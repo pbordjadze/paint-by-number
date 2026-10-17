@@ -51,13 +51,13 @@ final class FeedbackEngine {
 
     private func prepare() {
         if hapticsEnabled { haptics.prepare() }
-        if soundsEnabled { sounds.prepare(sky: SkySetting.current()) }
+        if soundsEnabled { sounds.prepare(sky: Sky.current()) }
     }
 
     /// The sky the next fill plays in: the tune's own until its next phrase begins (or a pause
     /// lets it turn), then the sky of the hour.
     func skyOfComingFill() -> Sky {
-        melody.skyOfNote(at: clock.now, under: SkySetting.current())
+        melody.skyOfNote(at: clock.now, under: Sky.current())
     }
 
     /// Selection changes and other UI detents.
@@ -67,7 +67,7 @@ final class FeedbackEngine {
 
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
-        let sky = melody.sky ?? SkySetting.current()
+        let sky = melody.sky ?? Sky.current()
         switch event {
         case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
@@ -79,7 +79,7 @@ final class FeedbackEngine {
             let now = clock.now
             if lastNote.map({ now - $0 >= .milliseconds(40) }) ?? true {
                 lastNote = now
-                let note = melody.next(at: now, under: SkySetting.current())
+                let note = melody.next(at: now, under: Sky.current())
                 if soundsOn { sounds.paint(note, velocity: 0.35 + 0.65 * size) }
             }
         case .rejected:

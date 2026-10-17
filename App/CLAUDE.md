@@ -299,6 +299,10 @@ synchronized folder would bundle it into the app.
   and the fill's stars with it: `FeedbackEngine` keeps the tune on the main actor (its
   `skyOfComingFill` is what `CanvasView.popSparkles` asks, before the sounds hear of the fill)
   and hands `SoundPlayer` each note. `paint-book-moon-dark` holds two stars for a screenshot.
+  Sun and Moon are Debug and SideStore only for now (`#if UNRELEASED`, Paul's call): the release
+  has no Sky row (`SkySetting` and Settings' section are compiled out, `ci/check_release.sh`
+  checks) and `Sky.current` keeps it on the Sun, whose voice there is the first kalimba and
+  scale (`ToneSynth.kalimba`, `SoundPlayer.firstScale`), with no stars: it sounds as before.
   Core Haptics patterns, none on iPad. `SoundPlayer` and `HapticsPlayer` each work on a queue of
   their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Sky are read
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
@@ -688,8 +692,8 @@ paper (`CanvasSnapshot.Options`).
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Sky
-  (`SkySetting`, Moon by default) picks the sounds and whether the fill's sparkles are
-  stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
+  (`SkySetting`, Moon by default; Debug and SideStore only for now) picks the sounds and whether
+  the fill's sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
   (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).

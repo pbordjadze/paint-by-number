@@ -8,7 +8,9 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
+    #if UNRELEASED
     @AppStorage(SettingsKey.sky) private var sky = SkySetting.default
+    #endif
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
@@ -102,7 +104,9 @@ struct SettingsView: View {
                     }
                 }
 
-                // A theme of its own, apart from the appearance and the paper.
+                #if UNRELEASED
+                // A theme of its own, apart from the appearance and the paper. Debug and
+                // SideStore builds only for now (`Sky.current`).
                 Section {
                     Picker(selection: $sky) {
                         // Plain choices: with a symbol each, the row drew its value cramped and
@@ -120,6 +124,7 @@ struct SettingsView: View {
                                 defaultValue: "Sun and Moon each have their own music, and by Moon the sparkles are stars. Follow the Sky turns to Moon at \(Sky.clockText(Sky.nightfall)) and back to Sun at \(Sky.clockText(Sky.sunrise)), your time.",
                                 comment: "Footer of the Sky section in Settings, under the Sky choice (Moon, Sun, Follow the Sky). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)"))
                 }
+                #endif
 
                 Section {
                     Picker(selection: $paintingLength) {

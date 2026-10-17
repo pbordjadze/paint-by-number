@@ -3,10 +3,31 @@ import PaintCore
 
 /// Tiny additive synthesizer for the feedback sounds.
 nonisolated enum ToneSynth {
-    /// The Sun's voice, a plucked tine: fundamental with a bright, fast-decaying inharmonic
-    /// partial and a soft "wet" noise onset (the brush touching the canvas). The kalimba the app
-    /// first played, a little brighter and lighter: a stronger octave and tine, a shorter ring.
+    /// Plucked-tine tone: fundamental with a bright, fast-decaying inharmonic partial and a
+    /// soft "wet" noise onset (the brush touching the canvas). The app's first voice, which the
+    /// release still plays (`Sky.current`).
     static func kalimba(frequency f: Double, sampleRate sr: Double) -> [Float] {
+        let n = Int(sr * 0.9)
+        var out = [Float](repeating: 0, count: n)
+        var noise = SplitMix64(seed: UInt64(f * 1000))
+        var lowpassed: Double = 0
+        for i in 0..<n {
+            let t = Double(i) / sr
+            let attack = min(1, t / 0.003)
+            let body = sin(2 * .pi * f * t) * exp(-t * 5.5)
+            let octave = 0.18 * sin(2 * .pi * 2 * f * t) * exp(-t * 9)
+            let tine = 0.22 * sin(2 * .pi * 5.4 * f * t) * exp(-t * 28)
+            let bits: UInt64 = noise.next()
+            lowpassed += 0.25 * (Double(bits >> 11) / Double(1 << 53) * 2 - 1 - lowpassed)
+            let brush = 0.10 * lowpassed * exp(-t * 45)
+            out[i] = Float(attack * (body + octave + tine) + brush) * 0.55
+        }
+        return out
+    }
+
+    /// The Sun's voice: the first kalimba a little brighter and lighter, a stronger octave and
+    /// tine, a shorter ring.
+    static func sunKalimba(frequency f: Double, sampleRate sr: Double) -> [Float] {
         let length = 0.75, fade = 0.05
         let n = Int(sr * length)
         var out = [Float](repeating: 0, count: n)

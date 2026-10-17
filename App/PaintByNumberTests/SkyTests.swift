@@ -44,7 +44,7 @@ struct SkyTests {
         defer { defaults.removePersistentDomain(forName: suite) }
 
         #expect(SkySetting.stored(in: defaults) == .moon)
-        #expect(SkySetting.current(at: try date(12, in: try calendar("Europe/Paris")), in: defaults) == .moon)
+        #expect(Sky.current(at: try date(12, in: try calendar("Europe/Paris")), in: defaults) == .moon)
         let night = try date(23, in: try calendar("Europe/Paris"))
         let paris = try calendar("Europe/Paris")
         #expect(SkySetting.followTheSky.sky(at: night, calendar: paris) == .moon)
@@ -52,7 +52,7 @@ struct SkyTests {
         #expect(SkySetting.moon.sky(at: try date(12, in: paris), calendar: paris) == .moon)
         defaults.set("sun", forKey: SettingsKey.sky)
         #expect(SkySetting.stored(in: defaults) == .sun)
-        #expect(SkySetting.current(in: defaults) == .sun)
+        #expect(Sky.current(in: defaults) == .sun)
         defaults.set("eclipse", forKey: SettingsKey.sky)
         #expect(SkySetting.stored(in: defaults) == .moon)
         // The persisted key and values: renaming one would forget every painter's choice.
@@ -64,8 +64,8 @@ struct SkyTests {
     @Test func eachSkysVoiceIsTheSameEveryLaunchAndInRange() {
         let rate = 44_100.0
         for frequency in SoundPlayer.scale(of: .sun) {
-            let note = ToneSynth.kalimba(frequency: frequency, sampleRate: rate)
-            #expect(note == ToneSynth.kalimba(frequency: frequency, sampleRate: rate))
+            let note = ToneSynth.sunKalimba(frequency: frequency, sampleRate: rate)
+            #expect(note == ToneSynth.sunKalimba(frequency: frequency, sampleRate: rate))
             #expect(note.allSatisfy { $0.isFinite && abs($0) < 1 })
             #expect(abs(note.last ?? 1) < 1e-3, "a note ends in silence, with no click")
         }
@@ -78,7 +78,7 @@ struct SkyTests {
             #expect(twinkle.allSatisfy { $0.isFinite && abs($0) < 1 })
         }
         // The bell rings longer than the kalimba.
-        #expect(ToneSynth.celesta(frequency: 440, sampleRate: rate).count > ToneSynth.kalimba(frequency: 440, sampleRate: rate).count)
+        #expect(ToneSynth.celesta(frequency: 440, sampleRate: rate).count > ToneSynth.sunKalimba(frequency: 440, sampleRate: rate).count)
     }
 
     /// By Moon the fill's sparkles are stars: the sparkle with shorter arms on its diagonals.

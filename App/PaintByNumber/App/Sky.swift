@@ -5,7 +5,7 @@ import Foundation
 /// brighter kalimba, by Moon a celesta-like bell on the same five notes, lower and minor
 /// (`SoundPlayer`), and the fill's two sparkles become stars (`CanvasView.popSparkles`). Only
 /// the sun and the moon keeping the hours: nothing here tells the painter anything about
-/// themselves.
+/// themselves. Debug and SideStore builds only for now (`current`).
 nonisolated enum Sky: String, Sendable {
     case sun, moon
 
@@ -20,6 +20,21 @@ nonisolated enum Sky: String, Sendable {
         (sunrise..<nightfall).contains(calendar.component(.hour, from: date)) ? .sun : .moon
     }
 
+    /// The sky painting plays in at `date`: what a sound or a sparkle asks for. Sun and Moon
+    /// are in Debug and SideStore builds only for now (`UNRELEASED`; Paul, October 17, 2026:
+    /// "ship it only to SideStore for now"): the release has no Sky row and keeps the Sun, whose
+    /// voice there is the kalimba the app first shipped (`SoundPlayer.scale(of:)`), with no stars.
+    static func current(at date: Date = .now, in defaults: UserDefaults = .standard) -> Sky {
+        #if UNRELEASED
+        SkySetting.stored(in: defaults).sky(at: date)
+        #else
+        .sun
+        #endif
+    }
+}
+
+#if UNRELEASED
+extension Sky {
     /// `hour` o'clock as the painter's locale writes it ("7 PM", "19 Uhr"), for Settings.
     static func clockText(_ hour: Int, calendar: Calendar = .autoupdatingCurrent) -> String {
         (calendar.date(bySettingHour: hour, minute: 0, second: 0, of: .now) ?? .now).formatted(.dateTime.hour())
@@ -68,9 +83,5 @@ nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
     static func stored(in defaults: UserDefaults = .standard) -> SkySetting {
         defaults.string(forKey: SettingsKey.sky).flatMap(SkySetting.init(rawValue:)) ?? .default
     }
-
-    /// The sky the stored setting gives at `date`: what a sound or a sparkle asks for.
-    static func current(at date: Date = .now, in defaults: UserDefaults = .standard) -> Sky {
-        stored(in: defaults).sky(at: date)
-    }
 }
+#endif
