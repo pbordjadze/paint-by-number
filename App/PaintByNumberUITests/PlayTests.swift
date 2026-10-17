@@ -122,7 +122,7 @@ final class PlayTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery-open", "-playHarness"]
         app.launch()
-        guard app.buttons["Close"].waitForExistence(timeout: 90) else {
+        guard app.buttons["Back"].waitForExistence(timeout: 90) else {
             throw PlayFailure("The demo painting did not open")
         }
         guard app.descendants(matching: .any)["play-state"].waitForExistence(timeout: 10) else {

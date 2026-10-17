@@ -7,11 +7,11 @@ final class LongTextTests: XCTestCase {
     @MainActor
     func testPaintingBarsKeepTheirControlsAndTheColorName() {
         let app = launch("paint-long-text")
-        XCTAssertTrue(button(app, labelPrefix: "Close").waitForExistence(timeout: 60), "The painting didn't open")
+        XCTAssertTrue(button(app, labelPrefix: "Back").waitForExistence(timeout: 60), "The painting didn't open")
         sleep(3)
         attachScreenshot(of: app, named: "paint-long-text")
         let window = app.windows.firstMatch.frame
-        for prefix in ["Close", "Undo", "More"] {
+        for prefix in ["Back", "Undo", "More"] {
             let control = button(app, labelPrefix: prefix)
             XCTAssertTrue(control.exists, "\(prefix) is missing")
             XCTAssertTrue(control.isHittable, "\(prefix) can't be tapped")

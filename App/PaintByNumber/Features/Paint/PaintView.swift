@@ -365,7 +365,7 @@ struct PaintView: View {
         // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
         HStack(spacing: 8) {
             if let onClose {
-                GlassIconButton(systemImage: "xmark", label: "Close", action: onClose)
+                GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
             }
             progressBadge(badge)
                 .frame(maxWidth: .infinity, alignment: .leading)

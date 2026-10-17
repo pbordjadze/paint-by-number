@@ -142,7 +142,7 @@ final class AccessibilityUITests: XCTestCase {
         }
         for swatch in visible { XCTAssertTrue(swatch.isHittable, "\(swatch.identifier) can't be tapped") }
         // A phone's bar has no room for Hint at this size; the selected swatch still offers it.
-        let controls = UIDevice.current.userInterfaceIdiom == .pad ? ["Close", "Hint", "Undo"] : ["Close", "Undo"]
+        let controls = UIDevice.current.userInterfaceIdiom == .pad ? ["Back", "Hint", "Undo"] : ["Back", "Undo"]
         for name in controls {
             XCTAssertTrue(app.buttons[name].isHittable, "\(name) can't be tapped")
         }
@@ -175,7 +175,7 @@ final class AccessibilityUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "paint-progress", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60))
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 60))
         sleep(3)
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         XCTAssertFalse(swatches.isEmpty)
@@ -189,7 +189,7 @@ final class AccessibilityUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = arguments
         app.launch()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60), "The painting didn't open")
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 60), "The painting didn't open")
         sleep(3)
         return app
     }

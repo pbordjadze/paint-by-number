@@ -46,7 +46,7 @@ final class RecoveryTests: XCTestCase {
         attachScreenshot(of: app, named: "recovery")
 
         regenerate.tap()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 120), "The regenerated painting didn't open")
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 120), "The regenerated painting didn't open")
         sleep(1)
         attachScreenshot(of: app, named: "regenerated")
     }

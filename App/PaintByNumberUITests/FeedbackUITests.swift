@@ -11,7 +11,7 @@ final class FeedbackUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery-open"]
         app.launch()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 90), "The painting didn't open")
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 90), "The painting didn't open")
         sleep(2)
         // The top bar where it has room (iPad), else the More menu.
         let give = app.buttons["Give Feedback"]
@@ -58,7 +58,7 @@ final class FeedbackUITests: XCTestCase {
         // It points at the Cancel button it was asked from.
         checkDialog(showing: ["Discard Your Feedback?", "Your marks and notes will be lost."], pointsAt: source, "feedback-discard", in: app)
         discard.tap()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "Discarding didn't return to painting")
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 10), "Discarding didn't return to painting")
         XCTAssertFalse(next.exists, "Feedback mode is still on")
     }
 

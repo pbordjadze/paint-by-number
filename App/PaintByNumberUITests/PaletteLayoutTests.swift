@@ -8,7 +8,7 @@ final class PaletteLayoutTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "paint-palette-number"]
         app.launch()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60), "The painting didn't open")
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 60), "The painting didn't open")
         sleep(3)
         attachScreenshot(of: app, named: "paint-palette-number")
         let frames = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex

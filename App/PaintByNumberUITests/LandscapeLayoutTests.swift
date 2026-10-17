@@ -9,7 +9,7 @@ final class LandscapeLayoutTests: XCTestCase {
     @MainActor
     func testPaintingPaletteAlongTrailingEdge() throws {
         let app = try launchInLandscape("paint-progress")
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60))
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 60))
         sleep(3)
         attachScreen(named: "landscape-paint-progress")
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex

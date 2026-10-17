@@ -230,7 +230,7 @@ struct ArtworkPaintingView: View {
 /// The zoom transition lets a swipe down or a pinch anywhere dismiss the pushed screen, which
 /// steals the canvas's pan and pinch and drops the painter back in the gallery. SwiftUI has no
 /// switch for it, so this turns the recognizers behind those two gestures off on the pushed
-/// controller's view once it has appeared; the edge swipe back and the Close button keep
+/// controller's view once it has appeared; the edge swipe back and the Back button keep
 /// working. The recognizers are found by their UIKit class names (`PaintingNavigationTests`
 /// notices if they change). It also tells `onAppear` that the push has finished (SwiftUI's own
 /// `onAppear` comes as it starts).
