@@ -191,6 +191,7 @@ extension EditWork {
         summary.regionsSplit += pieces.count - 1
         summary.detailAreas += pieces.indices.filter { pieces[$0].plan!.needsDetail }.count
         summary.touched.formUnion(ids)
+        summary.pieces.formUnion(ids)
     }
 
     /// Turns a chain edge that bounds nothing back into a stroke of the area it lies in.

@@ -22,7 +22,13 @@ import Foundation
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
 ///   area; a piece with less is not cut off. A stretch that closes nothing is an interior stroke,
-///   verbatim.
+///   verbatim. A draw with `paints` (every draw the app makes now; one without is a draw from
+///   before, laid exactly as it was) also nudges the line, and only the line, where it crosses an
+///   edge within `inkWidth` of a junction (an end of an edge): it passes through the junction, so
+///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
+///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
+///   `painted(_:on:photo:)`): the paint nearest it within the book's own tolerance for one color
+///   (`paintTolerance`), else a new paint of that color added last.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -34,14 +40,29 @@ import Foundation
 ///   just-noticeable difference of the color, else a new paint added last.
 public enum TemplateEditor {
     public enum Edit: Sendable, Equatable {
-        /// A polyline; `closed` joins the last point back to the first.
-        case draw(points: [SIMD2<Float>], closed: Bool = false)
+        /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's
+        /// colors of the pieces it cuts, nil for a draw made before lines took them (no nudge, no
+        /// recoloring: such a draw is laid as it always was).
+        case draw(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint]? = nil)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
         case eraseLine(at: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The shape under `point`, painted `color` (OKLab, as `LineEdit.photoColor` reads it).
         case fill(at: SIMD2<Float>, color: SIMD3<Float>)
+    }
+
+    /// The photo's color of a piece a drawn line cuts: `at`, a point inside the piece (its number's
+    /// spot when it was read), and `color`, OKLab. A paint whose point is in no piece the line cut
+    /// (the line laid on another base) changes nothing.
+    public struct Paint: Sendable, Equatable {
+        public var at: SIMD2<Float>
+        public var color: SIMD3<Float>
+
+        public init(at: SIMD2<Float>, color: SIMD3<Float>) {
+            self.at = at
+            self.color = color
+        }
     }
 
     /// Why an edit was declined: the template is returned as it was.
@@ -75,9 +96,14 @@ public enum TemplateEditor {
         public var erased = 0
         public var fills = 0
         public var paintsAdded = 0
+        /// Pieces a line's paints gave another paint.
+        public var recolored = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
         /// centre.
         public var tooSmall: [SIMD2<Float>] = []
+        /// Regions of the new template a drawn line cut a region into (each piece, the one that
+        /// kept the region's index too).
+        public var pieces: [Int] = []
         /// Regions of the new template whose outline, paint, numbers or strokes changed.
         public var touchedRegions: [Int] = []
         /// For each region of the old template, the region it is in the new one (a merged
@@ -138,8 +164,9 @@ public enum TemplateEditor {
     ) throws -> (template: Template, outcome: Outcome) {
         var work = try EditWork(template, snapRadius: snapRadius)
         switch edit {
-        case .draw(let points, let closed):
-            try work.draw(points, closed: closed)
+        case .draw(let points, let closed, let paints):
+            try work.draw(points, closed: closed, nudging: paints != nil)
+            if let paints { try work.paint(paints) }
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
@@ -174,10 +201,28 @@ public enum TemplateEditor {
         outcome.erased = s.erased
         outcome.fills = s.fills
         outcome.paintsAdded = s.paintsAdded
+        outcome.recolored = s.recolored
+        outcome.pieces = mapping.pieces
         outcome.tooSmall = s.declined
         outcome.touchedRegions = mapping.touched
         outcome.continued = mapping.continued
         return (result, outcome)
+    }
+
+    /// `edit` with the photo's colors of the pieces it cuts, when it is a draw without them: the
+    /// line laid on `template` as a draw with paints lays it (nudged), and each piece's color read
+    /// over its pixels (`LineEdit.photoColor(ofRegion:in:image:)`) at its number. Another edit, or
+    /// one that changes nothing, comes back as a draw that lays the same way with no paints.
+    public static func painted(_ edit: Edit, on template: Template, photo: RGBAImage) -> Edit {
+        guard case .draw(let points, let closed, nil) = edit else { return edit }
+        let bare = Edit.draw(points: points, closed: closed, paints: [])
+        guard let (result, outcome) = try? apply(bare, to: template), outcome.changed else { return bare }
+        let paints = outcome.pieces.compactMap { piece -> Paint? in
+            guard let label = result.labels(ofRegion: piece).first,
+                  let color = LineEdit.photoColor(ofRegion: piece, in: result, image: photo) else { return nil }
+            return Paint(at: label.position, color: color)
+        }
+        return .draw(points: points, closed: closed, paints: paints)
     }
 
     private static func unchanged(_ template: Template) -> Outcome {

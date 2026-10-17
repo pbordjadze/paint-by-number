@@ -77,6 +77,48 @@ public struct LineEdit: Sendable, Equatable {
         func median(_ v: [Float]) -> Float { v.sorted()[(v.count - 1) / 2] }
         return SIMD3(median(l), median(a), median(b))
     }
+
+    /// Pixels of an area read at most (`photoColor(ofRegion:in:image:)`): its pixels are read
+    /// on a grid coarse enough to keep within this, which a median of a few thousand settles.
+    public static let areaSamples = 4096
+
+    /// The photo's color over region `region` of `template` (canvas pixels map onto the whole
+    /// photo, as `photoColor(at:in:)`'s normalized points do): the median, channel by channel in
+    /// OKLab, of the photo under the region's pixels, composited over white. The median ignores
+    /// the blur of a soft edge along the area's outline. Nil for a region with no pixels.
+    public static func photoColor(ofRegion region: Int, in template: Template, image: RGBAImage) -> SIMD3<Float>? {
+        let map = template.regionMap
+        let w = image.width, h = image.height
+        guard w > 0, h > 0, map.width > 0, map.height > 0, region >= 0, region < template.regions.count else { return nil }
+        let b = template.regions[region].bounds
+        var x0 = 0, y0 = 0, x1 = map.width, y1 = map.height
+        if !b.isEmpty {
+            x0 = max(Int(b.minX) - 1, 0); y0 = max(Int(b.minY) - 1, 0)
+            x1 = min(Int(b.maxX) + 1, map.width); y1 = min(Int(b.maxY) + 1, map.height)
+        }
+        guard x0 < x1, y0 < y1 else { return nil }
+        let step = max(1, Int((Double((x1 - x0) * (y1 - y0)) / Double(areaSamples)).squareRoot().rounded(.up)))
+        let lut = ColorScience.decodeLUT
+        var l: [Float] = [], a: [Float] = [], bb: [Float] = []
+        let sx = Float(w) / Float(map.width), sy = Float(h) / Float(map.height)
+        for y in stride(from: y0, to: y1, by: step) {
+            for x in stride(from: x0, to: x1, by: step) where Int(map[x, y]) == region {
+                let px = image[min(Int((Float(x) + 0.5) * sx), w - 1), min(Int((Float(y) + 0.5) * sy), h - 1)]
+                var lin = SIMD3(lut[Int(px.x)], lut[Int(px.y)], lut[Int(px.z)])
+                if px.w != 255 {
+                    let alpha = Float(px.w) / 255
+                    lin = lin * alpha + SIMD3(repeating: 1 - alpha)
+                }
+                let lab = ColorScience.linearToOKLab(lin, space: image.colorSpace)
+                l.append(lab.x)
+                a.append(lab.y)
+                bb.append(lab.z)
+            }
+        }
+        guard !l.isEmpty else { return nil }
+        func median(_ v: [Float]) -> Float { v.sorted()[(v.count - 1) / 2] }
+        return SIMD3(median(l), median(a), median(bb))
+    }
 }
 
 /// The painter's edits (`LineArtInput.edits`) applied to the drawing the template without them

@@ -29,14 +29,17 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
-//   pbn edit <template.pbnt> <edits.json> --out <dir>
+//   pbn edit <template.pbnt> <edits.json> --out <dir> [--photo <image>]
 //       applies manual edits to a finished coloring-book template, in order, as the app's Refine
-//       does (TemplateEditor): no photo, no edge map, no segmentation. edits.json: [{"kind":
-//       "draw", "points": [[x, y], ...], "closed": false}, {"kind": "erase", "radius": r,
+//       does (TemplateEditor): no edge map, no segmentation. edits.json: [{"kind": "draw",
+//       "points": [[x, y], ...], "closed": false, "paints": [{"at": [x, y], "color": [L, a,
+//       b]}]}, {"kind": "erase", "radius": r,
 //       "points": [...]}, {"kind": "eraseLine", "points": [[x, y]], "reach": r}, {"kind": "fill",
 //       "points": [[x, y]], "color": [L, a, b] | "paint": n}], all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
-//       line drawn exactly as given and cutting the cell it closes, the eraser's pass cutting the
+//       line drawn exactly as given and cutting the cell it closes (with "paints", nudged through
+//       the junctions it crosses beside and each piece it cuts recolored; --photo reads those
+//       paints from the photo for every draw without them, as the app does), the eraser's pass cutting the
 //       ink at the edge of its reach (the cells it frees merging), a line tapped away from
 //       junction to junction, the shape under a point made one detail area of a paint (the
 //       color's, within a just-noticeable difference, else a new one); a kind pbn doesn't know is

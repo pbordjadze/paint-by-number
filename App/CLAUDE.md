@@ -549,9 +549,13 @@ Conventions).
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
     tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`), which
     `CreateModel.edit(_:)` / `fill(at:color:)` lays on the template on screen off the main actor
-    (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. The shown template
-    is a function of the base (what the generator makes from the photo, the settings and the
-    refinements' generator inputs, `TemplateRefinements.generatorInputs`) and `refinements.edits`,
+    (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. A drawn line
+    first takes the photo's colors for the pieces it cuts (`TemplateEditor.painted` on the
+    template shown and `source.image`, kept in the edit's `paints`; `docs/coloring-book.md` › A
+    drawn line's colors); one sent while the base is being made again is kept as drawn. The
+    shown template is a function of the base (what the generator makes from the photo, the
+    settings and the refinements' generator inputs, `TemplateRefinements.generatorInputs`) and
+    `refinements.edits`,
     laid in order, so the same pair is the same template on every device and in every build of one
     `pipelineVersion`; what an edit doesn't reach is bit for bit what it was (`CreateModelTests`).
     Until an edit lands (`CreateModel.settledEdits` reaches its number) it shows over the template

@@ -457,9 +457,9 @@ struct CreateModelTests {
         try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial && model.isFinal }
     }
 
-    /// An edit is laid on the template on screen as it is: nothing is generated and no draft shows,
-    /// the paints are the ones it had, and every region away from the line is bit for bit what it
-    /// was.
+    /// An edit is laid on the template on screen as it is (a drawn line with the photo's colors
+    /// for what it cuts, `TemplateEditor.painted`): nothing is generated and no draft shows, the
+    /// paints are the ones it had, and every region away from the line is bit for bit what it was.
     @Test func anEditIsLaidOnTheTemplateOnScreenAlone() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
@@ -474,10 +474,12 @@ struct CreateModelTests {
             return model.settledEdits >= serial && model.isFinal
         }
         #expect(!generated, "An edit generated the template again")
-        #expect(model.refinements.edits == [edit] && model.preview?.refinements == model.refinements)
+        let laid = TemplateEditor.painted(edit, on: before, photo: try #require(model.source?.image))
+        guard case .draw(_, _, .some(_)) = laid else { Issue.record("the line has no paints"); return }
+        #expect(model.refinements.edits == [laid] && model.preview?.refinements == model.refinements)
         #expect(model.canUndo && !model.canRedo && model.note == nil)
 
-        let (expected, outcome) = try TemplateEditor.apply(edit, to: before)
+        let (expected, outcome) = try TemplateEditor.apply(laid, to: before)
         #expect(outcome.declined == nil && outcome.changed)
         let after = try #require(model.preview?.template)
         #expect(after == expected, "The template on screen isn't the editor's result")
@@ -501,7 +503,26 @@ struct CreateModelTests {
 
         // Start takes the template on screen, edits and all.
         let draft = try await model.makeDraft()
-        #expect(draft.template == after && draft.refinements.edits == [edit])
+        #expect(draft.template == after && draft.refinements.edits == [laid])
+        model.cancelAll()
+    }
+
+    /// A shape drawn closed takes the photo's colors for the pieces it cuts, kept in its edit, so
+    /// the edit lays the same way without the photo.
+    @Test func aClosedShapeTakesThePhotosColors() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let box = TemplateEditor.Edit.draw(
+            points: [SIMD2(0.4 * w, 0.4 * h), SIMD2(0.6 * w, 0.4 * h), SIMD2(0.6 * w, 0.6 * h), SIMD2(0.4 * w, 0.6 * h)], closed: true)
+        try await waitForEdits(model, model.edit(box))
+        let laid = try #require(model.refinements.edits.first)
+        guard case .draw(_, true, let paints?) = laid else { Issue.record("the shape has no paints: \(laid)"); return }
+        #expect(!paints.isEmpty)
+        #expect(laid == TemplateEditor.painted(box, on: before, photo: try #require(model.source?.image)))
+        #expect(try TemplateEditor.apply(laid, to: before).template == model.preview?.template)
         model.cancelAll()
     }
 
@@ -513,12 +534,14 @@ struct CreateModelTests {
         try await waitUntil { model.isFinal }
         let before = try #require(model.preview?.template)
         model.beginRefining()
-        let first = line(in: before)
-        try await waitForEdits(model, model.edit(first))
+        let photo = try #require(model.source?.image)
+        try await waitForEdits(model, model.edit(line(in: before)))
         let once = try #require(model.preview?.template)
+        let first = TemplateEditor.painted(line(in: before), on: before, photo: photo)
         let w = Float(before.width), h = Float(before.height)
-        let second = TemplateEditor.Edit.draw(points: [SIMD2(0.2 * w, 0.2 * h), SIMD2(0.3 * w, 0.25 * h)])
-        try await waitForEdits(model, model.edit(second))
+        let drawn = TemplateEditor.Edit.draw(points: [SIMD2(0.2 * w, 0.2 * h), SIMD2(0.3 * w, 0.25 * h)])
+        try await waitForEdits(model, model.edit(drawn))
+        let second = TemplateEditor.painted(drawn, on: once, photo: photo)
         let twice = try #require(model.preview?.template)
         #expect(model.refinements.edits == [first, second] && twice != once)
 
@@ -602,9 +625,10 @@ struct CreateModelTests {
         try await waitUntil { model.isFinal }
         let first = try #require(model.preview?.template)
         let settings = model.settings
-        let edit = line(in: first)
-        try await waitForEdits(model, model.edit(edit))
+        try await waitForEdits(model, model.edit(line(in: first)))
         let drawn = try #require(model.preview?.template)
+        let edit = TemplateEditor.painted(line(in: first), on: first, photo: try #require(model.source?.image))
+        #expect(model.refinements.edits == [edit])
 
         model.detail = settings.detail < 0.75 ? Double(settings.detail) + 0.25 : Double(settings.detail) - 0.25
         model.settingsChanged()
@@ -622,7 +646,8 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
-    /// Edits sent while the template is being made again are laid on it before it shows.
+    /// Edits sent while the template is being made again are laid on it before it shows (a drawn
+    /// line as drawn: there was no template to read its pieces' colors on).
     @Test func editsSentWhileTheTemplateIsMadeAgainAreNotLost() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
