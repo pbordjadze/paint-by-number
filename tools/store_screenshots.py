@@ -22,8 +22,9 @@ marketing guidelines don't allow drawn device frames), on the app's paper (#F4EF
 baked grain under the crops (never over the app's pixels), and midnight for the last two. The Red Fox is the coloring book's in-progress
 subject because new paintings are always coloring books. Every crop is a fraction of its
 source screenshot; every line of copy points at something its screen shows. The headlines are
-set in Source Serif 4 standing in for New York (fetched from Google Fonts into DIR/.fonts on
-first run), the rest in the system font.
+set in Fraunces at its softest and wonkiest (fetched from Google Fonts into DIR/.fonts on
+first run), a gold squiggle under one phrase and the app's gold sparkles beside them, the
+cards tilted a little like a scrapbook's; the rest in the system font.
 
 Requires Pillow and Chromium (--chrome, $CHROME, Playwright's under /opt/pw-browsers, or one
 on PATH).
@@ -47,8 +48,12 @@ ICON = ROOT / "App/PaintByNumber/Resources/Assets.xcassets/AppIcon.appiconset/Ap
 PAPER, INK, SUB, PLUM, NAVY = "#F4EFE6", "#1F1A21", "#3A333D", "#7B3F7E", "#1B2242"
 SOURCE = {"iphone": (1206, 2622), "ipad": (2064, 2752)}
 CANVAS = {"iphone": (1320, 2868), "ipad": (2064, 2752)}
-FONT_CSS = "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+FONT_CSS = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,100,1&display=swap"
 MOON = "M62 8 A44 44 0 1 0 92 78 A36 36 0 1 1 62 8Z"
+SPARKLE = "M50 0Q56.65 43.35 100 50Q56.65 56.65 50 100Q43.35 56.65 0 50Q43.35 43.35 50 0Z"  # Theme.swift's Sparkle
+SQUIGGLE = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20' preserveAspectRatio='none'%3E"
+            "%3Cpath d='M3 13C28 5 46 17 74 10S124 4 150 12S186 15 197 7' fill='none' stroke='%23C9A24A' stroke-width='5' "
+            "stroke-linecap='round'/%3E%3C/svg%3E")
 
 
 SLOTS = {
@@ -57,53 +62,53 @@ SLOTS = {
 }
 
 
-def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None):
+def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None, tilt=0):
     """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom).
-    A slot takes the painter's own screenshot of the same screen in place of the scenario."""
+    A slot takes the painter's own screenshot of the same screen in place of the scenario; tilt is in degrees."""
     return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over,
-                slot=slot)
+                slot=slot, tilt=tilt)
 
 
 SLIDES = {
     "iphone": [
-        dict(title="Paint the pets<br>you love", size=132, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
-            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview")]),
-        dict(title="Every pet gets<br>a portrait", crops=[
+        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
+            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)]),
+        dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
             crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
                  slot="pet-progress")]),
-        dict(title="Tap a color,<br>fill its number", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
+        dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)]),
-        dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
-            crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True),
+        dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
+            crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True, tilt=1.5),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
-        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
+        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
             crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
-        dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
+        dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
-        dict(night=True, hills=True, title="It waits where<br>you stopped", sub="Saved as you go, and kept<br>on your device.", crops=[
-            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True)]),
+        dict(night=True, hills=True, title="Saves your spot,<br>like a <span class=mark>good dog</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
+            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)]),
     ],
     "ipad": [
-        dict(title="Paint the pets<br>you love", size=176, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
-            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview")]),
-        dict(title="Every pet gets<br>a portrait", crops=[
+        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
+            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)]),
+        dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
                  slot="pet-progress")]),
-        dict(title="Tap a color,<br>fill its number", sub="Every paint has a name. This one is Corn Husk.", crops=[
+        dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)]),
-        dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
-            crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True),
+        dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
+            crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
-        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
+        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
             crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
-        dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes in a dark room.", crops=[
+        dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
-        dict(night=True, hills=True, title="It waits where<br>you stopped", sub="Saved as you go, and kept on your device.", crops=[
-            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True)]),
+        dict(night=True, hills=True, title="Saves your spot,<br>like a <span class=mark>good dog</span>", sub="Saved as you go, and kept on your device.", crops=[
+            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)]),
     ],
 }
 
@@ -120,9 +125,9 @@ def find_chrome(arg):
 
 
 def fetch_fonts(out):
-    """Source Serif 4 from Google Fonts, kept beside the output so later runs work offline."""
+    """Fraunces from Google Fonts, kept beside the output so later runs work offline."""
     folder = out / ".fonts"
-    css = folder / "serif.css"
+    css = folder / "display.css"
     if css.exists():
         return css
     folder.mkdir(parents=True, exist_ok=True)
@@ -198,6 +203,8 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
     if c["fade"]:
         f = c["fade"]
         style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
+    if c["tilt"]:
+        style.append(f"transform:rotate({c['tilt']}deg)")
     if stand_in:
         style.append(f"outline:6px dashed {PLUM};outline-offset:10px")
     inset = 96 if dev == "iphone" else 144  # a full-bleed crop starts off the page; its tag starts at the text margin
@@ -222,6 +229,12 @@ def page(shots, dev, k, slide, fonts, noise, slots):
                  + f"<svg class=moon viewBox='0 0 100 100' style='left:{mx}px;top:{my}px;width:{m}px;height:{m}px'>"
                    f"<path d='{MOON}' fill='url(#gold)'/></svg>")
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
+    if not slide.get("hills"):  # the hills slide has its moon there instead
+        r = random.Random(k)
+        for i, (x0, x1, y0, y1, s) in enumerate(((.70, .80, 230, 300, 70), (.83, .90, 360, 440, 44), (.74, .82, 520, 600, 30))):
+            sz = s * (1 if phone else 1.3)
+            extra += (f"<svg class=moon viewBox='0 0 100 100' style='left:{W * r.uniform(x0, x1):.0f}px;"
+                      f"top:{r.uniform(y0, y1):.0f}px;width:{sz:.0f}px;height:{sz:.0f}px'><path d='{SPARKLE}' fill='url(#gold)'/></svg>")
     first_slot = next((c for c in slide["crops"] if c["slot"]), None)
     crops = "".join(crop_html(shots, dev, c, W, H, slots, SLOTS[c["slot"]] if c is first_slot else None)
                     for c in slide["crops"])
@@ -239,10 +252,11 @@ body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple
 .glow{{width:1040px;height:1040px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.14),rgba(201,162,74,0) 62%)}}
 .moon{{z-index:4}}
 .folio{{position:absolute;left:{margin}px;top:{folio_y}px;display:flex;align-items:center;gap:{folio * .55:.0f}px;z-index:5;
-  font:600 {folio}px 'Source Serif 4',serif;color:{fg}}}
+  font:600 {folio}px Fraunces,serif;color:{fg}}}
 .folio img{{width:{folio * 2}px;height:{folio * 2}px;border-radius:{folio * .45:.0f}px;box-shadow:0 0 0 1px rgba(31,26,33,.10)}}
 .text{{position:absolute;left:{margin}px;right:{margin}px;top:300px;z-index:5}}
-h1{{font:600 {size}px/{.98 if k == 0 else 1.0} 'Source Serif 4',serif;letter-spacing:{-.025 if k == 0 else -.02}em;color:{fg}}}
+h1{{font:600 {size}px/1.02 Fraunces,serif;letter-spacing:-.015em;color:{fg}}}
+.mark{{background:url("{SQUIGGLE}") 0 100%/100% .26em no-repeat;padding-bottom:.08em}}
 p{{margin-top:{32 if phone else 40}px;font-size:{44 if phone else 56}px;line-height:1.3;font-weight:500;
   color:{"rgba(244,239,230,.78)" if night else SUB};max-width:{900 if phone else 1640}px}}
 </style></head><body>
