@@ -153,7 +153,9 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// A single tap on a library photo opens its preview; after going back, the same photo can
-    /// be picked again (the selection is reset after each pick).
+    /// be picked again (the selection is reset after each pick) and loads as it did the first
+    /// time: its template is made, not the "Couldn’t Open Photo" of a photo the picker gave no
+    /// data for.
     @MainActor
     func testLibraryPhotoOpensPreviewAndCanBePickedAgain() throws {
         try XCTSkipIf(!isPad, "iPhone picks in the full system picker (testBrowseAllPickOpensPreview)")
@@ -168,27 +170,16 @@ final class CreateFlowTests: XCTestCase {
         // Back once the photo's settings are chosen: until then its models and candidates keep
         // every core busy, and on CI's simulators a Back tapped then was lost twice (the preview
         // stayed, finishing its suggestion).
-        XCTAssertTrue(
-            waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
-            "The preview never finished choosing its settings")
-
-        // By the system's identifier: the gallery's New Painting button, under the create flow,
-        // carries the back button's label too.
-        let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
-        guard back.waitForExistence(timeout: 10) else {
-            attachTree(of: app, named: "preview-back-tree")
-            XCTFail("No back button on the preview")
-            return
-        }
-        back.tap()
-        let returned = waitUntil(timeout: 30) { !start.exists }
-        if !returned { attachTree(of: app, named: "preview-back-missed-tree") }
-        XCTAssertTrue(returned, "Back didn't return to the photo step")
+        guard previewLoads(app, start: start, "The first pick’s preview", shot: "library-photo-loaded") else { return }
+        guard goBack(app, from: start) else { return }
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
         let reopened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
         attachScreenshot(of: app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
+        guard reopened else { return }
+        // The preview opens at once either way: what Start Painting waits for is the photo's load.
+        _ = previewLoads(app, start: start, "The second pick’s preview", shot: "library-photo-loaded-again")
     }
 
     /// Samples (behind a segment on compact widths, beside the picker on wide ones) sit in a
@@ -305,7 +296,8 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// A photo picked in the full system picker opens its preview: the push happens while the
-    /// sheet dismisses, which must not stall either transition.
+    /// sheet dismisses, which must not stall either transition. The photo loads, and after going
+    /// back the same photo can be picked again in a new sheet and loads too.
     @MainActor
     func testBrowseAllPickOpensPreview() throws {
         try XCTSkipIf(isPad, "The system picker sheet's photos aren't reachable on the iPad simulator (no fully visible photo)")
@@ -313,8 +305,58 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
 
-        // On iPhone the Photos pane's Choose Photo presents the same picker as Browse All.
-        guard openBrowseAll(app, sheet: sheet, via: app.buttons["Choose Photo"]) != nil else { return }
+        guard try pickInBrowseAll(app, picker: picker, sheet: sheet) else { return }
+        let start = app.buttons["Start Painting"]
+        let opened = start.waitForExistence(timeout: 60)
+        attachScreenshot(of: app, named: "browse-all-picked")
+        if !opened { attachTree(of: app, named: "browse-all-pick-tree") }
+        XCTAssertTrue(opened, "Picking a photo in Browse All didn't open its preview")
+        XCTAssertTrue(waitUntil(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after a pick")
+        guard opened, previewLoads(app, start: start, "The first pick’s preview", shot: "browse-all-loaded") else { return }
+
+        guard goBack(app, from: start) else { return }
+        XCTAssertTrue(picker.waitForExistence(timeout: 20))
+        guard try pickInBrowseAll(app, picker: picker, sheet: sheet) else { return }
+        let reopened = start.waitForExistence(timeout: 60)
+        attachScreenshot(of: app, named: "browse-all-picked-again")
+        if !reopened { attachTree(of: app, named: "browse-all-pick-again-tree") }
+        XCTAssertTrue(reopened, "The same photo couldn't be picked a second time in Browse All")
+        XCTAssertTrue(waitUntil(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after the second pick")
+        guard reopened else { return }
+        _ = previewLoads(app, start: start, "The second pick’s preview", shot: "browse-all-loaded-again")
+    }
+
+    // MARK: - Helpers
+
+    /// Taps the preview's Back and waits for the photo step (the preview's Start Painting gone).
+    /// A tap the iPad simulator lost is tapped once more (`retapIfLost`) when the photo step
+    /// hasn't returned within 10 s.
+    @MainActor
+    private func goBack(_ app: XCUIApplication, from start: XCUIElement) -> Bool {
+        // By the system's identifier: the gallery's New Painting button, under the create flow,
+        // carries the back button's label too.
+        let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
+        guard back.waitForExistence(timeout: 10) else {
+            attachTree(of: app, named: "preview-back-tree")
+            XCTFail("No back button on the preview")
+            return false
+        }
+        back.tap()
+        var returned = waitUntil(timeout: 10) { !start.exists }
+        if !returned {
+            retapIfLost("preview Back") { back.tap() }
+            returned = waitUntil(timeout: 30) { !start.exists }
+        }
+        if !returned { attachTree(of: app, named: "preview-back-missed-tree") }
+        XCTAssertTrue(returned, "Back didn't return to the photo step")
+        return returned
+    }
+
+    /// Presents the full system picker (iPhone's Choose Photo presents the same picker as Browse
+    /// All) and taps its first photo; false, with the test failed, when it showed no photos.
+    @MainActor
+    private func pickInBrowseAll(_ app: XCUIApplication, picker: XCUIElement, sheet: SheetDetector) throws -> Bool {
+        guard openBrowseAll(app, sheet: sheet, via: app.buttons["Choose Photo"]) != nil else { return false }
         // The sheet can open on a blank "Loading…" page whose Close sits left of the loaded
         // sheet's Cancel: wait for its photos, then read the bar of the sheet they are in.
         let sheetPhotosShown = waitUntil(timeout: 30) {
@@ -324,7 +366,7 @@ final class CreateFlowTests: XCTestCase {
         guard sheetPhotosShown, let cancel = sheet.dismissFrame else {
             attachTree(of: app, named: "browse-all-loading-tree")
             XCTFail("The system picker showed no photos")
-            return
+            return false
         }
         // The sheet's grid lies below its top bar. Sheets are centred horizontally, and the
         // Cancel button sits at the sheet's leading edge, so mirroring its inset bounds an area
@@ -338,16 +380,8 @@ final class CreateFlowTests: XCTestCase {
             width: window.width - 2 * inset, height: window.maxY - (sheetTop - window.minY) - bar.maxY - 8)
         try tapFirstPhoto(
             app, in: grid, origin: CGPoint(x: window.minX + inset, y: sheetTop), excluding: picker)
-
-        let start = app.buttons["Start Painting"]
-        let opened = start.waitForExistence(timeout: 60)
-        attachScreenshot(of: app, named: "browse-all-picked")
-        if !opened { attachTree(of: app, named: "browse-all-pick-tree") }
-        XCTAssertTrue(opened, "Picking a photo in Browse All didn't open its preview")
-        XCTAssertTrue(waitUntil(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after a pick")
+        return true
     }
-
-    // MARK: - Helpers
 
     /// On the iPhone simulator the system picker's sheet ignores a synthesized tap on its Cancel
     /// (screen recordings show the tap landing on it; the same flow passes on iPad). Verified on
@@ -440,6 +474,25 @@ final class CreateFlowTests: XCTestCase {
         attachTree(of: app, named: "inline-tap-missed-tree")
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
         return opens.waitForExistence(timeout: 30)
+    }
+
+    /// Waits for the preview's Start Painting to enable: the photo loaded and its settings were
+    /// chosen on a template made from it. It stays off under "Couldn’t Open Photo", which ends
+    /// the wait at once. Attaches the screen, and the tree when the wait fails.
+    @MainActor
+    private func previewLoads(_ app: XCUIApplication, start: XCUIElement, _ what: String, shot: String) -> Bool {
+        let enabled = NSPredicate(format: "isEnabled == true")
+        let failure = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Open Photo'")).firstMatch
+        let deadline = Date().addingTimeInterval(120)
+        var loaded = false
+        while !loaded, !failure.exists, Date() < deadline {
+            loaded = waitFor(start, toMatch: enabled, timeout: 2)
+        }
+        attachScreenshot(of: app, named: shot)
+        if !loaded { attachTree(of: app, named: "\(shot)-tree") }
+        XCTAssertFalse(failure.exists, "\(what) says the photo couldn’t be opened")
+        XCTAssertTrue(loaded, "\(what) never finished choosing its settings")
+        return loaded
     }
 
     /// Taps the first library photo that is fully visible inside `area` (window coordinates)
