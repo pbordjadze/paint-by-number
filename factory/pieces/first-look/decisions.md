@@ -29,3 +29,8 @@ Paul; nothing was changed on its branch.
 Marginarium ships (Codex draws, from October 19), the Marginarium's paper (a design-system
 call), and Rikyū's one-drawing first page (against Paul's October 15 shape, which opens on every
 drawing). Replay waits to be built.
+
+**Undone the same day** (Paul: "Bible school teacher isn't supposed to go away, she was being
+merged with Madeline Lengle"): there are no Former Guardians. Madeleine and the Bible School
+Teacher are one guardian, Madeleine, the Bible School Teacher, on the Hearth with her drawing, so
+Madeleine's wording for that line has nowhere to go.

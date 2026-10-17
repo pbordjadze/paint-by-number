@@ -439,11 +439,14 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 - Different music by day and by night, switching by the painter's own time of day, with "a very
   very gentle note of astrology there, like a subtle nod ... Think midsummer nights dream—but
   with an edgy astrological vibe." Built as Settings › Sky (F48, `pieces/day-and-night`).
-- A new guardian, the Astrologer, to oversee it. Madeleine (after Madeleine L'Engle) replaces the
+- A new guardian, the Astrologer, to oversee it. Madeleine (after Madeleine L'Engle) joins the
   Bible School Teacher on the Hearth: "one very gentle guardian of wholesomeness—but a super
-  chill one. Like a pagan Narnia." Paul's word overrules the October 12 rule that no drawn
-  guardian leaves; the Bible School Teacher keeps her drawing, her words in the chapters and a
-  page in Who's Who, and sits on no jury (`active: false`).
+  chill one. Like a pagan Narnia. Madeline Lengle, who should now be the Bible school teacher."
+  Claude first read it as a replacement and gave the Bible School Teacher a Former Guardians page;
+  Paul, the same day: "Bible school teacher isn't supposed to go away, she was being merged with
+  Madeline Lengle." They are one guardian, Madeleine, the Bible School Teacher, with the Bible
+  School Teacher's drawing, id and seat and both charters joined, and the October 12 rule (no
+  drawn guardian leaves) stands.
 - "Use this specific lamp to run and oversee all future UI features, starting with all the ones
   that haven't shipped yet": the Lamplit Table (`GUARDIANS.md`), six seats, named by its members.
   Root `CLAUDE.md` › App rules carries the rule on `main`, so every session sees it.

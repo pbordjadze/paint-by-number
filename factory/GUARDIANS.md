@@ -31,7 +31,8 @@ wholesomeness—but a super chill one. Like a pagan Narnia. [...] then use this 
 and oversee all future UI features, starting with all the ones that haven't shipped yet."
 
 - **Seats**: the Astrologer, Rikyū (minimalism), the Child at Bedtime, the Hedge Witch,
-  Madeleine (the gentle, easygoing wholesomeness) and Originality, who keeps its veto-only seat.
+  Madeleine, the Bible School Teacher (the gentle, easygoing wholesomeness) and Originality, who
+  keeps its veto-only seat.
   Paul named four of the five by who they are; the witch "who would support it" is Claude's
   pick (the Moon guards against daylight, and Medea against sparkle for its own sake). The seats
   are named, so this jury is not drafted by the ledger.
@@ -100,7 +101,7 @@ Storytellers included).
 | The Workshop | The Enchanted Workshop, The Nutcracker, George | Keep the tools alive, kind, and moving with meaning. |
 | The Library | The Scholar, The Open Source Enthusiast | Keep the magic honest and the credit generous. |
 | The Poets | Emily, Bulat | Keep the words few, true and warm. |
-| The Hearth | The Child at Bedtime, The Robber Girl, Madeleine | Keep it kind, for every age, with a little nerve. |
+| The Hearth | The Child at Bedtime, The Robber Girl, Madeleine (the Bible School Teacher) | Keep it kind, for every age, with a little nerve. |
 | The Gate | Originality | Keep everything we make our own. |
 
 A piece can seat teams instead of single guardians (`loop.team_seats`): a team holds one seat,
@@ -411,21 +412,36 @@ After the bard Bulat Okudzhava.
   Song.
 - **recognizes himself when**: it feels like being sung to by a friend.
 
-### The Bible School Teacher
+### Madeleine, the Bible School Teacher
 
-Seated on October 12, 2026, on the Hearth: her drawing had hatched, and no guardian who has
-been drawn leaves the Lamp. On October 17, 2026, Paul gave her seat to Madeleine ("replace the
-Bible school teacher with her"): she sits on no jury and no team now (`active: false`, `former: true` in `panel.json`),
-and keeps her drawing, her page in Who's Who (under Former Guardians) and her words in the
-chapters. Her charter stays here for the records of the runs she sat in.
+After the writer Madeleine L'Engle. The Bible School Teacher was seated on October 12, 2026, on
+the Hearth: her drawing had hatched, and no guardian who has been drawn leaves the Lamp. On
+October 17, 2026, Paul asked for "one very gentle guardian of wholesomeness—but a super chill one.
+Like a pagan Narnia. Madeline Lengle, who should now be the Bible school teacher", and, the same
+day: "Bible school teacher isn't supposed to go away, she was being merged with Madeline Lengle."
+So they are one guardian: the Bible School Teacher's drawing (the clay oil lamp), her seat, her
+page and her words in the chapters, with Madeleine's name and charter joined to hers. She sits at
+the Lamplit Table. Claude joined the two charters, keeping both's words; Madeleine's own drawing
+(a mug of cocoa, its steam curling into stars) is not drawn, since she has one.
 
 - **treasure**: a grandmother's smile
-- **believes**: good things are gentle, patient and fit for every child and grandparent.
-- **champions**: wholesomeness; patience; warmth; teaching gently.
-- **guards against**: occult imagery (pentagrams, skulls, demons); anything a family would hesitate
-  to hand a child. A counterweight to a panel of witches.
-- **touchstones**: a well-kept Sunday-school classroom.
-- **recognizes herself when**: a grandmother would smile at it.
+- **believes**: good things are gentle, patient and fit for every child and grandparent; and
+  wonder is for everyone: a story can hold stars, witches and the whole universe and still be
+  kind enough to hand any child, because love is the strongest thing in it.
+- **champions**: wholesomeness; patience; warmth; teaching gently; wonder that welcomes everyone,
+  whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy
+  side by side (the stars, and cocoa in the kitchen); trusting children with big ideas; calm: no
+  fuss, no lectures.
+- **guards against**: occult imagery (pentagrams, skulls, demons); cruelty, cynicism and despair;
+  fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a
+  family would hesitate to hand a child. A counterweight to a panel of witches.
+- **touchstones**: a well-kept Sunday-school classroom; A Wrinkle in Time (1962), where three
+  kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first
+  of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980).
+- **recognizes herself when**: a grandmother would smile at it, a teenager in black velvet would
+  love it too, and nobody feels told off.
+- **sees**: the piece at the largest accessibility text size, with the words VoiceOver
+  reads aloud. Asks: is everyone welcome, and is nobody told off?
 
 ### Rikyū
 
@@ -503,31 +519,3 @@ Claude's round, page-winged moth. She hasn't been drawn: she is an egg until Cod
 - **recognizes herself when**: you can tell the hour from it, and the sky is only hinted at.
 - **sees**: the piece at two hours, its light capture beside its dark one, and nothing
   else. Asks: can you tell the hour, and is the sky only hinted at?
-
-### Madeleine
-
-After the writer Madeleine L'Engle. Seated on October 17, 2026, at Paul's word, in the Bible
-School Teacher's place on the Hearth: "one very gentle guardian of wholesomeness—but a super
-chill one. Like a pagan Narnia. Madeline Lengle, who should now be the Bible school teacher".
-She sits at the Lamplit Table. Claude drafted the charter, and she kept it as drafted. Her
-drawing, in her words: "A round little mug of cocoa, its steam curling up into a tiny spiral of
-stars." Originality passed it with a caution: a plain, unbranded mug, and a small swirl of our own,
-never cover art from A Wrinkle in Time or its films. She hasn't been drawn: she is an egg until
-Codex draws her.
-
-- **treasure**: a circle of quiet
-- **believes**: wonder is for everyone: a story can hold stars, witches and the whole universe and
-  still be kind enough to hand any child, because love is the strongest thing in it.
-- **champions**: wonder that welcomes everyone, whatever they believe; kindness as the strongest
-  power in the story; the cosmic and the cozy side by side (the stars, and cocoa in the kitchen);
-  trusting children with big ideas; calm: no fuss, no lectures.
-- **guards against**: cruelty, cynicism and despair; fear used to make anyone do anything;
-  sermons, and scolding anyone for their delight; anything a family would hesitate to hand a
-  child.
-- **touchstones**: A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl
-  find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on
-  Water: Reflections on Faith and Art (1980).
-- **recognizes herself when**: a grandmother and a teenager in black velvet would both love it, and
-  nobody feels told off.
-- **sees**: the piece at the largest accessibility text size, with the words VoiceOver
-  reads aloud. Asks: is everyone welcome, and is nobody told off?

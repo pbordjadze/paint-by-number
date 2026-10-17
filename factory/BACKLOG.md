@@ -831,7 +831,7 @@ included). It comes after the show ships, never instead of it.
 Paul, October 17: the Lamplit Table runs and oversees every UI feature, starting with the ones
 that haven't shipped (`GUARDIANS.md` › The Lamplit Table; how a round runs: `ORCHESTRATOR.md`).
 Its answers are proposals; for another session's branch they go to Paul, never onto the branch.
-Drawings (the eggs: Bart, Rikyū, Lotte, the Astrologer, Madeleine; the Moon's redraw) stay the
+Drawings (the eggs: Bart, Rikyū, Lotte, the Astrologer; the Moon's redraw) stay the
 whole Lamp's, through Codex.
 
 ### F48 · Sun and Moon
@@ -856,7 +856,8 @@ Motion).
 
 ### F52 · The Marginarium in the release
 Debug and SideStore builds only (`#if UNRELEASED`). First look: not yet. Three seats want the
-eggs hatched (or not opened on) before it ships; Madeleine's wording for Former Guardians is in;
+eggs hatched (or not opened on) before it ships; Former Guardians is gone (Madeleine is the Bible
+School Teacher, one guardian: Paul, October 17);
 the Hedge Witch's warm paper and Rikyū's one-drawing first page are Paul's calls
 (`pieces/first-look/decisions.md`).
 

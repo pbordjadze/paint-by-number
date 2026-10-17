@@ -162,10 +162,11 @@
     },
     {
       "id": "bible-school-teacher",
-      "charter": "The Bible School Teacher",
+      "charter": "Madeleine, the Bible School Teacher",
       "baseWeight": 1,
-      "active": false,
-      "former": true
+      "active": true,
+      "description": "After the writer Madeleine L'Engle.",
+      "team": "hearth"
     },
     {
       "id": "sen-no-rikyu",
@@ -189,14 +190,6 @@
       "baseWeight": 1,
       "active": true,
       "team": "moonlit-circle"
-    },
-    {
-      "id": "madeleine-lengle",
-      "charter": "Madeleine",
-      "baseWeight": 1,
-      "active": true,
-      "description": "After the writer Madeleine L'Engle.",
-      "team": "hearth"
     }
   ],
   "teams": [

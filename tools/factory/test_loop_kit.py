@@ -450,8 +450,7 @@ class PrimitiveTests(unittest.TestCase):
 
 
 class TeamSeatTests(unittest.TestCase):
-    """GUARDIANS.md › Teams: a team holds one seat, and every guardian on the Lamp sits on exactly
-    one; one who passed its seat on (`former`) sits on none."""
+    """GUARDIANS.md › Teams: a team holds one seat, and every guardian sits on exactly one."""
 
     def setUp(self):
         self.gs = loop.guardians()
@@ -459,11 +458,11 @@ class TeamSeatTests(unittest.TestCase):
 
     def test_every_guardian_sits_on_exactly_one_team(self):
         members = [m for seat in self.seats for m in seat['members']]
-        self.assertEqual(sorted(members), sorted(g['id'] for g in self.gs if not g.get('former')))
-        self.assertEqual([g['id'] for g in self.gs if g.get('former')], ['bible-school-teacher'])
-        self.assertTrue(all(not g['active'] for g in self.gs if g.get('former')))
+        self.assertEqual(sorted(members), sorted(g['id'] for g in self.gs))
+        # The Bible School Teacher and Madeleine are one guardian (Paul, October 17).
         hearth = next(s for s in self.seats if s['id'] == 'hearth')
-        self.assertEqual(hearth['members'], ['robber-girl', 'child-at-bedtime', 'madeleine-lengle'])
+        self.assertEqual(hearth['members'], ['robber-girl', 'child-at-bedtime', 'bible-school-teacher'])
+        self.assertIn('#### Madeleine, the Bible School Teacher', hearth['charter_text'])
         self.assertEqual([s['id'] for s in self.seats if s.get('vetoOnly')], ['gate'])
         storytellers = next(s for s in self.seats if s['id'] == 'storytellers')
         self.assertEqual(storytellers['members'], ['storybook', 'dinotopia', 'bartimaeus', 'lotte-reiniger'])
