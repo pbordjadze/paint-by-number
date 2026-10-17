@@ -1,0 +1,23 @@
+Failed to tap "Unfavorite" Button: No matches found for Elements matching predicate '"Unfavorite" IN identifiers' from input {(
+    Button, identifier: 'xmark', label: 'Close',
+    Button, identifier: 'Photo', label: 'Photo', value: Hidden,
+    Button, identifier: 'lightbulb', label: 'Hint',
+    Button, identifier: 'arrow.uturn.backward', label: 'Undo',
+    Button, identifier: 'exclamationmark.bubble', label: 'Give Feedback',
+    Button, label: 'More',
+    Button, identifier: 'canvas-area-18', label: 'Area 7', value: not painted, botto...,
+    Button,
+    Button, identifier: 'swatch-7', label: '7, Nickel Plate, gray', value: 67 percent painted, Selected,
+    Button, identifier: 'swatch-8', label: '8, Field Mouse, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-9', label: '9, Weathered Fence, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-10', label: '10, Rainy Cobbles, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-11', label: '11, Event Horizon, black', value: 0 percent painted
+)}
+Possibly caused by runtime issues:
+Automation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {
+    "XC_kAXXCAttributeAutomationType" = 14;
+    "XC_kAXXCAttributeElementBaseType" = UIResponder;
+    "XC_kAXXCAttributeElementType" = "SwiftUI.AccessibilityNode";
+    "XC_kAXXCAttributeTraits" = 1108101562369;
+}
+See test report attachments for more detail.

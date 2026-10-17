@@ -1,0 +1,5 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate 'label == "3 in progress · 1 ready · 2 finished"'
+      ↪︎Find: First Match
