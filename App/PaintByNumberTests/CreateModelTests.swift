@@ -214,6 +214,109 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A touch on a slider that moves nothing, while the final template of the settings it let go
+    /// on is being made, must not cost that template: the touch cancelled the job, and letting go
+    /// took the cancelled job, still unwinding, for the one under way and made no other.
+    @Test func touchingASliderWhileTheFinalIsBeingMadeStillGetsTheFinal() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        // A slider moved and let go: the full resolution of the new settings starts.
+        model.setAdjusting(true)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.setAdjusting(false)
+        try await waitUntil(timeout: .seconds(60), polling: .milliseconds(2)) { model.refining != nil }
+        #expect(!model.isFinal && !model.canRefine)
+
+        // A touch that moves nothing, before it is done.
+        model.setAdjusting(true)
+        model.setAdjusting(false)
+        try await waitUntil(timeout: .seconds(60)) { model.isFinal }
+        #expect(model.canRefine && model.phase == .ready)
+        model.cancelAll()
+    }
+
+    /// Refine tapped while the painting is still updating waits for the final template and opens
+    /// by itself (`opensRefine`), which a full resolution on a phone takes tens of seconds to make;
+    /// there is nothing to ask for while the photo's settings are chosen, and with the final
+    /// template there it opens at once.
+    @Test func refineTappedWhileUpdatingOpensOnceTheFinalIsMade() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.phase == .suggesting }
+        model.askForRefine()
+        #expect(!model.canAskForRefine && !model.isWaitingToRefine && !model.refineAsked)
+
+        try await waitUntil { model.isFinal }
+        model.askForRefine()
+        #expect(model.canAskForRefine && model.canRefine && !model.refineAsked, "Asked for with the final template there")
+
+        // A slider moved and let go: the template is made again, and Refine waits for it.
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        #expect(!model.canRefine && model.canAskForRefine)
+        model.askForRefine()
+        #expect(model.isWaitingToRefine && !model.opensRefine)
+        try await waitUntil(timeout: .seconds(60)) { model.opensRefine }
+        #expect(model.isFinal && !model.isWaitingToRefine)
+        model.withdrawRefine()
+        #expect(!model.opensRefine)
+        model.cancelAll()
+    }
+
+    /// A drag whose end was never heard leaves the model adjusting: a Refine asked for then still
+    /// opens once the final template is made (the full resolution of a resting thumb comes anyway).
+    @Test func aRefineAskedForOpensEvenIfTheLastDragNeverEnded() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        model.setAdjusting(true)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine && model.isAdjusting)
+        try await waitUntil(timeout: .seconds(60)) { model.opensRefine }
+        #expect(model.isFinal && model.isAdjusting)
+        model.cancelAll()
+    }
+
+    /// A Refine waited for is called off by going back to the sliders, by Start and by another
+    /// photo: it must not open over what the painter went on to.
+    @Test func aRefineWaitedForIsCalledOffByTheSlidersStartAndAnotherPhoto() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine)
+        model.setAdjusting(true)
+        #expect(!model.isWaitingToRefine, "A touch on a slider left the wait on")
+        model.setAdjusting(false)
+        try await waitUntil(timeout: .seconds(60)) { model.isFinal }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!model.opensRefine, "Refine opened by itself after the sliders were touched")
+
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine)
+        _ = try await model.makeDraft()
+        #expect(!model.refineAsked && !model.opensRefine, "Start left a Refine to open over the painting")
+
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine)
+        model.load(sample: try #require(Sample.named("great-wave")))
+        #expect(!model.refineAsked, "Another photo kept the last one's wait")
+        model.cancelAll()
+    }
+
     /// The typed name is trimmed; an empty one falls back to the sample's name or, for a
     /// photo, the date. A new photo starts over with its own default.
     @Test func titleFallsBackToTheDefault() throws {

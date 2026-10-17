@@ -17,8 +17,9 @@ final class RefineUITests: XCTestCase {
         XCTAssertEqual(refine.value as? String, "No changes")
         refine.tap()
 
+        // Tapped while the painting may still be updating: it opens once the final template is made.
         let canvas = app.descendants(matching: .any)["refine-canvas"]
-        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Refine didn't open")
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertTrue(app.buttons["refine-tool-pen"].isSelected, "Refine doesn't start on the pen")
         XCTAssertFalse(app.buttons["refine-tool-more"].exists, "The detail brushes show with Detail Brushes off")
@@ -102,7 +103,7 @@ final class RefineUITests: XCTestCase {
         let refine = app.buttons["refine"]
         refine.tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
-        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Refine didn't open")
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         let more = app.buttons["refine-tool-more"]
         XCTAssertTrue(more.exists, "Detail Brushes on, Refine has no More Detail")
         more.tap()
@@ -136,10 +137,11 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
             "The preview never finished choosing its settings")
-        // Refine opens on the final template, which can come after the first draft.
+        // Refine is on once the settings are chosen; a tap before the final template is made waits
+        // for it (the tests wait for Refine to open).
         XCTAssertTrue(
             waitFor(app.buttons["refine"], toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
-            "The preview never became ready to refine")
+            "Refine never came on")
         return app
     }
 
