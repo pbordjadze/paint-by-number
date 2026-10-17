@@ -172,7 +172,7 @@ final class StartHandoffUITests: XCTestCase {
                 if gallery.waitForExistence(timeout: attempt == 1 ? 6 : 15) { break }
             }
         } else {
-            app.buttons["Close"].tap()
+            app.buttons["Back"].tap()
         }
         let returned = gallery.waitForExistence(timeout: 15)
         attachScreenshot(of: app, named: "back-in-gallery")

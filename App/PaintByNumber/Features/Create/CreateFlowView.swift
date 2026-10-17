@@ -203,6 +203,7 @@ struct CreateFlowView: View {
         guard !isDissolving else { return }
         isDissolving = true
         Log.create.notice("Hand-off: the painting drew, template at \(String(describing: target), privacy: .public)")
+        hideFlowUnderTheShow()
         let motion = StartHandoffPlan.motion(reduceMotion: reduceMotion, target: target)
         if motion == .fly {
             flightTarget = target
@@ -241,6 +242,13 @@ struct CreateFlowView: View {
         }
     }
 
+    /// The show's paper hides the settings until it fades; they go at once, or they would show
+    /// through it, faintly, as it does.
+    private func hideFlowUnderTheShow() {
+        guard makingOf != nil else { return }
+        withAnimation(nil) { flowOpacity = 0 }
+    }
+
     /// A layout moved the template while the picture was on its way (the palette settling, the
     /// status bar going): the picture heads for where it is now. Once it is cross-fading into the
     /// canvas it is left where it landed.
@@ -261,6 +269,7 @@ struct CreateFlowView: View {
         guard !isDissolving else { return }
         isDissolving = true
         Log.create.notice("Hand-off: the painting never drew; the cover fades away")
+        hideFlowUnderTheShow()
         Task {
             withAnimation(.easeInOut(duration: StartHandoffPlan.move)) {
                 leaving = .landed(nil)
