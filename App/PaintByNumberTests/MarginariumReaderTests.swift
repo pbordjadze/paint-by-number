@@ -95,7 +95,7 @@ struct MarginariumReaderTests {
         }
         // A guardian's drawing is the guardian: its description is its guardian's name alone.
         for pet in pets {
-            let guardian = MarginariumCast.everyGuardian.first { $0.id == pet.pet }
+            let guardian = MarginariumCast.guardians.first { $0.id == pet.pet }
             #expect(guardian != nil, "\(pet.pet ?? "nil") has no page in Who's Who")
             #expect(pet.text == guardian?.name, "\(pet.pet ?? "nil")")
         }

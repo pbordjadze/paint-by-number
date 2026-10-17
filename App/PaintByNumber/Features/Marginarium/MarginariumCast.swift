@@ -3,8 +3,7 @@ import Foundation
 /// Who's Who in the Marginarium: the people, the AI helpers and the Lamp's guardians in their
 /// teams (`MarginariumWhosWhoView`). Each guardian's brief is its charter in `factory/GUARDIANS.md`
 /// in plain words; the ids are the panel's (`factory/panel.json`) and name each guardian's sheet
-/// (`MarginariumPet`). A guardian who hasn't hatched yet shows an egg (`MarginariumEgg`). A
-/// guardian who passed its seat on keeps its page (`MarginariumCast.former`).
+/// (`MarginariumPet`). A guardian who hasn't hatched yet shows an egg (`MarginariumEgg`).
 nonisolated struct MarginariumGuardian: Identifiable, Sendable {
     let id: String
     let name: String
@@ -52,14 +51,10 @@ nonisolated enum MarginariumCast {
     static func guardian(destination: String) -> MarginariumGuardian? {
         guard destination.hasPrefix("guardian.") else { return nil }
         let id = destination.dropFirst("guardian.".count)
-        return everyGuardian.first { $0.id == id }
+        return guardians.first { $0.id == id }
     }
 
-    /// The Lamp today, team by team.
     static var guardians: [MarginariumGuardian] { teams.flatMap(\.members) }
-
-    /// Every guardian with a page: the Lamp today, then those who passed their seats on.
-    static var everyGuardian: [MarginariumGuardian] { guardians + former.members }
 
     static func team(of guardian: MarginariumGuardian) -> MarginariumTeam? {
         teams.first { team in team.members.contains { $0.id == guardian.id } }
@@ -161,10 +156,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "hearth",
             name: String(localized: "lamp.team.hearth.name", defaultValue: "The Hearth",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, Madeleine)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, Madeleine, the Bible School Teacher)"),
             purpose: String(localized: "lamp.team.hearth.purpose", defaultValue: "Keep it kind, for every age, with a little nerve.",
                             comment: "The Marginarium, Who is Who: what the team The Hearth is for, under its name"),
-            members: [childAtBedtime, robberGirl, madeleineLengle]),
+            members: [childAtBedtime, robberGirl, bibleSchoolTeacher]),
         MarginariumTeam(
             id: "gate",
             name: String(localized: "lamp.team.gate.name", defaultValue: "The Gate",
@@ -174,15 +169,6 @@ nonisolated enum MarginariumCast {
             members: [originality]),
     ]
 
-    /// Guardians who passed their seats on. Not on the Lamp any more, each keeps its page; its
-    /// drawing and its words stay in the chapters where it spoke. Shown after the teams.
-    static let former = MarginariumTeam(
-        id: "former",
-        name: String(localized: "lamp.former.name", defaultValue: "Former Guardians",
-                     comment: "The Marginarium, Who is Who: the heading of the guardians who are no longer on the Lamp, after its teams"),
-        purpose: String(localized: "lamp.former.purpose", defaultValue: "They passed their seats on, with our thanks. Their words stay in the chapters.",
-                        comment: "The Marginarium, Who is Who: the line under Former Guardians"),
-        members: [bibleSchoolTeacher])
 
     static let dinotopia = MarginariumGuardian(
         id: "dinotopia",
@@ -632,27 +618,31 @@ nonisolated enum MarginariumCast {
                            comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Robber Girl"),
         hatched: true)
 
+    /// The Bible School Teacher and Madeleine are one guardian (Paul, October 17, 2026: "she was
+    /// being merged with Madeline Lengle"): her drawing, her seat on the Hearth and her words in
+    /// the chapters, with Madeleine's name and charter joined to hers.
     static let bibleSchoolTeacher = MarginariumGuardian(
         id: "bible-school-teacher",
-        name: String(localized: "lamp.bible-school-teacher.name", defaultValue: "The Bible School Teacher",
-                     comment: "The Marginarium, Who is Who: its name, for the guardian The Bible School Teacher"),
-        after: nil,
-        portrait: String(localized: "lamp.bible-school-teacher.portrait", defaultValue: "She sat on the Hearth until October 17, 2026, when her seat passed to Madeleine. Thank you for keeping it so gently. Her drawing and her words stay in the chapters where she spoke.",
-                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Bible School Teacher, who is no longer on the Lamp"),
+        name: String(localized: "lamp.bible-school-teacher.name", defaultValue: "Madeleine, the Bible School Teacher",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Madeleine, the Bible School Teacher"),
+        after: String(localized: "lamp.bible-school-teacher.after", defaultValue: "After the writer Madeleine L'Engle.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Madeleine, the Bible School Teacher"),
+        portrait: String(localized: "lamp.bible-school-teacher.portrait", defaultValue: "She joined the Hearth as the Bible School Teacher, and took the name Madeleine when Paul asked for \"one very gentle guardian of wholesomeness—but a super chill one.\" She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Madeleine, the Bible School Teacher"),
         guards: String(localized: "lamp.bible-school-teacher.guards", defaultValue: "a grandmother's smile",
-                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Bible School Teacher"),
-        believes: String(localized: "lamp.bible-school-teacher.believes", defaultValue: "Good things are gentle, patient and fit for every child and grandparent.",
-                         comment: "The Marginarium, Who is Who: what it believes, for the guardian The Bible School Teacher"),
-        loves: String(localized: "lamp.bible-school-teacher.loves", defaultValue: "Wholesomeness; patience; warmth; teaching gently.",
-                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Bible School Teacher"),
-        watchesFor: String(localized: "lamp.bible-school-teacher.watchesFor", defaultValue: "Spooky occult imagery, like skulls and demons; anything a family would hesitate to hand a child. She is a counterweight to a panel of witches.",
-                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Bible School Teacher"),
-        looksUpTo: String(localized: "lamp.bible-school-teacher.looksUpTo", defaultValue: "A well-kept Sunday-school classroom.",
-                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Bible School Teacher"),
-        happiestWhen: String(localized: "lamp.bible-school-teacher.happiestWhen", defaultValue: "A grandmother would smile at it.",
-                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Bible School Teacher"),
-        petCaption: String(localized: "lamp.bible-school-teacher.petCaption", defaultValue: "The Bible School Teacher",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Bible School Teacher"),
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Madeleine, the Bible School Teacher"),
+        believes: String(localized: "lamp.bible-school-teacher.believes", defaultValue: "Good things are gentle, patient and fit for every child and grandparent. Wonder is for everyone: a story can hold stars, witches and the whole universe and still be kind enough to hand any child, because love is the strongest thing in it.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Madeleine, the Bible School Teacher"),
+        loves: String(localized: "lamp.bible-school-teacher.loves", defaultValue: "Wholesomeness; patience; warmth; teaching gently; wonder that welcomes everyone, whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy side by side, the stars and cocoa in the kitchen; trusting children with big ideas; calm: no fuss, no lectures.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Madeleine, the Bible School Teacher"),
+        watchesFor: String(localized: "lamp.bible-school-teacher.watchesFor", defaultValue: "Spooky occult imagery, like skulls and demons; cruelty, cynicism and despair; fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a family would hesitate to hand a child. She is a counterweight to a panel of witches.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Madeleine, the Bible School Teacher"),
+        looksUpTo: String(localized: "lamp.bible-school-teacher.looksUpTo", defaultValue: "A well-kept Sunday-school classroom; A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980).",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Madeleine, the Bible School Teacher"),
+        happiestWhen: String(localized: "lamp.bible-school-teacher.happiestWhen", defaultValue: "A grandmother would smile at it, a teenager in black velvet would love it too, and nobody feels told off.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Madeleine, the Bible School Teacher"),
+        petCaption: String(localized: "lamp.bible-school-teacher.petCaption", defaultValue: "Madeleine, the Bible School Teacher",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Madeleine, the Bible School Teacher"),
         hatched: true)
 
     static let astrologer = MarginariumGuardian(
@@ -676,30 +666,6 @@ nonisolated enum MarginariumCast {
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Astrologer"),
         petCaption: String(localized: "lamp.astrologer.petCaption", defaultValue: "The Astrologer, still an egg",
                            comment: "The Marginarium, Who is Who: the caption and VoiceOver description of The Astrologer's egg: the guardian hasn't hatched yet"),
-        hatched: false)
-
-    static let madeleineLengle = MarginariumGuardian(
-        id: "madeleine-lengle",
-        name: String(localized: "lamp.madeleine-lengle.name", defaultValue: "Madeleine",
-                     comment: "The Marginarium, Who is Who: its name, for the guardian Madeleine"),
-        after: String(localized: "lamp.madeleine-lengle.after", defaultValue: "After the writer Madeleine L'Engle.",
-                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Madeleine"),
-        portrait: String(localized: "lamp.madeleine-lengle.portrait", defaultValue: "She took the Bible School Teacher's seat on the Hearth when Paul asked for \"one very gentle guardian of wholesomeness—but a super chill one.\" She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships.",
-                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Madeleine"),
-        guards: String(localized: "lamp.madeleine-lengle.guards", defaultValue: "a circle of quiet",
-                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Madeleine"),
-        believes: String(localized: "lamp.madeleine-lengle.believes", defaultValue: "Wonder is for everyone: a story can hold stars, witches and the whole universe and still be kind enough to hand any child, because love is the strongest thing in it.",
-                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Madeleine"),
-        loves: String(localized: "lamp.madeleine-lengle.loves", defaultValue: "Wonder that welcomes everyone, whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy side by side, the stars and cocoa in the kitchen; trusting children with big ideas; calm: no fuss, no lectures.",
-                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Madeleine"),
-        watchesFor: String(localized: "lamp.madeleine-lengle.watchesFor", defaultValue: "Cruelty, cynicism and despair; fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a family would hesitate to hand a child.",
-                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Madeleine"),
-        looksUpTo: String(localized: "lamp.madeleine-lengle.looksUpTo", defaultValue: "A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980).",
-                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Madeleine"),
-        happiestWhen: String(localized: "lamp.madeleine-lengle.happiestWhen", defaultValue: "A grandmother and a teenager in black velvet would both love it, and nobody feels told off.",
-                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Madeleine"),
-        petCaption: String(localized: "lamp.madeleine-lengle.petCaption", defaultValue: "Madeleine, still an egg",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Madeleine's egg: the guardian hasn't hatched yet"),
         hatched: false)
 
     static let rikyu = MarginariumGuardian(

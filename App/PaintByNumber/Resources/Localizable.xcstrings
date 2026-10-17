@@ -8930,7 +8930,7 @@
       }
     },
     "lamp.team.hearth.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, Madeleine)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, Madeleine, the Bible School Teacher)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10982,31 +10982,43 @@
       }
     },
     "lamp.bible-school-teacher.name" : {
-      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Bible School Teacher"
+            "value" : "Madeleine, the Bible School Teacher"
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Madeleine, the Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the writer Madeleine L'Engle."
           }
         }
       }
     },
     "lamp.bible-school-teacher.portrait" : {
-      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Bible School Teacher, who is no longer on the Lamp",
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "She sat on the Hearth until October 17, 2026, when her seat passed to Madeleine. Thank you for keeping it so gently. Her drawing and her words stay in the chapters where she spoke."
+            "value" : "She joined the Hearth as the Bible School Teacher, and took the name Madeleine when Paul asked for \"one very gentle guardian of wholesomeness—but a super chill one.\" She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships."
           }
         }
       }
     },
     "lamp.bible-school-teacher.guards" : {
-      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11018,73 +11030,73 @@
       }
     },
     "lamp.bible-school-teacher.believes" : {
-      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Good things are gentle, patient and fit for every child and grandparent."
+            "value" : "Good things are gentle, patient and fit for every child and grandparent. Wonder is for everyone: a story can hold stars, witches and the whole universe and still be kind enough to hand any child, because love is the strongest thing in it."
           }
         }
       }
     },
     "lamp.bible-school-teacher.loves" : {
-      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wholesomeness; patience; warmth; teaching gently."
+            "value" : "Wholesomeness; patience; warmth; teaching gently; wonder that welcomes everyone, whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy side by side, the stars and cocoa in the kitchen; trusting children with big ideas; calm: no fuss, no lectures."
           }
         }
       }
     },
     "lamp.bible-school-teacher.watchesFor" : {
-      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spooky occult imagery, like skulls and demons; anything a family would hesitate to hand a child. She is a counterweight to a panel of witches."
+            "value" : "Spooky occult imagery, like skulls and demons; cruelty, cynicism and despair; fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a family would hesitate to hand a child. She is a counterweight to a panel of witches."
           }
         }
       }
     },
     "lamp.bible-school-teacher.looksUpTo" : {
-      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A well-kept Sunday-school classroom."
+            "value" : "A well-kept Sunday-school classroom; A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980)."
           }
         }
       }
     },
     "lamp.bible-school-teacher.happiestWhen" : {
-      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A grandmother would smile at it."
+            "value" : "A grandmother would smile at it, a teenager in black velvet would love it too, and nobody feels told off."
           }
         }
       }
     },
     "lamp.bible-school-teacher.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Bible School Teacher",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Madeleine, the Bible School Teacher",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Bible School Teacher"
+            "value" : "Madeleine, the Bible School Teacher"
           }
         }
       }
@@ -11193,126 +11205,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Astrologer, still an egg"
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.name" : {
-      "comment" : "The Marginarium, Who is Who: its name, for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Madeleine"
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After the writer Madeleine L'Engle."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.portrait" : {
-      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "She took the Bible School Teacher's seat on the Hearth when Paul asked for \"one very gentle guardian of wholesomeness—but a super chill one.\" She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.guards" : {
-      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "a circle of quiet"
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.believes" : {
-      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wonder is for everyone: a story can hold stars, witches and the whole universe and still be kind enough to hand any child, because love is the strongest thing in it."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.loves" : {
-      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wonder that welcomes everyone, whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy side by side, the stars and cocoa in the kitchen; trusting children with big ideas; calm: no fuss, no lectures."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.watchesFor" : {
-      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cruelty, cynicism and despair; fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a family would hesitate to hand a child."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.looksUpTo" : {
-      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980)."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.happiestWhen" : {
-      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Madeleine",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A grandmother and a teenager in black velvet would both love it, and nobody feels told off."
-          }
-        }
-      }
-    },
-    "lamp.madeleine-lengle.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Madeleine's egg: the guardian hasn't hatched yet",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Madeleine, still an egg"
           }
         }
       }
@@ -11553,30 +11445,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lotte, still an egg"
-          }
-        }
-      }
-    },
-    "lamp.former.name" : {
-      "comment" : "The Marginarium, Who is Who: the heading of the guardians who are no longer on the Lamp, after its teams",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Former Guardians"
-          }
-        }
-      }
-    },
-    "lamp.former.purpose" : {
-      "comment" : "The Marginarium, Who is Who: the line under Former Guardians",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "They passed their seats on, with our thanks. Their words stay in the chapters."
           }
         }
       }

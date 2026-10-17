@@ -152,10 +152,10 @@ synchronized folder would bundle it into the app.
   people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
   AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
   `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
-  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`, and one who
-  passed its seat on keeps its page after the teams (`MarginariumCast.former`: the Bible School
-  Teacher, whose seat went to Madeleine on October 17; her drawing and words stay in the
-  chapters, so `everyGuardian`, not `guardians`, is who has a page). A guardian's drawing
+  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. The Bible
+  School Teacher and Madeleine are one guardian since October 17 (Paul: "she was being merged
+  with Madeline Lengle"): Madeleine, the Bible School Teacher, with her drawing, id, seat on the
+  Hearth and signature in the chapters. A guardian's drawing
   is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
   egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
   own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title

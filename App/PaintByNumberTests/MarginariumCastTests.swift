@@ -3,8 +3,8 @@ import Testing
 @testable import PaintByNumber
 
 /// Who's Who: every guardian sits on exactly one team, each brief is complete, a pet that ships
-/// is shown (and only an unhatched one is an egg), every guardian who signs a margin note has a
-/// page, and a guardian who passed its seat on keeps its page off the teams.
+/// is shown (and only an unhatched one is an egg), and every guardian who signs a margin note
+/// has a page.
 @MainActor
 struct MarginariumCastTests {
     @Test func everyGuardianIsOnExactlyOneTeam() {
@@ -23,23 +23,24 @@ struct MarginariumCastTests {
         #expect(MarginariumCast.bartimaeus.guards == "the footnote")
     }
 
-    /// Paul, October 17, 2026: Madeleine takes the Bible School Teacher's seat on the Hearth, and
-    /// the Astrologer joins the Moonlit Circle. The Bible School Teacher keeps her page, off the
-    /// teams, since her words and drawing stay in the chapters.
-    @Test func madeleineTakesTheBibleSchoolTeachersSeat() {
-        #expect(MarginariumCast.team(of: MarginariumCast.madeleineLengle)?.members.map(\.id)
-            == ["child-at-bedtime", "robber-girl", "madeleine-lengle"])
+    /// Paul, October 17, 2026: the Bible School Teacher and Madeleine are one guardian, on the
+    /// Hearth with her drawing ("she was being merged with Madeline Lengle"), and the Astrologer
+    /// joins the Moonlit Circle.
+    @Test func madeleineIsTheBibleSchoolTeacher() {
+        let madeleine = MarginariumCast.bibleSchoolTeacher
+        #expect(MarginariumCast.team(of: madeleine)?.members.map(\.id)
+            == ["child-at-bedtime", "robber-girl", "bible-school-teacher"])
+        #expect(madeleine.name == "Madeleine, the Bible School Teacher")
+        #expect(madeleine.after == "After the writer Madeleine L'Engle.")
+        #expect(madeleine.hatched)
+        #expect(MarginariumSpeakers.petIDs["the Bible School Teacher"] == madeleine.id)
+        #expect(!MarginariumCast.guardians.contains { $0.id == "madeleine-lengle" })
         #expect(MarginariumCast.team(of: MarginariumCast.astrologer)?.id == "moonlit-circle")
         #expect(MarginariumCast.team(of: MarginariumCast.rikyu)?.id == "glass-and-frost")
-        #expect(MarginariumCast.former.members.map(\.id) == ["bible-school-teacher"])
-        #expect(!MarginariumCast.guardians.contains { $0.id == "bible-school-teacher" })
-        #expect(MarginariumCast.team(of: MarginariumCast.bibleSchoolTeacher) == nil)
-        #expect(MarginariumCast.guardian(destination: "guardian.bible-school-teacher")?.portrait?.contains("Madeleine") == true)
-        #expect(MarginariumCast.madeleineLengle.after == "After the writer Madeleine L'Engle.")
     }
 
     @Test func everyBriefIsComplete() {
-        for guardian in MarginariumCast.everyGuardian {
+        for guardian in MarginariumCast.guardians {
             let fields = [guardian.name, guardian.guards, guardian.believes, guardian.loves, guardian.watchesFor,
                           guardian.looksUpTo, guardian.happiestWhen, guardian.petCaption]
             #expect(fields.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(guardian.id)")
@@ -53,12 +54,12 @@ struct MarginariumCastTests {
     }
 
     @Test func hatchedPetsShipAndOnlyUnhatchedOnesAreEggs() {
-        for guardian in MarginariumCast.everyGuardian {
+        for guardian in MarginariumCast.guardians {
             #expect(guardian.hatched == (MarginariumPet.named(guardian.id) != nil),
                     "\(guardian.id): hatched must match whether its pet ships")
         }
         #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted()
-            == ["astrologer", "bartimaeus", "lotte-reiniger", "madeleine-lengle", "moon", "sen-no-rikyu"])
+            == ["astrologer", "bartimaeus", "lotte-reiniger", "moon", "sen-no-rikyu"])
         #expect(MarginariumCast.helpers.compactMap(\.pet) == ["pip", "colophon"])
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }
@@ -66,7 +67,7 @@ struct MarginariumCastTests {
     /// A guardian's drawing is the guardian, never its pet (Paul, October 15): its caption and
     /// VoiceOver description are its name alone, and an egg says the guardian hasn't hatched.
     @Test func aDrawingGoesByItsGuardiansName() {
-        for guardian in MarginariumCast.everyGuardian {
+        for guardian in MarginariumCast.guardians {
             if guardian.hatched {
                 #expect(guardian.petCaption == guardian.name, "\(guardian.id)")
             } else {
@@ -77,13 +78,13 @@ struct MarginariumCastTests {
 
     /// Every guardian whose pet stands beside a margin note has a page in Who's Who.
     @Test func everySpeakingGuardianHasAPage() {
-        let pages = Set(MarginariumCast.everyGuardian.map(\.id))
+        let pages = Set(MarginariumCast.guardians.map(\.id))
         let speaking = Set(MarginariumSpeakers.petIDs.values).subtracting(["pip", "colophon"])
         #expect(speaking.isSubset(of: pages), "No page for \(speaking.subtracting(pages).sorted())")
     }
 
     @Test func destinationsRoundTrip() {
-        for guardian in MarginariumCast.everyGuardian {
+        for guardian in MarginariumCast.guardians {
             #expect(MarginariumCast.guardian(destination: MarginariumCast.destination(of: guardian))?.id == guardian.id)
         }
         #expect(MarginariumCast.guardian(destination: MarginariumCast.whosWho) == nil)

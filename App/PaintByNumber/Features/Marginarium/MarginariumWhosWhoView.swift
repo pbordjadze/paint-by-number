@@ -4,10 +4,9 @@ import SwiftUI
 /// Who's Who: everyone the chapters mention, the guardians drawn as themselves and the helpers with
 /// their pets (`MarginariumCast`). The people and the AI helpers come first, then what the Lamp
 /// is, then its guardians team by team; a guardian's card opens its brief
-/// (`MarginariumGuardianView`), and the guardians who passed their seats on come last. Teams are
-/// lazy grid cells, and cards play small copies of their drawings' cells
-/// (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of guardians never holds their
-/// full sheets.
+/// (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small copies of their
+/// drawings' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of guardians
+/// never holds their full sheets.
 struct MarginariumWhosWhoView: View {
     @ScaledMetric(relativeTo: .body) private var cardMinimum: CGFloat = 150
     /// Groups (the people, the helpers, each team) sit two to a row where a page has room for
@@ -50,8 +49,6 @@ struct MarginariumWhosWhoView: View {
                             teamView(team)
                                 .id("team-" + team.id)
                         }
-                        teamView(MarginariumCast.former)
-                            .id("team-" + MarginariumCast.former.id)
                     }
                 }
                 .frame(maxWidth: 860, alignment: .leading)
