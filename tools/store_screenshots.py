@@ -15,7 +15,10 @@ The first two slides show the painter's own pets, which CI can't photograph: a c
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
 an iPhone or iPad whose screen has the same proportions. Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
-iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png.
+iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png. Four slides
+also carry a pet's own photo as a taped-on polaroid (a `photo`: --slots/photo-<n>.jpg, already
+cropped to its frame's 4:5 or 5:4), each pet shown whole once; without the file the polaroid is
+an empty frame marked PLACEHOLDER.
 
 Each slide is an HTML page rendered by headless Chromium: real UI as frameless crops (Apple's
 marketing guidelines don't allow drawn device frames), on the app's paper (#F4EFE6) with a
@@ -69,16 +72,21 @@ def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False,
                 slot=slot, tilt=tilt)
 
 
+def photo(n, x, y, w, tilt, landscape=False):
+    """A taped-on polaroid of the painter's photo-<n>.jpg, w px wide at (x, y)."""
+    return dict(n=n, x=x, y=y, w=w, tilt=tilt, landscape=landscape)
+
+
 SLIDES = {
     "iphone": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
-            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)]),
+            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 110, 1990, 560, -5)]),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
             crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
-                 slot="pet-progress")]),
+                 slot="pet-progress")], photos=[photo(2, 830, 640, 420, 5)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
-            crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)]),
+            crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)], photos=[photo(3, 690, 610, 560, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
             crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True, tilt=1.5),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
@@ -87,18 +95,18 @@ SLIDES = {
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
-        dict(night=True, hills=True, title="Saves your spot,<br>like a <span class=mark>good dog</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
-            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)]),
+        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
+            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)], photos=[photo(4, 850, 740, 410, 6)]),
     ],
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
-            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)]),
+            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 140, 2000, 520, -5)]),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
-                 slot="pet-progress")]),
+                 slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
-            crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)]),
+            crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)], photos=[photo(3, 1340, 840, 600, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
@@ -107,8 +115,8 @@ SLIDES = {
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
-        dict(night=True, hills=True, title="Saves your spot,<br>like a <span class=mark>good dog</span>", sub="Saved as you go, and kept on your device.", crops=[
-            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)]),
+        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your device.", crops=[
+            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)], photos=[photo(4, 1480, 700, 480, 6)]),
     ],
 }
 
@@ -172,6 +180,24 @@ def hills(W, H, dev):
             f"<path d='{path(fg)}' fill='{PAPER}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/></svg>")
 
 
+def photo_path(slots, p):
+    path = slots / f"photo-{p['n']}.jpg" if slots else None
+    return path.resolve() if path and path.exists() else None
+
+
+def photo_html(slots, p):
+    w, pad = p["w"], p["w"] * .045
+    iw = w - 2 * pad
+    ih = iw * (.8 if p["landscape"] else 1.25)
+    src = photo_path(slots, p)
+    inner = (f"<div class=snap style='width:{iw:.0f}px;height:{ih:.0f}px;background:url({src.as_uri()}) center/cover'></div>"
+             if src else f"<div class=snap style='width:{iw:.0f}px;height:{ih:.0f}px;background:#E8E2D8'></div>"
+                         f"<div class=tag style='left:{pad + 20:.0f}px;top:{pad + 20:.0f}px'>PLACEHOLDER: a pet photo</div>")
+    return (f"<div class=polaroid style='left:{p['x']}px;top:{p['y']}px;padding:{pad:.0f}px {pad:.0f}px {w * .15:.0f}px;"
+            f"transform:rotate({p['tilt']}deg)'>{inner}<div class=tape style='width:{w * .38:.0f}px;height:{w * .09:.0f}px;"
+            f"left:{w * .31:.0f}px;top:{-w * .04:.0f}px'></div></div>")
+
+
 def own_shot(slots, dev, c):
     """The painter's screenshot for this crop's slot, if --slots has it."""
     if c["slot"] and slots:
@@ -229,7 +255,9 @@ def page(shots, dev, k, slide, fonts, noise, slots):
                  + f"<svg class=moon viewBox='0 0 100 100' style='left:{mx}px;top:{my}px;width:{m}px;height:{m}px'>"
                    f"<path d='{MOON}' fill='url(#gold)'/></svg>")
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
-    if not slide.get("hills"):  # the hills slide has its moon there instead
+    photos = slide.get("photos", [])
+    extra += "".join(photo_html(slots, p) for p in photos)
+    if not slide.get("hills") and not any(p["y"] < 900 for p in photos):  # the moon, or a photo, has that corner
         r = random.Random(k)
         for i, (x0, x1, y0, y1, s) in enumerate(((.70, .80, 230, 300, 70), (.83, .90, 360, 440, 44), (.74, .82, 520, 600, 30))):
             sz = s * (1 if phone else 1.3)
@@ -244,7 +272,10 @@ def page(shots, dev, k, slide, fonts, noise, slots):
 *{{margin:0;box-sizing:border-box}}
 html,body{{width:{W}px;height:{H}px;overflow:hidden}}
 body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple-system,"SF Pro Text",Inter,"Helvetica Neue",sans-serif}}
-.crop,.hills,.moon,.glow,.grain,.tag{{position:absolute}}
+.crop,.hills,.moon,.glow,.grain,.tag,.polaroid,.tape{{position:absolute}}
+.polaroid{{z-index:4;background:#FFFDF8;box-shadow:0 24px 50px rgba(31,26,33,.28),0 2px 6px rgba(31,26,33,.12)}}
+.snap{{position:relative}}
+.tape{{background:rgba(201,162,74,.45);transform:rotate(-4deg)}}
 .tag{{z-index:6;max-width:{W - 2 * margin - 64}px;padding:16px 28px;border-radius:28px;background:{PLUM};color:{PAPER};
   font:600 {32 if phone else 40}px/1.25 -apple-system,"SF Pro Text",Inter,sans-serif}}
 .hills{{left:0;top:0;z-index:2}}
@@ -286,7 +317,8 @@ def main():
         for k, slide in enumerate(slides, 1):
             first = slide["crops"][0]
             name = first["slot"] or first["scenario"]
-            if any(c["slot"] and not own_shot(args.slots, dev, c) for c in slide["crops"]):
+            if (any(c["slot"] and not own_shot(args.slots, dev, c) for c in slide["crops"])
+                    or any(not photo_path(args.slots, p) for p in slide.get("photos", []))):
                 name += "-placeholder"
             html = pages / f"{dev}-{k}.html"
             html.write_text(page(args.shots, dev, k - 1, slide, fonts, noise, args.slots))
