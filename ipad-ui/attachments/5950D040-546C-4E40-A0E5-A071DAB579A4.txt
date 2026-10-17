@@ -1,0 +1,4 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type NavigationBar
+    ↪︎Find: Elements matching predicate '"Send Feedback" IN identifiers'

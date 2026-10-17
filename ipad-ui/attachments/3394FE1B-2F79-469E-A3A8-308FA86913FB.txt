@@ -1,0 +1,4 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Alert
+    ↪︎Find: Elements matching predicate '"Couldn’t Send Feedback" IN identifiers'
