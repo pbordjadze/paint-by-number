@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 """The App Store screenshots, composed from CI's screenshots of the real app.
 
-    tools/store_screenshots.py SHOTS --out DIR [--chrome PATH]
+    tools/store_screenshots.py SHOTS --out DIR [--slots DIR] [--chrome PATH]
 
 SHOTS is an unpacked CI report (`git fetch origin +refs/ci-shots/main:refs/ci-shots/main &&
 git archive refs/ci-shots/main | tar -x -C SHOTS`): it reads SHOTS/iphone/shots/iphone-<scenario>.png
 and SHOTS/ipad/shots/ipad-<scenario>.png, so a scenario named in SLIDES must stay in
-ci/scenarios.txt. It writes six slides per size to DIR (outside the repo):
-iphone-69-<n>-<scenario>.png (1320×2868), iphone-63-<n>-<scenario>.png (1206×2622, the size
-App Store Connect requires) and ipad-13-<n>-<scenario>.png (2064×2752), RGB without alpha.
+ci/scenarios.txt. It writes eight slides per size to DIR (outside the repo):
+iphone-69-<n>-<name>.png (1320×2868), iphone-63-<n>-<name>.png (1206×2622, the size
+App Store Connect requires) and ipad-13-<n>-<name>.png (2064×2752), RGB without alpha.
+
+The first slides show the painter's own people and pets, which CI can't photograph: a crop
+with a `slot` reads <device>-<slot>.png from --slots (a folder outside the repo: family photos
+are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
+an iPhone or iPad whose screen has the same proportions. Without it, the slide shows the stand-in,
+marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
+iphone-family-preview.png, iphone-pet-progress.png, iphone-family-finish.png, and the same three
+as ipad-*.png.
 
 Each slide is an HTML page rendered by headless Chromium: real UI as frameless crops (Apple's
 marketing guidelines don't allow drawn device frames), on the app's paper (#F4EFE6) with a
@@ -44,24 +52,39 @@ FONT_CSS = "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8.
 MOON = "M62 8 A44 44 0 1 0 92 78 A36 36 0 1 1 62 8Z"
 
 
-def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False):
-    """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom)."""
-    return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over)
+SLOTS = {
+    "family-preview": "a family photo on the New Painting screen (Photo | Painting)",
+    "pet-progress": "a pet's painting, about a third painted",
+    "family-finish": "a finished painting of family, at its Finished! bar",
+}
+
+
+def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None):
+    """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom).
+    A slot takes the painter's own screenshot of the same screen in place of the scenario."""
+    return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over,
+                slot=slot)
 
 
 SLIDES = {
     "iphone": [
-        dict(title="This fox<br>was a photo", size=150, crops=[
-            crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 1080),
-            crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True),
-            crop("create-samples-photographs", (.518, .939, .4495, .5945), 1.1, 680, 700, radius=40, shadow=True, over=True)]),
+        dict(title="Paint the people<br>you love", size=132, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
+            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="family-preview")]),
+        dict(title="The dog gets<br>a portrait too", crops=[
+            crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
+            crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
+                 slot="pet-progress")]),
         dict(title="Tap a color,<br>fill its number", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)]),
-        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
-            crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
+        dict(title="Then send it<br>to them", sub="Share the finished painting,<br>or print it.", crops=[
+            crop("paint-finish", (.04, .96, .335, .661), 1.42, "c", 1000, radius=28, shadow=True, slot="family-finish"),
+            crop("paint-finish", (.03, .97, .868, .958), 1.0945, "c", 2200, radius=78, shadow=True, over=True,
+                 slot="family-finish")]),
         dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
             crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
+        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
+            crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
         dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
@@ -69,17 +92,23 @@ SLIDES = {
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True)]),
     ],
     "ipad": [
-        dict(title="This fox<br>was a photo", size=176, crops=[
-            crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 900),
-            crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True),
-            crop("create-samples-photographs", (.787, .965, .2475, .3475), 1.6, 1380, 560, radius=48, shadow=True, over=True)]),
+        dict(title="Paint the people<br>you love", size=176, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
+            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="family-preview")]),
+        dict(title="The dog gets<br>a portrait too", crops=[
+            crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
+            crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
+                 slot="pet-progress")]),
         dict(title="Tap a color,<br>fill its number", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)]),
-        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
-            crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
+        dict(title="Then send it<br>to them", sub="Share the finished painting, or print it.", crops=[
+            crop("paint-finish", (.0145, .984, .2, .762), 1.0, "c", 860, radius=28, shadow=True, slot="family-finish"),
+            crop("paint-finish", (.228, .770, .927, .984), 1.5, "c", 2440, radius=70, shadow=True, over=True,
+                 slot="family-finish")]),
         dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
+        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
+            crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
         dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
@@ -148,16 +177,26 @@ def hills(W, H, dev):
             f"<path d='{path(fg)}' fill='{PAPER}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/></svg>")
 
 
-def crop_html(shots, dev, c, W, H):
+def own_shot(slots, dev, c):
+    """The painter's screenshot for this crop's slot, if --slots has it."""
+    if c["slot"] and slots:
+        path = slots / f"{dev}-{c['slot']}.png"
+        if path.exists():
+            return path.resolve()
+    return None
+
+
+def crop_html(shots, dev, c, W, H, slots, label=None):
     SW, SH = SOURCE[dev]
     x0, x1, y0, y1 = c["box"]
     s = c["scale"]
     w, h = (x1 - x0) * SW * s, (y1 - y0) * SH * s
     x = (W - w) / 2 if c["x"] == "c" else c["x"]
     y = H - h if c["y"] == "b" else c["y"]
-    src = (shots / dev / "shots" / f"{dev}-{c['scenario']}.png").resolve()
+    src = own_shot(slots, dev, c) or (shots / dev / "shots" / f"{dev}-{c['scenario']}.png").resolve()
     if not src.exists():
         sys.exit(f"Missing {src}: is {c['scenario']} still a CI scenario?")
+    stand_in = c["slot"] and not own_shot(slots, dev, c)
     style = [f"left:{x:.1f}px", f"top:{y:.1f}px", f"width:{w:.1f}px", f"height:{h:.1f}px",
              f"background:url({src.as_uri()}) {-x0 * SW * s:.1f}px {-y0 * SH * s:.1f}px/{SW * s:.1f}px {SH * s:.1f}px no-repeat",
              f"z-index:{3 if c['over'] else 1}"]
@@ -169,10 +208,15 @@ def crop_html(shots, dev, c, W, H):
     if c["fade"]:
         f = c["fade"]
         style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
-    return f"<div class=crop style='{';'.join(style)}'></div>"
+    if stand_in:
+        style.append(f"outline:6px dashed {PLUM};outline-offset:10px")
+    inset = 96 if dev == "iphone" else 144  # a full-bleed crop starts off the page; its tag starts at the text margin
+    tag = (f"<div class=tag style='left:{max(inset, x + 32):.1f}px;top:{y + 32:.1f}px'>PLACEHOLDER: {label}</div>"
+           if stand_in and label else "")
+    return f"<div class=crop style='{';'.join(style)}'></div>{tag}"
 
 
-def page(shots, dev, k, slide, fonts, noise):
+def page(shots, dev, k, slide, fonts, noise, slots):
     W, H = CANVAS[dev]
     night = slide.get("night", False)
     phone = dev == "iphone"
@@ -188,14 +232,18 @@ def page(shots, dev, k, slide, fonts, noise):
                  + f"<svg class=moon viewBox='0 0 100 100' style='left:{mx}px;top:{my}px;width:{m}px;height:{m}px'>"
                    f"<path d='{MOON}' fill='url(#gold)'/></svg>")
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
-    crops = "".join(crop_html(shots, dev, c, W, H) for c in slide["crops"])
+    first_slot = next((c for c in slide["crops"] if c["slot"]), None)
+    crops = "".join(crop_html(shots, dev, c, W, H, slots, SLOTS[c["slot"]] if c is first_slot else None)
+                    for c in slide["crops"])
     return f"""<!doctype html><html><head><meta charset=utf-8>
 <link rel=stylesheet href='{fonts.as_uri()}'>
 <style>
 *{{margin:0;box-sizing:border-box}}
 html,body{{width:{W}px;height:{H}px;overflow:hidden}}
 body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple-system,"SF Pro Text",Inter,"Helvetica Neue",sans-serif}}
-.crop,.hills,.moon,.glow,.grain{{position:absolute}}
+.crop,.hills,.moon,.glow,.grain,.tag{{position:absolute}}
+.tag{{z-index:6;max-width:{W - 2 * margin - 64}px;padding:16px 28px;border-radius:28px;background:{PLUM};color:{PAPER};
+  font:600 {32 if phone else 40}px/1.25 -apple-system,"SF Pro Text",Inter,sans-serif}}
 .hills{{left:0;top:0;z-index:2}}
 .grain{{inset:0;z-index:0;mix-blend-mode:{blend};opacity:{opacity};background:url({noise.as_uri()}) 0 0/600px 600px}}
 .glow{{width:1040px;height:1040px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.14),rgba(201,162,74,0) 62%)}}
@@ -220,6 +268,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("shots", type=Path)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--slots", type=Path, help="the painter's own screenshots for the slots (outside the repo)")
     ap.add_argument("--chrome")
     args = ap.parse_args()
     chrome = find_chrome(args.chrome)
@@ -231,9 +280,12 @@ def main():
     for dev, slides in SLIDES.items():
         W, H = CANVAS[dev]
         for k, slide in enumerate(slides, 1):
-            name = slide["crops"][0]["scenario"]
+            first = slide["crops"][0]
+            name = first["slot"] or first["scenario"]
+            if any(c["slot"] and not own_shot(args.slots, dev, c) for c in slide["crops"]):
+                name += "-placeholder"
             html = pages / f"{dev}-{k}.html"
-            html.write_text(page(args.shots, dev, k - 1, slide, fonts, noise))
+            html.write_text(page(args.shots, dev, k - 1, slide, fonts, noise, args.slots))
             png = out / (f"iphone-69-{k}-{name}.png" if dev == "iphone" else f"ipad-13-{k}-{name}.png")
             # The window runs taller than the slide: headless Chrome loses the bottom of an exact-size one.
             subprocess.run([chrome, "--headless", "--no-sandbox", "--hide-scrollbars", "--allow-file-access-from-files",
