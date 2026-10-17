@@ -32,6 +32,15 @@ first place down to 1): The Lamplit Table 24 (Originality's proposal; first for 
 and Madeleine), The Lantern Circle 20, The Night-Light Circle 20, The Turning Sky 16, The Circle
 of Quiet 14 (Madeleine ranked her own book title third), The Quiet Room 11.
 
+**Paul's call (October 17, after both rounds).** "Honestly — moon vs sun needs to be a little
+separate from dark or light mode — one is accessibility, one is a theme, and it should also be
+allowed to just stay in moon or sun — moon should be default, with sun or “auto” as options".
+Moon is the default and comes first (Moon, Sun, Follow the Sky); the Table had only named the
+choices, and Claude's brief had proposed the automatic one as the default. Sky has a Settings
+section of its own, a theme apart from the system's appearance and from the paper. The automatic
+choice keeps the Table's name, Follow the Sky: Settings › Paper already has an Automatic, which
+follows dark mode.
+
 **Built** on `claude/day-night-music-astrological-theme-ycqyrm` (the app's `Sky`, Settings › Sky,
 `SoundPlayer`, `ToneSynth`, `PaintingMelody`, `Sparkle.starPath`). Claude's own calls, for the
 Table to look at: Sun a tone above the old C (D major pentatonic, "a touch higher"), Moon from the

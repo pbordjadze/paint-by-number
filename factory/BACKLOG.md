@@ -837,7 +837,8 @@ whole Lamp's, through Codex.
 ### F48 · Sun and Moon
 Decided in two rounds (`pieces/day-and-night/decisions.md`) and built on
 `claude/day-night-music-astrological-theme-ycqyrm`. The first look's two asks are in (the stars
-turn with the music; rounder star points); the next look sees `paint-book-moon-dark`.
+turn with the music; rounder star points); the next look sees `paint-book-moon-dark`. Paul: Moon is
+the default, a theme apart from dark mode.
 
 ### F49 · Gentle tips
 On `claude/gentle-tips` (another session, from the Lamp's own design of the tips that day): the
