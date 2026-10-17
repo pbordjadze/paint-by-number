@@ -82,8 +82,9 @@ final class RefineAfterSlidersTests: XCTestCase {
 
         // Back to a slider: a drag, as a touch that moves nothing needn't count as one for a slider.
         drag(smoothness, to: 0.6)
-        XCTAssertEqual(
-            refine.value as? String, "No changes", "A drag of a slider didn't call the wait off: \(refine.value ?? "")")
+        XCTAssertTrue(
+            waitFor(refine, toMatch: NSPredicate(format: "value == %@", "No changes"), timeout: 5),
+            "A drag of a slider didn't call the wait off: \(refine.value ?? "")")
         settle(app)
         Thread.sleep(forTimeInterval: 2)
         XCTAssertFalse(canvas.exists, "Refine opened by itself after the wait was called off")
@@ -128,10 +129,12 @@ final class RefineAfterSlidersTests: XCTestCase {
         settle(app)
     }
 
-    /// A finger put on the thumb in the middle of `slider`, dragged to `position` and lifted.
+    /// A finger put on `slider`'s thumb, dragged to `position` and lifted. The thumb rests where its
+    /// setting's detents put it, not always mid-track (Smoothness on an iPad), and a press beside it
+    /// moves nothing.
     @MainActor
     private func drag(_ slider: XCUIElement, to position: CGFloat) {
-        slider.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        slider.coordinate(withNormalizedOffset: CGVector(dx: slider.normalizedSliderPosition, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: position, dy: 0.5)))
     }
 
