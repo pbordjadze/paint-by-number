@@ -143,6 +143,9 @@ struct PaintView: View {
             }
         }
         .onDisappear { undoManager?.removeAllActions(withTarget: session) }
+        .task {
+            if let onTemplateFrame { await reportTemplate(to: onTemplateFrame) }
+        }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
@@ -185,7 +188,7 @@ struct PaintView: View {
                 onDismissPhoto: { peek.setLatched(false) },
                 onZoomStep: { PaintTips.record(.zoomedByDoubleTap) },
                 isAnnotating: feedback != nil,
-                onTemplateFrame: templateReport)
+                watchesFirstFrame: onTemplateFrame != nil)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
                 .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { canvasOrigin.point = $0 }
@@ -253,12 +256,27 @@ struct PaintView: View {
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
     }
 
-    /// What the canvas tells, as `onTemplateFrame` takes it: the template's rect in global
-    /// coordinates.
-    private var templateReport: ((CGRect) -> Void)? {
-        guard let onTemplateFrame else { return nil }
-        let origin = canvasOrigin
-        return { frame in onTemplateFrame(frame.offsetBy(dx: origin.point.x, dy: origin.point.y)) }
+    /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
+    /// screen and its template has stayed where it is for a moment, tells `report` where the
+    /// template is (global coordinates), and again whenever it moves. A painting's first layout is
+    /// not its last: its size class, palette and status bar settle after it (the status bar goes
+    /// with the create flow's cover), and polling sees whichever of them moved it.
+    private func reportTemplate(to report: (CGRect) -> Void) async {
+        var previous: CGRect?
+        var announced: CGRect?
+        for _ in 0..<600 {
+            try? await Task.sleep(for: .milliseconds(100))
+            guard !Task.isCancelled, startHandoff?.isRunning == true else { return }
+            guard controller.isShowingFirstFrame, let local = controller.templateFrame else { continue }
+            let frame = local.offsetBy(dx: canvasOrigin.point.x, dy: canvasOrigin.point.y)
+            defer { previous = frame }
+            guard frame != announced else { continue }
+            // The first time, once two looks agree; after that, as it moves.
+            if announced != nil || frame == previous {
+                announced = frame
+                report(frame)
+            }
+        }
     }
 
     // MARK: Layout

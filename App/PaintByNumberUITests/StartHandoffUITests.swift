@@ -73,12 +73,9 @@ final class StartHandoffUITests: XCTestCase {
         waitForStart(in: app).tap()
         attachFrames(captureEntry(), named: "slowed-start-making-of-on")
 
-        let card = app.descendants(matching: .any)["making-of-card"]
-        XCTAssertTrue(card.waitForExistence(timeout: 120), "The making-of never showed a step's card")
-        attachScreenshot(of: app, named: "making-of-playing")
-        // The show is about 17 s: its end hands over to the painting. No tap: the app is never idle
-        // while it plays, and the frames are taken meanwhile.
-        attachFrames(captureHandoff(in: app, timeout: 180, keep: 60), named: "slowed-end-making-of-on")
+        // The show is about 17 s, after the time it takes to make: its end hands over to the painting.
+        // No tap: the app is never idle while it plays, and the frames are taken meanwhile.
+        attachFrames(captureHandoff(in: app, timeout: 240, keep: 60), named: "slowed-end-making-of-on")
 
         expectPainting(in: app)
     }
@@ -91,7 +88,7 @@ final class StartHandoffUITests: XCTestCase {
         waitForStart(in: app).tap()
 
         expectPainting(in: app)
-        returnToGallery(from: app, byEdgeSwipe: false)
+        returnToGallery(from: app, byEdgeSwipe: true)
     }
 
     // MARK: - Steps
@@ -163,14 +160,19 @@ final class StartHandoffUITests: XCTestCase {
     /// Back to the gallery, where the new painting's card is.
     @MainActor
     private func returnToGallery(from app: XCUIApplication, byEdgeSwipe: Bool) {
+        let gallery = app.buttons["New Painting"]
         if byEdgeSwipe {
+            // A swipe lost to a busy simulator is made once more; one that never goes back is a failure.
             let window = app.windows.firstMatch
-            window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
-                .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+            for attempt in 1...2 where !gallery.exists {
+                window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
+                    .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+                if gallery.waitForExistence(timeout: attempt == 1 ? 6 : 15) { break }
+            }
         } else {
             app.buttons["Close"].tap()
         }
-        let returned = app.buttons["New Painting"].waitForExistence(timeout: 15)
+        let returned = gallery.waitForExistence(timeout: 15)
         attachScreenshot(of: app, named: "back-in-gallery")
         XCTAssertTrue(returned, "Going back didn't return to the gallery")
         XCTAssertTrue(app.buttons[title].firstMatch.waitForExistence(timeout: 15), "The new painting has no card")

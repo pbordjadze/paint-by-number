@@ -85,7 +85,7 @@ struct AppShellView: View {
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
                     // The zoom is for pushes from a card and for the way back to it; the painting
-                    // Start Painting makes is pushed under the cover with no animation (`startPainting`).
+                    // Start Painting makes is pushed under the cover (`startPainting`).
                     ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
@@ -263,14 +263,13 @@ struct AppShellView: View {
     }
 
     /// Start Painting has saved `artwork`. The cover stays up, showing the create flow's picture;
-    /// the painting is pushed beneath it with no animation, and the flow dissolves into it once its
-    /// canvas has drawn (`StartHandoff`). The zoom would show the gallery between the two.
+    /// the painting is pushed beneath it, and the flow dissolves into it once its canvas has drawn
+    /// (`StartHandoff`). The push is the usual one, its zoom run unseen under the opaque cover: with
+    /// no animation at all the edge swipe back never worked (`StartHandoffUITests`).
     private func startPainting(_ artwork: Artwork) {
         guard handoff.begin(artwork.id) else { return }
         guard StartHandoffLogic.shouldPush(artwork.id, onto: path) else { return }
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        withTransaction(transaction) { path = [artwork.id] }
+        path = [artwork.id]
     }
 
     /// The flow has dissolved into the painting: the cover goes without a slide.

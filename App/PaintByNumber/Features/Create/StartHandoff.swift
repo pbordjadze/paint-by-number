@@ -9,11 +9,11 @@ import Observation
 /// flow's cover and, through the navigation stack, to the painting. The sequence:
 ///
 /// 1. Start has saved the painting (with Settings › The Making-of on, after its show): the shell
-///    `begin`s the hand-off and pushes the painting *under* the cover, with no animation. The cover
-///    stays up and shows what it showed.
-/// 2. The painting loads, and its canvas reports its first frame on screen with the template's rect
-///    in global coordinates (`paintingDrew`: `CanvasView.onTemplateFrame`), and again if a layout
-///    moves the template while the flow is still on its way there.
+///    `begin`s the hand-off and pushes the painting *under* the cover (its zoom runs unseen). The
+///    cover stays up and shows what it showed.
+/// 2. The painting loads, and once its canvas has its first frame on screen it reports the
+///    template's rect in global coordinates (`paintingDrew`: `PaintView.reportTemplate`), and again
+///    if a layout moves the template while the flow is still on its way there.
 /// 3. The create flow, which observes `phase`, moves its picture (the making-of's, or the
 ///    preview's) to that rect while everything else fades to clear, cross-fades the picture into
 ///    the canvas beneath it, and `complete`s.
@@ -193,6 +193,8 @@ nonisolated enum StartHandoffPlan {
     static var appear: Double { 0.2 * timeScale }
     /// The picture starts to cross-fade into the canvas this long after it started to move.
     static var landAfter: Double { 0.4 * timeScale }
+    /// The picture lands once the template has stayed where it is this long.
+    static let settle = Duration.milliseconds(350)
     /// The cross-fade into the canvas.
     static var crossFade: Double { 0.2 * timeScale }
     /// The show's card and Skip come in after the picture has moved.

@@ -281,13 +281,9 @@ private struct CanvasGesturesOverZoomDismissal: UIViewControllerRepresentable {
             disableDismissalGestures()
             // Next turn: SwiftUI may be mid-update when UIKit calls this.
             Task { onAppear() }
-            // A painting pushed under the create flow's cover, with no animation, may be given them
-            // later still.
             Task {
-                for pause in [Duration.milliseconds(400), .milliseconds(1100), .milliseconds(2500)] {
-                    try? await Task.sleep(for: pause)
-                    disableDismissalGestures()
-                }
+                try? await Task.sleep(for: .milliseconds(400))
+                disableDismissalGestures()
             }
         }
 

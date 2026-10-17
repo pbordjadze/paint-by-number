@@ -554,19 +554,21 @@ Conventions).
   journey from the settings to the canvas is one picture moving. `AppShellView` owns the hand-off
   object and passes it through the environment (`\.startHandoff`) to the create flow's cover and the
   painting. On Start (after the show, with Settings › The Making-of on) the shell `begin`s it and
-  pushes the painting *under* the cover with animations off (`startPainting`; the zoom stays for
-  pushes from a card and the way back to it), and `ArtworkPaintingView` mounts without its fades
-  (`isUnderCover`). The canvas reports where its template is once its first frame is on screen
-  (`CanvasView.onTemplateFrame`: a tenth of a second after the GPU finished the frame, in global
-  coordinates through `PaintView.onTemplateFrame`), and again when a layout moves it (the palette
-  settling, the status bar going: the painting's first layout is not its last); the flow, which
-  observes `phase`, then moves its picture there in `StartHandoffPlan.move` (about 0.45 s, a gentle
-  spring, following the template if it moves on the way) while the card, Skip, the sliders and its
-  own paper fade to clear, cross-fades the picture into the canvas and `complete`s, and the shell
-  takes the cover away with animations off (`endCreateFlow`). The flow hides the status bar as it
-  goes, so the painting beneath has the layout it keeps once the cover is gone. The picture is the show's when
-  it played (`MakingOfView`: `entry`, `leaving`; `PictureTravel` is its scale and offset), else the
-  preview's (`PreviewPictureProbe`, `DepartingPicture`). A painting that has not drawn in
+  pushes the painting *under* the cover (`startPainting`: the usual push and its zoom, unseen behind
+  the opaque cover; a push with animations off left the edge swipe back dead), and
+  `ArtworkPaintingView` mounts without its fades (`isUnderCover`). The canvas notes when its first
+  frame is on screen (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished
+  it), and `PaintView.reportTemplate` then tells the hand-off where the template is, in global
+  coordinates once it has stayed put for a moment, and again whenever it moves: a painting's first
+  layout is not its last (the size class, the palette and the status bar settle after it, and the
+  status bar goes with the cover). The flow, which observes `phase`, moves its picture there in
+  `StartHandoffPlan.move` (about 0.45 s, a gentle spring, following the template if it moves on the
+  way and landing once it has stopped) while the card, Skip, the sliders and its own paper fade to
+  clear, cross-fades the picture into the canvas and `complete`s, and the shell takes the cover away
+  with animations off (`endCreateFlow`). The flow hides the status bar as it goes, so the painting
+  beneath has the layout it keeps once the cover is gone. The picture is the show's when it played
+  (`MakingOfView`: `entry`, `leaving`; `PictureTravel` is its scale and offset), else the preview's
+  (`PreviewPictureProbe`, `DepartingPicture`). A painting that has not drawn in
   `StartHandoffPlan.fallback` (2.5 s: a slow open, the recovery screen) `timeOut`s: the cover fades
   out alone and the painting stays pushed. The same motion plays the other way into the show: its
   picture starts where the preview's was. Reduce Motion moves nothing (`StartHandoffPlan.motion`,

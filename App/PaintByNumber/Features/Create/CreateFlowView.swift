@@ -41,6 +41,7 @@ struct CreateFlowView: View {
     /// Where the picture is moving to (global coordinates), and whether it has started to
     /// cross-fade into the canvas: a layout that moves the template meanwhile moves the target.
     @State private var flightTarget: CGRect?
+    @State private var targetChangedAt = ContinuousClock.now
     @State private var hasLanded = false
 
     enum Step: Hashable { case preview }
@@ -203,7 +204,10 @@ struct CreateFlowView: View {
         isDissolving = true
         Log.create.notice("Hand-off: the painting drew, template at \(String(describing: target), privacy: .public)")
         let motion = StartHandoffPlan.motion(reduceMotion: reduceMotion, target: target)
-        if motion == .fly { flightTarget = target }
+        if motion == .fly {
+            flightTarget = target
+            targetChangedAt = .now
+        }
         Task {
             switch motion {
             case .fly:
@@ -215,6 +219,11 @@ struct CreateFlowView: View {
                 withAnimation(.easeOut(duration: StartHandoffPlan.appear)) { departure?.opacity = 1 }
                 withAnimation(.easeOut(duration: StartHandoffPlan.fade)) { flowOpacity = 0 }
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.landAfter))
+                // Not while the template is still moving: the status bar going takes the painting's
+                // layout with it, a moment after the flow started to go.
+                for _ in 0..<30 where ContinuousClock.now - targetChangedAt < StartHandoffPlan.settle {
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
                 hasLanded = true
                 withAnimation(.easeOut(duration: StartHandoffPlan.crossFade)) {
                     leaving = .landed(flightTarget ?? target)
@@ -239,6 +248,7 @@ struct CreateFlowView: View {
         guard let current = flightTarget, current != target, !hasLanded else { return }
         Log.create.notice("Hand-off: the template moved to \(String(describing: target), privacy: .public)")
         flightTarget = target
+        targetChangedAt = .now
         withAnimation(.spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)) {
             leaving = .moving(target)
             departure?.rect = target
