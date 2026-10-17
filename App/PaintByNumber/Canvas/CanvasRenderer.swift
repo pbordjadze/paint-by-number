@@ -56,8 +56,13 @@ final class CanvasRenderer {
 
     /// Renders a frame into the layer's next drawable. Returns false when no frame could be
     /// produced (GPU still busy with earlier frames, or no drawable); try again next tick.
+    /// `onPresented` is called, on a thread of Metal's, once the frame is on screen: a tenth of a
+    /// second after the GPU finished it, which is a few refreshes after it was queued to be shown.
     @discardableResult
-    func draw(in layer: CAMetalLayer, uniforms: CanvasUniforms, content: RenderContext.Content) -> Bool {
+    func draw(
+        in layer: CAMetalLayer, uniforms: CanvasUniforms, content: RenderContext.Content,
+        onPresented: (@Sendable () -> Void)? = nil
+    ) -> Bool {
         let size = SIMD2(Int(layer.drawableSize.width), Int(layer.drawableSize.height))
         guard size.x > 0, size.y > 0 else { return false }
         guard inFlight.wait(timeout: .now() + .milliseconds(2)) == .success else { return false }
@@ -89,7 +94,7 @@ final class CanvasRenderer {
             commands, scene: scene, states: stateBuffers[slot], uniforms: uniforms,
             targets: RenderContext.Targets(color: drawable.texture, multisample: multisample, outlines: outlines),
             content: content)
-        commands.addCompletedHandler(Self.signal(inFlight))
+        commands.addCompletedHandler(Self.signal(inFlight, then: onPresented))
         commands.present(drawable)
         commands.commit()
         return true
@@ -107,8 +112,15 @@ final class CanvasRenderer {
         pending[k].removeAll(keepingCapacity: true)
     }
 
-    /// Built outside the main actor: Metal calls it on its own completion thread.
-    nonisolated private static func signal(_ semaphore: DispatchSemaphore) -> MTLCommandBufferHandler {
-        { _ in semaphore.signal() }
+    /// Built outside the main actor: Metal calls it on its own completion thread. A frame whose
+    /// presentation is awaited (`onPresented`) is announced here, a tenth of a second after the
+    /// GPU finished it: the drawable is shown at the next refresh after that.
+    nonisolated private static func signal(
+        _ semaphore: DispatchSemaphore, then onPresented: (@Sendable () -> Void)?
+    ) -> MTLCommandBufferHandler {
+        { _ in
+            semaphore.signal()
+            if let onPresented { DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) { onPresented() } }
+        }
     }
 }

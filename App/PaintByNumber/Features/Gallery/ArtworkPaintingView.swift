@@ -14,6 +14,9 @@ struct ArtworkPaintingView: View {
 
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
+    /// The hand-off from Start Painting: this painting, just made, opens under the create flow's
+    /// cover, which dissolves into it once the canvas has drawn (`StartHandoff`).
+    @Environment(\.startHandoff) private var handoff
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @State private var autosaver: PaintingAutosaver?
     /// Made once when the painting is presented, not in `body`: each autosave replaces the
@@ -39,6 +42,24 @@ struct ArtworkPaintingView: View {
     private var artwork: Artwork? { library.artwork(with: artworkID) }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
+    /// Under the create flow's cover, waiting to be handed the screen: nothing of the painting
+    /// fades in, since the cover is what dissolves.
+    private var isUnderCover: Bool { handoff?.isOpening(artworkID) == true }
+
+    /// What the canvas tells once its first frame is on screen, while the cover waits for it, and
+    /// when a layout moves the template after that.
+    private var canvasReport: ((CGRect) -> Void)? {
+        guard isUnderCover else { return nil }
+        return { rect in canvasDrew(rect) }
+    }
+
+    /// The canvas has its template at `templateRect` (global coordinates): where the cover is to
+    /// bring its picture.
+    private func canvasDrew(_ templateRect: CGRect) {
+        Log.create.notice("Painting reports its template at \(String(describing: templateRect), privacy: .public)")
+        handoff?.paintingDrew(artworkID, templateRect: templateRect)
+    }
+
     /// Where the painting came from, for feedback given on it. The painter's own photo is read
     /// (as stored, off the main actor) only if they choose to send it; a library picture's is
     /// in the repository.
@@ -57,7 +78,9 @@ struct ArtworkPaintingView: View {
         ZStack {
             Theme.paper.ignoresSafeArea()
             if let autosaver, hasLanded {
-                PaintView(session: autosaver.session, title: artwork?.title ?? "", onClose: close)
+                PaintView(
+                    session: autosaver.session, title: artwork?.title ?? "", onClose: close,
+                    onTemplateFrame: canvasReport)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
@@ -155,7 +178,7 @@ struct ArtworkPaintingView: View {
             return
         }
         Preferences().apply(to: session)
-        withAnimation(.easeOut(duration: 0.25)) {
+        withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) {
             failure = nil
             regenerationFailed = false
             autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
@@ -174,7 +197,7 @@ struct ArtworkPaintingView: View {
     /// The push finished: the painting, when loaded, takes the thumbnail's place.
     private func land() {
         guard !hasLanded else { return }
-        withAnimation(.easeOut(duration: 0.25)) { hasLanded = true }
+        withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) { hasLanded = true }
         #if DEBUG
         markDemoReady()
         #endif

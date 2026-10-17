@@ -11,6 +11,11 @@ final class CanvasController {
     func zoomToFit() { view?.zoomToFit() }
     func zoom(by factor: CGFloat) { view?.zoom(by: factor) }
     func replay() { view?.replay() }
+    /// Where the template is in the canvas (the canvas's own coordinates), and whether the first
+    /// frame has been on screen (`PaintCanvas.watchesFirstFrame`): the start of a painting is handed
+    /// over to the canvas (`StartHandoff`).
+    var templateFrame: CGRect? { view?.templateFrame }
+    var isShowingFirstFrame: Bool { view?.hasShownFirstFrame ?? false }
     /// Makes the canvas first responder again (the window's undo history of fills, ⌘Z).
     func focus() { _ = view?.becomeFirstResponder() }
     /// Lets go of first responder, so ⌘Z and three-finger undo take back no fills meanwhile.
@@ -47,9 +52,13 @@ struct PaintCanvas: UIViewRepresentable {
     var onZoomStep: (() -> Void)?
     /// Feedback mode: the markup canvas over this one has the touches and the camera.
     var isAnnotating = false
+    /// The canvas notes when its first frame is on screen (`CanvasController.isShowingFirstFrame`).
+    /// Read when the view is made.
+    var watchesFirstFrame = false
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
+        view.watchesFirstFrame = watchesFirstFrame
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
         view.photoLoader = photoLoader

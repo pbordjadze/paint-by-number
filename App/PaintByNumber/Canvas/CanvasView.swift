@@ -66,6 +66,12 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPhotoUnavailable: (() -> Void)?
     /// A canvas touch asked to hide the photo.
     var onDismissPhoto: (() -> Void)?
+    /// Whether the first frame is watched for (`hasShownFirstFrame`): the start of a painting is
+    /// handed over to it (`StartHandoff`). Set before the canvas is in a window; nothing draws
+    /// before it has been laid out.
+    var watchesFirstFrame = false
+    /// The first frame is on screen (a tenth of a second after the GPU finished it).
+    private(set) var hasShownFirstFrame = false
     /// A double-tap zoomed the canvas.
     var onZoomStep: (() -> Void)?
     /// The zoom relative to the fitted canvas changed (pinch, double tap, camera moves).
@@ -710,7 +716,14 @@ final class CanvasView: UIView, PaintingCanvas {
                 red: Double(palette.background.x), green: Double(palette.background.y),
                 blue: Double(palette.background.z), alpha: 1),
             photo: uniforms.photo.x > 0.001 ? photoTexture : nil)
-        if renderer.draw(in: metalLayer, uniforms: uniforms, content: content) {
+        // The first frame that shows the fitted painting: the one the start of a painting is
+        // handed over to, announced once it is on screen.
+        var presented: (@Sendable () -> Void)?
+        if watchesFirstFrame, !isAwaitingFirstFrame, laidOutSize != .zero {
+            presented = Self.firstFrameReport(of: self)
+        }
+        if renderer.draw(in: metalLayer, uniforms: uniforms, content: content, onPresented: presented) {
+            if presented != nil { isAwaitingFirstFrame = true }
             needsRender = false
             lastCamera = camera
             framesRendered += 1
@@ -724,6 +737,25 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
     private var skippedFrames = 0
+    /// The frame `watchesFirstFrame` waits for is on its way to the screen.
+    private var isAwaitingFirstFrame = false
+
+    /// What Metal's thread calls when that frame is up (built outside the main actor: Metal
+    /// calls it on a thread of its own).
+    nonisolated private static func firstFrameReport(of view: CanvasView) -> @Sendable () -> Void {
+        { [weak view] in
+            guard let view else { return }
+            Task { @MainActor in view.hasShownFirstFrame = true }
+        }
+    }
+
+    /// Where the template is now, in this view's coordinates.
+    var templateFrame: CGRect {
+        let camera = currentCamera()
+        return CGRect(
+            x: camera.origin.x, y: camera.origin.y, width: CGFloat(template.width) * camera.zoom,
+            height: CGFloat(template.height) * camera.zoom)
+    }
 
     /// The paint state the shaders currently see for a region (tests).
     func regionState(_ region: Int) -> RegionState? { renderer?.states[region] }
