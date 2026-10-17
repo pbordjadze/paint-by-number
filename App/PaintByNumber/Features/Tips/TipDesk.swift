@@ -36,6 +36,8 @@ final class TipDesk {
     @ObservationIgnored private let now: () -> Date
     /// The moment being waited out, with the screen it belongs to: when that goes, so does it.
     @ObservationIgnored private var offering: (place: TipPlace, task: Task<Void, Never>)?
+    /// The screen whose moment is being waited out.
+    var offeringPlace: TipPlace? { offering?.place }
     @ObservationIgnored private var watching: Task<Void, Never>?
     /// The latest moment the painter did something (a fill, a slider, a screen): the hand has
     /// rested for as long as it was before now.
@@ -179,6 +181,10 @@ final class TipDesk {
         quiet: @escaping @MainActor () -> TipPacing.Quiet = { [] }
     ) {
         guard !isMuted, TipPreference.isEnabled(in: store.defaults) else { return }
+        // The shelf's moments come from a gallery that stays in the hierarchy under a painting,
+        // whose library changes as it is painted, and from uncovering it, which a painting just
+        // started does at once: they must not call off the moment of the screen in front.
+        if place == .shelf, !isInView(.shelf) { return }
         // A tip of a screen that is no longer in view is on its way out (screens come and go in no
         // fixed order).
         if let current = turn, !isInView(current.place) { release(current) }

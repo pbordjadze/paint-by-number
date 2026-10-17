@@ -168,6 +168,23 @@ struct TipDeskTests {
         #expect(f.desk.turn == nil)
     }
 
+    /// A painting just started opens under the create flow, and the shelf is uncovered as it goes:
+    /// the shelf's moment then leaves Tap to Paint's alone.
+    @Test func theShelfBehindAPaintingDoesNotCallOffItsMoment() throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.desk.enter(.shelf)
+        f.desk.enter(.bench)
+        f.desk.offer([.benchTap], in: .bench, rest: .seconds(5))
+        #expect(f.desk.offeringPlace == .bench)
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == .bench)
+        f.desk.leave(.bench)
+        f.desk.isCovered = true
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == nil)
+    }
+
     @Test func noTipHasTheTurnBeforeOneIsGiven() throws {
         let f = try fixture()
         defer { f.cleanup() }
