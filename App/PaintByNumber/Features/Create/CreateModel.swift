@@ -261,8 +261,10 @@ final class CreateModel {
     /// Refine was tapped and waits for the final template.
     var isWaitingToRefine: Bool { refineAsked && !canRefine }
 
-    /// Refine, asked for earlier, can open: the final template is made and no thumb is on a slider.
-    var opensRefine: Bool { refineAsked && canRefine && !isAdjusting }
+    /// Refine, asked for earlier, can open: the final template is made. (A thumb on a slider has
+    /// called the wait off already, `setAdjusting`; `isAdjusting` is no part of this, as a drag
+    /// whose end never came would keep Refine from opening for good.)
+    var opensRefine: Bool { refineAsked && canRefine }
 
     /// A tap on Refine before the final template is made: Refine opens when it is, unless the
     /// painter goes back to the sliders (`setAdjusting`), starts the painting or changes the photo
@@ -270,11 +272,13 @@ final class CreateModel {
     func askForRefine() {
         guard !canRefine, canAskForRefine else { return }
         refineAsked = true
+        trace("Refine asked for")
     }
 
     /// Refine opened, or is not wanted any more.
     func withdrawRefine() {
         refineAsked = false
+        trace("Refine opens")
     }
 
     /// The preview matches the settings and refinements at full resolution.
@@ -443,13 +447,13 @@ final class CreateModel {
     /// (`settingsChanged`) supersedes the full resolution under way, and one that changes none
     /// leaves it be.
     func setAdjusting(_ adjusting: Bool) {
+        // Back to the sliders: a Refine tapped while the painting was updating is not wanted now,
+        // whether or not the last drag's end was heard.
+        if adjusting { refineAsked = false }
         guard adjusting != isAdjusting else { return }
         isAdjusting = adjusting
         trace(adjusting ? "A slider was touched" : "A slider was let go")
-        if adjusting {
-            // Back to the sliders: a Refine tapped while the painting was updating is not wanted now.
-            refineAsked = false
-        } else {
+        if !adjusting {
             stopDrafts()
             // The resting thumb's full resolution, already under way for these settings, carries on;
             // otherwise the settings let go on get theirs, so the painter is never left with a draft.
@@ -465,7 +469,7 @@ final class CreateModel {
     /// is in: what a preview that stays off, or goes off again, is diagnosed from.
     private func trace(_ event: String) {
         let phaseName = String(describing: self.phase)
-        Log.create.info(
+        Log.create.notice(
             "\(event, privacy: .public) [adjusting \(self.isAdjusting, privacy: .public), full under way \(self.refining != nil, privacy: .public), final \(self.isFinal, privacy: .public), phase \(phaseName, privacy: .public)]"
         )
     }

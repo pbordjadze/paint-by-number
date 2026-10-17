@@ -266,6 +266,23 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A drag whose end was never heard leaves the model adjusting: a Refine asked for then still
+    /// opens once the final template is made (the full resolution of a resting thumb comes anyway).
+    @Test func aRefineAskedForOpensEvenIfTheLastDragNeverEnded() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        model.setAdjusting(true)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine && model.isAdjusting)
+        try await waitUntil(timeout: .seconds(60)) { model.opensRefine }
+        #expect(model.isFinal && model.isAdjusting)
+        model.cancelAll()
+    }
+
     /// A Refine waited for is called off by going back to the sliders, by Start and by another
     /// photo: it must not open over what the painter went on to.
     @Test func aRefineWaitedForIsCalledOffByTheSlidersStartAndAnotherPhoto() async throws {

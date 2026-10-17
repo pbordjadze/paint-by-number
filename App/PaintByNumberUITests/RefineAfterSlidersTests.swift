@@ -8,7 +8,7 @@ import XCTest
 /// says "Updating…" and notes how long Refine took to open (`refine-after-*`).
 final class RefineAfterSlidersTests: XCTestCase {
     /// How long each full resolution waits before it starts.
-    private static let delay = 6
+    private static let delay = 8
 
     /// A drag of Detail, the slider Paul moved, released.
     @MainActor
@@ -66,7 +66,7 @@ final class RefineAfterSlidersTests: XCTestCase {
     }
 
     /// Refine tapped while the painting updates is called off by going back to a slider: it
-    /// doesn't open by itself later, and a tap once the painting is made opens it at once.
+    /// doesn't open by itself once the painting is made, and a tap then opens it at once.
     @MainActor
     func testTouchingASliderCallsOffAWaitingRefine() throws {
         let app = launchPreview()
@@ -80,10 +80,10 @@ final class RefineAfterSlidersTests: XCTestCase {
         XCTAssertEqual(refine.value as? String, "Preparing…", "Refine tapped while updating doesn't say it is waiting")
         attachScreenshot(of: app, named: "preparing")
 
-        smoothness.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.05)
-        XCTAssertTrue(
-            waitFor(refine, toMatch: NSPredicate(format: "value == %@", "No changes")),
-            "A touch on a slider didn't call the wait off: \(refine.value ?? "")")
+        // Back to a slider: a drag, as a touch that moves nothing needn't count as one for a slider.
+        drag(smoothness, to: 0.6)
+        XCTAssertEqual(
+            refine.value as? String, "No changes", "A drag of a slider didn't call the wait off: \(refine.value ?? "")")
         settle(app)
         Thread.sleep(forTimeInterval: 2)
         XCTAssertFalse(canvas.exists, "Refine opened by itself after the wait was called off")
