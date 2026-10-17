@@ -1,0 +1,92 @@
+Application, 0x11874ea80, pid: 92384, label: 'Paint by Moonlight' <App element pid: 92384>
+  Window (Main), 0x11874ebc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4336060416.4>
+    Other, 0x11874ed00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418356736.5>
+      Other, 0x11874fd40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4420550656.7>
+        Other, 0x11874fe80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418342400.9>
+          Other, 0x1187acb40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4336059392.11>
+            Other, 0x1187ade00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4417973184.13>
+              Other, 0x1187ae940, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418346432.17>
+                Other, 0x1187adcc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418346880.24>
+                  Other, 0x1187ac500, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4336729408.33>
+                    Other, 0x1187ad7c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4655874048.125>
+                      Other, 0x1187ad400, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4417776128.127>
+                        Other, 0x1187ad680, {{516.0, 678.0}, {0.0, 0.0}} <AX element pid: 92384, elementOrHash.elementID: 4417812928.128>
+                        Other, 0x1187ae440, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'canvas', label: 'Painting' <AX element pid: 92384, elementOrHash.elementID: 4335723520.133>
+                          Button, 0x1187ac780, {{598.3, 770.1}, {44.0, 44.0}}, identifier: 'canvas-area-241', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655953472.145>
+                          Button, 0x1187afac0, {{396.1, 808.9}, {44.0, 44.0}}, identifier: 'canvas-area-248', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655955584.146>
+                          Button, 0x1187acc80, {{427.7, 817.6}, {44.0, 44.0}}, identifier: 'canvas-area-284', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655955520.147>
+                          Button, 0x1187aebc0, {{591.8, 777.6}, {44.0, 44.0}}, identifier: 'canvas-area-238', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655941376.148>
+                          Button, 0x1187adf40, {{402.0, 826.9}, {44.0, 44.0}}, identifier: 'canvas-area-293', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655955264.149>
+                          Button, 0x1187afe80, {{416.2, 839.4}, {44.0, 44.0}}, identifier: 'canvas-area-313', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655952064.150>
+                          Button, 0x1187ae080, {{427.5, 827.5}, {44.0, 44.0}}, identifier: 'canvas-area-296', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655944960.151>
+                          Button, 0x11878f0c0, {{482.4, 851.3}, {44.0, 44.0}}, identifier: 'canvas-area-319', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655945152.152>
+                          Button, 0x11878e580, {{520.8, 903.8}, {44.0, 44.0}}, identifier: 'canvas-area-273', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655951296.153>
+                          Button, 0x11878f980, {{616.5, 896.6}, {44.0, 44.0}}, identifier: 'canvas-area-364', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655940160.154>
+                          Button, 0x11878ebc0, {{643.6, 893.9}, {44.0, 44.0}}, identifier: 'canvas-area-370', label: 'Area 1', value: not painted, bottom <AX element pid: 92384, elementOrHash.elementID: 4655940032.155>
+                          Button, 0x11878e6c0, {{757.1, 895.9}, {44.0, 44.0}}, identifier: 'canvas-area-365', label: 'Area 1', value: not painted, botto... <AX element pid: 92384, elementOrHash.elementID: 4655941824.156>
+                          Button, 0x11878e940, {{707.2, 914.5}, {44.0, 44.0}}, identifier: 'canvas-area-372', label: 'Area 1', value: not painted, botto... <AX element pid: 92384, elementOrHash.elementID: 4417660608.157>
+                          Button, 0x11878e300, {{716.9, 908.8}, {44.0, 44.0}}, identifier: 'canvas-area-384', label: 'Area 1', value: not painted, botto... <AX element pid: 92384, elementOrHash.elementID: 4417667008.158>
+                        Other, 0x11878f200, {{515.5, 634.5}, {1.0, 1.0}} <AX element pid: 92384, elementOrHash.elementID: 4417766272.134>
+                        Button, 0x11878ef80, {{17.0, 6.0}, {44.0, 44.0}}, identifier: 'chevron.backward', label: 'Back' <AX element pid: 92384, elementOrHash.elementID: 4417791616.135>
+                        StaticText, 0x11878e080, {{86.5, 17.5}, {173.0, 21.0}}, label: 'The Great Wave, 0 percent painted' <AX element pid: 92384, elementOrHash.elementID: 4417790720.136>
+                          StaticText, 0x11878fe80, {{114.0, 19.0}, {113.0, 18.0}}, label: 'The Great Wave' <AX element pid: 92384, elementOrHash.elementID: 4417791168.159>
+                          StaticText, 0x11878f5c0, {{235.0, 19.0}, {24.5, 18.0}}, label: '0%' <AX element pid: 92384, elementOrHash.elementID: 4417789824.160>
+                        Other, 0x11878e800, {{269.5, 19.0}, {1.0, 18.0}} <AX element pid: 92384, elementOrHash.elementID: 4417373504.137>
+                        StaticText, 0x11878ee40, {{280.5, 19.0}, {152.5, 18.0}}, identifier: 'current-color', label: 'Current color', value: 1, Hazelnut Pralin... <AX element pid: 92384, elementOrHash.elementID: 4417758400.138>
+                          StaticText, 0x11878f840, {{296.5, 19.0}, {136.5, 18.0}}, label: '1 · Hazelnut Praline' <AX element pid: 92384, elementOrHash.elementID: 4417376192.161>
+                        Button, 0x11878f700, {{738.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden <AX element pid: 92384, elementOrHash.elementID: 4417753920.139>
+                          Image, 0x11878fc00, {{738.0, 6.0}, {44.0, 44.0}}, identifier: 'photo', label: 'Photo' <AX element pid: 92384, elementOrHash.elementID: 4417759296.162>
+                        Button, 0x11878e1c0, {{795.0, 6.0}, {44.0, 44.0}}, identifier: 'lightbulb', label: 'Hint' <AX element pid: 92384, elementOrHash.elementID: 4417760192.140>
+                        Button, 0x10a6f2580, {{857.0, 6.0}, {44.0, 44.0}}, identifier: 'arrow.uturn.backward', label: 'Undo', Disabled <AX element pid: 92384, elementOrHash.elementID: 4417760640.141>
+                        Button, 0x11876cdc0, {{919.0, 6.0}, {44.0, 44.0}}, identifier: 'exclamationmark.bubble', label: 'Give Feedback' <AX element pid: 92384, elementOrHash.elementID: 4417761088.142>
+                        Button, 0x11876d900, {{976.0, 6.0}, {44.0, 44.0}}, label: 'More' <AX element pid: 92384, elementOrHash.elementID: 4417840768.143>
+                          Button, 0x11876d7c0, {{976.0, 6.0}, {44.0, 44.0}} <AX element pid: 92384, elementOrHash.elementID: 4655877632.163>
+                            Image, 0x11876c140, {{990.0, 26.0}, {16.0, 4.0}}, identifier: 'ellipsis', label: 'More' <AX element pid: 92384, elementOrHash.elementID: 4417762880.166>
+                        ScrollView, 0x11876d540, {{196.0, 1220.0}, {640.0, 132.0}} <AX element pid: 92384, elementOrHash.elementID: 4419514368.144>
+                          Other, 0x11876c780, {{196.0, 1220.0}, {640.0, 132.0}} <AX element pid: 92384, elementOrHash.elementID: 4621426176.164>
+                            Button, 0x11876d2c0, {{212.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-1', label: '1, Hazelnut Praline, beige', value: 0 percent painted, Selected <AX element pid: 92384, elementOrHash.elementID: 4417803520.167>
+                            Other, 0x11876cb40, {{212.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-1' <AX element pid: 92384, elementOrHash.elementID: 4417767168.168>
+                            Button, 0x11876c640, {{268.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-3', label: '3, Candle Wax, light beige', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417805760.169>
+                            Other, 0x11876d180, {{268.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-3' <AX element pid: 92384, elementOrHash.elementID: 4417773440.170>
+                            Button, 0x11876ca00, {{324.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-5', label: '5, Oat Milk, beige', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417799936.171>
+                            Other, 0x11876c280, {{324.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-5' <AX element pid: 92384, elementOrHash.elementID: 4417777472.172>
+                            Button, 0x11876d680, {{380.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-7', label: '7, Mountain Lake, blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417813376.173>
+                            Other, 0x11876c500, {{380.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-7' <AX element pid: 92384, elementOrHash.elementID: 4417770304.174>
+                            Button, 0x11876d040, {{436.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-9', label: '9, Blue Spruce, blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417804416.175>
+                            Other, 0x11876d400, {{436.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-9' <AX element pid: 92384, elementOrHash.elementID: 4417774336.176>
+                            Button, 0x11876c8c0, {{492.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-11', label: '11, Squall Line, blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417799040.177>
+                            Other, 0x11876c3c0, {{492.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-11' <AX element pid: 92384, elementOrHash.elementID: 4417775680.178>
+                            Button, 0x11876cc80, {{548.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-13', label: '13, Storm Slate, navy', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417915072.179>
+                            Other, 0x10a43ad00, {{548.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-13' <AX element pid: 92384, elementOrHash.elementID: 4417775232.180>
+                            Button, 0x10a43bc00, {{604.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-15', label: '15, Sidewalk Chalk, pale gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417946496.181>
+                            Other, 0x10a438a00, {{604.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-15' <AX element pid: 92384, elementOrHash.elementID: 4417777024.182>
+                            Button, 0x10a43b700, {{660.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-17', label: '17, Silver Spoon, light gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417951424.183>
+                            Other, 0x10a43b0c0, {{660.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-17' <AX element pid: 92384, elementOrHash.elementID: 4417742912.184>
+                            Button, 0x10a43bac0, {{716.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-19', label: '19, Heron, gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417959040.185>
+                            Other, 0x10a43af80, {{716.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-19' <AX element pid: 92384, elementOrHash.elementID: 4336719104.186>
+                            Button, 0x10a43b980, {{772.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-21', label: '21, River Pebble, gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417974080.187>
+                            Other, 0x11877af80, {{772.0, 1234.0}, {48.0, 48.0}}, identifier: 'swatch-21' <AX element pid: 92384, elementOrHash.elementID: 4336727168.188>
+                            Button, 0x11877a940, {{212.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-2', label: '2, Fresh Linen, white', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417807104.189>
+                            Other, 0x11877bd40, {{212.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-2' <AX element pid: 92384, elementOrHash.elementID: 4417768064.190>
+                            Button, 0x11877b340, {{268.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-4', label: '4, Melon Cream, light beige', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417808448.191>
+                            Other, 0x11873d680, {{268.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-4' <AX element pid: 92384, elementOrHash.elementID: 4417773888.192>
+                            Button, 0x11873da40, {{324.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-6', label: '6, Morning Haze, light grayish teal', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417808896.193>
+                            Other, 0x11873d900, {{324.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-6' <AX element pid: 92384, elementOrHash.elementID: 4417777920.194>
+                            Button, 0x11873d540, {{380.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-8', label: '8, Blueprint, vivid blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417812480.195>
+                            Other, 0x11873e300, {{380.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-8' <AX element pid: 92384, elementOrHash.elementID: 4417766720.196>
+                            Button, 0x11873d400, {{436.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-10', label: '10, Rainy Harbor, grayish blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417806656.197>
+                            Other, 0x11873cdc0, {{436.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-10' <AX element pid: 92384, elementOrHash.elementID: 4417774784.198>
+                            Button, 0x11873c000, {{492.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-12', label: '12, Slate Pencil, dark blue', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417913728.199>
+                            Other, 0x11873cf00, {{492.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-12' <AX element pid: 92384, elementOrHash.elementID: 4417769856.200>
+                            Button, 0x11873d180, {{548.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-14', label: '14, Seafoam Spray, pale gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417912832.201>
+                            Other, 0x11873de00, {{548.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-14' <AX element pid: 92384, elementOrHash.elementID: 4417776576.202>
+                            Button, 0x11873d040, {{604.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-16', label: '16, Moth Wing, pale gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417950528.203>
+                            Other, 0x11873cc80, {{604.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-16' <AX element pid: 92384, elementOrHash.elementID: 4418353152.204>
+                            Button, 0x11873db80, {{660.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-18', label: '18, Pebble Beach, light gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417960384.205>
+                            Other, 0x11873e1c0, {{660.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-18' <AX element pid: 92384, elementOrHash.elementID: 4336724032.206>
+                            Button, 0x11873df40, {{716.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-20', label: '20, Tumbleweed, gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417972288.207>
+                            Other, 0x11873dcc0, {{716.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-20' <AX element pid: 92384, elementOrHash.elementID: 4336725824.208>
+                            Button, 0x11873c3c0, {{772.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-22', label: '22, Flint, gray', value: 0 percent painted <AX element pid: 92384, elementOrHash.elementID: 4417974976.209>
+                            Other, 0x11873cb40, {{772.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-22' <AX element pid: 92384, elementOrHash.elementID: 4417375296.210>
+                Other, 0x118744000, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418359808.25>
+                  Other, 0x118744140, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 92384, elementOrHash.elementID: 4418361856.34>
