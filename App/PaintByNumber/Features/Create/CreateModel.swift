@@ -134,6 +134,9 @@ final class CreateModel {
     private(set) var settledEdits = 0
     /// What Refine tells the painter: an edit that could not be made, edits that no longer fit.
     private(set) var note: RefineNote?
+    /// The painter tapped Refine before the final template was there (`askForRefine()`): it opens
+    /// as soon as it is.
+    private(set) var refineAsked = false
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -243,6 +246,36 @@ final class CreateModel {
     /// of the template it is shown and are laid unscaled on whichever template is made next (a
     /// draft's canvas is smaller than the full one's, and a Detail change moves the full one's).
     var canRefine: Bool { !isChoosingSettings && isFinal }
+
+    /// Refine can be tapped: it opens now (`canRefine`), or as soon as the final template is made
+    /// (`askForRefine()`), which a full-resolution generation takes tens of seconds to do on a
+    /// phone. Not while the photo's settings are chosen, nor after a generation failed (the status
+    /// says so): no final template is on its way then.
+    var canAskForRefine: Bool {
+        if canRefine { return true }
+        guard source != nil, !isChoosingSettings else { return false }
+        if case .failed = phase { return false }
+        return true
+    }
+
+    /// Refine was tapped and waits for the final template.
+    var isWaitingToRefine: Bool { refineAsked && !canRefine }
+
+    /// Refine, asked for earlier, can open: the final template is made and no thumb is on a slider.
+    var opensRefine: Bool { refineAsked && canRefine && !isAdjusting }
+
+    /// A tap on Refine before the final template is made: Refine opens when it is, unless the
+    /// painter goes back to the sliders (`setAdjusting`), starts the painting or changes the photo
+    /// first.
+    func askForRefine() {
+        guard !canRefine, canAskForRefine else { return }
+        refineAsked = true
+    }
+
+    /// Refine opened, or is not wanted any more.
+    func withdrawRefine() {
+        refineAsked = false
+    }
 
     /// The preview matches the settings and refinements at full resolution.
     var isFinal: Bool {
@@ -396,6 +429,7 @@ final class CreateModel {
     /// are back on the suggestion's (the sliders' detents).
     func settingsChanged() {
         guard source != nil, !isChoosingSettings else { return }
+        trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
         if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
@@ -405,17 +439,35 @@ final class CreateModel {
         }
     }
 
-    /// A slider drag began or ended.
+    /// A slider drag began or ended. A touch cancels nothing: the first setting it changes
+    /// (`settingsChanged`) supersedes the full resolution under way, and one that changes none
+    /// leaves it be.
     func setAdjusting(_ adjusting: Bool) {
         guard adjusting != isAdjusting else { return }
         isAdjusting = adjusting
+        trace(adjusting ? "A slider was touched" : "A slider was let go")
         if adjusting {
-            fullTask?.cancel()
+            // Back to the sliders: a Refine tapped while the painting was updating is not wanted now.
+            refineAsked = false
         } else {
             stopDrafts()
-            // The resting thumb's full resolution, already under way for these settings, carries on.
-            if refining != settings { scheduleFull(after: .milliseconds(60)) }
+            // The resting thumb's full resolution, already under way for these settings, carries on;
+            // otherwise the settings let go on get theirs, so the painter is never left with a draft.
+            if !isFinal, !(isMakingFull && refining == settings) { scheduleFull(after: .milliseconds(60)) }
         }
+    }
+
+    /// A full-resolution generation is under way and not cancelled (`refining` alone also holds
+    /// for one cancelled and still unwinding).
+    private var isMakingFull: Bool { refining != nil && fullTask?.isCancelled == false }
+
+    /// A line of the app's log (`ci/collect.sh` keeps its category) with the state the generation
+    /// is in: what a preview that stays off, or goes off again, is diagnosed from.
+    private func trace(_ event: String) {
+        let phaseName = String(describing: self.phase)
+        Log.create.info(
+            "\(event, privacy: .public) [adjusting \(self.isAdjusting, privacy: .public), full under way \(self.refining != nil, privacy: .public), final \(self.isFinal, privacy: .public), phase \(phaseName, privacy: .public)]"
+        )
     }
 
     /// Back to the suggestion's settings, without choosing again.
@@ -432,10 +484,13 @@ final class CreateModel {
         fullTask?.cancel()
         refineQueue?.cancel()
         stopDrafts()
+        refineAsked = false
     }
 
     /// The full-resolution template for the current settings, generating it if needed.
     func makeDraft() async throws -> ArtworkDraft {
+        // Starting the painting leaves no Refine to open over it.
+        refineAsked = false
         // Settings still being chosen are chosen first, and the edits sent are laid.
         _ = await loadTask?.value
         _ = await refineQueue?.value
@@ -568,6 +623,8 @@ final class CreateModel {
         generation += 1
         let id = generation
         let load = loadID
+        let kind = draft ? "Draft" : "Full"
+        trace("\(kind) #\(id) started for \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
         let input = draft ? (draftImage ?? source.image) : source.image
         if !draft {
             phase = .generating
@@ -576,14 +633,18 @@ final class CreateModel {
             refiningID = id
         }
         defer { if !draft, refiningID == id { refining = nil } }
-        // Called on pipeline threads; hops to the main actor.
+        // Called on pipeline threads; hops to the main actor. Only the full resolution reports, and
+        // a draft starting beside it must not stop its progress (`generation` counts drafts too).
         let report: @Sendable (Float) -> Void = { value in
             Task { @MainActor in
-                guard self.generation == id else { return }
+                guard self.refiningID == id else { return }
                 self.progress = Double(value)
             }
         }
         do {
+            #if DEBUG
+            if !draft, let delay = DemoMode.fullResolutionDelay { try await Task.sleep(for: delay) }
+            #endif
             let refinements = self.refinements
             let inputs = refinements.generatorInputs
             var shown: Shown
@@ -601,8 +662,12 @@ final class CreateModel {
             if load == loadID, let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs) }
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
-            // resolution) would replace it with less.
-            if draft, generation != id { return }
+            // resolution) would replace it with less, and one finishing after the full resolution
+            // of the sliders' settings is shown would take it back: Refine would never open.
+            if draft, generation != id || isFinal {
+                trace("Draft #\(id) dropped")
+                return
+            }
             // Edits sent while this was being made are laid before it shows, so it never takes
             // one back.
             var left = shown.replay.left
@@ -625,10 +690,20 @@ final class CreateModel {
                 if left != leftOutEdits, left > 0 { say(.left(left)) }
                 leftOutEdits = left
             }
-            if generation == id { phase = .ready }
+            trace("\(kind) #\(id) shown")
+            // Ready with the newest full resolution, or with a draft when none is under way: the
+            // status goes on saying "Updating…" while a draft shows beside the full resolution.
+            if draft {
+                if generation == id, !isMakingFull { phase = .ready }
+            } else if refiningID == id {
+                phase = .ready
+            }
         } catch is CancellationError {
+            trace("\(kind) #\(id) cancelled")
         } catch {
             Log.create.error("Generation failed: \(String(describing: error), privacy: .public)")
+            // No final template is on its way: a Refine waiting for it would wait for ever.
+            refineAsked = false
             phase = .failed(CreateError.renderFailed.localizedDescription)
         }
     }

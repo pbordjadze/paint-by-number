@@ -181,7 +181,9 @@ synchronized folder would bundle it into the app.
   (`DemoMode.isTestHost`). Shared helpers in `Fixtures.swift` (`waitUntil`, `record`, `mosaic`,
   `rasterize`, `PixelReader`, `repositoryRoot`, `sample`: a template of a library picture).
 - `PaintByNumberUITests`: XCTest launching demo scenarios (`-demo`) with `-demoFixedPictures`,
-  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-NSDoubleLocalizedStrings`,
+  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-slowFullResolution <seconds>` (each
+  full-resolution generation of the create flow waits: a phone's tens of seconds, on a simulator),
+  `-NSDoubleLocalizedStrings`,
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests
   (menu-bar keys, landscape) skip on iPhone, and the system-picker tests skip where synthesized taps
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
@@ -449,7 +451,9 @@ Conventions).
   `settingsOrigin` and `paintingLength`, and regeneration reuses an artwork's recorded settings.
 - Tuning: a drag renders drafts from the reduced photo, their line lengths scaled to the draft's
   canvas (`CreateModel.draftSettings`) so short strokes like eyes show as they will; a thumb
-  resting `CreateModel.restDelay` renders the full resolution under the finger. The Lines slider
+  resting `CreateModel.restDelay` renders the full resolution under the finger, and letting go
+  makes the settings' unless it is under way or there (`setAdjusting`: a touch on a slider cancels
+  nothing, only a setting that changes does; a draft never replaces a final preview). The Lines slider
   moves the book's thresholds and shortest line (`CreateModel.lineArt(_:lines:)`; the middle is
   the book's defaults), the line art recorded with the painting like any setting. `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
   across slider changes.
@@ -459,7 +463,12 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
-- Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper,
+- Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
+  which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
+  the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
+  template is made, `CreateModel.askForRefine` / `opensRefine`, called off by touching a slider,
+  Start or another photo; it is off only without line art and detail brushes, while the settings
+  are chosen and after a failed generation, the status saying why): the drawing large, on its paper,
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as

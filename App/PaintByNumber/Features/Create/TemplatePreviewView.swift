@@ -101,6 +101,10 @@ struct TemplatePreviewView: View {
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        // A tap on Refine made while the painting was updating: it opens once it is made.
+        .onChange(of: model.opensRefine) { _, opens in
+            if opens { openRefine() }
+        }
         #if DEBUG
         // `create-refine` shows the Refine screen once its painting is refined.
         .onChange(of: model.refinements.isEmpty) { _, isEmpty in
@@ -149,6 +153,18 @@ struct TemplatePreviewView: View {
     private var offersEnlarging: Bool { isCompact && !isSideBySide }
     private var isEnlarged: Bool { isTuning && !isSideBySide }
 
+    /// Refine on the final template, or, while it is being made, as soon as it is.
+    private func openRefine() {
+        titleFocused = false
+        guard !isStarting else { return }
+        if model.canRefine {
+            model.withdrawRefine()
+            isRefining = true
+        } else {
+            model.askForRefine()
+        }
+    }
+
     private func setEnlarged(_ enlarged: Bool) {
         titleFocused = false
         withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
@@ -172,17 +188,26 @@ struct TemplatePreviewView: View {
         if !isEnlarged {
             // The optional Refine step: a text button, so it reads as a step and not a view.
             ToolbarItem(placement: .primaryAction) {
-                Button("Refine") {
-                    titleFocused = false
-                    isRefining = true
+                Button(action: openRefine) {
+                    if model.isWaitingToRefine {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text("Preparing…")
+                        }
+                    } else {
+                        Text("Refine")
+                    }
                 }
-                // Without line art there is nothing to draw on; the detail brushes still work.
-                // Nor on a draft or an earlier settings' template: the edits are made in the canvas
-                // units of the template Refine opens on.
+                // Without line art there is nothing to draw on; the detail brushes still work. Else
+                // it is on while the painting updates: Refine draws on the final template alone (its
+                // edits are made in that template's canvas units), so a tap before it is made waits
+                // for it (`CreateModel.askForRefine`) and opens by itself.
                 .disabled(
-                    !model.canRefine || isStarting
+                    !model.canAskForRefine || isStarting
                         || !(model.hasLineArtInput || Preferences().detailBrushes))
-                .accessibilityValue(RefineView.changes(model.refinements.changeCount))
+                .accessibilityLabel("Refine")
+                .accessibilityValue(
+                    model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
             }
         }
