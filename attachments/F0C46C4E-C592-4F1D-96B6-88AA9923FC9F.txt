@@ -1,0 +1,33 @@
+Attributes: Button, 0x10a064c80, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+Element subtree:
+ →Button, 0x10a064c80, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+Path to element:
+ →Application, 0x10a065900, pid: 24591, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x10a0652c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x10a065680, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x10a0666c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x10a067340, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x10a066580, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳NavigationBar, 0x10a065a40, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+        ↳Other, 0x10a0675c0, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+         ↳Other, 0x10a067700, {{946.0, 36.0}, {72.0, 36.0}}
+          ↳Button, 0x10a064c80, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x10a1d08c0, pid: 24591, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x10a183c00, {{10.0, 32.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'New Painting'
+      Button, 0x10a085f40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x10a085540, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: Favorites, Disabled
+      Button, 0x10a086bc0, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+      Button, 0x10a181040, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+      Button, 0x10a1d1f40, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+      Button, 0x11746d900, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate '"refine" IN identifiers'
+      Output: {
+        Button, 0x10a070a00, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+      }

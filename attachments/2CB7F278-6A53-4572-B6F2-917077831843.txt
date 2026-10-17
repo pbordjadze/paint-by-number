@@ -1,0 +1,34 @@
+Attributes: Button, 0x10a090f00, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Element subtree:
+ →Button, 0x10a090f00, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Path to element:
+ →Application, 0x118632800, pid: 26918, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x118632a80, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x118633840, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x118630280, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x118630a00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x118633c00, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x1186321c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x118630140, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x118630dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x118633200, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Button, 0x10a090f00, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x10a18ad00, pid: 26918, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x10a209e00, {{10.0, 32.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'New Painting'
+      Button, 0x1186326c0, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x1186308c0, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: Favorites, Disabled
+      Button, 0x118631e00, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+      Button, 0x10a20b0c0, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes, Disabled
+      Button, 0x10a18a080, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+      Button, 0x11746c780, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate '"Start Painting" IN identifiers'
+      Output: {
+        Button, 0x1186317c0, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+      }
