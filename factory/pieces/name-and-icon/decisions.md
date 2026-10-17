@@ -46,7 +46,8 @@ own view 30/31, charter + own view 29/27. View effect +8/+9 (permutation p = 0.0
 effect +1/+0 (p = 0.41/0.53). Each seat's own view came off trial (bb3f0dc); one piece, six
 reviewers an arm: a first result, not a law.
 
-**Paul's call (October 17).** No new name: Paint by Moonlight stays, with the whole name under the
+**Paul's call (October 17).** No new name: Paint by Moonlight stays (asked that evening whether to
+keep it, look at Paint by Heart or run a fresh round of names, Paul: "Keep"), with the whole name under the
 icon (iOS cuts it to about "Paint by Moo…"). None of the four icons is adopted: the final icon goes
 to Paul's sister, who plays the app, with a spec sheet of Apple's requirements (1024 px square,
 square corners, content centered, a numeral at least 30% of the icon's height).
