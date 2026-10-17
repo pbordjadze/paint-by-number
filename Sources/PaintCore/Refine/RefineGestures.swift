@@ -1,3 +1,6 @@
+#if canImport(CoreGraphics)
+import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it on Linux.
+#endif
 import Foundation
 
 /// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts

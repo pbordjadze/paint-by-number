@@ -1,3 +1,6 @@
+#if canImport(CoreGraphics)
+import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it on Linux.
+#endif
 import Foundation
 
 /// The pen's line as Refine keeps it: a finger's samples smoothed into curves (quadratics
@@ -278,7 +281,8 @@ public struct LineChains: Sendable {
                 high = CGPoint(x: max(high.x, p.x), y: max(high.y, p.y))
             }
             self.points = points
-            bounds = CGRect(x: low.x - 1, y: low.y - 1, width: high.x - low.x + 2, height: high.y - low.y + 2)
+            let width: CGFloat = high.x - low.x + 2, height: CGFloat = high.y - low.y + 2
+            bounds = CGRect(x: low.x - 1, y: low.y - 1, width: width, height: height)
         }
     }
 
