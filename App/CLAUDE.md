@@ -14,6 +14,12 @@ synchronized folder would bundle it into the app.
   iPhone for its first ten seconds or so, and a painter's iPad ignored them too, though the iPad
   simulator doesn't (`PhotoSourceView`; `CreateFlowTests` picks an inline photo on both devices
   and checks the left edge).
+- The inline picker's second pick of a photo it gave before in the flow (its selection is reset
+  after each pick so the same photo can be picked again) is an item with the photo's identifier and
+  no content types: `loadTransferable` answers nil, however often it is asked, and the preview
+  said "Couldn’t Open Photo" (CI, Oct 17). `CreateModel.load(item:)` keeps the data of the last
+  three library photos by identifier and uses the kept copy then. The preview opens either way, so
+  `CreateFlowTests` waits for Start Painting to enable after the second pick (`previewLoads`).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
