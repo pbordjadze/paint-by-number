@@ -11,7 +11,7 @@ struct StartHandoffTests {
     private let id = UUID()
     private let template = CGRect(x: 40, y: 120, width: 300, height: 200)
 
-    @Test func theCanvasReportsOnceAndOnlyForThePaintingBeingOpened() {
+    @Test func theCanvasReportsForThePaintingBeingOpenedAndFollowsALayout() {
         let handoff = StartHandoff()
         #expect(handoff.phase == .idle && !handoff.isRunning)
         #expect(handoff.begin(id))
@@ -25,12 +25,19 @@ struct StartHandoffTests {
         #expect(handoff.phase == .ready(id, template))
         #expect(!handoff.isOpening(id))
 
-        // The first report stands.
-        handoff.paintingDrew(id, templateRect: template.offsetBy(dx: 30, dy: 30))
-        #expect(handoff.phase == .ready(id, template))
+        // A layout that moves the template while the flow is on its way is followed...
+        let moved = template.offsetBy(dx: 0, dy: -48)
+        handoff.paintingDrew(id, templateRect: moved)
+        #expect(handoff.phase == .ready(id, moved))
+        // ...but only from the painting being opened.
+        handoff.paintingDrew(UUID(), templateRect: template)
+        #expect(handoff.phase == .ready(id, moved))
 
         handoff.complete()
         #expect(handoff.phase == .finished(id) && handoff.isFinished)
+        // The flow has dissolved: the canvas moving after that changes nothing.
+        handoff.paintingDrew(id, templateRect: template)
+        #expect(handoff.phase == .finished(id))
         handoff.reset()
         #expect(handoff.phase == .idle && !handoff.isRunning && !handoff.isFinished)
     }

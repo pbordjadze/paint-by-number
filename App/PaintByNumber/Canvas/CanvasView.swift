@@ -66,11 +66,11 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPhotoUnavailable: (() -> Void)?
     /// A canvas touch asked to hide the photo.
     var onDismissPhoto: (() -> Void)?
-    /// Called once, on the main actor, when the first frame is on screen, with the rect the
-    /// template fills in it in this view's own coordinates: the start of a painting is handed over
-    /// to this frame (`StartHandoff`). Set before the canvas is in a window; nothing draws before
-    /// it has been laid out.
-    var onFirstFrame: ((CGRect) -> Void)?
+    /// Told where the template is, in this view's own coordinates, once the first frame is on
+    /// screen and again whenever a layout moves it (the palette or the status bar changing the room
+    /// the canvas has): the start of a painting is handed over to this frame (`StartHandoff`).
+    /// Set before the canvas is in a window; nothing draws before it has been laid out.
+    var onTemplateFrame: ((CGRect) -> Void)?
     /// A double-tap zoomed the canvas.
     var onZoomStep: (() -> Void)?
     /// The zoom relative to the fitted canvas changed (pinch, double tap, camera moves).
@@ -383,6 +383,8 @@ final class CanvasView: UIView, PaintingCanvas {
         } else {
             cameraDidSettle()
         }
+        // Once announced, a layout that moves the template is announced as it comes.
+        if announcedTemplateFrame != nil { announceTemplateFrame() }
     }
 
     /// The paper, backdrop and ink the next frame draws with.
@@ -718,11 +720,8 @@ final class CanvasView: UIView, PaintingCanvas {
         // The first frame that shows the fitted painting: the one the start of a painting is
         // handed over to, announced once it is on screen.
         var presented: (@Sendable () -> Void)?
-        if onFirstFrame != nil, !isAwaitingFirstFrame, laidOutSize != .zero {
-            let drawn = CGRect(
-                x: camera.origin.x, y: camera.origin.y, width: CGFloat(template.width) * camera.zoom,
-                height: CGFloat(template.height) * camera.zoom)
-            presented = Self.firstFrameReport(of: self, drawn: drawn)
+        if onTemplateFrame != nil, !isAwaitingFirstFrame, laidOutSize != .zero {
+            presented = Self.firstFrameReport(of: self)
         }
         if renderer.draw(in: metalLayer, uniforms: uniforms, content: content, onPresented: presented) {
             if presented != nil { isAwaitingFirstFrame = true }
@@ -739,22 +738,62 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
     private var skippedFrames = 0
-    /// The frame `onFirstFrame` waits for is on its way to the screen.
+    /// The frame `onTemplateFrame` waits for is on its way to the screen.
     private var isAwaitingFirstFrame = false
+    /// The first frame is on screen, and the template's place is being settled for announcing.
+    private var announcesTemplateFrame = false
+    /// Where `onTemplateFrame` last was told the template is: nil until it has been told once.
+    private var announcedTemplateFrame: CGRect?
 
     /// What Metal's thread calls when that frame is up (built outside the main actor: Metal
-    /// calls it on a thread of its own). It may come twice; the first is the answer.
-    nonisolated private static func firstFrameReport(of view: CanvasView, drawn: CGRect) -> @Sendable () -> Void {
+    /// calls it on a thread of its own).
+    nonisolated private static func firstFrameReport(of view: CanvasView) -> @Sendable () -> Void {
         { [weak view] in
             guard let view else { return }
-            Task { @MainActor in view.firstFrameIsUp(drawn) }
+            Task { @MainActor in view.firstFrameIsUp() }
         }
     }
 
-    private func firstFrameIsUp(_ drawn: CGRect) {
-        guard let report = onFirstFrame else { return }
-        onFirstFrame = nil
-        report(drawn)
+    /// The first frame is on screen: its template's place is announced once it has stayed where it
+    /// is for a moment (a painting's first layout is not always its last: the size class and the
+    /// palette settle after it), and after that every layout that moves it is.
+    private func firstFrameIsUp() {
+        guard !announcesTemplateFrame else { return }
+        announcesTemplateFrame = true
+        announceOnceSettled(from: templateFrame, retries: 12)
+    }
+
+    private func announceOnceSettled(from previous: CGRect, retries: Int) {
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(120))
+            guard let self else { return }
+            let now = self.templateFrame
+            if now == previous || retries <= 0 {
+                self.announceTemplateFrame()
+            } else {
+                self.announceOnceSettled(from: now, retries: retries - 1)
+            }
+        }
+    }
+
+    /// Where the template is now, in this view's coordinates.
+    private var templateFrame: CGRect {
+        let camera = currentCamera()
+        return CGRect(
+            x: camera.origin.x, y: camera.origin.y, width: CGFloat(template.width) * camera.zoom,
+            height: CGFloat(template.height) * camera.zoom)
+    }
+
+    /// Tells `onTemplateFrame` where the template is, if that is not where it last said.
+    private func announceTemplateFrame() {
+        guard let report = onTemplateFrame else { return }
+        let frame = templateFrame
+        guard frame != announcedTemplateFrame else { return }
+        announcedTemplateFrame = frame
+        Log.canvas.notice(
+            "Template at \(String(describing: frame), privacy: .public) in a canvas of \(String(describing: self.bounds.size), privacy: .public), insets \(String(describing: self.chromeInsets), privacy: .public), safe area \(String(describing: self.safeAreaInsets), privacy: .public)"
+        )
+        report(frame)
     }
 
     /// The paint state the shaders currently see for a region (tests).

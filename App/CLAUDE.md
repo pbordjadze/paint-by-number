@@ -556,12 +556,15 @@ Conventions).
   painting. On Start (after the show, with Settings › The Making-of on) the shell `begin`s it and
   pushes the painting *under* the cover with animations off (`startPainting`; the zoom stays for
   pushes from a card and the way back to it), and `ArtworkPaintingView` mounts without its fades
-  (`isUnderCover`). The canvas reports its first frame once it is on screen, with the template's
-  rect in global coordinates (`CanvasView.onFirstFrame`, from the drawable's presented handler,
-  through `PaintView.onCanvasDrawn`); the flow, which observes `phase`, then moves its picture there
-  in `StartHandoffPlan.move` (about 0.45 s, a gentle spring) while the card, Skip, the sliders and
-  its own paper fade to clear, cross-fades the picture into the canvas and `complete`s, and the
-  shell takes the cover away with animations off (`endCreateFlow`). The picture is the show's when
+  (`isUnderCover`). The canvas reports where its template is once its first frame is on screen
+  (`CanvasView.onTemplateFrame`: a tenth of a second after the GPU finished the frame, in global
+  coordinates through `PaintView.onTemplateFrame`), and again when a layout moves it (the palette
+  settling, the status bar going: the painting's first layout is not its last); the flow, which
+  observes `phase`, then moves its picture there in `StartHandoffPlan.move` (about 0.45 s, a gentle
+  spring, following the template if it moves on the way) while the card, Skip, the sliders and its
+  own paper fade to clear, cross-fades the picture into the canvas and `complete`s, and the shell
+  takes the cover away with animations off (`endCreateFlow`). The flow hides the status bar as it
+  goes, so the painting beneath has the layout it keeps once the cover is gone. The picture is the show's when
   it played (`MakingOfView`: `entry`, `leaving`; `PictureTravel` is its scale and offset), else the
   preview's (`PreviewPictureProbe`, `DepartingPicture`). A painting that has not drawn in
   `StartHandoffPlan.fallback` (2.5 s: a slow open, the recovery screen) `timeOut`s: the cover fades
@@ -569,8 +572,11 @@ Conventions).
   picture starts where the preview's was. Reduce Motion moves nothing (`StartHandoffPlan.motion`,
   `entry`): cross-fades over the same time. The painting's tips wait for the cover to go (a popover
   can't present under it). `StartHandoffLogic` holds the rules for `StartHandoffTests`;
-  `StartHandoffUITests` attach bursts of screenshots across the hand-off, and `-handoffSlowdown N`
-  (Debug) stretches every duration N times for their `Slowed` runs.
+  `StartHandoffUITests` attach the frames of the screen around the hand-off (`ScreenFrames.swift`),
+  `-handoffSlowdown N` (Debug) stretches every duration N times for their `Slowed` runs, and
+  `-handoffFallback S` sets the seconds a painting has to draw: CI's simulators take several to
+  open one, and stall their main thread for seconds meanwhile, so a motion of half a second is a
+  frame or two there.
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all

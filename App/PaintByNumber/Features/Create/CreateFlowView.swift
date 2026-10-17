@@ -38,6 +38,10 @@ struct CreateFlowView: View {
     /// The flow itself (its screens and its background), fading to clear as the painting takes over.
     @State private var flowOpacity = 1.0
     @State private var isDissolving = false
+    /// Where the picture is moving to (global coordinates), and whether it has started to
+    /// cross-fade into the canvas: a layout that moves the template meanwhile moves the target.
+    @State private var flightTarget: CGRect?
+    @State private var hasLanded = false
 
     enum Step: Hashable { case preview }
 
@@ -66,9 +70,12 @@ struct CreateFlowView: View {
             .overlay {
                 if handoff?.isRunning == true { Color.clear.contentShape(.rect) }
             }
+            // The painting beneath takes the status bar's room with it as the flow goes: its
+            // layout is then the one it keeps once the cover is gone.
+            .statusBarHidden(isDissolving)
             .onChange(of: handoff?.phase, initial: true) { _, phase in
                 switch phase {
-                case .ready(_, let target)?: dissolve(into: target)
+                case .ready(_, let target)?: if isDissolving { retarget(to: target) } else { dissolve(into: target) }
                 case .timedOut?: giveUp()
                 default: break
                 }
@@ -195,8 +202,10 @@ struct CreateFlowView: View {
         guard !isDissolving else { return }
         isDissolving = true
         Log.create.notice("Hand-off: the painting drew, template at \(String(describing: target), privacy: .public)")
+        let motion = StartHandoffPlan.motion(reduceMotion: reduceMotion, target: target)
+        if motion == .fly { flightTarget = target }
         Task {
-            switch StartHandoffPlan.motion(reduceMotion: reduceMotion, target: target) {
+            switch motion {
             case .fly:
                 withAnimation(.spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)) {
                     leaving = .moving(target)
@@ -206,8 +215,9 @@ struct CreateFlowView: View {
                 withAnimation(.easeOut(duration: StartHandoffPlan.appear)) { departure?.opacity = 1 }
                 withAnimation(.easeOut(duration: StartHandoffPlan.fade)) { flowOpacity = 0 }
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.landAfter))
+                hasLanded = true
                 withAnimation(.easeOut(duration: StartHandoffPlan.crossFade)) {
-                    leaving = .landed(target)
+                    leaving = .landed(flightTarget ?? target)
                     departure?.opacity = 0
                 }
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.crossFade + 0.05))
@@ -219,6 +229,19 @@ struct CreateFlowView: View {
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.move + 0.05))
             }
             handoff?.complete()
+        }
+    }
+
+    /// A layout moved the template while the picture was on its way (the palette settling, the
+    /// status bar going): the picture heads for where it is now. Once it is cross-fading into the
+    /// canvas it is left where it landed.
+    private func retarget(to target: CGRect) {
+        guard let current = flightTarget, current != target, !hasLanded else { return }
+        Log.create.notice("Hand-off: the template moved to \(String(describing: target), privacy: .public)")
+        flightTarget = target
+        withAnimation(.spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)) {
+            leaving = .moving(target)
+            departure?.rect = target
         }
     }
 

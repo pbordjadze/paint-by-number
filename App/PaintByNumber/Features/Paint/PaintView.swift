@@ -27,9 +27,10 @@ struct PaintView: View {
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
     var fillDurationScale: Float = 1
-    /// Told once, when the canvas's first frame is on screen, where the template is in it (global
-    /// coordinates): the create flow's picture moves there (`StartHandoff`).
-    var onCanvasDrawn: ((CGRect) -> Void)?
+    /// Told where the template is (global coordinates) once the canvas's first frame is on screen,
+    /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
+    /// Read when the canvas is made.
+    var onTemplateFrame: ((CGRect) -> Void)?
 
     @State private var controller = CanvasController()
     /// Where the canvas is in global coordinates, read when its first frame is on screen. A
@@ -83,18 +84,18 @@ struct PaintView: View {
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onCanvasDrawn: ((CGRect) -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil
     ) {
         self.session = session
         self.title = title
         self.onClose = onClose
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
-        self.onCanvasDrawn = onCanvasDrawn
+        self.onTemplateFrame = onTemplateFrame
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
-    /// Where the canvas view is in global coordinates (`onCanvasDrawn` reports in them).
+    /// Where the canvas view is in global coordinates (`onTemplateFrame` reports in them).
     private final class CanvasOrigin {
         var point = CGPoint.zero
     }
@@ -184,7 +185,7 @@ struct PaintView: View {
                 onDismissPhoto: { peek.setLatched(false) },
                 onZoomStep: { PaintTips.record(.zoomedByDoubleTap) },
                 isAnnotating: feedback != nil,
-                onFirstFrame: firstFrameReport)
+                onTemplateFrame: templateReport)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
                 .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { canvasOrigin.point = $0 }
@@ -252,12 +253,12 @@ struct PaintView: View {
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
     }
 
-    /// The canvas's first frame, as `onCanvasDrawn` takes it: the template's rect in global
+    /// What the canvas tells, as `onTemplateFrame` takes it: the template's rect in global
     /// coordinates.
-    private var firstFrameReport: ((CGRect) -> Void)? {
-        guard let onCanvasDrawn else { return nil }
+    private var templateReport: ((CGRect) -> Void)? {
+        guard let onTemplateFrame else { return nil }
         let origin = canvasOrigin
-        return { drawn in onCanvasDrawn(drawn.offsetBy(dx: origin.point.x, dy: origin.point.y)) }
+        return { frame in onTemplateFrame(frame.offsetBy(dx: origin.point.x, dy: origin.point.y)) }
     }
 
     // MARK: Layout

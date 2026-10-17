@@ -12,7 +12,8 @@ import Observation
 ///    `begin`s the hand-off and pushes the painting *under* the cover, with no animation. The cover
 ///    stays up and shows what it showed.
 /// 2. The painting loads, and its canvas reports its first frame on screen with the template's rect
-///    in global coordinates (`paintingDrew`: `CanvasView.onFirstFrame`).
+///    in global coordinates (`paintingDrew`: `CanvasView.onTemplateFrame`), and again if a layout
+///    moves the template while the flow is still on its way there.
 /// 3. The create flow, which observes `phase`, moves its picture (the making-of's, or the
 ///    preview's) to that rect while everything else fades to clear, cross-fades the picture into
 ///    the canvas beneath it, and `complete`s.
@@ -52,7 +53,8 @@ final class StartHandoff {
     }
 
     /// The painting `id` has its first frame on screen, its template at `templateRect` (global
-    /// coordinates). Ignored unless that painting is the one being opened.
+    /// coordinates), or a layout has moved the template since. Ignored unless that painting is the
+    /// one being opened, and once the flow has dissolved.
     func paintingDrew(_ id: UUID, templateRect: CGRect) {
         guard logic.paintingDrew(id, templateRect: templateRect) else { return }
         fallback?.cancel()
@@ -112,13 +114,21 @@ nonisolated struct StartHandoffLogic: Equatable, Sendable {
         return true
     }
 
-    /// Accepted once, from the painting being opened; a report after the timeout, from another
-    /// painting or before any hand-off is ignored.
+    /// Accepted from the painting being opened, and again, with a new rect, while the flow is on
+    /// its way (a layout moved the template); a report after the timeout or the flow's end, from
+    /// another painting or before any hand-off is ignored.
     @discardableResult
     mutating func paintingDrew(_ id: UUID, templateRect: CGRect) -> Bool {
-        guard isOpening(id) else { return false }
-        phase = .ready(id, templateRect)
-        return true
+        switch phase {
+        case .opening(let current) where current == id:
+            phase = .ready(id, templateRect)
+            return true
+        case .ready(let current, let rect) where current == id && rect != templateRect:
+            phase = .ready(id, templateRect)
+            return true
+        default:
+            return false
+        }
     }
 
     @discardableResult
@@ -188,10 +198,17 @@ nonisolated enum StartHandoffPlan {
     /// The show's card and Skip come in after the picture has moved.
     static var chromeDelay: Double { 0.4 * timeScale }
     /// How long the painting has to draw its first frame before the cover leaves alone.
-    static var fallback: Duration { .milliseconds(Int(2500 * timeScale)) }
+    static var fallback: Duration {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "handoffFallback")
+        if seconds > 0 { return .milliseconds(Int(seconds * 1000)) }
+        #endif
+        return .milliseconds(Int(2500 * timeScale))
+    }
 
     /// Debug launches can slow every duration down (`-handoffSlowdown 4`) so that a burst of
-    /// screenshots catches the motion.
+    /// screenshots catches the motion, and set how long the painting has (`-handoffFallback 20`,
+    /// in seconds: CI's simulators take several to open one).
     private static var timeScale: Double {
         #if DEBUG
         let scale = UserDefaults.standard.double(forKey: "handoffSlowdown")
