@@ -72,8 +72,11 @@ final class CanvasView: UIView, PaintingCanvas {
     var watchesFirstFrame = false
     /// The first frame is on screen (a tenth of a second after the GPU finished it).
     private(set) var hasShownFirstFrame = false
-    /// A double-tap zoomed the canvas.
+    /// The painter zoomed the canvas: a double tap or a pinch.
     var onZoomStep: (() -> Void)?
+    /// A finger took hold of the canvas to move or zoom it (true), or let go and the camera came to
+    /// rest (false): the gentle tips wait for the hand.
+    var onHandChange: ((Bool) -> Void)?
     /// The zoom relative to the fitted canvas changed (pinch, double tap, camera moves).
     var onZoomChange: ((CGFloat) -> Void)?
     /// Set from SwiftUI's `accessibilityReduceMotion`: camera moves jump, fills and undos land
@@ -1600,22 +1603,32 @@ extension CanvasView: UIScrollViewDelegate {
         cameraAnimation = nil
         pendingFocus = nil
         finishYieldsCamera()
+        onHandChange?(true)
     }
 
     func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
         cameraAnimation = nil
         pendingFocus = nil
         finishYieldsCamera()
+        onHandChange?(true)
+        onZoomStep?()
     }
 
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        if !decelerate { cameraDidSettle() }
+        if !decelerate {
+            cameraDidSettle()
+            onHandChange?(false)
+        }
     }
 
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) { cameraDidSettle() }
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        cameraDidSettle()
+        onHandChange?(false)
+    }
 
     func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
         cameraDidSettle()
+        onHandChange?(false)
     }
 }
 

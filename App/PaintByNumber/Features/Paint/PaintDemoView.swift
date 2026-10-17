@@ -23,7 +23,10 @@ import simd
 /// - `paint-replay`: a finished painting mid-replay
 /// - `paint-photo`: the source photo shown over a painting in progress
 /// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
-///   the only scenario that shows tips (`PaintTips.configure`)
+///   with the gallery's, the create flow's and Settings' tip scenarios the only ones that show
+///   tips (`PaintTips.configure`)
+/// - `paint-tip-fill`: `paint-tip`, then once the tip is up an area is filled for the painter
+///   (a UI test checks the tip goes with the fill)
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 /// - `paint-palette`: ~30 % painted, the palette in four rows in rainbow order (More › Palette)
@@ -362,9 +365,17 @@ private final class Demo {
             Log.demo.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
             return
         }
-        if scenario == PaintTips.demoScenario {
-            // TipKit evaluates eligibility asynchronously; the popover is up well within this.
-            try? await Task.sleep(for: .seconds(1.5))
+        if scenario == "paint-tip" || scenario == "paint-tip-fill" {
+            // The desk gives the tip its turn once TipKit finds it eligible, and TipKit presents it.
+            await PaintTips.awaitDemoTip()
+            if scenario == "paint-tip-fill" {
+                // Long enough for a UI test, slow on CI, to have found the tip.
+                try? await Task.sleep(for: .seconds(12))
+                let color = session.selectedColor ?? 0
+                if let area = session.template.regions.indices.first(where: { session.colorOf($0) == color && !session.isPainted($0) }) {
+                    session.paint([area], from: Self.center(session.template, area), animated: true)
+                }
+            }
             return
         }
         if scenario == "paint-finish", let last = lastArea {

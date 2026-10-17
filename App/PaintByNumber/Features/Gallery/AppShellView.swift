@@ -156,12 +156,28 @@ struct AppShellView: View {
         }
         #endif
         .onChange(of: path) { _, path in openArtwork = path.last?.uuidString ?? "" }
+        // The shelf's tips wait while anything covers it, and have their moment when it is uncovered.
+        .onChange(of: isCovered, initial: true) { _, covered in
+            PaintTips.desk.isCovered = covered
+            if covered {
+                if isCreating { PaintTips.used(.shelfNewPainting) }
+            } else {
+                PaintTips.shelfMoment(library)
+            }
+        }
+    }
+
+    /// A screen over the shelf: the create flow, Settings, the time-lapse's sheet, the Marginarium.
+    private var isCovered: Bool {
+        isCreating || isShowingSettings || timelapse != nil || isShowingMarginarium
     }
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
+                // Where the tips can be turned off: hung below the gear.
+                .barTip(.shelfSettings)
         }
         #if UNRELEASED
         if showsMarginarium {
@@ -189,6 +205,7 @@ struct AppShellView: View {
             Button("New Painting", systemImage: "plus") { isCreating = true }
                 .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
+                .barTip(.shelfNewPainting)
         }
     }
 

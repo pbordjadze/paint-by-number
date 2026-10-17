@@ -195,6 +195,7 @@ struct CompareView: View {
     private func moveDivider(to x: CGFloat, in size: CGSize) {
         let visible = Self.visible(pictureRect(in: size), in: size)
         guard after != nil, visible.width > 0 else { return }
+        PaintTips.dividerMoved()
         split = min(max((x - visible.minX) / visible.width, 0), 1)
     }
 
@@ -283,6 +284,8 @@ struct CompareView: View {
                     DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                         .onChanged { value in moveDivider(to: value.location.x, in: size) }
                 )
+                // Compare Photo and Page: hung below the handle.
+                .gentleTip(.newPaintingDivider, arrowEdge: .top)
         }
         .position(x: x, y: visible.midY)
     }

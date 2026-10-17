@@ -160,7 +160,8 @@ synchronized folder would bundle it into the app.
   `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
-  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
+  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`; `Tips/`
+  (the gentle tips, see Tips).
 - `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
   linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
   growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
@@ -215,7 +216,7 @@ synchronized folder would bundle it into the app.
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), and `gallery-first-run` is the
   gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
-  reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
+  reset TipKit and hide every tip except in the tip scenarios (Tips). The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
   after it appears. `marginarium-chapter`, `marginarium-chapter-dark` and
@@ -276,10 +277,7 @@ synchronized folder would bundle it into the app.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
-- Tips: `PaintTips` (TipKit), configured in `PaintByNumberApp.init`; donations and invalidations
-  come from session events in `PaintChromeState` (plus double-tap zoom and Pencil strokes from the
-  canvas); one tip at a time through a `TipGroup`. Settings › Show Tips Again bumps the tips' id
-  generation.
+- Tips: the bench's moments are in `PaintChromeState` (see Tips below).
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -299,6 +297,56 @@ synchronized folder would bundle it into the app.
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
   feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
   key; `pbn names` prints a template's.
+
+## Tips
+
+The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
+and Never list are the spec; its notes are the record, not UI): 22 tips, each said once, on for
+everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
+and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
+gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
+where they live.
+
+- **Where they live.** `Features/Tips/`: `GentleTips` (17 of the tips as TipKit tips, `nonisolated`,
+  in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
+  with the ids of the first version, so what was closed stays closed), `TipDesk` (turns), `TipPacing`
+  (limits, with `TipHistory` and `TipStore`), `TipMoments` (`TipPreference`, the switch's value, and
+  `TipMoments`, which tips a moment may offer) and `PaintTips+Moments`. `PaintTips` is the facade
+  (configure, the switch, donations, `used`), set up in `PaintByNumberApp.init`; the bench's moments
+  are `PaintChromeState`'s. Counts the rules need are TipKit events (`TipEvents`:
+  `donations.count`); every tip's rules also read `TipSwitch.tipsOn`. A tip has no button but TipKit's
+  close button, which closes just that tip for good.
+- **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
+  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
+  three at buttons of a navigation bar, the gear, + and Refine, where TipKit's popover tip found
+  nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip
+  has no TipKit display limit, which would retire it from under that view: `TipDesk` says it once). A screen reports the
+  moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
+  stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
+  for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
+  hint is not queued, it waits for its moment to come again. A tip's turn ends when it is closed (TipKit
+  invalidates it), used (`PaintTips.used` → `invalidate(reason: .actionPerformed)`), its screen goes
+  (`TipDesk.leave`) or 45 s pass. `TipPacing`: one at a time, 3 minutes and something done between
+  hints (a fill, a slider, a screen), 3 a session (a stretch without a 30-minute break), 5 a day, 3 on
+  the first painting (counted from its opening, in place of the session's), silence while a finger or
+  the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
+  Feedback is on, and after a finish only Replay Painting. Tap to Paint alone waits for neither the
+  gap nor something done. State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
+  `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
+- **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
+  tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
+  The first shelf visit, once the starter pages show, gives A Page Is Waiting with no question asked
+  (`TipMoments.shelf`). Show Tips Again turns tips on, bumps the generation (`PaintTips.scoped` ids and
+  events) and starts the pacing and history over. Day one is the first launch with tips on
+  (`TipHistory.tipsOnSince`, set when the desk is made).
+- **Tests keep them hidden.** Demo launches and the test host clear TipKit and the pacing, put the
+  switch back to on, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the
+  scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
+  `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
+  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
+  bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
+  them; `GentleTipsUITests` and `PaintingTipsTests` do.
 
 ## Giving feedback
 

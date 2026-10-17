@@ -15,6 +15,7 @@ struct GalleryView: View {
 
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""
@@ -43,7 +44,7 @@ struct GalleryView: View {
                     let ready = library.readyToPaint(matching: query)
                     let preparing = shownPlaceholders
                     if !ready.isEmpty || !preparing.isEmpty {
-                        section("Ready to Paint", count: ready.count + preparing.count) {
+                        section("Ready to Paint", count: ready.count + preparing.count, tip: .shelfStarter) {
                             ForEach(preparing) { PlaceholderCard(placeholder: $0) }
                             ForEach(ready) { card($0) }
                         }
@@ -75,6 +76,15 @@ struct GalleryView: View {
         }
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
+        // one is painted or finished), tips are switched on.
+        .onAppear {
+            PaintTips.desk.enter(.shelf)
+            PaintTips.shelfMoment(library)
+        }
+        .onDisappear { PaintTips.desk.leave(.shelf) }
+        .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
+        .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards.
         .animation(.snappy, value: shownIDs)
         .animation(.snappy, value: library.placeholders)
@@ -142,7 +152,11 @@ struct GalleryView: View {
     private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
     private var spacing: CGFloat { width < 560 ? 16 : 26 }
 
-    private func section<Content: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder content: () -> Content) -> some View {
+    /// `tip` is a tip inline under the header while it has the turn (a popover would have nothing to
+    /// point at).
+    private func section<Content: View>(
+        _ title: LocalizedStringKey, count: Int, tip: TipID? = nil, @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(title).font(.display(.title2))
@@ -154,6 +168,11 @@ struct GalleryView: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
 
+            if let tip, PaintTips.desk.turn == tip {
+                GentleTipView(id: tip)
+                    .transition(.opacity)
+            }
+
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: spacing, alignment: .top), count: columnCount),
                 alignment: .leading, spacing: spacing + 8
@@ -161,6 +180,17 @@ struct GalleryView: View {
                 content()
             }
         }
+        // A fade, with nothing moving but the cards making room, under Reduce Motion as well.
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
+    }
+
+    /// The tips a card carries: touching and holding the first painting shown, and the first
+    /// finished one's time-lapse.
+    private func tips(of artwork: Artwork) -> [TipID] {
+        var ids: [TipID] = []
+        if shownIDs.first == artwork.id { ids.append(.shelfHold) }
+        if library.finished(matching: query).first?.id == artwork.id { ids.append(.shelfTimeLapse) }
+        return ids
     }
 
     private func card(_ artwork: Artwork) -> some View {
@@ -168,6 +198,10 @@ struct GalleryView: View {
             ArtworkCard(artwork: artwork, namespace: namespace)
         }
         .buttonStyle(PressableCardStyle())
+        .gentleTip(tips(of: artwork))
+        // The grid builds the cards near the screen: a tip waits for its card to be one of them.
+        .onAppear { PaintTips.desk.anchor(tips(of: artwork), present: true) }
+        .onDisappear { PaintTips.desk.anchor(tips(of: artwork), present: false) }
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery
@@ -219,12 +253,19 @@ struct GalleryView: View {
     @ViewBuilder
     private func editingMenu(for artwork: Artwork) -> some View {
         if artwork.isFavorite {
-            Button("Unfavorite", systemImage: "heart.slash") { library.setFavorite(artwork.id, false) }
+            Button("Unfavorite", systemImage: "heart.slash") {
+                PaintTips.used(.shelfHold)
+                library.setFavorite(artwork.id, false)
+            }
         } else {
-            Button("Favorite", systemImage: "heart") { library.setFavorite(artwork.id, true) }
+            Button("Favorite", systemImage: "heart") {
+                PaintTips.used(.shelfHold)
+                library.setFavorite(artwork.id, true)
+            }
         }
         Divider()
         Button("Rename", systemImage: "pencil") {
+            PaintTips.used(.shelfHold)
             renameText = artwork.title
             renaming = artwork
         }
@@ -240,7 +281,11 @@ struct GalleryView: View {
             }
         }
         if artwork.isComplete {
-            Button("Share Time-lapse", systemImage: "timelapse") { shareTimelapse(artwork) }
+            Button("Share Time-lapse", systemImage: "timelapse") {
+                PaintTips.used(.shelfHold)
+                PaintTips.used(.shelfTimeLapse)
+                shareTimelapse(artwork)
+            }
         }
         ShareLink(
             item: PrintableTemplateFile(
@@ -250,13 +295,19 @@ struct GalleryView: View {
             Label("Print Template…", systemImage: "printer")
         }
         Divider()
-        Button("Restart", systemImage: "arrow.counterclockwise") { restarting = artwork }
-            .disabled(!artwork.isStarted)
+        Button("Restart", systemImage: "arrow.counterclockwise") {
+            PaintTips.used(.shelfHold)
+            restarting = artwork
+        }
+        .disabled(!artwork.isStarted)
         deleteButton(for: artwork)
     }
 
     private func deleteButton(for artwork: Artwork) -> some View {
-        Button("Delete", systemImage: "trash", role: .destructive) { deleting = artwork }
+        Button("Delete", systemImage: "trash", role: .destructive) {
+            PaintTips.used(.shelfHold)
+            deleting = artwork
+        }
     }
 
     private func previewImage(_ artwork: Artwork) -> Image {

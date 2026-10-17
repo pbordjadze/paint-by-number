@@ -1,8 +1,10 @@
 import Foundation
 import Testing
+import TipKit
 @testable import PaintByNumber
 
-/// Which painting events feed the first-run tips, and the generations behind Show Tips Again.
+/// Which painting events feed the gentle tips, the generations behind Show Tips Again, and what each
+/// tip is made of: an id of its own, and rules.
 @MainActor
 struct PaintTipsTests {
     @Test func paintingEventsMapToTipSignals() {
@@ -31,6 +33,39 @@ struct PaintTipsTests {
         #expect(FirstPaintTip.hasPaint)
         PaintTips.paintingOpened(hasProgress: false)
         #expect(!FirstPaintTip.hasPaint)
+    }
+
+    @Test func everyTipHasAnIdOfItsOwn() {
+        let ids = TipID.allCases.map { $0.tip.id }
+        #expect(Set(ids).count == ids.count)
+    }
+
+    /// Whoever closed one of the first version's five bench tips has it closed: their ids carry over.
+    @Test func theBenchTipsOfTheFirstVersionKeepTheirIds() {
+        let generation = PaintTips.generation()
+        #expect(TipID.benchTap.tip.id == "tip.firstPaint.\(generation)")
+        #expect(TipID.benchFind.tip.id == "tip.hint.\(generation)")
+        #expect(TipID.benchZoom.tip.id == "tip.zoom.\(generation)")
+        #expect(TipID.benchDrag.tip.id == "tip.dragPaint.\(generation)")
+        #expect(TipID.benchPencil.tip.id == "tip.pencil.\(generation)")
+    }
+
+    /// Tips off means none: every tip's rules carry the tips-on parameter. And a tip has no buttons
+    /// but its close button: the Tips switch in Settings is the only way to turn them off.
+    @Test func everyTipHasRulesAndNoActions() {
+        for id in TipID.allCases {
+            let tip = id.tip
+            #expect(!tip.rules.isEmpty, "\(id) has no rules: tips off must mean none")
+            #expect(tip.actions.isEmpty, "\(id)")
+        }
+    }
+
+    /// A tip of the navigation bar sits in a popover of SwiftUI's own with its `TipView` inside: a
+    /// display limit of TipKit's would retire the tip from under that view, so the desk says it once.
+    @Test func theTipsOfTheNavigationBarHaveNoDisplayLimit() {
+        for id in TipID.allCases where id.hangsFromBar {
+            #expect(id.tip.options.isEmpty, "\(id)")
+        }
     }
 
     @Test func showingTipsAgainGivesThemNewIDs() throws {

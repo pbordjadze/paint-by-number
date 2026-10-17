@@ -1,7 +1,6 @@
 import Foundation
 import PaintCore
 import SwiftUI
-import TipKit
 
 /// Swatch geometry at a Dynamic Type size. Numerals grow with text up to 1.4×, so the palette
 /// keeps its place on screen at accessibility sizes; the Large Content Viewer covers the rest.
@@ -60,8 +59,6 @@ struct PaletteBar: View {
     var lines = 1
     /// Per color, bumped to shake its swatch (e.g. after tapping a region of that color).
     var shakes: [Int: Int] = [:]
-    /// A tip about the selected color, shown from its swatch.
-    var tip: (any Tip)? = nil
     var metrics: PaletteMetrics = .standard
     /// Shows the selected color's number and name above the swatches, so the color can be
     /// told by name (horizontal bars only; wide layouts show it in the progress badge).
@@ -70,6 +67,7 @@ struct PaletteBar: View {
     let order: [Int]
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The color whose details popover is open (long-press on its swatch).
     @State private var detailsColor: Int?
 
@@ -202,8 +200,12 @@ struct PaletteBar: View {
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
-        // Over a bottom bar, beside a trailing one.
-        .popoverTip(selected ? tip : nil, arrowEdge: axis == .horizontal ? .bottom : .trailing)
+        // The tips about the selected color (Tap to Paint, Can't Find It?) point at its swatch: over
+        // a bottom bar, beside a trailing one, and over it again at the largest text sizes, where
+        // beside would leave no room for the words.
+        .gentleTip(
+            .benchTap, .benchFind, active: selected,
+            arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(session.numberedColorNames[index])

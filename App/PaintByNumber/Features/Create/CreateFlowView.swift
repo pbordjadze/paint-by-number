@@ -122,7 +122,10 @@ struct CreateFlowView: View {
                 model.refine(ShellDemo.refinements(for: template))
                 return
             }
-            if openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
+            // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
+            if (openingSample != nil && ShellDemo.current != .createTip) || ShellDemo.current == .createFromFile {
+                DemoMode.markReady()
+            }
         }
         #endif
         .onChange(of: model.draft) { old, draft in
@@ -181,6 +184,7 @@ struct CreateFlowView: View {
         let draft = try await model.makeDraft()
         let artwork = try await library.create(draft)
         library.drafts.drop(photoID: model.photoID)
+        PaintTips.pageMade()
         let place = previewPicture.picture
         let from = StartHandoffPlan.entry(reduceMotion: reduceMotion, from: place)
         if Preferences().playsMakingOf, let source = model.makingOfSource(for: draft, artworkID: artwork.id) {

@@ -106,8 +106,11 @@ struct PhotoSourceView: View {
             browsedItem = nil
             pick(item)
         }
+        .onAppear { PaintTips.newPaintingOpened() }
+        .onDisappear { PaintTips.desk.leave(.newPainting) }
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
+                PaintTips.photoChosen()
                 model.load(imageData: data)
                 onPicked()
             } onFailure: {
@@ -125,6 +128,8 @@ struct PhotoSourceView: View {
         }
         .pickerStyle(.segmented)
         .accessibilityIdentifier("photo-source")
+        // No Photo at Hand: hung below the control that switches to Samples.
+        .gentleTip(.newPaintingSamples, arrowEdge: .top)
     }
 
     /// One layout for both widths, so the picker keeps its identity (and its loaded grid and
@@ -212,7 +217,11 @@ struct PhotoSourceView: View {
 
     private var samplesPane: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if isWide { SectionTitle("Samples") }
+            if isWide {
+                // Wide windows show the samples beside the photos: the tip points at their title.
+                SectionTitle("Samples")
+                    .gentleTip(.newPaintingSamples, arrowEdge: .top)
+            }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -244,6 +253,7 @@ struct PhotoSourceView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: 14)], spacing: 14) {
                 ForEach(samples) { sample in
                     Button {
+                        PaintTips.photoChosen()
                         model.load(sample: sample)
                         onPicked()
                     } label: {
@@ -275,6 +285,7 @@ struct PhotoSourceView: View {
 
     /// Shared by the inline picker and Browse All.
     private func pick(_ item: PhotosPickerItem) {
+        PaintTips.photoChosen()
         model.load(item: item)
         onPicked()
     }
