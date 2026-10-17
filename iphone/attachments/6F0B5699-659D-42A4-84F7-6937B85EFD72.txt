@@ -1,0 +1,66 @@
+Attributes: Application, 0x1184c3200, pid: 75844, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x1184c3200, pid: 75844, label: 'Paint by Moonlight'
+    Window (Main), 0x1184c0000, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1184c08c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1184c30c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1184c1540, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1184c3480, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1184c03c0, {{0.0, 0.0}, {402.0, 874.0}}
+                NavigationBar, 0x1184c0640, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Paint by Moonlight'
+                  Button, 0x1184c35c0, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Settings'
+                  Button, 0x1184c2080, {{290.0, 66.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+                  Button, 0x1184c0780, {{346.0, 66.0}, {36.0, 36.0}}, label: 'New Painting'
+                  StaticText, 0x1184c2800, {{16.0, 119.7}, {315.0, 40.7}}, label: 'Paint by Moonlight'
+                Other, 0x118584a00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x118584b40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x118584c80, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x118584dc0, {{0.0, 0.0}, {402.0, 874.0}}
+                        ScrollView, 0x118584f00, {{201.0, 0.0}, {0.0, 874.0}}
+                          Other, 0x118585040, {{201.0, 168.0}, {0.0, 0.0}}
+                        Other, 0x118585180, {{66.0, 235.0}, {270.0, 198.0}}
+                        StaticText, 0x1185852c0, {{55.8, 466.8}, {290.3, 67.7}}, label: 'Every painting starts with a photo'
+                        StaticText, 0x118585400, {{46.5, 544.5}, {309.0, 42.3}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                        Button, 0x118585540, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting'
+                          Image, 0x118585900, {{137.7, 644.0}, {14.3, 14.3}}, identifier: 'plus', label: 'Add'
+                          StaticText, 0x118585a40, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting'
+                Other, 0x1181a70c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1181a7d40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Toolbar, 0x1181a7c00, {{0.0, 788.0}, {402.0, 86.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                      Other, 0x1181a7340, {{28.0, 798.0}, {346.0, 48.0}}
+                        Other, 0x1181a7840, {{28.0, 798.0}, {346.0, 48.0}}
+                          Other, 0x1181a7980, {{28.0, 798.0}, {0.0, 0.0}}
+                            Other, 0x1181a6f80, {{28.0, 798.0}, {346.0, 48.0}}
+                              Other, 0x1181a7ac0, {{28.0, 798.0}, {346.0, 48.0}}
+                                Other, 0x1181a6d00, {{33.0, 803.0}, {336.0, 38.0}}
+                                  SearchField, 0x1181a6a80, {{33.0, 803.0}, {336.0, 38.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+                                    Image, 0x1181a7200, {{46.0, 812.3}, {20.3, 18.7}}, identifier: 'magnifyingglass', label: 'Search'
+      Other, 0x1181a7480, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1181a7700, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1181a7e80, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1181a6800, {{0.0, 0.0}, {402.0, 874.0}}
+              NavigationBar, 0x1181a6bc0, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x11830cc80, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Close'
+                StaticText, 0x11830d2c0, {{145.3, 73.7}, {111.0, 20.7}}, label: 'New Painting'
+                Button, 0x11830f840, {{345.0, 66.0}, {37.0, 36.0}}, label: 'Browse All…'
+              Other, 0x11830d540, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11830cf00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11830c280, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11830cb40, {{0.0, 0.0}, {402.0, 874.0}}
+                      StaticText, 0x11830d400, {{24.0, 120.0}, {354.0, 38.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.'
+                      SegmentedControl, 0x11830c140, {{20.0, 172.0}, {362.0, 31.0}}, identifier: 'photo-source'
+                        Button, 0x11830c8c0, {{20.0, 172.0}, {181.0, 32.0}}, label: 'Photos', Selected
+                        Button, 0x11830ca00, {{201.0, 172.0}, {181.0, 32.0}}, label: 'Samples'
+                      Image, 0x11830de00, {{166.0, 465.0}, {69.3, 57.0}}, identifier: 'photo.on.rectangle.angled', label: 'photo.on.rectangle.angled'
+                      Button, 0x11830fac0, {{111.3, 547.0}, {179.3, 50.3}}, identifier: 'choose-photo', label: 'Choose Photo'
+                        Image, 0x11830f340, {{133.3, 564.7}, {19.7, 15.3}}, identifier: 'photo', label: 'Photo'
+                        StaticText, 0x11830ee40, {{111.3, 547.0}, {179.3, 50.3}}, label: 'Choose Photo'
+              Other, 0x11830c3c0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11830ed00, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x1184c3200, pid: 75844, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x11830f480, pid: 75844, label: 'Paint by Moonlight'
+  }
