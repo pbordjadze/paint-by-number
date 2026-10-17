@@ -95,7 +95,9 @@ struct PhotoSourceView: View {
         }
         .onChange(of: libraryItems) { _, items in
             guard let item = items.first else { return }
-            // Clearing the selection lets the same photo be picked again after coming back.
+            // Clearing the selection lets the same photo be picked again after coming back. The
+            // item the picker then gives for it has no data (`CreateModel.load(item:)` keeps the
+            // first pick's).
             libraryItems = []
             pick(item)
         }

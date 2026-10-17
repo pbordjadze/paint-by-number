@@ -276,10 +276,46 @@ final class CreateModel {
     }
 
     func load(item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil) {
-            guard let data = try await item.loadTransferable(type: Data.self) else { throw CreateError.unreadable }
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { [self] in
+            let data = try await photoData(of: item)
             return try await Self.decode(data: data)
         }
+    }
+
+    /// The photos this flow has read from the library, newest first, by the picker's asset
+    /// identifier. `PhotoSourceView` resets the inline picker's selection after each pick so the
+    /// same photo can be picked again, and the item the picker then gives for a photo it gave
+    /// before carries the identifier and no content types: `loadTransferable` answers nil, however
+    /// often it is asked (CI, Oct 17: three content types the first time, none the second). The
+    /// copy read the first time stands in. The full system picker (Browse All, iPhone's Choose
+    /// Photo) is made without a photo library, so its items carry no identifier: nothing is kept.
+    @ObservationIgnored private var pickedPhotos: [PickedPhoto] = []
+
+    private struct PickedPhoto {
+        let identifier: String
+        let data: Data
+    }
+
+    /// How many photos `pickedPhotos` keeps: a photo is a few megabytes.
+    private static let pickedPhotosKept = 3
+
+    private func photoData(of item: PhotosPickerItem) async throws -> Data {
+        let identifier = item.itemIdentifier
+        if let data = try await item.loadTransferable(type: Data.self) {
+            if let identifier { keepPickedPhoto(data, identifier: identifier) }
+            return data
+        }
+        guard let identifier, let kept = pickedPhotos.first(where: { $0.identifier == identifier }) else {
+            throw CreateError.unreadable
+        }
+        Log.create.notice("The picker had no data for a photo it gave before: using the copy kept from then")
+        return kept.data
+    }
+
+    private func keepPickedPhoto(_ data: Data, identifier: String) {
+        pickedPhotos.removeAll { $0.identifier == identifier }
+        pickedPhotos.insert(PickedPhoto(identifier: identifier, data: data), at: 0)
+        if pickedPhotos.count > Self.pickedPhotosKept { pickedPhotos.removeLast(pickedPhotos.count - Self.pickedPhotosKept) }
     }
 
     /// `title` names the painting when the photo came with a name (an opened file); without
