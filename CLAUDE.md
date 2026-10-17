@@ -300,6 +300,14 @@ Saved paintings must open in every later build. The format history is documented
   `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
   numerals use New York, buttons and body text SF. The design system, tokens, canvas sheet and app
   icon: `App/CLAUDE.md` › Design.
+- Taste: every new screen or control, and every one not yet in the release, goes to the
+  **Lamplit Table** before it ships (Paul, October 17, 2026): the Lamp's standing jury for the
+  app's UI, the Astrologer, Rikyū, the Child at Bedtime, the Hedge Witch, Madeleine and
+  Originality (who can only veto). Its charters and how a round runs (a low-effort Opus subagent
+  per seat, the charter word for word, blind ballots, every reply kept) are `factory/GUARDIANS.md`
+  › The Lamplit Table and `factory/ORCHESTRATOR.md` on the `claude/vibe-factory` branch; a
+  round's brief, replies and decisions go in `factory/pieces/<piece>/` there, and its outcome in
+  the commit that acts on it. Its answers are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
   Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
@@ -343,8 +351,9 @@ Saved paintings must open in every later build. The format history is documented
   `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
   Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
   the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
-  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
-  `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
+  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`. So is Sun
+  and Moon: Settings' Sky row is under `#if UNRELEASED` and the release plays as before
+  (`Sky.current`), the same check failing if the row ships. `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
   what the release (TestFlight, App Store, the Release check) leaves out. It gates only
   features Paul chose to try before shipping; demo code stays `#if DEBUG`.
