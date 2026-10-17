@@ -6,17 +6,16 @@
 SHOTS is an unpacked CI report (`git fetch origin +refs/ci-shots/main:refs/ci-shots/main &&
 git archive refs/ci-shots/main | tar -x -C SHOTS`): it reads SHOTS/iphone/shots/iphone-<scenario>.png
 and SHOTS/ipad/shots/ipad-<scenario>.png, so a scenario named in SLIDES must stay in
-ci/scenarios.txt. It writes eight slides per size to DIR (outside the repo):
+ci/scenarios.txt. It writes seven slides per size to DIR (outside the repo):
 iphone-69-<n>-<name>.png (1320×2868), iphone-63-<n>-<name>.png (1206×2622, the size
 App Store Connect requires) and ipad-13-<n>-<name>.png (2064×2752), RGB without alpha.
 
-The first slides show the painter's own people and pets, which CI can't photograph: a crop
-with a `slot` reads <device>-<slot>.png from --slots (a folder outside the repo: family photos
+The first two slides show the painter's own pets, which CI can't photograph: a crop with a
+`slot` reads <device>-<slot>.png from --slots (a folder outside the repo: the painter's photos
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
 an iPhone or iPad whose screen has the same proportions. Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
-iphone-family-preview.png, iphone-pet-progress.png, iphone-family-finish.png, and the same three
-as ipad-*.png.
+iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png.
 
 Each slide is an HTML page rendered by headless Chromium: real UI as frameless crops (Apple's
 marketing guidelines don't allow drawn device frames), on the app's paper (#F4EFE6) with a
@@ -53,9 +52,8 @@ MOON = "M62 8 A44 44 0 1 0 92 78 A36 36 0 1 1 62 8Z"
 
 
 SLOTS = {
-    "family-preview": "a family photo on the New Painting screen (Photo | Painting)",
-    "pet-progress": "a pet's painting, about a third painted",
-    "family-finish": "a finished painting of family, at its Finished! bar",
+    "pet-preview": "a pet's photo on the New Painting screen (Photo | Painting)",
+    "pet-progress": "a second pet's painting, about a third painted",
 }
 
 
@@ -68,18 +66,14 @@ def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False,
 
 SLIDES = {
     "iphone": [
-        dict(title="Paint the people<br>you love", size=132, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
-            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="family-preview")]),
-        dict(title="The dog gets<br>a portrait too", crops=[
+        dict(title="Paint the pets<br>you love", size=132, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
+            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview")]),
+        dict(title="Every pet gets<br>a portrait", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
             crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
                  slot="pet-progress")]),
         dict(title="Tap a color,<br>fill its number", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)]),
-        dict(title="Then send it<br>to them", sub="Share the finished painting,<br>or print it.", crops=[
-            crop("paint-finish", (.04, .96, .335, .661), 1.42, "c", 1000, radius=28, shadow=True, slot="family-finish"),
-            crop("paint-finish", (.03, .97, .868, .958), 1.0945, "c", 2200, radius=78, shadow=True, over=True,
-                 slot="family-finish")]),
         dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
             crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
@@ -92,18 +86,14 @@ SLIDES = {
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True)]),
     ],
     "ipad": [
-        dict(title="Paint the people<br>you love", size=176, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
-            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="family-preview")]),
-        dict(title="The dog gets<br>a portrait too", crops=[
+        dict(title="Paint the pets<br>you love", size=176, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
+            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview")]),
+        dict(title="Every pet gets<br>a portrait", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
                  slot="pet-progress")]),
         dict(title="Tap a color,<br>fill its number", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)]),
-        dict(title="Then send it<br>to them", sub="Share the finished painting, or print it.", crops=[
-            crop("paint-finish", (.0145, .984, .2, .762), 1.0, "c", 860, radius=28, shadow=True, slot="family-finish"),
-            crop("paint-finish", (.228, .770, .927, .984), 1.5, "c", 2440, radius=70, shadow=True, over=True,
-                 slot="family-finish")]),
         dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
