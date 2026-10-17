@@ -27,8 +27,8 @@ enum SettingsKey {
     /// Start Painting first plays the making-of show (`MakingOfView`): the painter's photo becoming
     /// its painting, step by step (Settings › The Making-of; off by default).
     static let playsMakingOf = "playsMakingOf"
-    /// Whether the app gives small tips as the painter goes (Settings › Tips). Unset until the
-    /// gallery's first visit asks (Show Tips or No Thanks): then no tip shows (`TipInvitation`).
+    /// Whether the app gives small tips as the painter goes (Settings › Tips). On for everyone
+    /// until they switch it off there: unset means on (`TipPreference`).
     nonisolated static let tipsEnabled = "tipsEnabled"
 }
 

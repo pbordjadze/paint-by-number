@@ -19,8 +19,8 @@ final class PaintChromeState {
     @ObservationIgnored private weak var tipSession: PaintingSession?
     /// Give Feedback is on: no hint speaks.
     @ObservationIgnored var isGivingFeedback = false
-    /// A finger is moving or zooming the page (the canvas reports it).
-    @ObservationIgnored private var handIsDown = false
+    /// Since when a finger has been moving or zooming the page (the canvas reports it).
+    @ObservationIgnored private var handDownSince: ContinuousClock.Instant?
     @ObservationIgnored private var lastFill: ContinuousClock.Instant?
     @ObservationIgnored private var finishedAt: ContinuousClock.Instant?
     @ObservationIgnored private var singleFills = 0
@@ -29,6 +29,8 @@ final class PaintChromeState {
     @ObservationIgnored private var idle: Task<Void, Never>?
     @ObservationIgnored private var afterShine: Task<Void, Never>?
 
+    /// The longest a finger is taken to hold the page without the canvas reporting a change.
+    private static let handLimit: Duration = .seconds(10)
     /// A fill lands in this long.
     private static let fillSettle: Duration = .milliseconds(900)
     /// Zen Mode flies to the next area after a fill; after a finished color's shine first.
@@ -136,7 +138,7 @@ final class PaintChromeState {
 
     /// A finger took hold of the page to move or zoom it, or let go.
     func handChanged(_ down: Bool) {
-        handIsDown = down
+        handDownSince = down ? ContinuousClock.now : nil
         activity()
     }
 
@@ -229,7 +231,10 @@ final class PaintChromeState {
         guard let session = tipSession else { return [] }
         let now = ContinuousClock.now
         var quiet: TipPacing.Quiet = []
-        if handIsDown || session.isStroking { quiet.insert(.handOnPage) }
+        // A hand that the canvas never reported lifting (a fling stopped by a touch) is not on the
+        // page for ever.
+        if let handDownSince, now - handDownSince < Self.handLimit { quiet.insert(.handOnPage) }
+        if session.isStroking { quiet.insert(.handOnPage) }
         if let lastFill, now - lastFill < Self.fillSettle { quiet.insert(.filling) }
         if let lastFill, session.flowsToNextArea, now - lastFill < Self.zenDrift { quiet.insert(.zenDrifting) }
         if session.replayed != nil { quiet.insert(.replay) }

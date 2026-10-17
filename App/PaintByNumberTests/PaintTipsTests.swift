@@ -4,7 +4,7 @@ import TipKit
 @testable import PaintByNumber
 
 /// Which painting events feed the gentle tips, the generations behind Show Tips Again, and what each
-/// tip is made of: an id of its own, rules, and Turn Off Tips beneath its close button.
+/// tip is made of: an id of its own, and rules.
 @MainActor
 struct PaintTipsTests {
     @Test func paintingEventsMapToTipSignals() {
@@ -50,24 +50,14 @@ struct PaintTipsTests {
         #expect(TipID.benchPencil.tip.id == "tip.pencil.\(generation)")
     }
 
-    /// Show Tips Again must not ask again: the invitation's id has no generation.
-    @Test func theInvitationIsNotRenewedByShowTipsAgain() {
-        #expect(TipID.invitation.tip.id == "tip.invitation")
-    }
-
-    @Test func everyHintHasRulesAndTurnOffTips() {
-        for id in TipID.hints {
+    /// Tips off means none: every tip's rules carry the tips-on parameter. And a tip has no buttons
+    /// but its close button: the Tips switch in Settings is the only way to turn them off.
+    @Test func everyTipHasRulesAndNoActions() {
+        for id in TipID.allCases {
             let tip = id.tip
             #expect(!tip.rules.isEmpty, "\(id) has no rules: tips off must mean none")
-            #expect(tip.actions.map(\.id) == ["turnOffTips"], "\(id)")
+            #expect(tip.actions.isEmpty, "\(id)")
         }
-    }
-
-    /// Two buttons of equal weight, and no rule: the answer, not TipKit, keeps it from showing again.
-    @Test func theInvitationHasShowTipsAndNoThanks() {
-        let tip = TipID.invitation.tip
-        #expect(tip.actions.map(\.id) == ["showTips", "noThanks"])
-        #expect(tip.rules.isEmpty)
     }
 
     @Test func showingTipsAgainGivesThemNewIDs() throws {

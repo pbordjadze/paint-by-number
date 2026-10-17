@@ -200,25 +200,26 @@ final class SettingsTests: XCTestCase {
             "The Making-of didn't switch off: \(toggle.value ?? "")")
     }
 
-    /// Settings › Tips is off until the invitation on the shelf says otherwise, switches on and off,
-    /// and says what it is for.
+    /// Settings › Tips is on until it is switched off (the only way to turn tips off), switches off
+    /// and on, and says what it is for.
     @MainActor
-    func testTipsSwitchStartsOffAndTurnsOnAndOff() throws {
+    func testTipsSwitchStartsOnAndTurnsOffAndOn() throws {
         let app = openSettings()
         let toggle = app.switches["settings-tips"]
         scroll(app, to: toggle)
         for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
         XCTAssertTrue(toggle.exists, "Settings has no Tips switch")
-        XCTAssertEqual(toggle.value as? String, "0", "Tips doesn't start off")
+        XCTAssertEqual(toggle.value as? String, "1", "Tips doesn't start on")
         let footer = element(
             labeled: "Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.", in: app)
         XCTAssertTrue(footer.exists, "The Tips section has no footer")
-        XCTAssertTrue(flip(toggle, on: true), "Tips didn't switch on: \(toggle.value ?? "")")
-        attachScreenshot(of: app, named: "settings-tips-on")
         XCTAssertTrue(flip(toggle, on: false), "Tips didn't switch off: \(toggle.value ?? "")")
+        attachScreenshot(of: app, named: "settings-tips-off")
+        XCTAssertTrue(flip(toggle, on: true), "Tips didn't switch on: \(toggle.value ?? "")")
     }
 
-    /// Show Tips Again turns Tips on, and says so; turning Tips off makes it usable again.
+    /// Show Tips Again turns Tips on again after the switch was turned off, and says so; turning
+    /// Tips off makes it usable again.
     @MainActor
     func testShowTipsAgainTurnsTipsOn() throws {
         let app = openSettings()
@@ -228,7 +229,7 @@ final class SettingsTests: XCTestCase {
         for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
         XCTAssertTrue(again.exists, "Settings has no Show Tips Again")
         XCTAssertEqual(again.label, "Show Tips Again")
-        XCTAssertEqual(toggle.value as? String, "0", "Tips doesn't start off")
+        XCTAssertTrue(flip(toggle, on: false), "Tips didn't switch off: \(toggle.value ?? "")")
         again.tap()
         XCTAssertTrue(
             waitFor(toggle, toMatch: NSPredicate(format: "value == '1'")),

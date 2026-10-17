@@ -47,8 +47,7 @@ struct TipPacingTests {
         var pacing = TipPacing()
         show(&pacing, .shelfStarter, at: 0)
         #expect(refusal(pacing, .shelfNewPainting, at: 10) == .anotherShowing)
-        // Even the invitation and Tap to Paint wait for it.
-        #expect(refusal(pacing, .invitation, at: 10) == .anotherShowing)
+        // Even Tap to Paint waits for it.
         #expect(refusal(pacing, .benchTap, at: 10) == .anotherShowing)
     }
 
@@ -103,17 +102,6 @@ struct TipPacingTests {
         shownAndDone(&pacing, .benchDrag, at: 4)
         #expect(refusal(pacing, .benchShowPhoto, at: 6) == .tooSoon)
         #expect(refusal(pacing, .benchShowPhoto, at: 7) == nil)
-    }
-
-    @Test func theInvitationIsNoHintAndNeedsNoGap() {
-        var pacing = TipPacing()
-        show(&pacing, .invitation, at: 0)
-        pacing.hide(.invitation)
-        // Show Tips leads straight to the page that waits.
-        #expect(refusal(pacing, .shelfStarter, at: 0.1) == nil)
-        #expect(pacing.shownToday == 0)
-        #expect(pacing.shownThisSession == 0)
-        #expect(pacing.lastShown == nil)
     }
 
     @Test func tapToPaintWaitsForNeitherTheGapNorSomethingDone() {
@@ -433,18 +421,14 @@ struct TipPacingTests {
 
     // MARK: Ids
 
-    @Test func theDesignHasTwentyTwoHintsAndAnInvitation() {
-        #expect(TipID.hints.count == 22)
-        #expect(!TipID.invitation.isHint)
-        #expect(TipID.allCases.count == 23)
-        #expect(Set(TipID.allCases.map(\.rawValue)).count == 23)
-        let allHints = TipID.hints.allSatisfy { $0.isHint }
-        #expect(allHints)
+    @Test func theDesignHasTwentyTwoTips() {
+        #expect(TipID.allCases.count == 22)
+        #expect(Set(TipID.allCases.map(\.rawValue)).count == 22)
     }
 
     @Test func eachHintLivesWhereTheDesignPutsIt() {
         func ids(in place: TipPlace) -> Set<TipID> { Set(TipID.allCases.filter { $0.place == place }) }
-        #expect(ids(in: .shelf) == [.invitation, .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings])
+        #expect(ids(in: .shelf) == [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings])
         #expect(ids(in: .newPainting) == [.newPaintingSamples])
         #expect(ids(in: .preview) == [
             .newPaintingDivider, .newPaintingSuggested, .newPaintingReset, .newPaintingSliders, .newPaintingRefine,

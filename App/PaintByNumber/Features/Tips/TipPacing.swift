@@ -6,8 +6,8 @@ import Foundation
 /// tells it when the tip is shown and when it is over; its state lives in UserDefaults (`TipStore`),
 /// so the limits hold across launches.
 ///
-/// The limits (the invitation is no hint and counts for none of them):
-/// - one hint at a time, and none while something keeps them away (`Quiet`);
+/// The limits:
+/// - one tip at a time, and none while something keeps them away (`Quiet`);
 /// - at least `minimumGap` between hints, and something done between them (a fill, a slider moved,
 ///   a screen changed: `noteActivity`);
 /// - at most `hintsPerSession` in a session (a stretch of use that no break of `sessionBreak` cuts)
@@ -102,7 +102,6 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
         if showing != nil { return .anotherShowing }
         if !quiet.isDisjoint(with: .silence) { return .quiet }
         if quiet.contains(.pageFinished) && id != .benchReplay { return .replayOnly }
-        guard id.isHint else { return nil }
 
         if day == Self.dayKey(now, calendar: calendar), shownToday >= Self.hintsPerDay { return .dayFull }
         if continuesSession(at: now) {
@@ -124,7 +123,6 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
         rollSession(at: now)
         showing = id
         lastSeen = now
-        guard id.isHint else { return }
         let today = Self.dayKey(now, calendar: calendar)
         if day != today {
             day = today

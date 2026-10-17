@@ -17,7 +17,7 @@ extension Library {
 extension PaintTips {
     // MARK: The shelf
 
-    /// The shelf appeared, its library changed, or the invitation was answered.
+    /// The shelf appeared, its library changed, or tips were switched on.
     static func shelfMoment(_ library: Library) {
         desk.offer(desk.shelfCandidates(library.tipFacts), in: .shelf, rest: .milliseconds(900))
     }

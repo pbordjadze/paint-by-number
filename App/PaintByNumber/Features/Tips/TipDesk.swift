@@ -1,4 +1,5 @@
 import Observation
+import os
 import SwiftUI
 import TipKit
 
@@ -10,10 +11,8 @@ import TipKit
 ///   final, the painter stopped for a minute. The desk waits for TipKit to find one of the tips
 ///   eligible, and for the painter's hand to rest, then asks `TipPacing`. Refused, the moment is
 ///   spent: nothing is queued, the tip waits for the next time its moment comes (design §5).
-/// - Granted, the tip has the turn until it is closed, used, or its screen goes (`finish`,
+/// - Granted, the tip has the turn until it is closed, used, or its screen goes (`release`,
 ///   `leave`), and `turn` is the only tip any view points. One at a time follows.
-/// - The invitation takes its turn the same way but is no hint: it counts for none of the limits.
-///   Closing it counts as No Thanks.
 ///
 /// A tip that TipKit shows for its own reasons would not be here: every view takes its tip from
 /// `turn`, and the tips' rules carry the tips-on parameter besides.
@@ -22,8 +21,8 @@ import TipKit
 final class TipDesk {
     /// The tip whose turn it is: the only one a view may point.
     private(set) var turn: TipID?
-    /// Counts the answers to the invitation and the Tips switch; a screen that offers on the
-    /// answer (the shelf, after Show Tips) watches it.
+    /// Counts the changes of the Tips switch; a screen that offers when tips come on (the shelf,
+    /// after Show Tips Again) watches it.
     private(set) var answers = 0
 
     /// Tests and demos that show no tips: nothing is offered.
@@ -56,7 +55,7 @@ final class TipDesk {
     private static let settle: Duration = .milliseconds(350)
     /// The longest a moment waits for the hand to rest.
     private static let restWindow: Duration = .seconds(12)
-    /// A tip that stays unanswered this long has had its say: its turn lapses.
+    /// A tip left alone this long has had its say: its turn lapses.
     private static let lapse: Duration = .seconds(45)
     /// A tip TipKit has retired for being shown keeps its turn this long, which is time to read it.
     private static let shownEnough: Duration = .seconds(15)
@@ -67,6 +66,12 @@ final class TipDesk {
         pacing = store.pacing()
         history = store.history()
         pacing.beginSession(now: now())
+        // Tips are on from the first launch (and for whoever updates from an earlier build): the
+        // first day is today.
+        if history.tipsOnSince == nil, TipPreference.isEnabled(in: store.defaults) {
+            history.tipsTurnedOn(at: now())
+            store.save(history)
+        }
     }
 
     // MARK: What a view asks
@@ -140,7 +145,7 @@ final class TipDesk {
     func paintingOpened(_ id: String) -> Bool {
         let first = history.paintingOpened(id)
         store.save(history)
-        if first, TipInvitation.isEnabled(in: store.defaults) {
+        if first, TipPreference.isEnabled(in: store.defaults) {
             pacing.firstPaintingOpened(now: now())
             store.save(pacing)
         }
@@ -154,7 +159,7 @@ final class TipDesk {
 
     /// Facts the moments of the shelf and the bench are chosen with.
     func shelfCandidates(_ facts: TipMoments.Shelf) -> [TipID] {
-        TipMoments.shelf(facts, answer: TipInvitation.answer(in: store.defaults), history: history, now: now())
+        TipMoments.shelf(facts, history: history, now: now())
     }
 
     var isDayTwoOrLater: Bool { history.isDayTwoOrLater(now: now()) }
@@ -173,13 +178,16 @@ final class TipDesk {
         _ candidates: [TipID], in place: TipPlace, rest: Duration = .milliseconds(900),
         quiet: @escaping @MainActor () -> TipPacing.Quiet = { [] }
     ) {
-        guard !isMuted, turn == nil else { return }
+        guard !isMuted, TipPreference.isEnabled(in: store.defaults) else { return }
+        // A tip of a screen that is no longer in view is on its way out (screens come and go in no
+        // fixed order).
+        if let current = turn, !isInView(current.place) { release(current) }
+        guard turn == nil else { return }
         if place == .shelf, servedShelf { return }
         // What the limits refuse for good has nothing to wait for; what is only quiet, or lacks
         // something done, may change while the moment waits.
-        let wanted = candidates.filter { id in
-            isWanted(id) && Self.mayChange(pacing.refusal(for: id, quiet: quiet(), now: now()))
-        }
+        let wanted = candidates.filter { Self.mayChange(pacing.refusal(for: $0, quiet: quiet(), now: now())) }
+        notice("offer in \(place.rawValue): \(Self.names(candidates)), wanted \(Self.names(wanted))")
         guard !wanted.isEmpty else { return }
         stopOffering()
         offering = (place, Task { [weak self] in
@@ -200,12 +208,6 @@ final class TipDesk {
         }
     }
 
-    /// Whether `id` may be offered at all: the invitation until it is answered, hints once tips are on.
-    private func isWanted(_ id: TipID) -> Bool {
-        let defaults = store.defaults
-        return id == .invitation ? TipInvitation.answer(in: defaults) == .unanswered : TipInvitation.isEnabled(in: defaults)
-    }
-
     private func run(
         _ candidates: [TipID], place: TipPlace, rest: Duration, quiet: @escaping @MainActor () -> TipPacing.Quiet
     ) async {
@@ -215,7 +217,7 @@ final class TipDesk {
         while !Task.isCancelled {
             // The rules read the tips-on parameter, which TipKit takes from here only once it has
             // loaded its datastore: say again what it should be until it does.
-            let tipsOn = TipInvitation.isEnabled(in: store.defaults)
+            let tipsOn = TipPreference.isEnabled(in: store.defaults)
             if TipSwitch.tipsOn != tipsOn { TipSwitch.tipsOn = tipsOn }
             var stillPending = false
             chosen = nil
@@ -228,35 +230,56 @@ final class TipDesk {
                 if chosen != nil { break }
             }
             if chosen != nil, clock.now - began >= Self.settle { break }
-            if chosen == nil, !stillPending { return }
+            if chosen == nil, !stillPending {
+                notice("no tip of \(Self.names(candidates)) is eligible: \(Self.statuses(candidates))")
+                return
+            }
             if clock.now - began >= Self.eligibilityWindow { break }
             try? await Task.sleep(for: .milliseconds(100))
         }
-        guard let id = chosen, !Task.isCancelled else { return }
+        guard let id = chosen, !Task.isCancelled else {
+            notice("nothing was eligible in time: \(Self.statuses(candidates))")
+            return
+        }
 
         // The hand rests: nothing done for `rest`, however long it takes (within reason).
         while clock.now - lastActivity < rest {
-            guard !Task.isCancelled, clock.now - began < Self.restWindow else { return }
+            guard !Task.isCancelled, clock.now - began < Self.restWindow else {
+                notice("\(id.rawValue) gave up waiting for the hand to rest")
+                return
+            }
             try? await Task.sleep(for: .milliseconds(100))
         }
-        guard !Task.isCancelled, turn == nil, isInView(place), !(place == .shelf && servedShelf) else { return }
-        guard case .available = id.progress else { return }
-        guard !Self.needsAnchor.contains(id) || anchored[id, default: 0] > 0 else { return }
-        guard pacing.refusal(for: id, quiet: quiet(), now: now()) == nil else { return }
+        guard !Task.isCancelled, turn == nil, isInView(place), !(place == .shelf && servedShelf) else {
+            notice("\(id.rawValue) lost its place: cancelled \(Task.isCancelled), turn \(turn?.rawValue ?? "none"), views \(places.map(\.rawValue)), covered \(isCovered), served \(servedShelf)")
+            return
+        }
+        guard case .available = id.progress else {
+            notice("\(id.rawValue) is no longer available: \(Self.statuses([id]))")
+            return
+        }
+        guard !Self.needsAnchor.contains(id) || anchored[id, default: 0] > 0 else {
+            notice("\(id.rawValue) has no view to point at")
+            return
+        }
+        if let refusal = pacing.refusal(for: id, quiet: quiet(), now: now()) {
+            notice("\(id.rawValue) refused: \(String(describing: refusal))")
+            return
+        }
         grant(id)
     }
 
     private func grant(_ id: TipID) {
         pacing.show(id, now: now())
         store.save(pacing)
-        // The question is no hint: Show Tips leads at once to the page that waits.
-        if id.place == .shelf, id.isHint { servedShelf = true }
+        if id.place == .shelf { servedShelf = true }
         turn = id
+        notice("turn: \(id.rawValue)")
         watching?.cancel()
         watching = Task { [weak self] in await self?.watch(id) }
     }
 
-    /// Follows the tip on screen: closed or used, it is over; unanswered long enough, its turn lapses.
+    /// Follows the tip on screen: closed or used, it is over; left alone long enough, its turn lapses.
     private func watch(_ id: TipID) async {
         let clock = ContinuousClock()
         let began = clock.now
@@ -265,49 +288,48 @@ final class TipDesk {
             guard !Task.isCancelled, turn == id else { return }
             let elapsed = clock.now - began
             switch id.progress {
-            case .over(.closed):
-                // A button of the invitation closes it too: its answer is given a moment later.
-                if id == .invitation { try? await Task.sleep(for: .milliseconds(300)) }
-                finish(id, closedByPainter: true)
-                return
-            case .over(.used):
-                finish(id, closedByPainter: false)
+            case .over(.closed), .over(.used):
+                release(id)
                 return
             case .over(.shownEnough):
                 if elapsed > Self.shownEnough {
-                    finish(id, closedByPainter: false)
+                    release(id)
                     return
                 }
             case .available, .pending:
                 break
             }
             if elapsed > Self.lapse {
-                finish(id, closedByPainter: false)
+                release(id)
                 return
             }
         }
     }
 
-    /// The tip is over. The invitation closed without an answer is No Thanks.
-    private func finish(_ id: TipID, closedByPainter: Bool) {
-        guard turn == id else { return }
-        release(id)
-        if id == .invitation, closedByPainter, TipInvitation.answer(in: store.defaults) == .unanswered {
-            PaintTips.answerInvitation(showTips: false)
-        }
+    private func notice(_ message: String) {
+        Log.tips.notice("\(message, privacy: .public)")
+    }
+
+    private static func names(_ ids: [TipID]) -> String {
+        ids.map(\.rawValue).joined(separator: ", ")
+    }
+
+    private static func statuses(_ ids: [TipID]) -> String {
+        ids.map { "\($0.rawValue) \(String(describing: $0.tip.status))" }.joined(separator: ", ")
     }
 
     /// `id` leaves the screen, whatever the reason.
     private func release(_ id: TipID) {
         guard turn == id else { return }
         turn = nil
+        notice("turn over: \(id.rawValue)")
         watching?.cancel()
         watching = nil
         pacing.hide(id)
         store.save(pacing)
     }
 
-    /// Its thing was used (or its answer given): the tip on screen, if it is this one, goes.
+    /// Its thing was used: the tip on screen, if it is this one, goes.
     func stop(_ id: TipID) {
         release(id)
     }
@@ -318,9 +340,9 @@ final class TipDesk {
         if let turn { release(turn) }
     }
 
-    // MARK: Answers and starting over
+    // MARK: The switch and starting over
 
-    /// The answer to the invitation, or the Tips switch, changed.
+    /// The Tips switch changed.
     func answered(tipsOn: Bool) {
         if tipsOn { history.tipsTurnedOn(at: now()) }
         store.save(history)
@@ -351,10 +373,8 @@ private struct GentleTipModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         // `isPresented: nil` leaves it to TipKit to show and dismiss the popover by the tip's status
-        // (and picks the one overload of `popoverTip` that takes an action).
-        content.popoverTip(
-            active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge,
-            action: { PaintTips.perform($0) })
+        // (and picks the one overload of `popoverTip` that takes an arrow edge that may be nil).
+        content.popoverTip(active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge)
     }
 }
 
@@ -378,6 +398,6 @@ struct GentleTipView: View {
     let id: TipID
 
     var body: some View {
-        TipView(PaintTips.desk.tip(among: [id]), isPresented: nil, arrowEdge: nil, action: { PaintTips.perform($0) })
+        TipView(PaintTips.desk.tip(among: [id]), isPresented: nil, arrowEdge: nil)
     }
 }

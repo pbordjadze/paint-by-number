@@ -77,7 +77,7 @@ struct GalleryView: View {
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
-        // one is painted or finished), the invitation is answered.
+        // one is painted or finished), tips are switched on.
         .onAppear {
             PaintTips.desk.enter(.shelf)
             PaintTips.shelfMoment(library)

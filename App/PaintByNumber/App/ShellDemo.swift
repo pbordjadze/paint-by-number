@@ -41,10 +41,11 @@ import PaintCore
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
-/// - `gallery-tips-invitation`, `-dark`, `-long-text`: the gallery as the first launch leaves it,
-///   with the invitation to small tips beside the gear (Show Tips, No Thanks); the tips show only
-///   in the scenarios named here and `paint-tip` (`PaintTips.configure`).
-/// - `gallery-tip`: the same after Show Tips: A Page Is Waiting, inline in Ready to Paint.
+/// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
+///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
+///   `paint-tip` (`PaintTips.configure`).
+/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips hung below the
+///   gear. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
 /// - `create-tip`: the photograph starter's preview with Already Chosen for You at the
 ///   "Suggested for this photo" chip (the divider's tip is closed already).
 /// - `settings`: the settings sheet over the gallery.
@@ -79,7 +80,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
-         galleryTipsInvitation, galleryTip, createTip, settingsTips, settingsTip,
+         galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
          marginariumChapterOneTable, marginariumChapterTwo, marginariumWhosWho, marginariumWhosWhoTeams,
@@ -109,9 +110,9 @@ enum ShellDemo: Equatable {
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
-        case "gallery-tips-invitation", "gallery-tips-invitation-dark", "gallery-tips-invitation-long-text":
-            .galleryTipsInvitation
-        case "gallery-tip": .galleryTip
+        case "gallery-tip", "gallery-tip-dark", "gallery-tip-long-text": .galleryTip
+        case "gallery-tip-gear": .galleryTipGear
+        case "gallery-tips-off": .galleryTipsOff
         case "create-tip": .createTip
         case "settings-tips": .settingsTips
         case "settings-tip": .settingsTip
@@ -275,14 +276,22 @@ enum ShellDemo: Equatable {
                 }
                 DemoMode.markReady()
             })
-        case .galleryFirstRun:
+        case .galleryFirstRun, .galleryTipsOff:
             // What the first launch makes (`Library.seedIfNeeded`): the starters, nobody's touched.
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
                 DemoMode.markReady()
             })
-        case .galleryTipsInvitation, .galleryTip:
+        case .galleryTip:
             // The first launch's gallery, ready once the tip the scenario shows is up.
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
+                Task {
+                    await PaintTips.awaitDemoTip()
+                    DemoMode.markReady()
+                }
+            })
+        case .galleryTipGear:
+            // A finished painting: nothing waits to be painted, so the gear's tip comes first.
+            library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)], completion: { _ in
                 Task {
                     await PaintTips.awaitDemoTip()
                     DemoMode.markReady()

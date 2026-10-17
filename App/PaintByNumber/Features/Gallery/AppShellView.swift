@@ -166,8 +166,8 @@ struct AppShellView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
-                // The invitation, and later where the tips can be turned off: hung below the gear.
-                .gentleTip(.invitation, .shelfSettings, arrowEdge: .top)
+                // Where the tips can be turned off: hung below the gear.
+                .gentleTip(.shelfSettings, arrowEdge: .top)
         }
         #if UNRELEASED
         if showsMarginarium {

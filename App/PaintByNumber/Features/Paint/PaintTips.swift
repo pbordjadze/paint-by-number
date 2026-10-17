@@ -25,7 +25,6 @@ nonisolated struct FirstPaintTip: Tip {
         #Rule(Self.$hasPaint) { $0 == false }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// A minute with no fill while the selected color has areas left: the selected swatch shows where to paint.
@@ -39,7 +38,6 @@ nonisolated struct HintTip: Tip {
         #Rule(TipEvents.stalls) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// After two taps beside areas too small to hit at this zoom.
@@ -53,7 +51,6 @@ nonisolated struct ZoomTip: Tip {
         #Rule(TipEvents.smallMisses) { $0.donations.count >= 2 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// After 15 single fills: one stroke paints many areas.
@@ -67,7 +64,6 @@ nonisolated struct DragPaintTip: Tip {
         #Rule(TipEvents.singleTaps) { $0.donations.count >= 15 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The first Pencil touch on the page: the Pencil paints while fingers navigate.
@@ -81,11 +77,10 @@ nonisolated struct PencilTip: Tip {
         #Rule(TipEvents.pencilStrokes) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// Configuration, the answers to the invitation, and the bridge from what the painter does to
-/// TipKit donations and invalidations; the desk (`TipDesk`) gives the tips their turns.
+/// Configuration, the Tips switch, and the bridge from what the painter does to TipKit donations
+/// and invalidations; the desk (`TipDesk`) gives the tips their turns.
 enum PaintTips {
     nonisolated static let generationKey = "tipsGeneration"
 
@@ -107,9 +102,9 @@ enum PaintTips {
     /// Gives the tips their turns. Made after `configure` has cleared a demo's or a test's state.
     static let desk = TipDesk()
 
-    /// Call once at launch. Demo and test runs start from an empty datastore and no answer to the
-    /// invitation, so screenshots and tests never depend on what an earlier run saw, donated or
-    /// answered; they show no tip but the scenarios' own.
+    /// Call once at launch. Demo and test runs start from an empty datastore and the Tips switch at
+    /// its default, so screenshots and tests never depend on what an earlier run saw or donated;
+    /// they show no tip but the scenarios' own.
     static func configure() {
         #if DEBUG
         let isolatedRun = DemoMode.isActive || DemoMode.isTestHost
@@ -117,7 +112,7 @@ enum PaintTips {
         if isolatedRun {
             try? Tips.resetDatastore()
             TipStore().reset()
-            TipInvitation.forget()
+            TipPreference.forget()
             if demo == nil { Tips.hideAllTipsForTesting() }
         }
         #endif
@@ -126,51 +121,27 @@ enum PaintTips {
         } catch {
             Log.tips.error("TipKit configuration failed: \(String(describing: error), privacy: .public)")
         }
-        // Tips are off until the invitation says otherwise: the rules of every tip read this.
-        TipSwitch.tipsOn = TipInvitation.isEnabled()
+        // The rules of every tip read this: on unless Settings says otherwise.
+        TipSwitch.tipsOn = TipPreference.isEnabled()
         desk.beginSession()
         #if DEBUG
-        // A run that shows a tip lets only that scenario's tips speak.
-        desk.isMuted = isolatedRun && demo?.tip == nil
         if let demo {
-            if let enabled = demo.enabled { setEnabled(enabled) }
+            desk.isMuted = demo.isMuted
+            setEnabled(demo.enabled)
             for id in demo.closed { id.tip.invalidate(reason: .tipClosed) }
+        } else {
+            desk.isMuted = isolatedRun
         }
         #endif
     }
 
-    // MARK: The answer
+    // MARK: The switch
 
-    /// Tips on or off: the invitation's answer, the Tips switch in Settings. Either answers the
-    /// invitation, which never asks again.
+    /// Tips on or off: Settings › Tips' switch.
     static func setEnabled(_ enabled: Bool) {
-        TipInvitation.record(enabled)
+        TipPreference.record(enabled)
         TipSwitch.tipsOn = enabled
         desk.answered(tipsOn: enabled)
-    }
-
-    /// Show Tips or No Thanks, or the note closed (No Thanks).
-    static func answerInvitation(showTips: Bool) {
-        setEnabled(showTips)
-        TipID.invitation.invalidate()
-        desk.stop(.invitation)
-    }
-
-    /// Turn Off Tips, beneath every hint's close button.
-    static func turnOffTips() {
-        setEnabled(false)
-    }
-
-    /// A button of a tip was tapped. The tips carry the same handlers (`TipActions`,
-    /// `InvitationTip`); the views hand this one to TipKit as well, in case it asks for either, and
-    /// each answer is the same however many times it is given.
-    static func perform(_ action: Tips.Action) {
-        switch action.id {
-        case "showTips": answerInvitation(showTips: true)
-        case "noThanks": answerInvitation(showTips: false)
-        case "turnOffTips": turnOffTips()
-        default: break
-        }
     }
 
     /// Settings ▸ Show Tips Again: tips on, and every tip as new.
@@ -178,7 +149,7 @@ enum PaintTips {
         bumpGeneration()
         donated.removeAll()
         invalidated.removeAll()
-        TipInvitation.record(true)
+        TipPreference.record(true)
         TipSwitch.tipsOn = true
         desk.startOver()
         desk.answered(tipsOn: true)
@@ -272,19 +243,28 @@ enum PaintTips {
     // MARK: Demos
 
     #if DEBUG
-    /// The demo scenarios that show tips (the rest hide every one): the tip each waits for before
-    /// it signals readiness, whether it begins with tips on (nil: the invitation is still to be
-    /// answered), and the tips already closed when it begins. `paint-tip-fill` is for UI tests.
-    private static let demoScenarios: [String: (tip: TipID?, enabled: Bool?, closed: [TipID])] = [
-        "paint-tip": (.benchTap, true, []),
-        "paint-tip-fill": (.benchTap, true, []),
-        "gallery-tips-invitation": (.invitation, nil, []),
-        "gallery-tips-invitation-dark": (.invitation, nil, []),
-        "gallery-tips-invitation-long-text": (.invitation, nil, []),
-        "gallery-tip": (.shelfStarter, true, []),
-        "create-tip": (.newPaintingSuggested, true, [.newPaintingDivider]),
-        "settings-tips": (nil, true, []),
-        "settings-tip": (.drawerWorthALook, true, []),
+    /// A scenario that lets tips speak (the rest hide every one): the tip it waits for before it
+    /// signals readiness (none: it waits for nothing), whether the Tips switch is on, the tips
+    /// already closed when it begins, and whether the desk is muted (nothing is offered at all).
+    private struct DemoScenario {
+        var tip: TipID?
+        var enabled = true
+        var closed: [TipID] = []
+        var isMuted = false
+    }
+
+    /// `paint-tip-fill` and `gallery-tips-off` (the switch off, the real gate) are for UI tests.
+    private static let demoScenarios: [String: DemoScenario] = [
+        "paint-tip": DemoScenario(tip: .benchTap),
+        "paint-tip-fill": DemoScenario(tip: .benchTap),
+        "gallery-tip": DemoScenario(tip: .shelfStarter),
+        "gallery-tip-dark": DemoScenario(tip: .shelfStarter),
+        "gallery-tip-long-text": DemoScenario(tip: .shelfStarter),
+        "gallery-tip-gear": DemoScenario(tip: .shelfSettings),
+        "gallery-tips-off": DemoScenario(enabled: false),
+        "create-tip": DemoScenario(tip: .newPaintingSuggested, closed: [.newPaintingDivider]),
+        "settings-tips": DemoScenario(isMuted: true),
+        "settings-tip": DemoScenario(tip: .drawerWorthALook),
     ]
 
     /// The tip the running scenario shows.

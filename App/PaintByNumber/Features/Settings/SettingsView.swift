@@ -13,8 +13,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
-    /// Unset until the invitation on the shelf is answered; off until then.
-    @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = false
+    /// On until switched off here (`TipPreference`).
+    @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = true
     #if UNRELEASED
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     #endif
@@ -198,8 +198,8 @@ struct SettingsView: View {
         .presentationDetents([.large])
         .pageSizedOnPad()
         .tint(Theme.accent)
-        // The Tips switch is the invitation's answer, kept: tips on or off takes effect at once, and
-        // Show Tips Again can ask once more after the switch has been turned off.
+        // Tips on or off takes effect at once, and Show Tips Again can be used once more after the
+        // switch has been turned off.
         .onChange(of: tipsEnabled) { _, enabled in
             PaintTips.setEnabled(enabled)
             if !enabled { tipsReset = false }

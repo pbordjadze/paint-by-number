@@ -20,14 +20,10 @@ nonisolated enum TipPlace: String, CaseIterable, Codable, Sendable {
     }
 }
 
-/// The invitation and the 22 tips, by the design's ids. Pure data: the tips themselves (TipKit) are
-/// made from these in `TipID.tip`, and everything that decides when one may appear
-/// (`TipPacing`, `TipMoments`) speaks of ids alone.
+/// The 22 tips, by the design's ids. Pure data: the tips themselves (TipKit) are made from these in
+/// `TipID.tip`, and everything that decides when one may appear (`TipPacing`, `TipMoments`) speaks
+/// of ids alone.
 nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
-    /// The one question, beside the gear on the first visit to the shelf. Not a hint: the limits of
-    /// `TipPacing` don't count it.
-    case invitation
-
     case shelfStarter, shelfNewPainting, shelfHold, shelfTimeLapse, shelfSettings
     case newPaintingSamples
     case newPaintingDivider, newPaintingSuggested, newPaintingReset, newPaintingSliders, newPaintingRefine
@@ -35,14 +31,9 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
-    /// The 22 hints, without the invitation.
-    static let hints: [TipID] = allCases.filter(\.isHint)
-
-    var isHint: Bool { self != .invitation }
-
     var place: TipPlace {
         switch self {
-        case .invitation, .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings: .shelf
+        case .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings: .shelf
         case .newPaintingSamples: .newPainting
         case .newPaintingDivider, .newPaintingSuggested, .newPaintingReset, .newPaintingSliders, .newPaintingRefine: .preview
         case .refineFill: .refine

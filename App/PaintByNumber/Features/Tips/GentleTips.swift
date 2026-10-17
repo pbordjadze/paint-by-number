@@ -1,19 +1,18 @@
 import SwiftUI
 import TipKit
 
-// The gentle tips (the app's design panel's design of October 17): the invitation and 17 of the 22
-// tips; the five bench tips of the first version are in `PaintTips.swift`. A tip type only says
-// what it is, in the design's words, and what TipKit may count on to show it: the tips-on
-// parameter, and the events and parameters the moment needs. When it may appear is `TipDesk`'s
-// (`TipPacing`: one at a time, the gap, the limits, quiet moments); where it points is its view's
-// (`gentleTip`).
+// The gentle tips (the app's design panel's design of October 17): 17 of the 22 tips; the five bench
+// tips of the first version are in `PaintTips.swift`. A tip type only says what it is, in the
+// design's words, and what TipKit may count on to show it: the tips-on parameter, and the events and
+// parameters the moment needs. When it may appear is `TipDesk`'s (`TipPacing`: one at a time, the
+// gap, the limits, quiet moments); where it points is its view's (`gentleTip`). A tip closes with its
+// own close button and stays closed; the switch in Settings › Tips is the only way to turn them off.
 //
-// The tip types are `nonisolated`: TipKit reads them off the main actor. Every hint but the
-// invitation has Turn Off Tips beneath its close button (`TipActions`).
+// The tip types are `nonisolated`: TipKit reads them off the main actor.
 
-/// Whether tips are on, for every tip's rules: the answer to the invitation and the Tips switch in
-/// Settings, set by `PaintTips.setEnabled`. A parameter rather than only the desk's say-so, so that
-/// turning tips off takes a tip that is showing off the screen at once.
+/// Whether tips are on, for every tip's rules: Settings › Tips' switch, set by `PaintTips.setEnabled`.
+/// A parameter rather than only the desk's say-so, so that turning tips off takes a tip that is
+/// showing off the screen at once.
 nonisolated struct TipSwitch {
     @Parameter static var tipsOn: Bool = false
 }
@@ -48,34 +47,10 @@ nonisolated enum TipEvents {
     }
 }
 
-nonisolated enum TipActions {
-    /// Beneath every hint's close button: one small line that turns tips off from inside the hint.
-    static var turnOff: Tips.Action {
-        Tips.Action(id: "turnOffTips", perform: { PaintTips.turnOffTips() }) { Text("Turn Off Tips") }
-    }
-}
-
-// MARK: The invitation
-
-/// The one question, on the first visit to the shelf, beside the gear: two buttons of equal weight.
-/// Closing the note counts as No Thanks (`TipDesk` watches for it). It has no rule: what keeps it
-/// from showing again is the answer, kept in `SettingsKey.tipsEnabled`, not TipKit's say-so, and its
-/// id carries no generation, because Show Tips Again must not ask again.
-nonisolated struct InvitationTip: Tip {
-    var id: String { "tip.invitation" }
-    var title: Text { Text("Small Tips?") }
-    var message: Text? { Text("Would you like small tips as you go? You can change this in Settings.") }
-    var image: Image? { Image(systemName: "lightbulb") }
-    var actions: [Tips.Action] {
-        Tips.Action(id: "showTips", perform: { PaintTips.answerInvitation(showTips: true) }) { Text("Show Tips") }
-        Tips.Action(id: "noThanks", perform: { PaintTips.answerInvitation(showTips: false) }) { Text("No Thanks") }
-    }
-}
-
 // MARK: The shelf
 
-/// The first shelf visit, right after Show Tips: the starters are ready. Inline in Ready to Paint,
-/// where a popover has nothing to point at. Stops when any painting is opened.
+/// The first shelf visit, once the starters are ready. Inline in Ready to Paint, where a popover has
+/// nothing to point at. Stops when any painting is opened.
 nonisolated struct ShelfStarterTip: Tip {
     var id: String { PaintTips.scoped("tip.shelfStarter") }
     var title: Text { Text("A Page Is Waiting") }
@@ -86,7 +61,6 @@ nonisolated struct ShelfStarterTip: Tip {
     }
     // Inline, it may come back on a visit or two while no painting has been opened.
     var options: [any TipOption] { Tips.MaxDisplayCount(3) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// Back on the shelf after the first painting session: where a new page begins. At the + button.
@@ -100,7 +74,6 @@ nonisolated struct ShelfNewPaintingTip: Tip {
         #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// From day two on, with two or more paintings: what a touch and hold on a painting offers.
@@ -113,7 +86,6 @@ nonisolated struct ShelfHoldTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// A painting is finished and the shelf shows it: the time-lapse, on a later visit than the hold.
@@ -126,7 +98,6 @@ nonisolated struct ShelfTimeLapseTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The shelf after the first finished painting: where the tips can be turned off. At the gear.
@@ -139,7 +110,6 @@ nonisolated struct ShelfSettingsTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 // MARK: New Painting
@@ -154,7 +124,6 @@ nonisolated struct NewPaintingSamplesTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The first preview, once loaded: the divider. Stops when the divider is dragged.
@@ -167,7 +136,6 @@ nonisolated struct NewPaintingDividerTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The first preview, after the divider's tip is over: the settings are the suggestion. At its chip.
@@ -181,7 +149,6 @@ nonisolated struct NewPaintingSuggestedTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The first time a slider is let go: the way back. At Reset to Suggested. Stops when it is used.
@@ -195,7 +162,6 @@ nonisolated struct NewPaintingResetTip: Tip {
         #Rule(TipEvents.sliderReleases) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The second page made, once its preview is up: what Colors and Detail do. Stops when either moves.
@@ -209,7 +175,6 @@ nonisolated struct NewPaintingSlidersTip: Tip {
         #Rule(TipEvents.pagesMade) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The third page made, once its preview is up: Refine, which is optional. At the Refine button.
@@ -223,7 +188,6 @@ nonisolated struct NewPaintingRefineTip: Tip {
         #Rule(TipEvents.pagesMade) { $0.donations.count >= 2 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 // MARK: Refine
@@ -239,7 +203,6 @@ nonisolated struct RefineFillTip: Tip {
         #Rule(TipEvents.linesDrawn) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 // MARK: The bench
@@ -255,7 +218,6 @@ nonisolated struct BenchShowPhotoTip: Tip {
         #Rule(TipEvents.quarters) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The first page finished, its shine over: the replay, the only hint after a finish. At Replay.
@@ -269,7 +231,6 @@ nonisolated struct BenchReplayTip: Tip {
         #Rule(TipEvents.finishes) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// The second painting session, in a pause with no stroke: Zen Mode, in More.
@@ -283,7 +244,6 @@ nonisolated struct BenchZenTip: Tip {
         #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 /// Opening the third painting, at least a day after the first page was finished: Give Feedback.
@@ -296,7 +256,6 @@ nonisolated struct BenchFeedbackTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 // MARK: The drawer
@@ -313,7 +272,6 @@ nonisolated struct DrawerWorthALookTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
-    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
 // MARK: Ids to tips
@@ -322,7 +280,6 @@ extension TipID {
     /// The tip of this id, made afresh: tip types are values, their ids those of their kind.
     nonisolated var tip: any Tip {
         switch self {
-        case .invitation: InvitationTip()
         case .shelfStarter: ShelfStarterTip()
         case .shelfNewPainting: ShelfNewPaintingTip()
         case .shelfHold: ShelfHoldTip()
@@ -356,11 +313,6 @@ extension TipID {
         if case .tipClosed = reason { return .over(.closed) }
         if case .actionPerformed = reason { return .over(.used) }
         return .over(.shownEnough)
-    }
-
-    /// Stops the tip for good: its thing was used (`invalidate(reason: .actionPerformed)`).
-    @MainActor func invalidate() {
-        tip.invalidate(reason: .actionPerformed)
     }
 }
 

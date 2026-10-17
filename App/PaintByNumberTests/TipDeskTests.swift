@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// The desk's bookkeeping: what the painter has done, the answer to the invitation, starting over.
-/// (Giving a tip its turn asks TipKit, which these tests leave alone: `TipPacingTests` covers the
-/// limits and `TipInvitationTests` which tips a moment offers.)
+/// The desk's bookkeeping: what the painter has done, the Tips switch, starting over. (Giving a tip
+/// its turn asks TipKit, which these tests leave alone: `TipPacingTests` covers the limits and
+/// `TipMomentsTests` which tips a moment offers.)
 @MainActor
 struct TipDeskTests {
     /// A clock the test moves, and a suite of its own.
@@ -23,9 +23,11 @@ struct TipDeskTests {
         func cleanup() { defaults.removePersistentDomain(forName: suite) }
     }
 
-    private func fixture() throws -> Fixture {
+    /// A desk on a suite of its own, with the Tips switch as given (on, the default, leaves it unset).
+    private func fixture(tipsOn: Bool = true) throws -> Fixture {
         let suite = "TipDeskTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
+        if !tipsOn { TipPreference.record(false, in: defaults) }
         let store = TipStore(defaults: defaults)
         let clock = TestClock()
         let desk = TipDesk(store: store, now: { clock.date })
@@ -43,14 +45,13 @@ struct TipDeskTests {
     }
 
     @Test func theFirstPaintingGetsItsOwnLimitOnlyWithTipsOn() throws {
-        let off = try fixture()
+        let off = try fixture(tipsOn: false)
         defer { off.cleanup() }
         off.desk.paintingOpened("a")
         #expect(off.store.pacing().firstPaintingLeft == nil)
 
         let on = try fixture()
         defer { on.cleanup() }
-        TipInvitation.record(true, in: on.defaults)
         on.desk.paintingOpened("a")
         #expect(on.store.pacing().firstPaintingLeft == TipPacing.hintsOnFirstPainting)
         on.desk.paintingClosed()
@@ -67,25 +68,32 @@ struct TipDeskTests {
         #expect(f.store.history().hasFilled)
     }
 
-    @Test func turningTipsOnStartsDayOne() throws {
+    /// Tips are on from the first launch: day one is the day the desk was first made.
+    @Test func theFirstDayBeginsAtTheFirstLaunch() throws {
         let f = try fixture()
         defer { f.cleanup() }
-        f.desk.answered(tipsOn: true)
-        #expect(f.desk.answers == 1)
+        #expect(f.store.history().tipsOnSince == f.clock.date)
         #expect(!f.desk.isDayTwoOrLater)
         f.clock.date.addTimeInterval(24 * 3600)
         #expect(f.desk.isDayTwoOrLater)
-        // Switching tips off and on again keeps the day they began.
+        // A later launch keeps the day tips began.
+        let later = TipDesk(store: f.store, now: { f.clock.date })
+        #expect(later.isDayTwoOrLater)
+    }
+
+    @Test func switchingTipsOffAndOnKeepsTheDayTheyBegan() throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.clock.date.addTimeInterval(24 * 3600)
         f.desk.answered(tipsOn: false)
         f.desk.answered(tipsOn: true)
-        #expect(f.desk.answers == 3)
+        #expect(f.desk.answers == 2)
         #expect(f.desk.isDayTwoOrLater)
     }
 
-    @Test func turningTipsOffBeginsNoDay() throws {
-        let f = try fixture()
+    @Test func tipsSwitchedOffBeginNoDay() throws {
+        let f = try fixture(tipsOn: false)
         defer { f.cleanup() }
-        f.desk.answered(tipsOn: false)
         #expect(f.store.history().tipsOnSince == nil)
         f.clock.date.addTimeInterval(5 * 24 * 3600)
         #expect(!f.desk.isDayTwoOrLater)
@@ -114,21 +122,17 @@ struct TipDeskTests {
         #expect(f.desk.feedbackIsDue)
     }
 
-    @Test func theShelfOffersWhatTheAnswerAllows() throws {
+    /// No question is asked: the first visit's candidate is the page that waits.
+    @Test func theShelfOffersThePageThatWaitsToANewcomer() throws {
         let f = try fixture()
         defer { f.cleanup() }
         let starters = TipMoments.Shelf(artworks: 2, started: 0, ready: 2, finished: 0)
-        #expect(f.desk.shelfCandidates(starters) == [.invitation])
-        TipInvitation.record(true, in: f.defaults)
         #expect(f.desk.shelfCandidates(starters) == [.shelfStarter])
-        TipInvitation.record(false, in: f.defaults)
-        #expect(f.desk.shelfCandidates(starters).isEmpty)
     }
 
     @Test func startingOverMakesEveryTipFresh() throws {
         let f = try fixture()
         defer { f.cleanup() }
-        TipInvitation.record(true, in: f.defaults)
         f.desk.answered(tipsOn: true)
         f.desk.paintingOpened("a")
         f.desk.filled()
@@ -150,7 +154,15 @@ struct TipDeskTests {
         let f = try fixture()
         defer { f.cleanup() }
         f.desk.isMuted = true
-        TipInvitation.record(true, in: f.defaults)
+        f.desk.enter(.shelf)
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.turn == nil)
+    }
+
+    /// Tips off means none: nothing is offered, though nothing is muted.
+    @Test func aDeskWithTipsSwitchedOffOffersNothing() throws {
+        let f = try fixture(tipsOn: false)
+        defer { f.cleanup() }
         f.desk.enter(.shelf)
         f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
         #expect(f.desk.turn == nil)

@@ -1,27 +1,18 @@
 import Foundation
 
-/// The invitation's answer, and the Tips switch in Settings, are one thing: `SettingsKey.tipsEnabled`.
-/// Unset until the first visit to the shelf is answered (Show Tips, No Thanks, or the note closed,
-/// which counts as No Thanks); set, the invitation never shows again, whatever changes the value.
-nonisolated enum TipInvitation {
-    enum Answer: Equatable, Sendable {
-        case unanswered, showTips, noThanks
-    }
-
-    static func answer(in defaults: UserDefaults = .standard) -> Answer {
-        guard let enabled = defaults.object(forKey: SettingsKey.tipsEnabled) as? Bool else { return .unanswered }
-        return enabled ? .showTips : .noThanks
-    }
-
+/// Whether tips are on: Settings › Tips' switch, `SettingsKey.tipsEnabled`. Tips are on for everyone
+/// until they switch them off there (the only way to), so unset means on: whoever updates from an
+/// earlier build has them too.
+nonisolated enum TipPreference {
     static func isEnabled(in defaults: UserDefaults = .standard) -> Bool {
-        answer(in: defaults) == .showTips
+        defaults.object(forKey: SettingsKey.tipsEnabled) as? Bool ?? true
     }
 
     static func record(_ enabled: Bool, in defaults: UserDefaults = .standard) {
         defaults.set(enabled, forKey: SettingsKey.tipsEnabled)
     }
 
-    /// Unanswered again: what a demo or test launch starts from.
+    /// Back to the default, on: what a demo or test launch starts from.
     static func forget(in defaults: UserDefaults = .standard) {
         defaults.removeObject(forKey: SettingsKey.tipsEnabled)
     }
@@ -41,18 +32,11 @@ nonisolated enum TipMoments {
         var preparing = false
     }
 
-    /// What the shelf may say on this visit. Nothing before its pages are in view; the invitation
-    /// until it is answered; after Show Tips, the page that waits, then, as the painter reaches
-    /// them, the rest. At most one of them is given its turn per visit (`TipDesk`).
-    static func shelf(
-        _ facts: Shelf, answer: TipInvitation.Answer, history: TipHistory, now: Date, calendar: Calendar = .current
-    ) -> [TipID] {
+    /// What the shelf may say on this visit. Nothing before its pages are in view; then, to a
+    /// newcomer, the page that waits and, as the painter reaches them, the rest. At most one of them
+    /// is given its turn per visit (`TipDesk`).
+    static func shelf(_ facts: Shelf, history: TipHistory, now: Date, calendar: Calendar = .current) -> [TipID] {
         guard !facts.preparing, facts.artworks > 0 else { return [] }
-        switch answer {
-        case .unanswered: return [.invitation]
-        case .noThanks: return []
-        case .showTips: break
-        }
         var due: [TipID] = []
         // Nobody has painted: the starters wait, and no painting has been opened.
         if facts.started == 0, facts.finished == 0, facts.ready > 0, history.openedCount == 0 {

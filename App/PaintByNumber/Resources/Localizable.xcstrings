@@ -6,7 +6,7 @@
       "extractionState" : "manual"
     },
     "A Page Is Waiting" : {
-      "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown right after Show Tips",
+      "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
     "About" : {
@@ -1905,10 +1905,6 @@
       "comment" : "Title of the tip at Samples when the New Painting screen opens for the first time",
       "extractionState" : "manual"
     },
-    "No Thanks" : {
-      "comment" : "Button of the invitation to small tips that keeps tips off; closing the note counts as No Thanks",
-      "extractionState" : "manual"
-    },
     "Painting Length sets how long new pages take. The Making-of shows a photo becoming its page." : {
       "comment" : "Message of the tip titled Worth a Look Here, at the Painting Length setting; the Making-of is a setting that plays a show after Start Painting",
       "extractionState" : "manual"
@@ -1949,16 +1945,8 @@
       "comment" : "Title of the tip at a finished painting in the gallery about sharing its time-lapse",
       "extractionState" : "manual"
     },
-    "Show Tips" : {
-      "comment" : "Button of the invitation to small tips that turns tips on; it weighs the same as No Thanks",
-      "extractionState" : "manual"
-    },
     "Skip" : {
       "comment" : "Button over the making-of show that ends it and opens the new painting",
-      "extractionState" : "manual"
-    },
-    "Small Tips?" : {
-      "comment" : "Title of the invitation to small tips, a note beside the gallery’s Settings button on the first visit",
       "extractionState" : "manual"
     },
     "Tap + to turn one of your photos, or a sample, into a page to paint." : {
@@ -2027,10 +2015,6 @@
     },
     "Touch and hold, then drag across areas with this number to fill them in one stroke." : {
       "comment" : "Message of the tip titled Paint Several Areas",
-      "extractionState" : "manual"
-    },
-    "Turn Off Tips" : {
-      "comment" : "Small button beneath the close button of every tip, turning all tips off",
       "extractionState" : "manual"
     },
     "Watch It Again" : {
@@ -4579,10 +4563,6 @@
     },
     "Worth a Look Here" : {
       "comment" : "Title of the tip at Painting Length when Settings opens for the first time",
-      "extractionState" : "manual"
-    },
-    "Would you like small tips as you go? You can change this in Settings." : {
-      "comment" : "Message of the invitation to small tips (the note titled Small Tips?); Settings is where the Tips switch is",
       "extractionState" : "manual"
     },
     "You Can Always Go Back" : {

@@ -285,19 +285,21 @@ synchronized folder would bundle it into the app.
 ## Tips
 
 The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
-and Never list are the spec; its notes are the record, not UI): one invitation beside the gallery's
-gear, then 22 hints, each said once. The shelf is the gallery, the bench the painting screen, the
-drawer Settings; `TipID` names the invitation and the hints and `TipPlace` where they live.
+and Never list are the spec; its notes are the record, not UI): 22 tips, each said once, on for
+everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
+and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
+gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
+where they live.
 
-- **Where they live.** `Features/Tips/`: `GentleTips` (the invitation and 17 of the hints as TipKit
-  tips, `nonisolated`, in the design's words; the other five, the bench's first, are in
-  `Features/Paint/PaintTips.swift` with the ids of the first version, so what was closed stays
-  closed), `TipDesk` (turns), `TipPacing` (limits, with `TipHistory` and `TipStore`),
-  `TipInvitation` (the answer, and `TipMoments`, which tips a moment may offer) and
-  `PaintTips+Moments`. `PaintTips` is the facade (configure, answers, donations, `used`), set up in
-  `PaintByNumberApp.init`; the bench's moments are `PaintChromeState`'s. Counts the rules need are
-  TipKit events (`TipEvents`: `donations.count`); every hint's rules also read `TipSwitch.tipsOn`,
-  and every hint has Turn Off Tips (`TipActions`) beneath its close button.
+- **Where they live.** `Features/Tips/`: `GentleTips` (17 of the tips as TipKit tips, `nonisolated`,
+  in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
+  with the ids of the first version, so what was closed stays closed), `TipDesk` (turns), `TipPacing`
+  (limits, with `TipHistory` and `TipStore`), `TipMoments` (`TipPreference`, the switch's value, and
+  `TipMoments`, which tips a moment may offer) and `PaintTips+Moments`. `PaintTips` is the facade
+  (configure, the switch, donations, `used`), set up in `PaintByNumberApp.init`; the bench's moments
+  are `PaintChromeState`'s. Counts the rules need are TipKit events (`TipEvents`:
+  `donations.count`); every tip's rules also read `TipSwitch.tipsOn`. A tip has no button but TipKit's
+  close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
@@ -310,21 +312,22 @@ drawer Settings; `TipID` names the invitation and the hints and `TipPlace` where
   the first painting (counted from its opening, in place of the session's), silence while a finger or
   the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
   Feedback is on, and after a finish only Replay Painting. Tap to Paint alone waits for neither the
-  gap nor something done. The invitation is no hint and counts for none of it. State: UserDefaults,
-  `TipStore` (`tipsPacing`, `tipsHistory`); `TipPacingTests` and `TipInvitationTests` run on Linux
-  too (the files are Foundation-only).
-- **The invitation.** `SettingsKey.tipsEnabled` is unset until answered and is Settings › Tips'
-  switch: Show Tips and No Thanks set it (closing the note counts as No Thanks, `TipDesk.finish`), the
-  switch and Turn Off Tips change it, and once set the invitation never shows (`TipInvitation`,
-  `TipMoments.shelf`). Testers updating from earlier builds have no answer yet: they are asked once
-  too. Show Tips Again turns tips on, bumps the generation (`PaintTips.scoped` ids and events) and
-  starts the pacing and history over.
-- **Tests keep them hidden.** Demo launches and the test host clear TipKit, the answer and the
-  pacing, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the scenarios
-  `PaintTips.demoScenarios` lists (each says which tip it waits for and `DemoMode.markReady()` follows
-  it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI tests), `gallery-tips-invitation`
-  (with `-dark`, `-long-text`), `gallery-tip`, `create-tip`, `settings-tips`, `settings-tip`. A UI test
-  that needs a tip names one of them; `GentleTipsUITests` and `PaintingTipsTests` do.
+  gap nor something done. State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
+  `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
+- **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
+  tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
+  The first shelf visit, once the starter pages show, gives A Page Is Waiting with no question asked
+  (`TipMoments.shelf`). Show Tips Again turns tips on, bumps the generation (`PaintTips.scoped` ids and
+  events) and starts the pacing and history over. Day one is the first launch with tips on
+  (`TipHistory.tipsOnSince`, set when the desk is made).
+- **Tests keep them hidden.** Demo launches and the test host clear TipKit and the pacing, put the
+  switch back to on, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the
+  scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
+  `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
+  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
+  bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
+  them; `GentleTipsUITests` and `PaintingTipsTests` do.
 
 ## Giving feedback
 
