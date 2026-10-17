@@ -1,0 +1,29 @@
+Attributes: Switch, 0x1138bfc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Element subtree:
+ →Switch, 0x1138bfc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Path to element:
+ →Application, 0x1138be300, pid: 98898, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1138be440, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x1138be580, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x1138be6c0, {{48.0, 42.0}, {936.0, 1282.0}}
+     ↳Other, 0x1138be800, {{48.0, 42.0}, {936.0, 1282.0}}
+      ↳Other, 0x1138be940, {{inf, inf}, {0.0, 0.0}}
+       ↳Other, 0x1138bea80, {{inf, inf}, {0.0, 0.0}}
+        ↳Other, 0x1138bebc0, {{inf, inf}, {0.0, 0.0}}
+         ↳Other, 0x1138bed00, {{inf, inf}, {0.0, 0.0}}
+          ↳Other, 0x1138bee40, {{inf, inf}, {0.0, 0.0}}
+           ↳Other, 0x1138bef80, {{inf, inf}, {0.0, 0.0}}
+            ↳Other, 0x1138bf0c0, {{inf, inf}, {0.0, 0.0}}
+             ↳Other, 0x1138bf200, {{inf, inf}, {0.0, 0.0}}
+              ↳Other, 0x1138bf340, {{inf, inf}, {0.0, 0.0}}
+               ↳Other, 0x1138bf480, {{inf, inf}, {0.0, 0.0}}
+                ↳CollectionView, 0x1138bf5c0, {{inf, inf}, {0.0, 0.0}}
+                 ↳Cell, 0x1138bf700, {{inf, inf}, {0.0, 0.0}}
+                  ↳Other, 0x1138bf840, {{inf, inf}, {0.0, 0.0}}
+                   ↳Other, 0x1138bf980, {{inf, inf}, {0.0, 0.0}}
+                    ↳Other, 0x1138bfac0, {{inf, inf}, {0.0, 0.0}}
+                     ↳Switch, 0x1138bfc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Switch
+    ↪︎Find: Elements matching predicate '"settings-making-of" IN identifiers'

@@ -1,0 +1,49 @@
+Attributes: Switch, 0x1138cbc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Element subtree:
+ →Switch, 0x1138cbc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Path to element:
+ →Application, 0x1138ca300, pid: 98898, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1138ca440, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x1138ca580, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x1138ca6c0, {{48.0, 42.0}, {936.0, 1282.0}}
+     ↳Other, 0x1138ca800, {{48.0, 42.0}, {936.0, 1282.0}}
+      ↳Other, 0x1138ca940, {{48.0, 42.0}, {936.0, 1282.0}}
+       ↳Other, 0x1138caa80, {{48.0, 42.0}, {936.0, 1282.0}}
+        ↳Other, 0x1138cabc0, {{48.0, 42.0}, {936.0, 1282.0}}
+         ↳Other, 0x1138cad00, {{48.0, 42.0}, {936.0, 1282.0}}
+          ↳Other, 0x1138cae40, {{48.0, 42.0}, {936.0, 1282.0}}
+           ↳Other, 0x1138caf80, {{48.0, 42.0}, {936.0, 1282.0}}
+            ↳Other, 0x1138cb0c0, {{48.0, 42.0}, {936.0, 1282.0}}
+             ↳Other, 0x1138cb200, {{48.0, 42.0}, {936.0, 1282.0}}
+              ↳Other, 0x1138cb340, {{48.0, 42.0}, {936.0, 1282.0}}
+               ↳Other, 0x1138cb480, {{48.0, 42.0}, {936.0, 1282.0}}
+                ↳CollectionView, 0x1138cb5c0, {{48.0, 42.0}, {936.0, 1282.0}}
+                 ↳Cell, 0x1138cb700, {{68.0, 1080.0}, {896.0, 52.0}}
+                  ↳Other, 0x1138cb840, {{68.0, 1080.0}, {896.0, 52.0}}
+                   ↳Other, 0x1138cb980, {{68.0, 1080.0}, {896.0, 52.0}}
+                    ↳Other, 0x1138cbac0, {{68.0, 1080.0}, {896.0, 52.0}}
+                     ↳Switch, 0x1138cbc00, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x113616300, pid: 98898, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Switch
+    Output: {
+      Switch, 0x113857700, {{68.0, 146.5}, {896.0, 52.0}}, label: 'Advance to Next Color', value: 1
+      Switch, 0x113924f00, {{68.0, 397.5}, {896.0, 52.0}}, identifier: 'settings-tips', label: 'Tips', value: 1
+      Switch, 0x113927840, {{68.0, 572.0}, {896.0, 52.0}}, label: 'Sounds', value: 1
+      Switch, 0x1138db980, {{68.0, 881.0}, {896.0, 52.0}}, identifier: 'settings-detail-brushes', label: 'Detail Brushes', value: 0
+      Switch, 0x113880f00, {{68.0, 980.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 0
+      Switch, 0x113882440, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+      Switch, 0x113857840, {{883.0, 158.5}, {63.0, 28.0}}, value: 1
+      Switch, 0x113925180, {{883.0, 409.5}, {63.0, 28.0}}, value: 1
+      Switch, 0x113927ac0, {{883.0, 584.0}, {63.0, 28.0}}, value: 1
+      Switch, 0x1138dbc00, {{883.0, 893.0}, {63.0, 28.0}}, value: 0
+      Switch, 0x113881180, {{883.0, 992.5}, {63.0, 28.0}}, value: 0
+      Switch, 0x1138826c0, {{883.0, 1092.0}, {63.0, 28.0}}, value: 1
+    }
+    ↪︎Find: Elements matching predicate '"settings-making-of" IN identifiers'
+      Output: {
+        Switch, 0x113936440, {{68.0, 1080.0}, {896.0, 52.0}}, identifier: 'settings-making-of', label: 'The Making-of', value: 1
+      }
