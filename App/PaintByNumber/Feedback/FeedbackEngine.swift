@@ -20,6 +20,13 @@ final class FeedbackEngine {
     /// Weak, not by `ObjectIdentifier`: a freed session's address can come back as a new one's.
     private var attached: [AttachedSession] = []
 
+    /// The tune, kept here rather than with the sounds so the canvas can ask which sky the coming
+    /// fill is in (`skyOfComingFill`): the fill's sparkles turn to stars where the music turns,
+    /// as a phrase begins. It plays on with the sounds off.
+    private var melody = PaintingMelody()
+    private var lastNote: ContinuousClock.Instant?
+    private let clock = ContinuousClock()
+
     /// How long the canvas animates a fill, so the haptic swell can match it. The canvas may
     /// update this per paint.
     var fillDuration: TimeInterval = 0.4
@@ -47,6 +54,12 @@ final class FeedbackEngine {
         if soundsEnabled { sounds.prepare(sky: SkySetting.current()) }
     }
 
+    /// The sky the next fill plays in: the tune's own until its next phrase begins (or a pause
+    /// lets it turn), then the sky of the hour.
+    func skyOfComingFill() -> Sky {
+        melody.skyOfNote(at: clock.now, under: SkySetting.current())
+    }
+
     /// Selection changes and other UI detents.
     func selectionChanged() {
         if hapticsEnabled { haptics.tick() }
@@ -54,7 +67,7 @@ final class FeedbackEngine {
 
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
-        let sky = SkySetting.current()
+        let sky = melody.sky ?? SkySetting.current()
         switch event {
         case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
@@ -62,7 +75,13 @@ final class FeedbackEngine {
             let canvas = Float(max(1, session.template.width * session.template.height))
             let size = min(1, (area / canvas).squareRoot() * 6)
             if hapticsOn { haptics.paint(strength: size, duration: fillDuration) }
-            if soundsOn { sounds.paint(velocity: 0.35 + 0.65 * size, sky: sky) }
+            // At most a note every 40 ms: a stroke's fills come faster than notes can sound.
+            let now = clock.now
+            if lastNote.map({ now - $0 >= .milliseconds(40) }) ?? true {
+                lastNote = now
+                let note = melody.next(at: now, under: SkySetting.current())
+                if soundsOn { sounds.paint(note, velocity: 0.35 + 0.65 * size) }
+            }
         case .rejected:
             if hapticsOn { haptics.reject() }
             if soundsOn { sounds.reject() }
@@ -72,7 +91,7 @@ final class FeedbackEngine {
             break
         case .colorCompleted:
             if hapticsOn { haptics.colorComplete() }
-            if soundsOn { sounds.colorComplete(sky: sky) }
+            if soundsOn { sounds.colorComplete(sky: sky, from: melody.latest) }
         case .artworkCompleted:
             if hapticsOn { haptics.celebrate() }
             if soundsOn { sounds.celebrate(sky: sky) }

@@ -180,7 +180,7 @@ nonisolated enum MarginariumCast {
         id: "former",
         name: String(localized: "lamp.former.name", defaultValue: "Former Guardians",
                      comment: "The Marginarium, Who is Who: the heading of the guardians who are no longer on the Lamp, after its teams"),
-        purpose: String(localized: "lamp.former.purpose", defaultValue: "They passed their seats on. Their words stay in the chapters.",
+        purpose: String(localized: "lamp.former.purpose", defaultValue: "They passed their seats on, with our thanks. Their words stay in the chapters.",
                         comment: "The Marginarium, Who is Who: the line under Former Guardians"),
         members: [bibleSchoolTeacher])
 
@@ -637,7 +637,7 @@ nonisolated enum MarginariumCast {
         name: String(localized: "lamp.bible-school-teacher.name", defaultValue: "The Bible School Teacher",
                      comment: "The Marginarium, Who is Who: its name, for the guardian The Bible School Teacher"),
         after: nil,
-        portrait: String(localized: "lamp.bible-school-teacher.portrait", defaultValue: "She sat on the Hearth until October 17, 2026, when Paul gave her seat to Madeleine. Her drawing and her words stay in the chapters where she spoke.",
+        portrait: String(localized: "lamp.bible-school-teacher.portrait", defaultValue: "She sat on the Hearth until October 17, 2026, when her seat passed to Madeleine. Thank you for keeping it so gently. Her drawing and her words stay in the chapters where she spoke.",
                          comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Bible School Teacher, who is no longer on the Lamp"),
         guards: String(localized: "lamp.bible-school-teacher.guards", defaultValue: "a grandmother's smile",
                        comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Bible School Teacher"),

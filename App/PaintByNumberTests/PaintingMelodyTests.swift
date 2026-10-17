@@ -56,6 +56,22 @@ struct PaintingMelodyTests {
         #expect(melody.sky == .moon)
     }
 
+    /// What the canvas asks before a fill (its stars turn with the music): the sky of the note
+    /// to come, without playing it, always the sky that note then plays in.
+    @Test func theComingSkyIsTheNextNotesSky() {
+        var melody = PaintingMelody()
+        let start = ContinuousClock.now
+        #expect(melody.skyOfNote(at: start, under: .moon) == .moon)
+        _ = melody.next(at: start, under: .sun)
+        let times = (1...12).map { start + .milliseconds(300 * $0) } + [start + .seconds(30)]
+        for (k, time) in times.enumerated() {
+            let requested: Sky = k.isMultiple(of: 3) ? .sun : .moon
+            let coming = melody.skyOfNote(at: time, under: requested)
+            #expect(melody.skyOfNote(at: time, under: requested) == coming, "asking twice changes nothing")
+            #expect(melody.next(at: time, under: requested).sky == coming, "fill \(k)")
+        }
+    }
+
     @Test func aLongPauseMovesOnToTheNextPhrase() {
         var melody = PaintingMelody()
         let start = ContinuousClock.now

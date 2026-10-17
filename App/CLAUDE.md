@@ -280,7 +280,10 @@ synchronized folder would bundle it into the app.
   Sky by default, Sun from 6 a.m. to 7 p.m. by the device's clock and time zone, Moon the rest;
   decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
-  rests, each sky with its own flourish and finale; the sky turns only where a phrase begins.
+  rests, each sky with its own flourish and finale. The sky turns only where a phrase begins,
+  and the fill's stars with it: `FeedbackEngine` keeps the tune on the main actor (its
+  `skyOfComingFill` is what `CanvasView.popSparkles` asks, before the sounds hear of the fill)
+  and hands `SoundPlayer` each note. `paint-book-moon-dark` holds two stars for a screenshot.
   Core Haptics patterns, none on iPad. `SoundPlayer` and `HapticsPlayer` each work on a queue of
   their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Sky are read
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on

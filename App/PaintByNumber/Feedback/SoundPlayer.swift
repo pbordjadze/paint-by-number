@@ -5,8 +5,9 @@ import os
 /// Soft, musical feedback sounds, synthesized the first time they're needed (when a painting
 /// screen first appears, or at the first sound; no audio assets).
 ///
-/// Painting plays one tune (`PaintingMelody`), a note per fill whatever the color, on a
-/// pentatonic scale so its notes can never clash. Each sky (`Sky`) has its own voice: by Sun a
+/// Painting plays one tune (`PaintingMelody`, kept by `FeedbackEngine`, which hands over each
+/// note), a note per fill whatever the color, on a pentatonic scale so its notes can never
+/// clash. Each sky (`Sky`) has its own voice: by Sun a
 /// bright kalimba, by Moon a celesta-like bell on the same five notes, lower and minor, with a
 /// quiet twinkle where a phrase comes to rest; finishing a color or the painting plays the
 /// sky's own flourish. A sky's notes are synthesized the first time it plays. Uses the ambient
@@ -28,9 +29,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private var thud: AVAudioPCMBuffer?
     private var isBuilt = false
     private var isSetUp = false
-    private var lastNote: ContinuousClock.Instant?
     private let clock = ContinuousClock()
-    private var melody = PaintingMelody()
 
     /// Sun: D major pentatonic over two octaves from D4, a tone above the C the app first played.
     static let sunScale: [Double] = [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.26, 739.99, 880.00, 987.77, 1174.66, 1318.51]
@@ -60,14 +59,10 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         }
     }
 
-    /// The tune's next note, in `sky` unless the tune is mid-phrase in the other. `velocity` 0…1.
-    func paint(velocity: Float, sky: Sky) {
-        let now = clock.now
+    /// Plays the tune's `note`, and the Moon's twinkle where its phrase rests. `velocity` 0…1.
+    func paint(_ note: PaintingMelody.Note, velocity: Float) {
         queue.async { [self] in
-            if let last = lastNote, now - last < .milliseconds(40) { return }
-            lastNote = now
             guard setUpIfNeeded() else { return }
-            let note = melody.next(at: now, under: sky)
             let volume = (0.18 + 0.22 * min(max(velocity, 0), 1)) * Self.level(of: note.sky)
             play(notes(of: note.sky)[note.index], volume: volume)
             if note.sky == .moon, note.endsPhrase {
@@ -83,29 +78,26 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         }
     }
 
-    /// A little rising arpeggio from the tune's latest note, in the tune's sky; the Moon's is slower.
-    func colorComplete(sky: Sky) {
+    /// A little rising arpeggio from the tune's latest note `latest`, in `sky`; the Moon's is slower.
+    func colorComplete(sky: Sky, from latest: Int) {
         queue.async { [self] in
             guard setUpIfNeeded() else { return }
-            let tuneSky = melody.sky ?? sky
-            let tones = notes(of: tuneSky)
-            let root = min(melody.latest, tones.count - 5)
-            let (start, step) = tuneSky == .sun ? (0.12, 0.085) : (0.14, 0.12)
+            let tones = notes(of: sky)
+            let root = min(latest, tones.count - 5)
+            let (start, step) = sky == .sun ? (0.12, 0.085) : (0.14, 0.12)
             for (k, interval) in [0, 2, 4].enumerated() {
-                play(tones[root + interval], volume: 0.3 * Self.level(of: tuneSky), delay: start + step * Double(k))
+                play(tones[root + interval], volume: 0.3 * Self.level(of: sky), delay: start + step * Double(k))
             }
         }
     }
 
-    /// The finale, in the tune's sky. Sun: a bright run up every note to an open, sunlit chord.
-    /// Moon: a slower, softer run down that settles on a warm low chord, one star left ringing
-    /// above it.
+    /// The finale in `sky`. Sun: a bright run up every note to an open, sunlit chord. Moon: a
+    /// slower, softer run down that settles on a warm low chord, one star left ringing above it.
     func celebrate(sky: Sky) {
         queue.async { [self] in
             guard setUpIfNeeded() else { return }
-            let tuneSky = melody.sky ?? sky
-            let tones = notes(of: tuneSky)
-            switch tuneSky {
+            let tones = notes(of: sky)
+            switch sky {
             case .sun:
                 for i in 0..<tones.count {
                     play(tones[i], volume: 0.22 + 0.01 * Float(i), delay: 0.07 * Double(i))

@@ -47,6 +47,8 @@ import simd
 ///   over the paint; the selected color's cells are hatched, not outlined)
 /// - `paint-book-zoomed`: zoomed 4× into the busiest part, a color selected
 /// - `paint-book-dark-paper`: `paint-book-progress` on dark paper
+/// - `paint-book-moon-dark`: `paint-book-dark-paper` in dark appearance by Moon (Settings › Sky),
+///   one more area painted and its two stars held at their fullest (fills and sparkles slowed)
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -234,6 +236,12 @@ private final class Demo {
         case "paint-book-dark-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
+        case "paint-book-moon-dark":
+            paint(fraction: 0.45)
+            UserDefaults.standard.register(defaults: [
+                SettingsKey.paperAppearance: PaperAppearance.dark.rawValue, SettingsKey.sky: SkySetting.moon.rawValue,
+            ])
+            fillDurationScale = 30
         case "paint-book-zoomed":
             paint(fraction: 0.2)
             camera = CanvasCamera(zoom: 4, center: Self.busiest(t))
@@ -389,6 +397,24 @@ private final class Demo {
             (session.canvas as? CanvasView)?.replay()
             // Readiness is signalled on return; the screenshot follows ~2 s later, mid-replay.
             try? await Task.sleep(for: .seconds(1.5))
+            return
+        }
+        if scenario == "paint-book-moon-dark" {
+            try? await Task.sleep(for: .seconds(1.5))
+            let t = session.template
+            func room(_ r: Int) -> Float { t.labels(ofRegion: r).map(\.radius).max() ?? 0 }
+            // The selected color's unpainted area with the most room, so its stars show.
+            guard let color = session.selectedColor,
+                  let target = t.regions.indices
+                      .filter({ session.colorOf($0) == color && !session.isPainted($0) })
+                      .max(by: { room($0) < room($1) })
+            else { return }
+            session.paint([target], from: Self.center(t, target), animated: true)
+            // Ready at the stars' fullest: they pop as the paint lands, and grow for a third of
+            // their time (`CanvasView.popSparkles`), the fill's length known once it is painted.
+            let longest = FeedbackEngine.shared.fillDuration
+            try? await Task.sleep(for: .seconds(0.8 * longest + 0.35 * 0.7 * Double(fillDurationScale)))
+            Log.demo.notice("demo paint-book-moon-dark: painted \(target, privacy: .public), fill \(longest, privacy: .public) s")
             return
         }
         guard scenario == "paint-fill" else { return }

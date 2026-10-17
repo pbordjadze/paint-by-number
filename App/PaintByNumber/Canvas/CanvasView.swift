@@ -54,7 +54,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     var initialCamera: CanvasCamera?
     var onPencilAction: ((PencilAction) -> Void)?
-    /// Scales fill and replay durations (demo scenarios catch them mid-way).
+    /// Scales fill, sparkle and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
     /// Loads the photo the painting was made from, the first time it is shown.
     var photoLoader: SourcePhotoLoader?
@@ -1041,8 +1041,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Two gold sparkles pop at the region's edge (on its label's free circle, which touches the
-    /// outline) as the paint lands, then fade; by Moon they are stars (`Sky`). Not during a fast
-    /// stroke, nor where the region is too small on screen for them to read.
+    /// outline) as the paint lands, then fade; by Moon they are stars (`Sky`), turning with the
+    /// music where its phrase begins. Not during a fast stroke, nor where the region is too small
+    /// on screen for them to read.
     private func popSparkles(at region: Int, after delay: Float) {
         guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
         let reach = CGFloat(label.radius) * currentCamera().zoom
@@ -1062,7 +1063,8 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         let centre = viewPoint(forCanvas: label.position)
         let size = min(22, max(10, reach * 0.45))
-        let stars = SkySetting.current() == .moon
+        // The canvas hears of a fill before the sounds do: this is the sky its note will be in.
+        let stars = FeedbackEngine.shared.skyOfComingFill() == .moon
         for (k, angle) in [-0.7, 2.3].enumerated() {
             let sparkle = sparkleLayers[nextSparkle]
             nextSparkle = (nextSparkle + 1) % sparkleLayers.count
@@ -1082,8 +1084,8 @@ final class CanvasView: UIView, PaintingCanvas {
             fade.keyTimes = [0, 0.2, 0.55, 1]
             let group = CAAnimationGroup()
             group.animations = [pop, fade]
-            group.duration = 0.7
-            group.beginTime = start + Double(delay) * 0.8 + Double(k) * 0.08
+            group.duration = 0.7 * Double(fillDurationScale)
+            group.beginTime = start + Double(delay) * 0.8 + Double(k) * 0.08 * Double(fillDurationScale)
             group.fillMode = .backwards
             sparkle.add(group, forKey: "sparkle")
         }
