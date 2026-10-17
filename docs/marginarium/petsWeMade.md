@@ -184,7 +184,7 @@ George, a tuning fork, eventually shed One Note, the working name Originality ha
 The Bible School Teacher is a clay oil lamp with a grapevine handle. Its flame belongs to the object, and its face occupies the warm clay below. Alongside the inkpot, palette and brush, it makes the household feel partly like a cupboard that has opened a meeting.
 
 <!-- marginarium: marginarium.petsWeMade.block.aac9341235244e2890fd4f9a66cd34f5 -->
-![The Bible School Teacher](pet:bible-school-teacher)
+![Madeleine, the Bible School Teacher](pet:bible-school-teacher)
 
 <!-- marginarium: marginarium.petsWeMade.block.355d954e949846bfb9956a57765d5cae -->
 These descriptions are my reading of the retained pictures and briefs. They are not new guardian testimony. I have not summoned the panel to make everyone agree with my adjectives.
