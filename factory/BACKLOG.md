@@ -836,26 +836,31 @@ whole Lamp's, through Codex.
 
 ### F48 · Sun and Moon
 Decided in two rounds (`pieces/day-and-night/decisions.md`) and built on
-`claude/day-night-music-astrological-theme-ycqyrm`. Before it ships: the Table's look at it as
-built.
+`claude/day-night-music-astrological-theme-ycqyrm`. The first look's two asks are in (the stars
+turn with the music; rounder star points); the next look sees `paint-book-moon-dark`.
 
 ### F49 · Gentle tips
 On `claude/gentle-tips` (another session, from the Lamp's own design of the tips that day): the
-invitation, 22 tips, their pacing. The Table looks before it ships.
+invitation, 22 tips, their pacing. First look: ship (4 to 1; Rikyū would keep about a dozen).
 
 ### F50 · The painting's back chevron
-On `claude/painting-back-button`: a back chevron instead of an X to return to the gallery.
+On `claude/painting-back-button`: a back chevron instead of an X to return to the gallery. First
+look: ship (5 of 5).
 
 ### F51 · Start Painting as one motion
 On `claude/smooth-start`: the create flow's cover dissolves into the painting, its picture landing
-where the template is.
+where the template is. First look: ship (4 to 1; the Child at Bedtime: a plain fade under Reduce
+Motion).
 
 ### F52 · The Marginarium in the release
-Debug and SideStore builds only (`#if UNRELEASED`). The Table looks at the contents page, the
-reader and Who's Who before Paul lets it into the release.
+Debug and SideStore builds only (`#if UNRELEASED`). First look: not yet. Three seats want the
+eggs hatched (or not opened on) before it ships; Madeleine's wording for Former Guardians is in;
+the Hedge Witch's warm paper and Rikyū's one-drawing first page are Paul's calls
+(`pieces/first-look/decisions.md`).
 
 ### F53 · Replay the making-of
-Not built (`NOTES.md`: "replay from More"). The Table designs where it lives and how it reads;
+Not built (`NOTES.md`: "replay from More"). Designed by the Table: **Watch It Become**, in More
+beside Replay Painting and offered on the finished painting's completion bar, never by itself.
 Claude builds it.
 
 ## Needs the Mac (Claude, in a session on the Mac)
