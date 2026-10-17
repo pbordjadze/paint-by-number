@@ -1,0 +1,34 @@
+Attributes: Button, 0x115ef26c0, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Element subtree:
+ →Button, 0x115ef26c0, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Path to element:
+ →Application, 0x115ef1b80, pid: 763, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x115ef1cc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x115ef1e00, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x115ef1f40, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x115ef2080, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x115ef21c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳NavigationBar, 0x115ef2300, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+        ↳Other, 0x115ef2440, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+         ↳Other, 0x115ef2580, {{899.0, 36.0}, {119.0, 36.0}}
+          ↳Button, 0x115ef26c0, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x1082fd680, pid: 763, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x115f69400, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+      Button, 0x115f69cc0, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x115f69b80, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+      Button, 0x115f69a40, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+      Button, 0x115f69180, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+      Button, 0x1082fe940, {{258.0, 905.5}, {235.0, 44.0}}, identifier: 'settings-origin', label: 'Reset to Suggested', value: Custom
+      Button, 0x1082fde00, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      Button, 0x115f69f40, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate '"refine" IN identifiers'
+      Output: {
+        Button, 0x115f4c780, {{899.0, 36.0}, {119.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+      }
