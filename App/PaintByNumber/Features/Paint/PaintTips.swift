@@ -132,10 +132,8 @@ enum PaintTips {
         } else {
             desk.isMuted = isolatedRun
         }
-        if let forced = DemoMode.forcedTip {
-            donateEveryRule()
-            desk.force(forced)
-        }
+        // The forced tip itself waits for the scenario's content (`DemoMode.markReady`).
+        if DemoMode.forcedTip != nil { donateEveryRule() }
         #endif
     }
 

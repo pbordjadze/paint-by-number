@@ -431,6 +431,11 @@ struct TipPacingTests {
         #expect(Set(bar) == [.shelfSettings, .shelfNewPainting, .newPaintingRefine])
     }
 
+    @Test func theTipsOnCardsAreTheHoldAndTheTimeLapse() {
+        let cards = TipID.allCases.filter { $0.hangsFromCard }
+        #expect(Set(cards) == [.shelfHold, .shelfTimeLapse])
+    }
+
     @Test func eachHintLivesWhereTheDesignPutsIt() {
         func ids(in place: TipPlace) -> Set<TipID> { Set(TipID.allCases.filter { $0.place == place }) }
         #expect(ids(in: .shelf) == [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings])

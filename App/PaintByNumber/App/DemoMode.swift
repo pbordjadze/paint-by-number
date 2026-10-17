@@ -25,6 +25,7 @@ enum DemoMode {
     }
 
     private static let requested = UserDefaults.standard.string(forKey: "demo")
+    private static var isForcingTip = false
     private static let tipSuffix = "--tip-"
 
     static var isActive: Bool { scenario != nil }
@@ -74,7 +75,12 @@ enum DemoMode {
     /// Signals that the scenario's content is on screen; only animations are still settling.
     static func markReady() {
         guard let scenario else { return }
-        guard forcedTip == nil else {
+        if let forcedTip {
+            // The scenario's content is on screen: now its tip may come, and readiness follows it.
+            if !isForcingTip {
+                isForcingTip = true
+                PaintTips.desk.force(forcedTip)
+            }
             Task {
                 await PaintTips.awaitDemoTip()
                 try? Data(scenario.utf8).write(to: readyMarker, options: .atomic)

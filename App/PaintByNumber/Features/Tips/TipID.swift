@@ -32,14 +32,22 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case drawerWorthALook
 
     /// The tips that hang from a button in a navigation bar (`barTip`: a popover of SwiftUI's own, with
-    /// the tip's `TipView` inside). They have no display limit of TipKit's, which would retire the tip
-    /// from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
+    /// the tip's `TipView` inside).
     var hangsFromBar: Bool {
         switch self {
         case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
         default: false
         }
     }
+
+    /// The tips that hang from a painting's card on the shelf, in a popover of SwiftUI's own like the
+    /// bar's (`cardTip`): TipKit's popover tip never came up on a card (CI, October 17: the turn
+    /// given, nothing on screen), where the card's own confirmation dialogs do.
+    var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
+
+    /// Tips in a popover of SwiftUI's own. They have no display limit of TipKit's, which would retire
+    /// the tip from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
+    var hasOwnPopover: Bool { hangsFromBar || hangsFromCard }
 
     var place: TipPlace {
         switch self {

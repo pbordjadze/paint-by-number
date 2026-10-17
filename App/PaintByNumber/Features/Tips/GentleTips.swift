@@ -84,7 +84,6 @@ nonisolated struct ShelfHoldTip: Tip {
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// A painting is finished and the shelf shows it: the time-lapse, on a later visit than the hold.
@@ -96,7 +95,6 @@ nonisolated struct ShelfTimeLapseTip: Tip {
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// The shelf after the first finished painting: where the tips can be turned off. At the gear.

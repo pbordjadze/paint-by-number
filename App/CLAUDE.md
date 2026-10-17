@@ -330,9 +330,11 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, where TipKit's popover tip found
-  nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip
-  has no TipKit display limit, which would retire it from under that view: `TipDesk` says it once). A screen reports the
+  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
+  the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
+  to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
+  display limit, which would retire it from under that view: `TipDesk` says it once; a card
+  anchors its tip only while it is mostly in view). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
   for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
