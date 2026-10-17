@@ -1,0 +1,4 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate '"paper-appearance" IN identifiers'

@@ -1,0 +1,82 @@
+Application, 0x11801dcc0, pid: 60494, label: 'Paint by Moonlight' <App element pid: 60494>
+  Window (Main), 0x11801c500, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4399073280.3>
+    Other, 0x11801f480, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485661696.4>
+      Other, 0x11801e300, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4487774208.6>
+        Other, 0x11801d900, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4399072256.8>
+          Other, 0x1182717c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485276864.10>
+            Other, 0x118270dc0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485635072.12>
+              NavigationBar, 0x118270140, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Paint by Moonlight' <AX element pid: 60494, elementOrHash.elementID: 4487872512.16>
+                Button, 0x118273340, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Settings' <AX element pid: 60494, elementOrHash.elementID: 4674672896.25>
+                Button, 0x118271e00, {{290.0, 66.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled <AX element pid: 60494, elementOrHash.elementID: 4674673536.26>
+                Button, 0x118273ac0, {{346.0, 66.0}, {36.0, 36.0}}, label: 'New Painting' <AX element pid: 60494, elementOrHash.elementID: 4674674816.27>
+                StaticText, 0x118272d00, {{16.0, 119.7}, {315.0, 40.7}}, label: 'Paint by Moonlight' <AX element pid: 60494, elementOrHash.elementID: 4399006592.28>
+              Other, 0x118270c80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485635520.17>
+                Other, 0x118272f80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4484424000.29>
+                  Other, 0x1180f8640, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4399005696.33>
+                    Other, 0x1180fb840, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485312768.37>
+                      ScrollView, 0x1180f9e00, {{201.0, 0.0}, {0.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4398661632.63>
+                        Other, 0x1180f8f00, {{201.0, 168.0}, {0.0, 0.0}} <AX element pid: 60494, elementOrHash.elementID: 4485666816.75>
+                      Other, 0x1180f9180, {{66.0, 235.0}, {270.0, 198.0}} <AX element pid: 60494, elementOrHash.elementID: 4485310080.64>
+                      StaticText, 0x1180f88c0, {{55.8, 466.8}, {290.3, 67.7}}, label: 'Every painting starts with a photo' <AX element pid: 60494, elementOrHash.elementID: 4485310528.65>
+                      StaticText, 0x1180f83c0, {{46.5, 544.5}, {309.0, 42.3}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.' <AX element pid: 60494, elementOrHash.elementID: 4485310976.66>
+                      Button, 0x1180f9cc0, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting' <AX element pid: 60494, elementOrHash.elementID: 4485312320.67>
+                        Image, 0x1180fb340, {{137.7, 644.0}, {14.3, 14.3}}, identifier: 'plus', label: 'Add' <AX element pid: 60494, elementOrHash.elementID: 4485311424.76>
+                        StaticText, 0x1180f9a40, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting' <AX element pid: 60494, elementOrHash.elementID: 4485311872.77>
+              Other, 0x1180f8b40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485663744.18>
+                Other, 0x1180f9900, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485666304.30>
+                  Toolbar, 0x117e98640, {{0.0, 788.0}, {402.0, 86.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 60494, elementOrHash.elementID: 4485076224.34>
+                    Other, 0x117e9b700, {{28.0, 798.0}, {346.0, 48.0}} <AX element pid: 60494, elementOrHash.elementID: 4485076672.38>
+                      Other, 0x117e98500, {{28.0, 798.0}, {346.0, 48.0}} <AX element pid: 60494, elementOrHash.elementID: 4485077120.68>
+                        Other, 0x117e99e00, {{28.0, 798.0}, {0.0, 0.0}} <AX element pid: 60494, elementOrHash.elementID: 4485077568.78>
+                          Other, 0x117e9a800, {{28.0, 798.0}, {346.0, 48.0}} <AX element pid: 60494, elementOrHash.elementID: 4485075776.81>
+                            Other, 0x117e9be80, {{28.0, 798.0}, {346.0, 48.0}} <AX element pid: 60494, elementOrHash.elementID: 4485078016.82>
+                              Other, 0x117e98dc0, {{33.0, 803.0}, {336.0, 38.0}} <AX element pid: 60494, elementOrHash.elementID: 4674681856.83>
+                                SearchField, 0x117e9b200, {{33.0, 803.0}, {336.0, 38.0}}, label: 'Search paintings', placeholderValue: 'Search paintings' <AX element pid: 60494, elementOrHash.elementID: 4398704640.84>
+                                  Image, 0x117e99a40, {{46.0, 812.3}, {20.3, 18.7}}, identifier: 'magnifyingglass', label: 'Search' <AX element pid: 60494, elementOrHash.elementID: 4676486656.85>
+    Other, 0x117e98b40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485672448.5>
+      Other, 0x117e9ad00, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4399078400.7>
+        Other, 0x117e9a080, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485274176.9>
+          Other, 0x117df7e80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485638656.11>
+            NavigationBar, 0x117efc000, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'New Painting' <AX element pid: 60494, elementOrHash.elementID: 4685465856.13>
+              Button, 0x117efc140, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Close' <AX element pid: 60494, elementOrHash.elementID: 4487786368.19>
+              StaticText, 0x117efc280, {{72.0, 73.7}, {111.0, 20.7}}, label: 'New Painting' <AX element pid: 60494, elementOrHash.elementID: 4399019136.20>
+              Other, 0x117efc3c0, {{264.0, 66.0}, {62.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes <AX element pid: 60494, elementOrHash.elementID: 4398708480.21>
+                Other, 0x117efc500, {{264.0, 66.0}, {62.0, 36.0}} <AX element pid: 60494, elementOrHash.elementID: 4485191808.31>
+                  Button, 0x117efc640, {{264.0, 66.0}, {62.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes <AX element pid: 60494, elementOrHash.elementID: 4485192256.35>
+              Button, 0x117efc780, {{342.0, 66.0}, {40.0, 36.0}}, label: 'Enlarge Preview' <AX element pid: 60494, elementOrHash.elementID: 4487787648.22>
+            Other, 0x117efc8c0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485640000.14>
+              Other, 0x117efca00, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485190912.23>
+                Other, 0x117efcb40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4399008384.32>
+                  Other, 0x117efcc80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4485309184.36>
+                    Other, 0x117efcdc0, {{201.0, 478.0}, {0.0, 0.0}} <AX element pid: 60494, elementOrHash.elementID: 4485146240.39>
+                    Other, 0x117efcf00, {{43.0, 120.0}, {316.0, 212.0}}, identifier: 'compare', label: 'Comparison of photo and template', value: 50 percent photo <AX element pid: 60494, elementOrHash.elementID: 4485280896.40>
+                      Image, 0x117efd040, {{43.0, 120.0}, {316.0, 212.0}} <AX element pid: 60494, elementOrHash.elementID: 4485417600.97>
+                      Image, 0x117efd180, {{43.0, 120.0}, {316.0, 212.0}} <AX element pid: 60494, elementOrHash.elementID: 4485279104.69>
+                      Other, 0x117efd2c0, {{179.0, 204.0}, {44.0, 44.0}} <AX element pid: 60494, elementOrHash.elementID: 4485386624.90>
+                      Image, 0x117efd400, {{193.7, 221.3}, {15.0, 9.7}}, identifier: 'arrow.left.and.right', label: 'arrow.left.and.right' <AX element pid: 60494, elementOrHash.elementID: 4485383488.91>
+                      StaticText, 0x117efd540, {{43.0, 120.0}, {316.0, 212.0}}, label: 'Photo' <AX element pid: 60494, elementOrHash.elementID: 4485279552.70>
+                      StaticText, 0x117efd680, {{292.5, 135.0}, {48.3, 14.3}}, label: 'Painting' <AX element pid: 60494, elementOrHash.elementID: 4485280000.71>
+                    Image, 0x117efd7c0, {{38.0, 385.3}, {13.7, 13.3}}, identifier: 'pencil', label: 'Edit' <AX element pid: 60494, elementOrHash.elementID: 4483873216.43>
+                    TextField, 0x117efd900, {{63.3, 380.0}, {302.7, 24.0}}, identifier: 'painting-title', placeholderValue: 'The Great Wave' <AX element pid: 60494, elementOrHash.elementID: 4398705920.44>
+                    Other, 0x117efda40, {{22.0, 426.0}, {201.7, 44.0}} <AX element pid: 60494, elementOrHash.elementID: 4483859328.45>
+                    Other, 0x117efdb80, {{22.0, 426.0}, {201.7, 44.0}} <AX element pid: 60494, elementOrHash.elementID: 4483858432.46>
+                    Other, 0x117efdcc0, {{22.0, 426.0}, {201.7, 44.0}}, identifier: 'settings-origin', label: 'Settings', value: Suggested for this... <AX element pid: 60494, elementOrHash.elementID: 4485301120.47>
+                      Image, 0x117efde00, {{35.3, 440.7}, {12.3, 15.0}}, identifier: 'sparkles', label: 'Sparkle' <AX element pid: 60494, elementOrHash.elementID: 4485300224.73>
+                      StaticText, 0x117efdf40, {{55.0, 440.2}, {156.7, 15.7}}, label: 'Suggested for this photo' <AX element pid: 60494, elementOrHash.elementID: 4485300672.74>
+                    Other, 0x117efe080, {{22.0, 482.0}, {358.0, 53.0}} <AX element pid: 60494, elementOrHash.elementID: 4485638208.48>
+                    StaticText, 0x117efe1c0, {{22.0, 482.0}, {46.7, 18.0}}, label: 'Colors' <AX element pid: 60494, elementOrHash.elementID: 4485302016.49>
+                    StaticText, 0x117efe300, {{361.3, 482.0}, {18.7, 18.0}}, label: '22' <AX element pid: 60494, elementOrHash.elementID: 4485302464.50>
+                    Slider, 0x117efe440, {{22.0, 504.0}, {358.0, 31.0}}, label: 'Colors', value: 22 <AX element pid: 60494, elementOrHash.elementID: 4674824192.51>
+                    StaticText, 0x117efe580, {{22.0, 547.0}, {41.7, 18.0}}, label: 'Detail' <AX element pid: 60494, elementOrHash.elementID: 4485303360.52>
+                    StaticText, 0x117efe6c0, {{323.3, 547.0}, {56.7, 18.0}}, label: 'Detailed' <AX element pid: 60494, elementOrHash.elementID: 4485303808.53>
+                    Slider, 0x117efe800, {{22.0, 569.0}, {358.0, 31.0}}, label: 'Detail', value: Detailed <AX element pid: 60494, elementOrHash.elementID: 4687053824.54>
+                    StaticText, 0x117efe940, {{22.0, 612.0}, {89.3, 18.0}}, label: 'Smoothness' <AX element pid: 60494, elementOrHash.elementID: 4485305152.55>
+                    StaticText, 0x117efea80, {{326.7, 612.0}, {53.3, 18.0}}, label: 'Smooth' <AX element pid: 60494, elementOrHash.elementID: 4485305600.56>
+                    Slider, 0x117efebc0, {{22.0, 634.0}, {358.0, 31.0}}, label: 'Smoothness', value: Smooth <AX element pid: 60494, elementOrHash.elementID: 4687055360.57>
+                    StaticText, 0x117efed00, {{22.0, 677.0}, {38.0, 18.0}}, label: 'Lines' <AX element pid: 60494, elementOrHash.elementID: 4485306496.58>
+                    StaticText, 0x117efee40, {{316.7, 677.0}, {63.3, 18.0}}, label: 'Balanced' <AX element pid: 60494, elementOrHash.elementID: 4485306944.59>
+                    Slider, 0x117efef80, {{22.0, 699.0}, {358.0, 31.0}}, label: 'Lines', value: Balanced <AX element pid: 60494, elementOrHash.elementID: 4687056896.60>
+                    StaticText, 0x117eff0c0, {{104.2, 742.0}, {193.7, 15.7}}, label: '22 colors · 406 areas · ~20 min' <AX element pid: 60494, elementOrHash.elementID: 4485307840.61>
+                    Button, 0x117eff200, {{22.0, 769.7}, {358.0, 62.3}}, label: 'Start Painting' <AX element pid: 60494, elementOrHash.elementID: 4485308736.62>
+            Other, 0x117eff340, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4676498432.15>
+              Other, 0x117eff480, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 60494, elementOrHash.elementID: 4676500480.24>

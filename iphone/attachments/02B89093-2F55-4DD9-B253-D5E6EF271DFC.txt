@@ -1,0 +1,18 @@
+Attributes: Button, 0x1181c3700, {{205.0, 66.0}, {121.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Element subtree:
+ →Button, 0x1181c3700, {{205.0, 66.0}, {121.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Path to element:
+ →Application, 0x118afd7c0, pid: 60494, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x118afd680, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x118afd540, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x118afe800, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x118afe6c0, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x118afe440, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳NavigationBar, 0x1181c3c00, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'New Painting'
+        ↳Other, 0x1181c3d40, {{205.0, 66.0}, {121.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+         ↳Other, 0x1181c3e80, {{205.0, 66.0}, {121.0, 36.0}}
+          ↳Button, 0x1181c3700, {{205.0, 66.0}, {121.0, 36.0}}, identifier: 'refine', label: 'Refine', value: Preparing…
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Button
+    ↪︎Find: Elements matching predicate '"refine" IN identifiers'
