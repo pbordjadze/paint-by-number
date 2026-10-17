@@ -14,7 +14,7 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | # | Item | Paul's words | State | Where | Updated |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Sun & Moon theme, music and the Lamplit Table, merged for SideStore only | "Can you merge Sun and moon but ship it only to SideStore for now" | in CI | merged to `main`; SideStore build follows its run | 2026-10-17 |
-| 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | waiting on Paul | TASTE: cuter slides pushed to `claude/app-store-screenshots`; needs the two pet photos | 2026-10-17 |
+| 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | building | TASTE: Paul liked the cuter slides; photos sent, see #10 | 2026-10-17 |
 | 3 | Astrology slide in the App Store set | | waiting on Paul | TASTE: waits until Sun & Moon ships to the release (it is SideStore-only); current slides need no change | 2026-10-17 |
 | 4 | App icon | | parked | with Paul's sister (the icon brief) | 2026-10-17 |
 | 5 | The app's name: keep "Paint by Moonlight" or change it | "the name might go soon? Or we keep it for now" | waiting on Paul | TASTE | 2026-10-17 |
@@ -22,3 +22,4 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 7 | Three flaky UI tests the back-button session found | | parked | Painting back button design | 2026-10-17 |
 | 8 | Marginarium in the release, the model reconvert, the old-device memory check, the making-of on device | | parked | the Monday Mac list | 2026-10-17 |
 | 9 | Refine screen shape sizing | | blocked | Refine screen shape sizing (`claude/refine-harness`): merge held for Caroline's answers | 2026-10-17 |
+| 10 | App Store slides: all four pets (two dogs, two cats), each shown fully at least once, in the cuter style | "There's two dogs and two cats here, each needs to be showcased fully at least once, if that's ok. See what we can do with that style and these photos." | building | TASTE (`claude/app-store-screenshots`); 11 photos handed over as private assets on the status page | 2026-10-17 |
