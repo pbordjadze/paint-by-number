@@ -83,7 +83,7 @@ struct SettingsView: View {
                     Text("Short tips explain painting gestures as you go.")
                 }
 
-                Section {
+                Section("Sound & Haptics") {
                     // iPad and the simulator have no haptics: nothing to switch.
                     if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
                         Toggle(isOn: $haptics) {
@@ -93,6 +93,10 @@ struct SettingsView: View {
                     Toggle(isOn: $sounds) {
                         SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                     }
+                }
+
+                // A theme of its own, apart from the appearance and the paper.
+                Section {
                     Picker(selection: $sky) {
                         ForEach(SkySetting.allCases) { choice in
                             SwiftUI.Label(choice.name, systemImage: choice.symbol).tag(choice)
@@ -102,12 +106,10 @@ struct SettingsView: View {
                         SwiftUI.Label("Sky", systemImage: sky.sky(at: .now).symbol)
                     }
                     .accessibilityIdentifier("settings-sky")
-                } header: {
-                    Text("Sound & Haptics")
                 } footer: {
                     Text(String(localized: "settings.sky.footer",
                                 defaultValue: "Sun and Moon each have their own music, and by Moon the sparkles are stars. Follow the Sky turns to Moon at \(Sky.clockText(Sky.nightfall)) and back to Sun at \(Sky.clockText(Sky.sunrise)), your time.",
-                                comment: "Footer of Settings' Sound & Haptics section, under the Sky choice (Follow the Sky, Sun, Moon). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)"))
+                                comment: "Footer of the Sky section in Settings, under the Sky choice (Moon, Sun, Follow the Sky). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)"))
                 }
 
                 Section {

@@ -4170,7 +4170,7 @@
       "extractionState" : "manual"
     },
     "Sky" : {
-      "comment" : "Settings picker under Sounds: Follow the Sky, Sun or Moon, which picks the sounds painting plays and whether the sparkles of a fill are stars",
+      "comment" : "Settings picker in a section of its own: Moon (the default), Sun or Follow the Sky, which picks the sounds painting plays and whether the sparkles of a fill are stars",
       "extractionState" : "manual"
     },
     "sky.followTheSky" : {
@@ -4210,7 +4210,7 @@
       }
     },
     "settings.sky.footer" : {
-      "comment" : "Footer of Settings' Sound & Haptics section, under the Sky choice (Follow the Sky, Sun, Moon). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)",
+      "comment" : "Footer of the Sky section in Settings, under the Sky choice (Moon, Sun, Follow the Sky). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

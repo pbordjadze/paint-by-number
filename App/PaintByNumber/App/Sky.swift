@@ -34,12 +34,14 @@ nonisolated enum Sky: String, Sendable {
     }
 }
 
-/// Settings › Sky: Follow the Sky (the default) takes the sky of the hour; Sun and Moon keep
-/// theirs at every hour.
+/// Settings › Sky, a theme and nothing to do with the light or dark appearance (an
+/// accessibility choice, the system's) or the paper (Settings › Paper): Moon, the default, and
+/// Sun keep their sky at every hour; Follow the Sky takes the sky of the hour (Paul, October 17,
+/// 2026: "moon should be default, with sun or “auto” as options").
 nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
-    case followTheSky, sun, moon
+    case moon, sun, followTheSky
 
-    static let `default` = SkySetting.followTheSky
+    static let `default` = SkySetting.moon
 
     var id: String { rawValue }
 

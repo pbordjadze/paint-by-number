@@ -276,9 +276,10 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sky: Follow the
-  Sky by default, Sun from 6 a.m. to 7 p.m. by the device's clock and time zone, Moon the rest;
-  decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sky: Moon by
+  default, Paul's call; Sun; or Follow the Sky, Sun from 6 a.m. to 7 p.m. by the device's clock
+  and time zone, Moon the rest; a theme, never tied to the dark appearance or the paper; decided
+  with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
   rests, each sky with its own flourish and finale. The sky turns only where a phrase begins,
   and the fill's stars with it: `FeedbackEngine` keeps the tune on the main actor (its
@@ -587,7 +588,7 @@ paper (`CanvasSnapshot.Options`).
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Sky
-  (`SkySetting`, Follow the Sky by default) picks the sounds and whether the fill's sparkles are
+  (`SkySetting`, Moon by default) picks the sounds and whether the fill's sparkles are
   stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
   (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
   made.

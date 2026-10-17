@@ -3,8 +3,9 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// Settings › Sky: Follow the Sky turns from Sun to Moon by the painter's own clock, in whatever
-/// time zone the device keeps; each sky's voice is the same at every launch and stays in range.
+/// Settings › Sky: Moon by default; Follow the Sky turns from Sun to Moon by the painter's own
+/// clock, in whatever time zone the device keeps; each sky's voice is the same at every launch and
+/// stays in range.
 @MainActor
 struct SkyTests {
     private func calendar(_ zone: String) throws -> Calendar {
@@ -37,25 +38,26 @@ struct SkyTests {
         #expect(Sky.at(noonInLondon, calendar: try calendar("Asia/Tbilisi")) == .sun)
     }
 
-    @Test func settingDefaultsToFollowingTheSky() throws {
+    @Test func settingDefaultsToTheMoon() throws {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
 
-        #expect(SkySetting.stored(in: defaults) == .followTheSky)
+        #expect(SkySetting.stored(in: defaults) == .moon)
+        #expect(SkySetting.current(at: try date(12, in: try calendar("Europe/Paris")), in: defaults) == .moon)
         let night = try date(23, in: try calendar("Europe/Paris"))
         let paris = try calendar("Europe/Paris")
         #expect(SkySetting.followTheSky.sky(at: night, calendar: paris) == .moon)
         #expect(SkySetting.sun.sky(at: night, calendar: paris) == .sun)
         #expect(SkySetting.moon.sky(at: try date(12, in: paris), calendar: paris) == .moon)
-        defaults.set("moon", forKey: SettingsKey.sky)
-        #expect(SkySetting.stored(in: defaults) == .moon)
-        #expect(SkySetting.current(in: defaults) == .moon)
+        defaults.set("sun", forKey: SettingsKey.sky)
+        #expect(SkySetting.stored(in: defaults) == .sun)
+        #expect(SkySetting.current(in: defaults) == .sun)
         defaults.set("eclipse", forKey: SettingsKey.sky)
-        #expect(SkySetting.stored(in: defaults) == .followTheSky)
+        #expect(SkySetting.stored(in: defaults) == .moon)
         // The persisted key and values: renaming one would forget every painter's choice.
         #expect(SettingsKey.sky == "sky")
-        #expect(SkySetting.allCases.map(\.rawValue) == ["followTheSky", "sun", "moon"])
+        #expect(SkySetting.allCases.map(\.rawValue) == ["moon", "sun", "followTheSky"])
         #expect(SkySetting.allCases.allSatisfy { !$0.name.isEmpty })
     }
 
