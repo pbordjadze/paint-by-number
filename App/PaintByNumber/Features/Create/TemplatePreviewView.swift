@@ -533,12 +533,21 @@ private struct StatusCapsule<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        HStack(spacing: 10) { content }
-            .font(.footnote.weight(.medium))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .glassEffect(.regular, in: .capsule)
-            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+        // One row where it fits, else the words above the bar: a tall photo on a phone leaves the
+        // preview too narrow for both, and the row squeezed the words into a column of letters.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { content }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .glassEffect(.regular, in: .capsule)
+            VStack(spacing: 7) { content }
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        }
+        .font(.footnote.weight(.medium))
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 }
 
