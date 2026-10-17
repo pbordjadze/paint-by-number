@@ -56,14 +56,6 @@ nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var symbol: String {
-        switch self {
-        case .followTheSky: "sun.horizon"
-        case .sun: Sky.sun.symbol
-        case .moon: Sky.moon.symbol
-        }
-    }
-
     func sky(at date: Date, calendar: Calendar = .autoupdatingCurrent) -> Sky {
         switch self {
         case .followTheSky: Sky.at(date, calendar: calendar)

@@ -98,8 +98,10 @@ struct SettingsView: View {
                 // A theme of its own, apart from the appearance and the paper.
                 Section {
                     Picker(selection: $sky) {
+                        // Plain choices: with a symbol each, the row drew its value cramped and
+                        // VoiceOver read no value at all. The row's own symbol is the sky now.
                         ForEach(SkySetting.allCases) { choice in
-                            SwiftUI.Label(choice.name, systemImage: choice.symbol).tag(choice)
+                            Text(choice.name).tag(choice)
                         }
                     } label: {
                         // The sky that holds now, a sun or a crescent with stars.
