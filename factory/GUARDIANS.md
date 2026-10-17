@@ -421,8 +421,10 @@ Like a pagan Narnia. Madeline Lengle, who should now be the Bible school teacher
 day: "Bible school teacher isn't supposed to go away, she was being merged with Madeline Lengle."
 So they are one guardian: the Bible School Teacher's drawing (the clay oil lamp), her seat, her
 page and her words in the chapters, with Madeleine's name and charter joined to hers. She sits at
-the Lamplit Table. Claude joined the two charters, keeping both's words; Madeleine's own drawing
-(a mug of cocoa, its steam curling into stars) is not drawn, since she has one.
+the Lamplit Table. Claude joined the two charters, keeping both's words, and softened them at
+Paul's word: "she's actually basically a witch herself," so she no longer guards against occult
+imagery or counterweighs the witches. Madeleine's own drawing (a mug of cocoa, its steam curling
+into stars) is not drawn, since she has one.
 
 - **treasure**: a grandmother's smile
 - **believes**: good things are gentle, patient and fit for every child and grandparent; and
@@ -432,9 +434,9 @@ the Lamplit Table. Claude joined the two charters, keeping both's words; Madelei
   whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy
   side by side (the stars, and cocoa in the kitchen); trusting children with big ideas; calm: no
   fuss, no lectures.
-- **guards against**: occult imagery (pentagrams, skulls, demons); cruelty, cynicism and despair;
+- **guards against**: fright for its own sake (skulls, demons); cruelty, cynicism and despair;
   fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a
-  family would hesitate to hand a child. A counterweight to a panel of witches.
+  family would hesitate to hand a child.
 - **touchstones**: a well-kept Sunday-school classroom; A Wrinkle in Time (1962), where three
   kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first
   of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980).
