@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Sky, Painting Length,
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
 /// Preview, Detail Brushes, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
@@ -80,29 +80,25 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(shows(picker, "Regular"), "Choosing Regular didn't change the picker: \(describe(picker))")
     }
 
-    /// Settings › Sky offers Moon, Sun and Follow the Sky, starts on Moon, keeps the choice and
-    /// says when Follow the Sky brings the Moon and the Sun, by the painter's clock.
+    /// Settings › Music lists Sun, Moon and Auto, starts on Auto, keeps the choice and says when
+    /// Auto brings the Sun and the Moon, by the painter's clock.
     @MainActor
-    func testSkyPickerChangesTheValue() throws {
+    func testMusicListChangesTheChoice() throws {
         let app = openSettings()
-        let picker = app.descendants(matching: .any)["settings-sky"]
-        scroll(app, to: picker)
-        XCTAssertTrue(picker.exists, "Settings has no Sky picker")
-        XCTAssertTrue(describe(picker).contains("Moon"), "Sky doesn't start on Moon: \(describe(picker))")
-        let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
-        XCTAssertTrue(footer.exists, "The Sky's footer doesn't say when the Moon and the Sun begin")
-        picker.tap()
-        for choice in ["Moon", "Sun", "Follow the Sky"] {
-            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Sky picker has no \(choice)")
+        let sun = app.buttons["Sun"], moon = app.buttons["Moon"], auto = app.buttons["Auto"]
+        scroll(app, to: auto)
+        for (name, row) in [("Sun", sun), ("Moon", moon), ("Auto", auto)] {
+            XCTAssertTrue(row.exists, "Settings › Music has no \(name)")
         }
-        app.buttons["Sun"].firstMatch.tap()
-        XCTAssertTrue(shows(picker, "Sun"), "Choosing Sun didn't change the picker: \(describe(picker))")
-        attachScreenshot(of: app, named: "settings-sky-sun")
-        // The choice is stored in the simulator's defaults: put it back for the other tests.
-        picker.tap()
-        XCTAssertTrue(app.buttons["Moon"].waitForExistence(timeout: 5))
-        app.buttons["Moon"].firstMatch.tap()
-        XCTAssertTrue(shows(picker, "Moon"), "Choosing Moon didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(auto.isSelected, "Music doesn't start on Auto")
+        let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
+        XCTAssertTrue(footer.exists, "Music's footer doesn't say when Auto brings the Sun and the Moon")
+        moon.tap()
+        XCTAssertTrue(waitUntil { moon.isSelected && !auto.isSelected && !sun.isSelected }, "Choosing Moon didn't select it alone")
+        attachScreenshot(of: app, named: "settings-music-moon")
+        // The choice is stored in the simulator's defaults: back to Auto for the other tests.
+        auto.tap()
+        XCTAssertTrue(waitUntil { auto.isSelected && !moon.isSelected }, "Choosing Auto didn't select it")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps

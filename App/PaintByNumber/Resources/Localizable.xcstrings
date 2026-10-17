@@ -4313,24 +4313,12 @@
       "comment" : "Settings toggle for sound feedback while painting",
       "extractionState" : "manual"
     },
-    "Sky" : {
-      "comment" : "Settings picker in a section of its own: Moon (the default), Sun or Follow the Sky, which picks the sounds painting plays and whether the sparkles of a fill are stars",
+    "Music" : {
+      "comment" : "Settings: the header of the section that lists the music painting plays, Sun, Moon and Auto (also the list's own label, which VoiceOver may read)",
       "extractionState" : "manual"
     },
-    "sky.followTheSky" : {
-      "comment" : "Choice of the Sky setting: Sun by day and Moon by night, by the painter's own clock",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Follow the Sky"
-          }
-        }
-      }
-    },
     "sky.sun" : {
-      "comment" : "Choice of the Sky setting: the daytime sounds at every hour",
+      "comment" : "Choice of Settings › Music: the daytime music, a bright kalimba, at every hour",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4342,7 +4330,7 @@
       }
     },
     "sky.moon" : {
-      "comment" : "Choice of the Sky setting: the nighttime sounds, and stars for sparkles, at every hour",
+      "comment" : "Choice of Settings › Music: the nighttime music, a bell, and stars for sparkles, at every hour",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4353,14 +4341,26 @@
         }
       }
     },
-    "settings.sky.footer" : {
-      "comment" : "Footer of the Sky section in Settings, under the Sky choice (Moon, Sun, Follow the Sky). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)",
+    "sky.auto" : {
+      "comment" : "Choice of Settings › Music: Sun by day and Moon by night, by the painter's own clock",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sun and Moon each have their own music, and by Moon the sparkles are stars. Follow the Sky turns to Moon at %1$@ and back to Sun at %2$@, your time."
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "settings.sky.footer" : {
+      "comment" : "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto plays Sun from %1$@ and Moon from %2$@, your time."
           }
         }
       }

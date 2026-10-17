@@ -50,7 +50,7 @@ import simd
 ///   over the paint; the selected color's cells are hatched, not outlined)
 /// - `paint-book-zoomed`: zoomed 4× into the busiest part, a color selected
 /// - `paint-book-dark-paper`: `paint-book-progress` on dark paper
-/// - `paint-book-moon-dark`: `paint-book-dark-paper` in dark appearance by Moon (Settings › Sky),
+/// - `paint-book-moon-dark`: `paint-book-dark-paper` in dark appearance by Moon (Settings › Music),
 ///   zoomed 2.5× onto the unpainted area with the most room, which is painted and its two stars
 ///   held at their fullest (fills and sparkles slowed)
 struct PaintDemoView: View {
