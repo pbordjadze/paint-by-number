@@ -1,0 +1,28 @@
+Attributes: Slider, 0x117e51b80, {{22.0, 769.3}, {358.0, 31.0}}, label: 'Lines', value: More
+Element subtree:
+ →Slider, 0x117e51b80, {{22.0, 769.3}, {358.0, 31.0}}, label: 'Lines', value: More
+Path to element:
+ →Application, 0x1186be300, pid: 84269, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1186bc280, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1186bc140, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1186bc000, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x117e52e40, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x117e52bc0, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x117e52a80, {{0.0, 0.0}, {402.0, 874.0}}
+        ↳Other, 0x117e52940, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x117e526c0, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x117e52800, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Slider, 0x117e51b80, {{22.0, 769.3}, {358.0, 31.0}}, label: 'Lines', value: More
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x117c217c0, pid: 84269, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Slider
+    Output: {
+      Slider, 0x117c21540, {{22.0, 769.3}, {358.0, 31.0}}, label: 'Lines', value: More
+    }
+    ↪︎Find: Elements matching predicate '"Lines" IN identifiers'
+      Output: {
+        Slider, 0x117efd540, {{22.0, 769.3}, {358.0, 31.0}}, label: 'Lines', value: More
+      }
