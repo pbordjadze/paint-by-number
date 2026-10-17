@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "C", "text": "[C]: the home-screen name is cut to \"Paint by Mo...\", and its tiny 4 nearly vanishes at the smallest tinted size, so it reads as a landscape wallpaper, not a paint-by-number app."},
+{"about": "C", "text": "[C]: in the two-tone view the moon breaks into a ragged blob and its gradients turn to noise; the soft night scene sits right among the sleep-sound icons."},
+{"about": "B", "text": "[B]: a crescent with a bold 3 inside a dark outline stays readable in two tones, tinted at all three sizes and dimmed at night, but the crescent alone echoes several sleep apps (White Noise, Sleep Sounds) in the competitor row."},
+{"about": "D", "text": "[D]: the outlined full moon with purple patches reads as paintable regions and keeps its 4 legible at mid size; in two tones the patches vanish entirely, leaving only a disc and a numeral."},
+{"about": "A", "text": "[A]: the large 6 under a hill line is the clearest numeral of the four at every size, but nothing in it says night or heart, so the icon and the name \"Paint by Heart\" don't tell one story."},
+{"about": "all", "text": "B and D shorten to \"Moonlight\" under the icon, which fits cleanly, while the full \"Paint by Moonlight\" stands apart from every rival name, all of which say \"Paint/Color by Number\"."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "kill", "D": "keep"},
+"favorite": "B",
+"veto": []}

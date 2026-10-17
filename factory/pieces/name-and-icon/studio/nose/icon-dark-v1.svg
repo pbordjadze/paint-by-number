@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <g id="background">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0F0D18"/>
+        <stop offset="1" stop-color="#241B3C"/>
+      </linearGradient>
+    </defs>
+    <rect width="1024" height="1024" fill="url(#sky)"/>
+  </g>
+  <g id="middle">
+    <defs>
+      <linearGradient id="paint" gradientUnits="userSpaceOnUse" x1="380" y1="160" x2="720" y2="820">
+        <stop offset="0" stop-color="#EDD089"/>
+        <stop offset="1" stop-color="#B98F32"/>
+      </linearGradient>
+    </defs>
+    <path d="M 180.05 641.50 A 322 322 0 1 0 520.15 155.78 A 14 14 0 0 0 506.26 178.16 A 282 282 0 0 1 196.33 620.78 A 14 14 0 0 0 180.05 641.50 Z" fill="url(#paint)" stroke="#1E1A22" stroke-width="12" stroke-linejoin="round"/>
+  </g>
+  <g id="foreground">
+    <defs>
+      <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#EDD089"/>
+        <stop offset="1" stop-color="#B98F32"/>
+      </linearGradient>
+    </defs>
+    <path d="M 818.0 276.0 Q 826.3 313.7 864.0 322.0 Q 826.3 330.3 818.0 368.0 Q 809.7 330.3 772.0 322.0 Q 809.7 313.7 818.0 276.0 Z" fill="url(#gold)"/>
+    <path d="M 878.0 396.0 Q 882.3 415.7 902.0 420.0 Q 882.3 424.3 878.0 444.0 Q 873.7 424.3 854.0 420.0 Q 873.7 415.7 878.0 396.0 Z" fill="url(#gold)"/>
+  </g>
+</svg>

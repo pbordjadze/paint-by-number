@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: the hills and sky are smooth airbrushed gradients with a soft glow around the moon, so up close it reads as polished digital render rather than something painted by hand; it leans slick."},
+{"about": "B", "text": "[B]: the black outline wobbles and swells along the hill, like an inked line drawn with a brush, and the cream area has a faint paper-like warmth, so it feels drawn rather than extruded."},
+{"about": "B", "text": "[B]: the deep teal is the only green-ish note among the four, a garden-at-dusk color that warms me, though the huge cropped 6 crowds the scene."},
+{"about": "C", "text": "[C]: flat navy and cream with a perfectly even, compass-drawn outline; clean and legible, but geometric and cool, closer to a badge than a hand-colored page."},
+{"about": "D", "text": "[D]: the lumpy, uneven purple blobs look like moss or clouds dabbed on with a sponge, the most hand-grown texture here, and the thin serif 4 sits on them like a handwritten label in an herbal."},
+{"about": "all", "text": "None of the four has visible paper grain or brush texture at 100%; every fill is vector-flat or gradient, so all of them could use a touch of handmade surface."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "fix", "D": "keep"},
+"favorite": "D",
+"veto": []}

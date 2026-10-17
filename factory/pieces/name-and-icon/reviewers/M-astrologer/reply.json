@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "C", "text": "[C] is the only icon you can tell the hour from: a crescent, a few small stars and dusky hills, the sky hinted rather than announced; but its numeral 4 is a speck at home-screen size and vanishes in the smallest tinted icon, so it reads as a sleep app, not a painting one."},
+{"about": "C", "text": "[C]'s home-screen name is cut to \"Paint by Mo...\" on both screens, losing the very word that carries the hour; it needs the short name \"Moonlight\" as [A] and [D] use."},
+{"about": "A", "text": "[A]: a plain crescent holding a bold 3 is a quiet companion and survives two-tone and the smallest tinted size, but in the originality row it sits close to the sleep apps' white crescents (White Noise, Sleep Sounds), so the moon alone doesn't say painting."},
+{"about": "D", "text": "[D]: the full moon with purple patches reads, in the dimmed night view, as a lump with blotches; the patches look like paint spills more than a moon's face, so neither the hour nor the craft comes through cleanly."},
+{"about": "B", "text": "[B] \"Paint by Heart\" has no sky in it at all: hills and a big 6, with no sun or moon, so nothing in it keeps the hours; it is legible and plain but it isn't mine to love."},
+{"about": "all", "text": "None of them reaches for zodiac clip art or tarot kitsch, which is right; the gentlest sign of the sky is [C]'s single bright star, the one small sign where a sign helps."}
+],
+"verdicts": {"A": "keep", "B": "kill", "C": "fix", "D": "fix"},
+"favorite": "C",
+"veto": []}

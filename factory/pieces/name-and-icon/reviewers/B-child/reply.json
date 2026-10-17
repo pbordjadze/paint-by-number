@@ -1,0 +1,10 @@
+{"findings": [
+{"about": "B", "text": "[B]: its home-screen name is cut to \"Paint by Mo...\", and its tiny \"4\" can't be read at night brightness or at the smallest tinted size, so neither the name nor the numbers come through."},
+{"about": "C", "text": "[C]: the crescent with its \"3\" stays clear at every tinted size and in the dimmed view, but it looks like the crescents in the Sleep sounds row (White Noise, Sleep Sounds), so it reads more as a sleep app than a painting app."},
+{"about": "A", "text": "[A]: the purple splotches on the full moon look like paint patches. Next to the numeral that suggests painting by numbers, but at the smallest tinted size the patches turn to mush."},
+{"about": "D", "text": "[D]: the big \"6\" is the boldest numeral and reads at every size. But the dunes and the name \"Paint by Heart\" say nothing about night or photos, so it is the least distinct of the four."},
+{"about": "all", "text": "All: none of them looks like the busy flower and pixel-heart icons the rivals use, and A–C share the \"Moonlight\" name, which none of the listed rival names come close to."}
+],
+"verdicts": {"A": "keep", "B": "fix", "C": "fix", "D": "kill"},
+"favorite": "A",
+"veto": []}

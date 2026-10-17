@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <g id="background">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1C2550"/>
+        <stop offset="1" stop-color="#2F3F70"/>
+      </linearGradient>
+    </defs>
+    <rect width="1024" height="1024" fill="url(#sky)"/>
+  </g>
+  <g id="middle">
+    <defs>
+      <linearGradient id="paper" gradientUnits="userSpaceOnUse" x1="380" y1="160" x2="720" y2="820">
+        <stop offset="0" stop-color="#F8F4EC"/>
+        <stop offset="1" stop-color="#EEE7DB"/>
+      </linearGradient>
+    </defs>
+    <path d="M 180.05 641.50 A 322 322 0 1 0 520.15 155.78 A 14 14 0 0 0 506.26 178.16 A 282 282 0 0 1 196.33 620.78 A 14 14 0 0 0 180.05 641.50 Z" fill="url(#paper)" stroke="#1E1A22" stroke-width="12" stroke-linejoin="round"/>
+  </g>
+  <g id="foreground">
+    <text x="616.4" y="663.5" font-family="Source Serif 4" font-weight="600" font-size="240" text-anchor="middle" fill="#1E1A22">3</text>
+  </g>
+</svg>

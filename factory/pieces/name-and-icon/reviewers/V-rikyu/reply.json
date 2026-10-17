@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "B", "text": "[B]: stars, moon, three hills and a tiny 4 crowd the square; the 4 is the smallest element and sits at the very bottom, so the stars could go and the numeral would read."},
+{"about": "C", "text": "[C]: the crescent's lower half dissolves into the light ground and survives only as a thin outline, so the dark band could go or be extended so the moon holds its shape."},
+{"about": "D", "text": "[D]: one disc and one numeral, nothing to remove; the thin 4 is the weakest stroke and the dithered lower edge leaks into the white below."},
+{"about": "A", "text": "[A]: a single hill and a large bold 6 — the clearest numeral of the four, but the hill alone says landscape, not painting, and the name drops the moon the others share."},
+{"about": "all", "text": "All four keep the bottom third of the tile empty or light, so the icons look cut off; the frame's lower edge could go consistently or be closed."},
+{"about": "all", "text": "B, C and D share one name, so the icon alone must carry the difference; the plainest one (D or C) carries it best."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "keep", "D": "keep"},
+"favorite": "D",
+"veto": []}

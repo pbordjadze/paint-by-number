@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: the numeral 4 is a tiny speck at the bottom; at the smallest tinted size it vanishes, so the icon reads as a generic night landscape, and its home-screen label is truncated to \"Paint by Mo...\"."},
+{"about": "B", "text": "[B]: the moon's purple blotches read as craters or stains rather than painted regions, and in the bedtime-dimmed view the dark tile nearly merges with the dark screen, leaving a floating disc."},
+{"about": "C", "text": "[C]: the big serif 6 is the boldest numeral in the set and survives every size and the two-tone reduction, so it says 'numbers' best; but in tinted and dimmed views the hills read as a blank card, and the name Paint by Heart says nothing about photos or night."},
+{"about": "D", "text": "[D]: crescent plus a 3 sitting inside it is the simplest silhouette and holds up at all three tinted sizes and in two tones, but a dark tile with a white crescent sits squarely among the Sleep sounds rivals (White Noise, Sleep Sounds), so it can read as a sleep app."},
+{"about": "all", "text": "[B] and [D] use the short home-screen name 'Moonlight', which fits without truncation but drops 'Paint', so on the home screen only the small numeral signals what the app does."},
+{"about": "all", "text": "All four stand apart from the busy, saturated flower-and-heart icons of the paint-by-number category; the calm night palette is distinctive there, though it borrows the sleep category's look."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "fix", "D": "keep"},
+"favorite": "D",
+"veto": []}

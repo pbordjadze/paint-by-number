@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: the purple blotches on the pale moon read as spots or bruises at night size, so the moon looks a little sick rather than friendly."},
+{"about": "B", "text": "[B]: a soft glowing crescent holding a 3 on near-black is a calm night-light picture, but the tile is so dark it almost sinks into the dimmed home screen."},
+{"about": "C", "text": "[C]: the big 6 under a dark hill with only a sliver of orange sun feels like dusk turning to dark, more lonely than cozy, and nothing in it twinkles."},
+{"about": "D", "text": "[D]: stars, a smiling crescent and purple hills over a white page make a little picture-book bedtime scene, the warmest and brightest tile in the row; the 4 is tiny though."},
+{"about": "D", "text": "[D]: the name cuts off to 'Paint by Mo...' under the icon, so the moonlight part of the name, the part a child would say, is lost."},
+{"about": "all", "text": "All four are dark tiles on a dark screen; only [D] carries enough light and color to be found again at bedtime."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "kill", "D": "fix"},
+"favorite": "D",
+"veto": []}

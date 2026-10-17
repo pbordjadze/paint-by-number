@@ -1,0 +1,10 @@
+{"findings": [
+{"about": "C", "text": "[C]: a little night scene with stars, a gold crescent and soft purple hills reads like a bedtime picture book, the warmest and safest icon here; but its 4 is tiny and the name truncates to \"Paint by Mo...\"."},
+{"about": "B", "text": "[B]: a big bright crescent holding a clear 3 on deep night is calm and easy to spot at a glance, and \"Moonlight\" fits under it whole."},
+{"about": "A", "text": "[A]: the full moon covered in purple blotches looks bruised or spotty rather than painted, which is less cozy than the others; the 4 is small and the icon nearly vanishes into the dark screen."},
+{"about": "D", "text": "[D]: the big 6 is the clearest number of all, but the dark green-black hills feel cold and the name \"Paint by Heart\" breaks the moon/night story the others share."},
+{"about": "all", "text": "All four dark-background icons sink into the dimmed home screen next to the bright neighbors, so only the moon shapes in [B] and [C] catch the eye at night."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "fix", "D": "kill"},
+"favorite": "C",
+"veto": []}

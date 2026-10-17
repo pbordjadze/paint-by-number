@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "all", "text": "No candidate resembles the paint-by-number field, where nearly every icon is a lush flower, pixel heart or pumpkin with outlined numbered cells; the calm flat palettes alone stand apart there."},
+{"about": "D", "text": "[D]: a white crescent on dark navy sits almost exactly beside Sleep Sounds - R... and Sleep: Sounds & ... in the sleep row; the small '3' is the only thing separating it from a sleep app."},
+{"about": "C", "text": "[C]: a night sky with crescent and stars over purple hills reads like the sleep row (Sleep Sounds - R..., Sleep Sounds Whi...), and its tiny '4' is nearly invisible, so it says sleep before paint."},
+{"about": "B", "text": "[B]: the moon is drawn as a paint-by-number shape with purple patches and a numeral '4' inside a cell, which no rival or sleep icon does; the moon becomes the canvas, so it is distinctly ours."},
+{"about": "A", "text": "[A]: the big '6' on cream hills is unlike any rival icon, but 'Paint by Heart' sits close to Paint Your World and the many heart icons in the color-by-number rows, and the icon shows no heart."},
+{"about": "all", "text": "[B], [C], [D] share 'Paint by Moonlight', which no rival name resembles, while every rival name leans on 'Paint by Number'; the name is owned, the icon has to carry the painting."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "kill", "D": "fix"},
+"favorite": "B",
+"veto": []}

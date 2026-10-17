@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "all", "text": "Every rival in the paint-by-number, color-by-number and coloring-book rows is a saturated flower, heart, pixel art or pumpkin on white, and no rival name avoids 'Paint/Color by Number'. All four muted, dark candidates and their names stand apart from that category at a glance."},
+{"about": "C", "text": "[C]'s white crescent on dark navy looks almost the same as the sleep-sounds icons in the same sheet ('White Noise Deep...', 'Sleep Sounds - R...', 'Sleep: Sounds &...'), so in search it reads as a sleep app. The small '3' is the only thing that says painting."},
+{"about": "D", "text": "[D]'s night sky with a moon and stars over purple hills also matches the sleep row ('Sleep Sounds - R...', 'Sleep Sounds Whi...'). Its '4' is tiny and nearly gone at the smallest tinted size, and on the home screen its name is cut to 'Paint by Mo...'."},
+{"about": "B", "text": "[B]'s full moon with blotchy patches that look like paint regions is the one moon in the pack no sleep or meditation rival has, and it hints at a painted template. On the home screen its label shortens cleanly to 'Moonlight'."},
+{"about": "A", "text": "[A]'s big serif '6' on cream hills looks like no other icon in any row, and its numeral survives the tinted view at every size. But the name 'Paint by Heart' sits close to rival names like 'Paint Your World' and 'Happy Color'."},
+{"about": "A", "text": "[A]'s hills-and-number scene has no link to its name 'Heart'. The icon and the name tell two different stories."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "fix", "D": "kill"},
+"favorite": "B",
+"veto": []}

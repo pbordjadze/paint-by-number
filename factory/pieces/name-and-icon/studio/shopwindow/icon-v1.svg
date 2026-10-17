@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Paint by Moonlight icon</title>
+<defs>
+<linearGradient id="paper-wash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5F2EB"/><stop offset="1" stop-color="#EAE3D5"/></linearGradient>
+<linearGradient id="sky-wash" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="540"><stop offset="0" stop-color="#0D4148"/><stop offset="1" stop-color="#155A60"/></linearGradient>
+</defs>
+<!-- The paper: every area not yet painted. -->
+<g id="background">
+<rect width="1024" height="1024" fill="url(#paper-wash)"/>
+</g>
+<!-- The paint: the night sky and one gold area, filled to the lines. -->
+<g id="middle">
+<path id="sky" fill="url(#sky-wash)" d="M-40 -40 L1064 -40 L1064 318 C1000 280 910 248 800 250 C680 252 560 318 482 409 C430 400 380 397 305 402 C180 410 70 472 -40 540 Z"/>
+<path id="gold" fill="#E6AF4B" d="M-40 540 C70 472 180 410 305 402 C322 600 270 860 176 1064 L-40 1064 Z"/>
+</g>
+<!-- The template: the ink lines and the numbers of the two areas still waiting (numerals drawn as paths). -->
+<g id="foreground">
+<g fill="none" stroke="#1A1E26" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+<path id="near-hill" d="M-40 540 C70 472 180 410 305 402 C380 397 430 400 482 409 C600 430 840 486 1064 520"/>
+<path id="far-hill" d="M482 409 C560 318 680 252 800 250 C910 248 1000 280 1064 318"/>
+<path id="gold-edge" d="M305 402 C322 600 270 860 176 1064"/>
+</g>
+<path id="six" fill="#1A1E26" d="M671.4 557 C622.2 558.8 571.2 584.6 544.8 632.6 C529.2 660.8 521.4 696.8 521.4 735.2 C521.4 807.2 559.8 853.4 607.2 853.4 C657.6 853.4 690.6 813.2 690.6 758.6 C690.6 701.6 656.4 664.4 611.4 664.4 C592.2 664.4 576.6 669.8 565.8 678.8 C577.8 636.8 613.8 594.2 663 586.4 C676.8 584.3 684.6 578 685.2 569.6 C685.8 561.8 680.4 557 671.4 557 Z M612 690.8 C634.2 690.8 650.4 719.6 650.4 759.8 C650.4 800.6 634.2 828.8 612 828.8 C589.8 828.8 573 800.6 573 759.8 C573 719.6 589.8 690.8 612 690.8 Z"/>
+<path id="two" fill="#1A1E26" d="M762.2 330.4 C762.2 313 777 300 793.7 300 C812.1 300 824.4 311.8 824.4 330.6 C824.4 346.9 814.9 358.7 802.6 370.1 C792.1 379.8 784.7 388.9 781 401.2 L817.2 401.2 C820.4 401.2 822 398.1 822.7 391.6 L826 391.6 L824.6 416 L758 416 L758 404.6 C765.4 395.1 772.4 386.1 779.4 378.4 C791 365.7 807 352.2 807 334.6 C807 320 800.7 312.3 791.7 312.3 C784 312.3 778.7 316.5 777.5 322.3 C781.9 323.4 784.9 327.6 784.9 332.5 C784.9 337.8 780.7 341.3 775.4 341.3 C768 341.3 762.2 336.9 762.2 330.4 Z"/>
+</g>
+</svg>

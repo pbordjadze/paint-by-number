@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: smooth airbrushed gradients in the sky, hills and moon, with a soft vignette, read as stock vector rendering; only the ink line and serif 4 at the bottom right hint at a painted template, so the center crop could belong to any wallpaper app."},
+{"about": "B", "text": "[B]: thick uneven ink outlines and a hand-cut wavy hill edge feel drawn, but the 6 is so large it gets cropped in both views, so the numeral works as a wall rather than a label you could paint inside."},
+{"about": "C", "text": "[C]: lumpy, irregular purple blobs with no outline sit on cream like real paint dabs, the most hand-made texture in the set, and the crisp serif 4 inside an inked circle still says paint by numbers."},
+{"about": "C", "text": "[C]: the blobs have no ink edge while the circle does, so the two languages clash a little; giving the blobs a slight outline or merging them into regions would tighten it."},
+{"about": "D", "text": "[D]: flat fills, one even-weight ink stroke and a serif 3 make a clean crescent, but the perfect geometric arcs read as factory-precise rather than hand-grown."},
+{"about": "all", "text": "All four share the same cream paper, near-black ink and serif numerals, so the choice is about motif and finish rather than palette; the gradients of [A] are the one break from the flat printed-template look."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "keep", "D": "keep"},
+"favorite": "C",
+"veto": []}

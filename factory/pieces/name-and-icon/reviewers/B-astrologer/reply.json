@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: the outlined crescent with a big serif 3 inside reads as 'numbered region' at every tinted size, but a lone crescent on navy sits right beside the Sleep sounds row (White Noise, Sleep Sounds), so it risks looking like a sleep app."},
+{"about": "B", "text": "[B]: the 6 is the largest, clearest numeral of the four and survives the smallest tinted size, but the dark teal sky nearly vanishes into the dark home screen and the name 'Paint by Heart' says nothing about photos or numbers."},
+{"about": "C", "text": "[C]: the purple blobs read as moon craters or splotches rather than paint regions, and in the two-tone view they disappear entirely, leaving a plain disc with a 4."},
+{"about": "D", "text": "[D]: the 4 is tiny at the bottom and vanishes at the smallest tinted size and at phone size, so the icon stops saying 'by numbers' and becomes a generic night landscape like the Sleep Sounds icons; its name is also truncated to 'Paint by Mo...' on the home screen."},
+{"about": "all", "text": "All four avoid the crowded flower-and-heart look of every paint-by-number rival, which is a real distinction; the moon candidates trade that for overlap with sleep and meditation apps."},
+{"about": "A", "text": "[A] and [C] show 'Moonlight' as a short home-screen name that fits without truncation, unlike [D]."}
+],
+"verdicts": {"A": "keep", "B": "fix", "C": "fix", "D": "kill"},
+"favorite": "A",
+"veto": []}

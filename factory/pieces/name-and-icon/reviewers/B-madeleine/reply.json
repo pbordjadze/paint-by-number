@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "B", "text": "[B]: the 4 is a tiny numeral at the bottom edge that vanishes at the smallest tinted size and on the home screen, and the label truncates to \"Paint by Mo...\", so neither icon nor name says paint-by-number on the phone."},
+{"about": "A", "text": "[A]: a crescent with a 3 sits right beside the sleep-sounds row (White Noise, Sleep Sounds, Sleep: Sounds & ...) in the originality sheet; the outlined moon as a paintable region is the only cue that it isn't a sleep app."},
+{"about": "C", "text": "[C]: the big 6 survives every test, including the smallest tinted size and the bedtime dim view, but the dark-mode version is nearly black, and 'Paint by Heart' loses the moon story the other three share."},
+{"about": "D", "text": "[D]: the purple blobs on the full moon read as craters, not paint regions, and the dimmed and tinted views turn them into mottled noise around a small 4."},
+{"about": "all", "text": "In the two-tone view [A] and [C] keep a clear figure plus numeral, while [B] fragments into stripes and stars and [D] is just a disc; bold shapes hold, scenic detail does not."},
+{"about": "A", "text": "[A]: its home-screen name 'Moonlight' fits without an ellipsis and the crescent-with-number stays legible at all three tinted sizes, the clearest single mark of the four."}
+],
+"verdicts": {"A": "keep", "B": "kill", "C": "fix", "D": "fix"},
+"favorite": "A",
+"veto": []}

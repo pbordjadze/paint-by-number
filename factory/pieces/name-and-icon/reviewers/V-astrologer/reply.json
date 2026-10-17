@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: a crescent with a small 3 on a navy tile tells you it's night at a glance and only hints at the sky. But the 3 is tiny, and nothing in the tile says paint."},
+{"about": "B", "text": "[B]: the full moon is painted in purple numbered patches, the only icon that says 'paint by number' about the moon itself. In dark mode its tile goes near-black and the moon carries the icon on its own."},
+{"about": "C", "text": "[C]: an amber sliver over a teal hill reads as sunrise or sunset, so the hour is unclear. The big 6 is the most legible numeral of the four, but 'Paint by Heart' has nothing to do with moonlight or the sky."},
+{"about": "D", "text": "[D]: the full night scene (stars, crescent, purple hills) spells the sky out instead of hinting at it, and its 4 shrinks to an unreadable dot at home-screen size."},
+{"about": "D", "text": "[D]: the name is cut to 'Paint by Mo...' on both screens, so the home screen loses the word that gives the hour."},
+{"about": "all", "text": "[A], [B] and [D] look the same on the day and night screens, with only the tile darkening. Their identity holds across modes, while [C] flips from a cream ground to a dark one and looks like a different icon."}
+],
+"verdicts": {"A": "keep", "B": "keep", "C": "kill", "D": "fix"},
+"favorite": "B",
+"veto": []}

@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "D", "text": "[D] holds five stars, a glowing moon, three hills and a numeral; at the smallest tinted size the 4 is a speck and the stars are dust, so the one thing that says 'numbers' is the first to go. It is also the only name cut short on the home screen ('Paint by Mo...')."},
+{"about": "B", "text": "[B] is one crescent and one numeral on an empty field; in two tones it stays a clear crescent with its 3, and the dark around it is part of the work. It reads at all three tinted sizes and at night brightness."},
+{"about": "C", "text": "[C] fills the moon with purple blots that crowd the 4; in the hedge crop the numeral is half-hidden under them, two things where one would do. In the two-tone view the blots vanish and only a plain disc with a 4 remains, which shows they were ornament."},
+{"about": "A", "text": "[A] gives the numeral the most room and the 6 is the largest, plainest mark of all four, but the gold sliver on the left edge is a second accent that pulls the eye off it. 'Paint by Heart' fits whole under the icon."},
+{"about": "all", "text": "[B] and [C] crescents and moons sit beside the sleep-sounds row in the competitor view (White Noise, Sleep Sounds), so the moon alone says 'sleep'; only the numeral says 'paint'. Keep the numeral large enough to survive the smallest size."},
+{"about": "B", "text": "[B] home-screen name 'Moonlight' drops the word 'Paint'; the label alone no longer says what the app does, so the icon's 3 must carry it."}
+],
+"verdicts": {"A": "fix", "B": "keep", "C": "fix", "D": "kill"},
+"favorite": "B",
+"veto": [{"candidate": "D", "reason": "clutter; ornament; two things where one would do; filling every silence."}]}

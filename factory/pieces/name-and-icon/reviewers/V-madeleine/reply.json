@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "B", "text": "[B]: the numeral 4 is tiny at the largest size and is just a speck at the smallest, so in one-color tint the icon reads as a night landscape and no longer says paint by numbers. Someone with low vision gets no clue about what the app does."},
+{"about": "D", "text": "[D]: the 6 is big and stays clear at all three sizes, and the hills read as a filled region, so this is the most legible icon for low-vision users. The name 'Paint by Heart' sounds warm, but it suggests you need feeling or skill, which may not welcome someone who is just tapping numbers."},
+{"about": "C", "text": "[C]: the moon's dark blotches crowd the 4, and at the smallest size the numeral merges into the craters, so the icon blurs into a textured circle."},
+{"about": "A", "text": "[A]: the crescent outline survives at every size, but the 3 sits inside the curve and gets very small at the smallest size. Making it larger would fix that."},
+{"about": "all", "text": "In the tinted rendering every icon is the same amber on brown, so contrast does all the work: [D] has the biggest light area and holds up best, while [B]'s thin stars disappear."},
+{"about": "all", "text": "All four names sound natural when spoken in a sentence and nothing in them scolds the user. 'Moonlight' does hint at evening painting, but it doesn't exclude anyone."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "fix", "D": "keep"},
+"favorite": "D",
+"veto": []}

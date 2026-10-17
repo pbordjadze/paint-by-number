@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "A", "text": "[A]: a single crescent with a small numeral 3 tucked inside it, on navy by day and near-black by night. The sky is only hinted at, one moon and nothing else, and the night version deepens on time without changing what it is."},
+{"about": "B", "text": "[B]: a full moon with purple paint-blob maria and a tiny 4 reads as a moon by day and by night. But the numeral is faint and the blobs make it look more like a cookie or a palette than a sky, so the hour is less legible than in [A]."},
+{"about": "C", "text": "[C]: crescent, gold stars and purple hills is the whole night sky drawn out, which is more than a hint, and the 4 almost disappears at this size. It also looks exactly the same on the day screen as on the night screen, so you can't tell the hour from it, and its name is cut to 'Paint by Mo...'."},
+{"about": "D", "text": "[D]: a cream ground with a big 6 by day that turns into a dark ground by night. This is the only icon that really changes with the hour, and the gold arc reads as a sun or a sunrise over hills, a gentle sign rather than clip art."},
+{"about": "D", "text": "[D]: the night version keeps the bold 6 and the gold wedge still bright, so it is starlit and plain together; the name 'Paint by Heart' fits whole but says nothing about the sky."},
+{"about": "all", "text": "None of the four slips into horoscope or zodiac kitsch; [A], [B] and [C] only get darker at night, while [D] actually tells day from night."}
+],
+"verdicts": {"A": "keep", "B": "fix", "C": "fix", "D": "keep"},
+"favorite": "D",
+"veto": []}

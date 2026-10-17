@@ -1,0 +1,10 @@
+{"findings": [
+{"about": "B", "text": "[B]: a picture-book night, with a smiling crescent glow, gold stars and soft purple hills. On the dimmed bedtime screen it is the one a child would ask to see again, but its 4 is so small it almost vanishes, and the label cuts off at 'Paint by Mo...'."},
+{"about": "A", "text": "[A]: the purple blotches on the full moon read as bruises or mold, not clouds, in the full-size crop and on the dim screen. A spotty moon feels a little eerie at bedtime."},
+{"about": "D", "text": "[D]: one cream crescent with a big friendly 3, plain and warm like a night-light. It stays clear at the smallest tinted size, though it sits very close to the sleep apps' crescents (White Noise, Sleep Sounds)."},
+{"about": "C", "text": "[C]: the large 6 is clear and kind, but the dark teal sky and black hill read as a gloomy dusk on the dark screen, and nothing in the picture says 'heart'."},
+{"about": "all", "text": "None of the four is scary; nothing here frightens the way the rivals' grinning Halloween pumpkins do. [B] and [D] carry the moon-and-wonder story that the name 'Paint by Moonlight' promises."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "fix", "D": "keep"},
+"favorite": "B",
+"veto": []}

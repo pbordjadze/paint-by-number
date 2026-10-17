@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "D", "text": "[D]: the teal hill with its ochre sliver and the hand-drawn, wobbly ink outline around a big soft '6' look like a page from a garden almanac, and 'Paint by Heart' sounds like something made by hand. It reads as grown, not manufactured."},
+{"about": "B", "text": "[B]: the moon's purple blobs are drawn in round, lumpy shapes like moss or lichen on a stone, and the inked rim keeps it homely. But in the two-tone view the blobs vanish and it becomes a plain white disc with a 4, so the handmade texture doesn't hold up."},
+{"about": "A", "text": "[A]: the gradient sky, glowing moon and layered purple hills are the slickest of the four, and its '4' is a tiny speck at home-screen size. On the home screen the name is cut to 'Paint by Mo...', which loses the moonlight it is named for."},
+{"about": "C", "text": "[C]: a lone crescent on dark navy sits right beside the sleep-sounds apps (White Noise, Sleep Sounds), so it reads as cold and like a sleep app, not something you paint with your hands."},
+{"about": "all", "text": "None of the four has anything green or growing except [D]'s teal hill. In the dimmed bedtime view [B] and [C] fade into flat dark tiles, while [D]'s cream ground still glows warm."},
+{"about": "D", "text": "[D]: the dark hilltop band goes almost black in night mode, so it needs a warmer, mossier green to keep its cozy daytime feel after dark."}
+],
+"verdicts": {"A": "fix", "B": "fix", "C": "kill", "D": "keep"},
+"favorite": "D",
+"veto": []}

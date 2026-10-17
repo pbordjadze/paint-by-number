@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>App icon: a hill and its number</title>
+<defs>
+<linearGradient id="paper-wash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5F2EB"/><stop offset="1" stop-color="#EAE3D5"/></linearGradient>
+<linearGradient id="sky-wash" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="600"><stop offset="0" stop-color="#0D4148"/><stop offset="1" stop-color="#155A60"/></linearGradient>
+</defs>
+<!-- The paper: the hill, the area still waiting. -->
+<g id="background">
+<rect width="1024" height="1024" fill="url(#paper-wash)"/>
+</g>
+<!-- The paint: the sky and the far ridge, filled to the lines. -->
+<g id="middle">
+<path id="sky" fill="url(#sky-wash)" d="M-40 -40 L1064 -40 L1064 520 C920 440 760 376 600 381 C522 384 472 430 392 454 C368 428 338 405 302 392 C200 356 60 360 -40 400 Z"/>
+<path id="ridge" fill="#E6AF4B" d="M-40 400 C60 360 200 356 302 392 C338 405 368 428 392 454 C300 482 120 548 -40 660 Z"/>
+</g>
+<!-- The ink: the two lines and the hill's number (a drawn path, no font needed). -->
+<g id="foreground">
+<g fill="none" stroke="#1A1E26" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+<path id="crest" d="M-40 660 C120 548 300 482 392 454 C472 430 522 384 600 381 C760 376 920 440 1064 520"/>
+<path id="ridge-line" d="M-40 400 C60 360 200 356 302 392 C338 405 368 428 392 454"/>
+</g>
+<path id="six" fill="#1A1E26" d="M636.3 510.5 C578.9 512.6 519.4 542.7 488.6 598.7 C470.4 631.6 461.3 673.6 461.3 718.4 C461.3 802.4 506.1 856.3 561.4 856.3 C620.2 856.3 658.7 809.4 658.7 745.7 C658.7 679.2 618.8 635.8 566.3 635.8 C543.9 635.8 525.7 642.1 513.1 652.6 C527.1 603.6 569.1 553.9 626.5 544.8 C642.6 542.4 651.7 535 652.4 525.2 C653.1 516.1 646.8 510.5 636.3 510.5 Z M567 666.6 C592.9 666.6 611.8 700.2 611.8 747.1 C611.8 794.7 592.9 827.6 567 827.6 C541.1 827.6 521.5 794.7 521.5 747.1 C521.5 700.2 541.1 666.6 567 666.6 Z"/>
+</g>
+</svg>

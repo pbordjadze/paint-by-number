@@ -1,0 +1,11 @@
+{"findings": [
+{"about": "B", "text": "[B]: four stars, a dot field, a moon, three hill bands and a small 4 all in one square; take away the stars and dots and the numeral, now the smallest thing in the icon, might finally be seen."},
+{"about": "B", "text": "[B]: the 4 sits tiny at the bottom edge, under two filled wave bands, so the one element that says 'paint by numbers' is the first to vanish at home-screen size."},
+{"about": "C", "text": "[C]: one large disc and one numeral, with dark space all around; little is left to take away, though the thin crescent line under the disc and the dithered lower edge are a second moon where one would do."},
+{"about": "D", "text": "[D]: the crescent and the 3 share one shape cleanly, but the horizon cuts the square in half and its ragged dithered edge is noise; the crescent alone on dark would be enough."},
+{"about": "A", "text": "[A]: a single hill line and a single numeral, the plainest of the four, but the faint specks along the left of the sky are leftovers that should go."},
+{"about": "all", "text": "Every icon already has a numeral and a sky; the ones that keep only those two, [A] and [C], read at once, while [B] fills every silence."}
+],
+"verdicts": {"A": "keep", "B": "kill", "C": "keep", "D": "fix"},
+"favorite": "C",
+"veto": [{"candidate": "B", "reason": "clutter; ornament; two things where one would do; filling every silence."}]}

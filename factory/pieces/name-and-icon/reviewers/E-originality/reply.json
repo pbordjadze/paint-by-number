@@ -1,0 +1,10 @@
+{"findings": [
+{"about": "all", "text": "None of the four names repeats a rival's naming pattern: every rival listed is 'X: Paint by Number' or a coined brand, and none uses 'Paint by <noun>'. No franchise, order or house name appears."},
+{"about": "B", "text": "[B]: a white crescent on a dark navy square is the sleep row's common look (Sleep Sounds - R..., Sleep: Sounds & ..., Sleep Sounds Whi...). The numeral 3 is the only thing that sets it apart, so at a glance it reads as a sleep app, not as our own."},
+{"about": "A", "text": "[A]: a crescent and stars over purple hills sits close to the sleep row's night scenes (BetterSleep's moon over a green hill, Sleep Sounds - R...). Its tiny '4' is the only paint-by-number cue, and it nearly disappears."},
+{"about": "D", "text": "[D]: a full moon with a painted numeral 4 on deep purple matches no rival in any row. The full moon looks a little like BetterSleep's, but the paint blotches and numeral make it distinct."},
+{"about": "C", "text": "[C]: a large numeral 6 over cream and green hill bands looks like no competitor's icon. 'Paint by Heart' echoes no rival name shown, though it moves away from the moon theme of the other three."}
+],
+"verdicts": {"A": "abstain", "B": "abstain", "C": "abstain", "D": "abstain"},
+"favorite": "abstain",
+"veto": []}
