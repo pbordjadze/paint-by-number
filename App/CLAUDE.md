@@ -579,8 +579,9 @@ Conventions).
     changes nothing, is not kept and takes no step of the history; a toast says so
     (`RefineNote`, `RefineNoteToast`, announced to VoiceOver by `CreateModel.say`, gone after
     `CreateModel.noteDuration`). A shape a line closed with no room for a number is not cut off but
-    its line stays, and the toast says that. An edit with nothing to change (an eraser over bare
-    paper) is silent.
+    its line stays, and the toast says that, only when the line cut nothing off (the slivers a
+    line closes crossing ink beside a junction are silent: `EditTrail.Verdict.made`). An edit
+    with nothing to change (an eraser over bare paper) is silent.
   - `TemplateRefinements` are the painter's changes: the `edits`, and the generator's inputs
     (importance, the edge maps' gain, `LineArtInput.writing`, and `lines`, the lines drawn and
     erased by builds that refined through the generator, `LineArtInput.edits`: paintings and
