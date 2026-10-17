@@ -48,6 +48,17 @@ nonisolated enum TipMoments {
         return due
     }
 
+    /// What the bench may say as a painting opens: a fresh page, how to paint; the third painting
+    /// opened a day after the first page was finished, Give Feedback (whether its page is fresh or
+    /// not: the third painting is often a new one); a page past a quarter, the photo.
+    static func benchOpened(fresh: Bool, feedbackIsDue: Bool, pastQuarter: Bool) -> [TipID] {
+        var due: [TipID] = []
+        if fresh { due.append(.benchTap) }
+        if feedbackIsDue { due.append(.benchFeedback) }
+        if pastQuarter { due.append(.benchShowPhoto) }
+        return due
+    }
+
     /// What the preview may say once its template is final, given whether the divider's tip is
     /// over (Already Chosen for You waits for it) and where the settings came from.
     static func preview(dividerIsOver: Bool, isSuggested: Bool, canRefine: Bool) -> [TipID] {

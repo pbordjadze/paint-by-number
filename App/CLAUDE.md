@@ -358,7 +358,10 @@ where they live.
   tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
   bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
-  them; `GentleTipsUITests` and `PaintingTipsTests` do.
+  them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
+  (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
+  is in view, whatever the moment and the pacing (`DemoMode.forcedTip`, `TipDesk.force`; every
+  rule's count donated), ready once it is up: `ci/scenarios.txt` screenshots each tip so.
 
 ## Giving feedback
 

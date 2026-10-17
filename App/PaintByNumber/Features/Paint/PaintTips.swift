@@ -113,7 +113,7 @@ enum PaintTips {
             try? Tips.resetDatastore()
             TipStore().reset()
             TipPreference.forget()
-            if demo == nil { Tips.hideAllTipsForTesting() }
+            if demo == nil, DemoMode.forcedTip == nil { Tips.hideAllTipsForTesting() }
         }
         #endif
         do {
@@ -131,6 +131,10 @@ enum PaintTips {
             for id in demo.closed { id.tip.invalidate(reason: .tipClosed) }
         } else {
             desk.isMuted = isolatedRun
+        }
+        if let forced = DemoMode.forcedTip {
+            donateEveryRule()
+            desk.force(forced)
         }
         #endif
     }
@@ -276,7 +280,22 @@ enum PaintTips {
     ]
 
     /// The tip the running scenario shows.
-    static var demoTip: TipID? { DemoMode.scenario.flatMap { demoScenarios[$0] }?.tip }
+    static var demoTip: TipID? { DemoMode.forcedTip ?? DemoMode.scenario.flatMap { demoScenarios[$0] }?.tip }
+
+    /// Every count a tip's rules wait for, so that whichever tip a `--tip-` scenario forces is
+    /// eligible.
+    private static func donateEveryRule() {
+        let counts: [(Tips.Event<Tips.EmptyDonation>, Int)] = [
+            (TipEvents.smallMisses, 2), (TipEvents.singleTaps, 15), (TipEvents.pencilStrokes, 1), (TipEvents.stalls, 1),
+            (TipEvents.quarters, 1), (TipEvents.finishes, 1), (TipEvents.sessions, 1), (TipEvents.pagesMade, 2),
+            (TipEvents.sliderReleases, 1), (TipEvents.linesDrawn, 1),
+        ]
+        Task {
+            for (event, count) in counts {
+                for _ in 0..<count { await event.donate() }
+            }
+        }
+    }
 
     /// Waits until the scenario's tip is up (TipKit presents it a moment after the turn is given).
     static func awaitDemoTip() async {

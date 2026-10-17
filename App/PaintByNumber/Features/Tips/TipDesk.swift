@@ -348,6 +348,38 @@ final class TipDesk {
         if let turn { release(turn) }
     }
 
+    #if DEBUG
+    /// A `--tip-` demo (`DemoMode.forcedTip`): `id` is given its turn once TipKit finds it eligible,
+    /// its screen is in view, nothing covers it and it has a view to point at, whatever the moment
+    /// and the pacing, so that every tip can be seen where it lives.
+    func force(_ id: TipID) {
+        Task { [weak self] in
+            let clock = ContinuousClock()
+            let deadline = clock.now + .seconds(120)
+            var readySince: ContinuousClock.Instant?
+            while clock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self else { return }
+                guard turn == nil, isInView(id.place), !Self.needsAnchor.contains(id) || anchored[id, default: 0] > 0,
+                      case .available = id.progress else {
+                    readySince = nil
+                    continue
+                }
+                // The screen has settled (a push or a sheet has landed) before the popover comes.
+                if let readySince, clock.now - readySince >= Self.forcedSettle {
+                    notice("forced: \(id.rawValue)")
+                    grant(id)
+                    return
+                }
+                if readySince == nil { readySince = clock.now }
+            }
+            self?.notice("forced \(id.rawValue) never came: \(Self.statuses([id]))")
+        }
+    }
+
+    private static let forcedSettle: Duration = .seconds(1)
+    #endif
+
     // MARK: The switch and starting over
 
     /// The Tips switch changed.

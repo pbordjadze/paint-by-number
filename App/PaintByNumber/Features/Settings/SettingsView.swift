@@ -25,6 +25,7 @@ struct SettingsView: View {
     private let appInfo = AppInfo()
 
     private enum Destination: Hashable { case acknowledgements }
+    private static let paintingLengthRow = "painting-length"
     @State private var tipsReset = false
 
     init() {
@@ -35,172 +36,183 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            Form {
-                Section {
-                    Toggle(isOn: $autoAdvance) {
-                        SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
+            ScrollViewReader { proxy in
+                Form {
+                    Section {
+                        Toggle(isOn: $autoAdvance) {
+                            SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
+                        }
+                    } header: {
+                        // Not the "Painting" key: that one names a picture, this one the activity.
+                        Text(String(localized: "settings.section.painting", defaultValue: "Painting",
+                                    comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
+                    } footer: {
+                        Text("When you finish a color, the next one is picked up automatically.")
                     }
-                } header: {
-                    // Not the "Painting" key: that one names a picture, this one the activity.
-                    Text(String(localized: "settings.section.painting", defaultValue: "Painting",
-                                comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
-                } footer: {
-                    Text("When you finish a color, the next one is picked up automatically.")
-                }
 
-                Section {
-                    Picker(selection: $paperAppearance) {
-                        ForEach(PaperAppearance.allCases) { appearance in
-                            Text(appearance.name).tag(appearance)
+                    Section {
+                        Picker(selection: $paperAppearance) {
+                            ForEach(PaperAppearance.allCases) { appearance in
+                                Text(appearance.name).tag(appearance)
+                            }
+                        } label: {
+                            SwiftUI.Label("Paper", systemImage: "circle.lefthalf.filled")
                         }
-                    } label: {
-                        SwiftUI.Label("Paper", systemImage: "circle.lefthalf.filled")
-                    }
-                    .accessibilityIdentifier("paper-appearance")
-                    Picker(selection: $lineWeight) {
-                        ForEach(LineWeight.allCases) { weight in
-                            Text(weight.name).tag(weight)
+                        .accessibilityIdentifier("paper-appearance")
+                        Picker(selection: $lineWeight) {
+                            ForEach(LineWeight.allCases) { weight in
+                                Text(weight.name).tag(weight)
+                            }
+                        } label: {
+                            SwiftUI.Label("Line Weight", systemImage: "lineweight")
                         }
-                    } label: {
-                        SwiftUI.Label("Line Weight", systemImage: "lineweight")
+                        .accessibilityIdentifier("settings-line-weight")
+                    } footer: {
+                        Text("Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper.")
                     }
-                    .accessibilityIdentifier("settings-line-weight")
-                } footer: {
-                    Text("Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper.")
-                }
 
-                Section {
-                    Toggle(isOn: $tipsEnabled) {
-                        SwiftUI.Label("Tips", systemImage: "lightbulb")
-                    }
-                    .accessibilityIdentifier("settings-tips")
-                    Button {
-                        PaintTips.showAgain()
-                        tipsReset = true
-                    } label: {
-                        if tipsReset {
-                            SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
-                        } else {
-                            SwiftUI.Label("Show Tips Again", systemImage: "arrow.counterclockwise")
+                    Section {
+                        Toggle(isOn: $tipsEnabled) {
+                            SwiftUI.Label("Tips", systemImage: "lightbulb")
                         }
+                        .accessibilityIdentifier("settings-tips")
+                        Button {
+                            PaintTips.showAgain()
+                            tipsReset = true
+                        } label: {
+                            if tipsReset {
+                                SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
+                            } else {
+                                SwiftUI.Label("Show Tips Again", systemImage: "arrow.counterclockwise")
+                            }
+                        }
+                        .disabled(tipsReset)
+                        .accessibilityIdentifier("settings-show-tips-again")
+                    } footer: {
+                        Text("Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.")
                     }
-                    .disabled(tipsReset)
-                    .accessibilityIdentifier("settings-show-tips-again")
-                } footer: {
-                    Text("Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.")
-                }
 
-                Section("Sound & Haptics") {
-                    // iPad and the simulator have no haptics: nothing to switch.
-                    if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
-                        Toggle(isOn: $haptics) {
-                            SwiftUI.Label("Haptics", systemImage: "hand.tap")
+                    Section("Sound & Haptics") {
+                        // iPad and the simulator have no haptics: nothing to switch.
+                        if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
+                            Toggle(isOn: $haptics) {
+                                SwiftUI.Label("Haptics", systemImage: "hand.tap")
+                            }
+                        }
+                        Toggle(isOn: $sounds) {
+                            SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                         }
                     }
-                    Toggle(isOn: $sounds) {
-                        SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
-                    }
-                }
 
-                // A theme of its own, apart from the appearance and the paper: two music choices
-                // and Auto, as a plain list (Paul: "a list of two music options").
-                Section {
-                    Picker(selection: $sky) {
-                        ForEach(SkySetting.allCases) { choice in
-                            Text(choice.name).tag(choice)
+                    // A theme of its own, apart from the appearance and the paper: two music choices
+                    // and Auto, as a plain list (Paul: "a list of two music options").
+                    Section {
+                        Picker(selection: $sky) {
+                            ForEach(SkySetting.allCases) { choice in
+                                Text(choice.name).tag(choice)
+                            }
+                        } label: {
+                            Text("Music")
                         }
-                    } label: {
+                        .pickerStyle(.inline)
+                        .labelsHidden()
+                    } header: {
                         Text("Music")
+                    } footer: {
+                        Text(String(localized: "settings.sky.footer",
+                                    defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
+                                    comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } header: {
-                    Text("Music")
-                } footer: {
-                    Text(String(localized: "settings.sky.footer",
-                                defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
-                                comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
-                }
 
-                Section {
-                    Picker(selection: $paintingLength) {
-                        ForEach(PaintingLength.allCases, id: \.self) { length in
-                            Text(length.name).tag(length)
+                    Section {
+                        Picker(selection: $paintingLength) {
+                            ForEach(PaintingLength.allCases, id: \.self) { length in
+                                Text(length.name).tag(length)
+                            }
+                        } label: {
+                            SwiftUI.Label("Painting Length", systemImage: "hourglass")
                         }
-                    } label: {
-                        SwiftUI.Label("Painting Length", systemImage: "hourglass")
+                        .accessibilityIdentifier("painting-length")
+                        .id(Self.paintingLengthRow)
+                        // Worth a Look Here, the first time Settings opens, once the row is there to point at.
+                        .gentleTip(.drawerWorthALook, arrowEdge: .top)
+                        .onAppear { PaintTips.drawerRowReached() }
+                    } header: {
+                        Text("New Paintings")
+                    } footer: {
+                        Text(paintingLength.footer)
+                            .accessibilityIdentifier("painting-length-footer")
                     }
-                    .accessibilityIdentifier("painting-length")
-                    // Worth a Look Here, the first time Settings opens, once the row is there to point at.
-                    .gentleTip(.drawerWorthALook, arrowEdge: .top)
-                    .onAppear { PaintTips.drawerRowReached() }
-                } header: {
-                    Text("New Paintings")
-                } footer: {
-                    Text(paintingLength.footer)
-                        .accessibilityIdentifier("painting-length-footer")
-                }
 
-                Section {
-                    Picker(selection: $previewStyle) {
-                        ForEach(PreviewStyle.allCases) { style in
-                            Text(style.name).tag(style)
+                    Section {
+                        Picker(selection: $previewStyle) {
+                            ForEach(PreviewStyle.allCases) { style in
+                                Text(style.name).tag(style)
+                            }
+                        } label: {
+                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
                         }
-                    } label: {
-                        SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
+                        .accessibilityIdentifier("settings-preview")
+                    } footer: {
+                        Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
                     }
-                    .accessibilityIdentifier("settings-preview")
-                } footer: {
-                    Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
-                }
 
-                Section {
-                    Toggle(isOn: $detailBrushes) {
-                        SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
+                    Section {
+                        Toggle(isOn: $detailBrushes) {
+                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
+                        }
+                        .accessibilityIdentifier("settings-detail-brushes")
+                    } footer: {
+                        Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
                     }
-                    .accessibilityIdentifier("settings-detail-brushes")
-                } footer: {
-                    Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
-                }
 
-                #if UNRELEASED
-                // Debug and SideStore builds only for now (`AppShellView`).
-                Section {
-                    Toggle(isOn: $showsMarginarium) {
-                        SwiftUI.Label("The Marginarium", systemImage: "book.pages")
+                    #if UNRELEASED
+                    // Debug and SideStore builds only for now (`AppShellView`).
+                    Section {
+                        Toggle(isOn: $showsMarginarium) {
+                            SwiftUI.Label("The Marginarium", systemImage: "book.pages")
+                        }
+                        .accessibilityIdentifier("settings-marginarium")
+                    } footer: {
+                        Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with its guardians.")
                     }
-                    .accessibilityIdentifier("settings-marginarium")
-                } footer: {
-                    Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with its guardians.")
+                    #endif
+
+                    Section {
+                        Toggle(isOn: $playsMakingOf) {
+                            SwiftUI.Label("The Making-of", systemImage: "film")
+                        }
+                        .accessibilityIdentifier("settings-making-of")
+                    } footer: {
+                        Text("After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it.")
+                    }
+
+                    Section {
+                        LabeledContent {
+                            Text(appInfo.summary)
+                        } label: {
+                            SwiftUI.Label("Version", systemImage: "info.circle")
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("about-version")
+                        NavigationLink(value: Destination.acknowledgements) {
+                            SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
+                        }
+                        .accessibilityIdentifier("about-acknowledgements")
+                    } header: {
+                        Text("About")
+                    } footer: {
+                        Text("Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking.")
+                    }
+                }
+                #if DEBUG
+                // On a phone the row is below the fold, and its tip comes only once it is reached.
+                .task {
+                    guard ShellDemo.current == .settingsTip else { return }
+                    try? await Task.sleep(for: .seconds(1))
+                    withAnimation { proxy.scrollTo(Self.paintingLengthRow, anchor: .center) }
                 }
                 #endif
-
-                Section {
-                    Toggle(isOn: $playsMakingOf) {
-                        SwiftUI.Label("The Making-of", systemImage: "film")
-                    }
-                    .accessibilityIdentifier("settings-making-of")
-                } footer: {
-                    Text("After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it.")
-                }
-
-                Section {
-                    LabeledContent {
-                        Text(appInfo.summary)
-                    } label: {
-                        SwiftUI.Label("Version", systemImage: "info.circle")
-                    }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("about-version")
-                    NavigationLink(value: Destination.acknowledgements) {
-                        SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
-                    }
-                    .accessibilityIdentifier("about-acknowledgements")
-                } header: {
-                    Text("About")
-                } footer: {
-                    Text("Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking.")
-                }
             }
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
