@@ -15,7 +15,7 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | --- | --- | --- | --- | --- | --- |
 | 1 | Sun & Moon theme, music and the Lamplit Table, merged for SideStore only | "Can you merge Sun and moon but ship it only to SideStore for now" | shipped (SideStore) | main 9fc1770 green but for the known flaky RefineAfterSlidersTests | 2026-10-17 |
 | 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | building | TASTE: Paul liked the cuter slides; photos sent, see #10 | 2026-10-17 |
-| 3 | Astrology slide in the App Store set | | building | Store slides: #12 shipped (cd48bec); planning the slide | 2026-10-17 |
+| 3 | Astrology slide in the App Store set | | shipped (SideStore) | Store slides 2e9ab17: slide 7 "Written in the stars", shown to Paul; wording his to change | 2026-10-17 |
 | 4 | App icon | | parked | with Paul's sister (the icon brief) | 2026-10-17 |
 | 5 | The app's name: keep "Paint by Moonlight" or change it | "the name might go soon? Or we keep it for now" | shipped (SideStore) | Paul: "Keep" (18:31): Paint by Moonlight stays | 2026-10-17 |
 | 6 | Making-of to painting hand-off: check it on a real device (it froze 10–100 s on CI simulators) | "the jump from the making of screen to the painting is very abrupt…" | shipped (TestFlight) | Paul: "Making of looks pretty good for now, could be refined a bit later"; recording to come | 2026-10-17 |
