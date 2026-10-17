@@ -80,9 +80,8 @@ final class GalleryActionsTests: XCTestCase {
         fox.press(forDuration: 1.5)
         let favorite = app.buttons["Favorite"]
         XCTAssertTrue(favorite.waitForExistence(timeout: 5), "The card menu has no Favorite")
-        favorite.tap()
-
-        XCTAssertTrue(waitFor(fox, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
+        XCTAssertTrue(
+            choose(favorite) { self.valueOf(fox).contains("Favorite") }, "The card doesn't say it is a favorite")
         scrollToTop(app)
         let wave = app.buttons["The Great Wave"].firstMatch
         XCTAssertTrue(waitUntil { self.precedes(fox, wave) }, "The favorite didn't move ahead of The Great Wave")
@@ -91,8 +90,8 @@ final class GalleryActionsTests: XCTestCase {
         fox.press(forDuration: 1.5)
         let unfavorite = app.buttons["Unfavorite"]
         XCTAssertTrue(unfavorite.waitForExistence(timeout: 5), "A favorite's menu has no Unfavorite")
-        unfavorite.tap()
-        XCTAssertTrue(waitFor(fox, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
+        XCTAssertTrue(
+            choose(unfavorite) { !self.valueOf(fox).contains("Favorite") }, "Unfavorite left the mark on the card")
         XCTAssertTrue(waitUntil { self.precedes(wave, fox) }, "The card didn't return to its place")
     }
 
@@ -199,10 +198,18 @@ final class GalleryActionsTests: XCTestCase {
         return a.minX < b.minX
     }
 
+    /// Taps a card menu's `item` once the menu has stopped opening, and says whether `changed`
+    /// came to hold. On CI's iPhone (October 16) Unfavorite was tapped where it stood, with the
+    /// press that opened the menu just done, and the card kept its mark for good, most likely a tap
+    /// that landed while the menu was still opening. A tap that changed nothing while the item is
+    /// still there is tapped once more (`retapIfLost`, which attaches the whole screen).
     @MainActor
-    private func waitFor(_ element: XCUIElement, _ predicate: String, timeout: TimeInterval = 5) -> Bool {
-        let wait = XCTNSPredicateExpectation(predicate: NSPredicate(format: predicate), object: element)
-        return XCTWaiter.wait(for: [wait], timeout: timeout) == .completed
+    private func choose(_ item: XCUIElement, until changed: () -> Bool) -> Bool {
+        waitUntilStill(item)
+        item.tap()
+        if waitUntil(timeout: 3, changed) { return true }
+        if item.exists { retapIfLost(item.label) { item.tap() } }
+        return waitUntil(timeout: 5, changed)
     }
 
     /// Waits for the demo gallery to have made its six paintings, then scrolls the card into view
