@@ -13,7 +13,7 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 
 | # | Item | Paul's words | State | Where | Updated |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Sun & Moon theme, music and the Lamplit Table, merged for SideStore only | "Can you merge Sun and moon but ship it only to SideStore for now" | in CI | merged to `main`; SideStore build follows its run | 2026-10-17 |
+| 1 | Sun & Moon theme, music and the Lamplit Table, merged for SideStore only | "Can you merge Sun and moon but ship it only to SideStore for now" | shipped (SideStore) | main 9fc1770 green but for the known flaky RefineAfterSlidersTests | 2026-10-17 |
 | 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | building | TASTE: Paul liked the cuter slides; photos sent, see #10 | 2026-10-17 |
 | 3 | Astrology slide in the App Store set | | blocked | TASTE: on #12 (Sun & Moon simplified and shipped to the release) | 2026-10-17 |
 | 4 | App icon | | parked | with Paul's sister (the icon brief) | 2026-10-17 |
@@ -24,4 +24,4 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 9 | Refine screen shape sizing | | blocked | Refine screen shape sizing (`claude/refine-harness`): merge held for Caroline's answers | 2026-10-17 |
 | 10 | App Store slides: all four pets (two dogs, two cats), each shown fully at least once, in the cuter style | "There's two dogs and two cats here, each needs to be showcased fully at least once, if that's ok. See what we can do with that style and these photos." | building | TASTE (`claude/app-store-screenshots`): going ahead with stand-in app screens; Paul settles the four photos, then makes the New Painting screenshots | 2026-10-17 |
 | 11 | Store slides: drop "like a good dog" (the saved-progress night slide) | "The "like a good dog" slide is weird, I'm gonna veto that language." | building | TASTE, with #10 | 2026-10-17 |
-| 12 | Sun & Moon: simplify to a list (Sun, Moon, Auto; Auto the default), then ship it to the release; Dawn and Dusk one day | "maybe this should just be a list of two music options, and those can be "Sun" and "Moon" or "Auto"—and then auto can be default maybe? With Dawn and Dusk to follow one day. If we can make that less confusing we can ship it." | building | Day/night music and astrological UI theme (new branch after main's run) | 2026-10-17 |
+| 12 | Sun & Moon: simplify to a list (Sun, Moon, Auto; Auto the default), then ship it to the release; Dawn and Dusk one day | "maybe this should just be a list of two music options, and those can be "Sun" and "Moon" or "Auto"—and then auto can be default maybe? With Dawn and Dusk to follow one day. If we can make that less confusing we can ship it." | in CI | Day/night music and astrological UI theme: 0039641 on `claude/day-night-music-astrological-theme-ycqyrm`; Lamplit Table next, then merge | 2026-10-17 |
