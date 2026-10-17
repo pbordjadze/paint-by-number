@@ -3,13 +3,14 @@ import os
 import SwiftUI
 import TipKit
 
-// First-run tips for the painting gestures (TipKit). The tip types are `nonisolated`: TipKit
-// reads them off the main actor. They are driven by `Tips.Event`s, whose donations come from
-// session events (`PaintTips.record`), and the first tip also by whether the painting has
-// paint. Tip and event ids carry a generation that Settings ▸ Show Tips Again bumps, so tips
-// return at once with fresh counts.
+// The bench's tips of the first version, in the gentle tips' words and rules (the app's design
+// panel's design of October 17; the other 17 are in `Features/Tips`). The tip types are
+// `nonisolated`: TipKit reads them off the main actor. Their rules are the tips-on parameter and
+// the events painting donates (`PaintTips.record`); `TipDesk` decides when one may appear. Tip and
+// event ids carry a generation that Settings ▸ Show Tips Again bumps, so tips return at once with
+// fresh counts, and the ids of the first version are kept: whoever closed one has it closed.
 
-/// The first painting: how to paint at all.
+/// The first painting: how to paint at all. Tap to Paint.
 nonisolated struct FirstPaintTip: Tip {
     /// Whether the open painting has paint already. A rule rather than an invalidation, so
     /// the tip still comes back on the next fresh painting after Show Tips Again.
@@ -17,72 +18,74 @@ nonisolated struct FirstPaintTip: Tip {
 
     var id: String { PaintTips.scoped("tip.firstPaint") }
     var title: Text { Text("Tap to Paint") }
-    var message: Text? { Text("Tap an area marked with this color’s number to fill it.") }
+    var message: Text? { Text("Pick a color below, then tap an area marked with its number to fill it.") }
     var image: Image? { Image(systemName: "hand.tap") }
     var rules: [Tips.Rule] {
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(Self.$hasPaint) { $0 == false }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
+    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// After a few taps on areas of another color: the selected swatch shows where to paint.
+/// A minute with no fill while the selected color has areas left: the selected swatch shows where to paint.
 nonisolated struct HintTip: Tip {
-    let wrongTaps = Tips.Event(id: PaintTips.scoped("event.wrongTap"))
-
     var id: String { PaintTips.scoped("tip.hint") }
     var title: Text { Text("Can’t Find It?") }
-    var message: Text? { Text("Tap the selected color again to be shown an area to paint.") }
+    var message: Text? { Text("Tap the selected color again, or the lightbulb, to be shown an area to paint.") }
     var image: Image? { Image(systemName: "lightbulb") }
     var rules: [Tips.Rule] {
-        #Rule(wrongTaps) { $0.donations.count >= 3 }
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(TipEvents.stalls) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
+    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// After taps just beside areas too small to hit at this zoom.
+/// After two taps beside areas too small to hit at this zoom.
 nonisolated struct ZoomTip: Tip {
-    let smallMisses = Tips.Event(id: PaintTips.scoped("event.smallMiss"))
-
     var id: String { PaintTips.scoped("tip.zoom") }
     var title: Text { Text("Zoom In on Small Areas") }
-    var message: Text? { Text("Double-tap the canvas to zoom in on it. Pinch to zoom back out.") }
+    var message: Text? { Text("Double-tap the page to zoom in. Pinch to zoom back out.") }
     var image: Image? { Image(systemName: "plus.magnifyingglass") }
     var rules: [Tips.Rule] {
-        #Rule(smallMisses) { $0.donations.count >= 2 }
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(TipEvents.smallMisses) { $0.donations.count >= 2 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
+    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// After several single taps and no drag: one stroke paints many areas.
+/// After 15 single fills: one stroke paints many areas.
 nonisolated struct DragPaintTip: Tip {
-    let singleTaps = Tips.Event(id: PaintTips.scoped("event.singleTap"))
-
     var id: String { PaintTips.scoped("tip.dragPaint") }
     var title: Text { Text("Paint Several Areas") }
-    var message: Text? { Text("Touch and hold, then drag across areas with this number to paint them in one stroke.") }
+    var message: Text? { Text("Touch and hold, then drag across areas with this number to fill them in one stroke.") }
     var image: Image? { Image(systemName: "hand.draw") }
     var rules: [Tips.Rule] {
-        #Rule(singleTaps) { $0.donations.count >= 6 }
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(TipEvents.singleTaps) { $0.donations.count >= 15 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
+    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// The first Pencil stroke: the Pencil paints while fingers navigate.
+/// The first Pencil touch on the page: the Pencil paints while fingers navigate.
 nonisolated struct PencilTip: Tip {
-    let pencilStrokes = Tips.Event(id: PaintTips.scoped("event.pencilStroke"))
-
     var id: String { PaintTips.scoped("tip.pencil") }
     var title: Text { Text("Paint with Apple Pencil") }
-    var message: Text? { Text("Apple Pencil paints; use your fingers to pan and zoom.") }
+    var message: Text? { Text("The Pencil paints while fingers move the page. Double-tap the Pencil for the next color.") }
     var image: Image? { Image(systemName: "applepencil") }
     var rules: [Tips.Rule] {
-        #Rule(pencilStrokes) { $0.donations.count >= 1 }
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(TipEvents.pencilStrokes) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
+    var actions: [Tips.Action] { TipActions.turnOff }
 }
 
-/// Configuration, the tip group of a painting screen, and the bridge from painting events to
-/// TipKit donations and invalidations.
+/// Configuration, the answers to the invitation, and the bridge from what the painter does to
+/// TipKit donations and invalidations; the desk (`TipDesk`) gives the tips their turns.
 enum PaintTips {
     nonisolated static let generationKey = "tipsGeneration"
 
@@ -101,23 +104,21 @@ enum PaintTips {
         defaults.set(generation(defaults) + 1, forKey: generationKey)
     }
 
-    /// Settings ▸ Show Tips Again.
-    static func showAgain() {
-        bumpGeneration()
-        donated.removeAll()
-        invalidated.removeAll()
-    }
+    /// Gives the tips their turns. Made after `configure` has cleared a demo's or a test's state.
+    static let desk = TipDesk()
 
-    /// The demo scenario that shows a tip; every other demo and test run hides them all.
-    static let demoScenario = "paint-tip"
-
-    /// Call once at launch. Demo and test runs start from an empty datastore so screenshots
-    /// and tests never depend on what an earlier run saw or donated.
+    /// Call once at launch. Demo and test runs start from an empty datastore and no answer to the
+    /// invitation, so screenshots and tests never depend on what an earlier run saw, donated or
+    /// answered; they show no tip but the scenarios' own.
     static func configure() {
         #if DEBUG
-        if DemoMode.isActive || DemoMode.isTestHost {
+        let isolatedRun = DemoMode.isActive || DemoMode.isTestHost
+        let demo = DemoMode.scenario.flatMap { demoScenarios[$0] }
+        if isolatedRun {
             try? Tips.resetDatastore()
-            if DemoMode.scenario != demoScenario { Tips.hideAllTipsForTesting() }
+            TipStore().reset()
+            TipInvitation.forget()
+            if demo == nil { Tips.hideAllTipsForTesting() }
         }
         #endif
         do {
@@ -125,27 +126,82 @@ enum PaintTips {
         } catch {
             Log.tips.error("TipKit configuration failed: \(String(describing: error), privacy: .public)")
         }
+        // Tips are off until the invitation says otherwise: the rules of every tip read this.
+        TipSwitch.tipsOn = TipInvitation.isEnabled()
+        desk.beginSession()
+        #if DEBUG
+        // A run that shows a tip lets only that scenario's tips speak.
+        desk.isMuted = isolatedRun && demo?.tip == nil
+        if let demo {
+            if let enabled = demo.enabled { setEnabled(enabled) }
+            for id in demo.closed { id.tip.invalidate(reason: .tipClosed) }
+        }
+        #endif
     }
+
+    // MARK: The answer
+
+    /// Tips on or off: the invitation's answer, the Tips switch in Settings. Either answers the
+    /// invitation, which never asks again.
+    static func setEnabled(_ enabled: Bool) {
+        TipInvitation.record(enabled)
+        TipSwitch.tipsOn = enabled
+        desk.answered(tipsOn: enabled)
+    }
+
+    /// Show Tips or No Thanks, or the note closed (No Thanks).
+    static func answerInvitation(showTips: Bool) {
+        setEnabled(showTips)
+        TipID.invitation.invalidate()
+        desk.stop(.invitation)
+    }
+
+    /// Turn Off Tips, beneath every hint's close button.
+    static func turnOffTips() {
+        setEnabled(false)
+    }
+
+    /// A button of a tip was tapped. The tips carry the same handlers (`TipActions`,
+    /// `InvitationTip`); the views hand this one to TipKit as well, in case it asks for either, and
+    /// each answer is the same however many times it is given.
+    static func perform(_ action: Tips.Action) {
+        switch action.id {
+        case "showTips": answerInvitation(showTips: true)
+        case "noThanks": answerInvitation(showTips: false)
+        case "turnOffTips": turnOffTips()
+        default: break
+        }
+    }
+
+    /// Settings ▸ Show Tips Again: tips on, and every tip as new.
+    static func showAgain() {
+        bumpGeneration()
+        donated.removeAll()
+        invalidated.removeAll()
+        TipInvitation.record(true)
+        TipSwitch.tipsOn = true
+        desk.startOver()
+        desk.answered(tipsOn: true)
+    }
+
+    // MARK: Using a thing
+
+    /// The painter used what `id` is about: the tip never shows, or goes if it does.
+    static func used(_ id: TipID) {
+        desk.stop(id)
+        invalidate(id.tip)
+    }
+
+    // MARK: The bench
 
     /// Tips on the selected swatch move with the selection, and each move presents the popover
     /// anew, which TipKit counts as another display. Using the gesture invalidates them anyway.
     nonisolated static let swatchTipDisplays = 3
 
-    /// One tip at a time: hardware first, then the basics, frustration relief, efficiency.
-    static func makeGroup() -> TipGroup {
-        TipGroup(.firstAvailable) {
-            PencilTip()
-            FirstPaintTip()
-            HintTip()
-            ZoomTip()
-            DragPaintTip()
-        }
-    }
-
     /// What happened while painting, as far as tips are concerned.
     enum Signal: Equatable {
         case tapPainted, strokePainted, strokeEnded, wrongColor, missedSmallArea, hintShown
-        case zoomedByDoubleTap, pencilUsed
+        case zoomed, pencilUsed
     }
 
     /// The tip signal of a session event (`isStroking`: a drag or Pencil stroke is under way).
@@ -161,24 +217,27 @@ enum PaintTips {
     }
 
     static func record(_ signal: Signal) {
+        desk.noteActivity()
         switch signal {
         case .tapPainted:
-            invalidate(FirstPaintTip())
-            donate(DragPaintTip().singleTaps)
+            desk.filled()
+            used(.benchTap)
+            donate(TipEvents.singleTaps, limit: 20)
         case .strokePainted:
-            invalidate(FirstPaintTip())
+            desk.filled()
+            used(.benchTap)
         case .strokeEnded:
-            invalidate(DragPaintTip())
+            used(.benchDrag)
         case .wrongColor:
-            donate(HintTip().wrongTaps)
+            break
         case .missedSmallArea:
-            donate(ZoomTip().smallMisses)
+            donate(TipEvents.smallMisses, limit: 4)
         case .hintShown:
-            invalidate(HintTip())
-        case .zoomedByDoubleTap:
-            invalidate(ZoomTip())
+            used(.benchFind)
+        case .zoomed:
+            used(.benchZoom)
         case .pencilUsed:
-            donate(PencilTip().pencilStrokes)
+            donate(TipEvents.pencilStrokes, limit: 2)
         }
     }
 
@@ -187,14 +246,16 @@ enum PaintTips {
         FirstPaintTip.hasPaint = hasProgress
     }
 
-    /// Donations per event and launch: every rule is met well below this, and a painting's
+    // MARK: Donations and invalidations
+
+    /// Donations per event and launch: every rule is met well below its limit, and a painting's
     /// thousands of taps must not grow the datastore.
-    private static let maxDonationsPerLaunch = 8
     private static var donated: [String: Int] = [:]
 
-    private static func donate(_ event: Tips.Event<Tips.EmptyDonation>) {
+    /// Donates `event`, up to `limit` times a launch.
+    static func donate(_ event: Tips.Event<Tips.EmptyDonation>, limit: Int = 8) {
         let count = donated[event.id, default: 0]
-        guard count < maxDonationsPerLaunch else { return }
+        guard count < limit else { return }
         donated[event.id] = count + 1
         Task { await event.donate() }
     }
@@ -207,4 +268,35 @@ enum PaintTips {
         guard invalidated.insert(tip.id).inserted else { return }
         tip.invalidate(reason: .actionPerformed)
     }
+
+    // MARK: Demos
+
+    #if DEBUG
+    /// The demo scenarios that show tips (the rest hide every one): the tip each waits for before
+    /// it signals readiness, whether it begins with tips on (nil: the invitation is still to be
+    /// answered), and the tips already closed when it begins. `paint-tip-fill` is for UI tests.
+    private static let demoScenarios: [String: (tip: TipID?, enabled: Bool?, closed: [TipID])] = [
+        "paint-tip": (.benchTap, true, []),
+        "paint-tip-fill": (.benchTap, true, []),
+        "gallery-tips-invitation": (.invitation, nil, []),
+        "gallery-tips-invitation-dark": (.invitation, nil, []),
+        "gallery-tips-invitation-long-text": (.invitation, nil, []),
+        "gallery-tip": (.shelfStarter, true, []),
+        "create-tip": (.newPaintingSuggested, true, [.newPaintingDivider]),
+        "settings-tips": (nil, true, []),
+        "settings-tip": (.drawerWorthALook, true, []),
+    ]
+
+    /// The tip the running scenario shows.
+    static var demoTip: TipID? { DemoMode.scenario.flatMap { demoScenarios[$0] }?.tip }
+
+    /// Waits until the scenario's tip is up (TipKit presents it a moment after the turn is given).
+    static func awaitDemoTip() async {
+        guard let expected = demoTip else { return }
+        let clock = ContinuousClock()
+        let deadline = clock.now + .seconds(120)
+        while desk.turn != expected, clock.now < deadline { try? await Task.sleep(for: .milliseconds(200)) }
+        try? await Task.sleep(for: .seconds(1.2))
+    }
+    #endif
 }

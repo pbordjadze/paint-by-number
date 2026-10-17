@@ -1,8 +1,10 @@
 import Foundation
 import Testing
+import TipKit
 @testable import PaintByNumber
 
-/// Which painting events feed the first-run tips, and the generations behind Show Tips Again.
+/// Which painting events feed the gentle tips, the generations behind Show Tips Again, and what each
+/// tip is made of: an id of its own, rules, and Turn Off Tips beneath its close button.
 @MainActor
 struct PaintTipsTests {
     @Test func paintingEventsMapToTipSignals() {
@@ -31,6 +33,41 @@ struct PaintTipsTests {
         #expect(FirstPaintTip.hasPaint)
         PaintTips.paintingOpened(hasProgress: false)
         #expect(!FirstPaintTip.hasPaint)
+    }
+
+    @Test func everyTipHasAnIdOfItsOwn() {
+        let ids = TipID.allCases.map { $0.tip.id }
+        #expect(Set(ids).count == ids.count)
+    }
+
+    /// Whoever closed one of the first version's five bench tips has it closed: their ids carry over.
+    @Test func theBenchTipsOfTheFirstVersionKeepTheirIds() {
+        let generation = PaintTips.generation()
+        #expect(TipID.benchTap.tip.id == "tip.firstPaint.\(generation)")
+        #expect(TipID.benchFind.tip.id == "tip.hint.\(generation)")
+        #expect(TipID.benchZoom.tip.id == "tip.zoom.\(generation)")
+        #expect(TipID.benchDrag.tip.id == "tip.dragPaint.\(generation)")
+        #expect(TipID.benchPencil.tip.id == "tip.pencil.\(generation)")
+    }
+
+    /// Show Tips Again must not ask again: the invitation's id has no generation.
+    @Test func theInvitationIsNotRenewedByShowTipsAgain() {
+        #expect(TipID.invitation.tip.id == "tip.invitation")
+    }
+
+    @Test func everyHintHasRulesAndTurnOffTips() {
+        for id in TipID.hints {
+            let tip = id.tip
+            #expect(!tip.rules.isEmpty, "\(id) has no rules: tips off must mean none")
+            #expect(tip.actions.map(\.id) == ["turnOffTips"], "\(id)")
+        }
+    }
+
+    /// Two buttons of equal weight, and no rule: the answer, not TipKit, keeps it from showing again.
+    @Test func theInvitationHasShowTipsAndNoThanks() {
+        let tip = TipID.invitation.tip
+        #expect(tip.actions.map(\.id) == ["showTips", "noThanks"])
+        #expect(tip.rules.isEmpty)
     }
 
     @Test func showingTipsAgainGivesThemNewIDs() throws {

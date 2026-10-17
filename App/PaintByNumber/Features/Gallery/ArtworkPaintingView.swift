@@ -155,6 +155,8 @@ struct ArtworkPaintingView: View {
             return
         }
         Preferences().apply(to: session)
+        // Before the painting screen appears: its first tip and the first painting's limit.
+        PaintTips.artworkOpened(artworkID)
         withAnimation(.easeOut(duration: 0.25)) {
             failure = nil
             regenerationFailed = false

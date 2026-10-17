@@ -42,6 +42,8 @@ struct CompletionBar: View {
             .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
             GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
+                // The only hint after a finish: over the bar, which sits at the bottom.
+                .gentleTip(.benchReplay, arrowEdge: .bottom)
             if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 // UIImage keeps the picture's Display P3 colors.

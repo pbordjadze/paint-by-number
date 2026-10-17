@@ -101,6 +101,28 @@ struct TemplatePreviewView: View {
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        // The preview's tips: a template that is final is a moment, a slider let go another.
+        .onAppear {
+            PaintTips.desk.enter(.preview)
+            if model.isFinal { previewFinal() }
+        }
+        .onDisappear { PaintTips.desk.leave(.preview) }
+        .onChange(of: model.isFinal) { _, isFinal in
+            if isFinal { previewFinal() }
+        }
+        .onChange(of: model.isAdjusting) { _, adjusting in
+            if !adjusting { PaintTips.sliderReleased(isCustom: model.settingsOrigin == .custom) }
+        }
+        .onChange(of: model.settingsOrigin) { old, origin in
+            if old == .custom, origin == .suggested { PaintTips.resetUsed() }
+        }
+        .onChange(of: isRefining) { _, refining in
+            if refining { PaintTips.refineOpened() }
+        }
+        // Start Painting saves the painting, and The Making-of may play: the preview says no more.
+        .onChange(of: isStarting) { _, starting in
+            if starting { PaintTips.desk.leave(.preview) }
+        }
         #if DEBUG
         // `create-refine` shows the Refine screen once its painting is refined.
         .onChange(of: model.refinements.isEmpty) { _, isEmpty in
@@ -184,6 +206,7 @@ struct TemplatePreviewView: View {
                         || !(model.hasLineArtInput || Preferences().detailBrushes))
                 .accessibilityValue(RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
+                .gentleTip(.newPaintingRefine, arrowEdge: .top)
             }
         }
         if offersEnlarging && !isEnlarged {
@@ -224,6 +247,13 @@ struct TemplatePreviewView: View {
         guard abs(model[keyPath: keyPath] - value) > 1e-9 else { return }
         model[keyPath: keyPath] = value
         model.settingsChanged()
+        PaintTips.sliderMoved(colorsOrDetail: keyPath == \CreateModel.colorCount || keyPath == \CreateModel.detail)
+    }
+
+    /// The template is final: the moment of the preview's tips. The suggestion's is only while the
+    /// settings are still the suggested ones.
+    private func previewFinal() {
+        PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: model.canRefine)
     }
 
     // MARK: Canvas
@@ -367,6 +397,8 @@ struct TemplatePreviewView: View {
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
                 valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
                 detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
+                // Fewer or More Areas: over the slider, clear of the preview's picture.
+                .gentleTip(.newPaintingSliders, arrowEdge: .bottom)
         case .detail:
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
@@ -439,6 +471,10 @@ struct TemplatePreviewView: View {
             }
         }
         .accessibilityIdentifier("settings-origin")
+        // Already Chosen for You hangs above the chip; You Can Always Go Back below it, where the
+        // preview is left in view to watch. Before the frame: they point at the chip, not the row.
+        .gentleTip(.newPaintingSuggested, active: model.settingsOrigin != .custom, arrowEdge: .bottom)
+        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, arrowEdge: .top)
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(model.settingsOrigin == nil ? 0 : 1)
         .accessibilityHidden(model.settingsOrigin == nil)

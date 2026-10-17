@@ -45,6 +45,8 @@ struct PaintCanvas: UIViewRepresentable {
     var onPhotoUnavailable: (() -> Void)?
     var onDismissPhoto: (() -> Void)?
     var onZoomStep: (() -> Void)?
+    /// A finger took hold of the page to move or zoom it (true), or let go (false).
+    var onHandChange: ((Bool) -> Void)?
     /// Feedback mode: the markup canvas over this one has the touches and the camera.
     var isAnnotating = false
 
@@ -77,6 +79,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.onPhotoUnavailable = onPhotoUnavailable
         view.onDismissPhoto = onDismissPhoto
         view.onZoomStep = onZoomStep
+        view.onHandChange = onHandChange
         view.showsPhoto = showsPhoto
         view.isAnnotating = isAnnotating
         controller.view = view

@@ -3,7 +3,6 @@ import Observation
 import os
 import PaintCore
 import SwiftUI
-import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
@@ -11,8 +10,9 @@ import UIKit
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
 /// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
-/// the top bar offers the Photo control (see `PhotoPeek`). First-run tips (`PaintTips`) point
-/// at the selected swatch or the middle of the canvas, one at a time.
+/// the top bar offers the Photo control (see `PhotoPeek`). The gentle tips (`TipDesk`) point at
+/// the selected swatch, the top of the canvas, the top bar's controls or the finished page's
+/// Replay, one at a time.
 ///
 /// Give Feedback (the top bar where it fits, else More; always the Paint menu) captures the
 /// painting as it is (`FeedbackCapture`, with the environment's `feedbackSource`) and switches
@@ -39,7 +39,6 @@ struct PaintView: View {
     @State private var sealBounces = 0
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
-    @State private var tips: TipGroup?
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
@@ -102,7 +101,6 @@ struct PaintView: View {
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
             isGivingFeedback: feedback != nil, giveFeedback: startFeedback))
         .onAppear {
-            if tips == nil { tips = PaintTips.makeGroup() }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.observe(session)
@@ -111,8 +109,17 @@ struct PaintView: View {
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
-        .onChange(of: zenMode, initial: true) { _, zen in session.flowsToNextArea = zen }
+        .onChange(of: zenMode, initial: true) { _, zen in
+            session.flowsToNextArea = zen
+            if zen { PaintTips.used(.benchZen) }
+        }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
+        // Choosing a color is something done: the tips' hand has not rested yet.
+        .onChange(of: session.selectedColor) { chrome.activity() }
+        // The photo shown, held or kept, is the Photo control used.
+        .onChange(of: peek.isShown) { _, shown in
+            if shown { PaintTips.used(.benchShowPhoto) }
+        }
         .onChange(of: session.isComplete) { _, complete in
             guard complete, !reduceMotion else { return }
             Task {
@@ -121,7 +128,10 @@ struct PaintView: View {
                 sealBounces += 1
             }
         }
-        .onDisappear { undoManager?.removeAllActions(withTarget: session) }
+        .onDisappear {
+            undoManager?.removeAllActions(withTarget: session)
+            chrome.close()
+        }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
@@ -162,7 +172,8 @@ struct PaintView: View {
                     peek = PhotoPeek()
                 },
                 onDismissPhoto: { peek.setLatched(false) },
-                onZoomStep: { PaintTips.record(.zoomedByDoubleTap) },
+                onZoomStep: { chrome.tipSignal(.zoomed) },
+                onHandChange: { chrome.handChanged($0) },
                 isAnnotating: feedback != nil)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
@@ -175,11 +186,12 @@ struct PaintView: View {
                     .ignoresSafeArea()
             }
 
-            // Canvas tips point at the middle of the visible canvas.
+            // Canvas tips point at the top of the visible canvas, under the top bar, and hang from
+            // there: the painter's eye is on the middle.
             Color.clear
                 .frame(width: 1, height: 1)
-                .popoverTip(canvasTip)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .gentleTip(.benchZoom, .benchDrag, .benchPencil, active: feedback == nil, arrowEdge: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .padding(visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette))
                 .allowsHitTesting(false)
 
@@ -310,22 +322,6 @@ struct PaintView: View {
             bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
     }
 
-    // MARK: Tips
-
-    /// Tips about canvas gestures (none while feedback is drawn); the rest belong to the
-    /// selected swatch.
-    private var canvasTip: (any Tip)? {
-        guard feedback == nil, let tip = tips?.currentTip, tip is DragPaintTip || tip is ZoomTip || tip is PencilTip else {
-            return nil
-        }
-        return tip
-    }
-
-    private var swatchTip: (any Tip)? {
-        guard let tip = tips?.currentTip, tip is FirstPaintTip || tip is HintTip else { return nil }
-        return tip
-    }
-
     // MARK: Top bar
 
     /// Close, the progress badge, then Photo, Hint, Undo, Give Feedback and More, as the first of
@@ -372,6 +368,7 @@ struct PaintView: View {
             if photoLoader != nil {
                 PhotoPeekButton(peek: $peek)
                     .disabled(photoUnavailable)
+                    .gentleTip(.benchShowPhoto, arrowEdge: .top)
             }
             if showsHint {
                 GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
@@ -381,6 +378,7 @@ struct PaintView: View {
                 .disabled(!session.isStarted)
             if showsFeedback {
                 GlassIconButton(systemImage: "exclamationmark.bubble", label: "Give Feedback", action: startFeedback)
+                    .gentleTip(.benchFeedback, arrowEdge: .top)
             }
             moreMenu(offersFeedback: !showsFeedback)
         }
@@ -440,7 +438,7 @@ struct PaintView: View {
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !session.isComplete { paletteMenu }
             if session.isComplete {
-                Button { controller.replay() } label: { Label("Replay Painting", systemImage: "play") }
+                Button(action: replay) { Label("Replay Painting", systemImage: "play") }
             }
             if offersFeedback {
                 Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
@@ -456,6 +454,9 @@ struct PaintView: View {
         }
         .accessibilityLabel(Text("More"))
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
+        // Zen Mode and, where the bar has no room for its button, Give Feedback live in this menu.
+        .gentleTip(.benchZen, active: true, arrowEdge: .top)
+        .gentleTip(.benchFeedback, active: offersFeedback, arrowEdge: .top)
         // Asked from this menu, so the popover points at its button, not at the whole screen.
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {
@@ -500,12 +501,12 @@ struct PaintView: View {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
             CompletionBar(
                 session: session, title: title, share: completionShare, sealBounces: sealBounces,
-                onReplay: controller.replay, onShareTimelapse: shareTimelapse, onClose: onClose)
+                onReplay: replay, onShareTimelapse: shareTimelapse, onClose: onClose)
                 .transition(transition)
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
-                shakes: chrome.shakes, tip: swatchTip, metrics: palette.metrics, showsCurrentColor: palette.caption,
+                shakes: chrome.shakes, metrics: palette.metrics, showsCurrentColor: palette.caption,
                 order: colorOrder)
         }
     }
@@ -516,6 +517,12 @@ struct PaintView: View {
     private var photoBinding: Binding<Bool>? {
         guard photoLoader != nil, !photoUnavailable else { return nil }
         return Binding { peek.isShown } set: { peek.setLatched($0) }
+    }
+
+    /// The replay, which the tip about it (Watch It Again) is for.
+    private func replay() {
+        PaintTips.used(.benchReplay)
+        controller.replay()
     }
 
     /// Undoes through the window's undo manager (so redo works) while it has this session's
@@ -546,7 +553,7 @@ struct PaintView: View {
         case .squeeze:
             controller.showHint()
         case .lifted:
-            PaintTips.record(.pencilUsed)
+            chrome.tipSignal(.pencilUsed)
         }
     }
 
@@ -562,6 +569,8 @@ struct PaintView: View {
     /// camera's (not under Reduce Motion).
     private func startFeedback() {
         guard feedback == nil, !canvasUnavailable else { return }
+        PaintTips.used(.benchFeedback)
+        chrome.isGivingFeedback = true
         peek.setLatched(false)
         let capture = FeedbackCapture(
             session: session, title: title, controller: controller, showsNumbers: showsNumbers, paper: paperAppearance,
@@ -587,6 +596,7 @@ struct PaintView: View {
 
     private func endFeedback() {
         Log.feedback.notice("Feedback ends")
+        chrome.isGivingFeedback = false
         withAnimation(reduceMotion ? nil : .snappy) { feedback = nil }
         // Back to the window's undo history of fills.
         controller.focus()

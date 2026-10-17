@@ -153,8 +153,14 @@ struct RefineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
         }
-        .onAppear { model.beginRefining() }
-        .onDisappear { model.dismissNote() }
+        .onAppear {
+            model.beginRefining()
+            PaintTips.desk.enter(.refine)
+        }
+        .onDisappear {
+            model.dismissNote()
+            PaintTips.desk.leave(.refine)
+        }
         .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: backdrop == .painting)) {
             await land()
         }
@@ -410,6 +416,7 @@ struct RefineView: View {
     /// then it shows over the template (`pending`).
     private func submit(_ edit: TemplateEditor.Edit, chain: [SIMD2<Float>]? = nil) {
         submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain))
+        if case .draw = edit { PaintTips.refineLineDrawn() }
     }
 
     private func endStroke() {
@@ -720,6 +727,7 @@ struct RefineView: View {
         let clears = base.map { !EditFills.cleared(by: at, edits: $0.refinements.edits, on: $0.template).isEmpty } ?? false
         submitted.append(Submitted(id: model.fill(at: at, color: color), edit: .fill(at: at, color: color), showsSwatch: !clears))
         FeedbackEngine.shared.selectionChanged()
+        PaintTips.refineFilled()
     }
 
     /// A marked line is unmarked; a found line is turned off, or on again.
@@ -876,6 +884,8 @@ struct RefineView: View {
     private var fillAndPhoto: some View {
         toolButton(.fill, systemImage: "drop.fill", label: Text("Fill"), id: "fill")
             .disabled(!model.hasLineArtInput)
+            // Make a Shape Its Own: over the tools, which sit at the bottom.
+            .gentleTip(.refineFill, arrowEdge: .bottom)
         Capsule()
             .fill(Color.primary.opacity(0.15))
             .frame(width: 1, height: 24)

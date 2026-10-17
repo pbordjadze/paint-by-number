@@ -13,6 +13,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
+    /// Unset until the invitation on the shelf is answered; off until then.
+    @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = false
     #if UNRELEASED
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     #endif
@@ -67,6 +69,10 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle(isOn: $tipsEnabled) {
+                        SwiftUI.Label("Tips", systemImage: "lightbulb")
+                    }
+                    .accessibilityIdentifier("settings-tips")
                     Button {
                         PaintTips.showAgain()
                         tipsReset = true
@@ -74,12 +80,13 @@ struct SettingsView: View {
                         if tipsReset {
                             SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
                         } else {
-                            SwiftUI.Label("Show Tips Again", systemImage: "lightbulb")
+                            SwiftUI.Label("Show Tips Again", systemImage: "arrow.counterclockwise")
                         }
                     }
                     .disabled(tipsReset)
+                    .accessibilityIdentifier("settings-show-tips-again")
                 } footer: {
-                    Text("Short tips explain painting gestures as you go.")
+                    Text("Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.")
                 }
 
                 Section("Sound & Haptics") {
@@ -103,6 +110,9 @@ struct SettingsView: View {
                         SwiftUI.Label("Painting Length", systemImage: "hourglass")
                     }
                     .accessibilityIdentifier("painting-length")
+                    // Worth a Look Here, the first time Settings opens, once the row is there to point at.
+                    .gentleTip(.drawerWorthALook, arrowEdge: .top)
+                    .onAppear { PaintTips.drawerRowReached() }
                 } header: {
                     Text("New Paintings")
                 } footer: {
@@ -188,5 +198,13 @@ struct SettingsView: View {
         .presentationDetents([.large])
         .pageSizedOnPad()
         .tint(Theme.accent)
+        // The Tips switch is the invitation's answer, kept: tips on or off takes effect at once, and
+        // Show Tips Again can ask once more after the switch has been turned off.
+        .onChange(of: tipsEnabled) { _, enabled in
+            PaintTips.setEnabled(enabled)
+            if !enabled { tipsReset = false }
+        }
+        .onAppear { PaintTips.drawerOpened() }
+        .onDisappear { PaintTips.desk.leave(.drawer) }
     }
 }

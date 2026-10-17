@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length, Preview,
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Painting Length, Preview,
 /// Detail Brushes, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
@@ -198,6 +198,50 @@ final class SettingsTests: XCTestCase {
                 for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: toggle)], timeout: 5)
                 == .completed,
             "The Making-of didn't switch off: \(toggle.value ?? "")")
+    }
+
+    /// Settings › Tips is off until the invitation on the shelf says otherwise, switches on and off,
+    /// and says what it is for.
+    @MainActor
+    func testTipsSwitchStartsOffAndTurnsOnAndOff() throws {
+        let app = openSettings()
+        let toggle = app.switches["settings-tips"]
+        scroll(app, to: toggle)
+        for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(toggle.exists, "Settings has no Tips switch")
+        XCTAssertEqual(toggle.value as? String, "0", "Tips doesn't start off")
+        let footer = element(
+            labeled: "Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.", in: app)
+        XCTAssertTrue(footer.exists, "The Tips section has no footer")
+        XCTAssertTrue(flip(toggle, on: true), "Tips didn't switch on: \(toggle.value ?? "")")
+        attachScreenshot(of: app, named: "settings-tips-on")
+        XCTAssertTrue(flip(toggle, on: false), "Tips didn't switch off: \(toggle.value ?? "")")
+    }
+
+    /// Show Tips Again turns Tips on, and says so; turning Tips off makes it usable again.
+    @MainActor
+    func testShowTipsAgainTurnsTipsOn() throws {
+        let app = openSettings()
+        let toggle = app.switches["settings-tips"]
+        let again = app.buttons["settings-show-tips-again"]
+        scroll(app, to: toggle)
+        for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(again.exists, "Settings has no Show Tips Again")
+        XCTAssertEqual(again.label, "Show Tips Again")
+        XCTAssertEqual(toggle.value as? String, "0", "Tips doesn't start off")
+        again.tap()
+        XCTAssertTrue(
+            waitFor(toggle, toMatch: NSPredicate(format: "value == '1'")),
+            "Show Tips Again didn't turn Tips on: \(toggle.value ?? "")")
+        XCTAssertTrue(
+            waitFor(again, toMatch: NSPredicate(format: "label == 'Tips Will Show Again'")),
+            "Show Tips Again doesn't say that tips will show again: \(again.label)")
+        attachScreenshot(of: app, named: "settings-show-tips-again")
+        XCTAssertFalse(again.isEnabled, "Show Tips Again can be tapped again at once")
+        XCTAssertTrue(flip(toggle, on: false), "Tips didn't switch off: \(toggle.value ?? "")")
+        XCTAssertTrue(
+            waitFor(again, toMatch: NSPredicate(format: "label == 'Show Tips Again' AND enabled == true")),
+            "Show Tips Again stayed spent once Tips was turned off: \(again.label)")
     }
 
     /// The picker's label and value together: how a menu picker's row reads.

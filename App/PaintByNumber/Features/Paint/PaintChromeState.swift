@@ -4,7 +4,8 @@ import PaintCore
 import SwiftUI
 import UIKit
 
-/// Transient chrome reactions to painting events, undo registration, and the tips they feed.
+/// Transient chrome reactions to painting events, undo registration, and the tips they feed: the
+/// moments of the bench at which a tip may speak (see `TipDesk`), and what keeps them quiet.
 @Observable
 final class PaintChromeState {
     /// Per color: bumped to shake its swatch.
@@ -14,13 +15,46 @@ final class PaintChromeState {
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var observed: ObjectIdentifier?
 
+    // The tips' view of the bench.
+    @ObservationIgnored private weak var tipSession: PaintingSession?
+    /// Give Feedback is on: no hint speaks.
+    @ObservationIgnored var isGivingFeedback = false
+    /// A finger is moving or zooming the page (the canvas reports it).
+    @ObservationIgnored private var handIsDown = false
+    @ObservationIgnored private var lastFill: ContinuousClock.Instant?
+    @ObservationIgnored private var finishedAt: ContinuousClock.Instant?
+    @ObservationIgnored private var singleFills = 0
+    @ObservationIgnored private var fillsThisVisit = 0
+    @ObservationIgnored private var passedQuarter = false
+    @ObservationIgnored private var idle: Task<Void, Never>?
+    @ObservationIgnored private var afterShine: Task<Void, Never>?
+
+    /// A fill lands in this long.
+    private static let fillSettle: Duration = .milliseconds(900)
+    /// Zen Mode flies to the next area after a fill; after a finished color's shine first.
+    private static let zenDrift: Duration = .seconds(3)
+    /// The finish: the last fill, the camera's flight to the whole page and its shine.
+    private static let shine: Duration = .seconds(4)
+    /// A pause with no stroke, for the second session's Zen Mode; and a minute with no fill while
+    /// the selected color has areas left, for where to find one.
+    private static let calmPause: Duration = .seconds(20)
+    private static let stallPause: Duration = .seconds(60)
+    /// Every this many single fills, Paint Several Areas is looked at.
+    private static let dragCheckEvery = 5
+    /// About a quarter of a page.
+    private static let quarter = 0.25
+
     func observe(_ session: PaintingSession) {
         guard observed != ObjectIdentifier(session) else { return }
         observed = ObjectIdentifier(session)
+        tipSession = session
         PaintTips.paintingOpened(hasProgress: session.progress.paintedCount > 0)
+        passedQuarter = session.fractionComplete >= Self.quarter
+        PaintTips.desk.enter(.bench)
+        benchOpened(session)
         session.onEvent { [weak self, weak session] event in
             if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
-                PaintTips.record(signal)
+                self?.tipSignal(signal)
             }
             switch event {
             case let .painted(regions, _):
@@ -41,6 +75,7 @@ final class PaintChromeState {
             case .artworkCompleted:
                 // The canvas flies out to the whole painting (`CanvasView.finish`).
                 Announcer.announce(PaintSpeech.paintingFinished)
+                self?.pageFinished()
             default:
                 break
             }
@@ -68,5 +103,142 @@ final class PaintChromeState {
             }
         }
         undoManager.setActionName(String(localized: "Paint"))
+    }
+
+    // MARK: Tips
+
+    /// What the painter did, as far as the tips go: donations and what the thing used silences
+    /// (`PaintTips.record`), then the moments it makes.
+    func tipSignal(_ signal: PaintTips.Signal) {
+        PaintTips.record(signal)
+        restartIdle()
+        switch signal {
+        case .tapPainted:
+            filled()
+            singleFills += 1
+            if singleFills.isMultiple(of: Self.dragCheckEvery) { offer([.benchDrag]) }
+        case .strokePainted, .strokeEnded:
+            filled()
+        case .missedSmallArea:
+            offer([.benchZoom])
+        case .pencilUsed:
+            offer([.benchPencil])
+        case .wrongColor, .hintShown, .zoomed:
+            break
+        }
+    }
+
+    /// The painter chose a color, or did anything else on the screen.
+    func activity() {
+        PaintTips.desk.noteActivity()
+        restartIdle()
+    }
+
+    /// A finger took hold of the page to move or zoom it, or let go.
+    func handChanged(_ down: Bool) {
+        handIsDown = down
+        activity()
+    }
+
+    /// The painting screen goes: a painting session, if the painter filled anything in it.
+    func close() {
+        idle?.cancel()
+        afterShine?.cancel()
+        PaintTips.desk.leave(.bench)
+        PaintTips.desk.paintingClosed()
+        if fillsThisVisit > 0 { PaintTips.donate(TipEvents.sessions, limit: 20) }
+    }
+
+    private func filled() {
+        lastFill = ContinuousClock.now
+        fillsThisVisit += 1
+        guard !passedQuarter, let session = tipSession, session.fractionComplete >= Self.quarter else { return }
+        passedQuarter = true
+        PaintTips.donate(TipEvents.quarters, limit: 2)
+        offer([.benchShowPhoto])
+    }
+
+    /// The painting opens: a fresh one says how to paint; one opened for the third time, or past
+    /// a quarter, may have something to say once the hand has rested.
+    private func benchOpened(_ session: PaintingSession) {
+        restartIdle()
+        guard !session.isComplete else { return }
+        if session.progress.paintedCount == 0 {
+            offer([.benchTap], rest: .milliseconds(700))
+            return
+        }
+        var due: [TipID] = []
+        if PaintTips.desk.feedbackIsDue { due.append(.benchFeedback) }
+        if passedQuarter {
+            PaintTips.donate(TipEvents.quarters, limit: 2)
+            due.append(.benchShowPhoto)
+        }
+        offer(due, rest: .seconds(2))
+    }
+
+    /// The last area is painted: once the camera has flown out and the shine has passed, the only
+    /// hint is the replay.
+    private func pageFinished() {
+        finishedAt = ContinuousClock.now
+        PaintTips.desk.finished()
+        let wait = UIAccessibility.isReduceMotionEnabled ? Duration.milliseconds(1500) : Self.shine + .milliseconds(500)
+        afterShine?.cancel()
+        afterShine = Task { [weak self] in
+            try? await Task.sleep(for: wait)
+            guard !Task.isCancelled, let self, self.tipSession?.isComplete == true else { return }
+            PaintTips.donate(TipEvents.finishes, limit: 2)
+            offer([.benchReplay], rest: .seconds(1))
+        }
+    }
+
+    /// Two checks while the painter sits still: after a short pause with no stroke, the second
+    /// painting session's Zen Mode; after a minute with no fill while the selected color has areas
+    /// left, where to find one.
+    private func restartIdle() {
+        idle?.cancel()
+        idle = Task { [weak self] in
+            try? await Task.sleep(for: Self.calmPause)
+            guard !Task.isCancelled else { return }
+            self?.paused()
+            try? await Task.sleep(for: Self.stallPause - Self.calmPause)
+            guard !Task.isCancelled else { return }
+            self?.stalled()
+        }
+    }
+
+    private func paused() {
+        guard let session = tipSession, !session.isComplete else { return }
+        offer([.benchZen], rest: .zero)
+    }
+
+    private func stalled() {
+        guard let session = tipSession, !session.isComplete, let color = session.selectedColor,
+              session.remainingByColor[color] > 0 else { return }
+        PaintTips.donate(TipEvents.stalls, limit: 4)
+        offer([.benchFind], rest: .zero)
+    }
+
+    /// A moment of the bench. Nothing but Tap to Paint speaks before the first fill.
+    private func offer(_ ids: [TipID], rest: Duration = .milliseconds(1500)) {
+        let ids = ids.filter { $0 == .benchTap || PaintTips.desk.hasFilled }
+        PaintTips.desk.offer(ids, in: .bench, rest: rest) { [weak self] in self?.quiet ?? [] }
+    }
+
+    /// What keeps the hints away just now (`TipPacing.Quiet`).
+    private var quiet: TipPacing.Quiet {
+        guard let session = tipSession else { return [] }
+        let now = ContinuousClock.now
+        var quiet: TipPacing.Quiet = []
+        if handIsDown || session.isStroking { quiet.insert(.handOnPage) }
+        if let lastFill, now - lastFill < Self.fillSettle { quiet.insert(.filling) }
+        if let lastFill, session.flowsToNextArea, now - lastFill < Self.zenDrift { quiet.insert(.zenDrifting) }
+        if session.replayed != nil { quiet.insert(.replay) }
+        if isGivingFeedback { quiet.insert(.feedback) }
+        if session.isComplete {
+            quiet.insert(.pageFinished)
+            let shine = UIAccessibility.isReduceMotionEnabled ? Duration.milliseconds(1200) : Self.shine
+            if let finishedAt, now - finishedAt < shine { quiet.insert(.shine) }
+        }
+        return quiet
     }
 }
