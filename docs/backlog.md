@@ -23,3 +23,4 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 8 | Marginarium in the release, the model reconvert, the old-device memory check, the making-of on device | | parked | the Monday Mac list | 2026-10-17 |
 | 9 | Refine screen shape sizing | | blocked | Refine screen shape sizing (`claude/refine-harness`): merge held for Caroline's answers | 2026-10-17 |
 | 10 | App Store slides: all four pets (two dogs, two cats), each shown fully at least once, in the cuter style | "There's two dogs and two cats here, each needs to be showcased fully at least once, if that's ok. See what we can do with that style and these photos." | building | TASTE (`claude/app-store-screenshots`); 11 photos handed over as private assets on the status page | 2026-10-17 |
+| 11 | Store slides: drop "like a good dog" (the saved-progress night slide) | "The "like a good dog" slide is weird, I'm gonna veto that language." | building | TASTE, with #10 | 2026-10-17 |
