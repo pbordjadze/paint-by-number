@@ -39,11 +39,13 @@ final class StartHandoffUITests: XCTestCase {
     func testSkippingTheShowOpensThePaintingAndBackReturnsToItsCard() throws {
         let app = launchPreview(makingOf: true)
         waitForStart(in: app).tap()
-        attachFrames(captureEntry(after: 5), named: "start-making-of-on")
+        // Two frames of the preview becoming the show (the slowed test has the rest of them), and
+        // Skip while the show is still being made: tapping while it animates waits for the app to be
+        // idle, which on CI's simulators it is not before the show has ended on its own (which opens
+        // the painting too, between finding Skip and tapping it, and ends the test here: an expected
+        // failure stops it).
+        attachFrames(captureEntry(after: 2), named: "start-making-of-on")
 
-        // Skip at once: tapping while the show animates waits for the app to be idle, which on CI's
-        // simulators it is not before the show has ended on its own (which opens the painting too,
-        // between finding Skip and tapping it).
         let skip = app.buttons["making-of-skip"]
         XCTAssertTrue(skip.waitForExistence(timeout: 60), "Start didn't open the making-of")
         let showMayEnd = XCTExpectedFailure.Options()
