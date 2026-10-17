@@ -68,11 +68,12 @@ SLOTS = {
 }
 
 
-def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None, tilt=0):
+def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None, tilt=0, loupe=False):
     """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom).
-    A slot takes the painter's own screenshot of the same screen in place of the scenario; tilt is in degrees."""
+    A slot takes the painter's own screenshot of the same screen in place of the scenario; tilt is in degrees.
+    A loupe is a round, gold-rimmed magnifier laid over the other crops."""
     return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over,
-                slot=slot, tilt=tilt)
+                slot=slot, tilt=tilt, loupe=loupe)
 
 
 def photo(n, x, y, w, tilt, landscape=False):
@@ -100,6 +101,10 @@ SLIDES = {
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
+        dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own<br>music. By Moon, every fill ends in stars.", crops=[
+            crop("paint-book-moon-dark", (0, 1, .06, .965), .7, 96, 720, radius=64, shadow=True, tilt=-2),
+            crop("paint-book-moon-dark", (.823, .989, .629, .7053), 2.8, 680, 1230, shadow=True, loupe=True),
+            crop("settings", (0, 1, .835, .985), 1.0945, "c", 2200, radius=56, shadow=True, over=True, tilt=2)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)], photos=[photo(4, 850, 740, 410, 6)]),
     ],
@@ -120,6 +125,10 @@ SLIDES = {
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
+        dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own music. By Moon, every fill ends in stars.", crops=[
+            crop("paint-book-moon-dark", (0, 1, 0, 1), .52, 144, 860, radius=44, shadow=True, tilt=-1.5),
+            crop("paint-book-moon-dark", (.845, 1, .597, .7133), 1.85, 1180, 1420, shadow=True, loupe=True),
+            crop("settings", (.045, .955, .475, .548), 1.0, "c", 2380, radius=40, shadow=True, over=True, tilt=1.5)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your device.", crops=[
             crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)], photos=[photo(4, 1480, 700, 480, 6)]),
     ],
@@ -231,6 +240,8 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
         style.append(f"border-radius:{r}px {r}px 0 0" if c["y"] == "b" else f"border-radius:{r}px")
     if c["shadow"]:
         style.append("box-shadow:0 28px 64px rgba(31,26,33,.20),0 2px 6px rgba(31,26,33,.08)")
+    if c["loupe"]:
+        style += ["border-radius:50%", "border:10px solid #C9A24A", "background-origin:border-box", "z-index:3"]
     if c["fade"]:
         f = c["fade"]
         style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
