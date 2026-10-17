@@ -1,0 +1,36 @@
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: error: unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: error: Unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: error: unable to resolve module dependency: 'MakingOf'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: error: Unable to resolve module dependency: 'MakingOf'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: error: unable to resolve module dependency: 'PaintByNumber'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: error: Unable to resolve module dependency: 'PaintByNumber'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: error: unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: error: Unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: error: unable to resolve module dependency: 'MakingOf'
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: error: Unable to resolve module dependency: 'MakingOf'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: error: unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: error: Unable to resolve module dependency: 'PaintCore'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+error: The file “MakingOf.abi.json” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftdoc” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftmodule” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “PaintByNumber.abi.json” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.abi.json” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintCore.abi.json” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')

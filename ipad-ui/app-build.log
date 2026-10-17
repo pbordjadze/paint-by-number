@@ -1,0 +1,1249 @@
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+public struct RefineScreen: Sendable, Equatable {
+              ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:33:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var canvas: CGSize
+               ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:35:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var picture: CGSize
+               ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:37:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var view: CGSize
+               ^
+Swift.==:1:24: note: candidate would match if 'RefineScreen' conformed to 'RawRepresentable'
+@inlinable public func == <T>(lhs: T, rhs: T) -> Bool where T : RawRepresentable, T.RawValue : Equatable
+                       ^
+Swift.FloatingPoint.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'FloatingPoint'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+Swift.BinaryInteger.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'BinaryInteger'
+public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : BinaryInteger}
+                   ^
+Swift._Pointer.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+Swift._Pointer.==:2:31: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+@inlinable public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : _Pointer}
+                              ^
+Swift.Strideable.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+@inlinable public static func == (x: Self, y: Self) -> Bool}
+                              ^
+Swift.StringProtocol.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+@inlinable public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : StringProtocol}
+                              ^
+Swift.SIMD.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+public static func == (a: Self, b: Self) -> Bool}
+                   ^
+Foundation.AttributedStringProtocol.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : AttributedStringProtocol}
+                   ^
+Foundation._BridgedStoredNSError.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+CoreFoundation._CFObject.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+public static func == (left: Self, right: Self) -> Bool}
+                   ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: note: add stubs for conformance
+public struct RefineScreen: Sendable, Equatable {
+              ^
+Swift.Equatable.==:2:13: note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+static func == (lhs: Self, rhs: Self) -> Bool}
+            ^
+Failed frontend command:
+/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -emit-module -experimental-skip-non-inlinable-function-bodies-without-types /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/AutoSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/AutoWorking.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PaintingLength.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PhotoAnalysis.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PhotoAnalyzer.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/SubjectHints.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditCoding.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditDraw.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditErase.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFaces.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFill.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFinish.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditLabels.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditMerge.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditPaint.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditPixels.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditTrail.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditWork.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/Lattice.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/TemplateEditor.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Export/SVGExport.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNaming.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNickname.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameV2.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameV2Anchors.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameVocabulary.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameVocabularyValidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorScience.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ConnectedComponents.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/DisjointSet.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/DistanceTransform.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Gaussian.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Grid.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/MinHeap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Morphology.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Netpbm.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Parallel.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/PixelBounds.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Resample.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/SIMDMath.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/SplitMix64.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/StageClock.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/CellMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/DrawnLine.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/EdgeMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LayeredLines.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineArtStats.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineDetection.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineEdits.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineLayering.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/MaskContours.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/StrokeGraph.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/Writing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/GenerationSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/LabelSizing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/LineArtSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/PaintingTime.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/PipelineTuning.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/RegionRemap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/Segmentation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/Template.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/TemplateCoding.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/TemplateLineArt.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/PipelineSnapshot.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BandMerging.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BandRings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BoundarySmoothing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BoxBlur.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/DomainTransformFilter.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/ImportanceMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/LabelRegularizer.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteBuilder.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteOrdering.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteRefiner.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionAdjacency.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionRuns.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionSimplifier+LabelRoom.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionSimplifier.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/SegmentationParameters.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/Segmenter.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/StructureMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/TextureConsolidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/TextureMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/ThinPartRemoval.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/WorkingImage.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/TemplateGenerator.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/BoundaryGraph.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/CurveFairing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/CurveFitter.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/DenseCurve.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/Earcut.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/EdgeGuides.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/EdgeSmoother.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/GeometryValidator.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/LabelKeepOut.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/PolyLabel.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/RegionFills.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/TemplateValidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/Vectorizer.swift -target arm64-apple-ios18.0-simulator -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -I /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/Developer/Library/Frameworks -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -suppress-warnings -profile-generate -profile-coverage-mapping -swift-version 6 -O -D SWIFT_PACKAGE -D DEBUG -D SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -D Xcode -serialize-debugging-options -const-gather-protocols-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber.xcodeproj -file-compilation-dir /Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber.xcodeproj -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/runner/work/paint-by-number/paint-by-number/build/dd/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-688ef53f1462e2c8f657fdc38a81448ff45c64a1807a658693f2a61704f17a36.sdkstatcache -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/swift-overrides.hmap -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name PaintCore -package-name paint_by_number -frontend-parseable-output -disable-clang-spi -clang-target arm64-apple-ios26.5-simulator -target-sdk-version 26.5 -target-sdk-name iphonesimulator26.5 -in-process-plugin-server-path /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -emit-module-doc-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore.swiftdoc -emit-module-source-info-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore.swiftsourceinfo -emit-objc-header-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore-Swift.h -serialize-diagnostics-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore-primary-emit-module.dia -emit-dependencies-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore-primary-emit-module.d -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore.swiftmodule -emit-abi-descriptor-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore.abi.json
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+            return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
+                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                                      
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+            return CGRect(
+            ^~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+                    let box = CGRect(x: min(a.x, p.x), y: min(a.y, p.y), width: abs(p.x - a.x), height: abs(p.y - a.y))
+                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                    
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+                        .insetBy(dx: -1, dy: -1)
+                         ^~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+        for line in lines where line.bounds.insetBy(dx: -reach, dy: -reach).contains(p) {
+                                ~~~~~~~~~~~ ^~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+            bounds = CGRect(x: low.x - 1, y: low.y - 1, width: high.x - low.x + 2, height: high.y - low.y + 2)
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+        for (k, line) in lines.enumerated() where line.bounds.insetBy(dx: -tolerance, dy: -tolerance).contains(point) {
+                                                  ~~~~~~~~~~~ ^~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+public struct RefineScreen: Sendable, Equatable {
+              ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:33:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var canvas: CGSize
+               ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:35:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var picture: CGSize
+               ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:37:16: note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+    public var view: CGSize
+               ^
+Swift.==:1:24: note: candidate would match if 'RefineScreen' conformed to 'RawRepresentable'
+@inlinable public func == <T>(lhs: T, rhs: T) -> Bool where T : RawRepresentable, T.RawValue : Equatable
+                       ^
+Swift.FloatingPoint.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'FloatingPoint'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+Swift.BinaryInteger.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'BinaryInteger'
+public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : BinaryInteger}
+                   ^
+Swift._Pointer.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+Swift._Pointer.==:2:31: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+@inlinable public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : _Pointer}
+                              ^
+Swift.Strideable.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+@inlinable public static func == (x: Self, y: Self) -> Bool}
+                              ^
+Swift.StringProtocol.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+@inlinable public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : StringProtocol}
+                              ^
+Swift.SIMD.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+public static func == (a: Self, b: Self) -> Bool}
+                   ^
+Foundation.AttributedStringProtocol.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : AttributedStringProtocol}
+                   ^
+Foundation._BridgedStoredNSError.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+public static func == (lhs: Self, rhs: Self) -> Bool}
+                   ^
+CoreFoundation._CFObject.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+public static func == (left: Self, right: Self) -> Bool}
+                   ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: note: add stubs for conformance
+public struct RefineScreen: Sendable, Equatable {
+              ^
+Swift.Equatable.==:2:13: note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+static func == (lhs: Self, rhs: Self) -> Bool}
+            ^
+Failed frontend command:
+/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/AutoSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/AutoWorking.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PaintingLength.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PhotoAnalysis.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/PhotoAnalyzer.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Auto/SubjectHints.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditCoding.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditDraw.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditErase.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFaces.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFill.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditFinish.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditLabels.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditMerge.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditPaint.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditPixels.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditTrail.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/EditWork.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/Lattice.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Edit/TemplateEditor.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Export/SVGExport.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNaming.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNickname.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameV2.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameV2Anchors.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameVocabulary.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorNicknameVocabularyValidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ColorScience.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/ConnectedComponents.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/DisjointSet.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/DistanceTransform.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Gaussian.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Grid.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/MinHeap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Morphology.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Netpbm.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Parallel.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/PixelBounds.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/Resample.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/SIMDMath.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/SplitMix64.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Foundation/StageClock.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/CellMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/DrawnLine.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/EdgeMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LayeredLines.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineArtStats.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineDetection.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineEdits.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/LineLayering.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/MaskContours.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/StrokeGraph.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/LineArt/Writing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/GenerationSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/LabelSizing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/LineArtSettings.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/PaintingTime.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/PipelineTuning.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/RegionRemap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/Segmentation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/Template.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/TemplateCoding.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Model/TemplateLineArt.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/PipelineSnapshot.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BandMerging.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BandRings.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BoundarySmoothing.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/BoxBlur.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/DomainTransformFilter.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/ImportanceMap.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/LabelRegularizer.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteBuilder.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteOrdering.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/PaletteRefiner.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionAdjacency.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionRuns.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionSimplifier+LabelRoom.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/RegionSimplifier.swift -primary-file /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/SegmentationParameters.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/Segmenter.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/StructureMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/TextureConsolidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/TextureMap.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/ThinPartRemoval.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Segmentation/WorkingImage.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/TemplateGenerator.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/BoundaryGraph.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/CurveFairing.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/CurveFitter.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/DenseCurve.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/Earcut.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/EdgeGuides.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/EdgeSmoother.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/GeometryValidator.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/LabelKeepOut.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/PolyLabel.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/RegionFills.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/TemplateValidation.swift /Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Vector/Vectorizer.swift -supplementary-output-file-map /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/supplementaryOutputs-4 -target arm64-apple-ios18.0-simulator -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore-dependencies-1.json -debug-module-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore.swiftmodule -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -I /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/Developer/Library/Frameworks -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -suppress-warnings -profile-generate -profile-coverage-mapping -swift-version 6 -O -D SWIFT_PACKAGE -D DEBUG -D SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -D Xcode -serialize-debugging-options -const-gather-protocols-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaintCore_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/runner/work/paint-by-number/paint-by-number/build/dd/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber.xcodeproj -file-compilation-dir /Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber.xcodeproj -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/runner/work/paint-by-number/paint-by-number/build/dd/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-688ef53f1462e2c8f657fdc38a81448ff45c64a1807a658693f2a61704f17a36.sdkstatcache -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/swift-overrides.hmap -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name PaintCore -package-name paint_by_number -frontend-parseable-output -disable-clang-spi -clang-target arm64-apple-ios26.5-simulator -target-sdk-version 26.5 -target-sdk-name iphonesimulator26.5 -in-process-plugin-server-path /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/TemplateCoding.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/TemplateLineArt.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PipelineSnapshot.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RefineGeometry.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RefineGestures.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BandMerging.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BandRings.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BoundarySmoothing.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BoxBlur.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/DomainTransformFilter.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/ImportanceMap.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/LabelRegularizer.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteBuilder.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteOrdering.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteRefiner.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionAdjacency.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionRuns.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionSimplifier+LabelRoom.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionSimplifier.o -o /Users/runner/work/paint-by-number/paint-by-number/build/dd/Build/Intermediates.noindex/PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/SegmentationParameters.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/TemplateCoding.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/TemplateLineArt.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PipelineSnapshot.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RefineGeometry.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RefineGestures.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BandMerging.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BandRings.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BoundarySmoothing.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/BoxBlur.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/DomainTransformFilter.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/ImportanceMap.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/LabelRegularizer.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteBuilder.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteOrdering.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/PaletteRefiner.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionAdjacency.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionRuns.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionSimplifier+LabelRoom.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/RegionSimplifier.o -index-unit-output-path /PaintCore.build/Debug-iphonesimulator/PaintCore.build/Objects-normal/arm64/SegmentationParameters.o
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: error: unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: note: a dependency of main module 'MakingOf'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Compositor.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/CrewInputsBuilder.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Draws.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldBands.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldMath.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldNoise.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldShow.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldSteps.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Layers.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/MakingOf.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/NumberSchedule.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Outlines.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/PaintSeeds.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/PetPlan.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Planner.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Sampling.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Show.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ShowPictures.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ShowTemplate.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Streams.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ValueNoise.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: error: unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: note: a dependency of main module 'PaintByNumber'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/ShellDemo.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasAccessibility.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasRenderer.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasScene.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasSnapshot.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasTypes.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasView.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/DigitAtlas.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/LineStyle.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/RenderContext.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/SyntheticTemplate.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/TimelapseFrameRenderer.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/ArtworkExports.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/ImageCodec.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/PDFExporter.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/TemplateRasterizer.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/CreateModel.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/LineArtDrawing.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/TemplatePreviewView.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackCapture.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackDraft.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackMarks.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackPackage.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackReport.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Gallery/ArtworkPaintingView.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfDemoView.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfPlayer.swift:6:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfShow.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/CompletionBar.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintCanvas.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintChromeState.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintDemoView.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintSpeech.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintView.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaletteArrangement.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaletteBar.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineCanvas.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineEdits.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineGeometry+Drawing.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineView.swift:1:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Settings/SettingsView.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Feedback/FeedbackEngine.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Feedback/ToneSynth.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/EdgeDetector.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/LineArtInputs.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/LineArtMapsCache.swift:6:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/ObjectFinder.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/PhotoLoader.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/SubjectImportance.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/TemplateRefinements.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/Artwork.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ArtworkFactory.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ArtworkStore.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ColorNameText.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/CreateDraft.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/DemoTemplateCache.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/Library.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintingAutosaver.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintingSession.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintProgress.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: error: unable to resolve module dependency: 'MakingOf'
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: note: a dependency of main module 'PaintByNumber'
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfPlayer.swift:3:8: note: also imported here
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfShow.swift:3:8: note: also imported here
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfView.swift:2:8: note: also imported here
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: error: unable to resolve module dependency: 'PaintByNumber'
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: note: a dependency of main module 'PaintByNumberTests'
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:8:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/BackgroundSavingTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/BundledPetsTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasPaletteTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasRenderTests.swift:7:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CreateModelTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/DraftTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ExportFilesTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackTests.swift:7:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackUploaderTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/Fixtures.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/GalleryQueryTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/HapticsPlayerTests.swift:2:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ImageCacheTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LibraryTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtInputsTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtPreviewTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtRenderingTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LocalizationTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumAnnotationsTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumCastTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumReaderTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumSpeakersTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ObjectFinderTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/OpenURLTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingAutosaverTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingMelodyTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:8:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintProgressTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintTipsTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaletteArrangementTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoLoaderTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoOverlayTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreferencesTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreviewPictureTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineEditsTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RenderingTests.swift:6:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ReopenGuardTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ReplayProgressTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SampleLibraryTests.swift:7:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SpriteAtlasTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/StartHandoffTests.swift:4:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SubjectImportanceTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TemplateRefinementsTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TextFinderTests.swift:5:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ThemeTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TimelapseExportTests.swift:7:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipDeskTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipMomentsTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipPacingTests.swift:3:18: note: also imported here
+@testable import PaintByNumber
+                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: error: unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: note: a dependency of main module 'PaintByNumberTests'
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasPaletteTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasRenderTests.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CreateModelTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/DraftTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/Fixtures.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ImageCacheTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LibraryTests.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtInputsTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtPreviewTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtRenderingTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LocalizationTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ObjectFinderTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingAutosaverTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintProgressTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaletteArrangementTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoLoaderTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoOverlayTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreferencesTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineEditsTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:2:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RenderingTests.swift:4:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SampleLibraryTests.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SubjectImportanceTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TemplateRefinementsTests.swift:3:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TimelapseExportTests.swift:5:8: note: also imported here
+import PaintCore
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: error: unable to resolve module dependency: 'MakingOf'
+import MakingOf
+       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: note: a dependency of main module 'PaintByNumberTests'
+import MakingOf
+       ^
+error: The file “PaintCore.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.abi.json” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+error: The file “PaintCore.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintCore' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: error: Unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Arrival.swift:1:8: note: A dependency of main module 'MakingOf'
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Compositor.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/CrewInputsBuilder.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Draws.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldBands.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldMath.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldNoise.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldShow.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/FieldSteps.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Layers.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/MakingOf.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/NumberSchedule.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Outlines.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/PaintSeeds.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/PetPlan.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Planner.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Sampling.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Show.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ShowPictures.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ShowTemplate.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/Streams.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/Sources/MakingOf/ValueNoise.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftmodule” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftdoc” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.abi.json” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+error: The file “MakingOf.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'MakingOf' from project 'PaintCore')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: error: Unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/Preferences.swift:2:8: note: A dependency of main module 'PaintByNumber'
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/App/ShellDemo.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasAccessibility.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasRenderer.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasScene.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasSnapshot.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasTypes.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/CanvasView.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/DigitAtlas.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/LineStyle.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/RenderContext.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/SyntheticTemplate.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Canvas/TimelapseFrameRenderer.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/ArtworkExports.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/ImageCodec.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/PDFExporter.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Export/TemplateRasterizer.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/CreateModel.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/LineArtDrawing.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Create/TemplatePreviewView.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackCapture.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackDraft.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackMarks.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackPackage.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Feedback/FeedbackReport.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Gallery/ArtworkPaintingView.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfDemoView.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfPlayer.swift:6:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfShow.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/CompletionBar.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintCanvas.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintChromeState.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintDemoView.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintSpeech.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaintView.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaletteArrangement.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Paint/PaletteBar.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineCanvas.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineEdits.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineGeometry+Drawing.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Refine/RefineView.swift:1:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/Settings/SettingsView.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Feedback/FeedbackEngine.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Feedback/ToneSynth.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/EdgeDetector.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/LineArtInputs.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/LineArtMapsCache.swift:6:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/ObjectFinder.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/PhotoLoader.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/SubjectImportance.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Generation/TemplateRefinements.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/Artwork.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ArtworkFactory.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ArtworkStore.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/ColorNameText.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/CreateDraft.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/DemoTemplateCache.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/Library.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintingAutosaver.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintingSession.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Model/PaintProgress.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: error: Unable to resolve module dependency: 'MakingOf'
+import MakingOf
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfCard.swift:2:8: note: A dependency of main module 'PaintByNumber'
+import MakingOf
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfPlayer.swift:3:8: note: Also imported here
+import MakingOf
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfShow.swift:3:8: note: Also imported here
+import MakingOf
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumber/Features/MakingOf/MakingOfView.swift:2:8: note: Also imported here
+import MakingOf
+       ^ (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.abi.json” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+error: The file “PaintByNumber.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintByNumber' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: error: Unable to resolve module dependency: 'PaintByNumber'
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AboutTests.swift:3:18: note: A dependency of main module 'PaintByNumberTests'
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:8:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/BackgroundSavingTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/BundledPetsTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasPaletteTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasRenderTests.swift:7:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CreateModelTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/DraftTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ExportFilesTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackTests.swift:7:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackUploaderTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/Fixtures.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/GalleryQueryTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/HapticsPlayerTests.swift:2:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ImageCacheTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LibraryTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtInputsTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtPreviewTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtRenderingTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LocalizationTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumAnnotationsTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumCastTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumReaderTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumSpeakersTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MarginariumTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ObjectFinderTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/OpenURLTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingAutosaverTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingMelodyTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:8:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintProgressTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintTipsTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaletteArrangementTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoLoaderTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoOverlayTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreferencesTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreviewPictureTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineEditsTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RenderingTests.swift:6:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ReopenGuardTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ReplayProgressTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SampleLibraryTests.swift:7:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SpriteAtlasTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/StartHandoffTests.swift:4:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SubjectImportanceTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TemplateRefinementsTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TextFinderTests.swift:5:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ThemeTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TimelapseExportTests.swift:7:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipDeskTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipMomentsTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TipPacingTests.swift:3:18: note: Also imported here
+@testable import PaintByNumber
+                 ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: error: Unable to resolve module dependency: 'PaintCore'
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/AccessibilityTests.swift:3:8: note: A dependency of main module 'PaintByNumberTests'
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasPaletteTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CanvasRenderTests.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/CreateModelTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/DraftTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/FeedbackTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/Fixtures.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ImageCacheTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LibraryTests.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtInputsTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtPreviewTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LineArtRenderingTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/LocalizationTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ObjectFinderTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingAutosaverTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintProgressTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaletteArrangementTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoLoaderTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PhotoOverlayTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PreferencesTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineEditsTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:2:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RenderingTests.swift:4:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SampleLibraryTests.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/SubjectImportanceTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TemplateRefinementsTests.swift:3:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/TimelapseExportTests.swift:5:8: note: Also imported here
+import PaintCore
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: error: Unable to resolve module dependency: 'MakingOf'
+import MakingOf
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/MakingOfShowTests.swift:3:8: note: A dependency of main module 'PaintByNumberTests'
+import MakingOf
+       ^ (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftmodule” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftdoc” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.abi.json” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+error: The file “PaintByNumberTests.swiftsourceinfo” couldn’t be opened because there is no such file. (in target 'PaintByNumberTests' from project 'PaintByNumber')
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:89:24: warning: main actor-isolated property 'elementType' can not be referenced from a nonisolated context
+            if element.elementType == .button, element.identifier.hasPrefix("swatch-") { found.append(element) }
+                       ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:50:38: note: property declared here
+@property (readonly) XCUIElementType elementType;
+                                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:89:56: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+            if element.elementType == .button, element.identifier.hasPrefix("swatch-") { found.append(element) }
+                                                       ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:35:32: note: property declared here
+@property (readonly) NSString *identifier;
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:90:21: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+            element.children.forEach(visit)
+                    ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElement.h:341:56: note: property declared here
+@property (readonly) NSArray<id<XCUIElementSnapshot>> *children;
+                                                       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/ScreenFrames.swift:34:32: warning: main actor-isolated property 'image' can not be referenced from a nonisolated context
+        guard let image = shot.image.cgImage else { return [] }
+                               ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIScreenshot.h:31:37: note: property declared here
+@property (readonly, copy) UIImage *image;
+                                    ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/ScreenFrames.swift:33:25: note: add '@MainActor' to make static method 'grays(of:)' part of global actor 'MainActor'
+    private static func grays(of shot: XCUIScreenshot) -> [UInt8] {
+                        ^
+    @MainActor 
+** TEST BUILD FAILED **
+

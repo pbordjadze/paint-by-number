@@ -1,0 +1,526 @@
+10:error: emit-module command failed with exit code 1 (use -v to see invocation)
+12:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+16:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+181:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+185:    |                                                       `- error: argument passed to call that takes no arguments
+189:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+193:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+197:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+201:    |                                     `- error: argument passed to call that takes no arguments
+205:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+209:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+213:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+217:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+221:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+225:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+233:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+237:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+241:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+325:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+329:    |                                                       `- error: argument passed to call that takes no arguments
+333:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+337:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+341:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+345:    |                                     `- error: argument passed to call that takes no arguments
+349:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+353:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+357:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+361:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+365:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+369:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+373:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+377:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+381:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+385:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+469:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+473:    |                                                       `- error: argument passed to call that takes no arguments
+477:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+481:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+485:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+489:    |                                     `- error: argument passed to call that takes no arguments
+493:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+497:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+501:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+505:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+509:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+513:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+517:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+521:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+525:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+529:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+613:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+617:    |                                                       `- error: argument passed to call that takes no arguments
+621:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+625:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+629:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+633:    |                                     `- error: argument passed to call that takes no arguments
+637:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+641:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+645:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+649:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+653:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+657:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+661:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+665:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+669:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+673:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+757:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+761:    |                                                       `- error: argument passed to call that takes no arguments
+765:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+769:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+773:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+777:    |                                     `- error: argument passed to call that takes no arguments
+781:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+785:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+789:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+793:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+797:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+801:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+805:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+809:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+813:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+817:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+901:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+905:    |                                                       `- error: argument passed to call that takes no arguments
+909:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+913:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+917:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+921:    |                                     `- error: argument passed to call that takes no arguments
+925:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+929:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+933:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+937:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+941:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+945:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+949:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+953:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+957:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+961:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1045:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1049:    |                                                       `- error: argument passed to call that takes no arguments
+1053:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1057:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1061:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1065:    |                                     `- error: argument passed to call that takes no arguments
+1069:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1073:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1077:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1081:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1085:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1089:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1093:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1097:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1101:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1105:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1189:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1193:    |                                                       `- error: argument passed to call that takes no arguments
+1197:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1201:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1205:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1209:    |                                     `- error: argument passed to call that takes no arguments
+1213:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1217:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1221:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1225:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1229:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1233:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1237:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1241:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1245:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1249:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1333:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1337:    |                                                       `- error: argument passed to call that takes no arguments
+1341:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1345:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1349:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1353:    |                                     `- error: argument passed to call that takes no arguments
+1357:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1361:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1365:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1369:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1373:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1377:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1381:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1385:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1389:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1393:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1477:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1481:    |                                                       `- error: argument passed to call that takes no arguments
+1485:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1489:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1493:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1497:    |                                     `- error: argument passed to call that takes no arguments
+1501:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1505:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1509:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1513:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1517:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1521:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1525:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1529:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1533:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1537:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1621:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1625:    |                                                       `- error: argument passed to call that takes no arguments
+1629:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1633:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1637:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1641:    |                                     `- error: argument passed to call that takes no arguments
+1645:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1649:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1653:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1657:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1661:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1665:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1669:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1673:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1677:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1681:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1765:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1769:    |                                                       `- error: argument passed to call that takes no arguments
+1773:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1777:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1781:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1785:    |                                     `- error: argument passed to call that takes no arguments
+1789:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1793:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1797:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1801:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1805:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1809:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1813:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1817:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1821:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1825:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1909:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+1913:    |                                                       `- error: argument passed to call that takes no arguments
+1917:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1921:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1925:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+1929:    |                                     `- error: argument passed to call that takes no arguments
+1933:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+1937:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+1941:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+1945:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+1949:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1953:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+1957:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+1961:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+1965:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+1969:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2053:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2057:    |                                                       `- error: argument passed to call that takes no arguments
+2061:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2065:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2069:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2073:    |                                     `- error: argument passed to call that takes no arguments
+2077:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2081:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2085:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2089:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2093:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2097:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2101:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2105:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2109:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2113:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2197:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2201:    |                                                       `- error: argument passed to call that takes no arguments
+2205:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2209:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2213:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2217:    |                                     `- error: argument passed to call that takes no arguments
+2221:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2225:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2229:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2233:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2237:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2241:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2245:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2249:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2253:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2257:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2341:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2345:    |                                                       `- error: argument passed to call that takes no arguments
+2349:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2353:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2357:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2361:    |                                     `- error: argument passed to call that takes no arguments
+2365:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2369:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2373:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2377:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2381:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2385:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2389:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2393:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2397:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2401:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2485:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2489:    |                                                       `- error: argument passed to call that takes no arguments
+2493:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2497:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2501:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2505:    |                                     `- error: argument passed to call that takes no arguments
+2509:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2513:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2517:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2521:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2525:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2529:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2533:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2537:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2541:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2545:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2629:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2633:    |                                                       `- error: argument passed to call that takes no arguments
+2637:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2641:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2645:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2649:    |                                     `- error: argument passed to call that takes no arguments
+2653:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2657:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2661:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2665:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2669:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2673:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2677:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2681:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2685:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2689:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2773:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2777:    |                                                       `- error: argument passed to call that takes no arguments
+2781:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2785:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2789:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2793:    |                                     `- error: argument passed to call that takes no arguments
+2797:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2801:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2805:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2809:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2813:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2817:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2821:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2825:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2829:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2833:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2917:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+2921:    |                                                       `- error: argument passed to call that takes no arguments
+2925:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2929:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2933:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+2937:    |                                     `- error: argument passed to call that takes no arguments
+2941:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+2945:    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+2949:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+2953:    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+2957:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2961:    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+2965:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+2969:    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+2973:/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+2977:    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+3060:error: fatalError
+----- the app's own lines -----
+----- tail -----
+3 | 
+
+Swift._Pointer.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+1 | protocol _Pointer {
+2 | public static func == (lhs: Self, rhs: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+3 | 
+
+Swift._Pointer.==:2:31: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+1 | protocol _Pointer {
+2 | @inlinable public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : _Pointer}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+3 | 
+
+Swift.Strideable.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+1 | protocol Strideable {
+2 | @inlinable public static func == (x: Self, y: Self) -> Bool}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+3 | 
+
+Swift.StringProtocol.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+1 | protocol StringProtocol {
+2 | @inlinable public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : StringProtocol}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+3 | 
+
+Swift.SIMD.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+1 | protocol SIMD {
+2 | public static func == (a: Self, b: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+3 | 
+
+Foundation.AttributedStringProtocol.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+1 | protocol AttributedStringProtocol {
+2 | public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : AttributedStringProtocol}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+3 | 
+
+Foundation._BridgedStoredNSError.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+1 | protocol _BridgedStoredNSError {
+2 | public static func == (lhs: Self, rhs: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+3 | 
+
+CoreFoundation._CFObject.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+1 | protocol _CFObject {
+2 | public static func == (left: Self, right: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+3 | 
+
+Swift.Equatable.==:2:13: note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+1 | protocol Equatable {
+2 | static func == (lhs: Self, rhs: Self) -> Bool}
+  |             `- note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+3 | 
+[113/118] Compiling PaintCore SegmentationParameters.swift
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:182:55: error: argument passed to call that takes no arguments
+180 |                 high = CGPoint(x: max(high.x, p.x), y: max(high.y, p.y))
+181 |             }
+182 |             return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
+    |                                                       `- error: argument passed to call that takes no arguments
+183 |         }
+184 |     }
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:193:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+191 |         let reaches = erasures.map { erasure -> CGRect in
+192 |             let xs = erasure.path.map(\.x), ys = erasure.path.map(\.y)
+193 |             return CGRect(
+    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+194 |                 x: (xs.min() ?? 0) - erasure.radius, y: (ys.min() ?? 0) - erasure.radius,
+195 |                 width: (xs.max() ?? 0) - (xs.min() ?? 0) + 2 * erasure.radius,
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:223:37: error: argument passed to call that takes no arguments
+221 |                 if k > 0 {
+222 |                     let a = line[k - 1]
+223 |                     let box = CGRect(x: min(a.x, p.x), y: min(a.y, p.y), width: abs(p.x - a.x), height: abs(p.y - a.y))
+    |                                     `- error: argument passed to call that takes no arguments
+224 |                         .insetBy(dx: -1, dy: -1)
+225 |                     let steps = Int(PenPath.distance(a, p).rounded(.up))
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:224:26: error: value of type 'CGRect' has no member 'insetBy'
+222 |                     let a = line[k - 1]
+223 |                     let box = CGRect(x: min(a.x, p.x), y: min(a.y, p.y), width: abs(p.x - a.x), height: abs(p.y - a.y))
+224 |                         .insetBy(dx: -1, dy: -1)
+    |                          `- error: value of type 'CGRect' has no member 'insetBy'
+225 |                     let steps = Int(PenPath.distance(a, p).rounded(.up))
+226 |                     // A unit at a time near an erasure; elsewhere the line's own points do.
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:244:45: error: value of type 'CGRect' has no member 'insetBy'
+242 |     public func nearestPoint(to p: CGPoint, within reach: CGFloat) -> CGPoint? {
+243 |         var best: (point: CGPoint, distance: CGFloat)?
+244 |         for line in lines where line.bounds.insetBy(dx: -reach, dy: -reach).contains(p) {
+    |                                             `- error: value of type 'CGRect' has no member 'insetBy'
+245 |             for (a, b) in zip(line.points, line.points.dropFirst()) {
+246 |                 let q = Self.closest(p, a, b)
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:281:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+279 |             }
+280 |             self.points = points
+281 |             bounds = CGRect(x: low.x - 1, y: low.y - 1, width: high.x - low.x + 2, height: high.y - low.y + 2)
+    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+282 |         }
+283 |     }
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGeometry.swift:315:63: error: value of type 'CGRect' has no member 'insetBy'
+313 |     public func chain(near point: CGPoint, tolerance: CGFloat) -> [CGPoint]? {
+314 |         var nearest: (line: Int, distance: CGFloat)?
+315 |         for (k, line) in lines.enumerated() where line.bounds.insetBy(dx: -tolerance, dy: -tolerance).contains(point) {
+    |                                                               `- error: value of type 'CGRect' has no member 'insetBy'
+316 |             for (a, b) in zip(line.points, line.points.dropFirst()) {
+317 |                 let d = PenPath.segmentDistance(point, a, b)
+
+/Users/runner/work/paint-by-number/paint-by-number/Sources/PaintCore/Refine/RefineGestures.swift:31:15: error: type 'RefineScreen' does not conform to protocol 'Equatable'
+ 29 | /// zoom. Points on the picture are normalized (0…1, origin top-left), as the screen's touches
+ 30 | /// arrive; the edits they make are in the template's canvas units.
+ 31 | public struct RefineScreen: Sendable, Equatable {
+    |               |- error: type 'RefineScreen' does not conform to protocol 'Equatable'
+    |               `- note: add stubs for conformance
+ 32 |     /// The template's canvas, canvas units.
+ 33 |     public var canvas: CGSize
+    |                `- note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+ 34 |     /// The picture on screen at its zoom, points.
+ 35 |     public var picture: CGSize
+    |                `- note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+ 36 |     /// The canvas view the picture sits in, points (the eraser's size follows it).
+ 37 |     public var view: CGSize
+    |                `- note: stored property type 'CGSize' does not conform to protocol 'Equatable', preventing synthesized conformance of 'RefineScreen' to 'Equatable'
+ 38 |     /// The drawing's line on screen, points (`LineArtDrawing.lineWidth` in the app).
+ 39 |     public var lineWidth: CGFloat
+
+Swift.==:1:24: note: candidate would match if 'RefineScreen' conformed to 'RawRepresentable'
+1 | @inlinable public func == <T>(lhs: T, rhs: T) -> Bool where T : RawRepresentable, T.RawValue : Equatable
+  |                        `- note: candidate would match if 'RefineScreen' conformed to 'RawRepresentable'
+
+Swift.FloatingPoint.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'FloatingPoint'
+1 | protocol FloatingPoint {
+2 | public static func == (lhs: Self, rhs: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'FloatingPoint'
+3 | 
+
+Swift.BinaryInteger.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'BinaryInteger'
+1 | protocol BinaryInteger {
+2 | public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : BinaryInteger}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'BinaryInteger'
+3 | 
+
+Swift._Pointer.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+1 | protocol _Pointer {
+2 | public static func == (lhs: Self, rhs: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+3 | 
+
+Swift._Pointer.==:2:31: note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+1 | protocol _Pointer {
+2 | @inlinable public static func == <Other>(lhs: Self, rhs: Other) -> Bool where Other : _Pointer}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to '_Pointer'
+3 | 
+
+Swift.Strideable.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+1 | protocol Strideable {
+2 | @inlinable public static func == (x: Self, y: Self) -> Bool}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to 'Strideable'
+3 | 
+
+Swift.StringProtocol.==:2:31: note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+1 | protocol StringProtocol {
+2 | @inlinable public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : StringProtocol}
+  |                               `- note: candidate would match if 'RefineScreen' conformed to 'StringProtocol'
+3 | 
+
+Swift.SIMD.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+1 | protocol SIMD {
+2 | public static func == (a: Self, b: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'SIMD'
+3 | 
+
+Foundation.AttributedStringProtocol.==:2:20: note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+1 | protocol AttributedStringProtocol {
+2 | public static func == <RHS>(lhs: Self, rhs: RHS) -> Bool where RHS : AttributedStringProtocol}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to 'AttributedStringProtocol'
+3 | 
+
+Foundation._BridgedStoredNSError.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+1 | protocol _BridgedStoredNSError {
+2 | public static func == (lhs: Self, rhs: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_BridgedStoredNSError'
+3 | 
+
+CoreFoundation._CFObject.==:2:20: note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+1 | protocol _CFObject {
+2 | public static func == (left: Self, right: Self) -> Bool}
+  |                    `- note: candidate would match if 'RefineScreen' conformed to '_CFObject'
+3 | 
+
+Swift.Equatable.==:2:13: note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+1 | protocol Equatable {
+2 | static func == (lhs: Self, rhs: Self) -> Bool}
+  |             `- note: protocol requires function '==' with type '(RefineScreen, RefineScreen) -> Bool'
+3 | 
+error: fatalError
