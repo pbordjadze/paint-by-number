@@ -1,0 +1,58 @@
+[
+ {
+  "key": "now",
+  "day": "Now",
+  "time": "11:15",
+  "title": "main builds the Refine test fix; tips layout in CI; Calmer menus waiting for a runner",
+  "detail": "Main's run holds four of the five runners, so the branches crawl: tips layout reports ~11:30, Calmer menus ~11:55",
+  "kind": "running"
+ },
+ {
+  "key": "merge-1",
+  "day": "Late morning",
+  "time": "~12:00",
+  "title": "Tips layout + Calmer menus merge together",
+  "detail": "One main run (~45 min) → SideStore. The warnings gate starts CI beside it",
+  "kind": "SideStore"
+ },
+ {
+  "key": "merge-2",
+  "day": "Midday",
+  "time": "~12:45",
+  "title": "Warnings gate merges",
+  "detail": "Then the Refine line split and Recolor, each as soon as it's built (both still being built)",
+  "kind": "SideStore"
+ },
+ {
+  "key": "refine",
+  "day": "Afternoon",
+  "time": "when ready",
+  "title": "Refine line split, then Recolor",
+  "detail": "About 45 min of CI each; your UX picks wait behind them",
+  "kind": "SideStore"
+ },
+ {
+  "key": "ux",
+  "day": "Afternoon",
+  "time": "after",
+  "title": "Your UX picks (two pushes), intro animations",
+  "detail": "You see the animations' frame strips first",
+  "kind": "SideStore"
+ },
+ {
+  "key": "release-4",
+  "day": "Later",
+  "time": "after UX",
+  "title": "Release 4 to TestFlight",
+  "detail": "One batch once your UX picks are in and main is green; moves later with the Refine work ahead of it. Waits for your go",
+  "kind": "next TestFlight"
+ },
+ {
+  "key": "after",
+  "day": "Later",
+  "time": "after",
+  "title": "Quiet painting",
+  "detail": "Built and waiting",
+  "kind": "SideStore"
+ }
+]

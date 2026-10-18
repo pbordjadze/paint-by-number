@@ -129,7 +129,7 @@ extension EditWork {
                     outer: faces[f].halves, holes: held[f].map(\.halves), rings: [faces[f].polygon] + held[f].map(\.polygon),
                     area2: faces[f].area2 + held[f].reduce(0) { $0 + $1.area2 }, plan: nil)
             }
-            let freshLines = pruned.filter { fresh.contains($0) }.map { lattice(of: $0).map(Lattice.position) }
+            let freshLines = splitting ? [] : pruned.filter { fresh.contains($0) }.map { lattice(of: $0).map(Lattice.position) }
             for i in pieces.indices {
                 pieces[i].plan = labelPlan(
                     rings: pieces[i].rings, color: color, detail: wasDetail, hints: hints, region: r, keepOut: freshLines)
@@ -199,6 +199,8 @@ extension EditWork {
         let points = lattice(of: e)
         let layer = layers[e], weight = weights[e]
         kill(e)
+        // A split's stretch that closes nothing was never ink: it goes.
+        if splitting && layer == LineLayer.color.rawValue { return }
         addStroke(points, layer: layer, weight: weight, region: areaContaining(points, among: areas))
     }
 

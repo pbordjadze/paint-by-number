@@ -57,15 +57,17 @@ def load_previous(path):
 
 
 def backlog_rows(path):
-    """The rows of the backlog's table, keyed by its header (`#` becomes `n`)."""
+    """The rows of the backlog's table (the one headed `#`, not the CI queue above it), keyed by
+    its header (`#` becomes `n`)."""
     rows, header = [], None
     for line in open(path, encoding="utf-8"):
         if not line.startswith("|"):
+            header = None
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if header is None:
             header = ["n" if c == "#" else c.lower().replace("'", "").replace(" ", "_") for c in cells]
-        elif not set("".join(cells)) <= set("-: "):
+        elif header[0] == "n" and not set("".join(cells)) <= set("-: "):
             rows.append(dict(zip(header, cells)))
     return rows
 

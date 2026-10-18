@@ -1,0 +1,65 @@
+[
+ {
+  "key": "main",
+  "order": "·",
+  "title": "main",
+  "detail": "The Refine test fix just merged; building your next SideStore update",
+  "state": "main running"
+ },
+ {
+  "key": "tip-layout",
+  "order": "1",
+  "title": "Gentle tips layout",
+  "detail": "Toolbar and page tips; the no-arrow follow-up comes after",
+  "state": "in CI"
+ },
+ {
+  "key": "fewer-buttons",
+  "order": "2",
+  "title": "Calmer menus",
+  "detail": "Re-run after a flaky test (e61421e); fewer buttons on the painting and Refine screens",
+  "state": "waiting for a runner"
+ },
+ {
+  "key": "ci-train",
+  "order": "3",
+  "title": "Warnings gate",
+  "detail": "Code-quality checks for CI; after it, a new compiler warning fails a run",
+  "state": "waiting"
+ },
+ {
+  "key": "refine-line-split",
+  "order": "4",
+  "title": "Refine: lines split colors",
+  "detail": "Hide the Color Splitter; fix the Pen's split and recolor (Caroline's case) · moved up by you",
+  "state": "building"
+ },
+ {
+  "key": "recolor",
+  "order": "5",
+  "title": "Recolor in Refine",
+  "detail": "Built and checked; Looks + Swatches behind one Colors button. SideStore only · moved up by you",
+  "state": "ready"
+ },
+ {
+  "key": "ux-refinements",
+  "order": "6",
+  "title": "Your UX picks",
+  "detail": "Items 1–21 and the one-row Music menu",
+  "state": "waiting"
+ },
+ {
+  "key": "nightfall",
+  "order": "7",
+  "title": "Intro animations",
+  "detail": "SideStore only; you see the frame strips before it merges",
+  "state": "waiting"
+ },
+ {
+  "key": "quiet-painting",
+  "order": "8",
+  "title": "Quiet painting",
+  "detail": "Built; Undo fades with the rest. SideStore only",
+  "state": "waiting"
+ }
+]

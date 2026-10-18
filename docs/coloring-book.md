@@ -290,7 +290,8 @@ smoothing, fitting). `TemplateEditor.apply(_:to:)` (`Sources/PaintCore/Edit/`, `
 Refine without it: the edit is made to the finished template, with no photo, edge map,
 segmentation, smoothing or fitting, so a line is the line drawn and everything the edit does not
 reach is bit for bit what it was. All points are canvas units; the edits are
-`draw(points, closed, paints)`, `erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
+`draw(points, closed, paints)`, `split(points, closed, paints)`, `erase(path, radius)`,
+`eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
 and its `points`, the shape `pbn edit` reads: `EditCoding.swift`), and `EditTrail` lays a list on a
 template and keeps the templates after the last few, so taking an edit back or putting it back
 costs no editing; an edit that does nothing on a template (declined, or nothing to change) is left
@@ -358,6 +359,25 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   regions become one, painted with the nearest paint within `SegmentationParameters.jnd`, else a
   new paint appended last (the palette is never reordered), and a detail area, kept whatever its
   size, as `CellMap.fill` made it.
+- **Split.** The Color Splitter (Paul, October 18, in place of the detail brushes: "a new brush
+  to separate a color cell WITHOUT a line") lays the Pen's line as a draw with paints does,
+  nudged the same way, but as undrawn boundaries (`LineLayer.color`): it divides the paint and
+  draws nothing. Its ends meet any edge within `inkWidth`, inked or not (a color cell's outline
+  is often undrawn), the drawing's strokes are no part of it, and what of it closes nothing
+  leaves nothing. Its pieces take the photo's colors as a drawn line's do; where a boundary it
+  laid still has one paint on both sides (the photo about one color across it), the smaller
+  side, or the larger where the smaller has no room for its number, takes a shade of that
+  paint toward its own photo color (`EditWork.shade(of:toward:step:)`: the photo's color where
+  it is at least `splitShadeStep`, 1.5 just-noticeable differences, away, else the paint moved
+  that far toward it, the other way where that would pass white or black, lighter where the
+  photo is the paint itself), an existing paint within a just-noticeable difference of it or
+  else a new one, stepping 1.5 differences farther out, twice, where a neighbour across an
+  undrawn edge has it or its number has no room. A split that divides no area, or leaves one
+  paint on both sides of a boundary it laid, is declined. On the parrots book four splits (across
+  the macaw's yellow chest, a loop round the red parrot's eye patch, down the green background,
+  a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas
+  told apart, which the palette often has no paint for. Without a reachable line nothing shows
+  where a split was, so Undo is the way back.
 - **What stays.** Regions, outlines, fill triangles, numbers, edges, strokes and paints the edit
   does not reach are copied as they were (`EditWork.finish` lays the survivors out again, so
   indices after a merged region shift). Neighbours of an edit gain a vertex where a line meets
