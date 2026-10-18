@@ -369,7 +369,7 @@ where they live.
 
 ## Giving feedback
 
-- Give Feedback (`PaintView`: the top bar where it fits, else More; the Paint menu) captures the
+- Give Feedback (`PaintView`: More, never the top bar; the Paint menu) captures the
   painting (`FeedbackCapture`: progress, selection, what is on screen, app and device; where it
   came from is `feedbackSource`, put in the environment by `ArtworkPaintingView`) into a
   `FeedbackDraft` and switches to feedback mode: painting, the Paint menu and the Pencil's double

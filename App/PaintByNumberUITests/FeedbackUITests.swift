@@ -13,14 +13,8 @@ final class FeedbackUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 90), "The painting didn't open")
         sleep(2)
-        // The top bar where it has room (iPad), else the More menu.
-        let give = app.buttons["Give Feedback"]
-        if give.exists {
-            give.tap()
-        } else {
-            app.buttons["More"].tap()
-            app.buttons["Give Feedback…"].tap()
-        }
+        app.buttons["More"].tap()
+        app.buttons["Give Feedback…"].tap()
         let next = app.buttons["feedback-next"]
         XCTAssertTrue(next.waitForExistence(timeout: 10), "Feedback didn't start")
         let undo = app.buttons["feedback-undo"]
