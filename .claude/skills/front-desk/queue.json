@@ -28,38 +28,38 @@
   "state": "waiting"
  },
  {
-  "key": "ux-refinements",
+  "key": "refine-line-split",
   "order": "4",
+  "title": "Refine: lines split colors",
+  "detail": "Hide the Color Splitter; fix the Pen's split and recolor (Caroline's case) · moved up by you",
+  "state": "building"
+ },
+ {
+  "key": "recolor",
+  "order": "5",
+  "title": "Recolor in Refine",
+  "detail": "Looks and Swatches behind one Colors button. SideStore only · moved up by you",
+  "state": "building"
+ },
+ {
+  "key": "ux-refinements",
+  "order": "6",
   "title": "Your UX picks",
   "detail": "Items 1–21 and the one-row Music menu",
   "state": "waiting"
  },
  {
   "key": "nightfall",
-  "order": "5",
+  "order": "7",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
   "state": "waiting"
  },
  {
   "key": "quiet-painting",
-  "order": "6",
+  "order": "8",
   "title": "Quiet painting",
   "detail": "Built; Undo fades with the rest. SideStore only",
   "state": "waiting"
- },
- {
-  "key": "refine-line-split",
-  "order": "–",
-  "title": "Refine: lines split colors",
-  "detail": "Hide the Color Splitter; fix the Pen's split and recolor (Caroline's case)",
-  "state": "building"
- },
- {
-  "key": "recolor",
-  "order": "–",
-  "title": "Recolor in Refine",
-  "detail": "Looks and Swatches behind one Colors button. SideStore only",
-  "state": "building"
  }
 ]

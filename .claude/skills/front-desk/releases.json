@@ -20,39 +20,39 @@
   "day": "Midday",
   "time": "~12:15",
   "title": "Warnings gate merges",
-  "detail": "Your UX picks start CI",
+  "detail": "Then the Refine line split and Recolor, each as soon as it's built (both still being built)",
   "kind": "SideStore"
  },
  {
-  "key": "merge-3",
-  "day": "Early afternoon",
-  "time": "~1:00",
-  "title": "Your UX picks merge (first push)",
-  "detail": "Items 8, 9, 16, 17, 21 go up as a second push; intro animations start CI",
+  "key": "refine",
+  "day": "Afternoon",
+  "time": "when ready",
+  "title": "Refine line split, then Recolor",
+  "detail": "About 45 min of CI each; your UX picks wait behind them",
   "kind": "SideStore"
  },
  {
-  "key": "merge-4",
-  "day": "Early afternoon",
-  "time": "~1:45",
-  "title": "UX second push and intro animations merge",
+  "key": "ux",
+  "day": "Afternoon",
+  "time": "after",
+  "title": "Your UX picks (two pushes), intro animations",
   "detail": "You see the animations' frame strips first",
   "kind": "SideStore"
  },
  {
   "key": "release-4",
-  "day": "Mid-afternoon",
-  "time": "~2:30",
+  "day": "Later",
+  "time": "after UX",
   "title": "Release 4 to TestFlight",
-  "detail": "One batch: tips, calmer menus, your UX picks, Send a refined painting, Music list, Refine fixes. Waits for your go",
+  "detail": "One batch once your UX picks are in and main is green; moves later with the Refine work ahead of it. Waits for your go",
   "kind": "next TestFlight"
  },
  {
   "key": "after",
-  "day": "Later today",
+  "day": "Later",
   "time": "after",
-  "title": "Quiet painting, Refine line split, Recolor",
-  "detail": "Quiet painting is built and waiting; the other two are still being built",
+  "title": "Quiet painting",
+  "detail": "Built and waiting",
   "kind": "SideStore"
  }
 ]

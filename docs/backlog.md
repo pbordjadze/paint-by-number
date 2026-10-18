@@ -20,9 +20,11 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
 | 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
 | 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
-| 4 | claude/ux-refinements | UX design audit | waiting |
-| 5 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
-| 6 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
+| 4 | claude/refine-line-split | Refine: lines split colors | building (Paul 15:01: "move these refine things up to just after the warnings gate") |
+| 5 | claude/recolor | Recolor in Refine | building (same) |
+| 6 | claude/ux-refinements | UX design audit | waiting |
+| 7 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
+| 8 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
 
 ## Inbox
 
