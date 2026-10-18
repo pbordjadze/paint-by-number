@@ -1,0 +1,55 @@
+Attributes: Button, 0x118787980, {{800.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Element subtree:
+ →Button, 0x118787980, {{800.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Path to element:
+ →Application, 0x118799e00, pid: 77327, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x118798000, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x118798140, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x118799040, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x118799180, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x118798c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x118741400, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x118741540, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x118741900, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x118740280, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Other, 0x1187403c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+            ↳Other, 0x118740500, {{0.0, 0.0}, {1032.0, 1376.0}}
+             ↳Button, 0x118787980, {{800.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x11879aa80, pid: 77327, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x118743980, {{17.0, 6.0}, {44.0, 44.0}}, identifier: 'chevron.backward', label: 'Back'
+      Button, 0x118743200, {{800.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+      Button, 0x118743340, {{857.0, 6.0}, {44.0, 44.0}}, identifier: 'lightbulb', label: 'Hint'
+      Button, 0x118742f80, {{919.0, 6.0}, {44.0, 44.0}}, identifier: 'arrow.uturn.backward', label: 'Undo'
+      Button, 0x118760f00, {{976.0, 6.0}, {44.0, 44.0}}, label: 'More'
+      Button, 0x1187c3e80, {{144.4, 742.8}, {44.0, 44.0}}, identifier: 'canvas-area-101', label: 'Area 10', value: not painted, left
+      Button, 0x1187c1e00, {{42.8, 797.5}, {44.0, 44.0}}, identifier: 'canvas-area-114', label: 'Area 10', value: not painted, botto...
+      Button, 0x1187c2080, {{67.2, 789.3}, {44.0, 44.0}}, identifier: 'canvas-area-117', label: 'Area 10', value: not painted, botto...
+      Button, 0x118743480, {{191.8, 797.0}, {44.0, 44.0}}, identifier: 'canvas-area-125', label: 'Area 10', value: not painted, botto...
+      Button, 0x1187435c0, {{364.3, 971.5}, {44.0, 44.0}}, identifier: 'canvas-area-201', label: 'Area 10', value: not painted, bottom
+      Button, 0x118743840, {{393.1, 968.9}, {44.0, 44.0}}, identifier: 'canvas-area-176', label: 'Area 10', value: not painted, bottom
+      Button, 0x118743700, {{418.0, 984.4}, {44.0, 44.0}}, identifier: 'canvas-area-203', label: 'Area 10', value: not painted, bottom
+      Button, 0x118762940, {{976.0, 6.0}, {44.0, 44.0}}
+      Button, 0x118745cc0, {{156.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-10', label: '10, Blueprint, blue', value: 53 percent painted, Selected
+      Button, 0x1187470c0, {{212.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-11', label: '11, Slate Pencil, dark blue', value: 0 percent painted
+      Button, 0x118776800, {{268.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-12', label: '12, Storm Slate, navy', value: 0 percent painted
+      Button, 0x118776940, {{324.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-13', label: '13, Duck Egg, pale gray', value: 0 percent painted
+      Button, 0x118798b40, {{380.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-14', label: '14, Moth Wing, pale gray', value: 0 percent painted
+      Button, 0x11879a300, {{436.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-15', label: '15, Aluminum Foil, pale gray', value: 0 percent painted
+      Button, 0x11879a440, {{492.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-16', label: '16, Silver Spoon, light gray', value: 0 percent painted
+      Button, 0x11879a1c0, {{548.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-17', label: '17, Pebble Beach, light gray', value: 0 percent painted
+      Button, 0x118799cc0, {{604.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-18', label: '18, Harbor Fog, gray', value: 0 percent painted
+      Button, 0x118799b80, {{660.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-19', label: '19, Nickel Plate, gray', value: 0 percent painted
+      Button, 0x11879b5c0, {{716.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-20', label: '20, Heron, grayish blue', value: 0 percent painted
+      Button, 0x118799540, {{772.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-21', label: '21, Granite Peak, gray', value: 0 percent painted
+      Button, 0x11879bc00, {{828.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-22', label: '22, Cinder Path, gray', value: 0 percent painted
+    }
+    ↪︎Find: Elements matching predicate '"Photo" IN identifiers'
+      Output: {
+        Button, 0x11873ebc0, {{800.0, 6.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+      }
