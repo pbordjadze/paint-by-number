@@ -27,6 +27,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 9 | claude/retro-review | Retro code review (Sonnet) | ready (6a01a58, local; 3 small fixes) |
 | 10 | claude/toolbar-tips | Gentle tips check | ready (local; after tip-layout d8fe24e merges; row 43 + a retro finding) |
 | 11 | claude/codex-decoder-fuzz | Codex workbench | ready soon (hostile-input tests for the decoders; decoder change dropped) |
+| 12 | claude/caroline-guardians | New guardian (Hope, Eno) | ready (41b871a [skip ci]; eggs in Who's Who) |
 
 ## Inbox
 
