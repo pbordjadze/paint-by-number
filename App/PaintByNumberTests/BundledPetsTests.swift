@@ -86,6 +86,6 @@ struct BundledPetsTests {
             #expect(size <= 1 << 20, "\(url.lastPathComponent) is over 1 MiB")
             total += size
         }
-        #expect(total <= 20 << 20)
+        #expect(total <= 24 << 20)
     }
 }

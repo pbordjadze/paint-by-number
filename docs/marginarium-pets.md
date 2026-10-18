@@ -90,7 +90,9 @@ arrives, so a note doesn't change shape.
 
 ## Bundled size budget
 
-Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 20 MiB total** for all of them,
+Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 24 MiB total** for all of them
+(20 MiB until October 18, raised for the guardians still coming; the Marginarium ships only in
+SideStore builds),
 kept as WebP resources instead of expanding every frame into an imageset. This disk budget is
 separate from the decoded-memory cache limit above. `BundledPetsTests` checks both limits on
 the shipped files, that every sheet loads through `SpriteAtlas` with the v2 contract, and that
@@ -161,7 +163,7 @@ from a still Paul approved first: the Astrologer, Bart (a small crimson ink-smok
 asterisk topknot), Rikyū, Scherenschnitt (Lotte until Paul renamed her; after the animator Lotte
 Reiniger), and Dino in the family's paint, his own design kept and replacing his Codex-app sheet.
 Their lossless sources are 1536 × 2288 PNGs (`factory/pets/<id>/` on the factory branch keeps
-them). To keep the total inside 20 MiB, these five are lossy WebP at quality 88 (the recipe
+them). To keep the total low, these five are lossy WebP at quality 88 (the recipe
 above, `quality=88`) rather than the highest that fits 1 MiB: the alpha channel is bit-identical
 to the sources, the mean absolute error over visible pixels is 2.6 to 6.9 of 255, and idle and
 waving cells at native size and 5x, on white and dark, showed no banding, halo or fringe.
@@ -174,7 +176,7 @@ waving cells at native size and 5x, on white and dark, showed no banding, halo o
 | `lotte-reiniger` | `e861b9c0812ac7d4c8168797c7613f02352c26f571aefcd5336fd685e8ca8570` | 488,422 | lossy WebP q88 |
 | `sen-no-rikyu` | `e89af5f75afa5fd6d14975baaec874ae9680d16ef154311145f8b04dd95dc7ef` | 704,938 | lossy WebP q88 |
 
-The twenty-four sheets total **20,042,546 bytes (19.11 MiB)** of the 20 MiB budget. Dino's
+The twenty-four sheets total **20,042,546 bytes (19.11 MiB)** of the 24 MiB budget. Dino's
 first sheet, in the table above, no longer ships. The new five fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
