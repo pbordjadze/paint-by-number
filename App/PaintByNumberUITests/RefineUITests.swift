@@ -1,8 +1,7 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens, the eraser and Fill, Undo and Redo (the
-/// buttons and a two-finger tap), Done and Cancel; with Settings › Detail Brushes, its brushes
-/// and text marks too.
+/// The create flow's optional Refine step: the pens, the eraser and Fill, the Color Splitter, the
+/// text marks, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
@@ -22,7 +21,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertTrue(app.buttons["refine-tool-pen"].isSelected, "Refine doesn't start on the pen")
-        XCTAssertFalse(app.buttons["refine-tool-more"].exists, "The detail brushes show with Detail Brushes off")
+        XCTAssertTrue(app.buttons["refine-tool-text"].exists, "Refine has no Text tool")
         let undo = app.buttons["refine-undo"], redo = app.buttons["refine-redo"]
         XCTAssertFalse(undo.isEnabled, "Undo is offered before any change")
 
@@ -95,21 +94,31 @@ final class RefineUITests: XCTestCase {
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "The refined preview can't be started")
     }
 
-    /// With Settings › Detail Brushes on, Refine also brushes areas for more detail and marks a
-    /// line of text dragged across, and Done keeps both.
+    /// The Color Splitter divides the picture's color along a stroke and shows the painting, where
+    /// a split shows; Text marks a line of text dragged across; there are no detail brushes. Done
+    /// keeps both.
     @MainActor
-    func testDetailBrushesBrushAndMarkText() throws {
-        let app = launchPreview(arguments: ["-refineDetailBrushes", "YES"])
+    func testSplitterAndTextCorrections() throws {
+        let app = launchPreview()
         let refine = app.buttons["refine"]
         refine.tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
-        let more = app.buttons["refine-tool-more"]
-        XCTAssertTrue(more.exists, "Detail Brushes on, Refine has no More Detail")
-        more.tap()
-        drag(on: canvas, from: CGVector(dx: 0.3, dy: 0.42), to: CGVector(dx: 0.6, dy: 0.5))
+        XCTAssertFalse(app.buttons["refine-tool-more"].exists, "Refine still has the More Detail brush")
+
+        let splitter = app.buttons["refine-tool-splitter"]
+        XCTAssertTrue(splitter.exists, "Refine has no Color Splitter")
+        splitter.tap()
+        XCTAssertTrue(waitFor(splitter, toMatch: NSPredicate(format: "isSelected == true")), "The splitter didn't become the tool")
         XCTAssertTrue(
-            waitFor(canvas, toMatch: changes("1 change")), "The brush stroke didn't count: \(canvas.value ?? "")")
+            waitFor(app.buttons["refine-painting"], toMatch: NSPredicate(format: "isSelected == true")),
+            "Picking the splitter didn't show the painting")
+        // Down the open sky of The Great Wave, from above the wave's outline to inside little Fuji:
+        // crossing a line at each end, it divides the sky between them.
+        drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.637, 0.675))
+        XCTAssertTrue(
+            waitFor(canvas, toMatch: changes("1 change")), "The split didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-splitter")
 
         let text = app.buttons["refine-tool-text"]
         XCTAssertTrue(text.exists, "Refine has no Text tool")
@@ -118,7 +127,6 @@ final class RefineUITests: XCTestCase {
         drag(on: canvas, from: CGVector(dx: 0.2, dy: 0.55), to: CGVector(dx: 0.55, dy: 0.6))
         XCTAssertTrue(
             waitFor(canvas, toMatch: changes("2 changes")), "Dragging with Text didn't mark a line: \(canvas.value ?? "")")
-        attachScreenshot(of: app, named: "refine-detail-brushes")
 
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")
@@ -128,9 +136,9 @@ final class RefineUITests: XCTestCase {
 
     /// The Great Wave's preview once its settings are chosen.
     @MainActor
-    private func launchPreview(arguments: [String] = []) -> XCUIApplication {
+    private func launchPreview() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"] + arguments
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"]
         app.launch()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 30), "The preview didn't open")
@@ -149,6 +157,17 @@ final class RefineUITests: XCTestCase {
 
     /// One finger dragged across `element`, as a line is drawn.
     @MainActor
+    /// A point of the picture (fractions of its width and height) as an offset in the canvas,
+    /// the whole surface, where the picture is fitted in the middle: The Great Wave (2048 × 1375),
+    /// `create-preview`'s picture.
+    private func onPicture(_ canvas: XCUIElement, _ x: CGFloat, _ y: CGFloat) -> CGVector {
+        let size = canvas.frame.size, aspect: CGFloat = 2048 / 1375
+        let width = min(size.width, size.height * aspect), height = width / aspect
+        return CGVector(
+            dx: ((size.width - width) / 2 + x * width) / size.width,
+            dy: ((size.height - height) / 2 + y * height) / size.height)
+    }
+
     private func drag(on element: XCUIElement, from: CGVector, to: CGVector) {
         element.coordinate(withNormalizedOffset: from)
             .press(forDuration: 0.05, thenDragTo: element.coordinate(withNormalizedOffset: to))
