@@ -21,6 +21,12 @@ nonisolated enum ImageCodec {
         return image(from: source, maxPixelSize: maxPixelSize)
     }
 
+    /// Decodes image data (a photo someone sent), downscaled so its long side is at most `maxPixelSize`.
+    static func image(data: Data, maxPixelSize: Int) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary) else { return nil }
+        return image(from: source, maxPixelSize: maxPixelSize)
+    }
+
     /// Returns `image` scaled down (never up) to fit `maxPixelSize`.
     static func downscaled(_ image: CGImage, maxPixelSize: Int) -> CGImage {
         let long = max(image.width, image.height)
