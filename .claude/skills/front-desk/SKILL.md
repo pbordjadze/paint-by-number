@@ -81,6 +81,16 @@ runs, up to three while it's idle.
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## The Codex workbench
+
+Paul (Oct 18, ~16:22 UTC): "Yeah Codex workbench, and the front desk can send things there or
+tell sessions to use it." The workbench is a lean session on the homelab (row 49; its id is in the
+backlog) where the Codex CLI does the work and a Sonnet session only dispatches and checks, to
+save Claude usage. Send it mechanical work: second-opinion reviews of a pushed branch before it
+merges, tests and fixtures, small verified fixes, merging main into a ready branch. Tell other
+sessions to hand it the same. Taste, design, writing, the Lamplit Table and judging what's real
+stay with Claude.
+
 ## Proposals
 
 Sessions and the Lamplit Table send proposals for new work (CLAUDE.md › Working with Paul ›
@@ -111,29 +121,29 @@ check-ins in a row.
 ## The status page
 
 There is one page, at https://claude.ai/artifact/HWcNT2WZkA4kxvtGqyMbmo: the Dashboard type,
-named "Moonlight Front Desk". It shows what needs Paul, the sessions, the inbox and usage. Refresh
-it on start, after a burst, and at each check-in:
+named "Moonlight Front Desk". It shows what needs Paul, the CI queue and what's next, the sessions,
+the inbox and usage, all from one dataset, `datasets/live`, so a refresh is cheap: do one whenever
+something Paul would see has moved (a card asked or answered, a merge, a queue change), not only at
+check-ins (Paul, Oct 18: it "doesn't feel as though you're updating the front desk artifact
+enough").
 
 1. `python3 .claude/skills/front-desk/sessions.py <list file> --previous <day.json>
-   --dashboard <scratch dir> --backlog docs/backlog.md`. `<day.json>` is today's opening snapshot
-   (see Usage).
-2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json` (and your
-   `decisions.json` when it changed; and `queue.json` and `releases.json`, kept by hand beside
-   this file, when the CI queue or main moved: Paul asked for the queue and what is next, estimated
-   on the page, Oct 18), each with
-   its own Artifact publish call: `url` set to the page, `file_path` set to the file, and
-   `asset: true`.
-3. Use `ArtifactData` to `update` `datasets/sessions`, `datasets/inbox` and `datasets/account`.
-   Get each document first for its version. Set `source.url` to the upload's `url`, and set
-   `updated` to `{at: <now>, by: "front desk"}`. Then delete the upload it replaced: Artifact
-   `delete` with `url` and `path` set to the old id (the 32 hex characters after `_blob/` in the
-   old `source.url`).
-4. After Paul has opened the page, `get` `data/users/me/runs` for failures his page reported, and
+   --dashboard <scratch dir> --backlog docs/backlog.md` (`<day.json>`: today's opening snapshot,
+   see Usage); skip it when only cards, the queue or what's next changed.
+2. Keep `queue.json`, `releases.json` (what's next, estimated; its `detail` is the per-workstream "now building" line) and `links.json` (the page's "Pages" strip: `id`, `order`, `title`, `url`, `note`) beside this file by hand, and
+   your `decisions.json` with `page.py`.
+3. `python3 .claude/skills/front-desk/live.py <scratch dir> <decisions.json> <live.json>` merges
+   them into one `live.json` (every row has `kind` and a unique `key`).
+4. One Artifact publish of `live.json` (`url` the page, `asset: true`), then one `ArtifactData`
+   `update` of `datasets/live`: `source.url` the upload's `url`, `updated` `{at, by: "front
+   desk"}` (`if_version` from the last write). Leave the old upload; delete the day's stale
+   uploads once, at the last check-in of the day (Artifact `list` `scope: "assets"`).
+5. After Paul has opened the page, `get` `data/users/me/runs` for failures his page reported, and
    fix the data or the helper.
 
-The page leads with **Yours to decide**: the dataset `datasets/decisions`, a hand-written file
+The page leads with **Yours to decide**: the `decision` rows of `datasets/live`, from a hand-written file
 `decisions.json` (rows of `id`, `order`, `group` = `now` | `whenever` | `later`, `title`, `ask`,
-`options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
+`options` [{label, detail}], `items`, `recommend`, `reply`, `link` (+ `link_label`, default "Open": shown as a button on the card), `from`, `asked`). Each row
 is a short review guide for one decision only Paul can make: the question, the choices, what
 the session recommends, and the reply to type. Each card asks one question, its options
 lettered (a, b, …) so a one-letter reply can't land on the wrong one. Keep it in step with what

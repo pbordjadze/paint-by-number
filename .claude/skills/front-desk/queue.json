@@ -3,77 +3,77 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "The Refine test fix just merged; building your next SideStore update",
+  "detail": "4bcffa0: code review fixes + the fix for the flaky Settings test; the first main run with the warnings gate",
   "state": "main running"
  },
  {
-  "key": "tip-layout",
-  "order": "1",
-  "title": "Gentle tips layout",
-  "detail": "Page tips as a card, no arrow (d8fe24e); toolbar tips as cards follow after",
-  "state": "in CI"
- },
- {
-  "key": "fewer-buttons",
-  "order": "2",
-  "title": "Calmer menus",
-  "detail": "Re-run after a flaky test (e61421e); fewer buttons on the painting and Refine screens",
-  "state": "in CI"
- },
- {
-  "key": "ci-train",
-  "order": "3",
-  "title": "Warnings gate",
-  "detail": "Code-quality checks for CI; after it, a new compiler warning fails a run",
-  "state": "waiting"
- },
- {
   "key": "refine-line-split",
-  "order": "4",
+  "order": "1",
   "title": "Refine: lines split colors",
-  "detail": "Lines recolor what they split, the hook fixed, the Color Splitter hidden · moved up by you",
-  "state": "ready after Calmer menus"
+  "detail": "Green at 5f39bb7; merges after main's current run",
+  "state": "green"
  },
  {
   "key": "recolor",
-  "order": "5",
+  "order": "2",
   "title": "Recolor in Refine",
-  "detail": "Built: five looks (Moonlit, Golden Hour, Pastel, Garden, Starry Night) and Swatches. SideStore only",
-  "state": "ready"
+  "detail": "Looks + Swatches, five looks; Codex findings fixed. SideStore only · moved up by you",
+  "state": "in CI"
  },
  {
-  "key": "ux-refinements",
-  "order": "6",
-  "title": "Your UX picks",
-  "detail": "Batch 1 built (new session took over); batch 2 after Calmer menus",
+  "key": "ci-tags",
+  "order": "3",
+  "title": "CI tags guard",
+  "detail": "The night train refuses a skip tag in its merge message (the reason main 4bcffa0 had to start the gate run). Compile check running.",
   "state": "waiting"
  },
  {
+  "key": "ux-refinements",
+  "order": "4",
+  "title": "Your UX picks",
+  "detail": "Both batches built (21 picks + Music row + Stop)",
+  "state": "ready"
+ },
+ {
   "key": "nightfall",
-  "order": "7",
+  "order": "5",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
   "state": "waiting"
  },
  {
   "key": "quiet-painting",
-  "order": "8",
+  "order": "6",
   "title": "Quiet painting",
-  "detail": "Built; Undo fades with the rest. SideStore only",
-  "state": "waiting"
- },
- {
-  "key": "retro-review",
-  "order": "9",
-  "title": "Code review fixes",
-  "detail": "Three small fixes from the Sonnet review; a night-train candidate",
+  "detail": "Built; Codex review clean; rebases after your UX picks. SideStore only",
   "state": "ready"
  },
  {
   "key": "toolbar-tips",
-  "order": "10",
+  "order": "7",
   "title": "Toolbar tips as cards",
   "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
+  "state": "ready"
+ },
+ {
+  "key": "codex-decoder-fuzz",
+  "order": "8",
+  "title": "Decoder stress tests",
+  "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
+  "state": "ready soon"
+ },
+ {
+  "key": "caroline-guardians",
+  "order": "9",
+  "title": "Hope and Eno in Who's Who",
+  "detail": "Caroline's two guardians, as eggs",
+  "state": "ready"
+ },
+ {
+  "key": "pets-oct18",
+  "order": "10",
+  "title": "Five new pet drawings",
+  "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
   "state": "ready"
  }
 ]

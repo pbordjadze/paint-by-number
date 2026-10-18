@@ -155,8 +155,13 @@ struct TipDeskTests {
         defer { f.cleanup() }
         f.desk.isMuted = true
         f.desk.enter(.shelf)
+        // The turn comes later, if at all: what a refused moment leaves is no offering.
         f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
-        #expect(f.desk.turn == nil)
+        #expect(f.desk.offeringPlace == nil)
+        f.desk.isMuted = false
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == .shelf)
+        f.desk.leave(.shelf)
     }
 
     /// Tips off means none: nothing is offered, though nothing is muted.
@@ -165,6 +170,7 @@ struct TipDeskTests {
         defer { f.cleanup() }
         f.desk.enter(.shelf)
         f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == nil)
         #expect(f.desk.turn == nil)
     }
 

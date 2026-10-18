@@ -83,6 +83,7 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     /// The painting screen's swatches, from one snapshot of the app.
+    @MainActor
     private static func swatches(in snapshot: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
         var found: [any XCUIElementSnapshot] = []
         func visit(_ element: any XCUIElementSnapshot) {
