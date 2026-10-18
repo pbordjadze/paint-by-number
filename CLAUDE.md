@@ -493,7 +493,10 @@ if he has gone quiet.
   write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
   subagent). Fix what it confirms; anything large or design-level goes to Paul through the front
   desk. The merge commit's message lists what the review found and what was fixed. No PR, no
-  extra CI run.
+  extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
+  head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
+  `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
+  `[compile]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about
