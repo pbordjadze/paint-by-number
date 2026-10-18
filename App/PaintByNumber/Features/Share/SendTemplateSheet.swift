@@ -12,6 +12,7 @@ struct SendTemplateSheet: View {
     let artwork: Artwork
     @Environment(Library.self) private var library
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @State private var includesPhoto = true
     @State private var preview: CGImage?
     @State private var isPreparing = false
@@ -21,6 +22,9 @@ struct SendTemplateSheet: View {
     @State private var canIncludePhoto = false
     /// Set once the sheet has gone, so a file made after that is deleted, not kept.
     @State private var departure = Departure()
+    /// The content's height: the sheet is no taller (the Lamplit Table, October 18: the empty band
+    /// below the buttons read as something missing).
+    @State private var contentHeight: CGFloat = 560
 
     var body: some View {
         // Scrolls when large text makes the sheet's content taller than its detent.
@@ -44,7 +48,7 @@ struct SendTemplateSheet: View {
                     .disabled(isPreparing)
                 }
                 Text(explanation)
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -76,8 +80,10 @@ struct SendTemplateSheet: View {
             .padding(28)
             .frame(maxWidth: 420)
             .frame(maxWidth: .infinity)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
         }
         .scrollBounceBehavior(.basedOnSize)
+        .presentationDetents([.height(contentHeight)])
         .background {
             ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
         }
@@ -89,7 +95,8 @@ struct SendTemplateSheet: View {
         }
     }
 
-    /// The blank page, on its own paper in either appearance.
+    /// The blank page on the canvas sheet's paper, dimmed by night (the Lamplit Table: a white
+    /// page glared on the dark sheet, and read as cold).
     @ViewBuilder
     private var page: some View {
         Group {
@@ -97,8 +104,9 @@ struct SendTemplateSheet: View {
                 Image(decorative: preview, scale: 1)
                     .resizable()
                     .scaledToFit()
+                    .colorMultiply(paper)
             } else {
-                Color(white: 0.96)
+                paper
                     .aspectRatio(artwork.aspectRatio, contentMode: .fit)
             }
         }
@@ -109,6 +117,11 @@ struct SendTemplateSheet: View {
         .accessibilityLabel(Text(String(
             localized: "send.preview", defaultValue: "A blank copy of “\(artwork.title)”",
             comment: "VoiceOver label of the page shown in Send Template; the argument is the painting's title")))
+    }
+
+    private var paper: Color {
+        let tone = CanvasPalette.sheetPaperSRGB * (colorScheme == .dark ? 0.82 : 1)
+        return Color(.sRGB, red: Double(tone.x), green: Double(tone.y), blue: Double(tone.z))
     }
 
     private var explanation: String {

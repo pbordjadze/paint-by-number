@@ -78,7 +78,8 @@ final class Library {
                        defaultValue: "This painting was sent from a newer version of Paint by Moonlight. Update the app to open it.",
                        comment: "Alert message when a painting someone sent was made by a newer version of the app")
             case .damaged:
-                String(localized: "library.receive.damaged", defaultValue: "The file is damaged, or isn’t a painting.",
+                String(localized: "library.receive.damaged",
+                       defaultValue: "This file may be damaged, or it isn’t a painting. Ask whoever sent it to send it again.",
                        comment: "Alert message when a file opened as a painting someone sent can't be read")
             case .saveFailed:
                 String(localized: "library.receive.saveFailed",
