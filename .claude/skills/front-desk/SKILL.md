@@ -64,6 +64,19 @@ hasn't written in the last ~10 minutes. If it ships something, add one line to y
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## Proposals
+
+Sessions and the Lamplit Table send proposals for new work (CLAUDE.md › Working with Paul ›
+Propose, don't start). For each: merge duplicates, drop what contradicts a decision Paul has
+made (say so to the proposer), and check that no session already owns it. Then add a
+`decisions.json` card in a `proposed` group (shown under "Proposed"): `title`, `ask` (what and
+why), `items` (size, CI time, rough cost, what Paul would have to do), `from` (who proposed it),
+`reply` ("yes / no / later"). On his yes, route it like any request (an owning session or a new
+one) and add a backlog row with his words. "Later" goes to `docs/ideas.md`, marked as the
+proposer's idea, not his. Paul's standing rule for the night of Oct 18 (05:33): small, clearly
+safe proposals (bug fixes and polish, behind `UNRELEASED`, never removing anything) may start
+without him; everything else waits for his yes.
+
 ## Check-ins
 
 While anything is building or in CI, keep one `send_later` check-in about 45 minutes out. When
@@ -80,7 +93,8 @@ it on start, after a burst, and at each check-in:
 1. `python3 .claude/skills/front-desk/sessions.py <list file> --previous <day.json>
    --dashboard <scratch dir> --backlog docs/backlog.md`. `<day.json>` is today's opening snapshot
    (see Usage).
-2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json`, each with
+2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json` (and your
+   `decisions.json` when it changed), each with
    its own Artifact publish call: `url` set to the page, `file_path` set to the file, and
    `asset: true`.
 3. Use `ArtifactData` to `update` `datasets/sessions`, `datasets/inbox` and `datasets/account`.
@@ -90,6 +104,21 @@ it on start, after a burst, and at each check-in:
    old `source.url`).
 4. After Paul has opened the page, `get` `data/users/me/runs` for failures his page reported, and
    fix the data or the helper.
+
+The page leads with **Yours to decide**: the dataset `datasets/decisions`, a hand-written file
+`decisions.json` (rows of `id`, `order`, `group` = `now` | `whenever` | `later`, `title`, `ask`,
+`options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
+is a short review guide for one decision only Paul can make: the question, the choices, what
+the session recommends, and the reply to type. Keep it in step with what you ask him in chat:
+add a row when a session needs him, drop it when he answers,
+and give any decision about how something looks a picture (Paul: "this kinda thing should have a
+visual"): an `image` field holding a `data:image/jpeg;base64,…` URL of a small side-by-side
+(about 1200 px wide, under 150 KB; the page shows only data URLs), with `image_alt`; and re-upload it the same way at
+each refresh. Paul uses the page to decide quickly; keep the rest of it short.
+He answers by commenting on a card with @claude. Keep the page watched
+(`ArtifactComments` `watch` with its `url`, again in a new front desk session): each such
+comment wakes you. Read the thread, treat his words as his decision (relay them like any
+go-ahead, verbatim, with the time), reply in the thread with where it went, and resolve it.
 
 Don't rewrite the page itself (`files/index.html`) unless Paul asks for a change to it. When you
 do, the Dashboard type's rules apply: the type's instructions come back when you publish with
