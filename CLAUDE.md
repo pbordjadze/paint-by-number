@@ -26,7 +26,8 @@ before planning app work).
     the style guide `ColorNicknameTests` lints).
   - `Model/`: `Template` + `TemplateCoding` (geometry conventions on `BoundaryEdge`, `Ring`,
     `FillMesh`, `Template.coordinateQuantum` and `points`), `GenerationSettings`, `Segmentation`,
-    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `PaintingTime` (the one painting-time
+    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `SharedPainting` (the `.moonlight` file Send
+    Template… writes: a template, its title and, by the painter's choice, its photo), `PaintingTime` (the one painting-time
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
@@ -48,7 +49,7 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
-  - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
+  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, eraser, line eraser and fill made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
     arithmetic; `docs/coloring-book.md` › Edits made to the template itself; a drawn line's
     paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`);
@@ -244,7 +245,10 @@ Saved paintings must open in every later build. The format history is documented
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
   chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
   strokes) must keep decoding (they are never regenerated). Add
-  a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
+  a fixture file and decode test for every new `formatVersion`, chunk or trailing field. A
+  painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
+  input) follows the same rules: `shared-v1.moonlight` and `shared-v1-photo.moonlight` (the
+  optional `PHOT` chunk) keep decoding.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base layout
@@ -425,8 +429,8 @@ any port of it, when changing the fitter: work from the paper.
 3. Turnaround is about 30 min (both iPad jobs take about that), about 40 when the caches miss (a
    change to the pipeline, the models or the pictures: the screenshots take twice as long and
    `ipad-ui` warms up first), longer when branches queue (only 5 macOS jobs run at once: a branch
-   push takes 2, `main` 4; `iphone`, about 45 min, is main's longest). `ci/fetch.sh` waits up to
-   100 min. A newer push to the same branch cancels the older run, which then never reports. Work
+   push takes 2, `main` 4; `iphone`, about 85 min, is main's longest). `ci/fetch.sh` waits up to
+   140 min. A newer push to the same branch cancels the older run, which then never reports. Work
    on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,

@@ -9,6 +9,8 @@ struct GalleryView: View {
     let query: GalleryQuery
     /// The time-lapse being made; the app shell presents its sheet.
     @Binding var timelapse: TimelapseRequest?
+    /// The painting Send Template… is sending; the app shell presents its sheet.
+    @Binding var sending: Artwork?
     var onCreate: () -> Void
     /// The painter chose to continue refining the create flow's draft.
     var onContinueDraft: (Drafts.Opened) -> Void
@@ -116,6 +118,10 @@ struct GalleryView: View {
             if ShellDemo.current?.sharesTimelapse == true, timelapse == nil, let artwork = library.finished.first {
                 shareTimelapse(artwork)
             }
+        }
+        .task(id: library.artworks.first?.id) {
+            // Demo: send the painting once it is ready.
+            if ShellDemo.current?.sendsTemplate == true, sending == nil, let artwork = library.artworks.first { sending = artwork }
         }
         #endif
     }
@@ -310,6 +316,12 @@ struct GalleryView: View {
             preview: SharePreview(ArtworkExporter.templateName(title: artwork.title), image: previewImage(artwork))
         ) {
             Label("Print Template…", systemImage: "printer")
+        }
+        // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
+        // is for whoever hasn't the app.
+        Button("Send Template…", systemImage: "paperplane") {
+            PaintTips.used(.shelfHold)
+            sending = artwork
         }
         Divider()
         Button("Restart", systemImage: "arrow.counterclockwise") {

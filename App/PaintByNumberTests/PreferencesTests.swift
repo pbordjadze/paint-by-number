@@ -25,21 +25,6 @@ struct PreferencesTests {
         #expect(!session.autoAdvance)
     }
 
-    /// Settings › Detail Brushes is off until switched on, and reads a launch argument's `YES`
-    /// (`-refineDetailBrushes YES`, as UI tests set it) as on.
-    @Test func detailBrushesAreOffUntilSwitchedOn() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(!Preferences(defaults: defaults).detailBrushes)
-        defaults.set(true, forKey: SettingsKey.detailBrushes)
-        #expect(Preferences(defaults: defaults).detailBrushes)
-        defaults.set("YES", forKey: SettingsKey.detailBrushes)
-        #expect(Preferences(defaults: defaults).detailBrushes)
-        #expect(SettingsKey.detailBrushes == "refineDetailBrushes")
-    }
-
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments
     /// (`-paperAppearance dark`) use, and anything else isn't a paper.
     @Test func paperAppearanceKeyAndRawValues() {
@@ -138,6 +123,8 @@ struct PreferencesTests {
         #expect(LineWeight.stored(in: defaults) == .bold)
         #expect(defaults.object(forKey: SettingsKey.haptics) as? Bool == true, "A current setting went too")
         #expect(Preferences.retiredKeys.contains("printPaperSize") && Preferences.retiredKeys.contains("colorNameStyle"))
+        // Settings › Detail Brushes, later Text Corrections: Refine's Text tool is always there.
+        #expect(Preferences.retiredKeys.contains("refineDetailBrushes"))
         // The Custom palette order goes with every painting's arrangement; the rows stay.
         #expect(defaults.object(forKey: SettingsKey.paletteOrder) == nil)
         #expect(defaults.object(forKey: Preferences.retiredCustomOrderPrefix + "42") == nil)

@@ -111,6 +111,12 @@ nonisolated struct ArtworkStore: Sendable {
 
     func readTemplate(_ id: UUID, maximumBytes: Int = Self.maximumTemplateBytes) throws -> Template {
         let compressed = try Data(contentsOf: url(.template, of: id), options: .mappedIfSafe)
+        return try Template(encoded: Self.lzfseDecoded(compressed, maximumBytes: maximumBytes))
+    }
+
+    /// `compressed` decoded from LZFSE, at most `maximumBytes` of it: the buffer grows only as the
+    /// stream fills it, so a damaged or hostile stream reserves no more than it decodes to.
+    static func lzfseDecoded(_ compressed: Data, maximumBytes: Int) throws -> Data {
         guard !compressed.isEmpty, maximumBytes > 0, maximumBytes <= Self.maximumTemplateBytes else {
             throw StoreError.unreadable("template decompression")
         }
@@ -131,7 +137,7 @@ nonisolated struct ArtworkStore: Sendable {
             }
             if count < capacity {
                 raw.count = count
-                return try Template(encoded: raw)
+                return raw
             }
             capacity = min(capacity * 2, maximumBytes + 1)
         }

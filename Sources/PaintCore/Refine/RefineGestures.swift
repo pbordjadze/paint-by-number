@@ -119,6 +119,13 @@ public enum RefineGestures {
         return drawEdit(touching(smooth, straight: false, on: screen, snapping: lines), on: screen)
     }
 
+    /// The Color Splitter's stroke: the Pen's line (`pen`), as a split, which divides the paint and
+    /// draws nothing.
+    public static func splitter(_ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?) -> TemplateEditor.Edit? {
+        guard case .draw(let line, let closed, _)? = pen(points, on: screen, snapping: lines) else { return nil }
+        return .split(points: line, closed: closed)
+    }
+
     /// The eraser's pass as an edit: its path in canvas units, and its reach there, the radius it
     /// has on screen. A dab is one point.
     public static func eraser(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
@@ -214,7 +221,7 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill:
+            case .fill, .split:
                 break
             }
         }

@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
-/// Preview, Detail Brushes, The Marginarium and The Making-of.
+/// Preview, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -158,20 +158,6 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(app.buttons["Painting"].waitForExistence(timeout: 5))
         app.buttons["Painting"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Painting"), "Choosing Painting didn't change the picker: \(describe(picker))")
-    }
-
-    /// Settings › Detail Brushes starts off, and switches on and off again.
-    @MainActor
-    func testDetailBrushesSwitch() throws {
-        let app = openSettings()
-        let toggle = app.switches["settings-detail-brushes"]
-        scroll(app, to: toggle)
-        XCTAssertTrue(toggle.exists, "Settings has no Detail Brushes switch")
-        XCTAssertEqual(toggle.value as? String, "0", "Detail Brushes doesn't start off")
-        XCTAssertTrue(flip(toggle, on: true), "Detail Brushes didn't switch on: \(toggle.value ?? "")")
-        attachScreenshot(of: app, named: "settings-detail-brushes")
-        // Stored in the simulator's defaults: off again for the other tests.
-        XCTAssertTrue(flip(toggle, on: false), "Detail Brushes didn't switch off: \(toggle.value ?? "")")
     }
 
     /// The Marginarium is hidden until its switch puts the book in the gallery's toolbar.
