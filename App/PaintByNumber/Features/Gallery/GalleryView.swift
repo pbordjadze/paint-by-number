@@ -271,6 +271,24 @@ struct GalleryView: View {
             renaming = artwork
         }
         Divider()
+        // Every way out of the app in one submenu, so the menu stays five items (Paul's calmer
+        // menus, October 18).
+        Menu {
+            shareItems(for: artwork)
+        } label: {
+            Label("Share", systemImage: "square.and.arrow.up")
+        }
+        Divider()
+        Button("Restart", systemImage: "arrow.counterclockwise") {
+            PaintTips.used(.shelfHold)
+            restarting = artwork
+        }
+        .disabled(!artwork.isStarted)
+        deleteButton(for: artwork)
+    }
+
+    @ViewBuilder
+    private func shareItems(for artwork: Artwork) -> some View {
         ShareLink(
             item: PaintingImageFile(store: library.store, artwork: artwork),
             preview: SharePreview(artwork.title, image: previewImage(artwork))
@@ -295,13 +313,6 @@ struct GalleryView: View {
         ) {
             Label("Print Template…", systemImage: "printer")
         }
-        Divider()
-        Button("Restart", systemImage: "arrow.counterclockwise") {
-            PaintTips.used(.shelfHold)
-            restarting = artwork
-        }
-        .disabled(!artwork.isStarted)
-        deleteButton(for: artwork)
     }
 
     private func deleteButton(for artwork: Artwork) -> some View {

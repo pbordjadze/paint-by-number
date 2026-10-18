@@ -53,6 +53,9 @@ final class GalleryActionsTests: XCTestCase {
         let app = launchGallery()
         let card = revealCard("Delicate Arch", in: app)
         card.press(forDuration: 1.5)
+        let menu = app.buttons["Share"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 5), "The finished card's menu has no Share")
+        menu.tap()
         let share = app.buttons["Share Time-lapse"]
         XCTAssertTrue(share.waitForExistence(timeout: 5), "The finished card's menu has no Share Time-lapse")
         share.tap()
