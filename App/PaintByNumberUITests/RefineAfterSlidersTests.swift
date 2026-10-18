@@ -78,7 +78,7 @@ final class RefineAfterSlidersTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Updating…"].waitForExistence(timeout: 10), "The painting never said it was updating")
         refine.tap()
         XCTAssertTrue(
-            waitFor(refine, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 3),
+            waitUntil(timeout: 5) { refine.value as? String == "Preparing…" },
             "Refine tapped while updating doesn't say it is waiting: \(refine.value ?? "")")
         attachScreenshot(of: app, named: "preparing")
 
@@ -153,8 +153,10 @@ final class RefineAfterSlidersTests: XCTestCase {
         refine.tap()
         // The button says so a moment after the tap (one read straight after it found the old value
         // now and then), unless the template was made between the status's read and the tap and
-        // Refine opened at once.
-        let preparing = waitFor(refine, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 3)
+        // Refine opened at once. Read afresh each time: a predicate expectation can time out while
+        // the app is busy with the element already matching.
+        _ = waitUntil(timeout: 5) { canvas.exists || refine.value as? String == "Preparing…" }
+        let preparing = refine.value as? String == "Preparing…"
         let openedAtOnce = !preparing && canvas.exists
         if preparing { attachScreenshot(of: app, named: "preparing-after-\(what)") }
         let opened = canvas.waitForExistence(timeout: 120)
