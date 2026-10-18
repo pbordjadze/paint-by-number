@@ -11,12 +11,9 @@ struct ArtworkCard: View {
             CardFrame {
                 ArtworkThumbnail(artwork: artwork)
             }
+            // A finished painting has no badge: its caption says so, with the time it took.
             .overlay(alignment: .topTrailing) {
-                if artwork.needsNewerApp {
-                    NeedsUpdateBadge().padding(10)
-                } else if artwork.isComplete {
-                    FinishedBadge().padding(10)
-                }
+                if artwork.needsNewerApp { NeedsUpdateBadge().padding(10) }
             }
             .overlay(alignment: .topLeading) {
                 if artwork.isFavorite { FavoriteBadge().padding(10) }
@@ -32,7 +29,8 @@ struct ArtworkCard: View {
                 Text(artwork.title)
                     .font(.display(.headline, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
+                    // Two lines, so a long title on a phone's narrow card reads whole.
+                    .lineLimit(2)
                 ProgressCaption(artwork: artwork)
             }
             .padding(.horizontal, 4)
@@ -115,17 +113,6 @@ struct ArtworkThumbnail: View {
     private var pixelSize: Int {
         ThumbnailCache.pixelSize(
             frame: size, displayScale: displayScale, aspectRatio: artwork.aspectRatio, fills: contentMode == .fill)
-    }
-}
-
-private struct FinishedBadge: View {
-    var body: some View {
-        Image(systemName: "checkmark")
-            .font(.system(size: 13, weight: .bold))
-            .foregroundStyle(.white)
-            .frame(width: 30, height: 30)
-            .glassEffect(.regular.tint(Theme.signature), in: .circle)
-            .accessibilityHidden(true)
     }
 }
 
@@ -243,7 +230,7 @@ struct PlaceholderCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(placeholder.sample.title)
                     .font(.display(.headline, weight: .semibold))
-                    .lineLimit(1)
+                    .lineLimit(2)
                 Text("Preparing…")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
