@@ -81,6 +81,15 @@ runs, up to three while it's idle.
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## Pets art
+
+Paul (Oct 18, 21:51): "pets page for pets art, front desk for everything else". Pet picks live on
+the pets session's homelab page (`#waiting`, with buttons; tailnet only), linked from the status
+page's Pages strip. The pets session acts on his taps itself and sends the front desk one batched
+summary at most about hourly (Paul: "You might not need to report on every tap"). Don't put pet
+art cards on the status page, and don't relay single taps to Paul. Carry only what leaves the pets
+page: branches ready for CI, characters and names (echo first), anything blocked.
+
 ## The Codex workbench
 
 Paul (Oct 18, ~16:22 UTC): "Yeah Codex workbench, and the front desk can send things there or
@@ -130,7 +139,7 @@ enough").
 1. `python3 .claude/skills/front-desk/sessions.py <list file> --previous <day.json>
    --dashboard <scratch dir> --backlog docs/backlog.md` (`<day.json>`: today's opening snapshot,
    see Usage); skip it when only cards, the queue or what's next changed.
-2. Keep `queue.json` and `releases.json` (what's next, estimated) beside this file by hand, and
+2. Keep `queue.json`, `releases.json` (what's next, estimated; its `detail` is the per-workstream "now building" line) and `links.json` (the page's "Pages" strip: `id`, `order`, `title`, `url`, `note`) beside this file by hand, and
    your `decisions.json` with `page.py`.
 3. `python3 .claude/skills/front-desk/live.py <scratch dir> <decisions.json> <live.json>` merges
    them into one `live.json` (every row has `kind` and a unique `key`).
@@ -143,7 +152,7 @@ enough").
 
 The page leads with **Yours to decide**: the `decision` rows of `datasets/live`, from a hand-written file
 `decisions.json` (rows of `id`, `order`, `group` = `now` | `whenever` | `later`, `title`, `ask`,
-`options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
+`options` [{label, detail}], `items`, `recommend`, `reply`, `link` (+ `link_label`, default "Open": shown as a button on the card), `from`, `asked`). Each row
 is a short review guide for one decision only Paul can make: the question, the choices, what
 the session recommends, and the reply to type. Each card asks one question, its options
 lettered (a, b, …) so a one-letter reply can't land on the wrong one. Keep it in step with what

@@ -64,7 +64,9 @@ extension XCTestCase {
         let target = NSPredicate(format: "value == %@", on ? "1" : "0")
         let tap = { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
         tap()
-        if waitFor(toggle, toMatch: target, timeout: 3) { return true }
+        // CI's simulator has taken 7 s to report a tap that landed (main, fbdcd8c): a tap that
+        // landed late is not lost, and tapping again would flip the switch back.
+        if waitFor(toggle, toMatch: target, timeout: 10) { return true }
         retapIfLost(toggle.label, tap)
         return waitFor(toggle, toMatch: target, timeout: 5)
     }
