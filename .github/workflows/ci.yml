@@ -108,8 +108,9 @@ jobs:
     name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || 'iPhone — build, screenshots, tests' }}
     runs-on: macos-26
     # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
-    # demo caches; 75 cut its tests off.
-    timeout-minutes: 100
+    # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
+    # last green run took 85).
+    timeout-minutes: 130
     strategy:
       fail-fast: false
       matrix:

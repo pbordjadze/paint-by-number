@@ -425,8 +425,8 @@ any port of it, when changing the fitter: work from the paper.
 3. Turnaround is about 30 min (both iPad jobs take about that), about 40 when the caches miss (a
    change to the pipeline, the models or the pictures: the screenshots take twice as long and
    `ipad-ui` warms up first), longer when branches queue (only 5 macOS jobs run at once: a branch
-   push takes 2, `main` 4; `iphone`, about 45 min, is main's longest). `ci/fetch.sh` waits up to
-   100 min. A newer push to the same branch cancels the older run, which then never reports. Work
+   push takes 2, `main` 4; `iphone`, about 85 min, is main's longest). `ci/fetch.sh` waits up to
+   140 min. A newer push to the same branch cancels the older run, which then never reports. Work
    on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
