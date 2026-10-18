@@ -57,6 +57,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 ICON = ROOT / "App/PaintByNumber/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
 PAPER, INK, SUB, PLUM, NAVY = "#F4EFE6", "#1F1A21", "#3A333D", "#7B3F7E", "#1B2242"
+# The sky behind every slide: aubergine velvet, and a bluer midnight for the night-paper and gallery slides.
+VELVET = "radial-gradient(120% 75% at 18% 0%,#4B2667 0%,#2C1544 46%,#160A26 100%)"
+MIDNIGHT = "radial-gradient(120% 75% at 82% 0%,#33246A 0%,#1D1344 46%,#0D0820 100%)"
+GILT = "rgba(225,194,122,.62)"
 SOURCE = {"iphone": (1206, 2622), "ipad": (2064, 2752)}
 CANVAS = {"iphone": (1320, 2868), "ipad": (2064, 2752)}
 FONT_CSS = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,100,1&display=swap"
@@ -203,8 +207,50 @@ def grain(out):
     return path
 
 
+def sky(W, H, dev, k):
+    """The starfield and a constellation behind the cards, the same for a slide on every run."""
+    r = random.Random(1000 + k)
+    phone = dev == "iphone"
+    dots = "".join(f"<circle cx='{r.uniform(0, W):.0f}' cy='{r.uniform(0, H):.0f}' r='{r.choice((1, 1, 1.4, 2, 2.6)) * (1 if phone else 1.3):.1f}' "
+                   f"fill='#F4E9D0' opacity='{r.uniform(.25, .85):.2f}'/>" for _ in range(170))
+    pts = [(W * r.uniform(.56, .92), r.uniform(200, 760)) for _ in range(6)]
+    pts.sort()
+    line = " ".join(f"{x:.0f},{y:.0f}" for x, y in pts)
+    s = 18 if phone else 24
+    stars = "".join(f"<path transform='translate({x - s / 2:.0f} {y - s / 2:.0f}) scale({s / 100})' d='{SPARKLE}' fill='url(#gold)'/>"
+                    for x, y in pts)
+    return (f"<svg class=sky viewBox='0 0 {W} {H}' width={W} height={H}>{dots}"
+            f"<polyline points='{line}' fill='none' stroke='{GILT}' stroke-width='2' stroke-dasharray='2 10' stroke-linecap='round'/>{stars}</svg>")
+
+
+def frame(W, H, dev):
+    """A tarot card's gilt double rule round the slide, with the moon's phases set into its top edge."""
+    i = 44 if dev == "iphone" else 56
+    m = 30 if dev == "iphone" else 40
+    gap = m * 1.9
+    x0 = W / 2 - 3 * gap
+    phases = []
+    for n, f in enumerate((-.75, -.5, -.25, 0, .25, .5, .75)):  # waxing to waning; 0 is full
+        cx = x0 + n * gap
+        if f == 0:
+            phases.append(f"<circle cx='{cx:.0f}' cy='{i}' r='{m / 2}' fill='url(#gold)'/>")
+        else:
+            rx = abs(f) * 2 - 1  # the terminator's half-width as a fraction of the radius
+            sweep = 1 if f < 0 else 0
+            d = (f"M{cx:.1f} {i - m / 2} A{m / 2} {m / 2} 0 0 {sweep} {cx:.1f} {i + m / 2} "
+                 f"A{abs(rx) * m / 2:.1f} {m / 2} 0 0 {sweep if rx < 0 else 1 - sweep} {cx:.1f} {i - m / 2}Z")
+            phases.append(f"<circle cx='{cx:.0f}' cy='{i}' r='{m / 2}' fill='#2C1544' stroke='{GILT}' stroke-width='1.5'/>"
+                          f"<path d='{d}' fill='url(#gold)'/>")
+    pad = gap * .6
+    return (f"<svg class=frame viewBox='0 0 {W} {H}' width={W} height={H}>"
+            f"<rect x='{i}' y='{i}' width='{W - 2 * i}' height='{H - 2 * i}' rx='18' fill='none' stroke='{GILT}' stroke-width='3'/>"
+            f"<rect x='{i + 12}' y='{i + 12}' width='{W - 2 * i - 24}' height='{H - 2 * i - 24}' rx='10' fill='none' stroke='{GILT}' stroke-width='1.2' opacity='.7'/>"
+            f"<rect x='{x0 - pad:.0f}' y='{i - m / 2 - 8}' width='{6 * gap + 2 * pad:.0f}' height='{m + 16}' rx='{m / 2 + 8}' fill='#2A1440'/>"
+            f"{''.join(phases)}</svg>")
+
+
 def hills(W, H, dev):
-    """The icon's plum hill and paper foreground, inked by hand-wobbled lines."""
+    """The icon's plum hill and a velvet foreground, gilt-edged with hand-wobbled lines."""
     crest = (2050, 1900) if dev == "iphone" else (2000, 1820)
     paper_top = 2450 if dev == "iphone" else 2380
     n = 60
@@ -220,8 +266,8 @@ def hills(W, H, dev):
         return f"M-20 {pts[0][1]:.1f} " + " ".join(f"L{x:.1f} {y:.1f}" for x, y in pts) + f" L{W + 20} {H + 20} L-20 {H + 20}Z"
 
     return (f"<svg class=hills viewBox='0 0 {W} {H}' width={W} height={H}>"
-            f"<path d='{path(top)}' fill='{PLUM}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/>"
-            f"<path d='{path(fg)}' fill='{PAPER}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/></svg>")
+            f"<path d='{path(top)}' fill='{PLUM}' stroke='{GILT}' stroke-width='4' stroke-linejoin='round'/>"
+            f"<path d='{path(fg)}' fill='#24123A' stroke='{GILT}' stroke-width='4' stroke-linejoin='round'/></svg>")
 
 
 def photo_path(slots, dev, p):
@@ -273,7 +319,8 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
         r = c["radius"]
         style.append(f"border-radius:{r}px {r}px 0 0" if c["y"] == "b" else f"border-radius:{r}px")
     if c["shadow"]:
-        style.append("box-shadow:0 28px 64px rgba(31,26,33,.20),0 2px 6px rgba(31,26,33,.08)")
+        gilt = f",0 0 0 3px {GILT}" if c["radius"] else ""
+        style.append(f"box-shadow:0 30px 70px rgba(6,2,14,.55),0 2px 8px rgba(6,2,14,.35){gilt}")
     if c["fade"]:
         f = c["fade"]
         style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
@@ -300,6 +347,8 @@ def page(shots, dev, k, slide, fonts, noise, slots):
     slide = laid_out(slide, dev, slots)
     night = slide.get("night", False)
     phone = dev == "iphone"
+    sky_bg = MIDNIGHT if night else VELVET
+    night = True  # every slide sits on the night sky now; `night` picks only the bluer midnight
     margin, folio_y, folio = (96, 130, 36) if phone else (144, 120, 46)
     size = slide.get("size", 120 if phone else 160)
     fg = PAPER if night else INK
@@ -311,6 +360,7 @@ def page(shots, dev, k, slide, fonts, noise, slots):
                  + f"<div class=glow style='left:{mx + m / 2 - 520}px;top:{my + m / 2 - 520}px'></div>"
                  + f"<svg class=moon viewBox='0 0 100 100' style='left:{mx}px;top:{my}px;width:{m}px;height:{m}px'>"
                    f"<path d='{MOON}' fill='url(#gold)'/></svg>")
+    extra += sky(W, H, dev, k) + frame(W, H, dev)
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
     photos = slide.get("photos", [])
     extra += "".join(photo_html(slots, dev, p) for p in photos)
@@ -330,14 +380,16 @@ def page(shots, dev, k, slide, fonts, noise, slots):
 <style>
 *{{margin:0;box-sizing:border-box}}
 html,body{{width:{W}px;height:{H}px;overflow:hidden}}
-body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple-system,"SF Pro Text",Inter,"Helvetica Neue",sans-serif}}
-.crop,.hills,.moon,.glow,.grain,.tag,.polaroid,.tape{{position:absolute}}
+body{{position:relative;background:{sky_bg};font-family:-apple-system,"SF Pro Text",Inter,"Helvetica Neue",sans-serif}}
+.crop,.hills,.moon,.glow,.grain,.tag,.polaroid,.tape,.sky,.frame{{position:absolute}}
+.sky{{left:0;top:0;z-index:0}}
+.frame{{left:0;top:0;z-index:2}}
 .polaroid{{z-index:4;background:#FFFDF8;box-shadow:0 24px 50px rgba(31,26,33,.28),0 2px 6px rgba(31,26,33,.12)}}
 .snap{{position:relative}}
 .tape{{background:rgba(201,162,74,.45);transform:rotate(-4deg)}}
 .chip{{position:absolute;z-index:5;display:flex;align-items:center;gap:.5em;padding:.45em 1em .45em .8em;border-radius:999px;
-  background:#FFFDF8;border:4px solid #C9A24A;color:{INK};font:600 {40 if phone else 56}px/1 -apple-system,"SF Pro Text",Inter,sans-serif;
-  box-shadow:0 14px 30px rgba(31,26,33,.14)}}
+  background:#2A1440;border:4px solid #C9A24A;color:{PAPER};font:600 {40 if phone else 56}px/1 -apple-system,"SF Pro Text",Inter,sans-serif;
+  box-shadow:0 14px 30px rgba(6,2,14,.4)}}
 .chip svg{{width:.8em;height:.8em}}
 .tag{{z-index:6;max-width:{W - 2 * margin - 64}px;padding:16px 28px;border-radius:28px;background:{PLUM};color:{PAPER};
   font:600 {32 if phone else 40}px/1.25 -apple-system,"SF Pro Text",Inter,sans-serif}}
