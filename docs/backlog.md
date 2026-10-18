@@ -17,6 +17,12 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 
 | Order | Branch | Session | State |
 | --- | --- | --- | --- |
+| 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
+| 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
+| 3 | claude/refine-preparing-flake | Refine: Color Splitter | in CI (0d61c29) |
+| 4 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting |
+| 5 | claude/ux-refinements | UX design audit | waiting |
+| 6 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
 
 ## Inbox
 
@@ -60,4 +66,4 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 32 | Overnight spend: keep going, cap the night at about $400 (from the 2026-10-18 snapshot) | "Keep going. … Maybe cap at $400, that should be plenty, right?" (05:32) Then (~06:25): "Don't have that $400 cap be too hard; if you want to go over you really can" | building | front desk: $400 is a soft guide; going over is fine when the work is worth it. Still pause new work if the rate limit isn't "allowed" | 2026-10-18 |
 | 33 | Show Edits: a Jellyfin plugin for per-show edits (replaces the Bake Off scripts and cron), documented for reuse by a future trigger-warning plugin | "Yes. And let's make sure we document it too—this mechanism could be good for our trigger warning plugin ambitions one day." (05:34) | building | Jellyfin maintenance notice pre-roll (media server; not this repo) | 2026-10-18 |
 | 34 | Internal audit: review how the front desk and its sessions ran tonight as a company; report on structure, what worked, what didn't, what to change | "have someone, maybe a high effort Opus with a sonnet helper, review the way this front desk ran tonight and suggest organizational improvements to the company. I want a nice report this morning … Call it internal audit." | waiting on Paul | Internal audit shipped https://claude.ai/artifact/8JmvypoS6x5dGT5SjB8rxt: top asks for Paul: a night train of small branches + compile-only check; his page comments count as his direct word for reversible things | 2026-10-18 |
-| 35 | Internal audit: build all ten changes (CI slots, runner-fitted slots and honest timings, night train, compile check, Paul's word counts once, timeouts, page helper, 400k hand-offs, audit ownership map, one report shape) | "Yes to all three, though #3 might not work with auto mode" (06:10, on the audit card) Then, in chat (~06:20): "The internal audit had great points — let's build all those changes" | building | Audit changes: rules and front desk (CLAUDE.md, the skill, a page helper); the night train and compile check go to Code review and warnings gate | 2026-10-18 |
+| 35 | Internal audit: build all ten changes (CI slots, runner-fitted slots and honest timings, night train, compile check, Paul's word counts once, timeouts, page helper, 400k hand-offs, audit ownership map, one report shape) | "Yes to all three, though #3 might not work with auto mode" (06:10, on the audit card) Then, in chat (~06:20): "The internal audit had great points — let's build all those changes" | shipped (SideStore) | merged to main by the front desk after review (Paul: "Update the front desk please"); the night train and compile check ride claude/ci-train | 2026-10-18 |
