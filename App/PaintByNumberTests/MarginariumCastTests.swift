@@ -15,11 +15,28 @@ struct MarginariumCastTests {
         for guardian in MarginariumCast.guardians {
             #expect(MarginariumCast.team(of: guardian)?.members.contains { $0.id == guardian.id } == true)
         }
-        // Paul's pairings, Dino on the storybook feel, and Bart with them on the footnote.
-        #expect(MarginariumCast.team(of: MarginariumCast.dinotopia)?.members.map(\.id) == ["dinotopia", "storybook", "bartimaeus"])
+        // Paul's pairings, Dino on the storybook feel, Bart with them on the footnote, and Lotte.
+        #expect(MarginariumCast.team(of: MarginariumCast.dinotopia)?.members.map(\.id)
+            == ["dinotopia", "storybook", "bartimaeus", "lotte-reiniger"])
         #expect(MarginariumCast.team(of: MarginariumCast.painter)?.members.map(\.id) == ["painter", "pirosmani"])
         #expect(MarginariumCast.dinotopia.guards == "the storybook feel")
         #expect(MarginariumCast.bartimaeus.guards == "the footnote")
+    }
+
+    /// Paul, October 17, 2026: the Bible School Teacher and Madeleine are one guardian, on the
+    /// Hearth with her drawing ("she was being merged with Madeline Lengle"), and the Astrologer
+    /// joins the Moonlit Circle.
+    @Test func madeleineIsTheBibleSchoolTeacher() {
+        let madeleine = MarginariumCast.bibleSchoolTeacher
+        #expect(MarginariumCast.team(of: madeleine)?.members.map(\.id)
+            == ["child-at-bedtime", "robber-girl", "bible-school-teacher"])
+        #expect(madeleine.name == "Madeleine, the Bible School Teacher")
+        #expect(madeleine.after == "After the writer Madeleine L'Engle.")
+        #expect(madeleine.hatched)
+        #expect(MarginariumSpeakers.petIDs["the Bible School Teacher"] == madeleine.id)
+        #expect(!MarginariumCast.guardians.contains { $0.id == "madeleine-lengle" })
+        #expect(MarginariumCast.team(of: MarginariumCast.astrologer)?.id == "moonlit-circle")
+        #expect(MarginariumCast.team(of: MarginariumCast.rikyu)?.id == "glass-and-frost")
     }
 
     @Test func everyBriefIsComplete() {
@@ -41,7 +58,8 @@ struct MarginariumCastTests {
             #expect(guardian.hatched == (MarginariumPet.named(guardian.id) != nil),
                     "\(guardian.id): hatched must match whether its pet ships")
         }
-        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted() == ["bartimaeus", "moon"])
+        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted()
+            == ["astrologer", "bartimaeus", "lotte-reiniger", "moon", "sen-no-rikyu"])
         #expect(MarginariumCast.helpers.compactMap(\.pet) == ["pip", "colophon"])
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }

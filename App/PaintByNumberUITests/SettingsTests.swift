@@ -1,7 +1,7 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Painting Length, Preview,
-/// Detail Brushes, The Marginarium and The Making-of.
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
+/// Preview, Detail Brushes, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -78,6 +78,32 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(app.buttons["Regular"].waitForExistence(timeout: 5))
         app.buttons["Regular"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Regular"), "Choosing Regular didn't change the picker: \(describe(picker))")
+    }
+
+    /// Settings › Music lists Sun, Moon and Auto, starts on Auto, keeps the choice and says when
+    /// Auto brings the Sun and the Moon, by the painter's clock.
+    @MainActor
+    func testMusicListChangesTheChoice() throws {
+        let app = openSettings()
+        let moon = app.buttons["Moon"], auto = app.buttons["Auto"]
+        // Row by row, top to bottom: an iPhone shows only some of them at once, and scrolling
+        // straight to Auto carried Sun off the top.
+        for name in ["Sun", "Moon", "Auto"] {
+            let row = app.buttons[name]
+            scroll(app, to: row)
+            XCTAssertTrue(row.exists, "Settings › Music has no \(name)")
+        }
+        XCTAssertTrue(auto.isSelected, "Music doesn't start on Auto")
+        // The footer sits right under Auto, so scrolling to it keeps Moon and Auto in view.
+        let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
+        scroll(app, to: footer)
+        XCTAssertTrue(footer.exists, "Music's footer doesn't say when Auto brings the Sun and the Moon")
+        moon.tap()
+        XCTAssertTrue(waitUntil { moon.isSelected && !auto.isSelected }, "Choosing Moon didn't select it alone")
+        attachScreenshot(of: app, named: "settings-music-moon")
+        // The choice is stored in the simulator's defaults: back to Auto for the other tests.
+        auto.tap()
+        XCTAssertTrue(waitUntil { auto.isSelected && !moon.isSelected }, "Choosing Auto didn't select it")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps
@@ -279,5 +305,13 @@ final class SettingsTests: XCTestCase {
             drags += 1
         }
         _ = element.waitForExistence(timeout: 2)
+        // A row the list has made can still peek out under its bottom edge: it reads as hittable,
+        // but a tap at its middle lands below the sheet and closes Settings (on iPad, the Music
+        // list left the Making-of's row there). Short drags bring it wholly into the list.
+        for _ in 0..<3 where dragsList && element.exists && element.frame.maxY > list.frame.maxY {
+            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).press(
+                forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)),
+                withVelocity: .default, thenHoldForDuration: 0.1)
+        }
     }
 }

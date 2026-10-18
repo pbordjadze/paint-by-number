@@ -131,6 +131,9 @@ before planning app work).
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
   in it ships or goes into the Marginarium until he says so, and its wording stays his.
+  `docs/backlog.md` is the other: the front desk's inbox (Working with Paul).
+- `.claude/skills/front-desk/`: the front desk (`SKILL.md`) and `sessions.py`, its summary of
+  Paul's sessions, their cost and the status page's data.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -306,6 +309,14 @@ Saved paintings must open in every later build. The format history is documented
   `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
   numerals use New York, buttons and body text SF. The design system, tokens, canvas sheet and app
   icon: `App/CLAUDE.md` › Design.
+- Taste: every new screen or control, and every one not yet in the release, goes to the
+  **Lamplit Table** before it ships (Paul, October 17, 2026): the Lamp's standing jury for the
+  app's UI, the Astrologer, Rikyū, the Child at Bedtime, the Hedge Witch, Madeleine and
+  Originality (who can only veto). Its charters and how a round runs (a low-effort Opus subagent
+  per seat, the charter word for word, blind ballots, every reply kept) are `factory/GUARDIANS.md`
+  › The Lamplit Table and `factory/ORCHESTRATOR.md` on the `claude/vibe-factory` branch; a
+  round's brief, replies and decisions go in `factory/pieces/<piece>/` there, and its outcome in
+  the commit that acts on it. Its answers are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
   Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
@@ -440,6 +451,37 @@ any port of it, when changing the fitter: work from the paper.
 benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch
 and its report ref can go. CI owns `sidestore` (never delete or push it) and the `refs/ci-shots/*`
 reports. Local `main` may lag: fetch before comparing.
+
+## Working with Paul
+
+Paul works in bursts, from his phone, often with several sessions going at once. He talks to one
+**front desk** session (`/front-desk`: `.claude/skills/front-desk/SKILL.md`). The front desk logs
+each idea, piece of feedback and go-ahead in `docs/backlog.md` and routes it to the session that
+owns it. It keeps the status page current: https://claude.ai/artifact/HWcNT2WZkA4kxvtGqyMbmo.
+Every other session keeps to one topic. When a session ships, gets blocked or needs Paul, it
+tells the front desk with `send_message` if one is running, and Paul with a push notification
+if he has gone quiet.
+
+- **Merging is standing permission, given once.** When a branch's CI is green and the change is
+  what Paul asked for, merge it into `main` without asking. Put anything not yet chosen for the
+  release behind `#if UNRELEASED`, so it reaches his SideStore build only. Don't wait for a
+  "yes".
+- **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
+  icon, and deleting or retiring anything Paul made or named.
+- **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about
+  45 minutes. While main's run is going, queue merges, then merge them together.
+- **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
+  CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
+  lowers a session's model or effort.
+- **CI etiquette.** Keep at most two branches in CI across all sessions; the front desk keeps
+  count. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
+  commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
+  together when it reports: every push cancels the run before it.
+- **Echo before you act** on names, characters, lore, identity or anything that removes
+  something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
+  wait for his yes. Phrases like "replace X with Y" are the ones to check.
+- **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
+  `[skip ci]`. That is the one exception to working on branches.
 
 ## Conventions
 

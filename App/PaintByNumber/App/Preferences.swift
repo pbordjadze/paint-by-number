@@ -5,6 +5,9 @@ import PaintCore
 enum SettingsKey {
     static let haptics = "hapticsEnabled"
     static let sounds = "soundsEnabled"
+    /// Settings › Music's Sun, Moon or Auto (`SkySetting`): which sounds play, and whether the
+    /// fill's sparkles are stars.
+    nonisolated static let sky = "sky"
     static let autoAdvance = "autoAdvanceColors"
     /// Zen Mode: fly on to the next area after each fill (the painting screen's More menu).
     static let zenMode = "zenMode"

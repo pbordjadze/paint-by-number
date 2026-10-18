@@ -64,6 +64,36 @@ nonisolated struct Sparkle: Shape {
         p.closeSubpath()
         return p
     }
+
+    /// The Moon's star (`Sky`): the sparkle with shorter rays on its diagonals, like a star on an
+    /// old sky chart, their tips rounded so they never read as thorns and their lengths a touch
+    /// uneven, as if inked by hand (the Lamplit Table, October 17, 2026). Each ray winds the way
+    /// the sparkle does, so their overlap stays filled under the non-zero rule.
+    static func starPath(in rect: CGRect, pinch: CGFloat = 0.133) -> CGPath {
+        let p = CGMutablePath()
+        p.addPath(cgPath(in: rect, pinch: pinch))
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        let half = min(rect.width, rect.height) / 2
+        // Up-right, down-right, down-left, up-left, as fractions of the long arms (the sparkle's
+        // own sides reach about 0.45 along a diagonal).
+        let reach: [CGFloat] = [0.68, 0.60, 0.65, 0.58]
+        let base = half * 0.30, tip = half * 0.045
+        for (k, fraction) in reach.enumerated() {
+            let angle = -CGFloat.pi / 4 + CGFloat.pi / 2 * CGFloat(k)
+            let length = half * fraction
+            // A point `x` along the ray and `y` across it.
+            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+                CGPoint(x: c.x + x * cos(angle) - y * sin(angle), y: c.y + x * sin(angle) + y * cos(angle))
+            }
+            let middle = (length - tip) / 2, side = (base + tip) / 2
+            p.move(to: point(0, -base))
+            p.addQuadCurve(to: point(length - tip, -tip), control: point(middle, -side))
+            p.addQuadCurve(to: point(length - tip, tip), control: point(length + tip * 0.35, 0))
+            p.addQuadCurve(to: point(0, base), control: point(middle, side))
+            p.closeSubpath()
+        }
+        return p
+    }
 }
 
 /// A gentle press response for tappable cards.

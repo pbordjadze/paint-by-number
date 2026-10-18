@@ -2,10 +2,10 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the making-of's spec (the screen
-# behind Settings' The Making-of ships), none of the Marginarium, and none of the Debug-only code
-# (`DemoMode`, the demo scenarios, the synthetic template, the maps and template caches of demo and
-# test launches, their main-thread watchdog, the feedback upload stub and its `-feedback-upload`
-# launch argument): those types are compiled out of Release by `#if DEBUG`.
+# behind Settings' The Making-of ships), none of the Marginarium, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
+# template caches of demo and test launches, their main-thread watchdog, the feedback upload stub
+# and its `-feedback-upload` launch argument): those types are compiled out of Release by
+# `#if DEBUG`.
 set -euo pipefail
 APP="$1"
 BINARY="$APP/$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Info.plist")"

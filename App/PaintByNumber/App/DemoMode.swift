@@ -12,8 +12,21 @@ import Foundation
 /// Debug builds only (CI screenshots and UI tests): the demo types are compiled out of Release
 /// builds, so a shipped app has no launch argument that swaps its content or library.
 enum DemoMode {
-    /// The requested scenario, e.g. "gallery", "create", "paint", "paint-progress".
-    static let scenario: String? = UserDefaults.standard.string(forKey: "demo")
+    /// The requested scenario, e.g. "gallery", "create", "paint", "paint-progress". A name that
+    /// ends in `--tip-<id>` (`paint--tip-benchZen`) is the scenario before it with that tip shown
+    /// where it lives (`forcedTip`): this is the name without the suffix.
+    static let scenario: String? = requested.map { $0.components(separatedBy: tipSuffix)[0] }
+
+    /// The tip a `--tip-<id>` scenario shows, given its turn once its screen is in view whatever the
+    /// moment and the pacing (`TipDesk.force`), so every tip can be seen at its view; the scenario
+    /// signals readiness once it is up.
+    static let forcedTip: TipID? = requested.flatMap { name in
+        name.components(separatedBy: tipSuffix).dropFirst().first.flatMap(TipID.init(rawValue:))
+    }
+
+    private static let requested = UserDefaults.standard.string(forKey: "demo")
+    private static var isForcingTip = false
+    private static let tipSuffix = "--tip-"
 
     static var isActive: Bool { scenario != nil }
 
@@ -62,6 +75,18 @@ enum DemoMode {
     /// Signals that the scenario's content is on screen; only animations are still settling.
     static func markReady() {
         guard let scenario else { return }
+        if let forcedTip {
+            // The scenario's content is on screen: now its tip may come, and readiness follows it.
+            if !isForcingTip {
+                isForcingTip = true
+                PaintTips.desk.force(forcedTip)
+            }
+            Task {
+                await PaintTips.awaitDemoTip()
+                try? Data(scenario.utf8).write(to: readyMarker, options: .atomic)
+            }
+            return
+        }
         try? Data(scenario.utf8).write(to: readyMarker, options: .atomic)
     }
 }

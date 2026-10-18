@@ -73,7 +73,7 @@ synchronized folder would bundle it into the app.
 ## Layout (`App/PaintByNumber/`)
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
-  `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
+  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
@@ -154,7 +154,10 @@ synchronized folder would bundle it into the app.
   people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
   AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
   `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
-  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. A guardian's drawing
+  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. The Bible
+  School Teacher and Madeleine are one guardian since October 17 (Paul: "she was being merged
+  with Madeline Lengle"): Madeleine, the Bible School Teacher, with her drawing, id, seat on the
+  Hearth and signature in the chapters. A guardian's drawing
   is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
   egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
   own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
@@ -186,7 +189,7 @@ synchronized folder would bundle it into the app.
   from `Acknowledgements.methods` letter for letter). Reduce Motion plays stills, one per step
   with its card, cross-faded, with no rings, sparks or stars. No replay from the painting yet.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
-  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
+  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`; the sky they play in is `App/Sky.swift`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
@@ -289,10 +292,19 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. `SoundPlayer` and
-  `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
-  Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`);
-  Haptics shows only on hardware with haptics (not iPad, not the simulator).
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Music, a plain
+  list: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
+  time zone and Moon the rest; Paul's calls; a theme, never tied to the dark appearance or the
+  paper; decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
+  Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
+  rests, each sky with its own flourish and finale. The sky turns only where a phrase begins,
+  and the fill's stars with it: `FeedbackEngine` keeps the tune on the main actor (its
+  `skyOfComingFill` is what `CanvasView.popSparkles` asks, before the sounds hear of the fill)
+  and hands `SoundPlayer` each note. `paint-book-moon-dark` holds two stars for a screenshot.
+  Core Haptics patterns, none on iPad. `SoundPlayer` and `HapticsPlayer` each work on a queue of
+  their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Music are read
+  live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
+  hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never
@@ -320,9 +332,11 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, where TipKit's popover tip found
-  nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip
-  has no TipKit display limit, which would retire it from under that view: `TipDesk` says it once). A screen reports the
+  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
+  the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
+  to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
+  display limit, which would retire it from under that view: `TipDesk` says it once; a card
+  anchors its tip only while it is mostly in view). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
   for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
@@ -348,7 +362,10 @@ where they live.
   tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
   bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
-  them; `GentleTipsUITests` and `PaintingTipsTests` do.
+  them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
+  (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
+  is in view, whatever the moment and the pacing (`DemoMode.forcedTip`, `TipDesk.force`; every
+  rule's count donated), ready once it is up: `ci/scenarios.txt` screenshots each tip so.
 
 ## Giving feedback
 
@@ -682,9 +699,11 @@ paper (`CanvasSnapshot.Options`).
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
-  making-of show after Start Painting (off by default; `Features/MakingOf`). New paintings are
-  coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
-  Settings changes how a template is made.
+  making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
+  (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
+  sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
+  (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
+  made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
   switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
@@ -701,7 +720,8 @@ the screen background; `signature` the Nightshade under prominent buttons' label
 `Theme.styleNavigationTitles`, the swatch numerals and the canvas digits (`DigitAtlas`). The canvas
 sheet is its own paper and ink in both appearances (`CanvasPalette.sheetPaperSRGB`/`sheetInkSRGB`;
 Settings › Paper can make it dark). The fill moment's two gold sparkles are `CAShapeLayer`s over the
-canvas (`CanvasView.popSparkles`). The app icon PNGs are rendered from the design system's
+canvas (`CanvasView.popSparkles`); by Moon they are stars (`Sparkle.starPath`, the sparkle with
+shorter, uneven arms on its diagonals). The app icon PNGs are rendered from the design system's
 `pipo-app-icon-v2.svg` at 1024 px (dark: the same art; tinted: its grayscale); no generator script
 lives in the repo.
 
