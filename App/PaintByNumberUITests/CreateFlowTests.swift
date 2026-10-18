@@ -424,11 +424,20 @@ final class CreateFlowTests: XCTestCase {
     @MainActor
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector, via button: XCUIElement? = nil) -> CGRect? {
         (button ?? app.buttons["Browse All…"]).tap()
-        let shown = waitUntil(timeout: 15) { sheet.dismissFrame != nil }
-        // Read again once the sheet has slid into place: a frame read mid-animation misses.
-        if shown { sleep(1) }
+        var cancel: CGRect?
+        _ = waitUntil(timeout: 15) { cancel = sheet.dismissFrame; return cancel != nil }
+        if cancel != nil {
+            // Read again once the sheet has slid into place: a frame read mid-animation misses.
+            // The out-of-process sheet can be missing from a snapshot then (CI, iPhone, Oct 17:
+            // seen, then gone a second later on its Loading page), so the last frame seen stands.
+            sleep(1)
+            _ = waitUntil(timeout: 10) {
+                if let frame = sheet.dismissFrame { cancel = frame; return true }
+                return false
+            }
+        }
         attachScreenshot(of: app, named: "browse-all")
-        guard shown, let cancel = sheet.dismissFrame else {
+        guard let cancel else {
             attachTree(of: app, named: "browse-all-tree")
             XCTFail("Browse All didn't present the system picker")
             return nil

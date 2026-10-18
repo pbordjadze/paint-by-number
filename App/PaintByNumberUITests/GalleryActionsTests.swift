@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Card menu actions in the gallery: deleting asks first, a time-lapse shows its progress and can be
@@ -23,6 +24,36 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 5), "No undo after deleting")
         XCTAssertTrue(card.waitForNonExistence(timeout: 5), "The painting is still in the gallery")
         attachScreenshot(of: app, named: "deleted")
+    }
+
+    /// A photo shared in from another app while the gallery asks a question closes the question
+    /// and opens the create flow on the photo (`AppShellView.presentIncomingImage`); Debug's
+    /// `-openFileOnQuestion` hands the file over the moment the question is asked.
+    @MainActor
+    func testASharedPhotoClosesAQuestionAndOpens() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "Harbor Morning.jpg")
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 320, height: 240)).image { context in
+            for (index, color) in [UIColor.systemTeal, .systemOrange, .systemIndigo].enumerated() {
+                color.setFill()
+                context.fill(CGRect(x: 0, y: CGFloat(index) * 80, width: 320, height: 80))
+            }
+        }
+        try XCTUnwrap(image.jpegData(compressionQuality: 0.9)).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let app = launchGallery(arguments: ["-openFile", url.path, "-openFileOnQuestion", "YES"])
+        let card = revealCard("The Great Wave", in: app)
+        card.press(forDuration: 1.5)
+        let delete = app.buttons["Delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5), "The card menu has no Delete")
+        delete.tap()
+
+        let start = app.buttons["Start Painting"]
+        let opened = start.waitForExistence(timeout: 60)
+        attachScreenshot(of: app, named: "shared-photo-over-question")
+        if !opened { attachTree(of: app, named: "shared-photo-over-question-tree") }
+        XCTAssertTrue(opened, "The shared photo didn't open the create flow over the gallery's question")
+        XCTAssertEqual(app.textFields["painting-title"].placeholderValue, "Harbor Morning")
     }
 
     /// A confirmation points at the card whose menu asked for it, wherever the card sits: the
@@ -191,9 +222,9 @@ final class GalleryActionsTests: XCTestCase {
     /// The demo gallery: six paintings, generated in the background at launch. They are the
     /// demo's fixed pictures (`-demoFixedPictures`), whose titles don't move with the library's order.
     @MainActor
-    private func launchGallery(_ scenario: String = "gallery") -> XCUIApplication {
+    private func launchGallery(_ scenario: String = "gallery", arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", scenario, "-demoFixedPictures", "YES"]
+        app.launchArguments = ["-demo", scenario, "-demoFixedPictures", "YES"] + arguments
         app.launch()
         return app
     }

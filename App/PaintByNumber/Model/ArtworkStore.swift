@@ -212,9 +212,18 @@ nonisolated struct ArtworkStore: Sendable {
     // MARK: Refinements
 
     /// The painting's refinements; none when it has no file, or one this app can't read (they
-    /// only shape a regeneration, which then makes the painting as first suggested).
-    func readRefinements(_ id: UUID) -> TemplateRefinements {
-        guard let data = try? Data(contentsOf: url(.refinements, of: id)) else { return TemplateRefinements() }
+    /// only shape a regeneration, which then makes the painting as first suggested). A file that
+    /// can't be read just now (an I/O or data protection error) throws: regenerating without it
+    /// would lose the painter's edits.
+    func readRefinements(_ id: UUID) throws -> TemplateRefinements {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url(.refinements, of: id))
+        } catch let error as CocoaError where !Library.isDamage(error) {
+            throw error
+        } catch {
+            return TemplateRefinements()
+        }
         return (try? JSONDecoder().decode(TemplateRefinements.self, from: data)) ?? TemplateRefinements()
     }
 
