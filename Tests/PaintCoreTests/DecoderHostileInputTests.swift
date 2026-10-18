@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import PaintCore
 
-/// Targeted fuzzing complements the unrestricted flips in TemplateCodingTests: every input
-/// here is known to be invalid, so silently accepting damage also fails the test.
+/// Targeted fuzzing complements the unrestricted flips in TemplateCodingTests. Invalid
+/// counts and references must throw; overlapping spans must finish with bounded work and size.
 @Suite("Decoder hostile input")
 struct DecoderHostileInputTests {
     static func replacing(_ data: Data, at offset: Int, with value: UInt32) -> Data {
@@ -66,7 +66,7 @@ struct DecoderHostileInputTests {
         }
     }
 
-    @Test func overlappingOwnershipSpansAreRefused() throws {
+    @Test(.timeLimit(.minutes(1))) func overlappingOwnershipSpansHaveBoundedDecoding() throws {
         let base = try TemplateCodingTests.v1Template()
         let mutations: [(String, (inout Template) -> Void)] = [
             ("region rings", { $0.regions[1].ringStart = $0.regions[0].ringStart }),
@@ -85,11 +85,32 @@ struct DecoderHostileInputTests {
         for (name, mutate) in mutations {
             var t = base
             mutate(&t)
-            Self.refuse(t.encoded(), name)
+            let data = t.encoded()
+            let shared = SharedPaintingTests.file([SharedPaintingTests.meta(), SharedPaintingTests.body(data)])
+            for (container, bytes, decode) in [
+                ("template", data, { try Template(encoded: data) }),
+                ("moonlight", shared, { try SharedPainting(encoded: shared).template }),
+            ] {
+                // Fixed small inputs and output bounds catch accidental span expansion. A
+                // generous deadline bounds work without requiring overlaps to be rejected.
+                try #require(bytes.count <= 16_384)
+                let clock = ContinuousClock()
+                let start = clock.now
+                do {
+                    let decoded = try decode()
+                    #expect(decoded.regionMap.storage.count <= 4096, "\(container): \(name)")
+                    #expect(decoded.encoded().count <= 16_384, "\(container): \(name)")
+                } catch is Template.CodingError {
+                    // Either result is allowed by the frozen decoder contract.
+                } catch {
+                    Issue.record("\(container): \(name): unexpected error \(error)")
+                }
+                #expect(start.duration(to: clock.now) < .seconds(5), "\(container): \(name)")
+            }
         }
     }
 
-    /// Overlap checks must allow adjacent spans, empty spans and storage in another order.
+    /// Adjacent spans, empty spans and storage in another order remain compatible.
     @Test func disjointOwnershipSpansStillDecode() throws {
         var t = try TemplateCodingTests.v1Template()
         t.regions.reverse()

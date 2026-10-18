@@ -369,23 +369,6 @@ extension Template {
             else { throw corrupt("region bounds") }
         }
 
-        // These spans own their storage: sharing a boundary uses another EdgeRef, not the
-        // same ring/reference span. Overlap can amplify a small file into repeated geometry
-        // when polygons are expanded. Allow gaps, empty spans and any ordering, as before.
-        func disjoint<T>(_ values: [T], start: KeyPath<T, UInt32>, count: KeyPath<T, UInt32>, name: String) throws {
-            let spans = values.filter { $0[keyPath: count] != 0 }.sorted { $0[keyPath: start] < $1[keyPath: start] }
-            var end = 0
-            for value in spans {
-                let first = Int(value[keyPath: start])
-                guard first >= end else { throw corrupt(name) }
-                end = first + Int(value[keyPath: count])
-            }
-        }
-        try disjoint(regions, start: \.ringStart, count: \.ringCount, name: "overlapping region rings")
-        try disjoint(regions, start: \.labelStart, count: \.labelCount, name: "overlapping region labels")
-        try disjoint(regions, start: \.indexStart, count: \.indexCount, name: "overlapping region indices")
-        try disjoint(rings, start: \.edgeStart, count: \.edgeCount, name: "overlapping ring edges")
-
         for l in labels {
             guard Int(l.region) < regions.count, l.radius.isFinite, inCanvas(l.position) else { throw corrupt("label") }
         }
