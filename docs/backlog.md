@@ -19,10 +19,12 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | --- | --- | --- | --- |
 | 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
 | 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
-| 3 | claude/refine-preparing-flake | Refine: Color Splitter | in CI (0d61c29) |
-| 4 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting |
-| 5 | claude/ux-refinements | UX design audit | waiting |
-| 6 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
+| 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
+| 4 | claude/refine-line-split | Refine: lines split colors | building (Paul 15:01: "move these refine things up to just after the warnings gate") |
+| 5 | claude/recolor | Recolor in Refine | building (same) |
+| 6 | claude/ux-refinements | UX design audit | waiting |
+| 7 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
+| 8 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
 
 ## Inbox
 
@@ -67,3 +69,8 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 33 | Show Edits: a Jellyfin plugin for per-show edits (replaces the Bake Off scripts and cron), documented for reuse by a future trigger-warning plugin | "Yes. And let's make sure we document it too—this mechanism could be good for our trigger warning plugin ambitions one day." (05:34) | building | Jellyfin maintenance notice pre-roll (media server; not this repo) | 2026-10-18 |
 | 34 | Internal audit: review how the front desk and its sessions ran tonight as a company; report on structure, what worked, what didn't, what to change | "have someone, maybe a high effort Opus with a sonnet helper, review the way this front desk ran tonight and suggest organizational improvements to the company. I want a nice report this morning … Call it internal audit." | waiting on Paul | Internal audit shipped https://claude.ai/artifact/8JmvypoS6x5dGT5SjB8rxt: top asks for Paul: a night train of small branches + compile-only check; his page comments count as his direct word for reversible things | 2026-10-18 |
 | 35 | Internal audit: build all ten changes (CI slots, runner-fitted slots and honest timings, night train, compile check, Paul's word counts once, timeouts, page helper, 400k hand-offs, audit ownership map, one report shape) | "Yes to all three, though #3 might not work with auto mode" (06:10, on the audit card) Then, in chat (~06:20): "The internal audit had great points — let's build all those changes" | shipped (SideStore) | merged to main by the front desk after review (Paul: "Update the front desk please"); the night train and compile check ride claude/ci-train | 2026-10-18 |
+| 36 | Tip arrows: drop the arrow on the Zoom, Drag and Pencil tips (card N4, option b) | "No arrow" | queued | Gentle tips check: follow-up after tip-layout 0c0dfb8 reports | 2026-10-18 |
+| 37 | Quiet painting: once painting starts, other buttons fade; painting, colors, back (and maybe hint) stay, bigger on iPad; the rest on demand | "When you actually start painting, is there a way to like, let all the other buttons kinda fade away…" | building | Quiet painting mode: built at claude/quiet-painting 274f6e8 (local), CI queue 7 | 2026-10-18 |
+| 38 | Recolor in Refine (Rick's idea): change the picture's colors, filters and finer control; a report with options first | "Rick thinks it would be really fun if you could change the colors from what they are in the original picture…" | building | Recolor in Refine: Paul "Yeah do this" (14:26, option a: Looks + Swatches); report https://claude.ai/artifact/UJ4S6qdwpWL7rMPBDwEWro | 2026-10-18 |
+| 39 | Refine: hide the Color Splitter for now; a Pen line splits the color areas it crosses and recolors each piece from the photo (today it says "too small for a number" or doesn't split) | "maybe drop the color line splitting tool for now, instead, normal lines should still like, split color cells…" Echo confirmed: "Yeah… it's not working right…" | building | Refine: lines split colors (after fewer-buttons merges) | 2026-10-18 |
+| 40 | Store slides: the black dog iPhone painting slide's Polaroid should line up with the original photo (Paul is fetching it) | "The black dog iPhone painting screenshot—I'm getting the original picture used now, so we can make the Polaroid line up" | waiting on Paul | Store slides (successor session_01EruDvrqq32fMEqJfvZFXHT): needs the photo | 2026-10-18 |

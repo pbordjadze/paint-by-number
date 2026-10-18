@@ -196,20 +196,10 @@ final class SettingsTests: XCTestCase {
         for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
         XCTAssertTrue(toggle.exists, "Settings has no Making-of switch")
         XCTAssertEqual(toggle.value as? String, "0", "The Making-of doesn't start off")
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
-        XCTAssertTrue(
-            XCTWaiter.wait(
-                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)], timeout: 5)
-                == .completed,
-            "The Making-of didn't switch on: \(toggle.value ?? "")")
+        XCTAssertTrue(flip(toggle, on: true), "The Making-of didn't switch on: \(toggle.value ?? "")")
         attachScreenshot(of: app, named: "settings-making-of")
         // Stored in the simulator's defaults: off again for the other tests.
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
-        XCTAssertTrue(
-            XCTWaiter.wait(
-                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: toggle)], timeout: 5)
-                == .completed,
-            "The Making-of didn't switch off: \(toggle.value ?? "")")
+        XCTAssertTrue(flip(toggle, on: false), "The Making-of didn't switch off: \(toggle.value ?? "")")
     }
 
     /// Settings › Tips is on until it is switched off (the only way to turn tips off), switches off

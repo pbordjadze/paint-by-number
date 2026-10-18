@@ -47,7 +47,8 @@ extension XCTestCase {
     /// A tap that changed nothing is tapped once more. On the iPad simulator of GitHub's macOS 26
     /// image of October 13, 2026, a tap in Settings' tests is now and then lost: a switch never
     /// moves, or the gallery's Settings button opens nothing, while the app's main thread is free
-    /// and its tree shows nothing in the way (the earlier image and the iPhone never lost one). The
+    /// and its tree shows nothing in the way (the earlier image never lost one; the iPhone lost one in
+    /// each of the Making-of switch test's two tries on main, October 18). The
     /// whole screen, system overlays included, is attached as `lost-tap-<what>` for the diagnosis,
     /// and the second tap is an activity the test's log shows.
     @MainActor
