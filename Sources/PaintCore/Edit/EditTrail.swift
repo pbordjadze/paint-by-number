@@ -38,9 +38,11 @@ public struct EditTrail: Sendable {
 
     /// What one edit did to the template it was laid on.
     public enum Verdict: Sendable, Equatable {
-        /// It changed the template. `tooSmall` is set when a shape it closed had no room for a
-        /// number, so the shape was not cut off: the line is there, as a stroke
-        /// (`TemplateEditor.Outcome.tooSmall`).
+        /// It changed the template. `tooSmall` is set when the shapes it closed all had no room
+        /// for a number, so none was cut off: the line is there, as a stroke
+        /// (`TemplateEditor.Outcome.tooSmall`). A line that cut a shape off is not too small for
+        /// the slivers it also closed where it crosses ink beside a junction: they are not shapes
+        /// the painter meant.
         case made(tooSmall: Bool)
         /// It had nothing to change (an eraser over bare paper).
         case nothing
@@ -59,7 +61,7 @@ public struct EditTrail: Sendable {
         public var made = 0
         /// Edits declined or with nothing to change: not in the template.
         public var left = 0
-        /// Edits among those made whose closed shape had no room for a number.
+        /// Edits among those made whose closed shapes all had no room for a number.
         public var tooSmall = 0
 
         public init() {}
@@ -123,7 +125,7 @@ public struct EditTrail: Sendable {
             let (next, outcome) = try TemplateEditor.apply(edit, to: template)
             if let declined = outcome.declined { return (template, .declined(declined.reason)) }
             guard outcome.changed else { return (template, .nothing) }
-            return (next, .made(tooSmall: !outcome.tooSmall.isEmpty))
+            return (next, .made(tooSmall: !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0))
         } catch {
             // A template without line art has nothing to edit.
             return (template, .declined("\(error)"))

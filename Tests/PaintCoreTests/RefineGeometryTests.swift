@@ -1,11 +1,9 @@
-import CoreGraphics
 import Foundation
-import PaintCore
 import Testing
-@testable import PaintByNumber
+@testable import PaintCore
 
-/// Refine's geometry: the pen's line smoothed and thinned, its ends on the lines they touch, the
-/// shapes, the line a tap of the eraser takes, and what a tap of Fill does.
+/// Refine's geometry (`RefineGeometry.swift`): the pen's line smoothed and thinned, its ends on
+/// the lines they touch, the shapes, and the line a tap of the eraser takes.
 struct RefineGeometryTests {
     /// A shaky line comes out smooth, from its first point to its last, and thinned to fewer
     /// points; a straight one to its two ends.
@@ -26,7 +24,7 @@ struct RefineGeometryTests {
     /// and stops where three lines meet or a line ends; a loop comes back to where it started;
     /// nothing is taken where no line is near.
     @Test func tappedLinesRunFromJunctionToJunction() throws {
-        func line(_ points: [SIMD2<Float>]) -> LineArtDrawing.Line { LineArtDrawing.Line(points[...])! }
+        func line(_ points: [SIMD2<Float>]) -> [CGPoint] { points.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) } }
         // Two lines end to end, meeting two more where three meet; one apart.
         let chains = LineChains(lines: [
             line([SIMD2(0, 0), SIMD2(10, 0)]), line([SIMD2(20, 0), SIMD2(10, 0)]),
@@ -135,32 +133,5 @@ struct RefineGeometryTests {
         #expect(curve.first == a && curve.last == b)
         #expect(curve.contains { PenPath.distance($0, bend) <= 1 })
         #expect(zip(curve, curve.dropFirst()).allSatisfy { PenPath.distance($0, $1) <= 2 })
-    }
-
-    /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; Fill
-    /// has no partner.
-    @Test func thePencilSwitchesPenAndEraser() {
-        #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
-        #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
-        #expect(RefineTool.more.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
-        #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
-    }
-
-    /// A tap anywhere in the detail area a fill made takes out the fills made there (not those
-    /// elsewhere); a tap in another area, or in a detail area no fill made, is a new fill. On three
-    /// stripes 20 units wide, the middle one a detail area.
-    @Test func aTapInAFilledAreaClearsItsFills() {
-        var t = Fixtures.stripes(count: 3, stripeWidth: 20, height: 40)
-        t.detailRegions = [1]
-        let color = SIMD3<Float>(0.6, 0.05, 0.05)
-        let inMiddle = TemplateEditor.Edit.fill(at: SIMD2(30, 20), color: color)
-        let again = TemplateEditor.Edit.fill(at: SIMD2(27, 8), color: color)
-        let onLeft = TemplateEditor.Edit.fill(at: SIMD2(6, 20), color: color)
-        let drawn = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(5, 5)])
-        let edits = [inMiddle, onLeft, drawn, again]
-        #expect(EditFills.cleared(by: SIMD2(36, 36), edits: edits, on: t) == [0, 3])
-        #expect(EditFills.cleared(by: SIMD2(10, 20), edits: edits, on: t).isEmpty)
-        #expect(EditFills.cleared(by: SIMD2(36, 36), edits: [onLeft, drawn], on: t).isEmpty)
-        #expect(EditFills.cleared(by: SIMD2(-5, 99), edits: edits, on: t).isEmpty)
     }
 }

@@ -7,6 +7,8 @@ extension EditWork {
         /// one; a split region: the piece that kept its index).
         var continued: [Int]
         var touched: [Int]
+        /// New indices of the pieces drawn lines cut.
+        var pieces: [Int]
     }
 
     /// The numbers of the regions that gained an outline vertex, checked against it: a radius
@@ -216,6 +218,7 @@ extension EditWork {
             while !regionAlive[s], let next = successor[s] { s = next }
             continued[r] = newIndex[s]
         }
-        return (result, Mapping(continued: continued, touched: summary.touched.compactMap { newIndex[$0] >= 0 ? newIndex[$0] : nil }.sorted()))
+        func renumbered(_ regions: Set<Int>) -> [Int] { regions.compactMap { newIndex[$0] >= 0 ? newIndex[$0] : nil }.sorted() }
+        return (result, Mapping(continued: continued, touched: renumbered(summary.touched), pieces: renumbered(summary.pieces)))
     }
 }

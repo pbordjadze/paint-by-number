@@ -126,6 +126,16 @@ struct EditTrailTests {
         #expect(other.template == trail.template)
     }
 
+    /// A shape cut off is not too small for the sliver its line also closes against ink: here the
+    /// rectangle's foot dips two units into the disc's cap, a sliver with no room for any number.
+    @Test func aSliverBesideAShapeCutOffIsNotReported() throws {
+        let rectangle: [SIMD2<Float>] = [SIMD2(40, 20), SIMD2(80, 20), SIMD2(80, 47), SIMD2(40, 47)]
+        let (_, outcome) = try TemplateEditor.apply(.draw(points: rectangle, closed: true), to: TemplateEditorTests.scene)
+        #expect(outcome.regionsSplit >= 1 && !outcome.tooSmall.isEmpty, "the cap is declined, the rectangle cut")
+        var trail = EditTrail(base: TemplateEditorTests.scene)
+        #expect(trail.add(.draw(points: rectangle, closed: true)) == .made(tooSmall: false))
+    }
+
     /// Only the newest few templates are kept, however many edits there are.
     @Test func snapshotsAreBounded() throws {
         var trail = EditTrail(base: TemplateEditorTests.scene)

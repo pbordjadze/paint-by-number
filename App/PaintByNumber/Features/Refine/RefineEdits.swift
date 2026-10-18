@@ -57,21 +57,6 @@ nonisolated struct RefineHistory: Equatable, Sendable {
     }
 }
 
-/// The fills a tap of the Fill tool takes out.
-nonisolated enum EditFills {
-    /// The positions in `edits` of the fills that made the detail area under `point` (canvas
-    /// units) of `template`: those whose own point lies in that area. None where the tap is not in
-    /// a detail area, or in one no fill made (a piece too small for the usual number is a detail
-    /// area too); a tap there makes a fill.
-    static func cleared(by point: SIMD2<Float>, edits: [TemplateEditor.Edit], on template: Template) -> [Int] {
-        guard let area = template.region(at: point), template.isDetailRegion(area) else { return [] }
-        return edits.indices.filter { index in
-            guard case .fill(let at, _) = edits[index] else { return false }
-            return template.region(at: at) == area
-        }
-    }
-}
-
 /// What Refine tells the painter, in a toast (`RefineNoteToast`) that VoiceOver announces
 /// (`CreateModel.say`): an edit that could not be made, a shape too small for a number, edits that
 /// no longer fit a template made again.

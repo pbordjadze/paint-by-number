@@ -763,8 +763,10 @@ final class CreateModel {
     //
     // - An edit (`edit(_:)`, `fill(at:color:)`) is laid on the template on screen off the main
     //   actor (`EditTrail`: tens of milliseconds, no regeneration) and shows at once, without a
-    //   crossfade. An edit that is declined (`EditTrail.Verdict.declined`) or has nothing to
-    //   change changes nothing: it is not kept, takes no step of the history, and a declined one
+    //   crossfade. A drawn line first takes the photo's colors for the pieces it cuts
+    //   (`TemplateEditor.painted`), which it keeps, so it lays the same way without the photo.
+    //   An edit that is declined (`EditTrail.Verdict.declined`) or has nothing to change changes
+    //   nothing: it is not kept, takes no step of the history, and a declined one
     //   says so (`note`). A shape a line closed that has no room for a number is cut off by nothing,
     //   but the line stays, and says so.
     // - A brush or a correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
@@ -976,11 +978,13 @@ final class CreateModel {
         var next = before
         next.edits.append(edit)
         do {
-            let laid = try await Self.laying(edit, on: current, settings: key.settings, refinements: next, style: previewStyle)
+            let laid = try await Self.laying(
+                edit, on: current, photo: source?.image, settings: key.settings, refinements: next, style: previewStyle)
+            next.edits[next.edits.count - 1] = laid.edit
             guard refinements == before, trailKey == key else {
                 // Something else changed the refinements meanwhile: the edit joins them.
                 history.push(refinements)
-                refinements.edits.append(edit)
+                refinements.edits.append(laid.edit)
                 await converge()
                 handled(serial)
                 return
@@ -1147,26 +1151,31 @@ final class CreateModel {
         return Shown(preview: preview, trail: trail, replay: replay)
     }
 
-    /// One edit laid on `trail`, and the result drawn when it changed the template.
+    /// One edit laid on `trail` (`edit`: as laid, a drawn line with its paints), and the result
+    /// drawn when it changed the template.
     nonisolated struct Laid: Sendable {
+        var edit: TemplateEditor.Edit
         var trail: EditTrail
         var verdict: EditTrail.Verdict
         var preview: Preview?
     }
 
-    /// `edit` laid on `trail`; `refinements` are the ones the template will have been made with,
-    /// the edit among them.
+    /// `edit` laid on `trail`, a drawn line with the colors of `photo` for the pieces it cuts;
+    /// `refinements` are the ones the template will have been made with, the edit last among them.
     @concurrent
     private static func laying(
-        _ edit: TemplateEditor.Edit, on trail: EditTrail, settings: GenerationSettings, refinements: TemplateRefinements,
-        style: PreviewStyle
+        _ edit: TemplateEditor.Edit, on trail: EditTrail, photo: RGBAImage?, settings: GenerationSettings,
+        refinements: TemplateRefinements, style: PreviewStyle
     ) async throws -> Laid {
         var trail = trail
+        let edit = photo.map { TemplateEditor.painted(edit, on: trail.template, photo: $0) } ?? edit
         let verdict = trail.add(edit)
-        guard verdict.isMade else { return Laid(trail: trail, verdict: verdict, preview: nil) }
+        guard verdict.isMade else { return Laid(edit: edit, trail: trail, verdict: verdict, preview: nil) }
         try Task.checkCancellation()
+        var refinements = refinements
+        if !refinements.edits.isEmpty { refinements.edits[refinements.edits.count - 1] = edit }
         let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
-        return Laid(trail: trail, verdict: verdict, preview: preview)
+        return Laid(edit: edit, trail: trail, verdict: verdict, preview: preview)
     }
 
     /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps

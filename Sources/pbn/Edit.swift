@@ -4,9 +4,14 @@ import PaintCore
 /// `pbn edit`'s edits.json: an array of `{"kind": "draw" | "erase" | "eraseLine" | "fill",
 /// "points": [[x, y], ...]}` in canvas units, plus `"closed"` for a draw (the last point joins
 /// the first), `"radius"` for an erase (canvas units), `"reach"` for an eraseLine (canvas
-/// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill. An
-/// edit of a kind pbn doesn't know is left out with a warning.
+/// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill, and
+/// `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
+/// recolors the pieces it cuts. An edit of a kind pbn doesn't know is left out with a warning.
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
+    struct EntryPaint: Decodable {
+        var at: [Float]
+        var color: [Float]
+    }
     struct Entry: Decodable {
         var kind: String
         var points: [[Float]]
@@ -15,6 +20,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
         var reach: Float?
         var color: [Float]?
         var paint: Int?
+        var paints: [EntryPaint]?
     }
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
     let entries: [Entry]
@@ -26,7 +32,11 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
         }
         switch entry.kind {
         case "draw":
-            return .draw(points: points, closed: entry.closed ?? false)
+            let paints = entry.paints?.map { p -> TemplateEditor.Paint in
+                guard p.at.count == 2, p.color.count == 3 else { fail("\(path): a paint is {\"at\": [x, y], \"color\": [L, a, b]}") }
+                return TemplateEditor.Paint(at: SIMD2(p.at[0], p.at[1]), color: SIMD3(p.color[0], p.color[1], p.color[2]))
+            }
+            return .draw(points: points, closed: entry.closed ?? false, paints: paints)
         case "erase":
             return .erase(path: points, radius: entry.radius ?? 4)
         case "eraseLine":
@@ -60,6 +70,8 @@ struct EditReport: Codable {
         var fills: Int
         var paintsAdded: Int
         var tooSmall: Int
+        /// Pieces a draw's paints gave another paint.
+        var recolored: Int
         /// For a draw: the farthest the template's ink strays from the line in the middle of it
         /// (its interior vertices and the steps between them) and from its two end points, canvas
         /// units: an end joins the ink it is near.
@@ -192,12 +204,13 @@ private func unexpectedChanges(_ old: Template, _ new: Template, _ outcome: Temp
 
 func runEdit(_ options: Options) throws {
     guard options.positional.count == 2, let out = options.out else {
-        fail("usage: pbn edit <template.pbnt> <edits.json> --out <dir>")
+        fail("usage: pbn edit <template.pbnt> <edits.json> --out <dir> [--photo <image>]")
     }
     guard let data = FileManager.default.contents(atPath: options.positional[0]) else { fail("cannot read \(options.positional[0])") }
     let before: Template
     do { before = try Template(encoded: data) } catch { fail("cannot decode \(options.positional[0]): \(error)") }
     let edits = loadTemplateEdits(options.positional[1], palette: before.palette)
+    let photo = options.photo.map(loadImage)
     let outDir = URL(fileURLWithPath: out)
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 
@@ -205,9 +218,10 @@ func runEdit(_ options: Options) throws {
     var t = before
     var steps: [EditReport.Step] = []
     var continued = Array(0..<before.regions.count)
-    for edit in edits {
+    for given in edits {
         let result: (template: Template, outcome: TemplateEditor.Outcome)
         let began = ContinuousClock.now
+        let edit = photo.map { TemplateEditor.painted(given, on: t, photo: $0) } ?? given
         do { result = try TemplateEditor.apply(edit, to: t) } catch { fail("cannot edit: \(error)") }
         let took = ContinuousClock.now - began
         elapsed += took
@@ -216,10 +230,10 @@ func runEdit(_ options: Options) throws {
             joins: result.outcome.joins, regionsSplit: result.outcome.regionsSplit, regionsMerged: result.outcome.regionsMerged,
             detailAreas: result.outcome.detailAreas, strokes: result.outcome.strokes, erased: result.outcome.erased,
             fills: result.outcome.fills, paintsAdded: result.outcome.paintsAdded, tooSmall: result.outcome.tooSmall.count,
-            unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
+            recolored: result.outcome.recolored, unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
             milliseconds: Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
         switch edit {
-        case .draw(let points, let closed):
+        case .draw(let points, let closed, _):
             step.kind = "draw"
             let line = closed ? points + [points[0]] : points
             if result.outcome.changed {
