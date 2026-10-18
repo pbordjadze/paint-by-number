@@ -64,6 +64,19 @@ hasn't written in the last ~10 minutes. If it ships something, add one line to y
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## Proposals
+
+Sessions and the Lamplit Table send proposals for new work (CLAUDE.md › Working with Paul ›
+Propose, don't start). For each: merge duplicates, drop what contradicts a decision Paul has
+made (say so to the proposer), and check that no session already owns it. Then add a
+`decisions.json` card in a `proposed` group (shown under "Proposed"): `title`, `ask` (what and
+why), `items` (size, CI time, rough cost, what Paul would have to do), `from` (who proposed it),
+`reply` ("yes / no / later"). On his yes, route it like any request (an owning session or a new
+one) and add a backlog row with his words. "Later" goes to `docs/ideas.md`, marked as the
+proposer's idea, not his. Paul's standing rule for the night of Oct 18 (05:33): small, clearly
+safe proposals (bug fixes and polish, behind `UNRELEASED`, never removing anything) may start
+without him; everything else waits for his yes.
+
 ## Check-ins
 
 While anything is building or in CI, keep one `send_later` check-in about 45 minutes out. When
