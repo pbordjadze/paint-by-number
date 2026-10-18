@@ -17,14 +17,13 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 
 | Order | Branch | Session | State |
 | --- | --- | --- | --- |
-| 1 | claude/tip-layout | Gentle tips check (successor session_01EW3s3RcZoc16MRwUThmPZF) | green (d8fe24e): merges after main's run |
 | 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | in CI (pushing now) |
+| 3b | claude/retro-review | Retro code review (Sonnet) | next after ci-train: fixes red main (fbdcd8c SettingsTests flip) |
 | 4 | claude/refine-line-split | Refine: lines split colors | building (Paul 15:01: "move these refine things up to just after the warnings gate") |
 | 5 | claude/recolor | Recolor in Refine | ready (319496e, local; built on fewer-buttons) |
 | 6 | claude/ux-refinements | UX design audit | waiting |
 | 7 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
 | 8 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
-| 9 | claude/retro-review | Retro code review (Sonnet) | ready (6a01a58, local; 3 small fixes) |
 | 10 | claude/toolbar-tips | Gentle tips check | ready (local; after tip-layout d8fe24e merges; row 43 + a retro finding) |
 | 11 | claude/codex-decoder-fuzz | Codex workbench | ready soon (hostile-input tests for the decoders; decoder change dropped) |
 | 12 | claude/caroline-guardians | New guardian (Hope, Eno) | ready (41b871a [skip ci]; eggs in Who's Who) |
