@@ -121,9 +121,9 @@ SLIDES = {
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your phone.", crops=[
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5, slot="pet-gallery")], photos=[photo(4, 850, 740, 410, 6)]),
         dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo<br>is traced and kept clear<br>of the numbers.", crops=[
-            crop("paint-book-progress", (0, 1, 0, 1), .461, "c", 1060, radius=40, shadow=True, slot="writing", tilt=-2),
-            crop("paint-book-progress", (.297, .664, .590, .788), 1.2, "c", 1780, radius=40, shadow=True, over=True, slot="writing", tilt=1.5)],
-             photos=[photo(5, 760, 2280, 470, 5, landscape=True)]),
+            crop("paint-book-progress", (0, 1, 0, 1), .461, "c", 860, radius=40, shadow=True, slot="writing", tilt=-2),
+            crop("paint-book-progress", (.297, .664, .590, .788), 1.2, "c", 1600, radius=40, shadow=True, over=True, slot="writing", tilt=3)],
+             photos=[photo(5, 720, 2160, 520, 5, landscape=True)]),
     ],
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
@@ -159,7 +159,7 @@ SLIDES = {
             crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2, slot="pet-gallery")], photos=[photo(4, 1480, 700, 480, 6)]),
         dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo is traced<br>and kept clear of the numbers.", crops=[
             crop("paint-book-progress", (0, 1, 0, 1), .664, "c", 850, radius=48, shadow=True, slot="writing", tilt=-1.5),
-            crop("paint-book-progress", (.297, .664, .590, .788), 1.6, "c", 1980, radius=48, shadow=True, over=True, slot="writing", tilt=1.2)],
+            crop("paint-book-progress", (.297, .664, .590, .788), 1.6, "c", 1980, radius=48, shadow=True, over=True, slot="writing", tilt=3)],
              photos=[photo(5, 1480, 330, 460, 6, landscape=True)]),
     ],
 }
