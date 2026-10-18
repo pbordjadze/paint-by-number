@@ -493,3 +493,15 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 - Paul on why these looked better: short concrete prompts per pet, his approved still as every
   row's master, style shown as pictures rather than enforced rules. A redraw trial of three
   earlier guardians followed.
+
+## Paul's method for every pet from now on (Oct 18)
+
+- Paul: "The papercutter "Lotte" one was incredible. The newest Niko is going to be incredible.
+  Grounding them in the actual techniques their namesake used is the right method here."
+- So each guardian's drawing is made in the real technique of its namesake (Scherenschnitt: black
+  paper cut with scissors, hinged with pins; Niko: house paint on black oilcloth with the black
+  left showing), never a generic glossy mascot. A new picture in that manner, not a copy of any
+  of their works. For a guardian with no namesake (the Moon), ask Paul which tradition to borrow.
+- Earlier lessons that go with it: short concrete prompts; Paul approves one still first and it is
+  every row's master; keep a guardian's own design (adding limbs made the Scholar worse); and a
+  pattern filling the whole body reads as AI, a few big uneven marks read as hand-made.
