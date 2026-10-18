@@ -736,9 +736,9 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Hope"),
         happiestWhen: String(localized: "lamp.hope.happiestWhen", defaultValue: "You turn the lights down and the screen gets better: slower, softer, quieter.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Hope"),
-        petCaption: String(localized: "lamp.hope.petCaption", defaultValue: "Hope, still an egg",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Hope's egg: the guardian hasn't hatched yet"),
-        hatched: false)
+        petCaption: String(localized: "lamp.hope.petCaption", defaultValue: "Hope",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Hope"),
+        hatched: true)
 
     static let eno = MarginariumGuardian(
         id: "eno",
@@ -760,9 +760,9 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Eno"),
         happiestWhen: String(localized: "lamp.eno.happiestWhen", defaultValue: "A small rule and a roll of the dice make something you'd never have drawn, and you keep it because it sounds right.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Eno"),
-        petCaption: String(localized: "lamp.eno.petCaption", defaultValue: "Eno, still an egg",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Eno's egg: the guardian hasn't hatched yet"),
-        hatched: false)
+        petCaption: String(localized: "lamp.eno.petCaption", defaultValue: "Eno",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Eno"),
+        hatched: true)
 
     static let keynes = MarginariumGuardian(
         id: "keynes",

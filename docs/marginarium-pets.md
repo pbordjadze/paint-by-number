@@ -195,3 +195,15 @@ need of a new drawing"), mirrors her right-facing looks for the left. The Snow Q
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
+
+## October 18: Hope and Eno hatch
+
+Caroline's first two guardians, drawn on October 18 with the create-pet skill from stills Paul
+approved first and signed off ("Hope is sick", "Both good"): Hope, a half-open moonflower with
+no face, and Eno, two mismatched tape spools, a slack loop of tape, a wildflower and a die.
+Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and dark).
+
+| Pet id | Source SHA-256 (lossless PNG) | App bytes | Encoding |
+| --- | --- | ---: | --- |
+| `eno` | `d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026` | 894,894 | lossy WebP q88 |
+| `hope` | `18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31` | 692,990 | lossy WebP q88 |
