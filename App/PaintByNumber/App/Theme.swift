@@ -96,6 +96,32 @@ nonisolated struct Sparkle: Shape {
     }
 }
 
+/// The design system's crescent, as the empty gallery's sketch draws it: the outer arc of one
+/// circle and the inner arc of a smaller one set off up and to the right, an outline to stroke.
+/// `rect` is the outer circle's square.
+nonisolated enum Crescent {
+    static func cgPath(in rect: CGRect) -> CGPath {
+        // The sketch's moon: an outer circle of radius 26 and an inner one of 23, 6.41 right of
+        // and 2.89 above its centre.
+        let s = rect.width / 52
+        let outer = CGPoint(x: rect.midX, y: rect.midY)
+        let inner = CGPoint(x: outer.x + 6.41 * s, y: outer.y - 2.89 * s)
+        let p = CGMutablePath()
+        func arc(center: CGPoint, radius: CGFloat, from a0: Double, to a1: Double) {
+            let steps = 40
+            for k in 0...steps {
+                let a = (a0 + (a1 - a0) * Double(k) / Double(steps)) * .pi / 180
+                let point = CGPoint(x: center.x + radius * cos(a), y: center.y + radius * sin(a))
+                if p.isEmpty { p.move(to: point) } else { p.addLine(to: point) }
+            }
+        }
+        arc(center: outer, radius: 26 * s, from: -81.75, to: -326.7)
+        arc(center: inner, radius: 23 * s, from: 48.24, to: 263.31)
+        p.closeSubpath()
+        return p
+    }
+}
+
 /// A gentle press response for tappable cards.
 struct PressableCardStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

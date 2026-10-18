@@ -89,7 +89,8 @@ synchronized folder would bundle it into the app.
   (`ArtworkExports.swift`), `ImageCodec`.
 - `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
-  the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
+  the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `EmptyGalleryView` (its sketch paints
+  itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -240,6 +241,9 @@ synchronized folder would bundle it into the app.
   `MakingOfDemoView`) make the show of a portrait photograph and hold it at a moment (the paints
   step's rings, the ink step's sparks, the template step's stars); `MakingOfUITests` turns the
   setting on with `-playsMakingOf YES`, starts a painting, and skips the show into it.
+  `paint-nightfall` (with `-dark`) is `paint-finish` by Moon, ready at the night's fullest; with
+  `gallery-empty` (ready once its sketch has painted itself) it is in `NightfallUITests`, whose
+  frames (stretched by Debug's `-introSlowdown <factor>`) are the two animations to look at.
 
 ## Painting screen
 
@@ -256,7 +260,13 @@ synchronized folder would bundle it into the app.
   canvas also gets direct `PaintingCanvas` calls.
 - Finishing: the last fill lingers; once it has landed (and the stroke that painted it has
   ended), `CanvasView.finish` eases the camera out to the whole painting, which shines as the
-  camera lands (Reduce Motion: a cut after a pause, no shine). A flight to fit follows layout
+  camera lands (Reduce Motion: a cut after a pause, no shine). In SideStore and Debug builds
+  (`#if UNRELEASED`, until Paul has seen it) night then falls over the painting, about 3 s once
+  the shine has swept (`Nightfall`, `CanvasView.finale`; the Lamplit Table's round
+  `pieces/intro-animation` on `claude/vibe-factory`, which put it here rather than at launch): dusk
+  settles, a gold crescent is inked into its top corner and two stars come out, then it lifts; by
+  Sun only a warm evening light; no sound; Reduce Motion fades one still; VoiceOver hears "The moon
+  rises over your painting." Its layers follow the camera and go with an undo or a replay. A flight to fit follows layout
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
