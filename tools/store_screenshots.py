@@ -10,13 +10,14 @@ ci/scenarios.txt. It writes seven slides per size to DIR (outside the repo):
 iphone-69-<n>-<name>.png (1320×2868), iphone-63-<n>-<name>.png (1206×2622, the size
 App Store Connect requires) and ipad-13-<n>-<name>.png (2064×2752), RGB without alpha.
 
-The first two slides show the painter's own pets, which CI can't photograph: a crop with a
+The first three slides show the painter's own pets, which CI can't photograph: a crop with a
 `slot` reads <device>-<slot>.png from --slots (a folder outside the repo: the painter's photos
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
 an iPhone or iPad whose screen has about the same proportions (an `own` layout's crops are
 fractions of the shot as it is). Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
-iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png. A slide's `own`
+iphone-pet-preview.png, iphone-pet-progress.png, iphone-making-of-start.png and
+iphone-making-of-end.png (two frames of a screen recording of the making-of), the same as ipad-*.png. A slide's `own`
 layout (crops and photos) replaces its stand-in layout once the painter's shots fill all its slots: a
 pet's portrait previews narrower than the stand-in's landscape, and their phone may be in dark mode.
 Four slides
@@ -66,15 +67,16 @@ SQUIGGLE = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBo
 SLOTS = {
     "pet-preview": "a pet's photo on the New Painting screen (Photo | Painting)",
     "pet-progress": "a second pet's painting, about a third painted",
+    "making-of-start": "the making-of's first step, on a pet's photo",
+    "making-of-end": "the making-of's last step, the pet's numbered drawing",
 }
 
 
-def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None, tilt=0, loupe=False):
+def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False, slot=None, tilt=0):
     """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom).
-    A slot takes the painter's own screenshot of the same screen in place of the scenario; tilt is in degrees.
-    A loupe is a round, gold-rimmed magnifier laid over the other crops."""
+    A slot takes the painter's own screenshot of the same screen in place of the scenario; tilt is in degrees."""
     return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over,
-                slot=slot, tilt=tilt, loupe=loupe)
+                slot=slot, tilt=tilt)
 
 
 def photo(n, x, y, w, tilt, landscape=False):
@@ -84,7 +86,7 @@ def photo(n, x, y, w, tilt, landscape=False):
 
 SLIDES = {
     "iphone": [
-        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
+        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Your phone turns any photo<br>into a painting to fill by number.", crops=[
             crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 110, 1990, 560, -5)],
              own=dict(crops=[crop("create-preview", (0, 1, .063, .965), .82, 150, 770, radius=72, shadow=True, slot="pet-preview", tilt=-2)],
                       photos=[photo(1, 790, 470, 400, 7)])),
@@ -95,45 +97,45 @@ SLIDES = {
              own=dict(crops=[crop("paint-book-progress", (.02, .98, .165, .80), .9, "c", 660, radius=48, shadow=True, slot="pet-progress", tilt=-1.5),
                              crop("paint-book-progress", (.02, .98, .848, .962), 1.0, "c", 2330, radius=78, shadow=True, over=True,
                                   slot="pet-progress")], photos=[photo(2, 850, 560, 400, 6)])),
+        dict(title="Just between you<br>and <span class=mark>your phone</span>", sub="Your photo becomes a painting right<br>on your phone, and stays there.", crops=[
+            crop("making-of", (.02, .98, .165, .87), .54, 70, 790, radius=44, shadow=True, slot="making-of-start", tilt=-3),
+            crop("making-of", (.02, .98, .165, .87), .54, 650, 1700, radius=44, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
+             chips=[("Made on your phone", 80, 1960), ("No account", 80, 2100), ("Works offline", 80, 2240)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)], photos=[photo(3, 690, 610, 560, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
             crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True, tilt=1.5),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
-        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
+        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others, built right in.", crops=[
             crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
-        dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own<br>music. By Moon, every fill ends in stars.", crops=[
-            crop("paint-book-moon-dark", (0, 1, .06, .965), .7, 96, 720, radius=64, shadow=True, tilt=-2),
-            crop("paint-book-moon-dark", (.823, .989, .629, .7053), 2.8, 680, 1230, shadow=True, loupe=True),
-            crop("settings", (0, 1, .843, .9985), 1.0945, "c", 2180, radius=56, shadow=True, over=True, tilt=2)]),
-        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
+        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your phone.", crops=[
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)], photos=[photo(4, 850, 740, 410, 6)]),
     ],
     "ipad": [
-        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Pick a photo, and it becomes a painting to fill by number.", crops=[
+        dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
             crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 140, 2000, 520, -5)]),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
                  slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)]),
+        dict(title="Just between you<br>and <span class=mark>your iPad</span>", sub="Your photo becomes a painting right on your iPad, and stays there.", crops=[
+            crop("making-of", (.02, .98, .06, .80), .48, 144, 860, radius=40, shadow=True, slot="making-of-start", tilt=-3),
+            crop("making-of", (.02, .98, .06, .80), .48, 1060, 1180, radius=40, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
+             chips=[("Made on your iPad", 144, 2200), ("No account", 144, 2360), ("Works offline", 144, 2520)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)], photos=[photo(3, 1340, 840, 600, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
-        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
+        dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh, Vermeer and others, built right in.", crops=[
             crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
-        dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own music. By Moon, every fill ends in stars.", crops=[
-            crop("paint-book-moon-dark", (0, 1, 0, 1), .52, 144, 860, radius=44, shadow=True, tilt=-1.5),
-            crop("paint-book-moon-dark", (.845, 1, .597, .7133), 1.85, 1180, 1420, shadow=True, loupe=True),
-            crop("settings", (.045, .955, .468, .628), .95, "c", 2260, radius=40, shadow=True, over=True, tilt=1.5)]),
-        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your device.", crops=[
+        dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your iPad.", crops=[
             crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)], photos=[photo(4, 1480, 700, 480, 6)]),
     ],
 }
@@ -244,8 +246,6 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
         style.append(f"border-radius:{r}px {r}px 0 0" if c["y"] == "b" else f"border-radius:{r}px")
     if c["shadow"]:
         style.append("box-shadow:0 28px 64px rgba(31,26,33,.20),0 2px 6px rgba(31,26,33,.08)")
-    if c["loupe"]:
-        style += ["border-radius:50%", "border:10px solid #C9A24A", "background-origin:border-box", "z-index:3"]
     if c["fade"]:
         f = c["fade"]
         style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
@@ -286,6 +286,8 @@ def page(shots, dev, k, slide, fonts, noise, slots):
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
     photos = slide.get("photos", [])
     extra += "".join(photo_html(slots, p) for p in photos)
+    extra += "".join(f"<div class=chip style='left:{x}px;top:{y}px'><svg viewBox='0 0 100 100'><path d='{SPARKLE}' fill='url(#gold)'/></svg>{t}</div>"
+                     for t, x, y in slide.get("chips", []))
     if not slide.get("hills") and not any(p["y"] < 900 for p in photos):  # the moon, or a photo, has that corner
         r = random.Random(k)
         for i, (x0, x1, y0, y1, s) in enumerate(((.70, .80, 230, 300, 70), (.83, .90, 360, 440, 44), (.74, .82, 520, 600, 30))):
@@ -305,6 +307,10 @@ body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple
 .polaroid{{z-index:4;background:#FFFDF8;box-shadow:0 24px 50px rgba(31,26,33,.28),0 2px 6px rgba(31,26,33,.12)}}
 .snap{{position:relative}}
 .tape{{background:rgba(201,162,74,.45);transform:rotate(-4deg)}}
+.chip{{position:absolute;z-index:5;display:flex;align-items:center;gap:.5em;padding:.45em 1em .45em .8em;border-radius:999px;
+  background:#FFFDF8;border:4px solid #C9A24A;color:{INK};font:600 {40 if phone else 56}px/1 -apple-system,"SF Pro Text",Inter,sans-serif;
+  box-shadow:0 14px 30px rgba(31,26,33,.14)}}
+.chip svg{{width:.8em;height:.8em}}
 .tag{{z-index:6;max-width:{W - 2 * margin - 64}px;padding:16px 28px;border-radius:28px;background:{PLUM};color:{PAPER};
   font:600 {32 if phone else 40}px/1.25 -apple-system,"SF Pro Text",Inter,sans-serif}}
 .hills{{left:0;top:0;z-index:2}}
