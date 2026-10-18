@@ -87,6 +87,16 @@ extension PaintTips {
 
     // MARK: Refine
 
+    /// Refine is on screen: how to draw on it is the first thing.
+    static func refineShown() {
+        desk.offer([.refineDraw], in: .refine, rest: .milliseconds(1200))
+    }
+
+    /// Any change made in Refine: the painter has found how to draw.
+    static func refineEdited() {
+        used(.refineDraw)
+    }
+
     /// A line was drawn: filling a closed shape is the next thing.
     static func refineLineDrawn() {
         donate(TipEvents.linesDrawn, limit: 2)
