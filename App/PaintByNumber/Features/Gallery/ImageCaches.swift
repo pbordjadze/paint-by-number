@@ -113,7 +113,9 @@ final class ThumbnailCache {
         let key = Key(id: artwork.id, version: artwork.thumbnailVersion, pixelSize: maxPixelSize)
         if let hit = images.image(for: key) { return hit }
         let id = artwork.id
-        guard let image = await Background.run({ store.thumbnail(id, maxPixelSize: maxPixelSize) }) else { return nil }
+        // A tile scrolled away before its turn came decodes nothing.
+        guard let image = await Background.run({ Task.isCancelled ? nil : store.thumbnail(id, maxPixelSize: maxPixelSize) })
+        else { return nil }
         images.insert(image, for: key)
         return image
     }

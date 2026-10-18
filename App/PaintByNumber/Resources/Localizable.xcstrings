@@ -4533,6 +4533,10 @@
       "comment" : "Message of the screen shown when the canvas can't be drawn",
       "extractionState" : "manual"
     },
+    "This painting can’t be restarted." : {
+      "comment" : "Alert title in the gallery when Restart couldn't read the painting (written by a newer app, or its files can't be read just now); nothing was changed",
+      "extractionState" : "manual"
+    },
     "time.approximately" : {
       "comment" : "An estimated duration, e.g. ~40 min; the argument is the duration text",
       "extractionState" : "manual",

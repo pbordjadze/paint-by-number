@@ -201,7 +201,7 @@ synchronized folder would bundle it into the app.
   (`DemoMode.isTestHost`). Shared helpers in `Fixtures.swift` (`waitUntil`, `record`, `mosaic`,
   `rasterize`, `PixelReader`, `repositoryRoot`, `sample`: a template of a library picture).
 - `PaintByNumberUITests`: XCTest launching demo scenarios (`-demo`) with `-demoFixedPictures`,
-  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-slowFullResolution <seconds>` (each
+  `-tracePaper`, `-tracePhotoPeek`, `-openFile` (with `-openFileOnQuestion`: once the gallery asks a question), `-slowFullResolution <seconds>` (each
   full-resolution generation of the create flow waits: a phone's tens of seconds, on a simulator),
   `-NSDoubleLocalizedStrings`,
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests
@@ -643,8 +643,10 @@ Conventions).
   suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
   with its refinements, at full resolution: the base, then its `edits` laid on it in order
   (`DraftTests.resumingADraftLaysItsEditsAgain`). Refine's undo and redo stacks are not kept. A draft
-  with any file missing or unreadable, or a photo that won't decode, is no draft: logged and
-  removed, never a failure of the gallery (`DraftTests`; `gallery-draft` is its screenshot).
+  with any file missing or damaged, or a photo that won't decode, is no draft: logged and
+  removed, never a failure of the gallery; one that can't be read just now (an I/O or data
+  protection error) is kept, at launch and on Continue (`DraftTests`; `gallery-draft` is its
+  screenshot).
 - Start Painting into the painting (`StartHandoff`, `Features/Create/StartHandoff.swift`): the
   journey from the settings to the canvas is one picture moving. `AppShellView` owns the hand-off
   object and passes it through the environment (`\.startHandoff`) to the create flow's cover and the
