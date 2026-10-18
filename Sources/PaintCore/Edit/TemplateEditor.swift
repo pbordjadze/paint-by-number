@@ -28,7 +28,9 @@ import Foundation
 ///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
 ///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
 ///   `painted(_:on:photo:)`): the paint nearest it within the book's own tolerance for one color
-///   (`paintTolerance`), else a new paint of that color added last.
+///   (`paintTolerance`), else a new paint of that color added last. Where that leaves one paint
+///   on both sides of the line and the photo tells the sides apart, the side farther from it
+///   takes its photo's color, or a shade of the paint toward it (`EditWork.paint`).
 /// - **Split.** The Color Splitter's line, laid as a draw with paints is, but as an undrawn
 ///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
 ///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.

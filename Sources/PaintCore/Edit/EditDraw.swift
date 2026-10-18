@@ -313,7 +313,7 @@ extension EditWork {
             byRegion[chain.region!, default: []].append(e)
             if chain.fresh {
                 fresh.insert(e)
-                if splitting { splitEdges.append(e) }
+                lineEdges.append(e)
             }
         }
         for r in byRegion.keys.sorted() { try splitRegion(r, chains: byRegion[r]!, fresh: fresh) }

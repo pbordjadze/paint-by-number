@@ -1,6 +1,6 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens, the eraser and Fill, the Color Splitter, the
+/// The create flow's optional Refine step: the pens, the eraser and Fill, no Color Splitter, the
 /// text marks, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
@@ -103,31 +103,27 @@ final class RefineUITests: XCTestCase {
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "The refined preview can't be started")
     }
 
-    /// The Color Splitter divides the picture's color along a stroke and shows the painting, where
-    /// a split shows; Text marks a line of text dragged across; there are no detail brushes. Done
-    /// keeps both.
+    /// The toolbar has no Color Splitter for now (`RefineView.offersSplitter`): the Pen's line
+    /// down the sky divides it instead. Text marks a line of text dragged across; there are no
+    /// detail brushes. Done keeps both.
     @MainActor
-    func testSplitterAndTextCorrections() throws {
+    func testPenSplitAndTextCorrections() throws {
         let app = launchPreview()
         let refine = app.buttons["refine"]
         refine.tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertFalse(app.buttons["refine-tool-more"].exists, "Refine still has the More Detail brush")
+        XCTAssertFalse(app.buttons["refine-tool-splitter"].exists, "Refine still offers the Color Splitter")
 
-        let splitter = app.buttons["refine-tool-splitter"]
-        XCTAssertTrue(splitter.exists, "Refine has no Color Splitter")
-        splitter.tap()
-        XCTAssertTrue(waitFor(splitter, toMatch: NSPredicate(format: "isSelected == true")), "The splitter didn't become the tool")
-        XCTAssertTrue(
-            waitFor(app.buttons["refine-backdrop"], toMatch: NSPredicate(format: "value == %@", "Painting")),
-            "Picking the splitter didn't show the painting")
+        let pen = app.buttons["refine-tool-pen"]
+        XCTAssertTrue(waitFor(pen, toMatch: NSPredicate(format: "isSelected == true")), "Refine doesn't start on the pen")
         // Down the open sky of The Great Wave, from above the wave's outline to inside little Fuji:
         // crossing a line at each end, it divides the sky between them.
         drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.637, 0.675))
         XCTAssertTrue(
-            waitFor(canvas, toMatch: changes("1 change")), "The split didn't count: \(canvas.value ?? "")")
-        attachScreenshot(of: app, named: "refine-splitter")
+            waitFor(canvas, toMatch: changes("1 change")), "The line didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-pen-split")
 
         let text = app.buttons["refine-tool-text"]
         XCTAssertTrue(text.exists, "Refine has no Text tool")
