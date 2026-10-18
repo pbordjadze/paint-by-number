@@ -4298,7 +4298,7 @@
       "extractionState" : "manual"
     },
     "Music" : {
-      "comment" : "Settings: the header of the section that lists the music painting plays, Sun, Moon and Auto (also the list's own label, which VoiceOver may read)",
+      "comment" : "Settings: the label of the row that picks the music painting plays, Sun, Moon or Auto (a menu, like Paper)",
       "extractionState" : "manual"
     },
     "sky.sun" : {
@@ -4338,7 +4338,7 @@
       }
     },
     "settings.sky.footer" : {
-      "comment" : "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
+      "comment" : "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

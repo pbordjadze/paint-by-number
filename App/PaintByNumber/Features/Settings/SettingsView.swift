@@ -96,32 +96,27 @@ struct SettingsView: View {
                         Toggle(isOn: $sounds) {
                             SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                         }
+                        // A theme of its own, apart from the appearance and the paper: Sun, Moon or
+                        // Auto, one row like Paper's (Paul, October 18, from the plain list he
+                        // first asked for).
+                        Picker(selection: $sky) {
+                            ForEach(SkySetting.allCases) { choice in
+                                Text(choice.name).tag(choice)
+                            }
+                        } label: {
+                            SwiftUI.Label("Music", systemImage: "music.note")
+                        }
+                        .accessibilityIdentifier("settings-music")
                     } header: {
                         if supportsHaptics {
                             Text("Sound & Haptics")
                         } else {
                             Text("Sound")
                         }
-                    }
-
-                    // A theme of its own, apart from the appearance and the paper: two music choices
-                    // and Auto, as a plain list (Paul: "a list of two music options").
-                    Section {
-                        Picker(selection: $sky) {
-                            ForEach(SkySetting.allCases) { choice in
-                                Text(choice.name).tag(choice)
-                            }
-                        } label: {
-                            Text("Music")
-                        }
-                        .pickerStyle(.inline)
-                        .labelsHidden()
-                    } header: {
-                        Text("Music")
                     } footer: {
                         Text(String(localized: "settings.sky.footer",
                                     defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
-                                    comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
+                                    comment: "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
                     }
 
                     // Painting Length last, so its footer sits under it.

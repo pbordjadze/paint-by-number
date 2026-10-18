@@ -292,8 +292,8 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Music, a plain
-  list: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sound's Music,
+  one row like Paper's: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
   time zone and Moon the rest; Paul's calls; a theme, never tied to the dark appearance or the
   paper; decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
