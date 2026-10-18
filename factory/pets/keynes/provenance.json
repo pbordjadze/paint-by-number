@@ -1,0 +1,24 @@
+{
+  "pet": "keynes",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude.",
+  "approved": "Paul approved the still first and signed off the sheet (\"sign off\" (22:08)).",
+  "image_generations": 14,
+  "source_png_sha256": "3e5b881edeecc6565dba724c14ead34c75d7d40ccc23fb0b138f53e2dcc96824",
+  "atlas_sha256": "0a06cabe25f4b4297588e413574153da778b5543e0067c2e7075ddb80d2f8ac5",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 022.5 has non-passing verdict fail",
+      "look direction 157.5 has non-passing verdict fail"
+    ]
+  },
+  "notes": "14 images, from C (your pick: the painted songbird, in the Omega Workshops manner). Passes the v2 contract. In the idle he sings and blinks; on a tap he lifts a wing and chirps. Two look poses read wrong (the reader doesn't play the look rows). On sign-off he hatches with Hope and Eno."
+}

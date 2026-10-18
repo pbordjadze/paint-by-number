@@ -1,0 +1,27 @@
+{
+  "pet": "hope",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude.",
+  "approved": "Paul approved the still first and signed off the sheet (\"Hope is sick\").",
+  "image_generations": 13,
+  "source_png_sha256": "18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31",
+  "atlas_sha256": "5d8721d2e70dbf36d1f1a4223d14461d152f7ec78535a5d9e603843fd15fb562",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 045 has non-passing verdict fail",
+      "look direction 067.5 has non-passing verdict fail",
+      "look directions drift 30.5px from idle registration, expected at most 26.0px",
+      "look directions contain transparent interior holes or seam bands: 112.5, 270, 292.5",
+      "adjacent look directions 157.5->180 jump 31.9px"
+    ]
+  },
+  "notes": "13 images. Passes the v2 contract. Faceless as approved: the bloom's turn does the looking; two of the sixteen look poses (45° and 67.5°, up-right) are ambiguous, so the skill's quality gate fails; the reader doesn't play the look rows."
+}

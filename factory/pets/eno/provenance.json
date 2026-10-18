@@ -1,0 +1,25 @@
+{
+  "pet": "eno",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude.",
+  "approved": "Paul approved the still first and signed off the sheet (\"Both good\").",
+  "image_generations": 14,
+  "source_png_sha256": "d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026",
+  "atlas_sha256": "9158b9337f73b59d83cbf73fe865f33d6789f22461afa864a0520067b4f104ee",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 202.5 has non-passing verdict fail",
+      "look direction 247.5 has non-passing verdict fail",
+      "look direction 337.5 has non-passing verdict fail"
+    ]
+  },
+  "notes": "14 images, built from the E2 draft as you saw it (its still is the master; nothing redrawn). Passes the v2 contract. Faceless, so the flower does the looking; three of the sixteen look poses read wrong, so the skill's quality gate fails; the reader doesn't play the look rows. On a tap the flower bends toward you."
+}

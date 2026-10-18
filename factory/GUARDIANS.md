@@ -538,7 +538,7 @@ whimsigoth, get Hope Sandoval on the panel", then "ADD HER AS A GUARDIAN WHY NOT
 the Moonlit Circle. Claude drafted the charter, and she kept it as drafted. Originality passed it
 with a caution: no likeness, voice or portrait of her; no lyrics, song or album titles; nothing
 that reads as her endorsement. Her mood (hazy, slow, velvet-dark, dream-pop restraint) belongs to
-everyone. She hasn't been drawn: she is an egg until Codex draws her.
+everyone. Drawn October 18: a half-open moonflower, dark violet on velvet black, one dewdrop holding one star; no face (Paul: "very artful for her not to have eyes or a face").
 
 - **treasure**: the hush after midnight
 - **believes**: a thing said softly, slowly and half in shadow stays with you longer than
@@ -566,7 +566,7 @@ guardians. Paul: "Go ahead with his creation, even the pets." He sits with the W
 drafted the charter, and he kept it as drafted. Originality passed it with a caution: no likeness
 or voice of his; no lyrics, song or album titles in his lines; none of his Oblique Strategies
 cards quoted (a deck of prompts is an idea that belongs to everyone); nothing that reads as his
-endorsement. He hasn't been drawn: he is an egg until Codex draws him.
+endorsement. Drawn October 18: two mismatched tape spools, a slack loop of tape, a wildflower from the bigger hub and a die; no face.
 
 - **treasure**: the room that plays itself
 - **believes**: give a good process a few simple rules and a little chance, and it will make
@@ -596,6 +596,7 @@ charter. Originality passed it with a caution: no likeness or voice of his; his 
 Bloomsbury painters' manner (the Omega Workshops, Charleston's painted furniture), never a copy of
 a picture by Duncan Grant or Vanessa Bell; nothing that reads as his endorsement. He hasn't been
 drawn: he is an egg until Codex draws him.
+Drawn October 18: a plump songbird painted like an Omega Workshops object, chosen over a painted cash box ("this wouldn't really be someone's chosen mascot").
 
 - **treasure**: the evening the money is for
 - **believes**: money and machinery are only the means; the point is a good life: friends,
