@@ -2,8 +2,9 @@ import Foundation
 
 extension EditWork {
     /// A line the painter drew, as the polyline it is (`TemplateEditor.Edit.draw`). Parts off the
-    /// canvas are cut away; the rest is laid on the template as drawn, in `drawRun`.
-    mutating func draw(_ input: [SIMD2<Float>], closed: Bool) throws {
+    /// canvas are cut away; the rest is laid on the template as drawn, in `drawRun`, `nudging` it
+    /// through the junctions it passes close by (`throughJunctions`).
+    mutating func draw(_ input: [SIMD2<Float>], closed: Bool, nudging: Bool = false) throws {
         var points: [LatticePoint] = []
         for p in input.prefix(TemplateEditor.maximumPoints) where p.x.isFinite && p.y.isFinite {
             let q = Lattice.clampedPoint(p)
@@ -11,7 +12,7 @@ extension EditWork {
         }
         if closed, points.count >= 3, points.first != points.last { points.append(points[0]) }
         guard points.count >= 2 else { return }
-        for run in clip(points) { try drawRun(run) }
+        for run in clip(points) { try drawRun(run, nudging: nudging) }
     }
 
     // MARK: - The canvas
@@ -186,7 +187,7 @@ extension EditWork {
     /// near; it is cut where it meets the drawing (the edges, itself, and the strokes it touches,
     /// `node`) into chains; each chain, with the outline of the region it lies in, either closes
     /// off part of the region (`splitRegion`) or is a stroke.
-    mutating func drawRun(_ input: [LatticePoint]) throws {
+    mutating func drawRun(_ input: [LatticePoint], nudging: Bool = false) throws {
         var run = Self.dedupe(input)
         guard run.count >= 2 else { return }
         if !(run.count >= 4 && run.first == run.last) {
@@ -203,6 +204,7 @@ extension EditWork {
         }
         run = Self.dedupe(run)
         guard run.count >= 2, Set(run).count >= 2 else { return }
+        if nudging { run = throughJunctions(run) }
 
         // The strokes the line might meet: simple ones near it that stay clear of every outline.
         var lo = LatticePoint(repeating: .max), hi = LatticePoint(repeating: .min)
@@ -310,6 +312,40 @@ extension EditWork {
         }
         for r in byRegion.keys.sorted() { try splitRegion(r, chains: byRegion[r]!, fresh: fresh) }
         summary.lines += 1
+    }
+
+    /// `run` passing through each junction (an end of an edge) within `TemplateEditor.reach` (the
+    /// width of ink) of a point where it crosses that edge: the junction becomes a vertex of the
+    /// line in its place. Otherwise the line clips the corner there, and the sliver it closes off
+    /// has no room for even a detail area's number (a right angle cut 2 units from its tip leaves
+    /// about 0.8 of room, against a floor of about 1): it stays uncut, the shape's line beside it
+    /// only a stroke there. The line moves by under the ink's width, as an end joining ink does
+    /// (`joinPoint`); the drawing's lines never move. A nudge that would make the line double
+    /// back on itself is not made.
+    mutating func throughJunctions(_ run: [LatticePoint]) -> [LatticePoint] {
+        let reachSquared = TemplateEditor.reach * TemplateEditor.reach
+        var inserts: [(segment: Int, point: LatticePoint)] = []
+        for c in contacts(of: run) {
+            guard case .cross(let p) = c.contact else { continue }
+            let n = Int(t.edges[c.edge].pointCount)
+            var best: (point: LatticePoint, d2: Int64)?
+            for j in [latticePoint(c.edge, 0), latticePoint(c.edge, n - 1)] {
+                let d2 = Lattice.distanceSquared(j, p)
+                if d2 <= reachSquared, best == nil || d2 < best!.d2 || (d2 == best!.d2 && Lattice.lexicographicallyBefore(j, best!.point)) {
+                    best = (j, d2)
+                }
+            }
+            if let best { inserts.append((c.mine, best.point)) }
+        }
+        guard !inserts.isEmpty else { return run }
+        let nudged = Self.dedupe(Self.inserting(inserts, into: run))
+        guard nudged.count >= 2 else { return run }
+        for i in 0..<(nudged.count - 1) {
+            for j in (i + 1)..<(nudged.count - 1) {
+                if case .overlap = Lattice.contact(nudged[i], nudged[i + 1], nudged[j], nudged[j + 1]) { return run }
+            }
+        }
+        return nudged
     }
 
     /// `points` cut into chains at the vertices in `nodes`: a loop is cut at its first node,

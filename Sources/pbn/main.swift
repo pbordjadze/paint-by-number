@@ -29,14 +29,17 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
-//   pbn edit <template.pbnt> <edits.json> --out <dir>
+//   pbn edit <template.pbnt> <edits.json> --out <dir> [--photo <image>]
 //       applies manual edits to a finished coloring-book template, in order, as the app's Refine
-//       does (TemplateEditor): no photo, no edge map, no segmentation. edits.json: [{"kind":
-//       "draw", "points": [[x, y], ...], "closed": false}, {"kind": "erase", "radius": r,
+//       does (TemplateEditor): no edge map, no segmentation. edits.json: [{"kind": "draw",
+//       "points": [[x, y], ...], "closed": false, "paints": [{"at": [x, y], "color": [L, a,
+//       b]}]}, {"kind": "erase", "radius": r,
 //       "points": [...]}, {"kind": "eraseLine", "points": [[x, y]], "reach": r}, {"kind": "fill",
 //       "points": [[x, y]], "color": [L, a, b] | "paint": n}], all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
-//       line drawn exactly as given and cutting the cell it closes, the eraser's pass cutting the
+//       line drawn exactly as given and cutting the cell it closes (with "paints", nudged through
+//       the junctions it crosses beside and each piece it cuts recolored; --photo reads those
+//       paints from the photo for every draw without them, as the app does), the eraser's pass cutting the
 //       ink at the edge of its reach (the cells it frees merging), a line tapped away from
 //       junction to junction, the shape under a point made one detail area of a paint (the
 //       color's, within a just-noticeable difference, else a new one); a kind pbn doesn't know is
@@ -47,6 +50,19 @@
 //       end moved onto ink, `maxEndShift`; `unexpectedChanges`, 0: regions the edit changed that
 //       it neither touched, merged nor sat beside) and how many regions are bit for bit as
 //       they were (`identicalRegions`)
+//   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm [--lines drawing.pgm]]
+//       [generate options]
+//       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
+//       its ends joining the lines they touch, Shapes, the Eraser's reach on screen, the Smart
+//       Eraser's line from junction to junction, Fill with the photo's color there, Undo, Redo)
+//       on the coloring book of the photo (generated as the app does, the coloring book at its
+//       defaults unless --line-style says otherwise, or --template), each edit laid as the app lays
+//       it (a drawn line with the photo's colors, TemplateEditor.painted; EditTrail). gestures.json:
+//       Sources/pbn/Refine.swift's RefineScript, points normalized to the picture. Writes
+//       before.ppm, after.ppm and per gesture steps/NN-<tool>.ppm (the painting with the drawing in
+//       ink at 2×) and steps/NN-<tool>-touches.ppm (its touches over it, in magenta), photo.ppm, before.pbnt, template.pbnt, edits.json (the
+//       edits as refinements.json keeps them) and refine.json: per gesture the edit, what it did
+//       and the toast Refine shows; tools/refine_sheet.py lays them out in one picture
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -82,12 +98,13 @@
 //       its canonical anchors. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|edit|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|edit|refine|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
 case "generate": try runGenerate(options)
 case "edit": try runEdit(options)
+case "refine": try runRefine(options)
 case "suggest": try runSuggest(options)
 case "trace": try runTrace(options)
 case "check": try runCheck(options)

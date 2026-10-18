@@ -319,9 +319,10 @@ struct DraftTests {
         try await waitUntil { model.isFinal }
         let template = try #require(model.preview?.template)
         let w = Float(template.width), h = Float(template.height)
-        let edit = TemplateEditor.Edit.draw(points: [SIMD2(0.42 * w, 0.5 * h), SIMD2(0.5 * w, 0.46 * h), SIMD2(0.58 * w, 0.5 * h)])
-        let serial = model.edit(edit)
+        let drawn = TemplateEditor.Edit.draw(points: [SIMD2(0.42 * w, 0.5 * h), SIMD2(0.5 * w, 0.46 * h), SIMD2(0.58 * w, 0.5 * h)])
+        let serial = model.edit(drawn)
         try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        let edit = TemplateEditor.painted(drawn, on: template, photo: try #require(model.source?.image))
         let saved = try #require(model.draft)
         #expect(saved.refinements.edits == [edit])
 

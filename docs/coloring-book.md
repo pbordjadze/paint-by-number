@@ -289,8 +289,8 @@ moved and the palette changed, because each edit ran the whole pipeline again (s
 smoothing, fitting). `TemplateEditor.apply(_:to:)` (`Sources/PaintCore/Edit/`, `pbn edit`) is
 Refine without it: the edit is made to the finished template, with no photo, edge map,
 segmentation, smoothing or fitting, so a line is the line drawn and everything the edit does not
-reach is bit for bit what it was. All points are canvas units; the edits are `draw(points, closed)`,
-`erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
+reach is bit for bit what it was. All points are canvas units; the edits are
+`draw(points, closed, paints)`, `erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
 and its `points`, the shape `pbn edit` reads: `EditCoding.swift`), and `EditTrail` lays a list on a
 template and keeps the templates after the last few, so taking an edit back or putting it back
 costs no editing; an edit that does nothing on a template (declined, or nothing to change) is left
@@ -325,7 +325,27 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   (`LabelSizing.detailMinimumRadius`) and not for the usual one becomes a detail area
   (`Template.detailRegions`); one with less is not cut off: the chains round it go back to being
   strokes and the cell stays as it was (`Outcome.tooSmall` says where). A line through a crowd
-  cuts what it can.
+  cuts what it can. The app says a shape is too small only when its line cut nothing off
+  (`EditTrail.Verdict.made`): a line through a crowd also closes slivers where it crosses ink
+  beside a junction or runs within a unit of a line, and 7 of 12 random ovals on the parrots book
+  set the toast off though every one was cut and numbered.
+- **A drawn line's colors.** A draw with `paints` (every draw the app has made since; one without,
+  saved before, is laid as it always was) changes the paint under it as well as the lines. First
+  the line, and only the line, passes through each junction (an end of an edge) within `inkWidth`
+  of where it crosses that edge (`EditWork.throughJunctions`; it moved lines by up to 2.1 units on
+  the parrots and lighthouse books), so it doesn't clip the corner there into a sliver with no room
+  for a number. Then each piece it cut takes the photo's color there: the app reads it over the
+  piece's pixels (`TemplateEditor.painted`, `LineEdit.photoColor(ofRegion:in:image:)`: the median
+  in OKLab, at most `areaSamples` pixels) and keeps it in the edit with a point inside the piece
+  (`Paint`), so the edit lays the same way without the photo. The piece takes the paint nearest
+  that color within `paintTolerance` (twice the palette's median spacing, the book's own tolerance
+  for one color, `CellMap.mergeCloseColors`, between a just-noticeable difference and three), its
+  own when that is nearest, else a new paint added last; it keeps its paint where the new one is a
+  neighbour's across an undrawn edge or its number has no room for the new digits. Of 40 random
+  closed shapes on each of the parrots and lighthouse books, 11 and 21 changed paints (26 and 96
+  pieces), adding 5 paints and none; the rest lay where the photo agrees with the paint there, and
+  stay so, each piece with its own number. Slivers the nudge doesn't reach (20 and 41, under a line
+  running within a unit of another) are left as before.
 - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach
   (stadium by stadium; the cut is the lattice point nearest the circle). Ink between two regions
   that this breaks lets the paint through: the regions merge (the larger by area keeps its index

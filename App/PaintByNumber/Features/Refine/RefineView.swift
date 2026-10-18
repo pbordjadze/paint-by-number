@@ -30,25 +30,6 @@ nonisolated enum RefineTool: Hashable {
     var erases: Bool { self == .eraser || self == .smartEraser }
 }
 
-/// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
-/// to where it ends, a rectangle or an oval across it, and a curve: a drag for its ends, then a
-/// second drag bends it through the finger (a tap leaves it straight).
-nonisolated enum RefineShape: CaseIterable, Hashable {
-    case line, rectangle, oval, curve
-
-    var systemImage: String {
-        switch self {
-        case .line: "line.diagonal"
-        case .rectangle: "rectangle"
-        case .oval: "oval"
-        case .curve: "point.topleft.down.to.point.bottomright.curvepath"
-        }
-    }
-
-    /// The figure ends where it starts.
-    var isClosed: Bool { self == .rectangle || self == .oval }
-}
-
 /// What shows beneath the drawing on the Refine screen.
 nonisolated enum RefineBackdrop: Hashable {
     /// The drawing's paper.
@@ -286,7 +267,7 @@ struct RefineView: View {
         var lines: [TemplateRefinements.Line] = []
         for item in submitted {
             switch item.edit {
-            case .draw(let points, let closed):
+            case .draw(let points, let closed, _):
                 lines.append(.init(kind: .draw, radius: 0, points: (closed ? points + points.prefix(1) : points).map(normalized)))
             case .erase(let path, let radius):
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
@@ -354,10 +335,12 @@ struct RefineView: View {
         return pictureLong > 0 ? Float(points / pictureLong) : 0.03
     }
 
-    /// The eraser too, a little finer: a thirtieth of the short side, between 10 and 20 points.
-    private var eraserRadius: Float {
-        let points = min(max(0.033 * min(canvasSize.width, canvasSize.height), 10), 20)
-        return pictureLong > 0 ? Float(points / pictureLong) : 0.02
+    /// The eraser too, a little finer (`RefineScreen.eraserRadius`).
+    private var eraserRadius: Float { screen.eraserRadius }
+
+    /// The screen as the gestures see it (`RefineGestures`, which `pbn refine` replays too).
+    private var screen: RefineScreen {
+        RefineScreen(canvas: templateSize, picture: picture.size, view: canvasSize, lineWidth: lineWidth)
     }
 
     @ViewBuilder
@@ -398,7 +381,7 @@ struct RefineView: View {
             snapLines = tool.erases ? nil : currentSnapLines()
         case .moved:
             // Samples closer than a point add nothing the line shows.
-            guard var current = trace, let last = current.last, onScreen(point - last) >= 1 else { return }
+            guard var current = trace, let last = current.last, screen.onScreenLength(point - last) >= 1 else { return }
             current.append(point)
             trace = current
         case .ended:
@@ -424,64 +407,14 @@ struct RefineView: View {
         snapLines = nil
     }
 
-    /// The shortest line the pen draws, in the template's canvas units: a touch shorter than a
-    /// fingertip's slip is no line.
-    static let shortestLine: CGFloat = 8
-    /// The Pen's ends move onto a line whose ink theirs touches: within one ink width (half of
-    /// each), and at least this many points.
-    static let touchFloor: CGFloat = 2
-
-    /// The template's canvas units per point on screen (0 before there is a template).
-    private var unitsPerPoint: CGFloat {
-        let canvas = base?.drawing.size ?? .zero
-        return picture.width > 0 ? canvas.width / picture.width : 0
-    }
-
-    /// The shortest line on screen, in points (`shortestLine`).
-    private var shortestOnScreen: CGFloat {
-        unitsPerPoint > 0 ? max(4, Self.shortestLine / unitsPerPoint) : 4
-    }
-
-    /// A pen's line from its samples: smoothed and thinned on screen's terms as it showed, its
-    /// ends moved onto a line their ink touches (`touchFloor`). Nil for a touch too short to be a
-    /// line, on screen or in the template.
+    /// A pen's line from its samples (`RefineGestures.pen`).
     private func penEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
-        let line = points.map(onScreenPoint)
-        guard picture.width > 0, PenPath.length(line) >= shortestOnScreen else { return nil }
-        return drawEdit(touching(PenPath.simplified(PenPath.smoothed(line, spacing: 2), tolerance: 0.3), straight: false))
+        RefineGestures.pen(points, on: screen, snapping: snapLines)
     }
 
-    /// The eraser's pass as an edit: its path in canvas units, and its reach there, the radius it
-    /// has on screen.
+    /// The eraser's pass as an edit (`RefineGestures.eraser`).
     private func eraserEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
-        let size = templateSize
-        guard size.width > 0, size.height > 0 else { return nil }
-        let path = simplified(points, tolerance: 0.5).map(canvasPoint)
-        return .erase(path: path, radius: eraserRadius * Float(max(size.width, size.height)))
-    }
-
-    /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
-    private func touching(_ line: [CGPoint], straight: Bool) -> [CGPoint] {
-        let units = unitsPerPoint
-        guard let snapLines, units > 0 else { return line }
-        let reach = max(lineWidth, Self.touchFloor) * units
-        let inCanvas = line.map { CGPoint(x: $0.x * units, y: $0.y * units) }
-        return PenAssist.joined(inCanvas, to: snapLines, reach: reach, straight: straight)
-            .map { CGPoint(x: $0.x / units, y: $0.y / units) }
-    }
-
-    /// A line of points on screen as the edit that draws it, in the template's canvas units. A
-    /// closed figure ends where it starts: the edit has that point once and says it is closed.
-    private func drawEdit(_ points: [CGPoint], closed: Bool = false) -> TemplateEditor.Edit? {
-        let units = unitsPerPoint
-        guard units > 0 else { return nil }
-        let canvas = points.map { SIMD2(Float($0.x * units), Float($0.y * units)) }
-        return .draw(points: closed ? Array(canvas.dropLast()) : canvas, closed: closed)
-    }
-
-    /// A picture point on screen, in points from the picture's corner.
-    private func onScreenPoint(_ p: SIMD2<Float>) -> CGPoint {
-        CGPoint(x: CGFloat(p.x) * picture.width, y: CGFloat(p.y) * picture.height)
+        RefineGestures.eraser(points, on: screen)
     }
 
     // MARK: Shapes
@@ -504,12 +437,12 @@ struct RefineView: View {
             if shape == .curve && curve == nil {
                 // The ends are down; the next drag bends the curve between them.
                 if let figure, figure.count == 2 {
-                    curve = (picturePoint(figure[0]), picturePoint(figure[1]))
+                    curve = (screen.picturePoint(figure[0]), screen.picturePoint(figure[1]))
                 }
             } else {
                 curve = nil
                 snapLines = nil
-                if let figure, let edit = drawEdit(figure, closed: shape.isClosed) { submit(edit) }
+                if let figure, let edit = RefineGestures.drawEdit(figure, closed: shape.isClosed, on: screen) { submit(edit) }
             }
         case .cancelled:
             trace = nil
@@ -521,35 +454,17 @@ struct RefineView: View {
     private func shapeFigure() -> [CGPoint]? {
         guard picture.width > 0, picture.height > 0 else { return nil }
         if let curve {
-            let a = onScreenPoint(curve.from), b = onScreenPoint(curve.to)
-            guard let bend = trace?.last else { return [a, b] }
-            return ShapePath.curve(from: a, to: b, through: onScreenPoint(bend), spacing: 2)
+            guard let bend = trace?.last else { return [screen.onScreen(curve.from), screen.onScreen(curve.to)] }
+            return RefineGestures.figure(shape, from: bend, to: bend, curve: curve, on: screen, snapping: snapLines)
         }
         guard let trace, let first = trace.first, let last = trace.last else { return nil }
-        let a = onScreenPoint(first), b = onScreenPoint(last)
-        let shortest = shortestOnScreen
-        switch shape {
-        case .line, .curve:
-            guard PenPath.distance(a, b) >= shortest else { return nil }
-            return touching([a, b], straight: true)
-        case .rectangle:
-            guard abs(b.x - a.x) >= shortest, abs(b.y - a.y) >= shortest else { return nil }
-            return ShapePath.rectangle(from: a, to: b)
-        case .oval:
-            guard abs(b.x - a.x) >= shortest, abs(b.y - a.y) >= shortest else { return nil }
-            return ShapePath.oval(from: a, to: b, spacing: 2)
-        }
+        return RefineGestures.figure(shape, from: first, to: last, on: screen, snapping: snapLines)
     }
 
     /// The shape under the finger, or a curve waiting to be bent, as `RefineInkLayer` draws it.
     private var shapeTrace: [SIMD2<Float>]? {
         guard tool == .shape, trace != nil || curve != nil else { return nil }
-        return shapeFigure()?.map(picturePoint)
-    }
-
-    /// A point on screen as a picture point (0…1).
-    private func picturePoint(_ p: CGPoint) -> SIMD2<Float> {
-        SIMD2(Float(p.x / picture.width), Float(p.y / picture.height))
+        return shapeFigure()?.map(screen.picturePoint)
     }
 
     /// A curve whose ends are down and that wasn't bent is laid straight.
@@ -557,32 +472,15 @@ struct RefineView: View {
         guard let pending = curve else { return }
         curve = nil
         snapLines = nil
-        if let edit = drawEdit([onScreenPoint(pending.from), onScreenPoint(pending.to)]) { submit(edit) }
+        if let edit = RefineGestures.straightCurve(from: pending.from, to: pending.to, on: screen) { submit(edit) }
     }
 
     /// The lines on screen, in the template's canvas units: its drawing, the lines drawn since,
     /// less what was erased since (the edits sent that it doesn't show yet).
     private func currentSnapLines() -> SnapLines? {
         guard let drawing = base?.drawing else { return nil }
-        let size = drawing.size
-        var lines = drawing.lines.map(\.points)
-        for item in submitted {
-            switch item.edit {
-            case .draw(let points, let closed):
-                lines.append((closed ? points + points.prefix(1) : points).map { CGPoint($0) })
-            case .erase(let path, let radius):
-                lines = SnapLines.erasing(lines, by: [(path.map { CGPoint($0) }, CGFloat(radius))])
-            case .eraseLine:
-                // The line itself: what meets it keeps its junction.
-                if let chain = item.chain {
-                    let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
-                    lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
-                }
-            case .fill:
-                break
-            }
-        }
-        return SnapLines(lines)
+        return RefineGestures.snapLines(
+            drawing: drawing.lines.map(\.points), canvas: drawing.size, pending: submitted.map { ($0.edit, $0.chain) })
     }
 
     // MARK: Landing
@@ -612,21 +510,6 @@ struct RefineView: View {
 
     /// The painting's long side, in pixels, at most.
     static let paintingPixels = 3200
-
-    /// `points` thinned to within `tolerance` points on screen.
-    private func simplified(_ points: [SIMD2<Float>], tolerance: CGFloat) -> [SIMD2<Float>] {
-        let size = picture.size
-        guard size.width > 0, size.height > 0 else { return points }
-        let onScreen = points.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
-        return PenPath.simplified(onScreen, tolerance: tolerance).map {
-            SIMD2(Float($0.x / size.width), Float($0.y / size.height))
-        }
-    }
-
-    /// A step between two picture points, in points on screen.
-    private func onScreen(_ step: SIMD2<Float>) -> CGFloat {
-        hypot(CGFloat(step.x) * picture.width, CGFloat(step.y) * picture.height)
-    }
 
     private var brushKind: TemplateRefinements.Stroke.Kind {
         switch tool {
@@ -692,21 +575,15 @@ struct RefineView: View {
         }
     }
 
-    /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
-    static let fingerReach: CGFloat = 16
-
     /// Takes out the drawn line under a tap from junction to junction (`LineChains` finds it for
     /// the flash and the ink laid over it; the template's editor decides what goes): the lines it
     /// meets stay whole. The line glows as it goes.
     private func eraseLine(at point: SIMD2<Float>) {
-        guard let drawing = base?.drawing, picture.width > 0 else { return }
-        let size = drawing.size
-        let tap = CGPoint(x: CGFloat(point.x) * size.width, y: CGFloat(point.y) * size.height)
-        // A finger's width on screen, in canvas units.
-        let reach = Self.fingerReach * size.width / picture.width
-        guard let chain = LineChains(drawing).chain(near: tap, tolerance: reach) else { return }
-        let normalized = chain.map { SIMD2(Float($0.x / size.width), Float($0.y / size.height)) }
-        submit(.eraseLine(at: canvasPoint(point), reach: Float(reach)), chain: normalized)
+        guard let drawing = base?.drawing,
+              let erased = RefineGestures.lineEraser(at: point, on: screen, chains: LineChains(drawing))
+        else { return }
+        let normalized = erased.chain
+        submit(erased.edit, chain: normalized)
         FeedbackEngine.shared.selectionChanged()
         guard !reduceMotion else { return }
         tapped = normalized

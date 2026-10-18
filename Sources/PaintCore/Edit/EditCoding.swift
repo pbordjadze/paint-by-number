@@ -4,7 +4,8 @@ import Foundation
 /// shape `pbn edit` reads for the kinds both know: an object with a `kind` and its `points`, in
 /// canvas units, plus what the kind needs.
 ///
-///     {"kind": "draw",      "points": [[x, y], ...], "closed": false}
+///     {"kind": "draw",      "points": [[x, y], ...], "closed": false,
+///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...]}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -13,9 +14,13 @@ import Foundation
 /// does not know fails that one edit's decoding (a list of edits decodes each on its own and
 /// leaves such an edit out). A new field gets a default that is what the kind did before it, so
 /// files already written keep their meaning: never rename or repurpose a key or a kind. A missing
-/// `closed` is false, a missing `radius` or `reach` the editor's own default (as `pbn edit`'s).
+/// `closed` is false, a missing `radius` or `reach` the editor's own default (as `pbn edit`'s). A
+/// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`):
+/// it is written only when there are paints, so a draw without them is written as it always was.
+/// An older reader skips `paints` and lays such a draw as before, in the paints it had.
 extension TemplateEditor.Edit: Codable {
-    private enum CodingKeys: String, CodingKey { case kind, points, closed, radius, reach, color }
+    private enum CodingKeys: String, CodingKey { case kind, points, closed, radius, reach, color, paints }
+    private enum PaintKeys: String, CodingKey { case at, color }
 
     /// The eraser's radius when a file gives none, canvas units (`pbn edit`'s default).
     static let defaultRadius: Float = 4
@@ -32,7 +37,22 @@ extension TemplateEditor.Edit: Codable {
         }
         switch kind {
         case "draw":
-            self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false)
+            var paints: [TemplateEditor.Paint]?
+            if c.contains(.paints) {
+                var list = try c.nestedUnkeyedContainer(forKey: .paints)
+                var decoded: [TemplateEditor.Paint] = []
+                while !list.isAtEnd {
+                    let p = try list.nestedContainer(keyedBy: PaintKeys.self)
+                    let at = try p.decode(SIMD2<Float>.self, forKey: .at)
+                    let color = try p.decode([Float].self, forKey: .color)
+                    guard color.count == 3 else {
+                        throw DecodingError.dataCorruptedError(forKey: .color, in: p, debugDescription: "a color is [L, a, b]")
+                    }
+                    decoded.append(TemplateEditor.Paint(at: at, color: SIMD3(color[0], color[1], color[2])))
+                }
+                paints = decoded
+            }
+            self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: paints)
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -51,10 +71,18 @@ extension TemplateEditor.Edit: Codable {
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .draw(let points, let closed):
+        case .draw(let points, let closed, let paints):
             try c.encode("draw", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
+            if let paints {
+                var list = c.nestedUnkeyedContainer(forKey: .paints)
+                for paint in paints {
+                    var p = list.nestedContainer(keyedBy: PaintKeys.self)
+                    try p.encode(paint.at, forKey: .at)
+                    try p.encode([paint.color.x, paint.color.y, paint.color.z], forKey: .color)
+                }
+            }
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)

@@ -87,7 +87,9 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`, `RefineEdits`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`; its gestures and
+  geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
+  the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -568,9 +570,13 @@ Conventions).
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
     tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`), which
     `CreateModel.edit(_:)` / `fill(at:color:)` lays on the template on screen off the main actor
-    (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. The shown template
-    is a function of the base (what the generator makes from the photo, the settings and the
-    refinements' generator inputs, `TemplateRefinements.generatorInputs`) and `refinements.edits`,
+    (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. A drawn line
+    first takes the photo's colors for the pieces it cuts (`TemplateEditor.painted` on the
+    template shown and `source.image`, kept in the edit's `paints`; `docs/coloring-book.md` › A
+    drawn line's colors); one sent while the base is being made again is kept as drawn. The
+    shown template is a function of the base (what the generator makes from the photo, the
+    settings and the refinements' generator inputs, `TemplateRefinements.generatorInputs`) and
+    `refinements.edits`,
     laid in order, so the same pair is the same template on every device and in every build of one
     `pipelineVersion`; what an edit doesn't reach is bit for bit what it was (`CreateModelTests`).
     Until an edit lands (`CreateModel.settledEdits` reaches its number) it shows over the template
@@ -598,8 +604,9 @@ Conventions).
     changes nothing, is not kept and takes no step of the history; a toast says so
     (`RefineNote`, `RefineNoteToast`, announced to VoiceOver by `CreateModel.say`, gone after
     `CreateModel.noteDuration`). A shape a line closed with no room for a number is not cut off but
-    its line stays, and the toast says that. An edit with nothing to change (an eraser over bare
-    paper) is silent.
+    its line stays, and the toast says that, only when the line cut nothing off (the slivers a
+    line closes crossing ink beside a junction are silent: `EditTrail.Verdict.made`). An edit
+    with nothing to change (an eraser over bare paper) is silent.
   - `TemplateRefinements` are the painter's changes: the `edits`, and the generator's inputs
     (importance, the edge maps' gain, `LineArtInput.writing`, and `lines`, the lines drawn and
     erased by builds that refined through the generator, `LineArtInput.edits`: paintings and
