@@ -1,0 +1,219 @@
+Building for debugging...
+[0/16] /Users/runner/work/paint-by-number/paint-by-number/.build/arm64-apple-macosx/debug/PaintCorePackageTests.derived/runner.swift
+[1/16] Write sources
+[1/16] Write pbn-entitlement.plist
+[3/16] Copying Fixtures
+[5/16] Write sources
+[10/16] Write swift-version-7974D3F7F03D5E95.txt
+[12/59] Emitting module PaintCore
+[13/79] Compiling PaintCore ColorNaming.swift
+[14/79] Compiling PaintCore ColorNickname.swift
+[15/79] Compiling PaintCore ColorNicknameV2.swift
+[16/79] Compiling PaintCore ColorNicknameV2Anchors.swift
+[17/79] Compiling PaintCore ColorNicknameVocabulary.swift
+[18/79] Compiling PaintCore ColorNicknameVocabularyValidation.swift
+[19/79] Compiling PaintCore ColorScience.swift
+[20/79] Compiling PaintCore ConnectedComponents.swift
+[21/79] Compiling PaintCore DisjointSet.swift
+[22/79] Compiling PaintCore DistanceTransform.swift
+[23/79] Compiling PaintCore Gaussian.swift
+[24/79] Compiling PaintCore Grid.swift
+[25/79] Compiling PaintCore MinHeap.swift
+[26/79] Compiling PaintCore Morphology.swift
+[27/79] Compiling PaintCore Netpbm.swift
+[28/79] Compiling PaintCore Parallel.swift
+[29/79] Compiling PaintCore PixelBounds.swift
+[30/79] Compiling PaintCore Resample.swift
+[31/79] Compiling PaintCore SIMDMath.swift
+[32/79] Compiling PaintCore SplitMix64.swift
+[33/79] Compiling PaintCore StageClock.swift
+[34/99] Compiling PaintCore AutoSettings.swift
+[35/99] Compiling PaintCore AutoWorking.swift
+[36/99] Compiling PaintCore PaintingLength.swift
+[37/99] Compiling PaintCore PhotoAnalysis.swift
+[38/99] Compiling PaintCore PhotoAnalyzer.swift
+[39/99] Compiling PaintCore SubjectHints.swift
+[40/99] Compiling PaintCore EditCoding.swift
+[41/99] Compiling PaintCore EditDraw.swift
+[42/99] Compiling PaintCore EditErase.swift
+[43/99] Compiling PaintCore EditFaces.swift
+[44/99] Compiling PaintCore EditFill.swift
+[45/99] Compiling PaintCore EditFinish.swift
+[46/99] Compiling PaintCore EditLabels.swift
+[47/99] Compiling PaintCore EditMerge.swift
+[48/99] Compiling PaintCore EditPaint.swift
+[49/99] Compiling PaintCore EditPixels.swift
+[50/99] Compiling PaintCore EditTrail.swift
+[51/99] Compiling PaintCore EditWork.swift
+[52/99] Compiling PaintCore Lattice.swift
+[53/99] Compiling PaintCore TemplateEditor.swift
+[54/99] Compiling PaintCore SVGExport.swift
+[55/119] Compiling PaintCore TemplateCoding.swift
+[56/119] Compiling PaintCore TemplateLineArt.swift
+[57/119] Compiling PaintCore PipelineSnapshot.swift
+[58/119] Compiling PaintCore RefineGeometry.swift
+[59/119] Compiling PaintCore RefineGestures.swift
+[60/119] Compiling PaintCore BandMerging.swift
+[61/119] Compiling PaintCore BandRings.swift
+[62/119] Compiling PaintCore BoundarySmoothing.swift
+[63/119] Compiling PaintCore BoxBlur.swift
+[64/119] Compiling PaintCore DomainTransformFilter.swift
+[65/119] Compiling PaintCore ImportanceMap.swift
+[66/119] Compiling PaintCore LabelRegularizer.swift
+[67/119] Compiling PaintCore PaletteBuilder.swift
+[68/119] Compiling PaintCore PaletteOrdering.swift
+[69/119] Compiling PaintCore PaletteRefiner.swift
+[70/119] Compiling PaintCore RegionAdjacency.swift
+[71/119] Compiling PaintCore RegionRuns.swift
+[72/119] Compiling PaintCore RegionSimplifier+LabelRoom.swift
+[73/119] Compiling PaintCore RegionSimplifier.swift
+[74/119] Compiling PaintCore SegmentationParameters.swift
+[75/119] Compiling PaintCore CellMap.swift
+[76/119] Compiling PaintCore DrawnLine.swift
+[77/119] Compiling PaintCore EdgeMap.swift
+[78/119] Compiling PaintCore LayeredLines.swift
+[79/119] Compiling PaintCore LineArtStats.swift
+[80/119] Compiling PaintCore LineDetection.swift
+[81/119] Compiling PaintCore LineEdits.swift
+[82/119] Compiling PaintCore LineLayering.swift
+[83/119] Compiling PaintCore MaskContours.swift
+[84/119] Compiling PaintCore StrokeGraph.swift
+[85/119] Compiling PaintCore Writing.swift
+[86/119] Compiling PaintCore GenerationSettings.swift
+[87/119] Compiling PaintCore LabelSizing.swift
+[88/119] Compiling PaintCore LineArtSettings.swift
+[89/119] Compiling PaintCore PaintingTime.swift
+[90/119] Compiling PaintCore PipelineTuning.swift
+[91/119] Compiling PaintCore RegionRemap.swift
+[92/119] Compiling PaintCore Segmentation.swift
+[93/119] Compiling PaintCore SharedPainting.swift
+[94/119] Compiling PaintCore Template.swift
+[95/119] Compiling PaintCore Segmenter.swift
+[96/119] Compiling PaintCore StructureMap.swift
+[97/119] Compiling PaintCore TextureConsolidation.swift
+[98/119] Compiling PaintCore TextureMap.swift
+[99/119] Compiling PaintCore ThinPartRemoval.swift
+[100/119] Compiling PaintCore WorkingImage.swift
+[101/119] Compiling PaintCore TemplateGenerator.swift
+[102/119] Compiling PaintCore BoundaryGraph.swift
+[103/119] Compiling PaintCore CurveFairing.swift
+[104/119] Compiling PaintCore CurveFitter.swift
+[105/119] Compiling PaintCore DenseCurve.swift
+[106/119] Compiling PaintCore Earcut.swift
+[107/119] Compiling PaintCore EdgeGuides.swift
+[108/119] Compiling PaintCore EdgeSmoother.swift
+[109/119] Compiling PaintCore GeometryValidator.swift
+[110/119] Compiling PaintCore LabelKeepOut.swift
+[111/119] Compiling PaintCore PolyLabel.swift
+[112/119] Compiling PaintCore RegionFills.swift
+[113/119] Compiling PaintCore TemplateValidation.swift
+[114/119] Compiling PaintCore Vectorizer.swift
+[115/179] Compiling MakingOf Arrival.swift
+[116/179] Compiling MakingOf Cards.swift
+[117/179] Compiling MakingOf Compositor.swift
+[118/179] Compiling MakingOf CrewInputsBuilder.swift
+[119/179] Compiling MakingOf Draws.swift
+[120/179] Compiling MakingOf ExactMath.swift
+[121/179] Compiling MakingOf FieldBands.swift
+[122/179] Compiling MakingOf FieldMath.swift
+[123/179] Emitting module pbn
+[124/182] Compiling pbn Refine.swift
+[125/182] Compiling pbn Timing.swift
+[126/182] Compiling pbn main.swift
+[126/182] Write Objects.LinkFileList
+[127/182] Linking pbn
+[128/182] Applying pbn
+[130/182] Emitting module MakingOf
+[131/194] Compiling MakingOf Geometry.swift
+[132/194] Compiling MakingOf InkCoverage.swift
+[133/194] Compiling MakingOf Labeling.swift
+[134/194] Compiling MakingOf Layers.swift
+[135/194] Compiling PaintCoreTests LineArtTests.swift
+[136/194] Compiling PaintCoreTests LineEditsTests.swift
+[137/194] Compiling MakingOf NumberSchedule.swift
+[138/194] Compiling MakingOf Outlines.swift
+[139/194] Compiling MakingOf PaintSeeds.swift
+[140/194] Compiling MakingOf PetPlan.swift
+[141/194] Compiling PaintCoreTests RegionMergingTests.swift
+[142/194] Compiling MakingOf Planner.swift
+[154/194] Compiling PaintCoreTests EditSplitTests.swift
+[155/194] Compiling MakingOf Geodesic.swift
+[156/194] Compiling MakingOf Sampling.swift
+[157/194] Compiling MakingOf ScheduleStyle.swift
+[158/194] Compiling MakingOf Show.swift
+[159/194] Compiling MakingOf ShowFrame.swift
+[160/194] Compiling MakingOf ShowPictures.swift
+[161/194] Compiling MakingOf ShowSpec.swift
+[162/194] Compiling MakingOf ShowTemplate.swift
+[163/194] Compiling MakingOf Sprites.swift
+[164/194] Compiling MakingOf StopWeights.swift
+[165/194] Compiling MakingOf Streams.swift
+[166/194] Compiling MakingOf Timeline.swift
+[167/194] Compiling MakingOf ValueNoise.swift
+[168/213] Emitting module MakingOfTests
+[169/222] Compiling MakingOfTests ArrivalTests.swift
+[170/222] Compiling MakingOfTests CardsTests.swift
+[171/222] Compiling MakingOfTests CompositorTests.swift
+[172/222] Compiling MakingOfTests CrewInputsTests.swift
+[173/222] Compiling MakingOfTests CrewPlanTests.swift
+[174/222] Compiling MakingOfTests ExactMathTests.swift
+[175/222] Compiling MakingOfTests FieldShowBenchmark.swift
+[176/222] Compiling MakingOfTests FieldShowTests.swift
+[177/222] Compiling MakingOfTests FixtureSupport.swift
+[178/222] Compiling MakingOfTests InkCoverageTests.swift
+[179/222] Compiling MakingOfTests LabelingTests.swift
+[180/222] Compiling MakingOfTests LayersTests.swift
+[181/222] Emitting module PaintCoreTests
+[182/222] Compiling MakingOfTests NumberScheduleTests.swift
+[183/222] Compiling MakingOfTests OutlinesTests.swift
+[184/222] Compiling MakingOfTests RevealFixture.swift
+[185/222] Compiling MakingOfTests SamplingTests.swift
+[186/222] Compiling MakingOfTests ShowPicturesTests.swift
+[187/222] Compiling MakingOfTests ShowSpecTests.swift
+[188/222] Compiling MakingOfTests ShowTemplateTests.swift
+[189/222] Compiling MakingOfTests ShowTests.swift
+[190/222] Compiling MakingOfTests SmallShowSupport.swift
+[191/222] Compiling MakingOfTests SplitMixTests.swift
+[192/222] Compiling MakingOfTests SpritesTests.swift
+[193/222] Compiling MakingOfTests StopWeightsTests.swift
+[200/234] Compiling PaintCoreTests RegionRemapTests.swift
+[201/234] Compiling PaintCoreTests SegmentationTests.swift
+[202/234] Compiling PaintCoreTests SharedPaintingTests.swift
+[224/234] Compiling PaintCoreTests TemplateCodingTests.swift
+[225/234] Compiling PaintCoreTests TemplateEditorTests.swift
+[226/234] Compiling PaintCoreTests TemplateValidationTests.swift
+[227/234] Compiling PaintCoreTests TestScenes.swift
+[228/234] Compiling PaintCoreTests TestSupport.swift
+[229/234] Compiling PaintCoreTests VectorizerTests.swift
+[230/234] Compiling PaintCoreTests WritingCodingTests.swift
+[231/234] Compiling PaintCoreTests WritingTests.swift
+[232/234] Compiling PaintCoreTests resource_bundle_accessor.swift
+[233/236] Compiling PaintCorePackageTests runner.swift
+[234/236] Emitting module PaintCorePackageTests
+[234/236] Write Objects.LinkFileList
+[235/236] Linking PaintCorePackageTests
+Build complete! (149.80s)
+Test Suite 'Selected tests' started at 2026-10-18 09:30:38.355.
+Test Suite 'PaintCorePackageTests.xctest' started at 2026-10-18 09:30:38.362.
+Test Suite 'PaintCorePackageTests.xctest' passed at 2026-10-18 09:30:38.362.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 09:30:38.362.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.007) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test sharedPlatformPins() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.012 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.012 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.012 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.012 seconds.
+✔ Test sharedPlatformPins() passed after 0.034 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.048 seconds.
+✔ Suite "ColorNickname v2" passed after 0.048 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.048 seconds.
