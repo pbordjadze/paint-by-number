@@ -225,6 +225,7 @@ struct PlaceholderCard: View {
                         .font(.system(size: 30, weight: .medium))
                         .foregroundStyle(.tint)
                         .symbolEffect(.pulse, options: .repeating)
+                        .accessibilityHidden(true)
                 }
             }
             VStack(alignment: .leading, spacing: 3) {

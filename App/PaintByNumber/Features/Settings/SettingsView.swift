@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
-    @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
     /// On until switched off here (`TipPreference`).
     @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = true
     #if UNRELEASED
@@ -129,10 +128,6 @@ struct SettingsView: View {
                             SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
                         }
                         .accessibilityIdentifier("settings-preview")
-                        Toggle(isOn: $detailBrushes) {
-                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
-                        }
-                        .accessibilityIdentifier("settings-detail-brushes")
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)

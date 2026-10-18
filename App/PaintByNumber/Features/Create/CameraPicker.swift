@@ -22,15 +22,29 @@ struct CameraPicker: UIViewControllerRepresentable {
     final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: CameraPicker
 
+        /// The shot is being encoded or was handed over: a second Use Photo meanwhile hands nothing.
+        private var isDelivering = false
+
         init(parent: CameraPicker) { self.parent = parent }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage, let data = image.jpegData(compressionQuality: 0.95) {
-                parent.onCapture(data)
-            } else {
-                parent.onFailure()
+            guard !isDelivering else { return }
+            isDelivering = true
+            let image = info[.originalImage] as? UIImage
+            Task {
+                if let image, let data = await Self.jpeg(image) {
+                    parent.onCapture(data)
+                } else {
+                    parent.onFailure()
+                }
+                parent.dismiss()
             }
-            parent.dismiss()
+        }
+
+        /// Off the main actor: a capture is 12 to 48 megapixels, a few hundred milliseconds to encode.
+        @concurrent
+        private static func jpeg(_ image: UIImage) async -> Data? {
+            image.jpegData(compressionQuality: 0.95)
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

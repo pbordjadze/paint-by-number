@@ -14,8 +14,8 @@ import SwiftUI
 /// The template shown at full resolution is the one the generator makes from the photo, the
 /// settings and the refinements' generator inputs (the base), with the painter's manual edits laid
 /// on it in order (`EditTrail`, `refinements.edits`). Refine's edits are made to that template
-/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its brushes and the sliders make the
-/// base again and the edits are laid on the new one. `MARK: Refine` says how.
+/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its text corrections and the sliders
+/// make the base again and the edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
     struct Source {
@@ -176,7 +176,7 @@ final class CreateModel {
     /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
     @ObservationIgnored private var loadID = 0
     /// The photo's latest full-resolution templates as the generator made them (no edits) and
-    /// what they were made with, newest first: stepping back to one (a brush undone, a slider put
+    /// what they were made with, newest first: stepping back to one (a text correction undone, a slider put
     /// back) lays the edits on it again without generating.
     @ObservationIgnored private var made: [Made] = []
 
@@ -453,6 +453,8 @@ final class CreateModel {
                 }
             } catch is CancellationError {
             } catch {
+                // A photo given up for another one fails with its own error: it is not news now.
+                guard load == loadID else { return }
                 Log.create.error("Loading photo failed: \(String(describing: error), privacy: .private)")
                 phase = .failed((error as? CreateError ?? .unreadable).localizedDescription)
             }
@@ -469,6 +471,9 @@ final class CreateModel {
     /// are back on the suggestion's (the sliders' detents).
     func settingsChanged() {
         guard source != nil, !isChoosingSettings else { return }
+        // A Refine tapped before is not wanted now, even when the slider's touch was never heard
+        // (`setAdjusting`): its template would be for settings that are gone.
+        refineAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
         if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
         if isAdjusting {
@@ -769,7 +774,7 @@ final class CreateModel {
     //   nothing: it is not kept, takes no step of the history, and a declined one
     //   says so (`note`). A shape a line closed that has no room for a number is cut off by nothing,
     //   but the line stays, and says so.
-    // - A brush or a correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
+    // - A correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
     //   sliders do the same with the settings. A base made before is reused (`made`).
@@ -803,7 +808,7 @@ final class CreateModel {
         return serial
     }
 
-    /// A brush or a correction of the text, in its turn.
+    /// A correction of the text, in its turn.
     func change(_ change: RefineChange) {
         enqueue { [self] in
             var next = refinements
@@ -950,10 +955,16 @@ final class CreateModel {
     private func lay(_ edit: TemplateEditor.Edit, serial: Int, tapped: Bool) async {
         let before = refinements
         guard let current = trail, let key = trailKey, key == currentKey else {
-            // The template on screen is being made again: it has the edit laid with the others.
-            if before.edits.count < TemplateRefinements.maximumEdits {
-                history.push(before)
-                refinements.edits.append(edit)
+            // The template on screen is being made again: it has the edit laid with the others. A
+            // split can't be made without its paints, so it takes them from the template on screen.
+            var kept = edit
+            if case .split = edit, let shown = trail?.template, let photo = source?.image {
+                kept = await Self.painting(edit, on: shown, photo: photo)
+            }
+            let now = refinements
+            if now.edits.count < TemplateRefinements.maximumEdits {
+                history.push(now)
+                refinements.edits.append(kept)
             }
             handled(serial, shown: false)
             return
@@ -1158,6 +1169,12 @@ final class CreateModel {
         var trail: EditTrail
         var verdict: EditTrail.Verdict
         var preview: Preview?
+    }
+
+    /// `edit` with the colors of `photo` for the pieces it cuts on `template` (`TemplateEditor.painted`).
+    @concurrent
+    private static func painting(_ edit: TemplateEditor.Edit, on template: Template, photo: RGBAImage) async -> TemplateEditor.Edit {
+        TemplateEditor.painted(edit, on: template, photo: photo)
     }
 
     /// `edit` laid on `trail`, a drawn line with the colors of `photo` for the pieces it cuts;

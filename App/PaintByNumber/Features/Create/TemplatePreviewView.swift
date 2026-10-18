@@ -225,13 +225,11 @@ struct TemplatePreviewView: View {
                         Text("Refine")
                     }
                 }
-                // Without line art there is nothing to draw on; the detail brushes still work. Else
-                // it is on while the painting updates: Refine draws on the final template alone (its
-                // edits are made in that template's canvas units), so a tap before it is made waits
-                // for it (`CreateModel.askForRefine`) and opens by itself.
-                .disabled(
-                    !model.canAskForRefine || isStarting
-                        || !(model.hasLineArtInput || Preferences().detailBrushes))
+                // Without line art there is nothing to draw on. Else it is on while the painting
+                // updates: Refine draws on the final template alone (its edits are made in that
+                // template's canvas units), so a tap before it is made waits for it
+                // (`CreateModel.askForRefine`) and opens by itself.
+                .disabled(!model.canAskForRefine || isStarting || !model.hasLineArtInput)
                 .accessibilityLabel("Refine")
                 .accessibilityValue(
                     model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
@@ -344,6 +342,7 @@ struct TemplatePreviewView: View {
             case .failed(let message):
                 StatusCapsule {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        .accessibilityHidden(true)
                     Text(message).lineLimit(2)
                 }
             default:

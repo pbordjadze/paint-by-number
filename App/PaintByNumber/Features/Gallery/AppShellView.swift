@@ -38,10 +38,21 @@ struct AppShellView: View {
     /// A file opened from another app (share sheet, Files), waiting for the library and the
     /// screen to be free for the create flow.
     @State private var incomingImage: IncomingImage?
+    /// A painting someone sent, added to the library from an opened file and waiting to open
+    /// the same way.
+    @State private var receivedPainting: UUID?
+    /// Why the last painting someone sent couldn't be added: pending until nothing covers the
+    /// shell (an alert can't show under a sheet or the create flow), then shown.
+    @State private var pendingReceiveFailure: Library.ReceiveError?
+    @State private var receiveFailure: Library.ReceiveError?
     @State private var isReadingFile = false
     /// The time-lapse a gallery card's menu is making. Its sheet is presented here, beside
     /// the settings sheet, so a file that arrives meanwhile can close it before the create flow opens.
     @State private var timelapse: TimelapseRequest?
+    /// The painting a card's Send Template… is sending, its sheet presented here like the time-lapse's.
+    @State private var sending: Artwork?
+    /// A rename, restart or delete question is up in the gallery (`GalleryView.isAsking`).
+    @State private var galleryAsks = false
     /// Changes with every file opened, so a create flow already on screen restarts on it.
     @State private var flowID = UUID()
     @State private var isDropTargeted = false
@@ -55,6 +66,8 @@ struct AppShellView: View {
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
     /// one landing after the painting was closed must not open it again.
     @State private var demoOpenedPainting = false
+    /// `-openFileOnQuestion` hands its file over once.
+    @State private var demoOpenedFile = false
     #endif
 
     var body: some View {
@@ -68,8 +81,8 @@ struct AppShellView: View {
         let flowIdentity = flowID
         NavigationStack(path: $path) {
             GalleryView(
-                namespace: zoom, query: query, timelapse: $timelapse, onCreate: { isCreating = true },
-                onContinueDraft: continueDraft)
+                namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
+                onContinueDraft: continueDraft, isAsking: $galleryAsks)
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
                     guard let photo = photos.first, !isCreating else { return false }
@@ -96,6 +109,7 @@ struct AppShellView: View {
             droppedTitle = nil
             resumedDraft = nil
             handoff.reset()
+            presentIncomingImage()
         }) {
             CreateFlowView(
                 openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
@@ -128,6 +142,15 @@ struct AppShellView: View {
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
             TimelapseExportSheet(request: request)
         }
+        .sheet(item: $sending, onDismiss: presentIncomingImage) { artwork in
+            SendTemplateSheet(artwork: artwork)
+                .environment(library)
+        }
+        .alert("Couldn’t Open Painting", isPresented: isShowingReceiveFailure, presenting: receiveFailure) { _ in
+            Button("OK") {}
+        } message: { failure in
+            Text(failure.localizedDescription)
+        }
         .onAppear(perform: restoreOpenArtwork)
         // "Open in Paint by Moonlight" from the share sheet or Files.
         .onOpenURL(perform: openFile)
@@ -137,11 +160,17 @@ struct AppShellView: View {
             RenderContext.prewarm()
             #if DEBUG
             if ShellDemo.current?.isReadyOnAppear == true { DemoMode.markReady() }
-            if let file = DemoMode.openFileURL { openFile(file) }
+            if let file = DemoMode.openFileURL, !DemoMode.opensFileOnQuestion { openFile(file) }
+            if ShellDemo.current == .galleryReceived, let file = await ShellDemo.sentPaintingFile() { openFile(file) }
             #endif
         }
         #if DEBUG
         .onAppear { if ShellDemo.current?.showsFavoritesOnly == true { filter = .favorites } }
+        .onChange(of: galleryAsks) { _, asks in
+            guard asks, DemoMode.opensFileOnQuestion, !demoOpenedFile, let file = DemoMode.openFileURL else { return }
+            demoOpenedFile = true
+            openFile(file)
+        }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
             guard ShellDemo.current == .galleryOpen, !demoOpenedPainting, path.isEmpty, let id else { return }
@@ -167,9 +196,14 @@ struct AppShellView: View {
         }
     }
 
-    /// A screen over the shelf: the create flow, Settings, the time-lapse's sheet, the Marginarium.
+    private var isShowingReceiveFailure: Binding<Bool> {
+        Binding { receiveFailure != nil } set: { if !$0 { receiveFailure = nil } }
+    }
+
+    /// A screen over the shelf: the create flow, Settings, the time-lapse's or Send Template's
+    /// sheet, the Marginarium.
     private var isCovered: Bool {
-        isCreating || isShowingSettings || timelapse != nil || isShowingMarginarium
+        isCreating || isShowingSettings || timelapse != nil || sending != nil || isShowingMarginarium
     }
 
     @ToolbarContentBuilder
@@ -233,8 +267,10 @@ struct AppShellView: View {
         #endif
     }
 
-    /// Starts a painting from a file another app opened in this one. Only the first of several
-    /// files opens (one painting per create flow); the others' inbox copies are just deleted.
+    /// Starts a painting from a file another app opened in this one: a photo opens the create
+    /// flow on it, a painting someone sent (`SharedPainting`) is added to the library and opens.
+    /// Only the first of several files opens (one painting per create flow); the others' inbox
+    /// copies are just deleted.
     private func openFile(_ url: URL) {
         guard url.isFileURL else { return }
         guard !isReadingFile else {
@@ -243,26 +279,74 @@ struct AppShellView: View {
         }
         isReadingFile = true
         Task {
-            incomingImage = await IncomingFile.take(url)
-            presentIncomingImage()
+            let file = await IncomingFile.take(url)
+            if SharedPaintingCodec.isSharedPainting(file.data) {
+                await receive(file)
+            } else {
+                // The newest file wins: a painting received earlier is in the gallery already.
+                receivedPainting = nil
+                incomingImage = file
+                presentIncomingImage()
+            }
         }
     }
 
-    /// Opens the create flow on the file once nothing stands in its way: on a cold launch the
-    /// first-launch samples are still being made, and the settings, Marginarium or time-lapse
-    /// sheet has to close first (its `onDismiss` comes back here; dismissing the time-lapse sheet
-    /// cancels its render). An open painting is dismissed (it saves as it disappears) and a
-    /// create flow already on screen starts over on the new photo. Not handled (untested): the
-    /// gallery's rename and delete dialogs and the painting screen's own sheets can be up when a
-    /// file arrives, and may keep the create flow from presenting.
-    private func presentIncomingImage() {
-        guard let image = incomingImage, library.placeholders.isEmpty else { return }
-        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil else {
+    /// Adds the painting in `file` to the library, then opens it once nothing stands in its way.
+    private func receive(_ file: IncomingImage) async {
+        do {
+            receivedPainting = try await library.receive(file.data, fallbackTitle: file.title).id
+            incomingImage = nil
+        } catch {
+            pendingReceiveFailure = error as? Library.ReceiveError ?? .damaged
+        }
+        isReadingFile = false
+        presentIncomingImage()
+    }
+
+    /// How long an alert or confirmation dialog takes to go: the cover can't present over it.
+    private static let questionDismissal: Duration = .milliseconds(600)
+
+    /// Whether nothing stands in the way of what an opened file shows: on a cold launch the
+    /// first-launch samples are still being made, and the settings, Marginarium, time-lapse or
+    /// Send Template sheet has to close first (its `onDismiss` comes back to
+    /// `presentIncomingImage`; dismissing the time-lapse sheet cancels its render), and so does a
+    /// question the gallery is asking (rename, restart, delete), which has no `onDismiss`: this
+    /// comes back once it has had time to go.
+    private func isClearForIncoming() -> Bool {
+        guard library.placeholders.isEmpty else { return false }
+        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil, sending == nil else {
             isShowingSettings = false
             isShowingMarginarium = false
             timelapse = nil
+            sending = nil
+            return false
+        }
+        guard !galleryAsks else {
+            galleryAsks = false
+            Task {
+                try? await Task.sleep(for: Self.questionDismissal)
+                presentIncomingImage()
+            }
+            return false
+        }
+        return true
+    }
+
+    /// Opens the create flow on the file once nothing stands in its way (`isClearForIncoming`),
+    /// or the painting someone sent (`presentReceivedPainting`). An open painting is dismissed (it
+    /// saves as it disappears) and a create flow already on screen starts over on the new photo.
+    /// Not handled (untested): the painting screen's own sheets can be up when a file arrives,
+    /// and may keep the create flow from presenting.
+    private func presentIncomingImage() {
+        guard pendingReceiveFailure == nil else {
+            presentReceiveFailure()
             return
         }
+        guard receivedPainting == nil else {
+            presentReceivedPainting()
+            return
+        }
+        guard let image = incomingImage, isClearForIncoming() else { return }
         incomingImage = nil
         isReadingFile = false
         // A saved painting would otherwise reopen over this flow on a cold launch.
@@ -275,6 +359,31 @@ struct AppShellView: View {
         handoff.reset()
         flowID = UUID()
         isCreating = true
+    }
+
+    /// Opens the painting someone sent in place of whatever painting or create flow is open (a
+    /// flow's draft is kept as it closes).
+    private func presentReceivedPainting() {
+        guard let id = receivedPainting, isClearForIncoming() else { return }
+        receivedPainting = nil
+        // A saved painting would otherwise reopen over this one on a cold launch.
+        didRestore = true
+        isCreating = false
+        // A hand-off still under way belonged to the flow this replaces.
+        handoff.reset()
+        path = [id]
+    }
+
+    /// Says why a sent painting couldn't be added, once nothing covers the shell: a create flow
+    /// closes first (its draft is kept, and its `onDismiss` comes back here).
+    private func presentReceiveFailure() {
+        guard let failure = pendingReceiveFailure, isClearForIncoming() else { return }
+        guard !isCreating else {
+            isCreating = false
+            return
+        }
+        pendingReceiveFailure = nil
+        receiveFailure = failure
     }
 
     /// Opens the create flow on the draft the gallery's row read.

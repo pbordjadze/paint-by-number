@@ -15,6 +15,8 @@ struct RefineInkLayer: View {
     let traceIsDrawn: Bool
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
+    /// The trace is the Color Splitter's, a line that won't be drawn: dashed.
+    var dashed = false
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
     let eraserRadius: Float
     let rect: CGRect
@@ -27,7 +29,7 @@ struct RefineInkLayer: View {
 
     var body: some View {
         let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
-        let lineWidth = lineWidth, beneath = beneath, halo = halo, traceIsDrawn = traceIsDrawn
+        let lineWidth = lineWidth, beneath = beneath, halo = halo, traceIsDrawn = traceIsDrawn, dashed = dashed
         Canvas { context, _ in
             guard rect.width > 0, rect.height > 0 else { return }
             let long = max(rect.width, rect.height)
@@ -85,6 +87,10 @@ struct RefineInkLayer: View {
                     let ring = Path(ellipseIn: CGRect(x: point(last).x - r, y: point(last).y - r, width: 2 * r, height: 2 * r))
                     canvas.fill(ring, with: .color(.white.opacity(0.25)))
                     canvas.stroke(ring, with: .color(LineArtDrawing.ink.opacity(0.45)), lineWidth: 1)
+                } else if dashed {
+                    var style = Self.style(lineWidth)
+                    style.dash = [lineWidth * 2.5, lineWidth * 2.5]
+                    canvas.stroke(Path(PenPath.path(points)), with: .color(LineArtDrawing.ink.opacity(0.7)), style: style)
                 } else {
                     ink(traceIsDrawn ? polyline(points) : Path(PenPath.path(points)))
                 }
