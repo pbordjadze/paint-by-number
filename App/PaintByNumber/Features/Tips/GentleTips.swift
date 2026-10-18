@@ -187,6 +187,19 @@ nonisolated struct NewPaintingRefineTip: Tip {
 
 // MARK: Refine
 
+/// Refine opened: how its canvas works, said once (it was a line under the tools until Paul's calmer
+/// menus, October 18). At the Pen. Stops at the first change made.
+nonisolated struct RefineDrawTip: Tip {
+    var id: String { PaintTips.scoped("tip.refineDraw") }
+    var title: Text { Text("Draw Your Own Lines") }
+    var message: Text? { Text("Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes.") }
+    var image: Image? { Image(systemName: "pencil.tip") }
+    var rules: [Tips.Rule] {
+        #Rule(TipSwitch.$tipsOn) { $0 == true }
+    }
+    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
+}
+
 /// The first line drawn inside Refine: filling a closed shape. At Fill. Stops when a fill is made.
 nonisolated struct RefineFillTip: Tip {
     var id: String { PaintTips.scoped("tip.refineFill") }
@@ -286,6 +299,7 @@ extension TipID {
         case .newPaintingReset: NewPaintingResetTip()
         case .newPaintingSliders: NewPaintingSlidersTip()
         case .newPaintingRefine: NewPaintingRefineTip()
+        case .refineDraw: RefineDrawTip()
         case .refineFill: RefineFillTip()
         case .benchTap: FirstPaintTip()
         case .benchZoom: ZoomTip()

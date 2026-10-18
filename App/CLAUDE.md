@@ -317,8 +317,10 @@ synchronized folder would bundle it into the app.
 ## Tips
 
 The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
-and Never list are the spec; its notes are the record, not UI): 22 tips, each said once, on for
-everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
+and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
+Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
+October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`),
+each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
 where they live.
@@ -561,7 +563,10 @@ Conventions).
   an area's color where it goes and draws no line (a split, below; dashed while the finger is
   down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
-  junction; Fill's tap makes the closed shape under it an area of its own in the photo's color
+  junction (both in one Erasers button, as Shapes holds its shapes, and the photo and the
+  painting beneath in one Show button; no line under the tools says how they work: each button's
+  VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
+  what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
   out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);

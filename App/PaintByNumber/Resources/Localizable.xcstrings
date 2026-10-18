@@ -17,6 +17,18 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Draw Your Own Lines" : {
+      "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
+      "extractionState" : "manual"
+    },
+    "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes." : {
+      "comment" : "Message of the tip titled Draw Your Own Lines in Refine (the two-finger tap undoes the last change)",
+      "extractionState" : "manual"
+    },
+    "Erasers" : {
+      "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
+      "extractionState" : "manual"
+    },
     "acknowledgements.codeFooter" : {
       "comment" : "Footer under the Open-Source Code list in Acknowledgements",
       "extractionState" : "manual",
@@ -3434,7 +3446,7 @@
       }
     },
     "refine.hint.curve" : {
-      "comment" : "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3458,7 +3470,7 @@
       }
     },
     "refine.hint.eraser" : {
-      "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), shown while it is picked",
+      "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3470,7 +3482,7 @@
       }
     },
     "refine.hint.fill" : {
-      "comment" : "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), shown while it is picked",
+      "comment" : "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3482,7 +3494,7 @@
       }
     },
     "refine.hint.line" : {
-      "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3494,7 +3506,7 @@
       }
     },
     "refine.hint.oval" : {
-      "comment" : "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3506,7 +3518,7 @@
       }
     },
     "refine.hint.pen" : {
-      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked",
+      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3518,7 +3530,7 @@
       }
     },
     "refine.hint.rectangle" : {
-      "comment" : "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3530,7 +3542,7 @@
       }
     },
     "refine.hint.smartEraser" : {
-      "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked",
+      "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3542,7 +3554,7 @@
       }
     },
     "refine.hint.splitter" : {
-      "comment" : "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), shown while it is picked",
+      "comment" : "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3554,7 +3566,7 @@
       }
     },
     "refine.hint.text" : {
-      "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked",
+      "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
