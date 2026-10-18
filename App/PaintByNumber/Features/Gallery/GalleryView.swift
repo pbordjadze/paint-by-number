@@ -122,7 +122,7 @@ struct GalleryView: View {
     private var shownDraft: CreateDraft? { query.isActive ? nil : library.drafts.current }
 
     /// Nothing to list, not even a draft: the invitation to the first painting shows instead.
-    private var isBare: Bool { library.isEmpty && library.drafts.current == nil }
+    private var isBare: Bool { library.isBare }
 
     @ViewBuilder
     private var narrowedEmptyState: some View {

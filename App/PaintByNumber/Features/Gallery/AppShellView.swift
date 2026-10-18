@@ -186,23 +186,24 @@ struct AppShellView: View {
             }
         }
         #endif
-        ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                Picker("Show", selection: $filter) {
-                    Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
-                    Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+        // An empty gallery's own New Painting is its only control there: nothing to filter, and
+        // no second New Painting.
+        if !library.isBare {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Show", selection: $filter) {
+                        Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
+                        Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label("Show", systemImage: filter == .all
+                          ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
                 }
-                .pickerStyle(.inline)
-            } label: {
-                Label("Show", systemImage: filter == .all
-                      ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                // The filled icon says a filter is on; VoiceOver hears which one.
+                .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
+                .disabled(library.artworks.isEmpty)
             }
-            // The filled icon says a filter is on; VoiceOver hears which one.
-            .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
-            .disabled(library.artworks.isEmpty)
-        }
-        // An empty gallery's own New Painting is the only one.
-        if !isBare {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("New Painting", systemImage: "plus") { isCreating = true }
                     .buttonStyle(.glassProminent)
@@ -211,9 +212,6 @@ struct AppShellView: View {
             }
         }
     }
-
-    /// Nothing to show at all: the gallery is its empty state (`GalleryView`).
-    private var isBare: Bool { library.isEmpty && library.drafts.current == nil }
 
     private var query: GalleryQuery { GalleryQuery(filter: filter, search: search) }
 

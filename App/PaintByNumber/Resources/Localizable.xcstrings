@@ -1049,6 +1049,10 @@
       "comment" : "Message of the confirmation dialog for restarting a painting from the gallery",
       "extractionState" : "manual"
     },
+    "Every region is painted." : {
+      "comment" : "Caption in the completion bar of a painting without a title",
+      "extractionState" : "manual"
+    },
     "export.error.renderFailed" : {
       "comment" : "Error when a painting's picture can't be rendered for sharing",
       "extractionState" : "manual",

@@ -35,7 +35,7 @@ struct DraftRow: View {
                 .contentShape(.rect)
                 .onTapGesture(perform: onContinue)
                 if !stacked { continueButton(fillsWidth: false) }
-                // Discard keeps its distance from Continue: across the row, or above it when stacked.
+                // Discard keeps its distance from Continue: set apart after it, or above it when stacked.
                 discardButton
             }
             if stacked { continueButton(fillsWidth: true) }
@@ -121,6 +121,6 @@ struct DraftRow: View {
             } message: {
                 Text("Its photo and everything you changed in Refine will be lost.")
             }
-            .padding(.leading, 12)
+            .padding(.leading, 20)
     }
 }

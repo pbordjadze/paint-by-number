@@ -9,8 +9,8 @@ import UIKit
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
 /// samples in a scrolling column beside it, in two sections: paintings, then photographs. The
-/// picker's own top bar reaches the albums and search; "Browse All…" presents the full system
-/// picker, a way in that doesn't depend on the embedded one taking taps.
+/// picker's own top bar reaches the albums and search; "Browse All…" (iPad's toolbar) presents
+/// the full system picker, a way in that doesn't depend on the embedded one taking taps.
 ///
 /// iPhone doesn't embed the picker (`embedsPicker`): on Paul's iPhone its grid never took a tap,
 /// though its bar did, after three layouts that each picked photos on the simulator (Sept 30,
