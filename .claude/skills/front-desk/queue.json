@@ -10,15 +10,15 @@
   "key": "ci-train",
   "order": "1",
   "title": "Warnings gate",
-  "detail": "The warnings gate (and the night train, compile check); Codex-reviewed",
-  "state": "in CI"
+  "detail": "Green at 7473ad2 (0 warnings); merges when main's run reports",
+  "state": "green"
  },
  {
   "key": "retro-review",
   "order": "2",
   "title": "Code review fixes",
   "detail": "Includes the fix for main's red Settings test, so it goes right after the warnings gate",
-  "state": "next"
+  "state": "in CI"
  },
  {
   "key": "refine-line-split",
