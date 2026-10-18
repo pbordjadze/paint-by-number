@@ -227,6 +227,8 @@ struct FeedbackSheet: View {
     /// nothing under a presentation still in flight, and a quick send asked it to.
     private func tryAgain() {
         guard let files = prepared else { return }
+        // Before the alert's binding hands the sheet back to editing, which would turn Send on.
+        phase = .sending
         let alertGone = ContinuousClock.now + Self.alertDismissal
         Task { await upload(files, notBefore: alertGone) }
     }
