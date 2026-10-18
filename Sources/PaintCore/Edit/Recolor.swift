@@ -106,7 +106,12 @@ extension TemplateEditor {
     /// The edit that lays `look` at `strength` (0 to 1) over `template`'s paints, with the
     /// lightnesses it reads from them.
     public static func look(_ look: Look, strength: Float, on template: Template) -> Edit {
-        .look(look, strength: strength, lightness: look.quantiles(of: template.palette))
+        self.look(look, strength: strength, paints: template.palette)
+    }
+
+    /// The edit that lays `look` at `strength` over `paints`, with the lightnesses it reads from them.
+    public static func look(_ look: Look, strength: Float, paints: [PaletteColor]) -> Edit {
+        .look(look, strength: strength, lightness: look.quantiles(of: paints))
     }
 
     /// The least chroma of a paint whose family is its hue (`repaint`'s `family`); a grayer

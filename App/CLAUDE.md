@@ -87,7 +87,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
   the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
@@ -568,7 +568,17 @@ Conventions).
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
   what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
-  out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
+  out (`EditFills`). Colors (after Fill; SideStore and Debug builds only for now, `#if UNRELEASED`,
+  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then
+  PaintCore's `TemplateEditor.Look`s, night to day, then the painters'; the Lamplit Table's
+  `factory/pieces/recolor`) with a Strength slider once one is chosen, and the paints, one picked
+  there or by a tap on its area taking a new color from the system `ColorPicker` (its family
+  along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
+  (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
+  a repaint of the color the last one repainted replaces it (the picker still moving is one step
+  of the history); paints made alike merge and a note says so. New colors cross-fade in (none
+  under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
+  12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.
