@@ -3,22 +3,22 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "Calmer menus merged (fbdcd8c); its main run is finishing, then tips layout merges",
+  "detail": "Tips layout merged (559842c); main was red on a flaky Settings test after Calmer menus, fix queued next",
   "state": "main running"
  },
  {
-  "key": "tip-layout",
-  "order": "1",
-  "title": "Gentle tips layout",
-  "detail": "Page tips as a card, no arrow",
-  "state": "green, merging"
- },
- {
   "key": "ci-train",
-  "order": "2",
+  "order": "1",
   "title": "Warnings gate",
   "detail": "The warnings gate (and the night train, compile check); Codex-reviewed",
   "state": "in CI"
+ },
+ {
+  "key": "retro-review",
+  "order": "2",
+  "title": "Code review fixes",
+  "detail": "Includes the fix for main's red Settings test, so it goes right after the warnings gate",
+  "state": "next"
  },
  {
   "key": "refine-line-split",
@@ -56,24 +56,31 @@
   "state": "ready"
  },
  {
-  "key": "retro-review",
-  "order": "8",
-  "title": "Code review fixes",
-  "detail": "Three small fixes from the Sonnet review; a night-train candidate",
-  "state": "ready"
- },
- {
   "key": "toolbar-tips",
-  "order": "9",
+  "order": "8",
   "title": "Toolbar tips as cards",
   "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
   "state": "ready"
  },
  {
   "key": "codex-decoder-fuzz",
-  "order": "10",
+  "order": "9",
   "title": "Decoder stress tests",
   "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
   "state": "ready soon"
+ },
+ {
+  "key": "caroline-guardians",
+  "order": "10",
+  "title": "Hope and Eno in Who's Who",
+  "detail": "Caroline's two guardians, as eggs",
+  "state": "ready"
+ },
+ {
+  "key": "pets-oct18",
+  "order": "11",
+  "title": "Five new pet drawings",
+  "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
+  "state": "ready"
  }
 ]
