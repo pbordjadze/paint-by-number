@@ -30,3 +30,9 @@ the canvas (32 points in, or a tenth of the page's height if less); after a zoom
 on the page unless it was panned away. The bar tips hang from a clear view laid over the button
 outside the bar, where the system draws an ordinary popover; on a phone the card still covers the
 title under the gear, as every tip card covers what lies under it.
+
+**Paul's decisions**: on Q1, Paul chose A2, no arrow (October 18, 13:51 UTC: "No arrow"). The page
+tips lie as a card with no arrow just inside the top of the page; merged in 559842c. On Q2, after
+B1 failed in CI three times, Paul chose a card on the screen, under the bar and with no arrow,
+like the page tips (October 18, 15:25 UTC: "B feels right, doesn't it? Let's do that"). It is
+being built on `claude/toolbar-tips`.
