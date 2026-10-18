@@ -1,0 +1,33 @@
+{
+  "pet": "moon",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude; drawn fresh in an old tradition (Paul's method).",
+  "approved": "Paul picked M1 (the almanac woodcut) and signed off the sheet 2026-10-18 21:55 UTC.",
+  "image_generations": 14,
+  "source_png_sha256": "fad216466f87ef81982c7e4a0f4bbc48d3282f97ff2663f1de125daa35e1e565",
+  "atlas_sha256": "bb487eca667735caaa67e99464ce5f06e724b68006e82d99304e48ba00f8da4b",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 045 has non-passing verdict fail",
+      "look direction 067.5 has non-passing verdict fail",
+      "look direction 112.5 has non-passing verdict fail",
+      "look direction 180 has non-passing verdict fail",
+      "look direction 202.5 has non-passing verdict fail",
+      "look direction 225 has non-passing verdict fail",
+      "look direction 247.5 has non-passing verdict fail",
+      "look direction 292.5 has non-passing verdict fail",
+      "look directions drift 55.5px from idle registration, expected at most 26.0px",
+      "adjacent look directions 157.5->180 jump 38.1px",
+      "adjacent look directions 337.5->000 jump 42.9px"
+    ]
+  },
+  "notes": "14 images, from M1 (your pick): a hand-coloured almanac woodcut. Passes the v2 contract. On a tap the lantern swings out toward you. Some look poses read wrong (45°–112.5°), so the skill's quality gate fails; the reader doesn't play the look rows."
+}

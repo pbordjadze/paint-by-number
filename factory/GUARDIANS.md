@@ -195,6 +195,10 @@ The app's name.
 
 ### The Moon
 
+Drawn October 18, after her first drawing was withheld (a side-on crescent couldn't turn to face
+left): a crescent with a calm profile face, as in a hand-coloured 15th-century almanac woodcut, a
+lantern hanging from her lower horn (Paul: "The moon one is in need of a new drawing").
+
 - **treasure**: the one warm light in the dark
 - **believes**: the best magic happens quietly, at night, by one warm light.
 - **champions**: night tones, a single light source, glow used sparingly; the elves and the
