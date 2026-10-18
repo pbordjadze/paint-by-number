@@ -4,7 +4,7 @@ import PaintCore
 
 /// What the painter refined in a new painting before painting it (the create flow's optional
 /// Refine step, `RefineView`): lines drawn and erased, areas split and shapes filled by hand,
-/// and, with Settings › Text Corrections, corrections to the lines of text the app found. Areas
+/// and corrections to the lines of text the app found. Areas
 /// brushed for more or less detail come only from builds that had the brushes; they still shape
 /// the base.
 /// Two kinds, by what they act on:

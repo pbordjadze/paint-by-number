@@ -17,7 +17,8 @@ nonisolated enum RefineTool: Hashable {
     /// The Color Splitter: a stroke divides an area's paint where it goes, drawing no line, each
     /// side in the photo's color (`TemplateEditor.Edit.split`).
     case splitter
-    /// Settings › Text Corrections: the text the app found corrected.
+    /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
+    /// one it missed.
     case text
 
     /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
@@ -73,9 +74,8 @@ nonisolated enum RefineBackdrop: Hashable {
 /// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
 /// switches between drawing and the Eraser. Photo and Painting show the photo, or the template
 /// painted (every area in its paint, `TemplateRasterizer.Style.paintedAreas`), beneath the
-/// drawing: the painting the changes make, once the template has them. With Settings › Text
-/// Corrections one finger also corrects the text the app found (a tap turns a found line off or
-/// on again, a drag across a line marks it).
+/// drawing: the painting the changes make, once the template has them. Text corrects the text the
+/// app found (a tap turns a found line off or on again, a drag across a line marks it).
 ///
 /// An edit lands in a few hundredths of a second, off the main actor, and the screen then shows
 /// the new template with no crossfade; until it does, the edit shows over the last template in the
@@ -92,8 +92,6 @@ struct RefineView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
-    /// Settings › Text Corrections, as the screen opened (Settings isn't reachable from it).
-    private let textCorrections = Preferences().detailBrushes
     @State private var tool: RefineTool
     @State private var shape = RefineShape.line
     @State private var backdrop = RefineBackdrop.paper
@@ -214,11 +212,9 @@ struct RefineView: View {
                         RefineTappedLine(points: tapped, rect: picture, lineWidth: lineWidth)
                             .opacity(flashes ? 1 : 0)
                     }
-                    if showsDetailMarks {
-                        RefineMarks(
-                            refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
-                            emphasizesText: tool == .text)
-                    }
+                    RefineMarks(
+                        refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
+                        emphasizesText: tool == .text)
                 }
                 // Drawing past the picture's edge stays on the picture.
                 .mask {
@@ -302,13 +298,6 @@ struct RefineView: View {
             guard item.showsSwatch, case .fill(let at, let color) = item.edit else { return nil }
             return RefineFillLayer.Swatch(point: at / size, color: color)
         }
-    }
-
-    /// The text corrections show while their tool is offered, or once there are any; so does
-    /// the detail brushing of builds that had brushes, which still shapes the base.
-    private var showsDetailMarks: Bool {
-        textCorrections || !model.refinements.strokes.isEmpty || !model.refinements.hiddenText.isEmpty
-            || !model.refinements.addedText.isEmpty
     }
 
     private var aspectRatio: CGFloat {
@@ -659,19 +648,15 @@ struct RefineView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 480)
                 .accessibilityIdentifier("refine-hint")
-            if textCorrections && model.hasLineArtInput {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 12) {
-                        lineTools
-                        textTool
-                    }
-                    VStack(spacing: 10) {
-                        textTool
-                        lineTools
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    lineTools
+                    textTool
                 }
-            } else {
-                lineTools
+                VStack(spacing: 10) {
+                    textTool
+                    lineTools
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -737,6 +722,7 @@ struct RefineView: View {
     private var textTool: some View {
         GlassEffectContainer(spacing: 10) {
             toolButton(.text, systemImage: "text.viewfinder", label: Text("Text"), id: "text")
+                .disabled(!model.hasLineArtInput)
         }
     }
 

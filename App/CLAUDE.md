@@ -593,9 +593,8 @@ Conventions).
     few edits and lays a changed list only from where it parts from the one laid (`move(to:)`);
     deeper steps lay from the nearest kept template or the base. A tap in a filled area removes
     that fill's edit and lays the rest again.
-  - **What still regenerates, and why.** The text corrections (Settings › Text Corrections,
-    `SettingsKey.detailBrushes`, off: a tap turning a found line off or on, a drag marking one it
-    missed), and the sliders, are image settings: they make the base again (`startGeneration`,
+  - **What still regenerates, and why.** The text corrections (the Text tool, always offered:
+    a tap turning a found line off or on, a drag marking one it missed), and the sliders, are image settings: they make the base again (`startGeneration`,
     reusing a base made before, `made`) and the edits are laid on the new one, those that no
     longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
     drawing"); they stay in the list, so a correction undone brings them back. Refine's detail
@@ -702,10 +701,7 @@ paper (`CanvasSnapshot.Options`).
 - `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
   session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
-  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
-  Text Corrections adds Refine's text corrections (`SettingsKey.detailBrushes`, named for the
-  detail brushes it once added too; the create flow reads it from `Preferences`, so
-  `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
+  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
@@ -714,7 +710,8 @@ paper (`CanvasSnapshot.Options`).
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
-  switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
+  switch per sound, haptic and flourish; Settings' paper size, Color Names and Detail Brushes,
+  later Text Corrections, whose Text tool Refine now always offers (Paul, October 18); the Custom palette
   order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›
   Line Weight first; a setting retired later joins `Preferences.retiredKeys`.

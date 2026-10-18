@@ -1,8 +1,7 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens, the eraser and Fill, the Color Splitter, Undo
-/// and Redo (the buttons and a two-finger tap), Done and Cancel; with Settings › Text Corrections,
-/// its text marks too.
+/// The create flow's optional Refine step: the pens, the eraser and Fill, the Color Splitter, the
+/// text marks, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
@@ -22,7 +21,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertTrue(app.buttons["refine-tool-pen"].isSelected, "Refine doesn't start on the pen")
-        XCTAssertFalse(app.buttons["refine-tool-text"].exists, "The Text tool shows with Text Corrections off")
+        XCTAssertTrue(app.buttons["refine-tool-text"].exists, "Refine has no Text tool")
         let undo = app.buttons["refine-undo"], redo = app.buttons["refine-redo"]
         XCTAssertFalse(undo.isEnabled, "Undo is offered before any change")
 
@@ -96,12 +95,11 @@ final class RefineUITests: XCTestCase {
     }
 
     /// The Color Splitter divides the picture's color along a stroke and shows the painting, where
-    /// a split shows; with Settings › Text Corrections on (`-refineDetailBrushes`, its stored name),
-    /// Refine also marks a line of text dragged across, and offers no detail brushes. Done keeps
-    /// both.
+    /// a split shows; Text marks a line of text dragged across; there are no detail brushes. Done
+    /// keeps both.
     @MainActor
     func testSplitterAndTextCorrections() throws {
-        let app = launchPreview(arguments: ["-refineDetailBrushes", "YES"])
+        let app = launchPreview()
         let refine = app.buttons["refine"]
         refine.tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
@@ -137,9 +135,9 @@ final class RefineUITests: XCTestCase {
 
     /// The Great Wave's preview once its settings are chosen.
     @MainActor
-    private func launchPreview(arguments: [String] = []) -> XCUIApplication {
+    private func launchPreview() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"] + arguments
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"]
         app.launch()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 30), "The preview didn't open")

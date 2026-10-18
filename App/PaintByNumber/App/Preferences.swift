@@ -21,10 +21,6 @@ enum SettingsKey {
     nonisolated static let lineWeight = "lineWeight"
     /// What the create flow's preview shows beside the photo (`PreviewStyle`).
     nonisolated static let previewStyle = "previewStyle"
-    /// Refine offers its text corrections beside the pen and the eraser (Settings › Text
-    /// Corrections; off by default). Named for the detail brushes it once offered too, which
-    /// Refine no longer has (Paul, October 18).
-    static let detailBrushes = "refineDetailBrushes"
     /// The gallery's toolbar offers The Marginarium, the storybook of how the app was made
     /// (Settings › The Marginarium; off by default).
     static let showsMarginarium = "showsMarginarium"
@@ -45,8 +41,6 @@ struct Preferences {
     var paintingLength: PaintingLength
     /// What the create flow's preview shows beside the photo.
     var previewStyle: PreviewStyle
-    /// Refine offers its text corrections too.
-    var detailBrushes: Bool
     /// Start Painting plays the making-of show first.
     var playsMakingOf: Bool
 
@@ -55,7 +49,6 @@ struct Preferences {
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
         previewStyle = PreviewStyle.stored(in: defaults)
-        detailBrushes = defaults.bool(forKey: SettingsKey.detailBrushes)
         playsMakingOf = defaults.bool(forKey: SettingsKey.playsMakingOf)
     }
 
@@ -65,11 +58,12 @@ struct Preferences {
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,
     /// line appearance and preview picture, and its switch for each sound, haptic and flourish;
-    /// Settings' paper size for printing and Color Names; the time-lapse's pace. Left in place,
+    /// Settings' paper size for printing and Color Names; the time-lapse's pace; Settings › Detail
+    /// Brushes (later Text Corrections: Refine's Text tool is always there now). Left in place,
     /// the first two would still shape new paintings, unseen.
     static let retiredKeys = [
         "advancedLineArt", "advancedPipelineTuning", "advancedLineAppearance", "advancedPreviewPicture",
-        "printPaperSize", "colorNameStyle", "timelapsePace",
+        "printPaperSize", "colorNameStyle", "timelapsePace", "refineDetailBrushes",
     ] + [
         "paintNotes", "colorJingle", "finishFanfare", "wrongColorSound", "fillHaptics", "wrongColorHaptics",
         "finishHaptics", "fillSparkles", "finishShine",
