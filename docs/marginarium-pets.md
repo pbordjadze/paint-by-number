@@ -173,10 +173,13 @@ waving cells at native size and 5x, on white and dark, showed no banding, halo o
 | `astrologer` | `53307856a9967efb7ad4045159a96ac76af733eac8c9db1be0544fc9e4b55a70` | 741,688 | lossy WebP q88 |
 | `bartimaeus` | `e370590298eab989ccfc12b639de3c8bd130347c540f129623701ed875259958` | 582,478 | lossy WebP q88 |
 | `dinotopia` | `ab1586dff623570a9039f3aeb6649b89ffa1aa2fd9ec8a122219d994e1f0f75a` | 683,880 | lossy WebP q88 |
+| `glassblower` | `6e418069d9c869691d244f6fa78bfe8e6292a088912d1583718f96c809c22b97` | 600,066 | lossy WebP q88 |
 | `lotte-reiniger` | `e861b9c0812ac7d4c8168797c7613f02352c26f571aefcd5336fd685e8ca8570` | 488,422 | lossy WebP q88 |
 | `sen-no-rikyu` | `e89af5f75afa5fd6d14975baaec874ae9680d16ef154311145f8b04dd95dc7ef` | 704,938 | lossy WebP q88 |
 
-The twenty-four sheets total **20,042,546 bytes (19.11 MiB)** of the 24 MiB budget. Dino's
-first sheet, in the table above, no longer ships. The new five fill more of their cells than the
+The Glassblower's redraw (Paul: "Both good") replaced the factory's droplet the same day: a
+clearer drop with a curling tip and a warm light inside. The twenty-four sheets total
+**19,657,940 bytes (18.75 MiB)** of the 24 MiB budget. Dino's and the Glassblower's first sheets,
+in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
