@@ -74,12 +74,15 @@ extension EditWork {
 
     /// Paints `r`, one side of a split whose other side has its paint, a shade of that paint
     /// toward `color` (`shade(of:toward:step:)`): an existing paint within a just-noticeable
-    /// difference of the shade or else a new one, farther out each time a shade lands on a paint
-    /// a neighbour across an undrawn edge has. False when no shade fits.
+    /// difference of the shade or else a new one, a step farther out each time a shade lands on a
+    /// paint a neighbour across an undrawn edge has, or has no room for its number. False when no
+    /// shade fits.
     mutating func shadeSplit(_ r: Int, toward color: SIMD3<Float>) -> Bool {
-        let shared = t.regions[r].colorIndex
-        for steps in [1, 2, 3] {
-            let shade = Self.shade(of: t.palette[Int(shared)].oklab, toward: color, step: Float(steps) * Self.splitShadeStep)
+        let shared = t.regions[r].colorIndex, paint = t.palette[Int(shared)].oklab
+        // The first try is the photo's color where that is a step away; each next one a step past it.
+        let first = max(ColorScience.distance(paint, color), Self.splitShadeStep)
+        for steps in [0, 1, 2] {
+            let shade = Self.shade(of: paint, toward: color, step: first + Float(steps) * Self.splitShadeStep)
             var nearest = -1, distance = Float.infinity
             for (k, p) in t.palette.enumerated() where k != Int(shared) {
                 let d = ColorScience.distance(p.oklab, shade)
@@ -99,13 +102,17 @@ extension EditWork {
     static let splitShadeStep: Float = 1.5 * SegmentationParameters.jnd
 
     /// A shade of `paint` toward `photo` (OKLab) at least `step` from it: the photo's
-    /// own color where it is farther, else `paint` moved that far toward it; where the photo is
-    /// `paint`'s own color, lighter (darker for a paint already near white).
+    /// own color where it is farther, else `paint` moved that far toward it (away from it where
+    /// that would pass white or black); where the photo is `paint`'s own color, lighter (darker
+    /// for a paint already near white).
     static func shade(of paint: SIMD3<Float>, toward photo: SIMD3<Float>, step: Float = splitShadeStep) -> SIMD3<Float> {
         let away = photo - paint
         let length = (away * away).sum().squareRoot()
         if length >= step { return photo }
-        if length > 1e-4 { return paint + away * (step / length) }
+        if length > 1e-4 {
+            let toward = paint + away * (step / length)
+            return (0...1).contains(toward.x) ? toward : paint - away * (step / length)
+        }
         return paint + SIMD3(paint.x > 0.85 ? -step : step, 0, 0)
     }
 

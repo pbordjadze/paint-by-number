@@ -950,10 +950,16 @@ final class CreateModel {
     private func lay(_ edit: TemplateEditor.Edit, serial: Int, tapped: Bool) async {
         let before = refinements
         guard let current = trail, let key = trailKey, key == currentKey else {
-            // The template on screen is being made again: it has the edit laid with the others.
-            if before.edits.count < TemplateRefinements.maximumEdits {
-                history.push(before)
-                refinements.edits.append(edit)
+            // The template on screen is being made again: it has the edit laid with the others. A
+            // split can't be made without its paints, so it takes them from the template on screen.
+            var kept = edit
+            if case .split = edit, let shown = trail?.template, let photo = source?.image {
+                kept = await Self.painting(edit, on: shown, photo: photo)
+            }
+            let now = refinements
+            if now.edits.count < TemplateRefinements.maximumEdits {
+                history.push(now)
+                refinements.edits.append(kept)
             }
             handled(serial, shown: false)
             return
@@ -1158,6 +1164,12 @@ final class CreateModel {
         var trail: EditTrail
         var verdict: EditTrail.Verdict
         var preview: Preview?
+    }
+
+    /// `edit` with the colors of `photo` for the pieces it cuts on `template` (`TemplateEditor.painted`).
+    @concurrent
+    private static func painting(_ edit: TemplateEditor.Edit, on template: Template, photo: RGBAImage) async -> TemplateEditor.Edit {
+        TemplateEditor.painted(edit, on: template, photo: photo)
     }
 
     /// `edit` laid on `trail`, a drawn line with the colors of `photo` for the pieces it cuts;

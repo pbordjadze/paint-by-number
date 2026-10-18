@@ -265,6 +265,8 @@ struct EditWork {
         if let r = right(e) {
             replaceRef(in: r, edge: e, reversed: true, with: pieces.reversed().map { EdgeRef(edge: UInt32($0), reversed: true) })
         }
+        // A split's own boundary cut by a later run of it stays the split's in every part.
+        if splitting, splitEdges.contains(e) { splitEdges.append(contentsOf: pieces.dropFirst()) }
         if cut.grown { noteNewVertex(on: e) }
         return pieces
     }

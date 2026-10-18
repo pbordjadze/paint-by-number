@@ -32,8 +32,8 @@ import Foundation
 /// - **Split.** The Color Splitter's line, laid as a draw with paints is, but as an undrawn
 ///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
 ///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
-///   Each piece takes the photo's color there within a just-noticeable difference, else a new
-///   paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
+///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
+///   else a new paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
 ///   is declined.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the

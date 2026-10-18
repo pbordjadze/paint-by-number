@@ -76,6 +76,9 @@ struct EditSplitTests {
         #expect(EditWork.shade(of: paint, toward: paint) == paint + SIMD3(step, 0, 0), "lighter where the photo is the paint")
         let white = SIMD3<Float>(0.95, 0, 0)
         #expect(EditWork.shade(of: white, toward: white) == white - SIMD3(step, 0, 0), "darker near white")
+        let nearWhite = SIMD3<Float>(0.99, 0, 0)
+        let past = EditWork.shade(of: nearWhite, toward: SIMD3(1, 0, 0))
+        #expect(past.x <= 1 && abs(ColorScience.distance(past, nearWhite) - step) < 1e-5, "never past white: \(past)")
     }
 
     @Test func splitsAreKeptInFiles() throws {

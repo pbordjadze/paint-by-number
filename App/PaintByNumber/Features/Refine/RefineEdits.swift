@@ -1,8 +1,9 @@
 import Foundation
 import PaintCore
 
-/// A change Refine makes to the generator's inputs (a correction to the text the app found). It is described rather than computed, so it lands on the refinements as they are when
-/// its turn comes (`CreateModel.change`), whatever the edits sent before it have done meanwhile.
+/// A change Refine makes to the generator's inputs (a correction to the text the app found). It
+/// is described rather than computed, so it lands on the refinements as they are when its turn
+/// comes (`CreateModel.change`), whatever the edits sent before it have done meanwhile.
 nonisolated enum RefineChange: Sendable, Equatable {
     /// A line of text the painter marked (rectangle corners, normalized).
     case markText([SIMD2<Float>])
@@ -69,8 +70,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notSplit
         /// A shape a line closed has no room for a number, so it was not cut off: the line stays.
         case tooSmall
-        /// Edits that no longer fit the drawing, left out of it (the sliders or a brush made the
-        /// template anew).
+        /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
+        /// made the template anew).
         case left(Int)
 
         /// What to say of an edit that was declined.
@@ -106,7 +107,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
-                   comment: "Refine screen toast after the sliders or a brush made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
+                   comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
         }
     }
 

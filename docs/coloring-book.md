@@ -369,9 +369,10 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   side, or the larger where the smaller has no room for its number, takes a shade of that
   paint toward its own photo color (`EditWork.shade(of:toward:step:)`: the photo's color where
   it is at least `splitShadeStep`, 1.5 just-noticeable differences, away, else the paint moved
-  that far toward it, lighter where the photo is the paint itself), an existing paint within a
-  just-noticeable difference of it or else a new one, stepping out to 3 and 4.5 differences
-  where a neighbour across an undrawn edge has it. A split that divides no area, or leaves one
+  that far toward it, the other way where that would pass white or black, lighter where the
+  photo is the paint itself), an existing paint within a just-noticeable difference of it or
+  else a new one, stepping 1.5 differences farther out, twice, where a neighbour across an
+  undrawn edge has it or its number has no room. A split that divides no area, or leaves one
   paint on both sides of a boundary it laid, is declined. On the parrots book four splits (across
   the macaw's yellow chest, a loop round the red parrot's eye patch, down the green background,
   a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas

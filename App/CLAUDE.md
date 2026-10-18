@@ -575,8 +575,8 @@ Conventions).
     (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. A drawn line
     first takes the photo's colors for the pieces it cuts (`TemplateEditor.painted` on the
     template shown and `source.image`, kept in the edit's `paints`; `docs/coloring-book.md` › A
-    drawn line's colors), and so does a split; one sent while the base is being made again is
-    kept as drawn. The
+    drawn line's colors), and so does a split; a line sent while the base is being made again is
+    kept as drawn, a split with the paints of the template on screen (it can't be made without). The
     shown template is a function of the base (what the generator makes from the photo, the
     settings and the refinements' generator inputs, `TemplateRefinements.generatorInputs`) and
     `refinements.edits`,

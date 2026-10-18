@@ -689,6 +689,27 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A split sent while the template is being made again takes its paints from the template on
+    /// screen: without them it could never be made.
+    @Test func aSplitSentWhileTheTemplateIsMadeAgainKeepsItsPaints() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let split = TemplateEditor.Edit.split(points: [SIMD2(0, 0.2 * h), SIMD2(w, 0.25 * h)])
+
+        model.lines = 0.7
+        model.settingsChanged()
+        let serial = model.edit(split)
+        try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        let kept = try #require(model.refinements.edits.first)
+        #expect(kept == TemplateEditor.painted(split, on: before, photo: try #require(model.source?.image)))
+        guard case .split(_, _, let paints) = kept else { Issue.record("not a split: \(kept)"); return }
+        #expect(!paints.isEmpty)
+        model.cancelAll()
+    }
+
     /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
     /// them; the middle and classic line art are left as they are.
     @Test func linesMapToTheLineArt() {
