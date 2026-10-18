@@ -19,7 +19,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | --- | --- | --- | --- |
 | 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
 | 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
-| 3 | claude/refine-preparing-flake | Refine: Color Splitter | in CI (0d61c29) |
+| 3 | claude/refine-preparing-flake | Refine: Color Splitter | green (0d61c29, 14:04): merging |
 | 4 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
 | 5 | claude/ux-refinements | UX design audit | waiting |
 | 6 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
