@@ -33,6 +33,10 @@ enum DemoMode {
     /// The app is hosting the unit tests: like a demo, it keeps no state between runs.
     static var isTestHost: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 
+    /// `-openFileOnQuestion YES`: the `-openFile` file arrives the moment the gallery first asks a
+    /// question (a rename, restart or delete), not at launch (`GalleryActionsTests`).
+    static let opensFileOnQuestion = UserDefaults.standard.bool(forKey: "openFileOnQuestion")
+
     /// `-openFile <path>`: the file the app opens on launch, through the same handler as a file
     /// opened from the share sheet. The `create-from-file` scenario, given none, opens a library
     /// picture it writes to the temporary directory under a name of its own, so the title the

@@ -201,7 +201,7 @@ synchronized folder would bundle it into the app.
   (`DemoMode.isTestHost`). Shared helpers in `Fixtures.swift` (`waitUntil`, `record`, `mosaic`,
   `rasterize`, `PixelReader`, `repositoryRoot`, `sample`: a template of a library picture).
 - `PaintByNumberUITests`: XCTest launching demo scenarios (`-demo`) with `-demoFixedPictures`,
-  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-slowFullResolution <seconds>` (each
+  `-tracePaper`, `-tracePhotoPeek`, `-openFile` (with `-openFileOnQuestion`: once the gallery asks a question), `-slowFullResolution <seconds>` (each
   full-resolution generation of the create flow waits: a phone's tens of seconds, on a simulator),
   `-NSDoubleLocalizedStrings`,
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests

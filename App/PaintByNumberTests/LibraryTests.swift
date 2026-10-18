@@ -354,7 +354,7 @@ struct LibraryTests {
         await #expect(throws: Library.OpenError.unreadable) {
             try await library.regenerate(artwork: artwork.id, settings: artwork.settings)
         }
-        await library.restart(artwork.id)
+        #expect(await !library.restart(artwork.id), "A restart that couldn't read the template reported success")
         var isDirectory: ObjCBool = false
         #expect(FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue)
 
@@ -437,7 +437,7 @@ struct LibraryTests {
         var progress = PaintProgress(regionCount: 3)
         progress.paint(1)
         library.saveProgress(progress, for: artwork.id)
-        await library.restart(artwork.id)
+        #expect(await !library.restart(artwork.id))
         await library.flush()
         #expect(try Data(contentsOf: metaURL) == meta)
         #expect(library.artwork(with: artwork.id) == listed)
@@ -531,7 +531,7 @@ struct LibraryTests {
         try store.writeMeta(stale)
 
         let library = makeLibrary()
-        await library.restart(artwork.id)
+        #expect(await library.restart(artwork.id))
         let restarted = try #require(library.artwork(with: artwork.id))
         #expect(restarted.regionCount == 3 && restarted.paintedCount == 0)
         await library.flush()

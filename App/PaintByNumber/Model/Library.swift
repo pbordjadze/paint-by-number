@@ -253,8 +253,11 @@ final class Library {
         persistMeta(artwork)
     }
 
-    func restart(_ id: UUID) async {
-        guard artwork(with: id)?.needsNewerApp == false else { return }
+    /// Starts a painting over. False when it can't be: written by a newer app, gone, or its
+    /// template can't be read just now; nothing changes then.
+    @discardableResult
+    func restart(_ id: UUID) async -> Bool {
+        guard artwork(with: id)?.needsNewerApp == false else { return false }
         // The fresh progress is sized from the template: metadata can be stale, and progress
         // that doesn't fit would be discarded on the next open with a "couldn't be read" notice.
         _ = await writes[id]?.value
@@ -264,15 +267,16 @@ final class Library {
         do {
             template = try await Background.run { try Library.readTemplate(id, from: store) }
         } catch {
-            return  // written by a newer app, or unreadable just now: nothing changes
+            return false  // written by a newer app, or unreadable just now: nothing changes
         }
-        guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return }
+        guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return false }
         if let template { artwork.adopt(template, settings: artwork.settings) }
         let fresh = PaintProgress(regionCount: artwork.regionCount)
         artwork.record(fresh)
         replace(artwork)
         persistProgress(fresh, of: artwork)
         await refreshThumbnail(id, template: template, progress: fresh)
+        return true
     }
 
     /// Saves painting progress (called debounced while painting).
