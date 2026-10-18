@@ -168,11 +168,10 @@ final class RefineUITests: XCTestCase {
 
     private func changes(_ value: String) -> NSPredicate { NSPredicate(format: "value == %@", value) }
 
-    /// One finger dragged across `element`, as a line is drawn.
-    @MainActor
     /// A point of the picture (fractions of its width and height) as an offset in the canvas,
     /// the whole surface, where the picture is fitted in the middle: The Great Wave (2048 × 1375),
     /// `create-preview`'s picture.
+    @MainActor
     private func onPicture(_ canvas: XCUIElement, _ x: CGFloat, _ y: CGFloat) -> CGVector {
         let size = canvas.frame.size, aspect: CGFloat = 2048 / 1375
         let width = min(size.width, size.height * aspect), height = width / aspect
@@ -181,6 +180,8 @@ final class RefineUITests: XCTestCase {
             dy: ((size.height - height) / 2 + y * height) / size.height)
     }
 
+    /// One finger dragged across `element`, as a line is drawn.
+    @MainActor
     private func drag(on element: XCUIElement, from: CGVector, to: CGVector) {
         element.coordinate(withNormalizedOffset: from)
             .press(forDuration: 0.05, thenDragTo: element.coordinate(withNormalizedOffset: to))
