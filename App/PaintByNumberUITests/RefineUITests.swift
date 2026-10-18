@@ -113,8 +113,9 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(app.buttons["refine-painting"], toMatch: NSPredicate(format: "isSelected == true")),
             "Picking the splitter didn't show the painting")
-        // Edge to edge across the sky: it divides every area it crosses.
-        drag(on: canvas, from: CGVector(dx: 0.02, dy: 0.15), to: CGVector(dx: 0.98, dy: 0.18))
+        // Down the open sky of The Great Wave, from above the wave's outline to inside little Fuji:
+        // crossing a line at each end, it divides the sky between them.
+        drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.637, 0.675))
         XCTAssertTrue(
             waitFor(canvas, toMatch: changes("1 change")), "The split didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-splitter")
@@ -156,6 +157,17 @@ final class RefineUITests: XCTestCase {
 
     /// One finger dragged across `element`, as a line is drawn.
     @MainActor
+    /// A point of the picture (fractions of its width and height) as an offset in the canvas,
+    /// the whole surface, where the picture is fitted in the middle: The Great Wave (2048 × 1375),
+    /// `create-preview`'s picture.
+    private func onPicture(_ canvas: XCUIElement, _ x: CGFloat, _ y: CGFloat) -> CGVector {
+        let size = canvas.frame.size, aspect: CGFloat = 2048 / 1375
+        let width = min(size.width, size.height * aspect), height = width / aspect
+        return CGVector(
+            dx: ((size.width - width) / 2 + x * width) / size.width,
+            dy: ((size.height - height) / 2 + y * height) / size.height)
+    }
+
     private func drag(on element: XCUIElement, from: CGVector, to: CGVector) {
         element.coordinate(withNormalizedOffset: from)
             .press(forDuration: 0.05, thenDragTo: element.coordinate(withNormalizedOffset: to))

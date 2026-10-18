@@ -543,7 +543,19 @@ struct CreateModelTests {
         let (expected, outcome) = try TemplateEditor.apply(laid, to: before)
         #expect(outcome.regionsSplit > 0 && outcome.strokes == 0)
         #expect(model.preview?.template == expected)
-        #expect(expected.lineArt?.strokes.count == before.lineArt?.strokes.count, "a split draws no line")
+        // A stroke the split's boundary cuts becomes two as long as it was (its cut on the lattice,
+        // a fraction of a unit off): no ink is added.
+        func ink(_ t: Template) -> Float {
+            guard let art = t.lineArt else { return 0 }
+            return art.strokes.reduce(Float(0)) { sum, stroke in
+                let points = art.strokePoints[Int(stroke.pointStart)..<Int(stroke.pointStart + stroke.pointCount)]
+                return sum + zip(points, points.dropFirst()).reduce(Float(0)) { length, step in
+                    let d = step.1 - step.0
+                    return length + (d * d).sum().squareRoot()
+                }
+            }
+        }
+        #expect(abs(ink(expected) - ink(before)) < 1, "a split draws no line")
         model.cancelAll()
     }
 
