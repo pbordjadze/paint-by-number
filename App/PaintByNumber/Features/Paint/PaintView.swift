@@ -4,6 +4,7 @@ import Observation
 import os
 import PaintCore
 import SwiftUI
+import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
@@ -15,10 +16,10 @@ import UIKit
 /// the selected swatch, the top of the canvas, the top bar's controls or the finished page's
 /// Replay, one at a time.
 ///
-/// Give Feedback (the top bar where it fits, else More; always the Paint menu) captures the
-/// painting as it is (`FeedbackCapture`, with the environment's `feedbackSource`) and switches
-/// to feedback mode: painting stops, the palette goes, `FeedbackBar` takes the top and
-/// `MarkupCanvas` lies over the canvas for drawing; Next opens `FeedbackSheet`.
+/// Give Feedback (More, and the Paint menu) captures the painting as it is (`FeedbackCapture`,
+/// with the environment's `feedbackSource`) and switches to feedback mode: painting stops, the
+/// palette goes, `FeedbackBar` takes the top and `MarkupCanvas` lies over the canvas for drawing;
+/// Next opens `FeedbackSheet`.
 struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
@@ -64,6 +65,8 @@ struct PaintView: View {
     @State private var flashes = false
     /// The thank-you toast's text while it shows.
     @State private var thanks: String?
+    /// The thanks for feedback just sent or shared, waiting for the review sheet to be gone.
+    @State private var pendingThanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
@@ -159,7 +162,7 @@ struct PaintView: View {
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
-        .sheet(isPresented: reviewsFeedback) {
+        .sheet(isPresented: reviewsFeedback, onDismiss: thankForFeedback) {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
                     .pageSizedOnPad()
@@ -212,14 +215,21 @@ struct PaintView: View {
                     .ignoresSafeArea()
             }
 
-            // Canvas tips point at the top of the visible canvas, under the top bar, and hang from
-            // there: the painter's eye is on the middle.
-            Color.clear
-                .frame(width: 1, height: 1)
-                .gentleTip(.benchZoom, .benchDrag, .benchPencil, active: feedback == nil, arrowEdge: .top)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette))
-                .allowsHitTesting(false)
+            // Tips about the page itself: a card at the top of the page as it first fits, with no
+            // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
+            // at the Photo button on a phone).
+            if feedback == nil, PaintTips.desk.pageTip != nil {
+                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette)
+                TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
+                    .frame(maxWidth: Self.pageTipWidth)
+                    .padding(.horizontal, Self.edge)
+                    .padding(.top, pageTipInset(in: CGSize(
+                        width: geo.size.width - visiblePadding.leading - visiblePadding.trailing,
+                        height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(visiblePadding)
+                    .transition(.opacity)
+            }
 
             VStack(spacing: 0) {
                 Group {
@@ -266,6 +276,7 @@ struct PaintView: View {
         // The completion bar slides in for the palette (at the bottom or the side) as the
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
+        .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
     }
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
@@ -363,6 +374,20 @@ struct PaintView: View {
             bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
     }
 
+    /// How far below the top of the visible canvas the page tips lie: just inside the top of the page
+    /// as it first fits there, centered within the canvas's margin.
+    private func pageTipInset(in visible: CGSize) -> CGFloat {
+        let template = session.template
+        let room = CGSize(width: visible.width - 2 * CanvasView.margin, height: visible.height - 2 * CanvasView.margin)
+        guard template.width > 0, room.width > 0, room.height > 0 else { return 0 }
+        let pageHeight = min(room.height, room.width * CGFloat(template.height) / CGFloat(template.width))
+        return CanvasView.margin + (room.height - pageHeight) / 2 + min(Self.pageTipDepth, pageHeight / 10)
+    }
+
+    /// How far into the page the page tips lie, and how wide they grow.
+    private static let pageTipDepth: CGFloat = 32
+    private static let pageTipWidth: CGFloat = 420
+
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
     private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
         let insets = canvasInsets(safe: safe, palette: palette)
@@ -373,22 +398,22 @@ struct PaintView: View {
 
     // MARK: Top bar
 
-    /// Close, the progress badge, then Photo, Hint, Undo, Give Feedback and More, as the first of
-    /// these that fits: each badge variant (largest first, down to its ring and percentage) with
-    /// every control, then each without Give Feedback (More offers it then), then the smallest
-    /// badge without Hint, which the selected swatch and the `h` key still offer (the narrowest
-    /// windows). Nothing here may grow wider than the window: the bar's width would widen the
-    /// whole screen.
+    /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
+    /// fits: each badge variant (largest first, down to its ring and percentage) with every
+    /// control, then the smallest badge without Hint, which the selected swatch and the `h` key
+    /// still offer (the narrowest windows). Give Feedback lives in More, so the bar never shows
+    /// more than six controls (Paul, October 18: "nested enough, that there isn't a moment where
+    /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
+    /// window: the bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
-        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: true) }
-            + badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: false) }
-            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false, showsFeedback: false) }
+        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true) }
+            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
         return GlassEffectContainer(spacing: 10) {
             // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
             ViewThatFits(in: .horizontal) {
                 ForEach(rows, id: \.self) { row in
-                    topBarRow(badge: row.badge, showsHint: row.showsHint, showsFeedback: row.showsFeedback)
+                    topBarRow(badge: row.badge, showsHint: row.showsHint)
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
@@ -402,10 +427,9 @@ struct PaintView: View {
     nonisolated private struct BarVariant: Hashable {
         var badge: BadgeVariant
         var showsHint: Bool
-        var showsFeedback: Bool
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool, showsFeedback: Bool) -> some View {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
         // 8 pt apart: the buttons' glass sits inside their frames, so the shapes stay further
         // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
         HStack(spacing: 8) {
@@ -425,11 +449,7 @@ struct PaintView: View {
             }
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .disabled(!session.isStarted)
-            if showsFeedback {
-                GlassIconButton(systemImage: "exclamationmark.bubble", label: "Give Feedback", action: startFeedback)
-                    .gentleTip(.benchFeedback, arrowEdge: .top)
-            }
-            moreMenu(offersFeedback: !showsFeedback)
+            moreMenu
         }
     }
 
@@ -479,19 +499,19 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// `offersFeedback` when the bar has no room for Give Feedback.
-    private func moreMenu(offersFeedback: Bool) -> some View {
+    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    private var moreMenu: some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
-            if !session.isComplete { paletteMenu }
+            Divider()
             if session.isComplete {
                 Button(action: replay) { Label("Replay Painting", systemImage: "play") }
+            } else {
+                paletteMenu
             }
-            if offersFeedback {
-                Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
-            }
+            Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
         } label: {
@@ -503,9 +523,9 @@ struct PaintView: View {
         }
         .accessibilityLabel(Text("More"))
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
-        // Zen Mode and, where the bar has no room for its button, Give Feedback live in this menu.
+        // Zen Mode and Give Feedback live in this menu.
         .gentleTip(.benchZen, active: true, arrowEdge: .top)
-        .gentleTip(.benchFeedback, active: offersFeedback, arrowEdge: .top)
+        .gentleTip(.benchFeedback, active: true, arrowEdge: .top)
         // Asked from this menu, so the popover points at its button, not at the whole screen.
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {
@@ -656,15 +676,21 @@ struct PaintView: View {
     /// thanks (sent, or just thanks for a share, which may only have been saved to Files).
     private func feedbackSent(_ delivery: FeedbackSheet.Delivery) {
         feedback?.isSent = true
-        feedback?.isReviewing = false
-        let message = switch delivery {
+        pendingThanks = switch delivery {
         case .sent: String(localized: "Feedback sent. Thank you!")
         case .shared: String(localized: "Thanks for the feedback!")
         }
+        feedback?.isReviewing = false
+    }
+
+    /// The review sheet is gone. Feedback ends and the thanks show only now, not after a guess at
+    /// the sheet's dismissal: on CI's busy simulators the thanks came while the sheet still showed.
+    private func thankForFeedback() {
+        guard let message = pendingThanks else { return }
+        pendingThanks = nil
+        endFeedback()
+        Announcer.announce(message)
         Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            endFeedback()
-            Announcer.announce(message)
             thanks = message
             try? await Task.sleep(for: .seconds(3))
             thanks = nil

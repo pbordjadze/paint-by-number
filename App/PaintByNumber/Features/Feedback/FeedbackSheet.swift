@@ -207,24 +207,36 @@ struct FeedbackSheet: View {
     }
 
     /// Sends the written files to the developers: thanks if they took them, the alert if not.
-    private func upload(_ files: FeedbackPackage.Files) async {
+    /// Neither closes the sheet nor shows the alert again sooner than `notBefore`: offline, a
+    /// send fails at once.
+    private func upload(_ files: FeedbackPackage.Files, notBefore: ContinuousClock.Instant? = nil) async {
         phase = .sending
         do {
             try await uploader.upload(files, app: draft.capture.app)
             Log.feedback.notice("Feedback sent (\(uploader.name, privacy: .public))")
+            if let notBefore { try? await Task.sleep(until: notBefore) }
             phase = .editing
             discardPrepared()
             onSent(.sent)
         } catch {
             Log.feedback.error("Sending feedback failed: \(String(describing: error), privacy: .public)")
+            if let notBefore { try? await Task.sleep(until: notBefore) }
             phase = .notSent
         }
     }
 
+    /// Sends again at once, but closes the sheet only once the alert has gone: UIKit dismisses
+    /// nothing under a presentation still in flight, and a quick send asked it to.
     private func tryAgain() {
         guard let files = prepared else { return }
-        Task { await upload(files) }
+        // Before the alert's binding hands the sheet back to editing, which would turn Send on.
+        phase = .sending
+        let alertGone = ContinuousClock.now + Self.alertDismissal
+        Task { await upload(files, notBefore: alertGone) }
     }
+
+    /// How long an alert takes to leave, with room to spare.
+    private static let alertDismissal = Duration.milliseconds(500)
 
     /// Opens the share sheet with the files already written, once the alert has gone: UIKit
     /// presents nothing over an alert that is still leaving.
@@ -232,7 +244,7 @@ struct FeedbackSheet: View {
         guard let files = prepared else { return }
         phase = .packing
         Task {
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: Self.alertDismissal)
             phase = .sharing(files.shared)
         }
     }

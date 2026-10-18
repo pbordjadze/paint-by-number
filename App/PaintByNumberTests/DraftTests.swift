@@ -217,6 +217,24 @@ struct DraftTests {
         #expect(Drafts(store: store).current == saved)
     }
 
+    @Test func aDraftWhosePhotoCantBeReadNowIsKeptWhenOpening() async throws {
+        let store = store
+        let saved = draft()
+        try store.write(saved, photo: try photo())
+        let fm = FileManager.default
+        let source = store.url(.source).path
+        try fm.setAttributes([.posixPermissions: 0], ofItemAtPath: source)
+        defer { try? fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: source) }
+
+        let drafts = Drafts(store: store)
+        #expect(await drafts.open() == nil)
+        #expect(drafts.current == saved, "A draft that couldn't be opened just now was dropped")
+        #expect(fm.fileExists(atPath: source), "A draft that couldn't be opened just now was removed")
+
+        try fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: source)
+        #expect(await drafts.open()?.draft == saved)
+    }
+
     @Test func aPhotoThatDoesNotDecodeIsFoundWhenOpening() async throws {
         let store = store
         try store.write(draft(), photo: try photo())

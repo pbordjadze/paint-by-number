@@ -29,6 +29,12 @@ import Foundation
 ///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
 ///   `painted(_:on:photo:)`): the paint nearest it within the book's own tolerance for one color
 ///   (`paintTolerance`), else a new paint of that color added last.
+/// - **Split.** The Color Splitter's line, laid as a draw with paints is, but as an undrawn
+///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
+///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
+///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
+///   else a new paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
+///   is declined.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -44,6 +50,9 @@ public enum TemplateEditor {
         /// colors of the pieces it cuts, nil for a draw made before lines took them (no nudge, no
         /// recoloring: such a draw is laid as it always was).
         case draw(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint]? = nil)
+        /// The Color Splitter's line: `points` divide the paint along an undrawn boundary, and the
+        /// pieces take `paints`.
+        case split(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint] = [])
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -135,12 +144,20 @@ public enum TemplateEditor {
     public static func apply(
         _ edit: Edit, to template: Template, verify: Bool = true
     ) throws -> (template: Template, outcome: Outcome) {
+        try apply(edit, to: template, verify: verify, reading: false)
+    }
+
+    /// `reading`: the edit is laid only to read its pieces (`painted`), so a split is not yet held
+    /// to having different paints on its two sides.
+    static func apply(
+        _ edit: Edit, to template: Template, verify: Bool, reading: Bool
+    ) throws -> (template: Template, outcome: Outcome) {
         // A line that meets others closer than the lattice can tell apart is made again with ends
         // and crossings snapped to vertices farther off, up to a few hundredths of a unit.
         let radii: [Int64] = [1, 3, 9, 27]
         for (k, radius) in radii.enumerated() {
             do {
-                return try apply(edit, to: template, verify: verify, snapRadius: radius)
+                return try apply(edit, to: template, verify: verify, snapRadius: radius, reading: reading)
             } catch EditFailure.collision(let why) {
                 if k == radii.count - 1 {
                     var outcome = unchanged(template)
@@ -160,13 +177,19 @@ public enum TemplateEditor {
     }
 
     private static func apply(
-        _ edit: Edit, to template: Template, verify: Bool, snapRadius: Int64
+        _ edit: Edit, to template: Template, verify: Bool, snapRadius: Int64, reading: Bool
     ) throws -> (template: Template, outcome: Outcome) {
         var work = try EditWork(template, snapRadius: snapRadius)
         switch edit {
         case .draw(let points, let closed, let paints):
             try work.draw(points, closed: closed, nudging: paints != nil)
             if let paints { try work.paint(paints) }
+        case .split(let points, let closed, let paints):
+            work.splitting = true
+            try work.draw(points, closed: closed, nudging: true)
+            guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the split divides no area") }
+            try work.paint(paints)
+            if !reading { try work.checkSplitPaints() }
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
@@ -214,15 +237,26 @@ public enum TemplateEditor {
     /// over its pixels (`LineEdit.photoColor(ofRegion:in:image:)`) at its number. Another edit, or
     /// one that changes nothing, comes back as a draw that lays the same way with no paints.
     public static func painted(_ edit: Edit, on template: Template, photo: RGBAImage) -> Edit {
-        guard case .draw(let points, let closed, nil) = edit else { return edit }
-        let bare = Edit.draw(points: points, closed: closed, paints: [])
-        guard let (result, outcome) = try? apply(bare, to: template), outcome.changed else { return bare }
+        let bare: Edit, wrap: ([Paint]) -> Edit
+        switch edit {
+        case .draw(let points, let closed, nil):
+            bare = .draw(points: points, closed: closed, paints: [])
+            wrap = { .draw(points: points, closed: closed, paints: $0) }
+        case .split(let points, let closed, let given) where given.isEmpty:
+            bare = edit
+            wrap = { .split(points: points, closed: closed, paints: $0) }
+        default:
+            return edit
+        }
+        guard let (result, outcome) = try? apply(bare, to: template, verify: true, reading: true), outcome.changed,
+              outcome.declined == nil
+        else { return bare }
         let paints = outcome.pieces.compactMap { piece -> Paint? in
             guard let label = result.labels(ofRegion: piece).first,
                   let color = LineEdit.photoColor(ofRegion: piece, in: result, image: photo) else { return nil }
             return Paint(at: label.position, color: color)
         }
-        return .draw(points: points, closed: closed, paints: paints)
+        return wrap(paints)
     }
 
     private static func unchanged(_ template: Template) -> Outcome {

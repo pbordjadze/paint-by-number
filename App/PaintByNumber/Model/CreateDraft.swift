@@ -82,10 +82,17 @@ nonisolated struct DraftStore: Sendable {
         return draft
     }
 
-    /// The photo's bytes, checked to decode.
+    /// The photo's bytes, checked to decode. A photo that can't be read just now (an I/O or data
+    /// protection error) throws that error: it says nothing about the draft.
     func photoData() throws -> Data {
         let data: Data
-        do { data = try Data(contentsOf: url(.source)) } catch { throw StoreError.missingPhoto }
+        do {
+            data = try Data(contentsOf: url(.source))
+        } catch let error as CocoaError where !Library.isDamage(error) {
+            throw error
+        } catch {
+            throw StoreError.missingPhoto
+        }
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               ImageCodec.image(from: source, maxPixelSize: 32) != nil
         else { throw StoreError.undecodablePhoto }

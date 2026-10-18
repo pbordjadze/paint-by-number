@@ -13,14 +13,8 @@ final class FeedbackUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 90), "The painting didn't open")
         sleep(2)
-        // The top bar where it has room (iPad), else the More menu.
-        let give = app.buttons["Give Feedback"]
-        if give.exists {
-            give.tap()
-        } else {
-            app.buttons["More"].tap()
-            app.buttons["Give Feedback…"].tap()
-        }
+        app.buttons["More"].tap()
+        app.buttons["Give Feedback…"].tap()
         let next = app.buttons["feedback-next"]
         XCTAssertTrue(next.waitForExistence(timeout: 10), "Feedback didn't start")
         let undo = app.buttons["feedback-undo"]
@@ -72,6 +66,13 @@ final class FeedbackUITests: XCTestCase {
         app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Feedback sent. Thank you!")).firstMatch
     }
 
+    /// The thanks come once the sheet has gone (`PaintView.thankForFeedback`), but the
+    /// accessibility tree can trail the screen by a moment on CI's simulators.
+    @MainActor
+    private func sheetIsGone(in app: XCUIApplication) -> Bool {
+        app.navigationBars["Send Feedback"].waitForNonExistence(timeout: 5)
+    }
+
     /// The review sheet over `paint-feedback-review`'s painting, marks and note, its Send going to
     /// the stub that `mode` names (the one that succeeds when nil).
     @MainActor
@@ -91,7 +92,7 @@ final class FeedbackUITests: XCTestCase {
         app.buttons["feedback-send"].tap()
         XCTAssertTrue(thanks(in: app).waitForExistence(timeout: 60), "A sent feedback wasn't thanked")
         attachScreenshot(of: app, named: "feedback-sent")
-        XCTAssertFalse(app.navigationBars["Send Feedback"].exists, "The review sheet stayed up after sending")
+        XCTAssertTrue(sheetIsGone(in: app), "The review sheet stayed up after sending")
         XCTAssertFalse(app.buttons["feedback-next"].exists, "Feedback mode is still on after sending")
     }
 
@@ -128,6 +129,6 @@ final class FeedbackUITests: XCTestCase {
         XCTAssertTrue(alert.waitForExistence(timeout: 60), "The first try didn't fail")
         alert.buttons["Try Again"].tap()
         XCTAssertTrue(thanks(in: app).waitForExistence(timeout: 60), "Try Again wasn't thanked")
-        XCTAssertFalse(app.navigationBars["Send Feedback"].exists, "The review sheet stayed up after sending")
+        XCTAssertTrue(sheetIsGone(in: app), "The review sheet stayed up after sending")
     }
 }

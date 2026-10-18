@@ -18,6 +18,18 @@
 				<string>public.image</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Paint by Moonlight Painting</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.pbordjadze.paintbynumber.painting</string>
+			</array>
+		</dict>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
@@ -30,5 +42,26 @@
 		<key>UISceneConfigurations</key>
 		<dict/>
 	</dict>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Paint by Moonlight Painting</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.pbordjadze.paintbynumber.painting</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>moonlight</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -34,6 +34,11 @@ gallery-first-run@90
 gallery-draft@90
 gallery-draft-long-text@90
 gallery-open@90
+gallery-send@90
+gallery-send-dark@90
+gallery-send-long-text@90
+gallery-received@120
+gallery-received-dark@120
 gallery-damaged@90
 gallery-timelapse@90
 gallery-timelapse-long-text@90
@@ -112,6 +117,7 @@ create-preview-dark--tip-newPaintingSliders@120
 create-custom-long-text--tip-newPaintingReset@120
 create-preview--tip-newPaintingRefine@120
 create-refine--tip-refineFill@180
+create-refine--tip-refineDraw@180
 paint--tip-benchZoom@60
 paint--tip-benchDrag@60
 paint--tip-benchPencil@60

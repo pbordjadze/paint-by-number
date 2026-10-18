@@ -9,9 +9,14 @@ struct GalleryView: View {
     let query: GalleryQuery
     /// The time-lapse being made; the app shell presents its sheet.
     @Binding var timelapse: TimelapseRequest?
+    /// The painting Send Template… is sending; the app shell presents its sheet.
+    @Binding var sending: Artwork?
     var onCreate: () -> Void
     /// The painter chose to continue refining the create flow's draft.
     var onContinueDraft: (Drafts.Opened) -> Void
+    /// Whether a rename, restart or delete question (or the restart's failure) is up; set false
+    /// by the shell to close it, as a photo shared in from another app does.
+    @Binding var isAsking: Bool
 
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -21,6 +26,7 @@ struct GalleryView: View {
     @State private var renameText = ""
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
+    @State private var restartFailed = false
     @State private var isOpeningDraft = false
 
     var body: some View {
@@ -86,10 +92,20 @@ struct GalleryView: View {
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards.
-        .animation(.snappy, value: shownIDs)
-        .animation(.snappy, value: library.placeholders)
-        .animation(.snappy, value: shownDraft?.photoID)
+        .animation(reduceMotion ? nil : .snappy, value: shownIDs)
+        .animation(reduceMotion ? nil : .snappy, value: library.placeholders)
+        .animation(reduceMotion ? nil : .snappy, value: shownDraft?.photoID)
         .animation(.easeInOut(duration: 0.35), value: isBare)
+        .alert("This painting can’t be restarted.", isPresented: $restartFailed) {}
+        // A photo shared in from another app can't present over a question: the shell closes it.
+        .onChange(of: hasQuestion) { _, asks in isAsking = asks }
+        .onChange(of: isAsking) { _, asks in
+            guard !asks else { return }
+            renaming = nil
+            restarting = nil
+            deleting = nil
+            restartFailed = false
+        }
         .alert("Rename Painting", isPresented: isPresent($renaming), presenting: renaming) { artwork in
             TextField("Title", text: $renameText)
                 .submitLabel(.done)
@@ -102,6 +118,10 @@ struct GalleryView: View {
             if ShellDemo.current?.sharesTimelapse == true, timelapse == nil, let artwork = library.finished.first {
                 shareTimelapse(artwork)
             }
+        }
+        .task(id: library.artworks.first?.id) {
+            // Demo: send the painting once it is ready.
+            if ShellDemo.current?.sendsTemplate == true, sending == nil, let artwork = library.artworks.first { sending = artwork }
         }
         #endif
     }
@@ -214,7 +234,10 @@ struct GalleryView: View {
             Button(String(localized: "gallery.restart.confirm", defaultValue: "Restart “\(pending.title)”",
                           comment: "Destructive button of the restart confirmation; the argument is the painting's title"),
                    role: .destructive) {
-                Task { await library.restart(pending.id) }
+                Task {
+                    // Not for a painting deleted meanwhile: there is nothing left to restart.
+                    if await !library.restart(pending.id), library.artwork(with: pending.id) != nil { restartFailed = true }
+                }
             }
         } message: { _ in
             Text("Every painted area will be cleared.")
@@ -228,6 +251,8 @@ struct GalleryView: View {
             DeleteConfirmationMessage(artwork: pending)
         }
     }
+
+    private var hasQuestion: Bool { renaming != nil || restarting != nil || deleting != nil || restartFailed }
 
     // MARK: Actions
 
@@ -271,6 +296,24 @@ struct GalleryView: View {
             renaming = artwork
         }
         Divider()
+        // Every way out of the app in one submenu, so the menu keeps five items (Paul's calmer
+        // menus, October 18).
+        Menu {
+            shareItems(for: artwork)
+        } label: {
+            Label("Share", systemImage: "square.and.arrow.up")
+        }
+        Divider()
+        Button("Restart", systemImage: "arrow.counterclockwise") {
+            PaintTips.used(.shelfHold)
+            restarting = artwork
+        }
+        .disabled(!artwork.isStarted)
+        deleteButton(for: artwork)
+    }
+
+    @ViewBuilder
+    private func shareItems(for artwork: Artwork) -> some View {
         ShareLink(
             item: PaintingImageFile(store: library.store, artwork: artwork),
             preview: SharePreview(artwork.title, image: previewImage(artwork))
@@ -295,13 +338,12 @@ struct GalleryView: View {
         ) {
             Label("Print Template…", systemImage: "printer")
         }
-        Divider()
-        Button("Restart", systemImage: "arrow.counterclockwise") {
+        // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
+        // is for whoever hasn't the app.
+        Button("Send Template…", systemImage: "paperplane") {
             PaintTips.used(.shelfHold)
-            restarting = artwork
+            sending = artwork
         }
-        .disabled(!artwork.isStarted)
-        deleteButton(for: artwork)
     }
 
     private func deleteButton(for artwork: Artwork) -> some View {

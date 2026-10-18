@@ -20,14 +20,15 @@ nonisolated enum TipPlace: String, CaseIterable, Codable, Sendable {
     }
 }
 
-/// The 22 tips, by the design's ids. Pure data: the tips themselves (TipKit) are made from these in
+/// The 23 tips, by the design's ids (22, and Refine's Draw Your Own Lines, which took the place of
+/// the line under Refine's tools: Paul's calmer menus, October 18). Pure data: the tips themselves (TipKit) are made from these in
 /// `TipID.tip`, and everything that decides when one may appear (`TipPacing`, `TipMoments`) speaks
 /// of ids alone.
 nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case shelfStarter, shelfNewPainting, shelfHold, shelfTimeLapse, shelfSettings
     case newPaintingSamples
     case newPaintingDivider, newPaintingSuggested, newPaintingReset, newPaintingSliders, newPaintingRefine
-    case refineFill
+    case refineDraw, refineFill
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
@@ -45,16 +46,25 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
-    /// Tips in a popover of SwiftUI's own. They have no display limit of TipKit's, which would retire
-    /// the tip from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
-    var hasOwnPopover: Bool { hangsFromBar || hangsFromCard }
+    /// The tips about the page itself, a card at the top of the page with no arrow (`TipDesk.pageTip`):
+    /// Paul, October 18, shown the arrow and none, "No arrow".
+    var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }
+
+    /// Tips the app draws itself, in a popover of SwiftUI's own or on the page. They have no display
+    /// limit of TipKit's, which would retire the tip from under its own view: closing, using or leaving
+    /// it unread (`TipDesk`) says it once.
+    var isDrawnByTheApp: Bool { hangsFromBar || hangsFromCard || liesOnThePage }
+
+    /// How to use a screen at all, so it waits for neither the gap nor something done
+    /// (`TipPacing`): Tap to Paint, and Refine's Draw Your Own Lines.
+    var isHowTo: Bool { self == .benchTap || self == .refineDraw }
 
     var place: TipPlace {
         switch self {
         case .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings: .shelf
         case .newPaintingSamples: .newPainting
         case .newPaintingDivider, .newPaintingSuggested, .newPaintingReset, .newPaintingSliders, .newPaintingRefine: .preview
-        case .refineFill: .refine
+        case .refineDraw, .refineFill: .refine
         case .benchTap, .benchZoom, .benchFind, .benchDrag, .benchPencil, .benchShowPhoto, .benchReplay, .benchZen,
              .benchFeedback: .bench
         case .drawerWorthALook: .drawer

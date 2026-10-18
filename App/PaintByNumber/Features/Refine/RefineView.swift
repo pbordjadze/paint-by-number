@@ -14,16 +14,19 @@ nonisolated enum RefineTool: Hashable {
     /// A tap makes the closed shape under it an area of its own in the photo's color there, or
     /// clears that again (`EditFills`).
     case fill
-    /// Settings › Detail Brushes: areas brushed for more or less detail, that brushing cleared,
-    /// and the text the app found corrected.
-    case more, less, unbrush, text
+    /// The Color Splitter: a stroke divides an area's paint where it goes, drawing no line, each
+    /// side in the photo's color (`TemplateEditor.Edit.split`).
+    case splitter
+    /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
+    /// one it missed.
+    case text
 
     /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
     var pencilPartner: RefineTool? {
         switch self {
         case .pen, .shape: .eraser
         case .eraser, .smartEraser: .pen
-        case .fill, .more, .less, .unbrush, .text: nil
+        case .fill, .splitter, .text: nil
         }
     }
 
@@ -51,6 +54,10 @@ nonisolated enum RefineBackdrop: Hashable {
 /// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
 ///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
 ///   curve's ends move onto a line their ink touches, as the Pen's do;
+/// - the Color Splitter's stroke divides an area's color where it goes and draws no line
+///   (`TemplateEditor.Edit.split`): each side takes the photo's color there, a different paint
+///   from the other's; it shows dashed while the finger is down, and picking it shows the
+///   painting, where a split shows;
 /// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
 ///   tap takes out a dab;
 /// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction;
@@ -67,18 +74,16 @@ nonisolated enum RefineBackdrop: Hashable {
 /// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
 /// switches between drawing and the Eraser. Photo and Painting show the photo, or the template
 /// painted (every area in its paint, `TemplateRasterizer.Style.paintedAreas`), beneath the
-/// drawing: the painting the changes make, once the template has them. With Settings › Detail
-/// Brushes one finger also
-/// brushes areas for more or less detail, clears that brushing, and corrects the text the app
-/// found (a tap turns a found line off or on again, a drag across a line marks it).
+/// drawing: the painting the changes make, once the template has them. Text corrects the text the
+/// app found (a tap turns a found line off or on again, a drag across a line marks it).
 ///
 /// An edit lands in a few hundredths of a second, off the main actor, and the screen then shows
 /// the new template with no crossfade; until it does, the edit shows over the last template in the
 /// drawing's own ink (`RefineInkLayer`), so a line is there the moment it is drawn and gone the
 /// moment it is erased, and a fill shows as a swatch of its color where it was tapped
 /// (`RefineFillLayer`, which then tints the areas fills made in their paint, under the drawing).
-/// The brushes and the text corrections still make the template again, as the sliders do, and the
-/// edits are laid on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
+/// The text corrections still make the template again, as the sliders do, and the edits are laid
+/// on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
 /// (`CreateModel.history`; an edit taken back or put back comes at once from the templates kept),
 /// Cancel puts back what the screen opened with, Done keeps them.
 struct RefineView: View {
@@ -87,10 +92,10 @@ struct RefineView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
-    /// Settings › Detail Brushes, as the screen opened (Settings isn't reachable from it).
-    private let detailBrushes = Preferences().detailBrushes
     @State private var tool: RefineTool
     @State private var shape = RefineShape.line
+    /// The eraser the Erasers button shows: the one last picked.
+    @State private var eraser = RefineTool.eraser
     @State private var backdrop = RefineBackdrop.paper
     /// The template on screen painted, for `RefineBackdrop.painting`, with its preview's id.
     @State private var painting: (preview: UUID, image: CGImage)?
@@ -105,8 +110,6 @@ struct RefineView: View {
     @State private var snapLines: SnapLines?
     /// A curve's ends, drawn and waiting for the drag that bends it.
     @State private var curve: (from: SIMD2<Float>, to: SIMD2<Float>)?
-    /// The brush stroke under the finger (detail brushes).
-    @State private var stroke: TemplateRefinements.Stroke?
     /// The line of text being dragged out: where the drag began and where it is.
     @State private var marking: (SIMD2<Float>, SIMD2<Float>)?
     /// The line the eraser was last tapped on, which flashes as it goes.
@@ -121,8 +124,7 @@ struct RefineView: View {
         self.model = model
         // Never a draft: its canvas is smaller than the one the edits will be laid on.
         _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
-        // Without a drawing to draw on (its line art failed), only the brushes are left.
-        _tool = State(initialValue: model.hasLineArtInput ? .pen : .more)
+        _tool = State(initialValue: .pen)
     }
 
     var body: some View {
@@ -137,6 +139,8 @@ struct RefineView: View {
         .onAppear {
             model.beginRefining()
             PaintTips.desk.enter(.refine)
+            // A draft refined before (Continue Refining) has found how to draw already.
+            if model.refinements.isEmpty { PaintTips.refineShown() }
         }
         .onDisappear {
             model.dismissNote()
@@ -205,17 +209,16 @@ struct RefineView: View {
                     let figure = shapeTrace
                     RefineInkLayer(
                         lines: pending, trace: tool == .shape ? figure : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
+                        dashed: tool == .splitter,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
                         beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     if let tapped {
                         RefineTappedLine(points: tapped, rect: picture, lineWidth: lineWidth)
                             .opacity(flashes ? 1 : 0)
                     }
-                    if showsDetailMarks {
-                        RefineMarks(
-                            refinements: shown, found: model.foundText, marking: marking, rect: picture,
-                            emphasizesText: tool == .text)
-                    }
+                    RefineMarks(
+                        refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
+                        emphasizesText: tool == .text)
                 }
                 // Drawing past the picture's edge stays on the picture.
                 .mask {
@@ -273,7 +276,8 @@ struct RefineView: View {
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
             case .eraseLine:
                 if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
-            case .fill:
+            case .fill, .split:
+                // `RefineFillLayer` shows fills; a split draws nothing.
                 break
             }
         }
@@ -300,42 +304,17 @@ struct RefineView: View {
         }
     }
 
-    /// The detail brushing and text corrections show while their tools are offered, or once
-    /// there are any.
-    private var showsDetailMarks: Bool {
-        detailBrushes || !model.refinements.strokes.isEmpty || !model.refinements.hiddenText.isEmpty
-            || !model.refinements.addedText.isEmpty
-    }
-
-    /// The refinements with the brush stroke still under the finger.
-    private var shown: TemplateRefinements {
-        guard let stroke else { return model.refinements }
-        var shown = model.refinements
-        shown.strokes.append(stroke)
-        return shown
-    }
-
     private var aspectRatio: CGFloat {
         guard let image = model.source?.image, image.width > 0, image.height > 0 else { return 1 }
         return CGFloat(image.width) / CGFloat(image.height)
     }
-
-    /// The picture's long side on screen, in points.
-    private var pictureLong: CGFloat { max(picture.width, picture.height) }
 
     /// The drawing's line on screen, as the preview and the canvas draw it at this size.
     private var lineWidth: CGFloat {
         (base?.drawing ?? model.preview?.drawing)?.lineWidth(scale: zoom, weight: lineWeight) ?? 1.5
     }
 
-    /// The detail brush keeps its size on screen, so zoomed in it brushes finer: a twenty-fifth of
-    /// the canvas's short side, between 14 and 30 points.
-    private var brushRadius: Float {
-        let points = min(max(0.04 * min(canvasSize.width, canvasSize.height), 14), 30)
-        return pictureLong > 0 ? Float(points / pictureLong) : 0.03
-    }
-
-    /// The eraser too, a little finer (`RefineScreen.eraserRadius`).
+    /// The eraser keeps its size on screen, so zoomed in it erases finer (`RefineScreen.eraserRadius`).
     private var eraserRadius: Float { screen.eraserRadius }
 
     /// The screen as the gestures see it (`RefineGestures`, which `pbn refine` replays too).
@@ -363,10 +342,9 @@ struct RefineView: View {
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch tool {
-        case .pen, .eraser, .smartEraser: follow(touch, at: point)
+        case .pen, .splitter, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
         case .text: mark(touch, at: point)
-        case .more, .less, .unbrush: brush(touch, at: point)
         // A fill is a tap: a drag does nothing.
         case .fill: break
         }
@@ -387,7 +365,7 @@ struct RefineView: View {
         case .ended:
             guard var current = trace else { return }
             current.append(point)
-            let edit = tool.erases ? eraserEdit(current) : penEdit(current)
+            let edit = tool.erases ? eraserEdit(current) : tool == .splitter ? splitterEdit(current) : penEdit(current)
             endStroke()
             if let edit { submit(edit) }
         case .cancelled:
@@ -399,6 +377,7 @@ struct RefineView: View {
     /// then it shows over the template (`pending`).
     private func submit(_ edit: TemplateEditor.Edit, chain: [SIMD2<Float>]? = nil) {
         submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain))
+        PaintTips.refineEdited()
         if case .draw = edit { PaintTips.refineLineDrawn() }
     }
 
@@ -410,6 +389,11 @@ struct RefineView: View {
     /// A pen's line from its samples (`RefineGestures.pen`).
     private func penEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
         RefineGestures.pen(points, on: screen, snapping: snapLines)
+    }
+
+    /// The Color Splitter's stroke as an edit (`RefineGestures.splitter`).
+    private func splitterEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
+        RefineGestures.splitter(points, on: screen, snapping: snapLines)
     }
 
     /// The eraser's pass as an edit (`RefineGestures.eraser`).
@@ -511,35 +495,6 @@ struct RefineView: View {
     /// The painting's long side, in pixels, at most.
     static let paintingPixels = 3200
 
-    private var brushKind: TemplateRefinements.Stroke.Kind {
-        switch tool {
-        case .less: .less
-        case .unbrush: .erase
-        default: .more
-        }
-    }
-
-    private func brush(_ touch: RefineTouch, at point: SIMD2<Float>) {
-        switch touch {
-        case .began:
-            stroke = TemplateRefinements.Stroke(kind: brushKind, radius: brushRadius, points: [point])
-        case .moved:
-            // Points closer than a fifth of the brush add nothing a round brush shows.
-            guard var current = stroke, let last = current.points.last else { return }
-            let step = point - last
-            guard (step * step).sum().squareRoot() >= 0.2 * current.radius else { return }
-            current.points.append(point)
-            stroke = current
-        case .ended:
-            guard var current = stroke else { return }
-            current.points.append(point)
-            stroke = nil
-            model.change(.stroke(current))
-        case .cancelled:
-            stroke = nil
-        }
-    }
-
     private func mark(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch touch {
         case .began:
@@ -556,7 +511,7 @@ struct RefineView: View {
 
     private func tap(at point: SIMD2<Float>) {
         switch tool {
-        case .pen:
+        case .pen, .splitter:
             break
         case .shape:
             finishCurve()
@@ -569,9 +524,6 @@ struct RefineView: View {
             fill(at: point)
         case .text:
             toggleText(at: point)
-        case .more, .less, .unbrush:
-            // A dab.
-            model.change(.stroke(TemplateRefinements.Stroke(kind: brushKind, radius: brushRadius, points: [point])))
         }
     }
 
@@ -604,6 +556,7 @@ struct RefineView: View {
         let clears = base.map { !EditFills.cleared(by: at, edits: $0.refinements.edits, on: $0.template).isEmpty } ?? false
         submitted.append(Submitted(id: model.fill(at: at, color: color), edit: .fill(at: at, color: color), showsSwatch: !clears))
         FeedbackEngine.shared.selectionChanged()
+        PaintTips.refineEdited()
         PaintTips.refineFilled()
     }
 
@@ -611,8 +564,10 @@ struct RefineView: View {
     private func toggleText(at point: SIMD2<Float>) {
         if let marked = model.refinements.addedText.last(where: { Self.line($0, contains: point) }) {
             model.change(.unmarkText(marked))
+            PaintTips.refineEdited()
         } else if let line = model.foundText.first(where: { Self.line($0, contains: point) }) {
             model.change(.toggleFound(line))
+            PaintTips.refineEdited()
         }
     }
 
@@ -620,6 +575,7 @@ struct RefineView: View {
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
         guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
         model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
+        PaintTips.refineEdited()
     }
 
     /// Whether a tap at `point` falls on `line`, give or take a little for the finger.
@@ -689,31 +645,31 @@ struct RefineView: View {
         }
     }
 
-    /// What the finger does, with a line on how to use it, along the bottom: the pens, the
-    /// erasers and the photo beneath, and the detail brushes in a row of their own where there
-    /// isn't room for one.
+    /// What the finger does, along the bottom: the pens, the erasers and what shows beneath, and
+    /// the Text tool in a row of its own where there isn't room for one. How each tool works is
+    /// its button's VoiceOver hint, and how to draw at all a tip said once (`RefineDrawTip`; a
+    /// line here until Paul's calmer menus, October 18); only a curve waiting to be bent says
+    /// what comes next.
     private var tools: some View {
         VStack(spacing: 12) {
-            Text(hint)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: 480)
-                .accessibilityIdentifier("refine-hint")
-            if detailBrushes {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 12) {
-                        lineTools
-                        detailTools
-                    }
-                    VStack(spacing: 10) {
-                        detailTools
-                        lineTools
-                    }
+            if tool == .shape, shape == .curve, curve != nil {
+                Text(hint(for: .shape))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 480)
+                    .accessibilityIdentifier("refine-hint")
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    lineTools
+                    textTool
                 }
-            } else {
-                lineTools
+                VStack(spacing: 10) {
+                    textTool
+                    lineTools
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -726,8 +682,9 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    /// The pens, erasers and Fill, then the photo: one row where it fits, else the pens and
-    /// erasers above Fill and the photo (a phone's width holds about five of these buttons).
+    /// The Pen, the Color Splitter, Shapes, the erasers and Fill, then what shows beneath: one row
+    /// where it fits, else the pens and erasers above Fill and the backdrop (a phone's width holds
+    /// about five of these buttons).
     private var lineTools: some View {
         ViewThatFits(in: .horizontal) {
             GlassEffectContainer(spacing: 10) {
@@ -749,11 +706,13 @@ struct RefineView: View {
     private var drawingTools: some View {
         toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
             .disabled(!model.hasLineArtInput)
+            // Draw Your Own Lines: over the tools, which sit at the bottom.
+            .gentleTip(.refineDraw, arrowEdge: .bottom)
+        toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
+            .disabled(!model.hasLineArtInput)
         shapesButton
             .disabled(!model.hasLineArtInput)
-        toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
-            .disabled(!model.hasLineArtInput)
-        toolButton(.smartEraser, systemImage: "wand.and.stars", label: Text("Smart Eraser"), id: "smart-eraser")
+        erasersButton
             .disabled(!model.hasLineArtInput)
     }
 
@@ -768,49 +727,42 @@ struct RefineView: View {
             .frame(width: 1, height: 24)
             .padding(.horizontal, 4)
             .accessibilityHidden(true)
-        backdropButton(.photo, systemImage: "photo", label: Text("Photo"), id: "refine-photo")
-        backdropButton(.painting, systemImage: "paintpalette", label: Text("Painting"), id: "refine-painting")
-            .disabled(base == nil)
+        backdropButton
     }
 
-    private var detailTools: some View {
+    private var textTool: some View {
         GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 8) {
-                toolButton(.more, systemImage: "plus", label: Text("More Detail"), id: "more")
-                toolButton(.less, systemImage: "minus", label: Text("Less Detail"), id: "less")
-                if model.hasLineArtInput {
-                    toolButton(.text, systemImage: "text.viewfinder", label: Text("Text"), id: "text")
-                }
-                toolButton(.unbrush, systemImage: "eraser.line.dashed", label: Text("Clear Brushing"), id: "unbrush")
-            }
+            toolButton(.text, systemImage: "text.viewfinder", label: Text("Text"), id: "text")
+                .disabled(!model.hasLineArtInput)
         }
     }
 
-    private var hint: String {
+    /// How `tool` works: its button's VoiceOver hint (a curve waiting to be bent also shows it).
+    private func hint(for tool: RefineTool) -> String {
         switch tool {
         case .pen:
             String(localized: "refine.hint.pen",
                    defaultValue: "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes.",
-                   comment: "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked")
+                   comment: "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), read by VoiceOver as the hint of its button")
         case .shape:
             switch shape {
             case .line:
                 String(localized: "refine.hint.line",
                        defaultValue: "Drag to draw a straight line. Two fingers zoom and move.",
-                       comment: "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked")
+                       comment: "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), read by VoiceOver as the hint of its button")
             case .rectangle:
                 String(localized: "refine.hint.rectangle",
                        defaultValue: "Drag from corner to corner to draw a rectangle. Two fingers zoom and move.",
-                       comment: "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), shown while it is picked")
+                       comment: "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), read by VoiceOver as the hint of its button")
             case .oval:
                 String(localized: "refine.hint.oval",
                        defaultValue: "Drag across to draw an oval. Two fingers zoom and move.",
-                       comment: "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), shown while it is picked")
+                       comment: "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), read by VoiceOver as the hint of its button")
             case .curve:
                 curve == nil
                     ? String(localized: "refine.hint.curve",
                              defaultValue: "Drag from one end of the curve to the other, then drag to bend it. Two fingers zoom and move.",
-                             comment: "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), shown while it is picked")
+                             comment: "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), read by VoiceOver as the hint of its button")
                     : String(localized: "refine.hint.curve.bend",
                              defaultValue: "Drag to bend the curve, or tap to keep it straight.",
                              comment: "Refine screen: the Shapes tool's Curve once its ends are placed: a drag bends it through the finger, a tap keeps it a straight line")
@@ -818,30 +770,23 @@ struct RefineView: View {
         case .eraser:
             String(localized: "refine.hint.eraser",
                    defaultValue: "Rub out just what you touch, or tap to erase a spot. Two fingers zoom and move.",
-                   comment: "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), shown while it is picked")
+                   comment: "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), read by VoiceOver as the hint of its button")
         case .smartEraser:
             String(localized: "refine.hint.smartEraser",
                    defaultValue: "Rub lines out, or tap a line to erase all of it. Two fingers zoom and move.",
-                   comment: "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked")
+                   comment: "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), read by VoiceOver as the hint of its button")
         case .fill:
             String(localized: "refine.hint.fill",
                    defaultValue: "Tap inside a closed shape to make it an area of its own, in the photo’s color there. Tap it again to clear it. Two fingers zoom and move.",
-                   comment: "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), shown while it is picked")
-        case .more:
-            String(localized: "refine.hint.more",
-                   defaultValue: "Brush where the painting should have more detail and lines. Two fingers zoom and move.",
-                   comment: "Refine screen: how the More Detail brush works, shown while it is picked")
-        case .less:
-            String(localized: "refine.hint.less",
-                   defaultValue: "Brush where the painting should be simpler, with fewer lines. Two fingers zoom and move.",
-                   comment: "Refine screen: how the Less Detail brush works, shown while it is picked")
+                   comment: "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), read by VoiceOver as the hint of its button")
+        case .splitter:
+            String(localized: "refine.hint.splitter",
+                   defaultValue: "Draw across an area to split it into two colors, with no line between them. Two fingers zoom and move.",
+                   comment: "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), read by VoiceOver as the hint of its button")
         case .text:
             String(localized: "refine.hint.text",
                    defaultValue: "Tap a line of text to keep or ignore it, or drag across a line the app missed.",
-                   comment: "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked")
-        case .unbrush:
-            String(localized: "refine.hint.unbrush", defaultValue: "Brush over marked areas to clear them.",
-                   comment: "Refine screen: how Clear Brushing works (it clears areas brushed for more or less detail), shown while it is picked")
+                   comment: "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), read by VoiceOver as the hint of its button")
         }
     }
 
@@ -857,6 +802,7 @@ struct RefineView: View {
         }
         .buttonBorderShape(.circle)
         .accessibilityLabel(label)
+        .accessibilityHint(Text(hint(for: tool)))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("refine-tool-\(id)")
         .accessibilityShowsLargeContentViewer { Label { label } icon: { Image(systemName: systemImage) } }
@@ -867,25 +813,83 @@ struct RefineView: View {
         }
     }
 
-    /// Shows the photo or the painting beneath the drawing while it is on (one at a time).
+    /// What shows beneath the drawing, the photo or the painting (one at a time, or neither): one
+    /// button holding both, prominent while either shows.
     @ViewBuilder
-    private func backdropButton(_ kind: RefineBackdrop, systemImage: String, label: Text, id: String) -> some View {
-        let selected = backdrop == kind
-        let button = Button { backdrop = selected ? .paper : kind } label: {
-            Image(systemName: systemImage)
+    private var backdropButton: some View {
+        let selected = backdrop != .paper
+        let menu = Menu {
+            Toggle(isOn: showing(.photo)) {
+                Label { Text("Photo") } icon: { Image(systemName: "photo") }
+            }
+            Toggle(isOn: showing(.painting)) {
+                Label { Text("Painting") } icon: { Image(systemName: "paintpalette") }
+            }
+            .disabled(base == nil)
+        } label: {
+            Image(systemName: backdrop == .painting ? "paintpalette" : "photo")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(selected ? Color.white : Color.primary)
                 .frame(width: 30, height: 30)
         }
         .buttonBorderShape(.circle)
-        .accessibilityLabel(label)
+        .accessibilityLabel(Text("Show"))
+        .accessibilityValue(backdropName)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier(id)
-        .accessibilityShowsLargeContentViewer { Label { label } icon: { Image(systemName: systemImage) } }
+        .accessibilityIdentifier("refine-backdrop")
+        .accessibilityShowsLargeContentViewer {
+            Label { Text("Show") } icon: { Image(systemName: backdrop == .painting ? "paintpalette" : "photo") }
+        }
         if selected {
-            button.buttonStyle(.glassProminent).tint(Theme.signature)
+            menu.buttonStyle(.glassProminent).tint(Theme.signature)
         } else {
-            button.buttonStyle(.glass)
+            menu.buttonStyle(.glass)
+        }
+    }
+
+    /// On while `kind` shows beneath the drawing; turning it off leaves the paper.
+    private func showing(_ kind: RefineBackdrop) -> Binding<Bool> {
+        Binding(get: { backdrop == kind }, set: { backdrop = $0 ? kind : .paper })
+    }
+
+    private var backdropName: Text {
+        switch backdrop {
+        case .paper: Text("Paper")
+        case .photo: Text("Photo")
+        case .painting: Text("Painting")
+        }
+    }
+
+    /// The Eraser and the Smart Eraser in one button, as Shapes holds its shapes: a menu of the
+    /// two, showing the one last picked, prominent while either is the finger's.
+    @ViewBuilder
+    private var erasersButton: some View {
+        let selected = tool.erases
+        let symbol = eraser == .smartEraser ? "wand.and.stars" : "eraser"
+        let menu = Menu {
+            Button { pick(.eraser) } label: {
+                Label { Text("Eraser") } icon: { Image(systemName: "eraser") }
+            }
+            Button { pick(.smartEraser) } label: {
+                Label { Text("Smart Eraser") } icon: { Image(systemName: "wand.and.stars") }
+            }
+        } label: {
+            Image(systemName: symbol)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .frame(width: 30, height: 30)
+        }
+        .buttonBorderShape(.circle)
+        .accessibilityLabel(Text("Erasers"))
+        .accessibilityValue(eraser == .smartEraser ? Text("Smart Eraser") : Text("Eraser"))
+        .accessibilityHint(Text(hint(for: eraser)))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("refine-tool-erasers")
+        .accessibilityShowsLargeContentViewer { Label { Text("Erasers") } icon: { Image(systemName: symbol) } }
+        if selected {
+            menu.buttonStyle(.glassProminent).tint(Theme.signature)
+        } else {
+            menu.buttonStyle(.glass)
         }
     }
 
@@ -909,6 +913,7 @@ struct RefineView: View {
         .buttonBorderShape(.circle)
         .accessibilityLabel(Text("Shapes"))
         .accessibilityValue(shapeName(shape))
+        .accessibilityHint(Text(hint(for: .shape)))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("refine-tool-shapes")
         .accessibilityShowsLargeContentViewer { Label { Text("Shapes") } icon: { Image(systemName: shape.systemImage) } }
@@ -941,6 +946,9 @@ struct RefineView: View {
         endStroke()
         finishCurve()
         self.tool = tool
+        if tool.erases { eraser = tool }
+        // A split draws no line: its colors show over the painting.
+        if tool == .splitter, base != nil { backdrop = .painting }
     }
 
     /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.

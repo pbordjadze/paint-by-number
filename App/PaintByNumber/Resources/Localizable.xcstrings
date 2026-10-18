@@ -17,6 +17,18 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Draw Your Own Lines" : {
+      "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
+      "extractionState" : "manual"
+    },
+    "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes." : {
+      "comment" : "Message of the tip titled Draw Your Own Lines in Refine (the two-finger tap undoes the last change)",
+      "extractionState" : "manual"
+    },
+    "Erasers" : {
+      "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
+      "extractionState" : "manual"
+    },
     "acknowledgements.codeFooter" : {
       "comment" : "Footer under the Open-Source Code list in Acknowledgements",
       "extractionState" : "manual",
@@ -329,16 +341,16 @@
       "comment" : "Status shown over the create preview while settings are being chosen for the photo (Suggested settings); also the sliders' VoiceOver value meanwhile",
       "extractionState" : "manual"
     },
-    "Clear Brushing" : {
-      "comment" : "Refine screen, with Settings › Detail Brushes on: the brush that clears areas brushed for more or less detail (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Close" : {
       "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet)",
       "extractionState" : "manual"
     },
     "Color Key" : {
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "extractionState" : "manual"
+    },
+    "Color Splitter" : {
+      "comment" : "Refine screen: the tool whose stroke divides an area's color in two without drawing a line (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Compare Photo and Page" : {
@@ -673,6 +685,10 @@
       "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
       "extractionState" : "manual"
     },
+    "Couldn’t Open Painting" : {
+      "comment" : "Title of the alert when a painting someone sent (a .moonlight file opened in the app) can't be added to the gallery",
+      "extractionState" : "manual"
+    },
     "Couldn’t Open Photo" : {
       "comment" : "Title shown in the create flow when the chosen photo can't be opened",
       "extractionState" : "manual"
@@ -995,10 +1011,6 @@
     },
     "Detail" : {
       "comment" : "Create flow: label of the slider for how much detail the template has",
-      "extractionState" : "manual"
-    },
-    "Detail Brushes" : {
-      "comment" : "Settings switch: the Refine screen also offers brushes for more or less detail and corrections to the text the app found",
       "extractionState" : "manual"
     },
     "Discard" : {
@@ -1753,9 +1765,41 @@
       "comment" : "Header of what is shared: the settings text in Settings › Advanced › Share with a Note, and the list of what goes with feedback on a painting",
       "extractionState" : "manual"
     },
-    "Less Detail" : {
-      "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
+    "library.receive.damaged" : {
+      "comment" : "Alert message when a file opened as a painting someone sent can't be read",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file may be damaged, or it isn’t a painting. Ask whoever sent it to send it again."
+          }
+        }
+      }
+    },
+    "library.receive.needsNewerApp" : {
+      "comment" : "Alert message when a painting someone sent was made by a newer version of the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting was sent from a newer version of Paint by Moonlight. Update the app to open it."
+          }
+        }
+      }
+    },
+    "library.receive.saveFailed" : {
+      "comment" : "Alert message when a painting someone sent can't be written to the library",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The painting couldn’t be saved on this device. Free up some space and open it again."
+          }
+        }
+      }
     },
     "Lifts its lid." : {
       "comment" : "The Marginarium: VoiceOver hint of Pip, the teapot: tapping it makes it lift its lid",
@@ -1933,6 +1977,66 @@
       "comment" : "Message of the tip titled No Photo at Hand; Samples is the pane or list of the app’s sample pictures",
       "extractionState" : "manual"
     },
+    "Send Template" : {
+      "comment" : "Title of the Send Template sheet, where a painter sends a blank copy of a painting's template to someone else",
+      "extractionState" : "manual"
+    },
+    "Send Template…" : {
+      "comment" : "Item of a gallery card menu's Share submenu: shares the painting's template as a file that Paint by Moonlight opens as a new, blank painting (refinements included, no photo), to send to someone else",
+      "extractionState" : "manual"
+    },
+    "send.explanation.drawingOnly" : {
+      "comment" : "Send Template's note with the Original Photo switch off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included. Your photo stays on this device."
+          }
+        }
+      }
+    },
+    "send.explanation.noPhoto" : {
+      "comment" : "Send Template's note when the painting has no photo to send",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included."
+          }
+        }
+      }
+    },
+    "send.explanation.photo" : {
+      "comment" : "Send Template's note with the Original Photo switch on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included, and your photo to peek at."
+          }
+        }
+      }
+    },
+    "send.preview" : {
+      "comment" : "VoiceOver label of the page shown in Send Template; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A blank copy of “%@”"
+          }
+        }
+      }
+    },
+    "Send…" : {
+      "comment" : "Send Template sheet's button: makes the .moonlight file and opens the share sheet",
+      "extractionState" : "manual"
+    },
     "Settings and Tips" : {
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
@@ -1987,6 +2091,10 @@
     },
     "Share Instead" : {
       "comment" : "Button in the alert after feedback couldn't be sent: opens the share sheet so the painter can send the feedback another way, such as Mail",
+      "extractionState" : "manual"
+    },
+    "The painting couldn’t be prepared for sending." : {
+      "comment" : "Send Template sheet: shown when the painting's file can't be made (its template can't be read)",
       "extractionState" : "manual"
     },
     "The Pencil paints while fingers move the page. Double-tap the Pencil for the next color." : {
@@ -2353,10 +2461,6 @@
       "comment" : "Accessibility label of the painting screen's More (…) menu",
       "extractionState" : "manual"
     },
-    "More Detail" : {
-      "comment" : "Refine screen: the brush that gives an area more detail and lines (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Name" : {
       "comment" : "Label of a row in a paint's details popover: the paint's playful nickname, e.g. “Harbor Fog”",
       "extractionState" : "manual"
@@ -2464,10 +2568,6 @@
           }
         }
       }
-    },
-    "Give Feedback" : {
-      "comment" : "Painting screen: top bar button (its accessibility label) that starts feedback: drawing on the painting and writing notes to send to the developers",
-      "extractionState" : "manual"
     },
     "Give Feedback…" : {
       "comment" : "Painting screen: item of the More menu and of the iPadOS Paint menu that starts feedback: drawing on the painting and writing notes to send to the developers",
@@ -2922,7 +3022,7 @@
       }
     },
     "Painting" : {
-      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the Refine screen's button that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
+      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the item of the Refine screen's Show menu that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
     "Painting Length" : {
@@ -3114,7 +3214,7 @@
       }
     },
     "Paper" : {
-      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic); also the value of Refine's Show button when neither the photo nor the painting shows beneath the drawing",
       "extractionState" : "manual"
     },
     "paper.automatic" : {
@@ -3230,7 +3330,7 @@
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's button that shows the photo beneath the drawing",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the item of the Refine screen's Show menu that shows the photo beneath the drawing",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -3297,10 +3397,6 @@
       "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where the painter draws and erases the template's lines",
       "extractionState" : "manual"
     },
-    "Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found." : {
-      "comment" : "Footer under the Detail Brushes switch in Settings",
-      "extractionState" : "manual"
-    },
     "refine.canvas" : {
       "comment" : "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes",
       "extractionState" : "manual",
@@ -3350,7 +3446,7 @@
       }
     },
     "refine.hint.curve" : {
-      "comment" : "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3374,7 +3470,7 @@
       }
     },
     "refine.hint.eraser" : {
-      "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), shown while it is picked",
+      "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3386,7 +3482,7 @@
       }
     },
     "refine.hint.fill" : {
-      "comment" : "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), shown while it is picked",
+      "comment" : "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3397,20 +3493,8 @@
         }
       }
     },
-    "refine.hint.less" : {
-      "comment" : "Refine screen: how the Less Detail brush works, shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush where the painting should be simpler, with fewer lines. Two fingers zoom and move."
-          }
-        }
-      }
-    },
     "refine.hint.line" : {
-      "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3421,20 +3505,8 @@
         }
       }
     },
-    "refine.hint.more" : {
-      "comment" : "Refine screen: how the More Detail brush works, shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush where the painting should have more detail and lines. Two fingers zoom and move."
-          }
-        }
-      }
-    },
     "refine.hint.oval" : {
-      "comment" : "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3446,7 +3518,7 @@
       }
     },
     "refine.hint.pen" : {
-      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked",
+      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3458,7 +3530,7 @@
       }
     },
     "refine.hint.rectangle" : {
-      "comment" : "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), shown while it is picked",
+      "comment" : "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3470,7 +3542,7 @@
       }
     },
     "refine.hint.smartEraser" : {
-      "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked",
+      "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3481,8 +3553,20 @@
         }
       }
     },
+    "refine.hint.splitter" : {
+      "comment" : "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw across an area to split it into two colors, with no line between them. Two fingers zoom and move."
+          }
+        }
+      }
+    },
     "refine.hint.text" : {
-      "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked",
+      "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3493,20 +3577,8 @@
         }
       }
     },
-    "refine.hint.unbrush" : {
-      "comment" : "Refine screen: how Clear Brushing works (it clears areas brushed for more or less detail), shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush over marked areas to clear them."
-          }
-        }
-      }
-    },
     "refine.note.left" : {
-      "comment" : "Refine screen toast after the sliders or a brush made the template again: how many of the painter's edits no longer apply to it; the argument is the count",
+      "comment" : "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3561,6 +3633,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That shape couldn’t be filled."
+          }
+        }
+      }
+    },
+    "refine.note.notSplit" : {
+      "comment" : "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That area couldn’t be split there."
           }
         }
       }
@@ -4182,7 +4266,7 @@
       "extractionState" : "manual"
     },
     "Setting" : {
-      "comment" : "VoiceOver label of the enlarged create preview's segmented control choosing which setting's slider shows (Colors, Detail, Smoothness or Lines)",
+      "comment" : "VoiceOver label of the create preview's segmented control (on a phone, in the settings card and the enlarged preview) choosing which setting's slider shows (Colors, Detail, Smoothness or Lines)",
       "extractionState" : "manual"
     },
     "settings.paintingLength.footer.detailed" : {
@@ -4242,7 +4326,7 @@
       "extractionState" : "manual"
     },
     "Share" : {
-      "comment" : "Accessibility label of the share menu in the completion bar, and the button that shares the settings text in Settings › Advanced › Share with a Note",
+      "comment" : "Accessibility label of the share menu in the completion bar, and the submenu of a gallery card's long-press menu that holds Share Painting, Share Time-lapse, Print Template and Send Template",
       "extractionState" : "manual"
     },
     "Share Painting" : {
@@ -4262,7 +4346,7 @@
       "extractionState" : "manual"
     },
     "Show" : {
-      "comment" : "Accessibility label of three controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), and Settings › Advanced's choice between the preview's template and its painted picture",
+      "comment" : "Accessibility label of four controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), Settings › Advanced's choice between the preview's template and its painted picture, and Refine's button that holds Photo and Painting (what shows beneath the drawing; its value names which, or Paper for neither)",
       "extractionState" : "manual"
     },
     "Show Color Details" : {
@@ -4481,6 +4565,10 @@
       "comment" : "Message of the screen shown when the canvas can't be drawn",
       "extractionState" : "manual"
     },
+    "This painting can’t be restarted." : {
+      "comment" : "Alert title in the gallery when Restart couldn't read the painting (written by a newer app, or its files can't be read just now); nothing was changed",
+      "extractionState" : "manual"
+    },
     "time.approximately" : {
       "comment" : "An estimated duration, e.g. ~40 min; the argument is the duration text",
       "extractionState" : "manual",
@@ -4627,10 +4715,6 @@
     },
     "What would make this painting better?" : {
       "comment" : "Feedback's review sheet: placeholder of the note field",
-      "extractionState" : "manual"
-    },
-    "When you finish a color, the next one is picked up automatically." : {
-      "comment" : "Footer under the Advance to Next Color setting",
       "extractionState" : "manual"
     },
     "With thanks to the museums and archives that share these pictures." : {

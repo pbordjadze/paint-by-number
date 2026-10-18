@@ -55,7 +55,7 @@ def describe(step):
             did.append(f"{step[key]} {label}")
     if did:
         lines.append((", ".join(did), INK))
-    if kind == "draw":
+    if kind in ("draw", "split"):
         lines.append((f"{len(edit['points'])} points, {len(edit.get('paints') or [])} paints"
                       + (", closed" if edit.get("closed") else ""), GREY))
     if step.get("toast"):

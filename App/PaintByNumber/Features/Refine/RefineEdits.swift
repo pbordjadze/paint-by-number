@@ -1,12 +1,10 @@
 import Foundation
 import PaintCore
 
-/// A change Refine makes to the generator's inputs (a brush, a correction to the text the app
-/// found). It is described rather than computed, so it lands on the refinements as they are when
-/// its turn comes (`CreateModel.change`), whatever the edits sent before it have done meanwhile.
+/// A change Refine makes to the generator's inputs (a correction to the text the app found). It
+/// is described rather than computed, so it lands on the refinements as they are when its turn
+/// comes (`CreateModel.change`), whatever the edits sent before it have done meanwhile.
 nonisolated enum RefineChange: Sendable, Equatable {
-    /// An area brushed for more or less detail, or cleared of it.
-    case stroke(TemplateRefinements.Stroke)
     /// A line of text the painter marked (rectangle corners, normalized).
     case markText([SIMD2<Float>])
     /// A line the painter marked, taken off again.
@@ -16,8 +14,6 @@ nonisolated enum RefineChange: Sendable, Equatable {
 
     func apply(to refinements: inout TemplateRefinements) {
         switch self {
-        case .stroke(let stroke):
-            refinements.strokes.append(stroke)
         case .markText(let line):
             refinements.addedText.append(line)
         case .unmarkText(let line):
@@ -69,16 +65,20 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notErased
         /// A shape that could not be filled (no room for the number of its paint).
         case notFilled
+        /// A Color Splitter stroke that could not split an area (it closed none off, or its sides
+        /// would keep one paint).
+        case notSplit
         /// A shape a line closed has no room for a number, so it was not cut off: the line stays.
         case tooSmall
-        /// Edits that no longer fit the drawing, left out of it (the sliders or a brush made the
-        /// template anew).
+        /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
+        /// made the template anew).
         case left(Int)
 
         /// What to say of an edit that was declined.
         init(declined edit: TemplateEditor.Edit) {
             switch edit {
             case .draw: self = .notDrawn
+            case .split: self = .notSplit
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             }
@@ -99,19 +99,22 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notFilled:
             String(localized: "refine.note.notFilled", defaultValue: "That shape couldn’t be filled.",
                    comment: "Refine screen toast: a Fill tap could not make its shape an area (no room for the number of its paint); nothing changed")
+        case .notSplit:
+            String(localized: "refine.note.notSplit", defaultValue: "That area couldn’t be split there.",
+                   comment: "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed")
         case .tooSmall:
             String(localized: "refine.note.tooSmall", defaultValue: "That shape is too small for a number.",
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
-                   comment: "Refine screen toast after the sliders or a brush made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
+                   comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
         }
     }
 
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
-        case .notDrawn, .notErased, .notFilled, .left: "exclamationmark.circle"
+        case .notDrawn, .notErased, .notFilled, .notSplit, .left: "exclamationmark.circle"
         }
     }
 }

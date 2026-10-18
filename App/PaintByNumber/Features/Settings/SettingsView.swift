@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
-    @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
     /// On until switched off here (`TipPreference`).
     @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = true
     #if UNRELEASED
@@ -46,8 +45,6 @@ struct SettingsView: View {
                         // Not the "Painting" key: that one names a picture, this one the activity.
                         Text(String(localized: "settings.section.painting", defaultValue: "Painting",
                                     comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
-                    } footer: {
-                        Text("When you finish a color, the next one is picked up automatically.")
                     }
 
                     Section {
@@ -155,15 +152,6 @@ struct SettingsView: View {
                         .accessibilityIdentifier("settings-preview")
                     } footer: {
                         Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
-                    }
-
-                    Section {
-                        Toggle(isOn: $detailBrushes) {
-                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
-                        }
-                        .accessibilityIdentifier("settings-detail-brushes")
-                    } footer: {
-                        Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
                     }
 
                     #if UNRELEASED

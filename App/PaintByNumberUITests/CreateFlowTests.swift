@@ -95,10 +95,10 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(chip.value as? String, "Suggested for this photo")
         XCTAssertEqual(chip.label, "Settings")
 
-        let detail = app.sliders["Detail"]
-        XCTAssertTrue(detail.exists, "No Detail slider")
         // The book's lines on a slider of their own.
-        XCTAssertEqual(app.sliders["Lines"].value as? String, "Balanced")
+        XCTAssertEqual(settingSlider("Lines", in: app).value as? String, "Balanced")
+        let detail = settingSlider("Detail", in: app)
+        XCTAssertTrue(detail.exists, "No Detail slider")
         XCTAssertTrue(detail.isEnabled, "The Detail slider still waits for the suggestion")
         let suggested = try XCTUnwrap(detail.value as? String)
         // Far from the suggestion, so the slider's word changes.
@@ -252,7 +252,9 @@ final class CreateFlowTests: XCTestCase {
         first.tap()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
-        let detail = app.sliders["Detail"]
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings-origin"].waitForExistence(timeout: 10), "The preview has no settings")
+        let detail = settingSlider("Detail", in: app)
         XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
 
         // Along the slider from its leading end (the thumb is rarely there), then from its title.
@@ -422,11 +424,20 @@ final class CreateFlowTests: XCTestCase {
     @MainActor
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector, via button: XCUIElement? = nil) -> CGRect? {
         (button ?? app.buttons["Browse All…"]).tap()
-        let shown = waitUntil(timeout: 15) { sheet.dismissFrame != nil }
-        // Read again once the sheet has slid into place: a frame read mid-animation misses.
-        if shown { sleep(1) }
+        var cancel: CGRect?
+        _ = waitUntil(timeout: 15) { cancel = sheet.dismissFrame; return cancel != nil }
+        if cancel != nil {
+            // Read again once the sheet has slid into place: a frame read mid-animation misses.
+            // The out-of-process sheet can be missing from a snapshot then (CI, iPhone, Oct 17:
+            // seen, then gone a second later on its Loading page), so the last frame seen stands.
+            sleep(1)
+            _ = waitUntil(timeout: 10) {
+                if let frame = sheet.dismissFrame { cancel = frame; return true }
+                return false
+            }
+        }
         attachScreenshot(of: app, named: "browse-all")
-        guard shown, let cancel = sheet.dismissFrame else {
+        guard let cancel else {
             attachTree(of: app, named: "browse-all-tree")
             XCTFail("Browse All didn't present the system picker")
             return nil
