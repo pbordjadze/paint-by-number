@@ -111,7 +111,7 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
                 return .sessionFull
             }
         }
-        if id != .benchTap, let lastShown {
+        if !id.isHowTo, let lastShown {
             if now.timeIntervalSince(lastShown) < Self.minimumGap { return .tooSoon }
             if !didSomethingSince { return .nothingDone }
         }

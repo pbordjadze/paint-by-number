@@ -317,13 +317,15 @@ synchronized folder would bundle it into the app.
 ## Tips
 
 The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
-and Never list are the spec; its notes are the record, not UI): 22 tips, each said once, on for
-everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
+and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
+Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
+October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`),
+each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
 where they live.
 
-- **Where they live.** `Features/Tips/`: `GentleTips` (17 of the tips as TipKit tips, `nonisolated`,
+- **Where they live.** `Features/Tips/`: `GentleTips` (18 of the tips as TipKit tips, `nonisolated`,
   in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
   with the ids of the first version, so what was closed stays closed), `TipDesk` (turns), `TipPacing`
   (limits, with `TipHistory` and `TipStore`), `TipMoments` (`TipPreference`, the switch's value, and
@@ -348,8 +350,8 @@ where they live.
   hints (a fill, a slider, a screen), 3 a session (a stretch without a 30-minute break), 5 a day, 3 on
   the first painting (counted from its opening, in place of the session's), silence while a finger or
   the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
-  Feedback is on, and after a finish only Replay Painting. Tap to Paint alone waits for neither the
-  gap nor something done. State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
+  Feedback is on, and after a finish only Replay Painting. Tap to Paint and Draw Your Own Lines alone wait for
+  neither the gap nor something done (`TipID.isHowTo`). State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
   `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
   tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
@@ -371,7 +373,7 @@ where they live.
 
 ## Giving feedback
 
-- Give Feedback (`PaintView`: the top bar where it fits, else More; the Paint menu) captures the
+- Give Feedback (`PaintView`: More, never the top bar; the Paint menu) captures the
   painting (`FeedbackCapture`: progress, selection, what is on screen, app and device; where it
   came from is `feedbackSource`, put in the environment by `ArtworkPaintingView`) into a
   `FeedbackDraft` and switches to feedback mode: painting, the Paint menu and the Pencil's double
@@ -561,7 +563,10 @@ Conventions).
   an area's color where it goes and draws no line (a split, below; dashed while the finger is
   down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
-  junction; Fill's tap makes the closed shape under it an area of its own in the photo's color
+  junction (both in one Erasers button, as Shapes holds its shapes, and the photo and the
+  painting beneath in one Show button; no line under the tools says how they work: each button's
+  VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
+  what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
   out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
@@ -676,7 +681,9 @@ Conventions).
   `-handoffFallback S` sets the seconds a painting has to draw: CI's simulators take several to
   open one, and stall their main thread for seconds meanwhile, so a motion of half a second is a
   frame or two there.
-- Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
+- Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
+  segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
+  iPad's card shows all four. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
   of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s
@@ -705,7 +712,7 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template `ShareLink`s can't report
 completion, so they rely on the launch purge and the sweep of stale exports each new export runs
 (`ArtworkExporter.staleExportAge`). The completion share picture and the time-lapse stay on light
-paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu) opens `SendTemplateSheet`: the
+paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),
 then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPainting`): PaintCore's
 `SharedPainting`, the template as it is (the painter's refinements are in it) with its title and

@@ -77,6 +77,20 @@ extension XCTestCase {
         add(note)
     }
 
+    /// The New Painting slider of `setting` ("Colors", "Detail", "Smoothness", "Lines"). A compact
+    /// window (iPhone) shows one slider at a time under its chooser (`tuned-setting`), which is
+    /// turned to `setting` first; the iPad shows them all.
+    @MainActor
+    func settingSlider(_ setting: String, in app: XCUIApplication) -> XCUIElement {
+        let slider = app.sliders[setting]
+        let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
+        if !slider.exists, chooser.exists {
+            chooser.buttons[setting].tap()
+            _ = slider.waitForExistence(timeout: 5)
+        }
+        return slider
+    }
+
     /// The first element showing exactly `label`, whatever its kind.
     @MainActor
     func element(labeled label: String, in app: XCUIApplication) -> XCUIElement {
