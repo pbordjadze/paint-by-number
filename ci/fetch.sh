@@ -5,7 +5,7 @@
 # refs/heads) contains STATUS.md, logs (*.log, long ones trimmed), <job>/errors.txt, test results,
 # screenshots under */shots/*.png and the quality regression under core/regression/
 # (regression.txt, regression.json, sheets/*/*.jpg).
-# Polls every 30 s for up to 140 min (a full run takes about 30). Run it in the background and read the report when done.
+# Polls every 30 s for up to 140 min (a full run takes 30 on idle runners, up to 100 under load). Run it in the background and read the report when done.
 set -euo pipefail
 SHA="${1:-$(git rev-parse HEAD)}"
 OUT="${2:-ci-report}"
