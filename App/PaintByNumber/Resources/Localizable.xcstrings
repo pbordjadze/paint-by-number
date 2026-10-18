@@ -1416,7 +1416,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings."
+            "value" : "Its file is damaged. It can be made again from its photo."
           }
         }
       }
@@ -1428,7 +1428,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings. Painted areas can’t be recovered, so it will start fresh."
+            "value" : "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh."
           }
         }
       }
@@ -1440,7 +1440,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged, and the original photo isn’t available to regenerate it."
+            "value" : "Its file is damaged, and its photo is gone, so it can’t be made again."
           }
         }
       }
@@ -1512,7 +1512,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The painting couldn’t be read just now. Nothing was changed: go back and open it again."
+            "value" : "It couldn’t be opened just now. Nothing changed: go back and try again."
           }
         }
       }
