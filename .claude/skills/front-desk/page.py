@@ -9,7 +9,7 @@
 (SKILL.md › The status page). `drop` removes the answered cards, `add` appends a card (or a list
 of them) and replaces any card with the same id, `check` only validates. Every command checks
 the cards: each has an id, a title and one question (`ask`, at most one "?"), its `options`
-are lettered ("a. …", "b. …"; unlettered labels are lettered in order) and an `image` is a
+are lettered ("a. …", "b. …"; `drop` and `add` letter unlettered labels in order) and an `image` is a
 `data:image/…` URL under 150 KB with its `image_alt`. A card about how something looks needs
 an image; mark it `"looks": true` and the check holds it to that.
 
@@ -75,14 +75,15 @@ def main():
         new = new if isinstance(new, list) else [new]
         ids = {c.get("id") for c in new}
         cards = [c for c in cards if c.get("id") not in ids] + new
-    letter(cards)
+    if command != "check":
+        letter(cards)
 
     found = problems(cards)
     for problem in found:
         print(f"problem: {problem}", file=sys.stderr)
     if found:
         sys.exit(1)
-    if json.dumps(cards) == before:
+    if command == "check" or json.dumps(cards) == before:
         print(f"{len(cards)} cards, nothing changed")
         return
     with open(path, "w", encoding="utf-8") as out:
@@ -94,7 +95,7 @@ def main():
     print("2. ArtifactData get   collection=datasets doc_id=decisions (note its version and the old"
           " source.url)")
     print("3. ArtifactData update collection=datasets doc_id=decisions"
-          " data={source: {url: <new url>}, updated: {at: <now>, by: \"front desk\"}}")
+          " with that version: source.url = <new url>, updated = {at: <now>, by: \"front desk\"}")
     print(f"4. Artifact delete   url={PAGE}  path=<the 32 hex after _blob/ in the old source.url>")
 
 

@@ -132,8 +132,8 @@ before planning app work).
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
   in it ships or goes into the Marginarium until he says so, and its wording stays his.
   `docs/backlog.md` is the other: the front desk's inbox (Working with Paul).
-- `.claude/skills/front-desk/`: the front desk (`SKILL.md`) and `sessions.py`, its summary of
-  Paul's sessions, their cost and the status page's data.
+- `.claude/skills/front-desk/`: the front desk (`SKILL.md`), `sessions.py`, its summary of
+  Paul's sessions, their cost and the status page's data, and `page.py`, the page's cards.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -422,7 +422,7 @@ any port of it, when changing the fitter: work from the paper.
    templates and line-art maps they make on disk (DEBUG `DemoTemplateCache`, `LineArtMapsCache`),
    and each job keeps them between runs in the Actions cache (`ci/demo_caches.sh`), keyed by the
    files that make them; on a miss `ipad-ui` makes the UI tests' first (its warm-up).
-3. Plan on about 80 min a run under load (60–100). Alone, the iPad jobs take 30, 40 when caches miss (a
+3. Turnaround is about 30 min (both iPad jobs take about that), about 40 when the caches miss (a
    change to the pipeline, the models or the pictures: the screenshots take twice as long and
    `ipad-ui` warms up first), longer when branches queue (only 5 macOS jobs run at once: a branch
    push takes 2, `main` 4; `iphone`, about 45 min, is main's longest). `ci/fetch.sh` waits up to
@@ -475,7 +475,8 @@ if he has gone quiet.
   lowers a session's model or effort.
 - **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
   idle. The front desk keeps the order in the CI queue atop `docs/backlog.md`: read your place
-  there instead of asking. Throwaway branches queue behind anything Paul called a must-have. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
+  there instead of asking. Throwaway branches queue behind anything Paul called a must-have.
+  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, tell the front desk, and any further push queues again unless it fixes a red run.

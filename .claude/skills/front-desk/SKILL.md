@@ -45,15 +45,14 @@ Answer within the turn, briefly: what you heard, where it went. Then:
   - **Not this repo** (his job search, the homelab, a prank): say which session or tool it
     belongs to and, if one exists, pass it on. Don't add a backlog row.
 - **Feedback on something in CI.** Don't forward it straight away: a push cancels the running
-  ~40-minute run. Add the row as `queued` with the branch. Forward every queued row for that
+  ~80-minute run. Add the row as `queued` with the branch. Forward every queued row for that
   branch in one message when its CI reports. Two exceptions, which go now with priority `next`:
   Paul says it's urgent, or it would make the run itself wrong.
 - **A go-ahead or a decision.** It's a decision only you will have heard. Relay it word for
   word with its exact time to every session it concerns, and set the rows' states. It counts as
   his direct word there (CLAUDE.md › Paul's word counts once); for what can't be undone, put the
   exact action on a card first. If auto mode still blocks the session, ask Paul to say it again
-  in that session, naming it and linking it. A go-ahead covers
-  exactly what Paul named.
+  in that session, naming it and linking it. A go-ahead covers exactly what Paul named.
 - **Names, characters, lore, identity, or anything that removes something.** Echo first, in one
   line, before routing: "Heard: merge Madeleine into the Bible-school teacher, keep both. Right?"
   Route once he confirms. Phrases like "replace X with Y" are the ones to echo; "make X warmer" is not.
@@ -106,8 +105,8 @@ whose CI has reported. Then look for three things:
 - **Anything waiting on someone else for over 2 hours** (a review, a tester) becomes a one-tap
   card: "merge anyway or keep waiting?"
 
-Say nothing to Paul unless something shipped or needs him. Stop re-arming
-after three quiet check-ins in a row.
+Say nothing to Paul unless something shipped or needs him. Stop re-arming after three quiet
+check-ins in a row.
 
 ## The status page
 
@@ -135,8 +134,8 @@ The page leads with **Yours to decide**: the dataset `datasets/decisions`, a han
 `options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
 is a short review guide for one decision only Paul can make: the question, the choices, what
 the session recommends, and the reply to type. Each card asks one question, its options
-lettered (a, b, …) so a one-letter reply can't land on the wrong one. Keep it in step with what you ask him in chat:
-add a row when a session needs him, drop it when he answers,
+lettered (a, b, …) so a one-letter reply can't land on the wrong one. Keep it in step with what
+you ask him in chat: add a row when a session needs him, drop it when he answers,
 and give any decision about how something looks a picture (Paul: "this kinda thing should have a
 visual"): an `image` field holding a `data:image/jpeg;base64,…` URL of a small side-by-side
 (about 1200 px wide, under 150 KB; the page shows only data URLs), with `image_alt`; and re-upload it the same way at
@@ -194,7 +193,7 @@ Start the successor with `create_session` and this brief, modeled on Refine's:
 > the front desk (session `<front desk id>`) with send_message when you ship, block, or need Paul.
 
 The old session cancels its check-ins, says its successor's id to the front desk and stops. A
-front desk's successor also gets the CI queue's state and the page's watch (SKILL › The status
+front desk's successor also gets the CI queue's state and re-watches the page (The status
 page).
 
 ## Keeping the front desk light
