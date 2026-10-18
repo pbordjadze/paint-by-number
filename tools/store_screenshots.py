@@ -23,7 +23,8 @@ layout (crops and photos) replaces its stand-in layout once the painter's shots 
 pet's portrait previews narrower than the stand-in's landscape, and their phone may be in dark mode.
 Four slides
 also carry a pet's own photo as a taped-on polaroid (a `photo`: --slots/photo-<n>.jpg, already
-cropped to its frame's 4:5 or 5:4), each pet shown whole once; without the file the polaroid is
+cropped to its frame's 4:5 or 5:4; --slots/<device>-photo-<n>.jpg in its place on that device, when
+its painting there was made from another photo), each pet shown whole once; without the file the polaroid is
 an empty frame marked PLACEHOLDER.
 
 Each slide is an HTML page rendered by headless Chromium: real UI as frameless crops (Apple's
@@ -213,16 +214,20 @@ def hills(W, H, dev):
             f"<path d='{path(fg)}' fill='{PAPER}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/></svg>")
 
 
-def photo_path(slots, p):
-    path = slots / f"photo-{p['n']}.jpg" if slots else None
-    return path.resolve() if path and path.exists() else None
+def photo_path(slots, dev, p):
+    """<device>-photo-<n>.jpg when the device's painting was made from another photo of the pet."""
+    for name in (f"{dev}-photo-{p['n']}.jpg", f"photo-{p['n']}.jpg"):
+        path = slots / name if slots else None
+        if path and path.exists():
+            return path.resolve()
+    return None
 
 
-def photo_html(slots, p):
+def photo_html(slots, dev, p):
     w, pad = p["w"], p["w"] * .045
     iw = w - 2 * pad
     ih = iw * (.8 if p["landscape"] else 1.25)
-    src = photo_path(slots, p)
+    src = photo_path(slots, dev, p)
     inner = (f"<div class=snap style='width:{iw:.0f}px;height:{ih:.0f}px;background:url({src.as_uri()}) center/cover'></div>"
              if src else f"<div class=snap style='width:{iw:.0f}px;height:{ih:.0f}px;background:#E8E2D8'></div>"
                          f"<div class=tag style='left:{pad + 20:.0f}px;top:{pad + 20:.0f}px'>PLACEHOLDER: a pet photo</div>")
@@ -298,7 +303,7 @@ def page(shots, dev, k, slide, fonts, noise, slots):
                    f"<path d='{MOON}' fill='url(#gold)'/></svg>")
     sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
     photos = slide.get("photos", [])
-    extra += "".join(photo_html(slots, p) for p in photos)
+    extra += "".join(photo_html(slots, dev, p) for p in photos)
     extra += "".join(f"<div class=chip style='left:{x}px;top:{y}px'><svg viewBox='0 0 100 100'><path d='{SPARKLE}' fill='url(#gold)'/></svg>{t}</div>"
                      for t, x, y in slide.get("chips", []))
     if not slide.get("hills") and not any(p["y"] < 900 for p in photos):  # the moon, or a photo, has that corner
@@ -367,7 +372,7 @@ def main():
             first = slide["crops"][0]
             name = first["slot"] or first["scenario"]
             if (any(c["slot"] and not own_shot(args.slots, dev, c) for c in slide["crops"])
-                    or any(not photo_path(args.slots, p) for p in slide.get("photos", []))):
+                    or any(not photo_path(args.slots, dev, p) for p in slide.get("photos", []))):
                 name += "-placeholder"
             html = pages / f"{dev}-{k}.html"
             html.write_text(page(args.shots, dev, k - 1, slide, fonts, noise, args.slots))
