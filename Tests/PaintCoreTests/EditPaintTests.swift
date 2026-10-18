@@ -57,6 +57,40 @@ struct EditPaintTests {
         #expect(u == plain)
     }
 
+    /// Paul, October 18: "colors should get recalculated when a new line is drawn". Each side's
+    /// photo within the book's tolerance of the sky's paint, so each alone keeps it, but the two
+    /// told apart: the sides part, the box taking its photo's color.
+    @Test func sidesThePhotoTellsApartPart() throws {
+        let t = Self.scene
+        let sky = try TemplateEditorTests.region(t, 100, 5)
+        let own = t.palette[Int(t.regions[sky].colorIndex)].oklab
+        let inside = own + SIMD3(-EditWork.splitShadeStep, 0, 0), outside = own + SIMD3(0.004, 0, 0)
+        let tolerance = TemplateEditor.paintTolerance(t.palette)
+        let nearest = { (c: SIMD3<Float>) in t.palette.map { ColorScience.distance($0.oklab, c) }.min()! }
+        #expect(nearest(inside) == ColorScience.distance(own, inside) && nearest(inside) <= tolerance,
+                "alone, the box's photo keeps the sky's paint")
+        let paints: [TemplateEditor.Paint] = [.init(at: Self.inBox, color: inside), .init(at: SIMD2(100, 5), color: outside)]
+        let (u, outcome) = try TemplateEditorTests.apply(Self.draw(paints), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.recolored == 1)
+        let box = try TemplateEditorTests.region(u, Self.inBox.x, Self.inBox.y), rest = try TemplateEditorTests.region(u, 100, 5)
+        #expect(u.regions[rest].colorIndex == t.regions[sky].colorIndex)
+        #expect(u.regions[box].colorIndex != u.regions[rest].colorIndex)
+        #expect(ColorScience.distance(u.palette[Int(u.regions[box].colorIndex)].oklab, inside) <= SegmentationParameters.jnd)
+        #expect(u.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        #expect(try TemplateEditorTests.apply(Self.draw(paints), to: t).0 == u)
+    }
+
+    /// Sides whose photos are closer than `splitShadeStep` keep the one paint.
+    @Test func sidesThePhotoHoldsAsOneKeepTheirPaint() throws {
+        let t = Self.scene
+        let sky = try TemplateEditorTests.region(t, 100, 5)
+        let own = t.palette[Int(t.regions[sky].colorIndex)].oklab
+        let paints: [TemplateEditor.Paint] = [
+            .init(at: Self.inBox, color: own + SIMD3(-0.012, 0, 0)), .init(at: SIMD2(100, 5), color: own + SIMD3(0.012, 0, 0))]
+        let (u, outcome) = try TemplateEditorTests.apply(Self.draw(paints), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.recolored == 0 && u.palette == t.palette)
+    }
+
     @Test func aPaintOutsideThePiecesChangesNothing() throws {
         let t = Self.scene
         let (u, outcome) = try TemplateEditorTests.apply(
