@@ -179,14 +179,15 @@ waving cells at native size and 5x, on white and dark, showed no banding, halo o
 | `lotte-reiniger` | `e861b9c0812ac7d4c8168797c7613f02352c26f571aefcd5336fd685e8ca8570` | 488,422 | lossy WebP q88 |
 | `sen-no-rikyu` | `e89af5f75afa5fd6d14975baaec874ae9680d16ef154311145f8b04dd95dc7ef` | 704,938 | lossy WebP q88 |
 | `snow-queen` | `66425c1d1d999695626963d813f5fc76c2c6e129eb8f03d919d300963e52dd88` | 570,650 | lossy WebP q88 |
+| `medea` | `5a65e726c0cdb2bba67292db3476efc4766518538d7b1b01d0a52452438a4553` | 665,758 | lossy WebP q88 |
 
 The Glassblower's redraw (Paul: "Both good") replaced the factory's droplet the same day: a
 clearer drop with a curling tip and a warm light inside. Niko followed, painted the way Pirosmani painted animals: house paint on black oilcloth, the black
 left showing as his patches, a crescent and stars on his shoulder (Paul: "Grounding them in the actual
 techniques their namesake used is the right method here"). The Moon hatched too: her first drawing was withheld because, a crescent seen side-on, she
 couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "The moon one is in
-need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. The twenty-five sheets total
-**19,455,510 bytes (18.55 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
+need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). The twenty-five sheets total
+**19,085,966 bytes (18.20 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
