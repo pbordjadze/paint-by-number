@@ -49,10 +49,11 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
-  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, eraser, line eraser and fill made to a finished
-    coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
-    arithmetic; `docs/coloring-book.md` › Edits made to the template itself; a drawn line's
-    paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`);
+  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, eraser, line eraser, fill and
+    Colors (looks and repaints, `Recolor.swift`) made to a finished coloring-book `Template`
+    exactly and with no image processing (`Lattice` is its exact arithmetic;
+    `docs/coloring-book.md` › Edits made to the template itself; a drawn line's paints, the
+    photo's colors of the pieces it cuts, are read beforehand by `painted`);
     `EditTrail`, a base with a list of edits laid on it, with undo and redo from kept templates;
     `EditCoding`, the shape of an edit in a file (the app's `refinements.json`).
   - `Refine/`: what Refine's screen makes of a gesture, shared by the app's `RefineView` and

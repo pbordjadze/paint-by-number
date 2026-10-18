@@ -223,6 +223,7 @@ func runRefine(_ options: Options) throws {
                 case .split: step.toast = "That area couldn’t be split there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
+                case .look, .repaint: step.toast = "Those colors couldn’t be changed."
                 }
             }
             step.regionsSplit = outcome.regionsSplit
@@ -246,7 +247,7 @@ func runRefine(_ options: Options) throws {
         case .draw(let points, _, _)?, .split(let points, _, _)?: around += points
         case .erase(let path, _)?: around += path
         case .eraseLine(let at, _)?, .fill(let at, _)?: around.append(at)
-        case nil: break
+        case .look?, .repaint?, nil: break
         }
         if let first = around.first {
             var lo = first, hi = first
