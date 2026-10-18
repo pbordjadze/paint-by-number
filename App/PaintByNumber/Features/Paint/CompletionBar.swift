@@ -25,18 +25,8 @@ struct CompletionBar: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.tint)
                 .symbolEffect(.bounce, value: sealBounces)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Finished!").font(.headline)
-                Group {
-                    if title.isEmpty {
-                        Text("Every region is painted.")
-                    } else {
-                        Text(title)
-                    }
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
+            // Not the title too: the progress badge above names the painting.
+            Text("Finished!").font(.headline)
             // The buttons keep their size on a phone; the caption shrinks, then truncates.
             .lineLimit(1)
             .minimumScaleFactor(0.7)

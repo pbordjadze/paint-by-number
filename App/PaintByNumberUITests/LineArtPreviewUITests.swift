@@ -9,7 +9,7 @@ final class LineArtPreviewUITests: XCTestCase {
     @MainActor
     func testLineArtPreviewShowsTheDrawing() throws {
         let app = launchPreview()
-        let compare = app.descendants(matching: .any)["Comparison of photo and template"]
+        let compare = app.descendants(matching: .any)["Comparison of photo and painting"]
         XCTAssertTrue(compare.exists, "The preview has no comparison")
         XCTAssertTrue(app.staticTexts["Line Art"].exists, "The comparison isn't captioned Line Art")
         XCTAssertFalse(app.staticTexts["Painting"].exists, "The comparison still shows the painting")
@@ -32,7 +32,7 @@ final class LineArtPreviewUITests: XCTestCase {
         try XCTSkipIf(
             UIDevice.current.userInterfaceIdiom == .pad, "Only compact windows enlarge the preview: the iPad's is large already")
         let app = launchPreview()
-        let compare = app.descendants(matching: .any)["Comparison of photo and template"]
+        let compare = app.descendants(matching: .any)["Comparison of photo and painting"]
         let fitted = compare.frame
         let enlarge = app.buttons["Enlarge Preview"]
         XCTAssertTrue(enlarge.waitForExistence(timeout: 10), "The preview can't be enlarged")

@@ -82,8 +82,8 @@ final class CreateModel {
                 String(localized: "create.error.unreadable", defaultValue: "This photo couldn’t be opened. Try another one.",
                        comment: "Error when a chosen photo can't be decoded")
             case .renderFailed:
-                String(localized: "create.error.renderFailed", defaultValue: "The template couldn’t be created. Try different settings.",
-                       comment: "Error when the template can't be generated from the photo")
+                String(localized: "create.error.renderFailed", defaultValue: "The painting couldn’t be made. Try different settings.",
+                       comment: "Error when the painting can't be made from the photo")
             case .cameraCapture:
                 String(localized: "create.error.cameraCapture",
                        defaultValue: "The photo from the camera couldn’t be used. Try taking it again.",

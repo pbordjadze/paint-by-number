@@ -661,8 +661,8 @@
       "comment" : "Create flow: label of the slider for the number of colors in the palette",
       "extractionState" : "manual"
     },
-    "Comparison of photo and template" : {
-      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
+    "Comparison of photo and painting" : {
+      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its painting (or its line art)",
       "extractionState" : "manual"
     },
     "Couldn’t Create Painting" : {
@@ -782,13 +782,13 @@
       }
     },
     "create.error.renderFailed" : {
-      "comment" : "Error when the template can't be generated from the photo",
+      "comment" : "Error when the painting can't be made from the photo",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The template couldn’t be created. Try different settings."
+            "value" : "The painting couldn’t be made. Try different settings."
           }
         }
       }
@@ -961,8 +961,8 @@
         }
       }
     },
-    "Creating template…" : {
-      "comment" : "Status shown while the template is first generated from the photo",
+    "Making the painting…" : {
+      "comment" : "Status shown while a new painting is first made from the photo",
       "extractionState" : "manual"
     },
     "Curve" : {
@@ -1047,10 +1047,6 @@
     },
     "Every painted area will be cleared." : {
       "comment" : "Message of the confirmation dialog for restarting a painting from the gallery",
-      "extractionState" : "manual"
-    },
-    "Every region is painted." : {
-      "comment" : "Caption in the completion bar of a painting without a title",
       "extractionState" : "manual"
     },
     "export.error.renderFailed" : {

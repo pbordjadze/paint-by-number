@@ -138,7 +138,8 @@ struct TemplatePreviewView: View {
         }
         #endif
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("Try Again", action: start)
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text(startError ?? "")
         }
@@ -335,7 +336,7 @@ struct TemplatePreviewView: View {
                     ProgressView(value: model.progress)
                         .frame(width: 64)
                     if model.preview == nil {
-                        Text("Creating template…")
+                        Text("Making the painting…")
                     } else {
                         Text("Updating…")
                     }

@@ -133,7 +133,7 @@ struct CompareView: View {
             offset = .zero
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Comparison of photo and template")
+        .accessibilityLabel("Comparison of photo and painting")
         .accessibilityValue(accessibilityValue)
         .accessibilityAdjustableAction { direction in
             switch direction {

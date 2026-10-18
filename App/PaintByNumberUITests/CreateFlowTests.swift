@@ -15,7 +15,7 @@ final class CreateFlowTests: XCTestCase {
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
 
-        let compare = app.descendants(matching: .any)["Comparison of photo and template"]
+        let compare = app.descendants(matching: .any)["Comparison of photo and painting"]
         XCTAssertTrue(compare.exists)
         XCTAssertEqual(compare.value as? String, "50 percent photo")
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
