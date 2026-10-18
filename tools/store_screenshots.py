@@ -116,15 +116,17 @@ SLIDES = {
     ],
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
-            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 140, 2000, 520, -5)]),
+            crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 140, 2000, 520, -5)],
+             own=dict(crops=[crop("create-preview", (0, 1, .022, 1), .64, 190, 900, radius=64, shadow=True, slot="pet-preview", tilt=-2)],
+                      photos=[photo(1, 1470, 860, 470, 7)])),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
                  slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)]),
         dict(title="Just between you<br>and <span class=mark>your iPad</span>", sub="Your photo becomes a painting right on your iPad, and stays there.", crops=[
-            crop("making-of", (.02, .98, .06, .80), .48, 144, 860, radius=40, shadow=True, slot="making-of-start", tilt=-3),
-            crop("making-of", (.02, .98, .06, .80), .48, 1060, 1180, radius=40, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
-             chips=[("Made on your iPad", 144, 2200), ("No account", 144, 2360), ("Works offline", 144, 2520)]),
+            crop("making-of", (.06, .94, .06, .92), .45, 144, 900, radius=40, shadow=True, slot="making-of-start", tilt=-3),
+            crop("making-of", (.06, .94, .06, .92), .45, 1080, 1300, radius=40, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
+             chips=[("Made on your iPad", 144, 2040), ("No account", 144, 2200), ("Works offline", 144, 2360)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)], photos=[photo(3, 1340, 840, 600, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
