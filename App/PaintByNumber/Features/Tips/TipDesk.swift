@@ -45,7 +45,7 @@ final class TipDesk {
     @ObservationIgnored private var places: [TipPlace] = []
     /// The shelf has given a hint on this visit: one a visit, so each waits for a visit of its own.
     @ObservationIgnored private var servedShelf = false
-    /// How many views that can point each of `needsAnchor` are on screen.
+    /// How many views that can point each of `needsAnchor` are on screen, mostly in view.
     @ObservationIgnored private var anchored: [TipID: Int] = [:]
     /// Tips that point at a view the shelf builds only when it is near the screen (a card in the
     /// grid): given a turn only while one is.
@@ -306,8 +306,9 @@ final class TipDesk {
                 break
             }
             if elapsed > Self.lapse {
-                // Said once, read or not: a tip of the bar has no display limit of TipKit's to say so.
-                if id.hangsFromBar { id.tip.invalidate(reason: .displayCountExceeded) }
+                // Said once, read or not: a tip in a popover of its own has no display limit of
+                // TipKit's to say so.
+                if id.hasOwnPopover { id.tip.invalidate(reason: .displayCountExceeded) }
                 release(id)
                 return
             }
@@ -347,6 +348,38 @@ final class TipDesk {
         stopOffering()
         if let turn { release(turn) }
     }
+
+    #if DEBUG
+    /// A `--tip-` demo (`DemoMode.forcedTip`), once its content is on screen: `id` is given its turn
+    /// once TipKit finds it eligible, its screen is in view, nothing covers it and it has a view to point at, whatever the moment
+    /// and the pacing, so that every tip can be seen where it lives.
+    func force(_ id: TipID) {
+        Task { [weak self] in
+            let clock = ContinuousClock()
+            let deadline = clock.now + .seconds(120)
+            var readySince: ContinuousClock.Instant?
+            while clock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self else { return }
+                guard turn == nil, isInView(id.place), !Self.needsAnchor.contains(id) || anchored[id, default: 0] > 0,
+                      case .available = id.progress else {
+                    readySince = nil
+                    continue
+                }
+                // The screen has settled (a push or a sheet has landed) before the popover comes.
+                if let readySince, clock.now - readySince >= Self.forcedSettle {
+                    notice("forced: \(id.rawValue)")
+                    grant(id)
+                    return
+                }
+                if readySince == nil { readySince = clock.now }
+            }
+            self?.notice("forced \(id.rawValue) never came: \(Self.statuses([id]))")
+        }
+    }
+
+    private static let forcedSettle: Duration = .seconds(1)
+    #endif
 
     // MARK: The switch and starting over
 
@@ -401,23 +434,26 @@ extension View {
     }
 }
 
-/// Hangs the tip whose turn it is from a button in a navigation bar. TipKit's popover tip found
-/// nothing to anchor to there (CI: the tips at the gallery's gear never came up while every other
-/// popover tip did), so this is SwiftUI's own popover, which the bar's buttons do carry, with the
-/// tip's `TipView` inside. A tap outside the popover closes the tip, as it does TipKit's own.
-private struct BarTipModifier: ViewModifier {
-    let id: TipID
+/// Hangs the tip whose turn it is, if it is one of `ids`, from a button in a navigation bar or a
+/// card on the shelf. TipKit's popover tip found nothing to anchor to there (CI: the tips at the
+/// gallery's gear and on its cards never came up while every other popover tip did), so this is
+/// SwiftUI's own popover, which those views do carry, with the tip's `TipView` inside. A tap
+/// outside the popover closes the tip, as it does TipKit's own.
+private struct OwnPopoverTipModifier: ViewModifier {
+    let ids: [TipID]
     var arrowEdge: Edge
 
     func body(content: Content) -> some View {
         // Read here, in the body, so the popover follows the desk's turn.
-        let isShown = PaintTips.desk.turn == id
-        let isPresented = Binding(get: { isShown }, set: { if !$0 { PaintTips.closed(id) } })
+        let shown = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
+        let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
         content.popover(isPresented: isPresented, arrowEdge: arrowEdge) {
-            TipView(id.tip, isPresented: nil, arrowEdge: nil)
-                .frame(minWidth: 260, idealWidth: 340, maxWidth: 360)
-                .fixedSize(horizontal: false, vertical: true)
-                .presentationCompactAdaptation(.popover)
+            if let shown {
+                TipView(shown.tip, isPresented: nil, arrowEdge: nil)
+                    .frame(minWidth: 260, idealWidth: 340, maxWidth: 360)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .presentationCompactAdaptation(.popover)
+            }
         }
     }
 }
@@ -426,7 +462,12 @@ extension View {
     /// The tip `id`, as a popover from this navigation bar button while it has the turn.
     /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
     func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
-        modifier(BarTipModifier(id: id, arrowEdge: arrowEdge))
+        modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: arrowEdge))
+    }
+
+    /// Whichever of `ids` has the turn, as a popover from this card on the shelf.
+    func cardTip(_ ids: [TipID], arrowEdge: Edge = .top) -> some View {
+        modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
     }
 }
 

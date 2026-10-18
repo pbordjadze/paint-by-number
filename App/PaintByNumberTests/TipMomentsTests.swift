@@ -144,4 +144,23 @@ struct TipMomentsTests {
         let inThePreview = offered.allSatisfy { $0.place == .preview }
         #expect(inThePreview)
     }
+
+    // MARK: The bench
+
+    @Test func aFreshPageSaysHowToPaint() {
+        #expect(TipMoments.benchOpened(fresh: true, feedbackIsDue: false, pastQuarter: false) == [.benchTap])
+    }
+
+    /// The third painting is often a new one: Give Feedback comes on a fresh page too, after Tap to
+    /// Paint, which is over by then (it was used on the first fill).
+    @Test func feedbackComesOnTheThirdPaintingFreshOrNot() {
+        #expect(TipMoments.benchOpened(fresh: true, feedbackIsDue: true, pastQuarter: false) == [.benchTap, .benchFeedback])
+        #expect(TipMoments.benchOpened(fresh: false, feedbackIsDue: true, pastQuarter: false) == [.benchFeedback])
+    }
+
+    @Test func aPagePastAQuarterOffersThePhoto() {
+        #expect(TipMoments.benchOpened(fresh: false, feedbackIsDue: false, pastQuarter: true) == [.benchShowPhoto])
+        let onTheBench = TipMoments.benchOpened(fresh: true, feedbackIsDue: true, pastQuarter: true).allSatisfy { $0.place == .bench }
+        #expect(onTheBench)
+    }
 }

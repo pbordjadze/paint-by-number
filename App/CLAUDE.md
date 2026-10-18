@@ -330,9 +330,11 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, where TipKit's popover tip found
-  nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip
-  has no TipKit display limit, which would retire it from under that view: `TipDesk` says it once). A screen reports the
+  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
+  the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
+  to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
+  display limit, which would retire it from under that view: `TipDesk` says it once; a card
+  anchors its tip only while it is mostly in view). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
   for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
@@ -358,7 +360,10 @@ where they live.
   tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
   bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
-  them; `GentleTipsUITests` and `PaintingTipsTests` do.
+  them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
+  (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
+  is in view, whatever the moment and the pacing (`DemoMode.forcedTip`, `TipDesk.force`; every
+  rule's count donated), ready once it is up: `ci/scenarios.txt` screenshots each tip so.
 
 ## Giving feedback
 

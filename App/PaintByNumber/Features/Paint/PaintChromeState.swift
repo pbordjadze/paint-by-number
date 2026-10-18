@@ -160,22 +160,15 @@ final class PaintChromeState {
         offer([.benchShowPhoto])
     }
 
-    /// The painting opens: a fresh one says how to paint; one opened for the third time, or past
-    /// a quarter, may have something to say once the hand has rested.
+    /// The painting opens: a fresh one says how to paint; the third painting, or one past a
+    /// quarter, may have something to say once the hand has rested (`TipMoments.benchOpened`).
     private func benchOpened(_ session: PaintingSession) {
         restartIdle()
         guard !session.isComplete else { return }
-        if session.progress.paintedCount == 0 {
-            offer([.benchTap], rest: .milliseconds(700))
-            return
-        }
-        var due: [TipID] = []
-        if PaintTips.desk.feedbackIsDue { due.append(.benchFeedback) }
-        if passedQuarter {
-            PaintTips.donate(TipEvents.quarters, limit: 2)
-            due.append(.benchShowPhoto)
-        }
-        offer(due, rest: .seconds(2))
+        let fresh = session.progress.paintedCount == 0
+        if passedQuarter { PaintTips.donate(TipEvents.quarters, limit: 2) }
+        let due = TipMoments.benchOpened(fresh: fresh, feedbackIsDue: PaintTips.desk.feedbackIsDue, pastQuarter: passedQuarter)
+        offer(due, rest: fresh ? .milliseconds(700) : .seconds(2))
     }
 
     /// The last area is painted: once the camera has flown out and the shine has passed, the only
