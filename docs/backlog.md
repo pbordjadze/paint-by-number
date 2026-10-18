@@ -106,3 +106,4 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 67 | Show Edits (Jellyfin): install and turn on the Bake Off rule | "Seems like it's working" (21:20) | shipped | castor: live 21:25, rule on; the first live test is S17E05 | 2026-10-18 |
 | 68 | Snow Queen, Medea, Hedge Witch and Dino in their namesakes' techniques, beside the approved stills | "Oooh—can we see the b option side by side please, sounds really really cool. Can we see that for Dino too." (21:29) | building | Marginarium pets (Codex): Medea and Hedge Witch sheets paused | 2026-10-18 |
 | 69 | Niko = P1 (Pirosmani, cream-white); Bulat C2's idle loop to rethink | "P1 is great for Niko… bulats loop just doesn't work" (21:33) | building | Marginarium pets (Codex): Niko's sheet; Bulat loop ideas first | 2026-10-18 |
+| 70 | Snow Queen in Andersen paper-cut (button pick on the pets page) | b (21:36) | building | Marginarium pets (Codex): full sheet | 2026-10-18 |
