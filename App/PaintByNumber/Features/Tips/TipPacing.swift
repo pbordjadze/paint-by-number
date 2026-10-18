@@ -123,7 +123,7 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
                 return .sessionFull
             }
         }
-        if id != .benchTap, let lastShown {
+        if !id.isHowTo, let lastShown {
             // A clock set back is no reason to wait (`continuesSession` reads it so too).
             let gap = now.timeIntervalSince(lastShown)
             if gap >= 0, gap < Self.minimumGap { return .tooSoon }

@@ -2,7 +2,7 @@ import UIKit
 import XCTest
 
 /// Settings › Preview on Line Art: the create flow's comparison shows the drawing alone, and a
-/// phone's enlarged preview tunes it one slider at a time.
+/// phone tunes it one slider at a time, in the card and in the enlarged preview.
 final class LineArtPreviewUITests: XCTestCase {
     /// The comparison's trailing side is the drawing on blank paper: captioned Line Art, with
     /// none of the painting's colors.
@@ -67,8 +67,29 @@ final class LineArtPreviewUITests: XCTestCase {
         app.buttons["Shrink Preview"].tap()
         XCTAssertTrue(app.buttons["Start Painting"].waitForExistence(timeout: 10), "Shrink Preview didn't bring the page back")
         XCTAssertTrue(waitUntil { compare.frame.height < enlarged.height - 20 }, "The comparison stayed enlarged")
-        XCTAssertEqual(app.sliders["Lines"].value as? String, "Most", "What the enlarged preview tuned didn't stay")
+        XCTAssertEqual(settingSlider("Lines", in: app).value as? String, "Most", "What the enlarged preview tuned didn't stay")
         XCTAssertEqual(app.buttons["settings-origin"].value as? String, "Custom")
+    }
+
+    /// The card under the comparison asks one thing at once on a phone: the slider of one setting,
+    /// Colors first, under a chooser that picks another. The iPad's card shows all four sliders.
+    @MainActor
+    func testCardShowsOneSliderAtATimeOnAPhone() throws {
+        let app = launchPreview()
+        let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
+        let names = ["Colors", "Detail", "Smoothness", "Lines"]
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            XCTAssertFalse(chooser.exists, "The iPad's card has a setting chooser")
+            for name in names { XCTAssertTrue(app.sliders[name].exists, "The iPad's card has no \(name) slider") }
+            return
+        }
+        XCTAssertTrue(chooser.exists, "The phone's card has no setting chooser")
+        XCTAssertTrue(app.sliders["Colors"].exists, "The phone's card doesn't start on Colors")
+        XCTAssertEqual(names.filter { app.sliders[$0].exists }, ["Colors"], "The phone's card shows more than one slider")
+        chooser.buttons["Detail"].tap()
+        XCTAssertTrue(app.sliders["Detail"].waitForExistence(timeout: 5), "Choosing Detail didn't show its slider")
+        XCTAssertFalse(app.sliders["Colors"].exists, "Colors still shows beside Detail")
+        attachScreenshot(of: app, named: "create-card-detail")
     }
 
     // MARK: - Helpers

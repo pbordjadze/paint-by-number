@@ -16,10 +16,10 @@ import UIKit
 /// the selected swatch, the top of the canvas, the top bar's controls or the finished page's
 /// Replay, one at a time.
 ///
-/// Give Feedback (the top bar where it fits, else More; always the Paint menu) captures the
-/// painting as it is (`FeedbackCapture`, with the environment's `feedbackSource`) and switches
-/// to feedback mode: painting stops, the palette goes, `FeedbackBar` takes the top and
-/// `MarkupCanvas` lies over the canvas for drawing; Next opens `FeedbackSheet`.
+/// Give Feedback (More, and the Paint menu) captures the painting as it is (`FeedbackCapture`,
+/// with the environment's `feedbackSource`) and switches to feedback mode: painting stops, the
+/// palette goes, `FeedbackBar` takes the top and `MarkupCanvas` lies over the canvas for drawing;
+/// Next opens `FeedbackSheet`.
 struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
@@ -398,22 +398,22 @@ struct PaintView: View {
 
     // MARK: Top bar
 
-    /// Close, the progress badge, then Photo, Hint, Undo, Give Feedback and More, as the first of
-    /// these that fits: each badge variant (largest first, down to its ring and percentage) with
-    /// every control, then each without Give Feedback (More offers it then), then the smallest
-    /// badge without Hint, which the selected swatch and the `h` key still offer (the narrowest
-    /// windows). Nothing here may grow wider than the window: the bar's width would widen the
-    /// whole screen.
+    /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
+    /// fits: each badge variant (largest first, down to its ring and percentage) with every
+    /// control, then the smallest badge without Hint, which the selected swatch and the `h` key
+    /// still offer (the narrowest windows). Give Feedback lives in More, so the bar never shows
+    /// more than six controls (Paul, October 18: "nested enough, that there isn't a moment where
+    /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
+    /// window: the bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
-        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: true) }
-            + badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: false) }
-            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false, showsFeedback: false) }
+        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true) }
+            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
         return GlassEffectContainer(spacing: 10) {
             // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
             ViewThatFits(in: .horizontal) {
                 ForEach(rows, id: \.self) { row in
-                    topBarRow(badge: row.badge, showsHint: row.showsHint, showsFeedback: row.showsFeedback)
+                    topBarRow(badge: row.badge, showsHint: row.showsHint)
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
@@ -427,10 +427,9 @@ struct PaintView: View {
     nonisolated private struct BarVariant: Hashable {
         var badge: BadgeVariant
         var showsHint: Bool
-        var showsFeedback: Bool
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool, showsFeedback: Bool) -> some View {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
         // 8 pt apart: the buttons' glass sits inside their frames, so the shapes stay further
         // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
         HStack(spacing: 8) {
@@ -450,11 +449,7 @@ struct PaintView: View {
             }
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .disabled(!session.isStarted)
-            if showsFeedback {
-                GlassIconButton(systemImage: "exclamationmark.bubble", label: "Give Feedback", action: startFeedback)
-                    .gentleTip(.benchFeedback, arrowEdge: .top)
-            }
-            moreMenu(offersFeedback: !showsFeedback)
+            moreMenu
         }
     }
 
@@ -504,19 +499,19 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// `offersFeedback` when the bar has no room for Give Feedback.
-    private func moreMenu(offersFeedback: Bool) -> some View {
+    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    private var moreMenu: some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
-            if !session.isComplete { paletteMenu }
+            Divider()
             if session.isComplete {
                 Button(action: replay) { Label("Replay Painting", systemImage: "play") }
+            } else {
+                paletteMenu
             }
-            if offersFeedback {
-                Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
-            }
+            Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
         } label: {
@@ -528,9 +523,9 @@ struct PaintView: View {
         }
         .accessibilityLabel(Text("More"))
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
-        // Zen Mode and, where the bar has no room for its button, Give Feedback live in this menu.
+        // Zen Mode and Give Feedback live in this menu.
         .gentleTip(.benchZen, active: true, arrowEdge: .top)
-        .gentleTip(.benchFeedback, active: offersFeedback, arrowEdge: .top)
+        .gentleTip(.benchFeedback, active: true, arrowEdge: .top)
         // Asked from this menu, so the popover points at its button, not at the whole screen.
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {

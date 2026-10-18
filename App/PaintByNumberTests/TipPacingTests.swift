@@ -113,6 +113,16 @@ struct TipPacingTests {
         #expect(refusal(pacing, .benchZoom, at: 0.2) == .tooSoon)
     }
 
+    /// Refine's Draw Your Own Lines says how to use the screen at all, as Tap to Paint does: it comes
+    /// as Refine opens, just after the preview's Shape the Lines Yourself.
+    @Test func drawYourOwnLinesWaitsForNeitherTheGapNorSomethingDone() {
+        var pacing = TipPacing()
+        show(&pacing, .newPaintingRefine, at: 0)
+        pacing.hide(.newPaintingRefine)
+        #expect(refusal(pacing, .refineDraw, at: 0.2) == nil)
+        #expect(refusal(pacing, .refineFill, at: 0.2) == .tooSoon)
+    }
+
     // MARK: Sessions and days
 
     @Test func aSessionHasThreeHints() {
@@ -446,9 +456,10 @@ struct TipPacingTests {
 
     // MARK: Ids
 
-    @Test func theDesignHasTwentyTwoTips() {
-        #expect(TipID.allCases.count == 22)
-        #expect(Set(TipID.allCases.map(\.rawValue)).count == 22)
+    /// The design's 22, and Refine's Draw Your Own Lines (Paul's calmer menus, October 18).
+    @Test func thereAreTwentyThreeTips() {
+        #expect(TipID.allCases.count == 23)
+        #expect(Set(TipID.allCases.map(\.rawValue)).count == 23)
     }
 
     @Test func theTipsAtNavigationBarButtonsAreTheGearThePlusAndRefine() {
@@ -473,7 +484,7 @@ struct TipPacingTests {
         #expect(ids(in: .preview) == [
             .newPaintingDivider, .newPaintingSuggested, .newPaintingReset, .newPaintingSliders, .newPaintingRefine,
         ])
-        #expect(ids(in: .refine) == [.refineFill])
+        #expect(ids(in: .refine) == [.refineDraw, .refineFill])
         #expect(ids(in: .bench) == [
             .benchTap, .benchZoom, .benchFind, .benchDrag, .benchPencil, .benchShowPhoto, .benchReplay, .benchZen,
             .benchFeedback,
