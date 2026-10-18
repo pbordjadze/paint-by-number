@@ -152,9 +152,14 @@ final class RefineAfterSlidersTests: XCTestCase {
         // The button says so a moment after the tap (one read straight after it found the old value
         // now and then), unless the template was made between the status's read and the tap and
         // Refine opened at once. Read afresh each time: a predicate expectation can time out while
-        // the app is busy with the element already matching.
-        _ = waitUntil(timeout: 5) { canvas.exists || refine.value as? String == "Preparing…" }
-        let preparing = refine.value as? String == "Preparing…"
+        // the app is busy with the element already matching. Preparing… seen once counts: Refine
+        // may open before a second read.
+        var sawPreparing = false
+        _ = waitUntil(timeout: 5) {
+            if refine.value as? String == "Preparing…" { sawPreparing = true }
+            return sawPreparing || canvas.exists
+        }
+        let preparing = sawPreparing
         let openedAtOnce = !preparing && canvas.exists
         if preparing { attachScreenshot(of: app, named: "preparing-after-\(what)") }
         let opened = canvas.waitForExistence(timeout: 120)

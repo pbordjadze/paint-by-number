@@ -442,6 +442,11 @@ struct TipPacingTests {
         #expect(Set(bar) == [.shelfSettings, .shelfNewPainting, .newPaintingRefine])
     }
 
+    @Test func theTipsOnThePageAreZoomDragAndPencil() {
+        let page = TipID.allCases.filter { $0.liesOnThePage }
+        #expect(Set(page) == [.benchZoom, .benchDrag, .benchPencil])
+    }
+
     @Test func theTipsOnCardsAreTheHoldAndTheTimeLapse() {
         let cards = TipID.allCases.filter { $0.hangsFromCard }
         #expect(Set(cards) == [.shelfHold, .shelfTimeLapse])

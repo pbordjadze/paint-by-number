@@ -288,7 +288,9 @@ synchronized folder would bundle it into the app.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
-- Tips: the bench's moments are in `PaintChromeState` (see Tips below).
+- Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
+  lie on the page as a card with no arrow, just inside its top as it first fits
+  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -339,11 +341,13 @@ where they live.
   `donations.count`); every tip's rules also read `TipSwitch.tipsOn`. A tip has no button but TipKit's
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
-  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
+  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `TipDesk.pageTip`,
+  a card on the page, for Zoom, Drag and Pencil; `.barTip(…)` for the
   three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
   the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
-  to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
-  display limit, which would retire it from under that view: `TipDesk` says it once; a card
+  to on CI: SwiftUI's own popover with the tip's `TipView` inside; these and the page's have no
+  TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
+  it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card
   anchors its tip only while it is mostly in view). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
