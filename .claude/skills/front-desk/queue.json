@@ -10,7 +10,7 @@
   "key": "refine-line-split",
   "order": "1",
   "title": "Refine: lines split colors",
-  "detail": "Green at 5f39bb7; merges after main's current run",
+  "detail": "Green; in the batch (compile check green), waiting on the iPhone fix run",
   "state": "green"
  },
  {
@@ -24,22 +24,22 @@
   "key": "ci-tags",
   "order": "3",
   "title": "CI tags guard",
-  "detail": "The night train refuses a skip tag in its merge message (the reason main 4bcffa0 had to start the gate run). Compile check running.",
-  "state": "in CI"
+  "detail": "Green at cd27a17; joins the batch to main",
+  "state": "green"
  },
  {
   "key": "ux-refinements",
   "order": "4",
   "title": "Your UX picks",
   "detail": "Both batches built (21 picks + Music row + Stop)",
-  "state": "ready"
+  "state": "in CI"
  },
  {
   "key": "nightfall",
   "order": "5",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
-  "state": "waiting"
+  "state": "in CI"
  },
  {
   "key": "quiet-painting",
