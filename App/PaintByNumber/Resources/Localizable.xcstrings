@@ -3022,7 +3022,7 @@
       }
     },
     "Painting" : {
-      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the Refine screen's button that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
+      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the item of the Refine screen's Show menu that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
     "Painting Length" : {
@@ -3214,7 +3214,7 @@
       }
     },
     "Paper" : {
-      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic); also the value of Refine's Show button when neither the photo nor the painting shows beneath the drawing",
       "extractionState" : "manual"
     },
     "paper.automatic" : {
@@ -3330,7 +3330,7 @@
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's button that shows the photo beneath the drawing",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the item of the Refine screen's Show menu that shows the photo beneath the drawing",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -4346,7 +4346,7 @@
       "extractionState" : "manual"
     },
     "Show" : {
-      "comment" : "Accessibility label of three controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), and Settings › Advanced's choice between the preview's template and its painted picture",
+      "comment" : "Accessibility label of four controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), Settings › Advanced's choice between the preview's template and its painted picture, and Refine's button that holds Photo and Painting (what shows beneath the drawing; its value names which, or Paper for neither)",
       "extractionState" : "manual"
     },
     "Show Color Details" : {

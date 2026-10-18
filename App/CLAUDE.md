@@ -325,7 +325,7 @@ and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them of
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
 where they live.
 
-- **Where they live.** `Features/Tips/`: `GentleTips` (17 of the tips as TipKit tips, `nonisolated`,
+- **Where they live.** `Features/Tips/`: `GentleTips` (18 of the tips as TipKit tips, `nonisolated`,
   in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
   with the ids of the first version, so what was closed stays closed), `TipDesk` (turns), `TipPacing`
   (limits, with `TipHistory` and `TipStore`), `TipMoments` (`TipPreference`, the switch's value, and
@@ -350,8 +350,8 @@ where they live.
   hints (a fill, a slider, a screen), 3 a session (a stretch without a 30-minute break), 5 a day, 3 on
   the first painting (counted from its opening, in place of the session's), silence while a finger or
   the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
-  Feedback is on, and after a finish only Replay Painting. Tap to Paint alone waits for neither the
-  gap nor something done. State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
+  Feedback is on, and after a finish only Replay Painting. Tap to Paint and Draw Your Own Lines alone wait for
+  neither the gap nor something done (`TipID.isHowTo`). State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
   `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
   tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.

@@ -252,7 +252,8 @@ final class CreateFlowTests: XCTestCase {
         first.tap()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
-        XCTAssertTrue(app.buttons["settings-origin"].waitForExistence(timeout: 10), "The preview has no settings")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings-origin"].waitForExistence(timeout: 10), "The preview has no settings")
         let detail = settingSlider("Detail", in: app)
         XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
 

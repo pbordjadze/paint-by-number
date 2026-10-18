@@ -94,7 +94,7 @@ struct RefineView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @State private var tool: RefineTool
     @State private var shape = RefineShape.line
-    /// The eraser the Erasers button shows and picks again: the one last picked.
+    /// The eraser the Erasers button shows: the one last picked.
     @State private var eraser = RefineTool.eraser
     @State private var backdrop = RefineBackdrop.paper
     /// The template on screen painted, for `RefineBackdrop.painting`, with its preview's id.
@@ -139,7 +139,8 @@ struct RefineView: View {
         .onAppear {
             model.beginRefining()
             PaintTips.desk.enter(.refine)
-            PaintTips.refineShown()
+            // A draft refined before (Continue Refining) has found how to draw already.
+            if model.refinements.isEmpty { PaintTips.refineShown() }
         }
         .onDisappear {
             model.dismissNote()
@@ -563,8 +564,10 @@ struct RefineView: View {
     private func toggleText(at point: SIMD2<Float>) {
         if let marked = model.refinements.addedText.last(where: { Self.line($0, contains: point) }) {
             model.change(.unmarkText(marked))
+            PaintTips.refineEdited()
         } else if let line = model.foundText.first(where: { Self.line($0, contains: point) }) {
             model.change(.toggleFound(line))
+            PaintTips.refineEdited()
         }
     }
 
@@ -572,6 +575,7 @@ struct RefineView: View {
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
         guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
         model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
+        PaintTips.refineEdited()
     }
 
     /// Whether a tap at `point` falls on `line`, give or take a little for the finger.
