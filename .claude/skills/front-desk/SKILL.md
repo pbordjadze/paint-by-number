@@ -81,6 +81,16 @@ runs, up to three while it's idle.
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## The Codex workbench
+
+Paul (Oct 18, ~16:22 UTC): "Yeah Codex workbench, and the front desk can send things there or
+tell sessions to use it." The workbench is a lean session on the homelab (row 49; its id is in the
+backlog) where the Codex CLI does the work and a Sonnet session only dispatches and checks, to
+save Claude usage. Send it mechanical work: second-opinion reviews of a pushed branch before it
+merges, tests and fixtures, small verified fixes, merging main into a ready branch. Tell other
+sessions to hand it the same. Taste, design, writing, the Lamplit Table and judging what's real
+stay with Claude.
+
 ## Proposals
 
 Sessions and the Lamplit Table send proposals for new work (CLAUDE.md › Working with Paul ›
