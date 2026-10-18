@@ -2,6 +2,7 @@ import Observation
 import os
 import SwiftUI
 import TipKit
+import UIKit
 
 /// Gives the tips their turns. TipKit decides when a tip is eligible (its rules: events and the
 /// tips-on parameter) and draws it; it has no say in when a tip may appear *now*, so views point
@@ -458,12 +459,83 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
-/// Where the navigation bar buttons that carry a tip are on screen (`barTip`), for `barTipHost`.
+/// Where the navigation bar buttons that carry a tip are in their window (`barTip`), for
+/// `barTipHost`.
 @MainActor
 @Observable
 final class BarTipAnchors {
     static let shared = BarTipAnchors()
     var frames: [TipID: CGRect] = [:]
+}
+
+/// Keeps `BarTipAnchors` told where a bar button is in its window. SwiftUI's global frame of a
+/// toolbar item is the bar's own hosting view's, not the window's (CI, October 18: the gear's tip
+/// hung over the gear, its anchor some 50 points above it), so a UIKit view behind the button
+/// reports it, asked again whenever SwiftUI sees the button move.
+private struct BarTipAnchorModifier: ViewModifier {
+    let id: TipID
+    @State private var moves = 0
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { _ in moves += 1 }
+            .background(WindowFrameProbe(moves: moves) { frame in
+                // A frame that is empty for a moment (a rotation, the bar's morph) keeps the last
+                // one: the anchor leaving would dismiss the popover, which closes the tip for good.
+                if !frame.isEmpty, BarTipAnchors.shared.frames[id] != frame { BarTipAnchors.shared.frames[id] = frame }
+            })
+            // A button that leaves the bar (Refine under Enlarge Preview) takes its tip's turn with
+            // it, and its anchor.
+            .onDisappear {
+                PaintTips.desk.stop(id)
+                BarTipAnchors.shared.frames[id] = nil
+            }
+    }
+}
+
+/// Reports where it is in its window, in points, when laid out, moved to a window or updated.
+private struct WindowFrameProbe: UIViewRepresentable {
+    /// Changes whenever the view it sits behind moves, so it reports again.
+    let moves: Int
+    let report: (CGRect) -> Void
+
+    func makeUIView(context: Context) -> ProbeView {
+        ProbeView(report: report)
+    }
+
+    func updateUIView(_ view: ProbeView, context: Context) {
+        view.report = report
+        view.reportFrame()
+    }
+
+    final class ProbeView: UIView {
+        var report: (CGRect) -> Void
+
+        init(report: @escaping (CGRect) -> Void) {
+            self.report = report
+            super.init(frame: .zero)
+            isUserInteractionEnabled = false
+            isAccessibilityElement = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            reportFrame()
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            reportFrame()
+        }
+
+        func reportFrame() {
+            guard let window else { return }
+            report(convert(bounds, to: window))
+        }
+    }
 }
 
 /// Hangs the tips of `ids` below their navigation bar buttons from a clear view laid over each
@@ -494,16 +566,7 @@ extension View {
     /// Marks this navigation bar button as where the tip `id` hangs from while it has the turn: below
     /// it, from the screen's `barTipHost`.
     func barTip(_ id: TipID) -> some View {
-        // A frame that is empty for a moment (a rotation, the bar's morph) keeps the last one: the
-        // anchor leaving would dismiss the popover, which closes the tip for good. A button that
-        // leaves the bar (Refine under Enlarge Preview) takes its tip's turn with it, and its anchor.
-        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-            if !frame.isEmpty { BarTipAnchors.shared.frames[id] = frame }
-        }
-        .onDisappear {
-            PaintTips.desk.stop(id)
-            BarTipAnchors.shared.frames[id] = nil
-        }
+        modifier(BarTipAnchorModifier(id: id))
     }
 
     /// Hangs the tips of `ids` below the navigation bar buttons that carry them (`barTip`). On the
