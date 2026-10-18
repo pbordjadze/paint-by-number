@@ -87,9 +87,11 @@ extension XCTestCase {
     func settingSlider(_ setting: String, in app: XCUIApplication) -> XCUIElement {
         let slider = app.sliders[setting]
         let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
-        if !slider.exists, chooser.exists {
+        // A tap as the full resolution lands is lost (main, 4bcffa0: twice, each within half a
+        // second of it), so the chooser is tapped until its slider shows.
+        for _ in 0..<3 where !slider.exists && chooser.exists {
             chooser.buttons[setting].tap()
-            _ = slider.waitForExistence(timeout: 5)
+            if slider.waitForExistence(timeout: 5) { break }
         }
         return slider
     }
