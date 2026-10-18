@@ -445,11 +445,10 @@ extension View {
     }
 }
 
-/// Hangs the tip whose turn it is, if it is one of `ids`, from a button in a navigation bar or a
-/// card on the shelf. TipKit's popover tip found nothing to anchor to there (CI: the tips at the
-/// gallery's gear and on its cards never came up while every other popover tip did), so this is
-/// SwiftUI's own popover, which those views do carry, with the tip's `TipView` inside. A tap
-/// outside the popover closes the tip, as it does TipKit's own.
+/// Hangs the tip whose turn it is, if it is one of `ids`, from a card on the shelf. TipKit's
+/// popover tip found nothing to anchor to there (CI: the tips on its cards never came up while
+/// every other popover tip did), so this is SwiftUI's own popover, which a card does carry, with
+/// the tip's `TipView` inside. A tap outside the popover closes the tip, as it does TipKit's own.
 private struct OwnPopoverTipModifier: ViewModifier {
     let ids: [TipID]
     var arrowEdge: Edge
@@ -469,11 +468,40 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
+/// Lays the tip whose turn it is, if it is one of `ids`, as a card with no arrow at the top of the
+/// view it modifies, just under the navigation bar whose button it is about. A popover from the
+/// button grew out of it on iOS 26 and covered it (on iPhone the title too), and nothing could
+/// hang one below it (Paul, October 18: a card on the page, as the painting's Zoom, Drag and
+/// Pencil are).
+private struct BarTipModifier: ViewModifier {
+    let ids: [TipID]
+
+    func body(content: Content) -> some View {
+        let shown = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
+        content.overlay(alignment: .top) {
+            ZStack {
+                if let shown {
+                    TipView(shown.tip, isPresented: nil, arrowEdge: nil)
+                        .frame(maxWidth: Self.width)
+                        .padding(.horizontal, Self.margin)
+                        .padding(.top, Self.margin)
+                        .transition(.opacity)
+                }
+            }
+            // A fade, on the card alone: the screen under it changes as it likes.
+            .animation(.easeInOut(duration: 0.25), value: shown)
+        }
+    }
+
+    private static let width: CGFloat = 420
+    private static let margin: CGFloat = 12
+}
+
 extension View {
-    /// The tip `id`, as a popover from this navigation bar button while it has the turn.
-    /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
-    func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
-        modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: arrowEdge))
+    /// Whichever of `ids` has the turn, as a card at the top of this screen: the tips about a
+    /// button of its navigation bar (`TipID.liesUnderTheBar`).
+    func barTips(_ ids: TipID...) -> some View {
+        modifier(BarTipModifier(ids: ids))
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf.

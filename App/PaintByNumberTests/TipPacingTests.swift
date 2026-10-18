@@ -427,7 +427,7 @@ struct TipPacingTests {
     }
 
     @Test func theTipsAtNavigationBarButtonsAreTheGearThePlusAndRefine() {
-        let bar = TipID.allCases.filter { $0.hangsFromBar }
+        let bar = TipID.allCases.filter { $0.liesUnderTheBar }
         #expect(Set(bar) == [.shelfSettings, .shelfNewPainting, .newPaintingRefine])
     }
 

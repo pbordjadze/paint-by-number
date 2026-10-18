@@ -100,6 +100,7 @@ struct TemplatePreviewView: View {
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        .barTips(.newPaintingRefine)
         // Shrink Preview is the way back from the enlarged preview. There is none while Start
         // Painting saves: leaving then would open the painting from whichever flow closes next.
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
@@ -233,7 +234,6 @@ struct TemplatePreviewView: View {
                 .accessibilityValue(
                     model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
-                .barTip(.newPaintingRefine)
             }
         }
         if offersEnlarging && !isEnlarged {

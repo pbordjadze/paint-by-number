@@ -73,13 +73,17 @@ final class GentleTipsUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Tap to Paint"].exists, "The bench gave a tip with tips off")
     }
 
-    /// A tip that points at a button in the navigation bar: Settings and Tips, hung below the gear.
+    /// A tip about a button in the navigation bar: Settings and Tips, a card under the bar that
+    /// leaves the gear in sight.
     @MainActor
-    func testSettingsAndTipsHangsBelowTheGear() throws {
+    func testSettingsAndTipsLiesUnderTheBar() throws {
         let app = launch("gallery-tip-gear")
         let tip = app.staticTexts["Settings and Tips"]
-        XCTAssertTrue(tip.waitForExistence(timeout: Self.tipTimeout), "The tip at the gear never came up")
+        XCTAssertTrue(tip.waitForExistence(timeout: Self.tipTimeout), "The tip about the gear never came up")
         attachScreenshot(of: app, named: "settings-and-tips")
+        let gear = app.buttons["Settings"].firstMatch
+        XCTAssertTrue(gear.exists, "The gear is gone")
+        XCTAssertGreaterThanOrEqual(tip.frame.minY, gear.frame.maxY, "The tip covers the gear")
         XCTAssertTrue(
             app.staticTexts["The gear holds paper tone, sound and painting length. Tips can be turned off there."].exists,
             "The tip doesn't say where tips can be turned off")
