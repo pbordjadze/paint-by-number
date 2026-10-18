@@ -434,11 +434,11 @@ extension View {
     }
 }
 
-/// Hangs the tip whose turn it is, if it is one of `ids`, from a button in a navigation bar or a
-/// card on the shelf. TipKit's popover tip found nothing to anchor to there (CI: the tips at the
-/// gallery's gear and on its cards never came up while every other popover tip did), so this is
-/// SwiftUI's own popover, which those views do carry, with the tip's `TipView` inside. A tap
-/// outside the popover closes the tip, as it does TipKit's own.
+/// Hangs the tip whose turn it is, if it is one of `ids`, from a card on the shelf or the anchor of a
+/// navigation bar button (`BarTipHost`). TipKit's popover tip found nothing to anchor to there (CI:
+/// the tips at the gallery's gear and on its cards never came up while every other popover tip
+/// did), so this is SwiftUI's own popover with the tip's `TipView` inside. A tap outside the
+/// popover closes the tip, as it does TipKit's own.
 private struct OwnPopoverTipModifier: ViewModifier {
     let ids: [TipID]
     var arrowEdge: Edge
@@ -458,11 +458,49 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
+/// Where the navigation bar buttons that carry a tip are on screen (`barTip`), for `barTipHost`.
+@MainActor
+@Observable
+final class BarTipAnchors {
+    static let shared = BarTipAnchors()
+    var frames: [TipID: CGRect] = [:]
+}
+
+/// Hangs the tips of `ids` below their navigation bar buttons from a clear view laid over each
+/// button, outside the bar: a popover from the bar's own button grows out of it on iOS 26 and
+/// covers it (and on a phone the title), with no arrow (the Lamplit Table, October 18: the button
+/// stays in view, the tip hangs below it).
+private struct BarTipHost: View {
+    let ids: [TipID]
+
+    var body: some View {
+        GeometryReader { geo in
+            let origin = geo.frame(in: .global).origin
+            ForEach(ids, id: \.self) { id in
+                if let frame = BarTipAnchors.shared.frames[id], !frame.isEmpty {
+                    Color.clear
+                        .frame(width: frame.width, height: frame.height)
+                        .modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: .top))
+                        .position(x: frame.midX - origin.x, y: frame.midY - origin.y)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+
 extension View {
-    /// The tip `id`, as a popover from this navigation bar button while it has the turn.
-    /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
-    func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
-        modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: arrowEdge))
+    /// Marks this navigation bar button as where the tip `id` hangs from while it has the turn: below
+    /// it, from the screen's `barTipHost`.
+    func barTip(_ id: TipID) -> some View {
+        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { BarTipAnchors.shared.frames[id] = $0 }
+    }
+
+    /// Hangs the tips of `ids` below the navigation bar buttons that carry them (`barTip`). On the
+    /// screen's navigation stack, so it reaches over the bar.
+    func barTipHost(_ ids: TipID...) -> some View {
+        overlay { BarTipHost(ids: ids) }
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf.

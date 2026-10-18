@@ -90,6 +90,7 @@ struct AppShellView: View {
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }
+        .barTipHost(.shelfSettings, .shelfNewPainting)
         .environment(\.startHandoff, handoff)
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil

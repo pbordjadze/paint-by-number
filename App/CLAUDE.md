@@ -282,7 +282,9 @@ synchronized folder would bundle it into the app.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
-- Tips: the bench's moments are in `PaintChromeState` (see Tips below).
+- Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
+  hang from just inside the top of the page as it first fits (`PaintView.pageTipInset`), not from
+  under the top bar's Photo button.
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -332,7 +334,9 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
+  three at buttons of a navigation bar, the gear, + and Refine, hung by the screen's
+  `.barTipHost(…)` from a clear view laid over the button outside the bar (a popover from the
+  bar's own button grows out of it on iOS 26 and covers it), and `.cardTip(…)` for the two on
   the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
   to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
   display limit, which would retire it from under that view: `TipDesk` says it once; a card
