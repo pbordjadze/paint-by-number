@@ -80,7 +80,8 @@ it on start, after a burst, and at each check-in:
 1. `python3 .claude/skills/front-desk/sessions.py <list file> --previous <day.json>
    --dashboard <scratch dir> --backlog docs/backlog.md`. `<day.json>` is today's opening snapshot
    (see Usage).
-2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json`, each with
+2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json` (and your
+   `decisions.json` when it changed), each with
    its own Artifact publish call: `url` set to the page, `file_path` set to the file, and
    `asset: true`.
 3. Use `ArtifactData` to `update` `datasets/sessions`, `datasets/inbox` and `datasets/account`.
@@ -90,6 +91,14 @@ it on start, after a burst, and at each check-in:
    old `source.url`).
 4. After Paul has opened the page, `get` `data/users/me/runs` for failures his page reported, and
    fix the data or the helper.
+
+The page leads with **Yours to decide**: the dataset `datasets/decisions`, a hand-written file
+`decisions.json` (rows of `id`, `order`, `group` = `now` | `whenever` | `later`, `title`, `ask`,
+`options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
+is a short review guide for one decision only Paul can make: the question, the choices, what
+the session recommends, and the reply to type. Keep it in step with what you ask him in chat:
+add a row when a session needs him, drop it when he answers, and re-upload it the same way at
+each refresh. Paul uses the page to decide quickly; keep the rest of it short.
 
 Don't rewrite the page itself (`files/index.html`) unless Paul asks for a change to it. When you
 do, the Dashboard type's rules apply: the type's instructions come back when you publish with
