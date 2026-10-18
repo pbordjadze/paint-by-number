@@ -28,6 +28,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 10 | claude/toolbar-tips | Gentle tips check | ready (local; after tip-layout d8fe24e merges; row 43 + a retro finding) |
 | 11 | claude/codex-decoder-fuzz | Codex workbench | ready soon (hostile-input tests for the decoders; decoder change dropped) |
 | 12 | claude/caroline-guardians | New guardian (Hope, Eno) | ready (41b871a [skip ci]; eggs in Who's Who) |
+| 13 | claude/pets-oct18 | Marginarium pets (Codex) | ready after Codex review (72b126b0 [skip ci]; 4 hatches + Dino redraw, Scherenschnitt name) |
 
 ## Inbox
 
