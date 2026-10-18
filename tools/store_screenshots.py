@@ -119,8 +119,8 @@ SLIDES = {
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220, slot="pet-zoomed")],
              photos=[photo(3, 690, 610, 560, -4, landscape=True)], own=dict(sub="Every paint has a name.<br>This one is Inkpot.")),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
-            crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True, tilt=1.5),
-            crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
+            crop("create-line-art", (.04, .96, .203, .489), 1.11, "c", 960, radius=56, shadow=True, tilt=1.5),
+            crop("create-line-art", (0, 1, .721, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
         dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others, built right in.", crops=[
             crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
