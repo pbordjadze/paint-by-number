@@ -5,7 +5,7 @@
     page.py <decisions.json> add <card.json>
     page.py <decisions.json> check
 
-<decisions.json> is the front desk's hand-written file behind the page's `datasets/decisions`
+<decisions.json> is the front desk's hand-written file behind the page's decision rows
 (SKILL.md › The status page). `drop` removes the answered cards, `add` appends a card (or a list
 of them) and replaces any card with the same id, `check` only validates. Every command checks
 the cards: each has an id, a title and one question (`ask`, at most one "?"), its `options`
@@ -13,8 +13,8 @@ are lettered ("a. …", "b. …"; `drop` and `add` letter unlettered labels in o
 `data:image/…` URL under 150 KB with its `image_alt`. A card about how something looks needs
 an image; mark it `"looks": true` and the check holds it to that.
 
-After a change it prints the calls that publish it, which only the session can make (MCP tools):
-the asset upload, the dataset update and the delete of the upload it replaced.
+After a change it prints the next step: rebuild live.json with live.py and publish it (SKILL.md ›
+The status page), which only the session can do (MCP tools).
 """
 
 import json
@@ -91,12 +91,7 @@ def main():
         out.write("\n")
 
     print(f"{len(cards)} cards written. Now:")
-    print(f"1. Artifact publish  url={PAGE}  file_path={os.path.abspath(path)}  asset=true  -> new url")
-    print("2. ArtifactData get   collection=datasets doc_id=decisions (note its version and the old"
-          " source.url)")
-    print("3. ArtifactData update collection=datasets doc_id=decisions"
-          " with that version: source.url = <new url>, updated = {at: <now>, by: \"front desk\"}")
-    print(f"4. Artifact delete   url={PAGE}  path=<the 32 hex after _blob/ in the old source.url>")
+    print(f"live.py <dash dir> {os.path.abspath(path)} <live.json>, then publish live.json and update datasets/live")
 
 
 if __name__ == "__main__":

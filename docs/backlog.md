@@ -17,8 +17,8 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 
 | Order | Branch | Session | State |
 | --- | --- | --- | --- |
-| 1 | claude/tip-layout | Gentle tips check (successor session_01EW3s3RcZoc16MRwUThmPZF) | in CI (da63c43: the page tips alone, no arrow) |
-| 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
+| 1 | claude/tip-layout | Gentle tips check (successor session_01EW3s3RcZoc16MRwUThmPZF) | green (d8fe24e): merges after main's run |
+| 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | in CI (pushing now) |
 | 4 | claude/refine-line-split | Refine: lines split colors | building (Paul 15:01: "move these refine things up to just after the warnings gate") |
 | 5 | claude/recolor | Recolor in Refine | ready (319496e, local; built on fewer-buttons) |
 | 6 | claude/ux-refinements | UX design audit | waiting |
@@ -26,6 +26,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 8 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
 | 9 | claude/retro-review | Retro code review (Sonnet) | ready (6a01a58, local; 3 small fixes) |
 | 10 | claude/toolbar-tips | Gentle tips check | ready (local; after tip-layout d8fe24e merges; row 43 + a retro finding) |
+| 11 | claude/codex-decoder-fuzz | Codex workbench | ready soon (hostile-input tests for the decoders; decoder change dropped) |
 
 ## Inbox
 
@@ -82,5 +83,6 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 45 | Sonnet code review of everything merged since Release 2 that wasn't reviewed; fix what's real | "Everything in the backlog that wasn't reviewed yet — can we have sonnets review them please? Should help to with code quality" | building | Retro code review session_01SW59ERYwUrSMHvBHECAS7D: 16 merges covered, nothing high severity; report https://claude.ai/artifact/WrRRn5KXHqaDPkhK93kqvH; 3 fixes ready (CI place 9), 10 findings sent to their branches | 2026-10-18 |
 | 46 | Rename the guardian Lotte to Scherenschnitt (inspiration and credit stay Lotte Reiniger); full name everywhere | "She could be "Scherenschnitt"" Echo confirmed: "Full name everywhere, need to be careful of spiraling complexity for no benefit" | building | Marginarium pets (Codex) session_011RMFx75M6riXmTKkwua57a: in the same change that adds her pet | 2026-10-18 |
 | 47 | Bart: drop "Ibid" (one name per guardian); redraw him as more of a djinn, an original one, keeping a nod to the asterisk | "Why is Bart's thing called "Ibid" — remember that we are consolidating down to one name per guardian? And maybe it should be a bit more of a Djinn" Echo confirmed: "Yes, keep a nod to the asterisk" | building | Marginarium pets (Codex) session_011RMFx75M6riXmTKkwua57a: draft first, then the sheet | 2026-10-18 |
-| 48 | Store slides: a ninth slide showcasing text detection, from the painting Paul just sent as feedback, cleaned up by hand so the handwriting reads perfectly | "The slides look good but we need one more. I just submitted it as feedback. Clean that one up manually so the handwritten text is perfectly visible, then that should be a slide showcasing the text detection." | building | Store slides session_01EruDvrqq32fMEqJfvZFXHT (report in pbordjadze/paint-feedback) | 2026-10-18 |
+| 48 | Store slides: a ninth slide showcasing text detection, from the painting Paul just sent as feedback, cleaned up by hand so the handwriting reads perfectly | "The slides look good but we need one more. I just submitted it as feedback. Clean that one up manually so the handwritten text is perfectly visible, then that should be a slide showcasing the text detection." | shipped (SideStore) | Love notes is slide 4 of 9 (both sets); Download all zip on the slides page; 48fcd1d [skip ci]; App Store upload waits for his yes | 2026-10-18 |
 | 49 | Use the idle Codex allowance: second-opinion reviews of every branch, decoder stress tests; move other mechanical work to Codex to save Claude usage (75% of the week, resets Tuesday evening) | "1 and 2, but maybe even some current or future work could be delegated there to save Claude usage since we're at 75% for the week with limit resetting Tuesday evening, yeah?" | building | Codex workbench session_01EmGdVfvj8FnB9TcT95JZP3 on lenovo-homelab (Sonnet dispatching, Codex working): decoder fuzz + reviews of ux-refinements, tip-layout | 2026-10-18 |
+| 50 | Text detection misreads small handwriting ("Hello Caroline we miss you!" traced as "Hello Corolixe ue mrs yoo!", feedback report 2026-10-18/161039-44bacf) | | new | found by Store slides (row 48); for the writing tracer (docs/writing.md), after Monday's freeze decision | 2026-10-18 |
