@@ -10,14 +10,15 @@ ci/scenarios.txt. It writes seven slides per size to DIR (outside the repo):
 iphone-69-<n>-<name>.png (1320×2868), iphone-63-<n>-<name>.png (1206×2622, the size
 App Store Connect requires) and ipad-13-<n>-<name>.png (2064×2752), RGB without alpha.
 
-The first three slides show the painter's own pets, which CI can't photograph: a crop with a
+The pet slides show the painter's own pets, which CI can't photograph: a crop with a
 `slot` reads <device>-<slot>.png from --slots (a folder outside the repo: the painter's photos
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
 an iPhone or iPad whose screen has about the same proportions (an `own` layout's crops are
 fractions of the shot as it is). Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
 iphone-pet-preview.png, iphone-pet-progress.png, iphone-making-of-start.png and
-iphone-making-of-end.png (two frames of a screen recording of the making-of), the same as ipad-*.png. A slide's `own`
+iphone-making-of-end.png (two frames of a screen recording of the making-of), iphone-pet-zoomed.png
+and iphone-pet-gallery.png, the same as ipad-*.png. A slide's `own`
 layout (crops and photos) replaces its stand-in layout once the painter's shots fill all its slots: a
 pet's portrait previews narrower than the stand-in's landscape, and their phone may be in dark mode.
 Four slides
@@ -69,6 +70,8 @@ SLOTS = {
     "pet-progress": "a second pet's painting, about a third painted",
     "making-of-start": "the making-of's first step, on a pet's photo",
     "making-of-end": "the making-of's last step, the pet's numbered drawing",
+    "pet-zoomed": "a third pet's painting part-painted, zoomed onto its face, a paint picked",
+    "pet-gallery": "the Gallery with a fourth pet's painting first",
 }
 
 
@@ -102,7 +105,8 @@ SLIDES = {
             crop("making-of", (.02, .98, .165, .87), .54, 650, 1700, radius=44, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
              chips=[("Made on your phone", 80, 1960), ("No account", 80, 2100), ("Works offline", 80, 2240)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
-            crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)], photos=[photo(3, 690, 610, 560, -4, landscape=True)]),
+            crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220, slot="pet-zoomed")],
+             photos=[photo(3, 690, 610, 560, -4, landscape=True)], own=dict(sub="Every paint has a name.<br>This one is Inkpot.")),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
             crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True, tilt=1.5),
             crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
@@ -112,7 +116,7 @@ SLIDES = {
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your phone.", crops=[
-            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)], photos=[photo(4, 850, 740, 410, 6)]),
+            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5, slot="pet-gallery")], photos=[photo(4, 850, 740, 410, 6)]),
     ],
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
@@ -122,13 +126,20 @@ SLIDES = {
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
-                 slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)]),
+                 slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)],
+             own=dict(crops=[crop("paint-book-progress", (0, 1, .02, .9), .76, "c", 780, radius=48, shadow=True, slot="pet-progress", tilt=-1.5),
+                             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2470, radius=70, shadow=True, over=True,
+                                  slot="pet-progress")], photos=[photo(2, 1560, 600, 420, 6)])),
         dict(title="Just between you<br>and <span class=mark>your iPad</span>", sub="Your photo becomes a painting right on your iPad, and stays there.", crops=[
             crop("making-of", (.06, .94, .06, .92), .45, 144, 900, radius=40, shadow=True, slot="making-of-start", tilt=-3),
             crop("making-of", (.06, .94, .06, .92), .45, 1080, 1300, radius=40, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
              chips=[("Made on your iPad", 144, 2040), ("No account", 144, 2200), ("Works offline", 144, 2360)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
-            crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)], photos=[photo(3, 1340, 840, 600, -4, landscape=True)]),
+            crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240, slot="pet-zoomed")],
+             photos=[photo(3, 1340, 840, 600, -4, landscape=True)],
+             own=dict(sub="Every paint has a name. This one is Inkpot.",
+                      crops=[crop("paint-book-zoomed", (0, 1, .015, 1), .69, "c", 860, radius=56, shadow=True, slot="pet-zoomed", tilt=1.5)],
+                      photos=[photo(3, 1480, 640, 470, -4, landscape=True)])),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
@@ -138,7 +149,7 @@ SLIDES = {
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your iPad.", crops=[
-            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)], photos=[photo(4, 1480, 700, 480, 6)]),
+            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2, slot="pet-gallery")], photos=[photo(4, 1480, 700, 480, 6)]),
     ],
 }
 
@@ -264,7 +275,7 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
 def laid_out(slide, dev, slots):
     """The slide as drawn: its `own` layout once the painter's screenshots fill its slots."""
     own = slide.get("own")
-    if own and all(own_shot(slots, dev, c) for c in own["crops"] if c["slot"]):
+    if own and all(own_shot(slots, dev, c) for c in own.get("crops", slide["crops"]) if c["slot"]):
         return {**slide, **own}
     return slide
 
