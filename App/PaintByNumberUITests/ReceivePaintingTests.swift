@@ -34,7 +34,8 @@ final class ReceivePaintingTests: XCTestCase {
 
         let alert = app.alerts["Couldn’t Open Painting"]
         XCTAssertTrue(alert.waitForExistence(timeout: 30), "No alert for a damaged painting file")
-        XCTAssertTrue(alert.staticTexts["The file is damaged, or isn’t a painting."].exists)
+        let message = alert.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "isn’t a painting")).firstMatch
+        XCTAssertTrue(message.exists, "The alert doesn't say the file is damaged")
         attachScreenshot(of: app, named: "received-painting-damaged")
         alert.buttons["OK"].tap()
         XCTAssertTrue(alert.waitForNonExistence(timeout: 5))

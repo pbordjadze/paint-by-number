@@ -77,7 +77,6 @@ struct SendTemplateSheet: View {
         .background {
             ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
         }
-        .presentationDetents([.medium, .large])
         .task { await loadPreview() }
         // Swiped away with the file made: it mustn't stay behind.
         .onDisappear { removeFile() }
