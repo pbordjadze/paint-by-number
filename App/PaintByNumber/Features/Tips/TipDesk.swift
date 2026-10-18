@@ -506,9 +506,10 @@ private struct CardTipAnchor: ViewModifier {
 /// Pencil are).
 private struct BarTipModifier: ViewModifier {
     let ids: [TipID]
+    var active: Bool
 
     func body(content: Content) -> some View {
-        let shown = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
+        let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
         content.overlay(alignment: .top) {
             ZStack {
                 if let shown {
@@ -530,9 +531,9 @@ private struct BarTipModifier: ViewModifier {
 
 extension View {
     /// Whichever of `ids` has the turn, as a card at the top of this screen: the tips about a
-    /// button of its navigation bar (`TipID.liesUnderTheBar`).
-    func barTips(_ ids: TipID...) -> some View {
-        modifier(BarTipModifier(ids: ids))
+    /// button of its navigation bar (`TipID.liesUnderTheBar`), while `active` (the button is there).
+    func barTips(_ ids: TipID..., active: Bool = true) -> some View {
+        modifier(BarTipModifier(ids: ids, active: active))
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
