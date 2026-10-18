@@ -17,7 +17,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 
 | Order | Branch | Session | State |
 | --- | --- | --- | --- |
-| 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
+| 1 | claude/tip-layout | Gentle tips check (successor session_01EW3s3RcZoc16MRwUThmPZF) | in CI (da63c43: the page tips alone, no arrow) |
 | 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
 | 3 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
 | 4 | claude/refine-line-split | Refine: lines split colors | building (Paul 15:01: "move these refine things up to just after the warnings gate") |
