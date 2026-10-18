@@ -65,6 +65,8 @@ extension XCTestCase {
         let tap = { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
         tap()
         if waitFor(toggle, toMatch: target, timeout: 3) { return true }
+        // A tap that landed late is not lost: tapping again would flip it back.
+        if toggle.value as? String == (on ? "1" : "0") { return true }
         retapIfLost(toggle.label, tap)
         return waitFor(toggle, toMatch: target, timeout: 5)
     }
