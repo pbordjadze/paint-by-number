@@ -19,8 +19,10 @@ import Foundation
 ///     length bytes of payload
 /// ```
 /// Nothing may follow the last chunk. Unknown chunks are skipped unless flagged required (the
-/// file then needs a newer reader: `Template.CodingError.requiredExtension`); none may appear
-/// twice. Chunks defined so far:
+/// file then needs a newer reader: `Template.CodingError.requiredExtension`); a known chunk may not
+/// appear twice. A version or compression method above this reader's counts as a newer writer's
+/// only up to `newestPlausible`: beyond that it is damage, so a damaged file isn't sent to the App
+/// Store for an update that doesn't exist. Chunks defined so far:
 /// - `META` (required): UTF-8 JSON, at most `maximumMetaBytes`:
 ///   `{"title": String, "settings": GenerationSettings, "sampleName": String}`, the last two
 ///   optional; unknown keys are ignored, settings that don't decode are none, and a `sampleName`
@@ -57,6 +59,8 @@ public struct SharedPainting: Sendable, Equatable {
     }
 
     public static let formatVersion: UInt32 = 1
+    /// The highest version or compression method a later writer is believed to reach.
+    static let newestPlausible: UInt32 = 255
     static let magic: UInt32 = 0x534D_4250  // "PBMS"
     public static let maximumMetaBytes = 64 * 1024
     /// Longer titles are cut to this many characters.
@@ -140,7 +144,9 @@ public struct SharedPainting: Sendable, Equatable {
         guard try r.read(UInt32.self) == Self.magic else { throw CodingError.badMagic }
         let version = try r.read(UInt32.self)
         guard version != 0 else { throw CodingError.corrupt("version") }
-        guard version <= Self.formatVersion else { throw CodingError.newerFormat(version) }
+        guard version <= Self.formatVersion else {
+            throw version <= Self.newestPlausible ? CodingError.newerFormat(version) : CodingError.corrupt("version")
+        }
 
         var meta: Meta?
         var template: Template?
@@ -162,7 +168,9 @@ public struct SharedPainting: Sendable, Equatable {
                 var body = BinaryReader(payload)
                 let method = try body.read(UInt32.self)
                 let length = Int(try body.read(UInt32.self))
-                guard let compression = Compression(rawValue: method) else { throw CodingError.requiredExtension(tag) }
+                guard let compression = Compression(rawValue: method) else {
+                    throw method <= Self.newestPlausible ? CodingError.requiredExtension(tag) : CodingError.corrupt(Template.Chunk.name(tag))
+                }
                 guard length > 0, length <= maximumTemplateBytes else { throw CodingError.corrupt(Template.Chunk.name(tag)) }
                 let stream = try body.readBytes(body.remaining)
                 let raw = compression == .none ? stream : try decompress(compression, stream, length)

@@ -91,6 +91,17 @@ struct SendTemplateTests {
         #expect(try await library.loadForPainting(received.id).template == Fixtures.stripes())
     }
 
+    /// A library picture's name without a photo beside it is left out: alone, it could name a
+    /// picture the painting wasn't made from, which a damaged template would be made again from.
+    @Test func pictureNameNeedsItsPhoto() async throws {
+        let library = makeLibrary()
+        let data = try SharedPaintingCodec.encode(
+            SharedPainting(title: "A", settings: nil, template: Fixtures.stripes(), sampleName: "great-wave"))
+        let received = try await library.receive(data, fallbackTitle: nil)
+        #expect(received.sampleName == nil)
+        #expect(!ArtworkFactory.canRegenerate(received, store: library.store))
+    }
+
     /// A photo that isn't an image leaves the painting without one, and adds it all the same.
     @Test func undecodablePhotoIsLeftOut() async throws {
         let library = makeLibrary()

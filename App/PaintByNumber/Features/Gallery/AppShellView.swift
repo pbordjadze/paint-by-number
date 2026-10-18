@@ -41,6 +41,9 @@ struct AppShellView: View {
     /// A painting someone sent, added to the library from an opened file and waiting to open
     /// the same way.
     @State private var receivedPainting: UUID?
+    /// Why the last painting someone sent couldn't be added: pending until nothing covers the
+    /// shell (an alert can't show under a sheet or the create flow), then shown.
+    @State private var pendingReceiveFailure: Library.ReceiveError?
     @State private var receiveFailure: Library.ReceiveError?
     @State private var isReadingFile = false
     /// The time-lapse a gallery card's menu is making. Its sheet is presented here, beside
@@ -102,6 +105,7 @@ struct AppShellView: View {
             droppedTitle = nil
             resumedDraft = nil
             handoff.reset()
+            presentIncomingImage()
         }) {
             CreateFlowView(
                 openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
@@ -266,6 +270,8 @@ struct AppShellView: View {
             if SharedPaintingCodec.isSharedPainting(file.data) {
                 await receive(file)
             } else {
+                // The newest file wins: a painting received earlier is in the gallery already.
+                receivedPainting = nil
                 incomingImage = file
                 presentIncomingImage()
             }
@@ -276,12 +282,12 @@ struct AppShellView: View {
     private func receive(_ file: IncomingImage) async {
         do {
             receivedPainting = try await library.receive(file.data, fallbackTitle: file.title).id
-            isReadingFile = false
-            presentIncomingImage()
+            incomingImage = nil
         } catch {
-            isReadingFile = false
-            receiveFailure = error as? Library.ReceiveError ?? .damaged
+            pendingReceiveFailure = error as? Library.ReceiveError ?? .damaged
         }
+        isReadingFile = false
+        presentIncomingImage()
     }
 
     /// Whether nothing stands in the way of what an opened file shows: on a cold launch the
@@ -306,6 +312,10 @@ struct AppShellView: View {
     /// Not handled (untested): the gallery's rename and delete dialogs and the painting screen's
     /// own sheets can be up when a file arrives, and may keep the create flow from presenting.
     private func presentIncomingImage() {
+        guard pendingReceiveFailure == nil else {
+            presentReceiveFailure()
+            return
+        }
         guard receivedPainting == nil else {
             presentReceivedPainting()
             return
@@ -333,7 +343,21 @@ struct AppShellView: View {
         // A saved painting would otherwise reopen over this one on a cold launch.
         didRestore = true
         isCreating = false
+        // A hand-off still under way belonged to the flow this replaces.
+        handoff.reset()
         path = [id]
+    }
+
+    /// Says why a sent painting couldn't be added, once nothing covers the shell: a create flow
+    /// closes first (its draft is kept, and its `onDismiss` comes back here).
+    private func presentReceiveFailure() {
+        guard let failure = pendingReceiveFailure, isClearForIncoming() else { return }
+        guard !isCreating else {
+            isCreating = false
+            return
+        }
+        pendingReceiveFailure = nil
+        receiveFailure = failure
     }
 
     /// Opens the create flow on the draft the gallery's row read.

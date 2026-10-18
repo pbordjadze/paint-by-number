@@ -216,7 +216,10 @@ final class Library {
         let settings = shared.settings ?? (shared.template.lineArt == nil ? Artwork.settingsBeforeLineArt : GenerationSettings())
         do {
             return try await create(ArtworkDraft(
-                title: title, template: shared.template, settings: settings, photo: photo, sampleName: shared.sampleName))
+                title: title, template: shared.template, settings: settings, photo: photo,
+                // A library picture's name only beside its photo: alone it could name any picture,
+                // which a damaged template would then be made again from.
+                sampleName: photo == nil ? nil : shared.sampleName))
         } catch {
             Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
             throw ReceiveError.saveFailed

@@ -136,6 +136,10 @@ struct SharedPaintingTests {
         #expect(error(Self.file(version: 2, [Self.meta(), Self.body(t)])) == .newerFormat(2))
         #expect(error(Self.file(version: 2, [Self.meta(), Self.body(t)]))?.requiresNewerReader == true)
         #expect(error(Self.file(version: 0, [Self.meta(), Self.body(t)])) == .corrupt("version"))
+        // Garbage where the version goes is damage, not a newer app's file.
+        #expect(error(Self.file(version: 256, [Self.meta(), Self.body(t)])) == .corrupt("version"))
+        #expect(error(Data("PBMS not really a painting".utf8)) == .corrupt("version"))
+        #expect(error(Self.file([Self.meta(), Self.body(method: 0x7FFF_0000, t)])) == .corrupt("TMPL"))
         #expect(error(Data("PBNT".utf8) + Self.file([Self.meta(), Self.body(t)]).dropFirst(4)) == .badMagic)
         #expect(error(Self.file([Self.meta(), Self.body(method: 9, t)])) == .requiredExtension(SharedPainting.Chunk.template))
         #expect(error(Self.file([Self.meta(), Self.meta(), Self.body(t)])) == .corrupt("duplicate chunk"))

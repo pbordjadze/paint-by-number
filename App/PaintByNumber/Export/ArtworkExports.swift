@@ -47,13 +47,13 @@ nonisolated enum ArtworkExporter {
 
     /// The painting to send someone else (`SharedPainting`): its template as it is, refinements
     /// and all, with its title and settings, never its progress; with `includesPhoto`, the photo
-    /// it was made from (`source.jpg`) and the library picture it came from.
+    /// it was made from (`source.jpg`) and, with it, the library picture it came from.
     static func sharedPainting(store: ArtworkStore, artwork: Artwork, includesPhoto: Bool) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let photo = includesPhoto ? try? Data(contentsOf: store.url(.source, of: artwork.id)) : nil
         return try SharedPaintingCodec.encode(SharedPainting(
             title: artwork.title, settings: artwork.settings, template: template, photo: photo,
-            sampleName: includesPhoto ? artwork.sampleName : nil))
+            sampleName: photo == nil ? nil : artwork.sampleName))
     }
 
     /// Writes `data` to a uniquely placed temporary file named after the artwork.

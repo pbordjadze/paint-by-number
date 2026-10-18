@@ -17,6 +17,10 @@ struct SendTemplateSheet: View {
     @State private var isPreparing = false
     @State private var file: URL?
     @State private var failed = false
+    /// Whether the painting has a photo to send, read off the main actor with the preview.
+    @State private var canIncludePhoto = false
+    /// Set once the sheet has gone, so a file made after that is deleted, not kept.
+    @State private var departure = Departure()
 
     var body: some View {
         // Scrolls when large text makes the sheet's content taller than its detent.
@@ -78,8 +82,11 @@ struct SendTemplateSheet: View {
             ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
         }
         .task { await loadPreview() }
-        // Swiped away with the file made: it mustn't stay behind.
-        .onDisappear { removeFile() }
+        // Swiped away with the file made, or still being made: it mustn't stay behind.
+        .onDisappear {
+            departure.hasLeft = true
+            removeFile()
+        }
     }
 
     /// The blank page, on its own paper in either appearance.
@@ -104,11 +111,6 @@ struct SendTemplateSheet: View {
             comment: "VoiceOver label of the page shown in Send Template; the argument is the painting's title")))
     }
 
-    /// The painting's photo can go with it: the painter's own, or the library picture it came from.
-    private var canIncludePhoto: Bool {
-        library.store.hasSource(artwork.id) || artwork.sampleName != nil
-    }
-
     private var explanation: String {
         if !canIncludePhoto {
             String(localized: "send.explanation.noPhoto",
@@ -125,10 +127,13 @@ struct SendTemplateSheet: View {
         }
     }
 
+    /// The blank page, and whether there is a photo to send: the painter's own, which travels as
+    /// its bytes (a library picture's name goes with it).
     private func loadPreview() async {
         let store = library.store, id = artwork.id
-        preview = await Background.run {
-            (try? store.readTemplate(id)).flatMap { TemplateRasterizer.image($0, style: .thumbnail, maxPixelSize: 800) }
+        (preview, canIncludePhoto) = await Background.run {
+            ((try? store.readTemplate(id)).flatMap { TemplateRasterizer.image($0, style: .thumbnail, maxPixelSize: 800) },
+             store.hasSource(id))
         }
         #if DEBUG
         if ShellDemo.current?.sendsTemplate == true { DemoMode.markReady() }
@@ -141,12 +146,18 @@ struct SendTemplateSheet: View {
         isPreparing = true
         failed = false
         let store = library.store, artwork = self.artwork, sendsPhoto = self.includesPhoto && canIncludePhoto
+        let departure = self.departure
         Task {
             do {
-                file = try await Background.run {
+                let made = try await Background.run {
                     let data = try ArtworkExporter.sharedPainting(store: store, artwork: artwork, includesPhoto: sendsPhoto)
                     return try ArtworkExporter.temporaryFile(
                         data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: SharedPaintingCodec.fileExtension)
+                }
+                if departure.hasLeft {
+                    await Background.run { ArtworkExporter.removeExport(at: made) }
+                } else {
+                    file = made
                 }
             } catch {
                 Log.library.error("Preparing a template to send failed: \(String(describing: error), privacy: .public)")
@@ -166,5 +177,10 @@ struct SendTemplateSheet: View {
         guard let file else { return }
         self.file = nil
         Task { await Background.run { ArtworkExporter.removeExport(at: file) } }
+    }
+
+    /// Shared by reference with the task that makes the file, which outlives the sheet.
+    final class Departure {
+        var hasLeft = false
     }
 }
