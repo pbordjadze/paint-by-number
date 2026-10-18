@@ -36,8 +36,15 @@ struct GlassIconLabel: View {
     }
 }
 
+private nonisolated struct GlassButtonDiameterKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 44
+}
+
 extension EnvironmentValues {
     /// The size of the painting screen's round glass buttons: 44 pt, a quarter more on regular
     /// widths' top bar (`QuietPainting.scale`).
-    @Entry var glassButtonDiameter: CGFloat = 44
+    var glassButtonDiameter: CGFloat {
+        get { self[GlassButtonDiameterKey.self] }
+        set { self[GlassButtonDiameterKey.self] = newValue }
+    }
 }
