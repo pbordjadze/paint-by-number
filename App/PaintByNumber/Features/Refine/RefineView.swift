@@ -686,7 +686,7 @@ struct RefineView: View {
             if tool == .colors, let base {
                 RefineColorsPanel(
                     template: base.template, paintsBefore: model.paintsBeforeEdits,
-                    look: RefineColors.look(in: base.refinements.edits), paint: $colorPaint, family: $colorFamily,
+                    edits: base.refinements.edits, paint: $colorPaint, family: $colorFamily,
                     change: model.recolor)
                     .disabled(model.phase == .generating)
                     .transition(.opacity)

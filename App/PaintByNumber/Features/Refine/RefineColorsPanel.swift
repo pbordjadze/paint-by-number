@@ -19,8 +19,8 @@ struct RefineColorsPanel: View {
     let template: Template
     /// The paints before any edit, which the looks' chips show themselves on.
     let paintsBefore: [PaletteColor]
-    /// The look the painting has, nil for the photo's colors.
-    let look: (look: TemplateEditor.Look, strength: Float)?
+    /// The edits the template on screen has: the look it shows, and whether any color changed.
+    let edits: [TemplateEditor.Edit]
     /// The paint picked (an index of `template.palette`).
     @Binding var paint: Int?
     @Binding var family: Bool
@@ -32,6 +32,12 @@ struct RefineColorsPanel: View {
     @State private var from: SIMD3<Float>?
     /// The picker's last color, laid once it has rested a moment.
     @State private var pending: Task<Void, Never>?
+
+    /// The look the painting has, nil for none.
+    private var look: (look: TemplateEditor.Look, strength: Float)? { RefineColors.look(in: edits) }
+
+    /// Whether the painting is in the photo's own colors: no look, no repaint.
+    private var inPhotoColors: Bool { RefineColors.withoutColors(edits).count == edits.count }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -95,6 +101,12 @@ struct RefineColorsPanel: View {
         .onChange(of: look?.strength) { _, new in strength = new ?? 1 }
         .onChange(of: paint) { _, new in pick(new) }
         .onChange(of: template.palette.count) { _, _ in paint = nil }
+        // A look or Photo changed the paints: the next repaint starts from the color shown. Only
+        // this picker's own repaint, still moving, keeps the color it started from.
+        .onChange(of: template.palette) { _, _ in
+            if case .repaint(let started, _, _)? = edits.last, started == from { return }
+            pick(paint)
+        }
         .onDisappear { pending?.cancel() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-colors")
@@ -105,7 +117,7 @@ struct RefineColorsPanel: View {
     /// A look's chip (nil: the photo's colors): four of the painting's paints in it, darkest to
     /// lightest, and its name.
     private func chip(_ kind: TemplateEditor.Look?) -> some View {
-        let selected = look?.look == kind
+        let selected = kind == nil ? inPhotoColors : look?.look == kind
         let colors = Self.preview(of: kind, on: paintsBefore)
         return Button {
             guard !selected else { return }
