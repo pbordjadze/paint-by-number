@@ -3,82 +3,75 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "Tips layout merged (559842c); main was red on a flaky Settings test after Calmer menus, fix queued next",
+  "detail": "Warnings gate merged (da89eed): any new compiler warning now fails CI. 559842c went green.",
   "state": "main running"
  },
  {
-  "key": "ci-train",
+  "key": "retro-review",
   "order": "1",
-  "title": "Warnings gate",
-  "detail": "Green at 7473ad2 (0 warnings); merges when main's run reports",
+  "title": "Code review fixes",
+  "detail": "Green at ab59135; merges after main's current run",
   "state": "green"
  },
  {
-  "key": "retro-review",
+  "key": "refine-line-split",
   "order": "2",
-  "title": "Code review fixes",
-  "detail": "Includes the fix for main's red Settings test, so it goes right after the warnings gate",
+  "title": "Refine: lines split colors",
+  "detail": "Lines recolor what they split, hook fixed, Splitter hidden; Codex review clean · moved up by you",
   "state": "in CI"
  },
  {
-  "key": "refine-line-split",
-  "order": "3",
-  "title": "Refine: lines split colors",
-  "detail": "Lines recolor what they split, hook fixed, Splitter hidden; Codex review clean · moved up by you",
-  "state": "ready"
- },
- {
   "key": "recolor",
-  "order": "4",
+  "order": "3",
   "title": "Recolor in Refine",
   "detail": "Looks + Swatches, five looks; Codex findings fixed. SideStore only · moved up by you",
   "state": "ready"
  },
  {
   "key": "ux-refinements",
-  "order": "5",
+  "order": "4",
   "title": "Your UX picks",
   "detail": "Both batches built (21 picks + Music row + Stop)",
   "state": "ready"
  },
  {
   "key": "nightfall",
-  "order": "6",
+  "order": "5",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
   "state": "waiting"
  },
  {
   "key": "quiet-painting",
-  "order": "7",
+  "order": "6",
   "title": "Quiet painting",
   "detail": "Built; Codex review clean; rebases after your UX picks. SideStore only",
   "state": "ready"
  },
  {
   "key": "toolbar-tips",
-  "order": "8",
+  "order": "7",
   "title": "Toolbar tips as cards",
   "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
   "state": "ready"
  },
  {
   "key": "codex-decoder-fuzz",
-  "order": "9",
+  "order": "8",
   "title": "Decoder stress tests",
   "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
   "state": "ready soon"
  },
  {
   "key": "caroline-guardians",
-  "order": "10",
+  "order": "9",
   "title": "Hope and Eno in Who's Who",
   "detail": "Caroline's two guardians, as eggs",
   "state": "ready"
  },
  {
   "key": "pets-oct18",
-  "order": "11",
+  "order": "10",
   "title": "Five new pet drawings",
   "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
   "state": "ready"
