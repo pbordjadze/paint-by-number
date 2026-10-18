@@ -107,6 +107,10 @@ SLIDES = {
             crop("making-of", (.02, .98, .165, .87), .54, 70, 790, radius=44, shadow=True, slot="making-of-start", tilt=-3),
             crop("making-of", (.02, .98, .165, .87), .54, 650, 1700, radius=44, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
              chips=[("Made on your phone", 80, 1960), ("No account", 80, 2100), ("Works offline", 80, 2240)]),
+        dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo<br>is traced and kept clear<br>of the numbers.", crops=[
+            crop("paint-book-progress", (0, 1, 0, 1), .461, "c", 860, radius=40, shadow=True, slot="writing", tilt=-2),
+            crop("paint-book-progress", (.297, .664, .590, .788), 1.2, "c", 1600, radius=40, shadow=True, over=True, slot="writing", tilt=3)],
+             photos=[photo(5, 720, 2160, 520, 5, landscape=True)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220, slot="pet-zoomed")],
              photos=[photo(3, 690, 610, 560, -4, landscape=True)], own=dict(sub="Every paint has a name.<br>This one is Inkpot.")),
@@ -120,10 +124,6 @@ SLIDES = {
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your phone.", crops=[
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5, slot="pet-gallery")], photos=[photo(4, 850, 740, 410, 6)]),
-        dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo<br>is traced and kept clear<br>of the numbers.", crops=[
-            crop("paint-book-progress", (0, 1, 0, 1), .461, "c", 860, radius=40, shadow=True, slot="writing", tilt=-2),
-            crop("paint-book-progress", (.297, .664, .590, .788), 1.2, "c", 1600, radius=40, shadow=True, over=True, slot="writing", tilt=3)],
-             photos=[photo(5, 720, 2160, 520, 5, landscape=True)]),
     ],
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
@@ -141,6 +141,10 @@ SLIDES = {
             crop("making-of", (.06, .94, .06, .92), .45, 144, 900, radius=40, shadow=True, slot="making-of-start", tilt=-3),
             crop("making-of", (.06, .94, .06, .92), .45, 1080, 1300, radius=40, shadow=True, over=True, slot="making-of-end", tilt=2.5)],
              chips=[("Made on your iPad", 144, 2040), ("No account", 144, 2200), ("Works offline", 144, 2360)]),
+        dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo is traced<br>and kept clear of the numbers.", crops=[
+            crop("paint-book-progress", (0, 1, 0, 1), .664, "c", 850, radius=48, shadow=True, slot="writing", tilt=-1.5),
+            crop("paint-book-progress", (.297, .664, .590, .788), 1.6, "c", 1980, radius=48, shadow=True, over=True, slot="writing", tilt=3)],
+             photos=[photo(5, 1480, 330, 460, 6, landscape=True)]),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name. This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240, slot="pet-zoomed")],
              photos=[photo(3, 1340, 840, 600, -4, landscape=True)],
@@ -157,10 +161,6 @@ SLIDES = {
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your iPad.", crops=[
             crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2, slot="pet-gallery")], photos=[photo(4, 1480, 700, 480, 6)]),
-        dict(title="Love notes,<br>kept <span class=mark>by hand</span>", sub="Handwriting in your photo is traced<br>and kept clear of the numbers.", crops=[
-            crop("paint-book-progress", (0, 1, 0, 1), .664, "c", 850, radius=48, shadow=True, slot="writing", tilt=-1.5),
-            crop("paint-book-progress", (.297, .664, .590, .788), 1.6, "c", 1980, radius=48, shadow=True, over=True, slot="writing", tilt=3)],
-             photos=[photo(5, 1480, 330, 460, 6, landscape=True)]),
     ],
 }
 
