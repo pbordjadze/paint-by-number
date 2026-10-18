@@ -10,7 +10,7 @@
   "key": "tip-layout",
   "order": "1",
   "title": "Gentle tips layout",
-  "detail": "Toolbar and page tips; the no-arrow follow-up comes after",
+  "detail": "Page tips as a card, no arrow (d8fe24e); toolbar tips as cards follow after",
   "state": "in CI"
  },
  {
@@ -18,7 +18,7 @@
   "order": "2",
   "title": "Calmer menus",
   "detail": "Re-run after a flaky test (e61421e); fewer buttons on the painting and Refine screens",
-  "state": "waiting for a runner"
+  "state": "in CI"
  },
  {
   "key": "ci-train",
@@ -38,14 +38,14 @@
   "key": "recolor",
   "order": "5",
   "title": "Recolor in Refine",
-  "detail": "Built and checked; Looks + Swatches behind one Colors button. SideStore only · moved up by you",
+  "detail": "Built: five looks (Moonlit, Golden Hour, Pastel, Garden, Starry Night) and Swatches. SideStore only",
   "state": "ready"
  },
  {
   "key": "ux-refinements",
   "order": "6",
   "title": "Your UX picks",
-  "detail": "Items 1–21 and the one-row Music menu",
+  "detail": "Batch 1 built (new session took over); batch 2 after Calmer menus",
   "state": "waiting"
  },
  {

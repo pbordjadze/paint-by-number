@@ -2,15 +2,15 @@
  {
   "key": "now",
   "day": "Now",
-  "time": "11:15",
-  "title": "main builds the Refine test fix; tips layout in CI; Calmer menus waiting for a runner",
-  "detail": "Main's run holds four of the five runners, so the branches crawl: tips layout reports ~11:30, Calmer menus ~11:55",
+  "time": "11:30",
+  "title": "main builds the Refine test fix; tips layout and Calmer menus in CI",
+  "detail": "Tips layout restarted after a review fix; both report around 12:00–12:15",
   "kind": "running"
  },
  {
   "key": "merge-1",
   "day": "Late morning",
-  "time": "~12:00",
+  "time": "~12:15",
   "title": "Tips layout + Calmer menus merge together",
   "detail": "One main run (~45 min) → SideStore. The warnings gate starts CI beside it",
   "kind": "SideStore"
@@ -18,9 +18,9 @@
  {
   "key": "merge-2",
   "day": "Midday",
-  "time": "~12:45",
+  "time": "~1:00",
   "title": "Warnings gate merges",
-  "detail": "Then the Refine line split and Recolor, each as soon as it's built (both still being built)",
+  "detail": "Then the Refine line split (still being built) and Recolor (ready)",
   "kind": "SideStore"
  },
  {
