@@ -11794,13 +11794,13 @@
       }
     },
     "lamp.keynes.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Maynard's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Maynard",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maynard, still an egg"
+            "value" : "Maynard"
           }
         }
       }

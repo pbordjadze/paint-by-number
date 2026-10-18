@@ -784,9 +784,9 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Maynard"),
         happiestWhen: String(localized: "lamp.keynes.happiestWhen", defaultValue: "The sums come out right and the evening is still lovely.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Maynard"),
-        petCaption: String(localized: "lamp.keynes.petCaption", defaultValue: "Maynard, still an egg",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Maynard's egg: the guardian hasn't hatched yet"),
-        hatched: false)
+        petCaption: String(localized: "lamp.keynes.petCaption", defaultValue: "Maynard",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Maynard"),
+        hatched: true)
 
     static let originality = MarginariumGuardian(
         id: "originality",

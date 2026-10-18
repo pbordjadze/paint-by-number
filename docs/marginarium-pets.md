@@ -196,14 +196,17 @@ first sheets, in the table above, no longer ship. The new ones fill more of thei
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
 
-## October 18: Hope and Eno hatch
+## October 18: Hope, Eno and Maynard hatch
 
 Caroline's first two guardians, drawn on October 18 with the create-pet skill from stills Paul
 approved first and signed off ("Hope is sick", "Both good"): Hope, a half-open moonflower with
-no face, and Eno, two mismatched tape spools, a slack loop of tape, a wildflower and a die.
+no face, and Eno, two mismatched tape spools, a slack loop of tape, a wildflower and a die; then
+Maynard (id `keynes`), a plump songbird painted like an Omega Workshops object, Bloomsbury circles
+and leaves in ochre, terracotta, sage and dusty blue.
 Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and dark).
 
 | Pet id | Source SHA-256 (lossless PNG) | App bytes | Encoding |
 | --- | --- | ---: | --- |
 | `eno` | `d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026` | 894,894 | lossy WebP q88 |
+| `keynes` | `3e5b881edeecc6565dba724c14ead34c75d7d40ccc23fb0b138f53e2dcc96824` | 742,584 | lossy WebP q88 |
 | `hope` | `18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31` | 692,990 | lossy WebP q88 |
