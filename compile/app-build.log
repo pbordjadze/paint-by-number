@@ -1,0 +1,608 @@
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX46_8_6expectfMf_.swift:1:50: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkBinaryOperation(RefineColorsPanel.offered,{ $0 == $1() },[.moonlit, .goldenHour, .pastel, .garden, .starryNight],expression: .__fromBinaryOperation(.__fromSyntaxNode("RefineColorsPanel.offered"),"==",.__fromSyntaxNode("[.moonlit, .goldenHour, .pastel, .garden, .starryNight]")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+                                                 ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:47:9: note: in expansion of macro 'expect' here
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
+@__swiftmacro_18PaintByNumberTests0026RefineToolTestsswift_DsAGgfMX47_8_6expectfMf0_.swift:1:51: warning: main actor-isolated static property 'offered' can not be referenced from a nonisolated context
+Testing.__checkFunctionCall(Set(RefineColorsPanel.offered).self,calling: {
+                                                  ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:48:9: note: in expansion of macro 'expect' here
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PaintByNumber.RefineColorsPanel.offered:2:32: note: static property declared here
+@MainActor internal static let offered: [PaintCore.TemplateEditor.Look]}
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/RefineToolTests.swift:46:16: note: add '@MainActor' to make instance method 'theRowOffersFiveLooks()' part of global actor 'MainActor'
+    @Test func theRowOffersFiveLooks() {
+               ^
+    @MainActor 
