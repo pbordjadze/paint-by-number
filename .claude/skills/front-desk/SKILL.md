@@ -97,7 +97,10 @@ The page leads with **Yours to decide**: the dataset `datasets/decisions`, a han
 `options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
 is a short review guide for one decision only Paul can make: the question, the choices, what
 the session recommends, and the reply to type. Keep it in step with what you ask him in chat:
-add a row when a session needs him, drop it when he answers, and re-upload it the same way at
+add a row when a session needs him, drop it when he answers,
+and give any decision about how something looks a picture (Paul: "this kinda thing should have a
+visual"): an `image` field holding a `data:image/jpeg;base64,…` URL of a small side-by-side
+(about 1200 px wide, under 150 KB; the page shows only data URLs), with `image_alt`; and re-upload it the same way at
 each refresh. Paul uses the page to decide quickly; keep the rest of it short.
 He answers by commenting on a card with @claude. Keep the page watched
 (`ArtifactComments` `watch` with its `url`, again in a new front desk session): each such
