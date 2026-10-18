@@ -81,6 +81,15 @@ runs, up to three while it's idle.
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## Pets art
+
+Paul (Oct 18, 21:51): "pets page for pets art, front desk for everything else". Pet picks live on
+the pets session's homelab page (`#waiting`, with buttons; tailnet only), linked from the status
+page's Pages strip. The pets session acts on his taps itself and sends the front desk one batched
+summary at most about hourly (Paul: "You might not need to report on every tap"). Don't put pet
+art cards on the status page, and don't relay single taps to Paul. Carry only what leaves the pets
+page: branches ready for CI, characters and names (echo first), anything blocked.
+
 ## The Codex workbench
 
 Paul (Oct 18, ~16:22 UTC): "Yeah Codex workbench, and the front desk can send things there or
