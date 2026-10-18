@@ -422,7 +422,7 @@ any port of it, when changing the fitter: work from the paper.
    templates and line-art maps they make on disk (DEBUG `DemoTemplateCache`, `LineArtMapsCache`),
    and each job keeps them between runs in the Actions cache (`ci/demo_caches.sh`), keyed by the
    files that make them; on a miss `ipad-ui` makes the UI tests' first (its warm-up).
-3. Turnaround is about 30 min (both iPad jobs take about that), about 40 when the caches miss (a
+3. Plan on about 80 min a run under load (60–100). Alone, the iPad jobs take 30, 40 when caches miss (a
    change to the pipeline, the models or the pictures: the screenshots take twice as long and
    `ipad-ui` warms up first), longer when branches queue (only 5 macOS jobs run at once: a branch
    push takes 2, `main` 4; `iphone`, about 45 min, is main's longest). `ci/fetch.sh` waits up to
@@ -473,11 +473,16 @@ if he has gone quiet.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
-- **CI etiquette.** Keep at most two branches in CI across all sessions; the front desk keeps
-  count. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
+- **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
+  idle. The front desk keeps the order in the CI queue atop `docs/backlog.md`: read your place
+  there instead of asking. Throwaway branches queue behind anything Paul called a must-have. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, tell the front desk, and any further push queues again unless it fixes a red run.
+- **Paul's word counts once.** His comment on the status page, or his words the front desk relays
+  verbatim with their exact time, is his direct word for anything that can be undone. For what
+  can't, the page's card names the exact action, and his comment on that card counts. If auto
+  mode still blocks the action, tell the front desk, which asks Paul to repeat it in your session.
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
@@ -485,6 +490,13 @@ if he has gone quiet.
   propose new work it noticed: send the front desk one short proposal (what, why, size, who
   thought of it), at most one a night, and keep to its own topic. Paul signs off on the status
   page. Small fixes inside a session's own task aren't proposals.
+- **Reports** to the front desk carry the row #, branch@sha, pushed or not, the CI state and the
+  one thing needed. No "still waiting" pings: the CI queue answers that.
+- **Audits** fix what they find, unless the file is in another queued branch's diff (the front
+  desk's brief lists them); a change to one of Paul's own picks goes on a card before it's built.
+- **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
+  branch@sha, CI state and queue place, open questions to Paul, pending check-ins and what's next
+  (`.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell the front desk its id.
 - **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
   `[skip ci]`. That is the one exception to working on branches.
 
