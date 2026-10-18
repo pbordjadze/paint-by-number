@@ -13,7 +13,8 @@ App Store Connect requires) and ipad-13-<n>-<name>.png (2064×2752), RGB without
 The first two slides show the painter's own pets, which CI can't photograph: a crop with a
 `slot` reads <device>-<slot>.png from --slots (a folder outside the repo: the painter's photos
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
-an iPhone or iPad whose screen has the same proportions. Without it, the slide shows the stand-in,
+an iPhone or iPad whose screen has about the same proportions (an `own` layout's crops are
+fractions of the shot as it is). Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
 iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png. A slide's `own`
 layout (crops and photos) replaces its stand-in layout once the painter's shots fill all its slots: a
@@ -90,7 +91,10 @@ SLIDES = {
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
             crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
-                 slot="pet-progress")], photos=[photo(2, 830, 640, 420, 5)]),
+                 slot="pet-progress")], photos=[photo(2, 830, 640, 420, 5)],
+             own=dict(crops=[crop("paint-book-progress", (.02, .98, .165, .80), .9, "c", 660, radius=48, shadow=True, slot="pet-progress", tilt=-1.5),
+                             crop("paint-book-progress", (.02, .98, .848, .962), 1.0, "c", 2330, radius=78, shadow=True, over=True,
+                                  slot="pet-progress")], photos=[photo(2, 850, 560, 400, 6)])),
         dict(title="Tap, tap, and<br>it’s <span class=mark>painted</span>", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
             crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)], photos=[photo(3, 690, 610, 560, -4, landscape=True)]),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
@@ -222,15 +226,15 @@ def own_shot(slots, dev, c):
 
 
 def crop_html(shots, dev, c, W, H, slots, label=None):
-    SW, SH = SOURCE[dev]
+    src = own_shot(slots, dev, c) or (shots / dev / "shots" / f"{dev}-{c['scenario']}.png").resolve()
+    if not src.exists():
+        sys.exit(f"Missing {src}: is {c['scenario']} still a CI scenario?")
+    SW, SH = Image.open(src).size if own_shot(slots, dev, c) else SOURCE[dev]  # the painter's phone may be another size
     x0, x1, y0, y1 = c["box"]
     s = c["scale"]
     w, h = (x1 - x0) * SW * s, (y1 - y0) * SH * s
     x = (W - w) / 2 if c["x"] == "c" else c["x"]
     y = H - h if c["y"] == "b" else c["y"]
-    src = own_shot(slots, dev, c) or (shots / dev / "shots" / f"{dev}-{c['scenario']}.png").resolve()
-    if not src.exists():
-        sys.exit(f"Missing {src}: is {c['scenario']} still a CI scenario?")
     stand_in = c["slot"] and not own_shot(slots, dev, c)
     style = [f"left:{x:.1f}px", f"top:{y:.1f}px", f"width:{w:.1f}px", f"height:{h:.1f}px",
              f"background:url({src.as_uri()}) {-x0 * SW * s:.1f}px {-y0 * SH * s:.1f}px/{SW * s:.1f}px {SH * s:.1f}px no-repeat",
