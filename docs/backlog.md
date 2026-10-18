@@ -20,9 +20,10 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 1 | claude/tip-layout | Gentle tips check | in CI (0c0dfb8; if red, ships the page tips alone) |
 | 2 | claude/fewer-buttons | Calmer menus | in CI (d145318, red-run fix) |
 | 3 | claude/refine-preparing-flake | Refine: Color Splitter | in CI (0d61c29) |
-| 4 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting |
+| 4 | claude/ci-train (includes claude/code-quality) | Code review and warnings gate | waiting (bbdfe1d, local) |
 | 5 | claude/ux-refinements | UX design audit | waiting |
 | 6 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
+| 7 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
 
 ## Inbox
 
@@ -68,5 +69,5 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 34 | Internal audit: review how the front desk and its sessions ran tonight as a company; report on structure, what worked, what didn't, what to change | "have someone, maybe a high effort Opus with a sonnet helper, review the way this front desk ran tonight and suggest organizational improvements to the company. I want a nice report this morning … Call it internal audit." | waiting on Paul | Internal audit shipped https://claude.ai/artifact/8JmvypoS6x5dGT5SjB8rxt: top asks for Paul: a night train of small branches + compile-only check; his page comments count as his direct word for reversible things | 2026-10-18 |
 | 35 | Internal audit: build all ten changes (CI slots, runner-fitted slots and honest timings, night train, compile check, Paul's word counts once, timeouts, page helper, 400k hand-offs, audit ownership map, one report shape) | "Yes to all three, though #3 might not work with auto mode" (06:10, on the audit card) Then, in chat (~06:20): "The internal audit had great points — let's build all those changes" | shipped (SideStore) | merged to main by the front desk after review (Paul: "Update the front desk please"); the night train and compile check ride claude/ci-train | 2026-10-18 |
 | 36 | Tip arrows: drop the arrow on the Zoom, Drag and Pencil tips (card N4, option b) | "No arrow" | queued | Gentle tips check: follow-up after tip-layout 0c0dfb8 reports | 2026-10-18 |
-| 37 | Quiet painting: once painting starts, other buttons fade; painting, colors, back (and maybe hint) stay, bigger on iPad; the rest on demand | "When you actually start painting, is there a way to like, let all the other buttons kinda fade away…" | building | Quiet painting mode: Paul "Yeah undo should fade" (14:07, option a); builds after fewer-buttons and ux-refinements | 2026-10-18 |
+| 37 | Quiet painting: once painting starts, other buttons fade; painting, colors, back (and maybe hint) stay, bigger on iPad; the rest on demand | "When you actually start painting, is there a way to like, let all the other buttons kinda fade away…" | building | Quiet painting mode: built at claude/quiet-painting 274f6e8 (local), CI queue 7 | 2026-10-18 |
 | 38 | Recolor in Refine (Rick's idea): change the picture's colors, filters and finer control; a report with options first | "Rick thinks it would be really fun if you could change the colors from what they are in the original picture…" | waiting on Paul | Recolor in Refine: options report; card N11 (a–d), report https://claude.ai/artifact/UJ4S6qdwpWL7rMPBDwEWro | 2026-10-18 |
