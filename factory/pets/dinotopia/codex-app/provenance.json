@@ -1,0 +1,29 @@
+{
+  "pet": "dinotopia",
+  "made_by": "Paul, with the Codex app's hatch-pet skill, before Dino joined the Lamp; not drawn by the Lamp's pet run, so it has no brief, style or jury of its own.",
+  "given": "2026-10-12: Paul named the guardian Dino and gave it this pet.",
+  "source": "Dino-animations.zip, uploaded by Paul: Dino-spritesheet.png with its contact sheet, GIFs and Dino-validation.json.",
+  "source_sha256": "e38ebb034a4cbafaeeb8e0da841a1d5954ffeb45f0d83079db18fef3826856b0",
+  "atlas_sha256": "2352a8abf74dead6198d1fa15e9e8206b7105949b6c0e135550970cd4f4d5bc7",
+  "atlas": "spritesheet.webp is the PNG as lossless WebP, pixel-identical; contact-sheet.webp is Paul's contact sheet, lossless.",
+  "validation": {
+    "valid": true,
+    "width": 1536,
+    "height": 2288,
+    "sprite_version": 2,
+    "frames_per_row": [
+      6,
+      8,
+      8,
+      4,
+      5,
+      8,
+      6,
+      6,
+      6,
+      8,
+      8
+    ],
+    "errors": []
+  }
+}

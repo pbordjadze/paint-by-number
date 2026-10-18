@@ -1,0 +1,23 @@
+{
+  "pet": "sen-no-rikyu",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude; backlog row 42.",
+  "approved": "Paul (and Caroline) approved the still first; every row was generated from it. Sheet signed off 2026-10-18.",
+  "image_generations": 14,
+  "source_png_sha256": "e89af5f75afa5fd6d14975baaec874ae9680d16ef154311145f8b04dd95dc7ef",
+  "atlas_sha256": "6721dc1c649573273221902e7b9900a8c3e692d6db14ec5ed6e959a03f997167",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 270 has non-passing verdict fail"
+    ]
+  },
+  "notes": "14 images. Passes the v2 contract. One look pose (screen-left, 270°) reads wrong: the one-image redo came out worse (five directions wrong), so this keeps the first version. The reader doesn't play the look rows."
+}

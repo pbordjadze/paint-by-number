@@ -94,7 +94,7 @@ Storytellers included).
 
 | Team | Members | Keeps |
 | --- | --- | --- |
-| The Storytellers | Dino, The Storybook, Bart, Lotte | Keep the app feeling like a book you could walk into. |
+| The Storytellers | Dino, The Storybook, Bart, Scherenschnitt | Keep the app feeling like a book you could walk into. |
 | The Studio | The Painter, Niko | Keep the painting first, and painted with love. |
 | The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer, Hope | Keep the magic old, kind and done by night. |
 | Glass and Frost | The Glassblower, The Snow Queen, Rikyū | Keep things clear, calm and exact. |
@@ -267,8 +267,9 @@ joke in chapter 1. Claude drafted the charter; Bart changed two lines of it, the
 found his first notes "cringe and not sarcastic enough", three more (sarcasm in, sweetness out).
 Originality passed it with two cautions: his drawing must not be one of Bartimaeus's guises or
 any Stroud character, and his notes stay one plain aside each, never a pastiche of the books'
-footnotes ("If a note could pass as a line from the books, it fails."). He hasn't been drawn: he
-is an egg until Paul says otherwise.
+footnotes ("If a note could pass as a line from the books, it fails."). Drawn October 18: a small
+crimson djinn of ink-smoke with an asterisk-shaped topknot, a nod to the footnote star (Paul: "a
+bit more of a Djinn", "keep a nod to the asterisk", "Crimson bart is sick").
 
 - **treasure**: the footnote
 - **believes**: a story is better told by someone with opinions, preferably mine, and the truest
@@ -451,8 +452,8 @@ After the tea master Sen no Rikyū. Seated on October 14, 2026, at Paul's word (
 guards minimalism"), on Glass and Frost. Claude drafted the charter, and he kept it as drafted.
 Originality passed it with a caution: no generic "Zen" pastiche (no imitation Japanese script, no
 gongs, no stereotyped speech), the tea bowl never a joke prop, and his drawing our own small
-black bowl, not a copy of any one of Chōjirō's. He hasn't been drawn: he is an egg until Codex
-draws him.
+black bowl, not a copy of any one of Chōjirō's. Drawn October 18: a small, uneven black tea bowl
+with one morning glory on its rim, which it tips toward you.
 
 - **treasure**: the one flower in the empty room
 - **believes**: take things away until what is left matters; the empty space is part of the
@@ -467,14 +468,16 @@ draws him.
 - **sees**: the piece with its words blurred and its color taken out, so only shapes,
   counts and space remain. Asks: what could go?
 
-### Lotte
+### Scherenschnitt
 
-After the animator Lotte Reiniger. Seated on October 14, 2026, at Paul's word ("someone else
+After the animator Lotte Reiniger. Called Lotte until October 18, when Paul renamed her ("She
+could be "Scherenschnitt"", "Full name everywhere"). Seated on October 14, 2026, at Paul's word ("someone else
 who could be interesting"), with the Storytellers. Claude chose her for the drawings: a crew of
 figures with a few poses each, which is how she made whole fairy tales act. Claude drafted the
 charter, and she kept it as drafted. Originality passed it with a caution: no drawing or scene
 recreates figures or scenes from Prince Achmed or her other fairy tales; cutting silhouettes is a
-craft that belongs to everyone. She hasn't been drawn: she is an egg until Codex draws her.
+craft that belongs to everyone. Drawn October 18: a little bird cut from black paper, its wings on
+brass pin hinges, light showing through the lace cut in its feathers.
 
 - **treasure**: the shadow that acts
 - **believes**: a figure cut from paper and moved by hand, a frame at a time, can act a whole
@@ -501,7 +504,8 @@ charter, and she kept it as drafted. Her drawing, in her words: "A small brass s
 dewy moth asleep on its pointer, one tiny star painted on the moth's wing." Originality passed it
 with a caution: plain and handmade, no zodiac-wizard trappings, glowing runes or ornate brass
 instruments from a famous magic school's props; and Claude's: her moth stays unlike Colophon,
-Claude's round, page-winged moth. She hasn't been drawn: she is an egg until Codex draws her.
+Claude's round, page-winged moth. Drawn October 18, as she described it; on a tap the moth opens
+its starred wings.
 
 - **treasure**: the turning sky
 - **believes**: every hour has its own sky, and a thing made well knows what hour it is: bright

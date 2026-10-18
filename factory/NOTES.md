@@ -335,12 +335,12 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   package was over the size limit); Codex updates it when its usage returns (Oct 19, F45).
 - Codex hit its usage limit again on Oct 12 ("try again at Oct 19th, 2026 4:20 AM").
 
-## Paul's point 18: get it all out, Tarragon included (Oct 12)
+## Paul's point 18: get it all out, the Hedge Witch included (Oct 12)
 
 - Paul: "finish it all up, getting all of it out there, including that last pet." The four
-  refinements shipped (main 010337a). Tarragon, the Hedge Witch's pet, is included on his word
+  refinements shipped (main 010337a). The Hedge Witch's drawing is included on his word
   over the maker jury's redo (`pieces/pets/owners-call.md`): nineteen pets; Moon stays withheld.
-- Codex's chapter carries a short note from Claude about Tarragon's last steps until Codex
+- Codex's chapter carries a short note from Claude about the Hedge Witch's last steps until Codex
   rewrites that part itself (Oct 19).
 - Shipped Oct 12 (main 42bb76c, build 1.0.325): chapter 1 (F39) with each guardian's pet beside
   its margin notes, Codex's chapter as chapter 6, the nineteen pets bundled, Pip's new face. Then
@@ -429,10 +429,10 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   and this isn't it." (on "Where I helped, I say that too, but quieter."); "Nor was I. Paul read
   one joke, decided he wanted its author on the panel, and here I am, the panel's least consulted
   member." (on "I was not asked whether I minded.").
-- His pet, in his words: Ibid, a little ink asterisk with six stubby arms and two dot feet,
-  stamped in brown ink, who hops down beside the note and waves the reader back up. The prompt is
-  on the collection page. He is an egg until then: drawing needs Codex, and Codex work waits for
-  Paul.
+- His drawing, in his words: a little ink asterisk with six stubby arms and two dot feet,
+  stamped in brown ink, who hops down beside the note and waves the reader back up. Drawn so on
+  Oct 18, then redrawn at Paul's word as a crimson ink-smoke djinn keeping a nod to the asterisk
+  (see Oct 18 below); one name per guardian, so the drawing is simply Bart.
 
 ## Paul's point 25: Sun and Moon, the Astrologer, Madeleine, the Lamplit Table (Oct 17)
 
@@ -475,3 +475,21 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   either.
 - Commits on this branch carry `[skip ci]`: CI runs the whole macOS matrix on every push, and
   nothing here needs it yet.
+
+## Oct 18: four guardians hatch, Dino redrawn (backlog row 42)
+
+- Paul: "We have a weeks worth of Codex usage … make some new pets, and maybe make a re-theming of
+  Dino … a bit more frugally than last time … let me see them/sign off on them". Made on the
+  homelab with the create-pet skill, one Codex model at low effort, one pet at a time: a draft
+  (still + idle) per egg on a tailnet page, full sheets only for Paul's picks, each sheet built from
+  the still he approved. 99 image generations for the five shipped sheets, the drafts and one
+  retired sheet; about 3% of the week's Codex usage.
+- Shipped (app branch claude/pets-oct18): the Astrologer, Bart, Rikyū, Scherenschnitt, and Dino in
+  the family's paint (his own design kept; Paul and Caroline picked it: "not scheming enough, like
+  design I"). Sheets in `pets/<id>/`. The Moon stays withheld until Paul says otherwise.
+- Known flaws, all in rows the reader doesn't play (it plays idle and the tap wave): a few of the
+  sixteen look directions read wrong (Rikyū 270°; Scherenschnitt 180–225°) or are mirrors (Bart);
+  some jump poses are drawn smaller. Bart's see-through smoke tail came out mostly opaque.
+- Paul on why these looked better: short concrete prompts per pet, his approved still as every
+  row's master, style shown as pictures rather than enforced rules. A redraw trial of three
+  earlier guardians followed.

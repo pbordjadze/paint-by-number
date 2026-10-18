@@ -1,0 +1,21 @@
+{
+  "pet": "bartimaeus",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude; backlog row 42.",
+  "approved": "Paul (and Caroline) approved the still first; every row was generated from it. Sheet signed off 2026-10-18.",
+  "image_generations": 14,
+  "source_png_sha256": "e370590298eab989ccfc12b639de3c8bd130347c540f129623701ed875259958",
+  "atlas_sha256": "94ad0f88be56c9fb366ab064caba1d7382697b239c7be702193619a6e40663bb",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": true,
+    "errors": []
+  },
+  "notes": "14 images. Passes the v2 contract and the skill's quality gate. Plainly: the see-through smoke tail you picked in A2c did NOT survive the sheet pipeline — only the very edges of the tail are soft; the tail itself is solid crimson in every frame. It still reads as smoke, but it isn't translucent like the still. The left-looking poses are mirrors of the right-looking ones, so his smirk and folded arms swap sides there (the reader doesn't play the look rows)."
+}
