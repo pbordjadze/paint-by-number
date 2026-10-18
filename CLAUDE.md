@@ -133,8 +133,8 @@ before planning app work).
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
   in it ships or goes into the Marginarium until he says so, and its wording stays his.
   `docs/backlog.md` is the other: the front desk's inbox (Working with Paul).
-- `.claude/skills/front-desk/`: the front desk (`SKILL.md`) and `sessions.py`, its summary of
-  Paul's sessions, their cost and the status page's data.
+- `.claude/skills/front-desk/`: the front desk (`SKILL.md`), `sessions.py`, its summary of
+  Paul's sessions, their cost and the status page's data, and `page.py`, the page's cards.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -477,11 +477,17 @@ if he has gone quiet.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
-- **CI etiquette.** Keep at most two branches in CI across all sessions; the front desk keeps
-  count. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
+- **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
+  idle. The front desk keeps the order in the CI queue atop `docs/backlog.md`: read your place
+  there instead of asking. Throwaway branches queue behind anything Paul called a must-have.
+  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, tell the front desk, and any further push queues again unless it fixes a red run.
+- **Paul's word counts once.** His comment on the status page, or his words the front desk relays
+  verbatim with their exact time, is his direct word for anything that can be undone. For what
+  can't, the page's card names the exact action, and his comment on that card counts. If auto
+  mode still blocks the action, tell the front desk, which asks Paul to repeat it in your session.
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
@@ -489,6 +495,13 @@ if he has gone quiet.
   propose new work it noticed: send the front desk one short proposal (what, why, size, who
   thought of it), at most one a night, and keep to its own topic. Paul signs off on the status
   page. Small fixes inside a session's own task aren't proposals.
+- **Reports** to the front desk carry the row #, branch@sha, pushed or not, the CI state and the
+  one thing needed. No "still waiting" pings: the CI queue answers that.
+- **Audits** fix what they find, unless the file is in another queued branch's diff (the front
+  desk's brief lists them); a change to one of Paul's own picks goes on a card before it's built.
+- **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
+  branch@sha, CI state and queue place, open questions to Paul, pending check-ins and what's next
+  (`.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell the front desk its id.
 - **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
   `[skip ci]`. That is the one exception to working on branches.
 

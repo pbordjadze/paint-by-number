@@ -7,6 +7,19 @@ table is their working list. One row per thing, newest at the bottom. *Paul's wo
 exactly, cut short with "…"; an empty cell means none were recorded. *Where* names the session
 (its title) or the branch.
 
+## CI queue
+
+The branches waiting for or holding a CI slot, in order; builders read their place here instead
+of asking. One branch runs while `main` runs, up to three while it's idle. A slot frees when its
+run reports green; a later push to that branch joins the back unless it fixes a red run.
+Throwaway branches (screenshots, experiments) go behind anything Paul called a must-have.
+States: `waiting`, `in CI`, `red` (its session is fixing it).
+
+| Order | Branch | Session | State |
+| --- | --- | --- | --- |
+
+## Inbox
+
 States: `new` (not routed yet), `building`, `in CI`, `queued` (a tweak held for a branch whose CI
 is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`, `shipped
 (SideStore)`, `shipped (TestFlight)`, `dropped`. Rows shipped or dropped over a week ago leave.
