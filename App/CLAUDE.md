@@ -555,7 +555,7 @@ Conventions).
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
   `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
-  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter's stroke divides
+  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter (after the Pen) divides
   an area's color where it goes and draws no line (a split, below; dashed while the finger is
   down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to

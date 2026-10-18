@@ -684,9 +684,9 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    /// The pens, the Color Splitter, the erasers and Fill, then the photo: one row where it fits,
-    /// else the pens and erasers above Fill and the photo (a phone's width holds about five of
-    /// these buttons).
+    /// The Pen, the Color Splitter, Shapes, the erasers and Fill, then the photo: one row where it
+    /// fits, else the pens and erasers above Fill and the photo (a phone's width holds about five
+    /// of these buttons).
     private var lineTools: some View {
         ViewThatFits(in: .horizontal) {
             GlassEffectContainer(spacing: 10) {
@@ -708,9 +708,9 @@ struct RefineView: View {
     private var drawingTools: some View {
         toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
             .disabled(!model.hasLineArtInput)
-        shapesButton
-            .disabled(!model.hasLineArtInput)
         toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
+            .disabled(!model.hasLineArtInput)
+        shapesButton
             .disabled(!model.hasLineArtInput)
         toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
             .disabled(!model.hasLineArtInput)
