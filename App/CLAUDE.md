@@ -666,7 +666,9 @@ Conventions).
   `-handoffFallback S` sets the seconds a painting has to draw: CI's simulators take several to
   open one, and stall their main thread for seconds meanwhile, so a motion of half a second is a
   frame or two there.
-- Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
+- Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
+  segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
+  iPad's card shows all four. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
   of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s
