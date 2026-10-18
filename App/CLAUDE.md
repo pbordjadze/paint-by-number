@@ -263,10 +263,14 @@ synchronized folder would bundle it into the app.
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
   `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
-  progress badge then names no color (nothing is on the brush); during a replay its ring and
+  progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
+  completion bar names the painting only when the badge doesn't (`badgeShowsTitle`, from the top
+  bar's row that fits); during a replay its ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
-  the saved progress stay whole).
+  the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
+  canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
+  bar and More, holds Stop (`CanvasView.stopReplay`).
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -496,7 +500,8 @@ Conventions).
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
-  (`GalleryFilter`, `@SceneStorage("galleryFilter")`) and `.searchable` make a `GalleryQuery`
+  (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it
+  filters) and `.searchable` make a `GalleryQuery`
   (`Library.inProgress`/`readyToPaint`/`finished` list favorites first; the gallery's sections are
   these three, a painting nobody has painted on being ready to paint, not in progress, and
   `GalleryCounts` is the subtitle that counts them); `TitleSearch.matches` needs every query

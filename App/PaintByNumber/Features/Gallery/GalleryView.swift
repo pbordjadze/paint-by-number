@@ -299,11 +299,13 @@ struct GalleryView: View {
             Label("Share", systemImage: "square.and.arrow.up")
         }
         Divider()
-        Button("Restart", systemImage: "arrow.counterclockwise") {
-            PaintTips.used(.shelfHold)
-            restarting = artwork
+        // Nothing to clear on a painting nobody has painted on.
+        if artwork.isStarted {
+            Button("Restart", systemImage: "arrow.counterclockwise") {
+                PaintTips.used(.shelfHold)
+                restarting = artwork
+            }
         }
-        .disabled(!artwork.isStarted)
         deleteButton(for: artwork)
     }
 

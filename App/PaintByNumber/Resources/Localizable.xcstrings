@@ -3673,8 +3673,16 @@
       "comment" : "Accessibility label of the replay button in the completion bar",
       "extractionState" : "manual"
     },
+    "Stop" : {
+      "comment" : "Accessibility label of the completion bar's button that stops the replay playing, in the Replay button's place",
+      "extractionState" : "manual"
+    },
     "Replay Painting" : {
       "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
+      "extractionState" : "manual"
+    },
+    "Stop Replay" : {
+      "comment" : "Menu item on the painting screen, in Replay Painting's place while the replay plays: stops it and shows the painting whole",
       "extractionState" : "manual"
     },
     "Reset to Suggested" : {

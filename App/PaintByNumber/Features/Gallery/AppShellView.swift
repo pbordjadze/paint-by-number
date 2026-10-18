@@ -223,20 +223,22 @@ struct AppShellView: View {
         // An empty gallery's own New Painting is its only control there: nothing to filter, and
         // no second New Painting.
         if !library.isBare {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Picker("Show", selection: $filter) {
-                        Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
-                        Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+            // Favorites are all it filters by: it comes once there is one, and stays while it is on.
+            if filter == .favorites || library.artworks.contains(where: \.isFavorite) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Show", selection: $filter) {
+                            Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
+                            Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Label("Show", systemImage: filter == .all
+                              ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
                     }
-                    .pickerStyle(.inline)
-                } label: {
-                    Label("Show", systemImage: filter == .all
-                          ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                    // The filled icon says a filter is on; VoiceOver hears which one.
+                    .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
                 }
-                // The filled icon says a filter is on; VoiceOver hears which one.
-                .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
-                .disabled(library.artworks.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("New Painting", systemImage: "plus") { isCreating = true }

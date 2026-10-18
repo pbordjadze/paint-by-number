@@ -46,6 +46,9 @@ struct PaintView: View {
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
     /// for a painting opened finished): its seal bounces.
     @State private var sealBounces = 0
+    /// The progress badge names the painting (the top bar's layout that fits has room for it):
+    /// the completion bar doesn't name it twice.
+    @State private var badgeShowsTitle = false
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -378,22 +381,30 @@ struct PaintView: View {
     /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
     /// fits: each badge variant (largest first, down to its ring and percentage) with every
     /// control, then the smallest badge without Hint, which the selected swatch and the `h` key
-    /// still offer (the narrowest windows). Give Feedback lives in More, so the bar never shows
+    /// still offer (the narrowest windows). A finished painting has nothing to hint at, so no
+    /// Hint at all. Give Feedback lives in More, so the bar never shows
     /// more than six controls (Paul, October 18: "nested enough, that there isn't a moment where
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
     /// window: the bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
-        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true) }
-            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
+        let rows: [BarVariant] = session.isComplete
+            ? badges.map { BarVariant(badge: $0, showsHint: false) }
+            : badges.map { BarVariant(badge: $0, showsHint: true) }
+                + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
         return GlassEffectContainer(spacing: 10) {
             // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
             ViewThatFits(in: .horizontal) {
                 ForEach(rows, id: \.self) { row in
                     topBarRow(badge: row.badge, showsHint: row.showsHint)
+                        .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
+        }
+        .onPreferenceChange(BadgeTitleKey.self) { shown in
+            // Only the row that fit is on screen; were any other heard, the bar names the title.
+            MainActor.assumeIsolated { badgeShowsTitle = shown == [true] }
         }
         // The bar keeps its 44 pt height (the canvas insets assume it); larger text sizes
         // reach its controls through the Large Content Viewer.
@@ -406,12 +417,21 @@ struct PaintView: View {
         var showsHint: Bool
     }
 
+    /// Whether the top bar's row on screen names the painting in its badge.
+    nonisolated private struct BadgeTitleKey: PreferenceKey {
+        static let defaultValue: [Bool] = []
+        static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
+    }
+
     private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
-        // 8 pt apart: the buttons' glass sits inside their frames, so the shapes stay further
-        // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
-        HStack(spacing: 8) {
+        // 12 pt between every two shapes, more than the container's 10, so they don't merge. The
+        // system glass buttons lay out about 5 pt wider on each side than their circle, Photo and
+        // More exactly as wide: held to their circles, the gaps come out even (they were 13 and
+        // 18 pt on a phone). Six controls fit a 402 pt phone.
+        HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
+                    .frame(width: Self.barHeight, height: Self.barHeight)
             }
             progressBadge(badge)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -422,10 +442,11 @@ struct PaintView: View {
             }
             if showsHint {
                 GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
-                    .disabled(session.isComplete)
+                    .frame(width: Self.barHeight, height: Self.barHeight)
             }
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
-                .disabled(!session.isStarted)
+                .frame(width: Self.barHeight, height: Self.barHeight)
+                .disabled(!session.isStarted || session.isReplaying)
             moreMenu
         }
     }
@@ -483,7 +504,9 @@ struct PaintView: View {
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             Divider()
-            if session.isComplete {
+            if session.isReplaying {
+                Button(action: controller.stopReplay) { Label("Stop Replay", systemImage: "stop") }
+            } else if session.isComplete {
                 Button(action: replay) { Label("Replay Painting", systemImage: "play") }
             } else {
                 paletteMenu
@@ -546,8 +569,9 @@ struct PaintView: View {
         if session.isComplete {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
             CompletionBar(
-                session: session, title: title, share: completionShare, sealBounces: sealBounces,
-                onReplay: replay, onShareTimelapse: shareTimelapse, onClose: onClose)
+                session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
+                sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
+                onShareTimelapse: shareTimelapse, onClose: onClose)
                 .transition(transition)
         } else {
             PaletteBar(
