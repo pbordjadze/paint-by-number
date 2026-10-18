@@ -166,10 +166,10 @@ struct EditRecolorTests {
         }
         #expect(digest == Self.lookDigest, "a look's math changed: \(digest)")
         #expect(TemplateEditor.Look.allCases.map(\.rawValue)
-            == ["moonlit", "pastel", "goldenHour", "sepia", "starryNight", "waterLilies", "greatWave"])
+            == ["moonlit", "goldenHour", "pastel", "sepia", "garden", "starryNight", "waterLilies", "greatWave"])
     }
 
-    static let lookDigest: UInt64 = 13525150165933263202
+    static let lookDigest: UInt64 = 15864780550302597421
 
     @Test func aLookRecordsThePaintingsLightness() {
         guard case .look(_, _, let lightness) = TemplateEditor.look(.starryNight, strength: 1, on: Self.rich) else {

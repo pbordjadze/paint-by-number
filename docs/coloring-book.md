@@ -392,10 +392,10 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   drawn line's pieces, a fill: `TemplateEditor.recolored`), and a line drawn under Moonlit takes
   Moonlit's paint. The painting looks place a paint on the painting's ramp by its rank among the
   palette's lightnesses, which the edit records when it is made (`lightness`, nine quantiles), so
-  a color laid later finds its place among them. Of the seven looks at full strength on the
-  parrots, lighthouse and hibiscus books (24 paints each) all 21 were made and validate, in 20 to
-  500 ms; Moonlit, Golden Hour and the painting looks merge 0 to 7 paints, Sepia 7 to 11 (hue is
-  gone), the first Pastel 10 on the lighthouse (it was widened before it shipped).
+  a color laid later finds its place among them. Of the eight looks at full strength on the
+  parrots, lighthouse and hibiscus books (24 paints each) all 24 were made and validate, in 20 to
+  150 ms; Moonlit, Golden Hour, Garden and the painters' looks merge 0 to 7 paints, Pastel 0 to 4
+  (a first, narrower Pastel merged 10 on the lighthouse), Sepia 7 to 11 (hue is gone).
 - **What stays.** Regions, outlines, fill triangles, numbers, edges, strokes and paints the edit
   does not reach are copied as they were (`EditWork.finish` lays the survivors out again, so
   indices after a merged region shift). Neighbours of an edit gain a vertex where a line meets

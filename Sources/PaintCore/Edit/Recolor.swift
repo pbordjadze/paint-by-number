@@ -8,14 +8,18 @@ extension TemplateEditor {
     /// is a new case. The math is `+ - * /`, `min`, `max` and `sqrt` only, so it gives the same
     /// bits on every platform.
     public enum Look: String, Sendable, CaseIterable, Codable {
+        // In the order Refine shows them: the night first, the app's own (the Lamplit Table,
+        // October 18), then the day, then the painters'.
         /// Darker, cool and quiet: the painting by moonlight.
         case moonlit
-        /// Light and soft.
-        case pastel
         /// Warm, as the last hour of sun.
         case goldenHour
+        /// Light and soft.
+        case pastel
         /// Brown ink on old paper.
         case sepia
+        /// Each paint, by its lightness, a color of a garden: soil, mushroom, moss, sage, birch.
+        case garden
         /// Each paint, by its lightness among the painting's, a color of Van Gogh's
         /// *The Starry Night* (1889).
         case starryNight
@@ -36,6 +40,10 @@ extension TemplateEditor {
                 [SIMD3(0.3094, -0.0400, -0.0250), SIMD3(0.4223, -0.0650, -0.0250), SIMD3(0.5072, -0.0700, -0.0350),
                  SIMD3(0.6112, -0.0550, -0.0400), SIMD3(0.6701, -0.0100, -0.0800), SIMD3(0.7278, 0.0400, -0.0750),
                  SIMD3(0.7750, 0.0700, -0.0200), SIMD3(0.8351, 0.0000, 0.0800), SIMD3(0.9211, -0.0100, 0.0550)]
+            case .garden:
+                [SIMD3(0.2699, 0.0114, 0.0149), SIMD3(0.3783, 0.0154, 0.0349), SIMD3(0.4256, -0.0433, 0.0507),
+                 SIMD3(0.5514, -0.0555, 0.0691), SIMD3(0.6684, -0.0473, 0.0640), SIMD3(0.7491, -0.0313, 0.0535),
+                 SIMD3(0.7934, -0.0043, 0.0442), SIMD3(0.8923, -0.0036, 0.0269), SIMD3(0.9529, -0.0033, 0.0184)]
             case .greatWave:
                 [SIMD3(0.2399, -0.0033, -0.0501), SIMD3(0.3386, -0.0142, -0.0759), SIMD3(0.4424, -0.0258, -0.0834),
                  SIMD3(0.5599, -0.0272, -0.0721), SIMD3(0.6919, -0.0221, -0.0446), SIMD3(0.8072, -0.0138, -0.0115),
@@ -57,7 +65,7 @@ extension TemplateEditor {
             case .pastel: return SIMD3(0.60 + 0.38 * L, 0.55 * a, 0.55 * b)
             case .goldenHour: return SIMD3(0.06 + 0.94 * L, 0.85 * a + 0.020, 0.85 * b + 0.055)
             case .sepia: return SIMD3(0.14 + 0.82 * L, 0.1 * a + 0.007 + 0.01 * L, 0.1 * b + 0.023 + 0.03 * L)
-            case .starryNight, .waterLilies, .greatWave:
+            case .garden, .starryNight, .waterLilies, .greatWave:
                 guard let ramp else { return c }
                 let r = Self.rank(L, lightness) * Float(ramp.count - 1)
                 let k = min(max(Int(r), 0), ramp.count - 2)
