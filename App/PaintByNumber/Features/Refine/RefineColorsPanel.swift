@@ -7,8 +7,14 @@ import SwiftUI
 /// moving with it while Similar Colors Too is on. Shapes, lines and numbers never change.
 /// The Lamplit Table decided the details (October 18, 2026: `factory/pieces/recolor` on
 /// `claude/vibe-factory`): the row always shown, Moonlit first and the row turning from night to
-/// day, the slider, the family on, the painters' names.
+/// day, the slider, the family on, the painters' names; then Paul (October 18): five looks, not
+/// eight, the rest kept for later (`offered`).
 struct RefineColorsPanel: View {
+    /// The looks the row offers, after Photo: night to day, then a painter's. Sepia, Water Lilies
+    /// and Great Wave stay in PaintCore, kept for later (Paul: "save the other 3 in case we want
+    /// them later"); adding one here brings it back.
+    static let offered: [TemplateEditor.Look] = [.moonlit, .goldenHour, .pastel, .garden, .starryNight]
+
     /// The template on screen.
     let template: Template
     /// The paints before any edit, which the looks' chips show themselves on.
@@ -32,7 +38,7 @@ struct RefineColorsPanel: View {
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 12) {
                     chip(nil)
-                    ForEach(TemplateEditor.Look.allCases, id: \.self) { chip($0) }
+                    ForEach(Self.offered, id: \.self) { chip($0) }
                 }
                 .padding(.horizontal, 2)
                 .padding(.vertical, 4)

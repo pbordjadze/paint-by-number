@@ -42,6 +42,12 @@ struct RefineToolTests {
         #expect(RefineColorsPanel.preview(of: .moonlit, on: []).isEmpty)
     }
 
+    /// The row offers five looks, Moonlit first (Paul, October 18); the rest are kept for later.
+    @Test func theRowOffersFiveLooks() {
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+    }
+
     /// A tap anywhere in the detail area a fill made takes out the fills made there (not those
     /// elsewhere); a tap in another area, or in a detail area no fill made, is a new fill. On three
     /// stripes 20 units wide, the middle one a detail area.

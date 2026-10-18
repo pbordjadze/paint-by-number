@@ -569,9 +569,9 @@ Conventions).
   what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
   out (`EditFills`). Colors (after Fill; SideStore and Debug builds only for now, `#if UNRELEASED`,
-  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then
-  PaintCore's `TemplateEditor.Look`s, night to day, then the painters'; the Lamplit Table's
-  `factory/pieces/recolor`) with a Strength slider once one is chosen, and the paints, one picked
+  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then the
+  five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
+  Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
   along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
