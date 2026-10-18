@@ -39,6 +39,16 @@ struct MarginariumCastTests {
         #expect(MarginariumCast.team(of: MarginariumCast.rikyu)?.id == "glass-and-frost")
     }
 
+    /// Paul, October 18, 2026: Hope and Eno are Caroline's first two guardians, Hope with the
+    /// Moonlit Circle and Eno with the Workshop.
+    @Test func carolinesGuardiansJoinTheirTeams() {
+        #expect(MarginariumCast.team(of: MarginariumCast.hope)?.id == "moonlit-circle")
+        #expect(MarginariumCast.team(of: MarginariumCast.eno)?.id == "workshop")
+        #expect(MarginariumCast.hope.after == "After the singer Hope Sandoval.")
+        #expect(MarginariumCast.hope.portrait?.contains("Caroline") == true)
+        #expect(MarginariumCast.eno.portrait?.contains("Caroline") == true)
+    }
+
     @Test func everyBriefIsComplete() {
         for guardian in MarginariumCast.guardians {
             let fields = [guardian.name, guardian.guards, guardian.believes, guardian.loves, guardian.watchesFor,
