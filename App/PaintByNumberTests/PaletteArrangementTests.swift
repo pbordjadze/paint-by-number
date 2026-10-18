@@ -67,6 +67,36 @@ struct PaletteArrangementTests {
         #expect(PaletteBar.lanes([], lines: 2).isEmpty)
     }
 
+    /// A one-line phone bar 378 pt long, 56 pt a swatch: the bar scrolls a hidden swatch whole into
+    /// view with 16 pt to spare on the side it comes in from, and not at all for one in view.
+    @Test func theBarScrollsTheSelectedSwatchWholeIntoView() {
+        let metrics = PaletteMetrics.standard
+        // Scrolled on to show lanes 12 and up; lane 9 holds swatch 10.
+        let bar = PaletteWindow(offset: 12 * 56, viewport: 378, content: 30 * 56 + 24, shown: 378)
+        #expect(bar.offset(revealing: 9, metrics: metrics) == 16 + 9 * 56 - 16)
+        #expect(bar.offset(revealing: 13, metrics: metrics) == nil, "a swatch in view moved the bar")
+        // Lane 20 starts at 1136, ends at 1184: the bar's end comes to 1200.
+        #expect(bar.offset(revealing: 20, metrics: metrics) == 1200 - 378)
+        // Never past either end.
+        #expect(bar.offset(revealing: 0, metrics: metrics) == 0)
+        #expect(bar.offset(revealing: 29, metrics: metrics) == 30 * 56 + 24 - 378)
+    }
+
+    /// Paul's tap on "10": a scroll view reaching 170 pt past the glass on each side counts swatches
+    /// under the glass as shown. Only what the glass shows counts.
+    @Test func swatchesUnderTheGlassAreNotInView() {
+        let metrics = PaletteMetrics.standard
+        let bar = PaletteWindow(offset: 600, viewport: 718, content: 30 * 56 + 24, hiddenBefore: 170, shown: 378)
+        // Lane 12 (at 688–736) is in the scroll view but under the glass's leading edge (770).
+        let target = bar.offset(revealing: 12, metrics: metrics)
+        #expect(target == 16 + 12 * 56 - 16 - 170)
+        if let target {
+            let shownFrom = target + 170
+            #expect(shownFrom <= 16 + 12 * 56 - 16, "the swatch is still hidden on the leading side")
+        }
+        #expect(bar.offset(revealing: 15, metrics: metrics) == nil, "a swatch the glass shows moved the bar")
+    }
+
     @Test func theNextColorFollowsThePalettesOrder() {
         let template = Fixtures.mosaic
         let session = PaintingSession(template: template, nicknameSeed: 42)
