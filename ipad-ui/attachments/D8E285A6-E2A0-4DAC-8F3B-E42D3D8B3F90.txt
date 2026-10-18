@@ -1,0 +1,101 @@
+Attributes: Other, 0x1064f2580, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 20 percent photo
+Element subtree:
+ →Other, 0x1064f2580, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 20 percent photo
+Path to element:
+ →Application, 0x113dce800, pid: 38549, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x113dcfac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x113dce940, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x113dcf980, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x113dcfe80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x113dce080, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x113dce300, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x113dcf700, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x113dcd180, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x1064f1040, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Other, 0x1064f2580, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 20 percent photo
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x1064c8c80, pid: 38549, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x10672b980, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7c00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147ee6c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7e80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147eea80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7ac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147ee800, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7980, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147ee580, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7840, {{0.0, 0.0}, {1032.0, 1376.0}}
+      NavigationBar, 0x1147eebc0, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+      Other, 0x1147ede00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1064c9040, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147f7480, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x1147ee080, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+      StaticText, 0x1147eda40, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+      Other, 0x1147edcc0, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Other, 0x1147ee1c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1064c8dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      NavigationBar, 0x1147f7340, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+      Other, 0x1147ed040, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147ee940, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147edb80, {{946.0, 36.0}, {72.0, 36.0}}
+      Other, 0x1147eed00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x1147f7200, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x1147f70c0, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+      Button, 0x1147ec780, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+      SearchField, 0x1147ec500, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+      StaticText, 0x1147ec8c0, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+      Other, 0x1147ecdc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147eef80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x1147edf40, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Other, 0x1147ecf00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Image, 0x1147ec640, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search'
+      Other, 0x1147ed180, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1147eca00, {{516.0, 721.0}, {0.0, 0.0}}
+      Other, 0x1147ecb40, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 20 percent photo
+      Image, 0x1147ef200, {{274.0, 859.0}, {13.5, 13.5}}, identifier: 'pencil', label: 'Edit'
+      TextField, 0x1147ef340, {{299.5, 853.5}, {460.5, 24.0}}, identifier: 'painting-title', placeholderValue: 'The Great Wave', value: The Great Wave
+      Other, 0x1147ec3c0, {{258.0, 905.5}, {202.0, 44.0}}
+      Other, 0x1147ef480, {{258.0, 905.5}, {202.0, 44.0}}
+      Other, 0x1064c9e00, {{258.0, 905.5}, {202.0, 44.0}}, identifier: 'settings-origin', label: 'Settings', value: Suggested for this...
+      Other, 0x1064ca300, {{258.0, 967.5}, {516.0, 53.0}}
+      StaticText, 0x1064c8500, {{258.0, 967.5}, {46.5, 18.0}}, label: 'Colors'
+      StaticText, 0x1064c8640, {{755.5, 967.5}, {18.5, 18.0}}, label: '22'
+      Slider, 0x1064c8780, {{258.0, 989.5}, {516.0, 31.0}}, label: 'Colors', value: 22
+      StaticText, 0x1064c88c0, {{258.0, 1038.5}, {41.5, 18.0}}, label: 'Detail'
+      StaticText, 0x1064c9f40, {{717.0, 1038.5}, {57.0, 18.0}}, label: 'Detailed'
+      Slider, 0x1064cbac0, {{258.0, 1060.5}, {516.0, 31.0}}, label: 'Detail', value: Detailed
+      StaticText, 0x1064ca1c0, {{258.0, 1109.5}, {89.5, 18.0}}, label: 'Smoothness'
+      StaticText, 0x1064c8140, {{720.5, 1109.5}, {53.5, 18.0}}, label: 'Smooth'
+      Slider, 0x1064c8280, {{258.0, 1131.5}, {516.0, 31.0}}, label: 'Smoothness', value: Smooth
+      StaticText, 0x1064c8000, {{258.0, 1180.5}, {38.0, 18.0}}, label: 'Lines'
+      StaticText, 0x1064c83c0, {{710.5, 1180.5}, {63.5, 18.0}}, label: 'Balanced'
+      Slider, 0x1064c8a00, {{258.0, 1202.5}, {516.0, 31.0}}, label: 'Lines', value: Balanced
+      StaticText, 0x1064c9180, {{419.2, 1251.5}, {193.5, 16.0}}, label: '22 colors · 406 areas · ~20 min'
+      Button, 0x1064c8f00, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      Other, 0x1147ed400, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Image, 0x1147ed2c0, {{32.0, 122.5}, {968.0, 650.5}}
+      Image, 0x1147ec000, {{32.0, 123.0}, {968.0, 649.5}}
+      Other, 0x1147ecc80, {{203.5, 426.0}, {44.0, 44.0}}
+      Image, 0x1147ec280, {{218.0, 443.5}, {15.0, 9.5}}, identifier: 'arrow.left.and.right', label: 'arrow.left.and.right'
+      StaticText, 0x1147ec140, {{32.0, 123.0}, {968.0, 649.5}}, label: 'Photo'
+      StaticText, 0x1147ef0c0, {{933.5, 137.8}, {48.5, 14.5}}, label: 'Painting'
+      Image, 0x1064c9900, {{271.5, 920.0}, {12.5, 15.0}}, identifier: 'sparkles', label: 'Sparkle'
+      StaticText, 0x1064cb980, {{291.5, 919.5}, {156.5, 16.0}}, label: 'Suggested for this photo'
+      ScrollView, 0x1147ef5c0, {{516.0, 0.0}, {0.0, 1376.0}}
+      Other, 0x1147ed7c0, {{381.0, 504.0}, {270.0, 198.0}}
+      StaticText, 0x1147ed680, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+      StaticText, 0x1147ed540, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+      Button, 0x1147ee300, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+      Other, 0x1147eee40, {{516.0, 138.0}, {0.0, 0.0}}
+      Image, 0x1147ee440, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+      StaticText, 0x1147ed900, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate '"Comparison of photo and template" IN identifiers'
+      Output: {
+        Other, 0x10672a6c0, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 20 percent photo
+      }

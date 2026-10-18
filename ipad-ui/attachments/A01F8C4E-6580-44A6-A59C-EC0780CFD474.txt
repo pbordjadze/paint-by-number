@@ -1,0 +1,19 @@
+Attributes: Other, 0x1064f3340, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 90% photo, zoomed ...
+Element subtree:
+ →Other, 0x1064f3340, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 90% photo, zoomed ...
+Path to element:
+ →Application, 0x113dcdcc0, pid: 38549, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1067292c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x1064f12c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x1064f0b40, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x1064f0140, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x1064f0dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x1064f3200, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x1064f2f80, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x1064f0500, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x1064f2a80, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Other, 0x1064f3340, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 90% photo, zoomed ...
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate '"Comparison of photo and template" IN identifiers'
