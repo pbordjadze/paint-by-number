@@ -480,10 +480,15 @@ if he has gone quiet.
 - **CI etiquette.** Keep at most two branches in CI across all sessions; the front desk keeps
   count. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
-  together when it reports: every push cancels the run before it.
+  together when it reports: every push cancels the run before it. A slot is freed by a green
+  report: merge, tell the front desk, and any further push queues again unless it fixes a red run.
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
+- **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
+  propose new work it noticed: send the front desk one short proposal (what, why, size, who
+  thought of it), at most one a night, and keep to its own topic. Paul signs off on the status
+  page. Small fixes inside a session's own task aren't proposals.
 - **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
   `[skip ci]`. That is the one exception to working on branches.
 
