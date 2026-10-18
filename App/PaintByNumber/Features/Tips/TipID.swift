@@ -46,9 +46,14 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
-    /// Tips in a popover of SwiftUI's own. They have no display limit of TipKit's, which would retire
-    /// the tip from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
-    var hasOwnPopover: Bool { hangsFromBar || hangsFromCard }
+    /// The tips about the page itself, a card at the top of the page with no arrow (`pageTip`):
+    /// Paul, October 18, shown the arrow and none, "No arrow".
+    var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }
+
+    /// Tips the app draws itself, in a popover of SwiftUI's own or on the page. They have no display
+    /// limit of TipKit's, which would retire the tip from under its own view: closing, using or leaving
+    /// it unread (`TipDesk`) says it once.
+    var isDrawnByTheApp: Bool { hangsFromBar || hangsFromCard || liesOnThePage }
 
     var place: TipPlace {
         switch self {

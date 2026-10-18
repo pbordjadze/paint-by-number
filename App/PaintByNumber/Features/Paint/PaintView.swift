@@ -4,6 +4,7 @@ import Observation
 import os
 import PaintCore
 import SwiftUI
+import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
@@ -214,19 +215,21 @@ struct PaintView: View {
                     .ignoresSafeArea()
             }
 
-            // Canvas tips point at the page itself, just inside its top edge, and hang from there:
-            // the top of the visible canvas sat under the top bar's Photo button on a phone, so
-            // the arrow seemed to point at it (the Lamplit Table, October 18).
-            let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette)
-            Color.clear
-                .frame(width: 1, height: 1)
-                .gentleTip(.benchZoom, .benchDrag, .benchPencil, active: feedback == nil, arrowEdge: .top)
-                .padding(.top, pageTipInset(in: CGSize(
-                    width: geo.size.width - visiblePadding.leading - visiblePadding.trailing,
-                    height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(visiblePadding)
-                .allowsHitTesting(false)
+            // Tips about the page itself: a card at the top of the page as it first fits, with no
+            // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
+            // at the Photo button on a phone).
+            if feedback == nil, PaintTips.desk.pageTip != nil {
+                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette)
+                TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
+                    .frame(maxWidth: Self.pageTipWidth)
+                    .padding(.horizontal, Self.edge)
+                    .padding(.top, pageTipInset(in: CGSize(
+                        width: geo.size.width - visiblePadding.leading - visiblePadding.trailing,
+                        height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(visiblePadding)
+                    .transition(.opacity)
+            }
 
             VStack(spacing: 0) {
                 Group {
@@ -370,8 +373,8 @@ struct PaintView: View {
             bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
     }
 
-    /// How far below the top of the visible canvas the canvas tips hang: just inside the top of the
-    /// page as it first fits there, centered within the canvas's margin.
+    /// How far below the top of the visible canvas the page tips lie: just inside the top of the page
+    /// as it first fits there, centered within the canvas's margin.
     private func pageTipInset(in visible: CGSize) -> CGFloat {
         let template = session.template
         let room = CGSize(width: visible.width - 2 * CanvasView.margin, height: visible.height - 2 * CanvasView.margin)
@@ -380,8 +383,9 @@ struct PaintView: View {
         return CanvasView.margin + (room.height - pageHeight) / 2 + min(Self.pageTipDepth, pageHeight / 10)
     }
 
-    /// How far into the page the canvas tips' arrow reaches.
+    /// How far into the page the page tips lie, and how wide they grow.
     private static let pageTipDepth: CGFloat = 32
+    private static let pageTipWidth: CGFloat = 420
 
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
     private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {

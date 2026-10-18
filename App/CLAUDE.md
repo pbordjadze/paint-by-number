@@ -285,8 +285,8 @@ synchronized folder would bundle it into the app.
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
 - Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
-  hang from just inside the top of the page as it first fits (`PaintView.pageTipInset`), not from
-  under the top bar's Photo button.
+  lie on the page as a card with no arrow, just inside its top as it first fits
+  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first

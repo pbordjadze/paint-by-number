@@ -79,6 +79,12 @@ final class TipDesk {
 
     // MARK: What a view asks
 
+    /// The tip of the turn, if it lies on the page (`TipID.liesOnThePage`).
+    var pageTip: (any Tip)? {
+        guard let turn, turn.liesOnThePage else { return nil }
+        return turn.tip
+    }
+
     /// The tip of the turn, if it is one of `ids`.
     func tip(among ids: [TipID]) -> (any Tip)? {
         guard let turn, ids.contains(turn) else { return nil }
@@ -307,9 +313,9 @@ final class TipDesk {
                 break
             }
             if elapsed > Self.lapse {
-                // Said once, read or not: a tip in a popover of its own has no display limit of
+                // Said once, read or not: a tip the app draws itself has no display limit of
                 // TipKit's to say so.
-                if id.hasOwnPopover { id.tip.invalidate(reason: .displayCountExceeded) }
+                if id.isDrawnByTheApp { id.tip.invalidate(reason: .displayCountExceeded) }
                 release(id)
                 return
             }
