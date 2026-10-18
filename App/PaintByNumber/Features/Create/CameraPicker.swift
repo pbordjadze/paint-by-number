@@ -22,9 +22,14 @@ struct CameraPicker: UIViewControllerRepresentable {
     final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: CameraPicker
 
+        /// The shot is being encoded or was handed over: a second Use Photo meanwhile hands nothing.
+        private var isDelivering = false
+
         init(parent: CameraPicker) { self.parent = parent }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            guard !isDelivering else { return }
+            isDelivering = true
             let image = info[.originalImage] as? UIImage
             Task {
                 if let image, let data = await Self.jpeg(image) {

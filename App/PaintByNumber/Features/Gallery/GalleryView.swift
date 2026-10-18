@@ -234,7 +234,10 @@ struct GalleryView: View {
             Button(String(localized: "gallery.restart.confirm", defaultValue: "Restart “\(pending.title)”",
                           comment: "Destructive button of the restart confirmation; the argument is the painting's title"),
                    role: .destructive) {
-                Task { if await !library.restart(pending.id) { restartFailed = true } }
+                Task {
+                    // Not for a painting deleted meanwhile: there is nothing left to restart.
+                    if await !library.restart(pending.id), library.artwork(with: pending.id) != nil { restartFailed = true }
+                }
             }
         } message: { _ in
             Text("Every painted area will be cleared.")

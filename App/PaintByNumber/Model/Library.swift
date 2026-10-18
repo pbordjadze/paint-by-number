@@ -405,10 +405,12 @@ final class Library {
         purge?.cancel()
         recentlyDeleted = nil
         let id = artwork.id
-        let restored = enqueue(id) { store in try store.restoreFromTrash(id) }
+        // A delete whose move to the trash failed left the folder where it was: nothing to restore.
+        let restored = enqueue(id) { store in if store.isInTrash(id) { try store.restoreFromTrash(id) } }
         insert(artwork)
         Task { [weak self] in
-            // Still in the trash, which the next launch empties: shown as deleted, with Undo again.
+            // Still in the trash, which the next launch empties: shown as deleted, with Undo again
+            // (a deletion pending meanwhile is made final, as a new delete makes it).
             guard await !restored.value, let self, self.artwork(with: id) != nil else { return }
             artworks.removeAll { $0.id == id }
             finalizeDeletion()
