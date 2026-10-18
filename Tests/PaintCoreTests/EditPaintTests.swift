@@ -123,6 +123,23 @@ struct EditPaintTests {
         #expect(TemplateEditor.painted(fill, on: t, photo: photo) == fill)
     }
 
+    /// A sliver across a large bounding box can fall between the points of the sampling grid
+    /// (retro review, October 18): its color is still read, every pixel then.
+    @Test func aThinSliverStillHasItsColorRead() throws {
+        var t = Self.scene
+        let r = 0, other = UInt32(1)
+        for y in 0..<t.height { for x in 0..<t.width { t.regionMap[x, y] = x == y + 1 ? UInt32(r) : other } }
+        t.regions[r].bounds = PixelBounds(minX: 0, minY: 0, maxX: Int32(t.width - 1), maxY: Int32(t.height - 1))
+        var pixels = [UInt8](repeating: 255, count: t.width * t.height * 4)
+        for y in 0..<t.height where y + 1 < t.width {
+            pixels.replaceSubrange(((y * t.width) + y + 1) * 4..<((y * t.width) + y + 1) * 4 + 3, with: [230, 0, 200])
+        }
+        let photo = RGBAImage(width: t.width, height: t.height, pixels: pixels)
+        let magenta = ColorScience.encodedToOKLab(SIMD3(230, 0, 200) / 255, space: .sRGB)
+        let color = try #require(LineEdit.photoColor(ofRegion: r, in: t, image: photo))
+        #expect(ColorScience.distance(color, magenta) < 0.01)
+    }
+
     /// A line with paints crossing an edge just beside a junction passes through the junction; a
     /// line without them is laid as drawn. Here a line across the horizon 1.5 from where it meets
     /// the disc, its ends free (clear of ink by more than `inkWidth`), so it is a stroke either way.

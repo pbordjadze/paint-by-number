@@ -73,8 +73,8 @@ nonisolated struct DrawableLineArt: Sendable {
     }
 
     /// Whether a line of `layer` is part of the drawing (a coloring book draws these alike and
-    /// nothing else).
-    static func isDrawn(_ layer: UInt8) -> Bool { layer != LineLayer.color.rawValue }
+    /// nothing else): PaintCore's rule, which Refine's gestures read too.
+    static func isDrawn(_ layer: UInt8) -> Bool { LineLayer.isDrawn(layer) }
 
     func points(of stroke: InteriorStroke) -> ArraySlice<SIMD2<Float>> {
         strokePoints[Int(stroke.pointStart)..<Int(stroke.pointStart + stroke.pointCount)]
