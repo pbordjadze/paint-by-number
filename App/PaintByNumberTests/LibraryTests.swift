@@ -52,12 +52,31 @@ struct LibraryTests {
         var refined = draft(photo: photo)
         refined.refinements = refinements
         let artwork = try await library.create(refined)
-        #expect(library.store.readRefinements(artwork.id) == refinements)
+        #expect(try library.store.readRefinements(artwork.id) == refinements)
 
         _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0))
-        #expect(library.store.readRefinements(artwork.id) == refinements, "Regenerating lost the refinements")
+        #expect(try library.store.readRefinements(artwork.id) == refinements, "Regenerating lost the refinements")
         try Data("not json".utf8).write(to: library.store.url(.refinements, of: artwork.id))
-        #expect(library.store.readRefinements(artwork.id).isEmpty)
+        #expect(try library.store.readRefinements(artwork.id).isEmpty)
+    }
+
+    @Test func regeneratingWaitsForRefinementsThatCantBeReadNow() async throws {
+        let library = makeLibrary()
+        var refinements = TemplateRefinements()
+        refinements.edits = [.draw(points: [SIMD2(20, 60), SIMD2(90, 56), SIMD2(160, 62)])]
+        var refined = draft(photo: try stripesPhoto())
+        refined.refinements = refinements
+        let artwork = try await library.create(refined)
+        let fm = FileManager.default
+        let file = library.store.url(.refinements, of: artwork.id).path
+        let template = try Data(contentsOf: library.store.url(.template, of: artwork.id))
+        try fm.setAttributes([.posixPermissions: 0], ofItemAtPath: file)
+        defer { try? fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: file) }
+
+        await #expect(throws: Library.OpenError.unreadable) {
+            _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0))
+        }
+        #expect(try Data(contentsOf: library.store.url(.template, of: artwork.id)) == template, "Regenerated without the edits")
     }
 
     /// A painting refined by hand regenerates the way it was made: the template from the photo and
@@ -79,7 +98,7 @@ struct LibraryTests {
         let expected = try ArtworkFactory.laying([edit], on: base)
         #expect(document.template == expected)
         #expect(document.template != base, "The edit wasn't laid")
-        #expect(library.store.readRefinements(artwork.id) == refinements)
+        #expect(try library.store.readRefinements(artwork.id) == refinements)
     }
 
     @Test func savesProgressCompletionAndThumbnail() async throws {
@@ -335,7 +354,7 @@ struct LibraryTests {
         await #expect(throws: Library.OpenError.unreadable) {
             try await library.regenerate(artwork: artwork.id, settings: artwork.settings)
         }
-        await library.restart(artwork.id)
+        #expect(await !library.restart(artwork.id), "A restart that couldn't read the template reported success")
         var isDirectory: ObjCBool = false
         #expect(FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue)
 
@@ -418,7 +437,7 @@ struct LibraryTests {
         var progress = PaintProgress(regionCount: 3)
         progress.paint(1)
         library.saveProgress(progress, for: artwork.id)
-        await library.restart(artwork.id)
+        #expect(await !library.restart(artwork.id))
         await library.flush()
         #expect(try Data(contentsOf: metaURL) == meta)
         #expect(library.artwork(with: artwork.id) == listed)
@@ -512,7 +531,7 @@ struct LibraryTests {
         try store.writeMeta(stale)
 
         let library = makeLibrary()
-        await library.restart(artwork.id)
+        #expect(await library.restart(artwork.id))
         let restarted = try #require(library.artwork(with: artwork.id))
         #expect(restarted.regionCount == 3 && restarted.paintedCount == 0)
         await library.flush()
@@ -776,6 +795,44 @@ struct LibraryTests {
         #expect(!written)
         #expect(library.writeFailures.isEmpty)
         #expect(library.artwork(with: artwork.id)?.thumbnailVersion == artwork.thumbnailVersion)
+    }
+
+    @Test func aDeletionThatFailsLeavesThePaintingInTheGallery() async throws {
+        let library = makeLibrary()
+        let a = try await library.create(draft(title: "A"))
+        // A file where the trash folder should be: the folder can't move there.
+        let trash = root.appending(path: ".trash", directoryHint: .isDirectory)
+        try FileManager.default.removeItem(at: trash)
+        try Data().write(to: trash)
+
+        library.delete(a.id)
+        #expect(library.artwork(with: a.id) == nil)
+        try await waitUntil(timeout: .seconds(10)) { library.artwork(with: a.id) != nil }
+        #expect(library.recentlyDeleted == nil)
+        #expect(library.store.exists(a.id))
+    }
+
+    @Test func anUndoThatFailsOffersUndoAgain() async throws {
+        let library = makeLibrary()
+        let a = try await library.create(draft(title: "A"))
+        library.delete(a.id)
+        await library.flush()
+        #expect(library.store.isInTrash(a.id))
+        // Something in the folder's place: it can't move back.
+        let folder = root.appending(path: a.id.uuidString)
+        try Data().write(to: folder)
+
+        library.undoDelete()
+        #expect(library.artwork(with: a.id) != nil)
+        try await waitUntil(timeout: .seconds(10)) { library.artwork(with: a.id) == nil }
+        #expect(library.recentlyDeleted?.id == a.id, "Undo isn't offered again")
+        #expect(library.store.isInTrash(a.id))
+
+        try FileManager.default.removeItem(at: folder)
+        library.undoDelete()
+        await library.flush()
+        #expect(library.store.exists(a.id))
+        #expect(library.artwork(with: a.id) != nil)
     }
 
     @Test func failedWriteOfADeletedArtworkIsHiddenThenDropped() async throws {

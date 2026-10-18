@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UniformTypeIdentifiers
 @testable import PaintByNumber
 
 struct PrivacyManifestTests {
@@ -108,19 +109,27 @@ struct BundleMetadataTests {
     }
 }
 
-/// "Open in Paint by Moonlight": the app declares itself an alternate viewer of images; files are
-/// copied into its inbox (`IncomingFile`), not opened in place.
+/// "Open in Paint by Moonlight": the app declares itself an alternate viewer of images and the owner
+/// of the paintings it sends (`.moonlight`, a type it exports); files are copied into its inbox
+/// (`IncomingFile`), not opened in place.
 struct DocumentTypeTests {
     private let info = Bundle.main.infoDictionary ?? [:]
 
     @Test func appOpensImagesAsAnAlternateViewerOnACopy() throws {
         let types = try #require(info["CFBundleDocumentTypes"] as? [[String: Any]])
+        #expect(types.count == 2)
         let image = try #require(types.first)
-        #expect(types.count == 1)
         #expect(image["CFBundleTypeName"] as? String == "Image")
         #expect(image["CFBundleTypeRole"] as? String == "Viewer")
         #expect(image["LSHandlerRank"] as? String == "Alternate")
         #expect(image["LSItemContentTypes"] as? [String] == ["public.image"])
+        let painting = try #require(types.last)
+        #expect(painting["CFBundleTypeName"] as? String == "Paint by Moonlight Painting")
+        #expect(painting["LSHandlerRank"] as? String == "Owner")
+        #expect(painting["LSItemContentTypes"] as? [String] == [UTType.moonlightPainting.identifier])
+        let exported = try #require(info["UTExportedTypeDeclarations"] as? [[String: Any]])
+        #expect(exported.map { $0["UTTypeIdentifier"] as? String } == [UTType.moonlightPainting.identifier])
+        #expect(UTType.moonlightPainting.preferredFilenameExtension == SharedPaintingCodec.fileExtension)
         #expect(info["LSSupportsOpeningDocumentsInPlace"] as? Bool == false)
         #expect(info["UISupportsDocumentBrowser"] == nil)
     }

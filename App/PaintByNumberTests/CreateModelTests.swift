@@ -283,6 +283,23 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A setting changed after Refine was tapped calls the wait off, even when the slider's touch
+    /// was never heard (CI, Oct 18: a drag's start never reached `setAdjusting`).
+    @Test func aRefineWaitedForIsCalledOffByAChangedSetting() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        #expect(!model.isWaitingToRefine, "A changed setting left the wait on")
+        model.cancelAll()
+    }
+
     /// A Refine waited for is called off by going back to the sliders, by Start and by another
     /// photo: it must not open over what the painter went on to.
     @Test func aRefineWaitedForIsCalledOffByTheSlidersStartAndAnotherPhoto() async throws {
@@ -526,6 +543,39 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A Color Splitter stroke across the picture divides its color with no line: the edit keeps
+    /// the photo's colors for its pieces, and the template on screen is the editor's result.
+    @Test func aSplitDividesTheColorWithNoLine() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let split = TemplateEditor.Edit.split(points: [SIMD2(0, 0.2 * h), SIMD2(w, 0.25 * h)])
+        try await waitForEdits(model, model.edit(split))
+        let laid = try #require(model.refinements.edits.first)
+        guard case .split(_, false, let paints) = laid else { Issue.record("not a split: \(laid)"); return }
+        #expect(!paints.isEmpty)
+        #expect(laid == TemplateEditor.painted(split, on: before, photo: try #require(model.source?.image)))
+        let (expected, outcome) = try TemplateEditor.apply(laid, to: before)
+        #expect(outcome.regionsSplit > 0 && outcome.strokes == 0)
+        #expect(model.preview?.template == expected)
+        // A stroke the split's boundary cuts becomes two as long as it was (its cut on the lattice,
+        // a fraction of a unit off): no ink is added.
+        func ink(_ t: Template) -> Float {
+            guard let art = t.lineArt else { return 0 }
+            return art.strokes.reduce(Float(0)) { sum, stroke in
+                let points = art.strokePoints[Int(stroke.pointStart)..<Int(stroke.pointStart + stroke.pointCount)]
+                return sum + zip(points, points.dropFirst()).reduce(Float(0)) { length, step in
+                    let d = step.1 - step.0
+                    return length + (d * d).sum().squareRoot()
+                }
+            }
+        }
+        #expect(abs(ink(expected) - ink(before)) < 1, "a split draws no line")
+        model.cancelAll()
+    }
+
     /// Undo brings the previous template back exactly, from the templates kept; Redo puts the edit
     /// back; Cancel puts back what Refine opened with.
     @Test func undoRestoresThePreviousTemplateExactly() async throws {
@@ -665,6 +715,27 @@ struct CreateModelTests {
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
         let base = try #require(model.preview?.template)
         #expect(try TemplateEditor.apply(edit, to: base).template == shown)
+        model.cancelAll()
+    }
+
+    /// A split sent while the template is being made again takes its paints from the template on
+    /// screen: without them it could never be made.
+    @Test func aSplitSentWhileTheTemplateIsMadeAgainKeepsItsPaints() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let split = TemplateEditor.Edit.split(points: [SIMD2(0, 0.2 * h), SIMD2(w, 0.25 * h)])
+
+        model.lines = 0.7
+        model.settingsChanged()
+        let serial = model.edit(split)
+        try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        let kept = try #require(model.refinements.edits.first)
+        #expect(kept == TemplateEditor.painted(split, on: before, photo: try #require(model.source?.image)))
+        guard case .split(_, _, let paints) = kept else { Issue.record("not a split: \(kept)"); return }
+        #expect(!paints.isEmpty)
         model.cancelAll()
     }
 

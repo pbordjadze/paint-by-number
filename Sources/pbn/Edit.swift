@@ -6,7 +6,8 @@ import PaintCore
 /// the first), `"radius"` for an erase (canvas units), `"reach"` for an eraseLine (canvas
 /// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill, and
 /// `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
-/// recolors the pieces it cuts. An edit of a kind pbn doesn't know is left out with a warning.
+/// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
+/// `"paints"`). An edit of a kind pbn doesn't know is left out with a warning.
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
     struct EntryPaint: Decodable {
         var at: [Float]
@@ -30,13 +31,15 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             guard p.count == 2 else { fail("\(path): points are [x, y]") }
             return SIMD2(p[0], p[1])
         }
+        let paints = entry.paints?.map { p -> TemplateEditor.Paint in
+            guard p.at.count == 2, p.color.count == 3 else { fail("\(path): a paint is {\"at\": [x, y], \"color\": [L, a, b]}") }
+            return TemplateEditor.Paint(at: SIMD2(p.at[0], p.at[1]), color: SIMD3(p.color[0], p.color[1], p.color[2]))
+        }
         switch entry.kind {
         case "draw":
-            let paints = entry.paints?.map { p -> TemplateEditor.Paint in
-                guard p.at.count == 2, p.color.count == 3 else { fail("\(path): a paint is {\"at\": [x, y], \"color\": [L, a, b]}") }
-                return TemplateEditor.Paint(at: SIMD2(p.at[0], p.at[1]), color: SIMD3(p.color[0], p.color[1], p.color[2]))
-            }
             return .draw(points: points, closed: entry.closed ?? false, paints: paints)
+        case "split":
+            return .split(points: points, closed: entry.closed ?? false, paints: paints ?? [])
         case "erase":
             return .erase(path: points, radius: entry.radius ?? 4)
         case "eraseLine":
@@ -48,7 +51,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             if let n = entry.paint, (1...palette.count).contains(n) { return .fill(at: point, color: palette[n - 1].oklab) }
             fail("\(path): a fill needs \"color\": [L, a, b] or \"paint\": a number of the palette")
         default:
-            FileHandle.standardError.write(Data("\(path): skipping an edit of kind \(entry.kind) (draw, erase, eraseLine or fill)\n".utf8))
+            FileHandle.standardError.write(Data("\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine or fill)\n".utf8))
             return nil
         }
     }
@@ -241,6 +244,7 @@ func runEdit(_ options: Options) throws {
                 step.maxDeviation = d.middle
                 step.maxEndShift = d.ends
             }
+        case .split: step.kind = "split"
         case .erase: step.kind = "erase"
         case .eraseLine: step.kind = "eraseLine"
         case .fill: step.kind = "fill"

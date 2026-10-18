@@ -25,6 +25,7 @@ struct CompletionBar: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.tint)
                 .symbolEffect(.bounce, value: sealBounces)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
                 Group {

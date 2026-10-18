@@ -26,7 +26,8 @@ before planning app work).
     the style guide `ColorNicknameTests` lints).
   - `Model/`: `Template` + `TemplateCoding` (geometry conventions on `BoundaryEdge`, `Ring`,
     `FillMesh`, `Template.coordinateQuantum` and `points`), `GenerationSettings`, `Segmentation`,
-    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `PaintingTime` (the one painting-time
+    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `SharedPainting` (the `.moonlight` file Send
+    Template… writes: a template, its title and, by the painter's choice, its photo), `PaintingTime` (the one painting-time
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
@@ -48,7 +49,7 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
-  - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
+  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, eraser, line eraser and fill made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
     arithmetic; `docs/coloring-book.md` › Edits made to the template itself; a drawn line's
     paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`);
@@ -132,8 +133,8 @@ before planning app work).
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
   in it ships or goes into the Marginarium until he says so, and its wording stays his.
   `docs/backlog.md` is the other: the front desk's inbox (Working with Paul).
-- `.claude/skills/front-desk/`: the front desk (`SKILL.md`) and `sessions.py`, its summary of
-  Paul's sessions, their cost and the status page's data.
+- `.claude/skills/front-desk/`: the front desk (`SKILL.md`), `sessions.py`, its summary of
+  Paul's sessions, their cost and the status page's data, and `page.py`, the page's cards.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -246,7 +247,10 @@ Saved paintings must open in every later build. The format history is documented
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
   chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
   strokes) must keep decoding (they are never regenerated). Add
-  a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
+  a fixture file and decode test for every new `formatVersion`, chunk or trailing field. A
+  painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
+  input) follows the same rules: `shared-v1.moonlight` and `shared-v1-photo.moonlight` (the
+  optional `PHOT` chunk) keep decoding.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base layout
@@ -428,9 +432,8 @@ any port of it, when changing the fitter: work from the paper.
    caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
    as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
    median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 4 (`iphone`,
-   about 45 min alone, is main's longest). `ci/fetch.sh` waits up to 150 min. A newer push to the
-   same branch cancels the older run, which then never reports. Work on something else while it
-   runs.
+   about 85 min, is main's longest). `ci/fetch.sh` waits up to 140 min. A newer push to the same
+   branch cancels the older run, which then never reports. Work on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
    Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
    `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in
@@ -498,11 +501,17 @@ if he has gone quiet.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
-- **CI etiquette.** Keep at most two branches in CI across all sessions; the front desk keeps
-  count. Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
+- **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
+  idle. The front desk keeps the order in the CI queue atop `docs/backlog.md`: read your place
+  there instead of asking. Throwaway branches queue behind anything Paul called a must-have.
+  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, tell the front desk, and any further push queues again unless it fixes a red run.
+- **Paul's word counts once.** His comment on the status page, or his words the front desk relays
+  verbatim with their exact time, is his direct word for anything that can be undone. For what
+  can't, the page's card names the exact action, and his comment on that card counts. If auto
+  mode still blocks the action, tell the front desk, which asks Paul to repeat it in your session.
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
@@ -510,6 +519,13 @@ if he has gone quiet.
   propose new work it noticed: send the front desk one short proposal (what, why, size, who
   thought of it), at most one a night, and keep to its own topic. Paul signs off on the status
   page. Small fixes inside a session's own task aren't proposals.
+- **Reports** to the front desk carry the row #, branch@sha, pushed or not, the CI state and the
+  one thing needed. No "still waiting" pings: the CI queue answers that.
+- **Audits** fix what they find, unless the file is in another queued branch's diff (the front
+  desk's brief lists them); a change to one of Paul's own picks goes on a card before it's built.
+- **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
+  branch@sha, CI state and queue place, open questions to Paul, pending check-ins and what's next
+  (`.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell the front desk its id.
 - **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
   `[skip ci]`. That is the one exception to working on branches.
 

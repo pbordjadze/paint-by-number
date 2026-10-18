@@ -6,12 +6,12 @@ import Testing
 /// Refine's tools: the Pencil's double tap, and what a tap of Fill does. Its geometry and
 /// gestures are PaintCore's (`RefineGeometryTests`, `RefineGesturesTests`).
 struct RefineToolTests {
-    /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; Fill
-    /// has no partner.
+    /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; Fill,
+    /// the Color Splitter and Text have no partner.
     @Test func thePencilSwitchesPenAndEraser() {
         #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
-        #expect(RefineTool.more.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
+        #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
     }
 

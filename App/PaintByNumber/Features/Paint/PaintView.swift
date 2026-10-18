@@ -64,6 +64,8 @@ struct PaintView: View {
     @State private var flashes = false
     /// The thank-you toast's text while it shows.
     @State private var thanks: String?
+    /// The thanks for feedback just sent or shared, waiting for the review sheet to be gone.
+    @State private var pendingThanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
@@ -159,7 +161,7 @@ struct PaintView: View {
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
-        .sheet(isPresented: reviewsFeedback) {
+        .sheet(isPresented: reviewsFeedback, onDismiss: thankForFeedback) {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
                     .pageSizedOnPad()
@@ -656,15 +658,21 @@ struct PaintView: View {
     /// thanks (sent, or just thanks for a share, which may only have been saved to Files).
     private func feedbackSent(_ delivery: FeedbackSheet.Delivery) {
         feedback?.isSent = true
-        feedback?.isReviewing = false
-        let message = switch delivery {
+        pendingThanks = switch delivery {
         case .sent: String(localized: "Feedback sent. Thank you!")
         case .shared: String(localized: "Thanks for the feedback!")
         }
+        feedback?.isReviewing = false
+    }
+
+    /// The review sheet is gone. Feedback ends and the thanks show only now, not after a guess at
+    /// the sheet's dismissal: on CI's busy simulators the thanks came while the sheet still showed.
+    private func thankForFeedback() {
+        guard let message = pendingThanks else { return }
+        pendingThanks = nil
+        endFeedback()
+        Announcer.announce(message)
         Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            endFeedback()
-            Announcer.announce(message)
             thanks = message
             try? await Task.sleep(for: .seconds(3))
             thanks = nil

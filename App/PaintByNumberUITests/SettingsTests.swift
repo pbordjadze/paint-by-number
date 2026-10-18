@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
-/// Preview, Detail Brushes, The Marginarium and The Making-of.
+/// Preview, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -160,20 +160,6 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(shows(picker, "Painting"), "Choosing Painting didn't change the picker: \(describe(picker))")
     }
 
-    /// Settings › Detail Brushes starts off, and switches on and off again.
-    @MainActor
-    func testDetailBrushesSwitch() throws {
-        let app = openSettings()
-        let toggle = app.switches["settings-detail-brushes"]
-        scroll(app, to: toggle)
-        XCTAssertTrue(toggle.exists, "Settings has no Detail Brushes switch")
-        XCTAssertEqual(toggle.value as? String, "0", "Detail Brushes doesn't start off")
-        XCTAssertTrue(flip(toggle, on: true), "Detail Brushes didn't switch on: \(toggle.value ?? "")")
-        attachScreenshot(of: app, named: "settings-detail-brushes")
-        // Stored in the simulator's defaults: off again for the other tests.
-        XCTAssertTrue(flip(toggle, on: false), "Detail Brushes didn't switch off: \(toggle.value ?? "")")
-    }
-
     /// The Marginarium is hidden until its switch puts the book in the gallery's toolbar.
     @MainActor
     func testMarginariumSwitchShowsTheBook() throws {
@@ -277,11 +263,12 @@ final class SettingsTests: XCTestCase {
         "\(element.label) \(element.value as? String ?? "")"
     }
 
-    /// Waits for a menu picker's row to read `choice` (in its label or its value, see `describe`).
+    /// Waits for a menu picker's row to read `choice` (in its label or its value, see `describe`),
+    /// reading the row afresh each time: a predicate expectation over it timed out on CI with the
+    /// row already reading Bold (main, Oct 18), as the menu's dismissal kept the app busy.
     @MainActor
     private func shows(_ picker: XCUIElement, _ choice: String) -> Bool {
-        let chosen = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", choice, choice)
-        return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
+        waitUntil(timeout: 10) { describe(picker).contains(choice) }
     }
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each

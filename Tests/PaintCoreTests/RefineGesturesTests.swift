@@ -45,6 +45,16 @@ struct RefineGesturesTests {
         #expect(laid.outcome.joins >= 1 && laid.outcome.declined == nil)
     }
 
+    /// The Color Splitter's stroke is the Pen's line, as a split.
+    @Test func theSplitterIsThePensLineAsASplit() throws {
+        let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
+        let pen = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: Self.lines))
+        let split = try #require(RefineGestures.splitter(samples, on: Self.screen, snapping: Self.lines))
+        guard case .draw(let line, false, nil) = pen else { Issue.record("\(pen)"); return }
+        #expect(split == .split(points: line))
+        #expect(RefineGestures.splitter([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
+    }
+
     /// Shapes: a rectangle is a closed line through its corners, an oval closed too, a curve takes
     /// its ends from one drag and its bend from the next; one too small to draw is none.
     @Test func shapesMakeTheirLines() throws {
