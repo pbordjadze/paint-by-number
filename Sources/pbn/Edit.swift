@@ -7,7 +7,10 @@ import PaintCore
 /// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill, and
 /// `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
 /// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
-/// `"paints"`). An edit of a kind pbn doesn't know is left out with a warning.
+/// `"paints"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
+/// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
+/// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
+/// know is left out with a warning.
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
     struct EntryPaint: Decodable {
         var at: [Float]
@@ -22,6 +25,11 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
         var color: [Float]?
         var paint: Int?
         var paints: [EntryPaint]?
+        var look: String?
+        var strength: Float?
+        var lightness: [Float]?
+        var from: [Float]?
+        var family: Bool?
     }
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
     let entries: [Entry]
@@ -50,8 +58,19 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             if let c = entry.color, c.count == 3 { return .fill(at: point, color: SIMD3(c[0], c[1], c[2])) }
             if let n = entry.paint, (1...palette.count).contains(n) { return .fill(at: point, color: palette[n - 1].oklab) }
             fail("\(path): a fill needs \"color\": [L, a, b] or \"paint\": a number of the palette")
+        case "look":
+            guard let name = entry.look, let look = TemplateEditor.Look(rawValue: name) else {
+                fail("\(path): a look needs \"look\": one of \(TemplateEditor.Look.allCases.map(\.rawValue).joined(separator: ", "))")
+            }
+            return .look(look, strength: entry.strength ?? 1, lightness: entry.lightness ?? [])
+        case "repaint":
+            guard let f = entry.from, f.count == 3, let c = entry.color, c.count == 3 else {
+                fail("\(path): a repaint needs \"from\" and \"color\": [L, a, b]")
+            }
+            return .repaint(from: SIMD3(f[0], f[1], f[2]), to: SIMD3(c[0], c[1], c[2]), family: entry.family ?? false)
         default:
-            FileHandle.standardError.write(Data("\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine or fill)\n".utf8))
+            FileHandle.standardError.write(Data(
+                "\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine, fill, look or repaint)\n".utf8))
             return nil
         }
     }
@@ -75,6 +94,9 @@ struct EditReport: Codable {
         var tooSmall: Int
         /// Pieces a draw's paints gave another paint.
         var recolored: Int
+        /// Paints a look or a repaint gave another color, and paints it made one with another.
+        var paintsChanged: Int
+        var paintsMerged: Int
         /// For a draw: the farthest the template's ink strays from the line in the middle of it
         /// (its interior vertices and the steps between them) and from its two end points, canvas
         /// units: an end joins the ink it is near.
@@ -221,11 +243,20 @@ func runEdit(_ options: Options) throws {
     var t = before
     var steps: [EditReport.Step] = []
     var continued = Array(0..<before.regions.count)
+    // The looks and repaints made so far, which later edits bring their colors through, as the app's
+    // EditTrail does.
+    var recolors: [TemplateEditor.Edit] = []
     for given in edits {
         let result: (template: Template, outcome: TemplateEditor.Outcome)
         let began = ContinuousClock.now
-        let edit = photo.map { TemplateEditor.painted(given, on: t, photo: $0) } ?? given
-        do { result = try TemplateEditor.apply(edit, to: t) } catch { fail("cannot edit: \(error)") }
+        var edit = photo.map { TemplateEditor.painted(given, on: t, photo: $0) } ?? given
+        if case .look(let look, let strength, let lightness) = edit, lightness.isEmpty {
+            edit = TemplateEditor.look(look, strength: strength, on: t)
+        }
+        do {
+            result = try TemplateEditor.apply(TemplateEditor.recolored(edit, by: recolors), to: t)
+        } catch { fail("cannot edit: \(error)") }
+        if result.outcome.changed, TemplateEditor.isRecolor(edit) { recolors.append(edit) }
         let took = ContinuousClock.now - began
         elapsed += took
         var step = EditReport.Step(
@@ -233,7 +264,8 @@ func runEdit(_ options: Options) throws {
             joins: result.outcome.joins, regionsSplit: result.outcome.regionsSplit, regionsMerged: result.outcome.regionsMerged,
             detailAreas: result.outcome.detailAreas, strokes: result.outcome.strokes, erased: result.outcome.erased,
             fills: result.outcome.fills, paintsAdded: result.outcome.paintsAdded, tooSmall: result.outcome.tooSmall.count,
-            recolored: result.outcome.recolored, unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
+            recolored: result.outcome.recolored, paintsChanged: result.outcome.paintsChanged,
+            paintsMerged: result.outcome.paintsMerged, unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
             milliseconds: Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
         switch edit {
         case .draw(let points, let closed, _):
@@ -248,6 +280,8 @@ func runEdit(_ options: Options) throws {
         case .erase: step.kind = "erase"
         case .eraseLine: step.kind = "eraseLine"
         case .fill: step.kind = "fill"
+        case .look: step.kind = "look"
+        case .repaint: step.kind = "repaint"
         }
         steps.append(step)
         continued = continued.map { $0 < result.outcome.continued.count ? result.outcome.continued[$0] : $0 }

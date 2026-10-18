@@ -808,6 +808,40 @@ final class CreateModel {
         return serial
     }
 
+    /// Refine's Colors, in its turn: a look over every paint (in place of any look or repaint
+    /// before it, read on the template the other edits make), the photo's colors again, or one
+    /// paint repainted (in place of the last edit when that repainted the same color: the color
+    /// picker still moving is one step of the history). Paints made alike become one, which a
+    /// note says. Nothing happens while the template is being made again.
+    func recolor(_ change: RefineColors) {
+        enqueue { [self] in
+            guard let current = trail, let key = trailKey, key == currentKey else { return }
+            let before = refinements
+            var next = before
+            let replaces = change.replacesLast(of: before.edits)
+            switch change {
+            case .photo:
+                next.edits = RefineColors.withoutColors(before.edits)
+            case .look(let look, let strength):
+                let kept = RefineColors.withoutColors(before.edits)
+                guard let edit = try? await Self.lookEdit(look, strength: strength, on: current, edits: kept) else { return }
+                next.edits = kept + [edit]
+            case .repaint(let from, let to, let family):
+                let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)
+                if replaces { next.edits[next.edits.count - 1] = edit } else { next.edits.append(edit) }
+            }
+            guard next != before, next.edits.count <= TemplateRefinements.maximumEdits, refinements == before else { return }
+            if !replaces { history.push(before) }
+            let paints = current.template.palette.count
+            await settle(on: next)
+            if refinements == next, let shown = trail?.template, shown.palette.count < paints { say(.alike) }
+        }
+    }
+
+    /// The paints of the template the generator made, before any edit: what the looks of Refine's
+    /// Colors show themselves on.
+    var paintsBeforeEdits: [PaletteColor] { trail?.base.palette ?? preview?.template.palette ?? [] }
+
     /// A correction of the text, in its turn.
     func change(_ change: RefineChange) {
         enqueue { [self] in
@@ -1160,6 +1194,17 @@ final class CreateModel {
         try Task.checkCancellation()
         let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
         return Shown(preview: preview, trail: trail, replay: replay)
+    }
+
+    /// `look` at `strength` as an edit, with the lightness of the paints `edits` make on `trail`'s
+    /// base: the template the look will be laid on.
+    @concurrent
+    private static func lookEdit(
+        _ look: TemplateEditor.Look, strength: Float, on trail: EditTrail, edits: [TemplateEditor.Edit]
+    ) async throws -> TemplateEditor.Edit {
+        var trail = trail
+        try trail.move(to: edits, cancel: .task)
+        return TemplateEditor.look(look, strength: strength, on: trail.template)
     }
 
     /// One edit laid on `trail` (`edit`: as laid, a drawn line with its paints), and the result

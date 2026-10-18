@@ -7,12 +7,45 @@ import Testing
 /// gestures are PaintCore's (`RefineGeometryTests`, `RefineGesturesTests`).
 struct RefineToolTests {
     /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; Fill,
-    /// the Color Splitter and Text have no partner.
+    /// the Color Splitter, Text and Colors have no partner.
     @Test func thePencilSwitchesPenAndEraser() {
         #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
         #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
+        #expect(RefineTool.colors.pencilPartner == nil && !RefineTool.colors.erases)
+    }
+
+    /// Colors' changes to the edits: a look and the photo's colors start from the edits without
+    /// looks and repaints, a repaint of the color the last one repainted takes its place, and the
+    /// look shown is the last one laid.
+    @Test func colorsChangeTheirOwnEditsAlone() {
+        let red = SIMD3<Float>(0.6, 0.2, 0.1), blue = SIMD3<Float>(0.6, -0.05, -0.2)
+        let drawn = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(5, 5)])
+        let moonlit = TemplateEditor.Edit.look(.moonlit, strength: 0.5)
+        let repaint = TemplateEditor.Edit.repaint(from: red, to: blue, family: true)
+        let edits = [drawn, moonlit, repaint]
+        #expect(RefineColors.withoutColors(edits) == [drawn])
+        #expect(RefineColors.look(in: edits)?.look == .moonlit && RefineColors.look(in: edits)?.strength == 0.5)
+        #expect(RefineColors.look(in: [drawn]) == nil)
+        #expect(RefineColors.repaint(from: red, to: red, family: false).replacesLast(of: edits))
+        #expect(!RefineColors.repaint(from: blue, to: red, family: true).replacesLast(of: edits))
+        #expect(!RefineColors.repaint(from: red, to: blue, family: true).replacesLast(of: [drawn]))
+        #expect(!RefineColors.look(.sepia, strength: 1).replacesLast(of: edits))
+    }
+
+    /// A look's chip shows four of the painting's paints, darkest to lightest, in that look.
+    @Test func aLooksChipShowsFourPaints() {
+        let palette = (0..<10).map { PaletteColor(oklab: SIMD3(0.1 + 0.08 * Float($0), 0.05, -0.02), space: .sRGB) }
+        #expect(RefineColorsPanel.preview(of: nil, on: palette).count == 4)
+        #expect(RefineColorsPanel.preview(of: .starryNight, on: palette).count == 4)
+        #expect(RefineColorsPanel.preview(of: .moonlit, on: []).isEmpty)
+    }
+
+    /// The row offers five looks, Moonlit first (Paul, October 18); the rest are kept for later.
+    @Test func theRowOffersFiveLooks() {
+        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
+        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
     }
 
     /// A tap anywhere in the detail area a fill made takes out the fills made there (not those
