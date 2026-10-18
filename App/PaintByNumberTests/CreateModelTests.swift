@@ -526,6 +526,27 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A Color Splitter stroke across the picture divides its color with no line: the edit keeps
+    /// the photo's colors for its pieces, and the template on screen is the editor's result.
+    @Test func aSplitDividesTheColorWithNoLine() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let split = TemplateEditor.Edit.split(points: [SIMD2(0, 0.2 * h), SIMD2(w, 0.25 * h)])
+        try await waitForEdits(model, model.edit(split))
+        let laid = try #require(model.refinements.edits.first)
+        guard case .split(_, false, let paints) = laid else { Issue.record("not a split: \(laid)"); return }
+        #expect(!paints.isEmpty)
+        #expect(laid == TemplateEditor.painted(split, on: before, photo: try #require(model.source?.image)))
+        let (expected, outcome) = try TemplateEditor.apply(laid, to: before)
+        #expect(outcome.regionsSplit > 0 && outcome.strokes == 0)
+        #expect(model.preview?.template == expected)
+        #expect(expected.lineArt?.strokes.count == before.lineArt?.strokes.count, "a split draws no line")
+        model.cancelAll()
+    }
+
     /// Undo brings the previous template back exactly, from the templates kept; Redo puts the edit
     /// back; Cancel puts back what Refine opened with.
     @Test func undoRestoresThePreviousTemplateExactly() async throws {

@@ -14,8 +14,8 @@ import SwiftUI
 /// The template shown at full resolution is the one the generator makes from the photo, the
 /// settings and the refinements' generator inputs (the base), with the painter's manual edits laid
 /// on it in order (`EditTrail`, `refinements.edits`). Refine's edits are made to that template
-/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its brushes and the sliders make the
-/// base again and the edits are laid on the new one. `MARK: Refine` says how.
+/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its text corrections and the sliders
+/// make the base again and the edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
     struct Source {
@@ -176,7 +176,7 @@ final class CreateModel {
     /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
     @ObservationIgnored private var loadID = 0
     /// The photo's latest full-resolution templates as the generator made them (no edits) and
-    /// what they were made with, newest first: stepping back to one (a brush undone, a slider put
+    /// what they were made with, newest first: stepping back to one (a text correction undone, a slider put
     /// back) lays the edits on it again without generating.
     @ObservationIgnored private var made: [Made] = []
 
@@ -769,7 +769,7 @@ final class CreateModel {
     //   nothing: it is not kept, takes no step of the history, and a declined one
     //   says so (`note`). A shape a line closed that has no room for a number is cut off by nothing,
     //   but the line stays, and says so.
-    // - A brush or a correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
+    // - A correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
     //   sliders do the same with the settings. A base made before is reused (`made`).
@@ -803,7 +803,7 @@ final class CreateModel {
         return serial
     }
 
-    /// A brush or a correction of the text, in its turn.
+    /// A correction of the text, in its turn.
     func change(_ change: RefineChange) {
         enqueue { [self] in
             var next = refinements

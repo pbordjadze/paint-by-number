@@ -329,16 +329,16 @@
       "comment" : "Status shown over the create preview while settings are being chosen for the photo (Suggested settings); also the sliders' VoiceOver value meanwhile",
       "extractionState" : "manual"
     },
-    "Clear Brushing" : {
-      "comment" : "Refine screen, with Settings › Detail Brushes on: the brush that clears areas brushed for more or less detail (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Close" : {
       "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet)",
       "extractionState" : "manual"
     },
     "Color Key" : {
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "extractionState" : "manual"
+    },
+    "Color Splitter" : {
+      "comment" : "Refine screen: the tool whose stroke divides an area's color in two without drawing a line (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Compare Photo and Page" : {
@@ -995,10 +995,6 @@
     },
     "Detail" : {
       "comment" : "Create flow: label of the slider for how much detail the template has",
-      "extractionState" : "manual"
-    },
-    "Detail Brushes" : {
-      "comment" : "Settings switch: the Refine screen also offers brushes for more or less detail and corrections to the text the app found",
       "extractionState" : "manual"
     },
     "Discard" : {
@@ -1753,10 +1749,6 @@
       "comment" : "Header of what is shared: the settings text in Settings › Advanced › Share with a Note, and the list of what goes with feedback on a painting",
       "extractionState" : "manual"
     },
-    "Less Detail" : {
-      "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Lifts its lid." : {
       "comment" : "The Marginarium: VoiceOver hint of Pip, the teapot: tapping it makes it lift its lid",
       "extractionState" : "manual"
@@ -1921,6 +1913,10 @@
       "comment" : "VoiceOver label of the spinner under the photo while the making-of show is being made, before it plays",
       "extractionState" : "manual"
     },
+    "Refine also offers corrections to the lines of text the app found." : {
+      "comment" : "Footer under the Text Corrections switch in Settings",
+      "extractionState" : "manual"
+    },
     "Refine, top right, lets you draw or erase lines and fill shapes. It is optional." : {
       "comment" : "Message of the tip titled Shape the Lines Yourself; Refine is the optional step of the New Painting screen, a button at its top right",
       "extractionState" : "manual"
@@ -1963,6 +1959,10 @@
     },
     "Tell Us What You Think" : {
       "comment" : "Title of the tip at Give Feedback on the painting screen, shown on opening the third painting",
+      "extractionState" : "manual"
+    },
+    "Text Corrections" : {
+      "comment" : "Settings switch: the Refine screen also offers corrections to the lines of text the app found",
       "extractionState" : "manual"
     },
     "The gear holds paper tone, sound and painting length. Tips can be turned off there." : {
@@ -2351,10 +2351,6 @@
     },
     "More" : {
       "comment" : "Accessibility label of the painting screen's More (…) menu",
-      "extractionState" : "manual"
-    },
-    "More Detail" : {
-      "comment" : "Refine screen: the brush that gives an area more detail and lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Name" : {
@@ -3297,10 +3293,6 @@
       "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where the painter draws and erases the template's lines",
       "extractionState" : "manual"
     },
-    "Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found." : {
-      "comment" : "Footer under the Detail Brushes switch in Settings",
-      "extractionState" : "manual"
-    },
     "refine.canvas" : {
       "comment" : "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes",
       "extractionState" : "manual",
@@ -3397,18 +3389,6 @@
         }
       }
     },
-    "refine.hint.less" : {
-      "comment" : "Refine screen: how the Less Detail brush works, shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush where the painting should be simpler, with fewer lines. Two fingers zoom and move."
-          }
-        }
-      }
-    },
     "refine.hint.line" : {
       "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked",
       "extractionState" : "manual",
@@ -3417,18 +3397,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drag to draw a straight line. Two fingers zoom and move."
-          }
-        }
-      }
-    },
-    "refine.hint.more" : {
-      "comment" : "Refine screen: how the More Detail brush works, shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush where the painting should have more detail and lines. Two fingers zoom and move."
           }
         }
       }
@@ -3481,6 +3449,18 @@
         }
       }
     },
+    "refine.hint.splitter" : {
+      "comment" : "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw across an area to split it into two colors, with no line between them. Two fingers zoom and move."
+          }
+        }
+      }
+    },
     "refine.hint.text" : {
       "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked",
       "extractionState" : "manual",
@@ -3489,18 +3469,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap a line of text to keep or ignore it, or drag across a line the app missed."
-          }
-        }
-      }
-    },
-    "refine.hint.unbrush" : {
-      "comment" : "Refine screen: how Clear Brushing works (it clears areas brushed for more or less detail), shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush over marked areas to clear them."
           }
         }
       }
@@ -3561,6 +3529,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That shape couldn’t be filled."
+          }
+        }
+      }
+    },
+    "refine.note.notSplit" : {
+      "comment" : "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That area couldn’t be split there."
           }
         }
       }

@@ -8,15 +8,12 @@ import Testing
 struct RefineEditsTests {
     static let found: [SIMD2<Float>] = [SIMD2(0.1, 0.1), SIMD2(0.3, 0.1), SIMD2(0.3, 0.15), SIMD2(0.1, 0.15)]
 
-    /// A change lands on the refinements as they are, whatever came before it: a brush adds a
-    /// stroke, a marked line comes and goes, a found line is turned off and on again (found a
-    /// little differently the second time, as when a painting is regenerated).
+    /// A change lands on the refinements as they are, whatever came before it: a marked line
+    /// comes and goes, a found line is turned off and on again (found a little differently the
+    /// second time, as when a painting is regenerated).
     @Test func changesLandOnTheRefinementsAsTheyAre() {
         var refinements = TemplateRefinements()
         refinements.edits = [.draw(points: [SIMD2(1, 2), SIMD2(3, 4)], closed: false)]
-        let stroke = TemplateRefinements.Stroke(kind: .more, radius: 0.1, points: [SIMD2(0.5, 0.5)])
-        RefineChange.stroke(stroke).apply(to: &refinements)
-        #expect(refinements.strokes == [stroke])
 
         let marked = TemplateRefinements.textLine(from: SIMD2(0.1, 0.1), to: SIMD2(0.4, 0.2))
         RefineChange.markText(marked).apply(to: &refinements)
@@ -57,7 +54,8 @@ struct RefineEditsTests {
         #expect(RefineNote.Kind(declined: .erase(path: [], radius: 1)) == .notErased)
         #expect(RefineNote.Kind(declined: .eraseLine(at: .zero)) == .notErased)
         #expect(RefineNote.Kind(declined: .fill(at: .zero, color: .zero)) == .notFilled)
-        let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .tooSmall, .left(1), .left(3)]
+        #expect(RefineNote.Kind(declined: .split(points: [])) == .notSplit)
+        let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .tooSmall, .left(1), .left(3)]
         let texts = kinds.map { RefineNote(kind: $0).text }
         #expect(texts.allSatisfy { !$0.isEmpty } && Set(texts).count == kinds.count)
         #expect(RefineNote(kind: .tooSmall).text == "That shape is too small for a number.")

@@ -48,7 +48,7 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
-  - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
+  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, eraser, line eraser and fill made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
     arithmetic; `docs/coloring-book.md` › Edits made to the template itself; a drawn line's
     paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`);

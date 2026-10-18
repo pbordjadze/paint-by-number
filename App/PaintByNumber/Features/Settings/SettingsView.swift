@@ -159,11 +159,11 @@ struct SettingsView: View {
 
                     Section {
                         Toggle(isOn: $detailBrushes) {
-                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
+                            SwiftUI.Label("Text Corrections", systemImage: "text.viewfinder")
                         }
                         .accessibilityIdentifier("settings-detail-brushes")
                     } footer: {
-                        Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
+                        Text("Refine also offers corrections to the lines of text the app found.")
                     }
 
                     #if UNRELEASED

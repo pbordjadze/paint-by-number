@@ -7,6 +7,7 @@ import PaintCore
 ///     {"screen": {"width": 960, "zoom": 1},
 ///      "gestures": [
 ///        {"tool": "pen", "points": [[x, y], ...]},                  a finger's samples
+///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
@@ -140,6 +141,8 @@ func runRefine(_ options: Options) throws {
         switch g.tool {
         case "pen":
             edit = RefineGestures.pen(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
+        case "splitter":
+            edit = RefineGestures.splitter(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "eraser":
             edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
         case "shape":
@@ -189,7 +192,7 @@ func runRefine(_ options: Options) throws {
             }
             step.verdict = "redo"
         default:
-            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, shape, eraser, smartEraser, fill, undo, redo)")
+            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, shape, eraser, smartEraser, fill, undo, redo)")
         }
 
         if let target {
@@ -217,6 +220,7 @@ func runRefine(_ options: Options) throws {
                 step.declined = why
                 switch painted {
                 case .draw: step.toast = "That line couldn’t be drawn there."
+                case .split: step.toast = "That area couldn’t be split there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
                 }
@@ -239,7 +243,7 @@ func runRefine(_ options: Options) throws {
         step.touches = name + "-touches.ppm"
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
-        case .draw(let points, _, _)?: around += points
+        case .draw(let points, _, _)?, .split(let points, _, _)?: around += points
         case .erase(let path, _)?: around += path
         case .eraseLine(let at, _)?, .fill(let at, _)?: around.append(at)
         case nil: break

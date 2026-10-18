@@ -21,8 +21,9 @@ enum SettingsKey {
     nonisolated static let lineWeight = "lineWeight"
     /// What the create flow's preview shows beside the photo (`PreviewStyle`).
     nonisolated static let previewStyle = "previewStyle"
-    /// Refine offers its brushes for more or less detail and its text corrections beside the
-    /// pen and the eraser (Settings › Detail Brushes; off by default).
+    /// Refine offers its text corrections beside the pen and the eraser (Settings › Text
+    /// Corrections; off by default). Named for the detail brushes it once offered too, which
+    /// Refine no longer has (Paul, October 18).
     static let detailBrushes = "refineDetailBrushes"
     /// The gallery's toolbar offers The Marginarium, the storybook of how the app was made
     /// (Settings › The Marginarium; off by default).
@@ -44,7 +45,7 @@ struct Preferences {
     var paintingLength: PaintingLength
     /// What the create flow's preview shows beside the photo.
     var previewStyle: PreviewStyle
-    /// Refine offers its detail brushes and text corrections too.
+    /// Refine offers its text corrections too.
     var detailBrushes: Bool
     /// Start Painting plays the making-of show first.
     var playsMakingOf: Bool

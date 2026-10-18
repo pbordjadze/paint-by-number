@@ -3,9 +3,10 @@ import Foundation
 import PaintCore
 
 /// What the painter refined in a new painting before painting it (the create flow's optional
-/// Refine step, `RefineView`): lines drawn and erased and shapes filled by hand, and, with
-/// Settings › Detail Brushes, areas brushed for more or less detail and corrections to the lines
-/// of text the app found.
+/// Refine step, `RefineView`): lines drawn and erased, areas split and shapes filled by hand,
+/// and, with Settings › Text Corrections, corrections to the lines of text the app found. Areas
+/// brushed for more or less detail come only from builds that had the brushes; they still shape
+/// the base.
 /// Two kinds, by what they act on:
 /// - `edits` are made by hand to the finished template (PaintCore's `TemplateEditor`), one after
 ///   another, with no image processing: a line is the line drawn, and nothing the edit does not

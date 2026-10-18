@@ -1,8 +1,8 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens, the eraser and Fill, Undo and Redo (the
-/// buttons and a two-finger tap), Done and Cancel; with Settings › Detail Brushes, its brushes
-/// and text marks too.
+/// The create flow's optional Refine step: the pens, the eraser and Fill, the Color Splitter, Undo
+/// and Redo (the buttons and a two-finger tap), Done and Cancel; with Settings › Text Corrections,
+/// its text marks too.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
@@ -22,7 +22,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertTrue(app.buttons["refine-tool-pen"].isSelected, "Refine doesn't start on the pen")
-        XCTAssertFalse(app.buttons["refine-tool-more"].exists, "The detail brushes show with Detail Brushes off")
+        XCTAssertFalse(app.buttons["refine-tool-text"].exists, "The Text tool shows with Text Corrections off")
         let undo = app.buttons["refine-undo"], redo = app.buttons["refine-redo"]
         XCTAssertFalse(undo.isEnabled, "Undo is offered before any change")
 
@@ -95,21 +95,31 @@ final class RefineUITests: XCTestCase {
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "The refined preview can't be started")
     }
 
-    /// With Settings › Detail Brushes on, Refine also brushes areas for more detail and marks a
-    /// line of text dragged across, and Done keeps both.
+    /// The Color Splitter divides the picture's color along a stroke and shows the painting, where
+    /// a split shows; with Settings › Text Corrections on (`-refineDetailBrushes`, its stored name),
+    /// Refine also marks a line of text dragged across, and offers no detail brushes. Done keeps
+    /// both.
     @MainActor
-    func testDetailBrushesBrushAndMarkText() throws {
+    func testSplitterAndTextCorrections() throws {
         let app = launchPreview(arguments: ["-refineDetailBrushes", "YES"])
         let refine = app.buttons["refine"]
         refine.tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
-        let more = app.buttons["refine-tool-more"]
-        XCTAssertTrue(more.exists, "Detail Brushes on, Refine has no More Detail")
-        more.tap()
-        drag(on: canvas, from: CGVector(dx: 0.3, dy: 0.42), to: CGVector(dx: 0.6, dy: 0.5))
+        XCTAssertFalse(app.buttons["refine-tool-more"].exists, "Refine still has the More Detail brush")
+
+        let splitter = app.buttons["refine-tool-splitter"]
+        XCTAssertTrue(splitter.exists, "Refine has no Color Splitter")
+        splitter.tap()
+        XCTAssertTrue(waitFor(splitter, toMatch: NSPredicate(format: "isSelected == true")), "The splitter didn't become the tool")
         XCTAssertTrue(
-            waitFor(canvas, toMatch: changes("1 change")), "The brush stroke didn't count: \(canvas.value ?? "")")
+            waitFor(app.buttons["refine-painting"], toMatch: NSPredicate(format: "isSelected == true")),
+            "Picking the splitter didn't show the painting")
+        // Edge to edge across the sky: it divides every area it crosses.
+        drag(on: canvas, from: CGVector(dx: 0.02, dy: 0.15), to: CGVector(dx: 0.98, dy: 0.18))
+        XCTAssertTrue(
+            waitFor(canvas, toMatch: changes("1 change")), "The split didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-splitter")
 
         let text = app.buttons["refine-tool-text"]
         XCTAssertTrue(text.exists, "Refine has no Text tool")
@@ -118,7 +128,6 @@ final class RefineUITests: XCTestCase {
         drag(on: canvas, from: CGVector(dx: 0.2, dy: 0.55), to: CGVector(dx: 0.55, dy: 0.6))
         XCTAssertTrue(
             waitFor(canvas, toMatch: changes("2 changes")), "Dragging with Text didn't mark a line: \(canvas.value ?? "")")
-        attachScreenshot(of: app, named: "refine-detail-brushes")
 
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")

@@ -84,6 +84,11 @@ struct EditWork {
 
     /// See `snapped`.
     let snapRadius: Int64
+    /// The edit is a split (`TemplateEditor.Edit.split`): the line it lays is an undrawn boundary,
+    /// its ends meet any edge, and what of it closes nothing leaves no stroke.
+    var splitting = false
+    /// The boundaries a split laid (the chains of its line; `drawRun`).
+    var splitEdges: [Int] = []
 
     init(_ template: Template, snapRadius: Int64 = 1) throws {
         self.snapRadius = snapRadius
