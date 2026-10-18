@@ -17,7 +17,10 @@ final class CreateFlowTests: XCTestCase {
 
         let compare = app.descendants(matching: .any)["Comparison of photo and painting"]
         XCTAssertTrue(compare.exists)
-        XCTAssertEqual(compare.value as? String, "50 percent photo")
+        // The divider sweeps in from the trailing edge with the first picture and rests in the middle.
+        XCTAssertTrue(
+            waitFor(compare, toMatch: NSPredicate(format: "value == %@", "50 percent photo"), timeout: 5),
+            "The divider didn't come to rest in the middle: \(compare.value ?? "")")
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)))
         let moved = waitFor(compare, toMatch: NSPredicate(format: "value != nil AND value != %@", "50 percent photo"))

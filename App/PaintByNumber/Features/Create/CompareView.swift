@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Before/after: the photo on the leading side of a draggable divider, the template's picture
 /// (the painting, or its line art: Settings › Preview) on the trailing side. New pictures
-/// crossfade in. Pinch or double-tap zooms both layers alike (up to `maxZoom`) to check an eye or
+/// crossfade in, a photo's first with the divider sweeping in from the trailing edge (`sweepIn`). Pinch or double-tap zooms both layers alike (up to `maxZoom`) to check an eye or
 /// a line of writing, and the zoom holds while the sliders change the template; zoomed in, a drag
 /// pans and the divider moves by its handle. The comparison takes the photo's shape, or fills
 /// the space it is given (`fillsSpace`, the enlarged preview) with the picture fitted inside it,
@@ -29,6 +29,8 @@ struct CompareView: View {
     @State private var liveZoom: CGFloat?
     @State private var liveOffset: CGSize?
     @State private var frameSize: CGSize = .zero
+    /// The divider has swept in for this photo's first picture (`sweepIn`).
+    @State private var hasSwept = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let maxZoom: CGFloat = 4
@@ -131,6 +133,10 @@ struct CompareView: View {
         .onChange(of: ObjectIdentifier(photo)) {
             zoom = 1
             offset = .zero
+            hasSwept = false
+        }
+        .onChange(of: after == nil) { _, isNil in
+            if !isNil { sweepIn() }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Comparison of photo and painting")
@@ -291,6 +297,20 @@ struct CompareView: View {
     }
 
     private static let space = "compare"
+
+    /// The photo's first picture arrives from the trailing edge, the divider sweeping from there
+    /// to the middle: before and after, shown rather than said. Once per photo; Reduce Motion, a
+    /// gesture under way or a divider already moved leave it where it is.
+    private func sweepIn() {
+        guard !hasSwept else { return }
+        hasSwept = true
+        guard !reduceMotion, liveZoom == nil, liveOffset == nil, split == 0.5 else { return }
+        // Without a picture the divider stood at the trailing edge: start the sweep there.
+        withTransaction(Transaction(animation: nil)) { split = 1 }
+        Task { @MainActor in
+            withAnimation(.smooth(duration: 0.9).delay(0.15)) { split = 0.5 }
+        }
+    }
 
     private func labels(split: CGFloat) -> some View {
         // Tight enough for both words on a tall photo's narrow preview on a phone.
