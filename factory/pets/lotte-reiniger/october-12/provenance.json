@@ -1,0 +1,25 @@
+{
+  "pet": "lotte-reiniger",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude; backlog row 42.",
+  "approved": "Paul (and Caroline) approved the still first; every row was generated from it. Sheet signed off 2026-10-18.",
+  "image_generations": 13,
+  "source_png_sha256": "e861b9c0812ac7d4c8168797c7613f02352c26f571aefcd5336fd685e8ca8570",
+  "atlas_sha256": "73a9cc5882789a59074726506196babc68b62f3525f2dfffa4a8848dc9a12f64",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look direction 180 has non-passing verdict fail",
+      "look direction 202.5 has non-passing verdict fail",
+      "look direction 225 has non-passing verdict fail"
+    ]
+  },
+  "notes": "13 images. Passes the v2 contract after clearing leftover key colour from inside the lace holes, so they're see-through as designed. Three of the sixteen look poses (looking down and down-left) read wrong, so the skill's quality gate fails; the reader doesn't play the look rows."
+}
