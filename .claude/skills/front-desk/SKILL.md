@@ -99,6 +99,10 @@ is a short review guide for one decision only Paul can make: the question, the c
 the session recommends, and the reply to type. Keep it in step with what you ask him in chat:
 add a row when a session needs him, drop it when he answers, and re-upload it the same way at
 each refresh. Paul uses the page to decide quickly; keep the rest of it short.
+He answers by commenting on a card with @claude. Keep the page watched
+(`ArtifactComments` `watch` with its `url`, again in a new front desk session): each such
+comment wakes you. Read the thread, treat his words as his decision (relay them like any
+go-ahead, verbatim, with the time), reply in the thread with where it went, and resolve it.
 
 Don't rewrite the page itself (`files/index.html`) unless Paul asks for a change to it. When you
 do, the Dashboard type's rules apply: the type's instructions come back when you publish with
