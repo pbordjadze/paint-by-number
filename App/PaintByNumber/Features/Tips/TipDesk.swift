@@ -459,106 +459,99 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
-/// Where the navigation bar buttons that carry a tip are in their window (`barTip`), for
-/// `barTipHost`.
-@MainActor
-@Observable
-final class BarTipAnchors {
-    static let shared = BarTipAnchors()
-    var frames: [TipID: CGRect] = [:]
-}
-
-/// Keeps `BarTipAnchors` told where a bar button is in its window. SwiftUI's global frame of a
-/// toolbar item is the bar's own hosting view's, not the window's (CI, October 18: the gear's tip
-/// hung over the gear, its anchor some 50 points above it), so a UIKit view behind the button
-/// reports it, asked again whenever SwiftUI sees the button move.
-private struct BarTipAnchorModifier: ViewModifier {
+/// A tip of a navigation bar button: the button leaving the bar (Refine under Enlarge Preview, the
+/// gallery's items during a search) takes its tip's turn with it.
+private struct BarTipModifier: ViewModifier {
     let id: TipID
-    @State private var moves = 0
 
     func body(content: Content) -> some View {
-        content
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { _ in moves += 1 }
-            .background(WindowFrameProbe(moves: moves) { frame in
-                // A frame that is empty for a moment (a rotation, the bar's morph) keeps the last
-                // one: the anchor leaving would dismiss the popover, which closes the tip for good.
-                if !frame.isEmpty, BarTipAnchors.shared.frames[id] != frame { BarTipAnchors.shared.frames[id] = frame }
-            })
-            // A button that leaves the bar (Refine under Enlarge Preview) takes its tip's turn with
-            // it, and its anchor.
-            .onDisappear {
-                PaintTips.desk.stop(id)
-                BarTipAnchors.shared.frames[id] = nil
+        content.onDisappear { PaintTips.desk.stop(id) }
+    }
+}
+
+/// Finds a navigation bar button on screen by its VoiceOver label. iOS 26 draws a toolbar's buttons
+/// itself: SwiftUI's frame of a toolbar item is not where the button is (CI, October 18: the gear's
+/// tip hung some 50 points above the gear), and a view laid behind its label never reaches the
+/// screen. The bar's own button view carries the label, as UI tests find it.
+@MainActor
+private enum BarButtons {
+    /// The button's frame in its window, if a navigation bar on screen shows one labelled `label`.
+    static func frame(labelled label: String) -> CGRect? {
+        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
+        for window in windows where !window.isHidden {
+            for bar in all(UINavigationBar.self, in: window) where !bar.isHidden && bar.alpha > 0 {
+                if let button = first(in: bar, where: { $0.accessibilityLabel == label && !$0.isHidden && !$0.bounds.isEmpty }) {
+                    return button.convert(button.bounds, to: window)
+                }
             }
+        }
+        return nil
+    }
+
+    private static func all<V: UIView>(_ type: V.Type, in view: UIView) -> [V] {
+        var found: [V] = []
+        if let match = view as? V { found.append(match) }
+        for subview in view.subviews { found += all(type, in: subview) }
+        return found
+    }
+
+    private static func first(in view: UIView, where matches: (UIView) -> Bool) -> UIView? {
+        if matches(view) { return view }
+        for subview in view.subviews {
+            if let match = first(in: subview, where: matches) { return match }
+        }
+        return nil
     }
 }
 
-/// Reports where it is in its window, in points, when laid out, moved to a window or updated.
-private struct WindowFrameProbe: UIViewRepresentable {
-    /// Changes whenever the view it sits behind moves, so it reports again.
-    let moves: Int
-    let report: (CGRect) -> Void
-
-    func makeUIView(context: Context) -> ProbeView {
-        ProbeView(report: report)
-    }
-
-    func updateUIView(_ view: ProbeView, context: Context) {
-        view.report = report
-        view.reportFrame()
-    }
-
-    final class ProbeView: UIView {
-        var report: (CGRect) -> Void
-
-        init(report: @escaping (CGRect) -> Void) {
-            self.report = report
-            super.init(frame: .zero)
-            isUserInteractionEnabled = false
-            isAccessibilityElement = false
-        }
-
-        @available(*, unavailable)
-        required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
-
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            reportFrame()
-        }
-
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            reportFrame()
-        }
-
-        func reportFrame() {
-            guard let window else { return }
-            report(convert(bounds, to: window))
+extension TipID {
+    /// The VoiceOver label of the navigation bar button a bar tip hangs from (`hangsFromBar`).
+    fileprivate var barButtonLabel: String? {
+        switch self {
+        case .shelfSettings: String(localized: "Settings")
+        case .shelfNewPainting: String(localized: "New Painting")
+        case .newPaintingRefine: String(localized: "Refine")
+        default: nil
         }
     }
 }
 
-/// Hangs the tips of `ids` below their navigation bar buttons from a clear view laid over each
-/// button, outside the bar: a popover from the bar's own button grows out of it on iOS 26 and
-/// covers it (and on a phone the title), with no arrow (the Lamplit Table, October 18: the button
-/// stays in view, the tip hangs below it).
+/// Hangs the tip of `ids` whose turn it is below its navigation bar button, from a clear view laid
+/// over the button outside the bar: a popover from the bar's own button grows out of it on iOS 26
+/// and covers it (and on a phone the title), with no arrow (the Lamplit Table, October 18: the
+/// button stays in view, the tip hangs below it).
 private struct BarTipHost: View {
     let ids: [TipID]
+    @State private var anchor: (id: TipID, frame: CGRect)?
 
     var body: some View {
+        let turn = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
         GeometryReader { geo in
             let origin = geo.frame(in: .global).origin
-            ForEach(ids, id: \.self) { id in
-                if let frame = BarTipAnchors.shared.frames[id], !frame.isEmpty {
-                    Color.clear
-                        .frame(width: frame.width, height: frame.height)
-                        .modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: .top))
-                        .position(x: frame.midX - origin.x, y: frame.midY - origin.y)
-                }
+            if let anchor, anchor.id == turn {
+                Color.clear
+                    .frame(width: anchor.frame.width, height: anchor.frame.height)
+                    .modifier(OwnPopoverTipModifier(ids: [anchor.id], arrowEdge: .top))
+                    .position(x: anchor.frame.midX - origin.x, y: anchor.frame.midY - origin.y)
             }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+        .task(id: turn) {
+            anchor = nil
+            guard let turn, let label = turn.barButtonLabel else { return }
+            // The bar may still be laying its buttons out when the turn comes.
+            for _ in 0..<20 {
+                if let frame = BarButtons.frame(labelled: label) {
+                    Log.tips.notice("bar anchor for \(turn.rawValue, privacy: .public): \(String(describing: frame), privacy: .public)")
+                    anchor = (turn, frame)
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled else { return }
+            }
+            Log.tips.notice("no navigation bar button labelled \(label, privacy: .public) for \(turn.rawValue, privacy: .public)")
+        }
     }
 }
 
@@ -566,7 +559,7 @@ extension View {
     /// Marks this navigation bar button as where the tip `id` hangs from while it has the turn: below
     /// it, from the screen's `barTipHost`.
     func barTip(_ id: TipID) -> some View {
-        modifier(BarTipAnchorModifier(id: id))
+        modifier(BarTipModifier(id: id))
     }
 
     /// Hangs the tips of `ids` below the navigation bar buttons that carry them (`barTip`). On the
