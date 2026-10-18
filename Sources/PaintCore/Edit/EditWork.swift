@@ -87,8 +87,9 @@ struct EditWork {
     /// The edit is a split (`TemplateEditor.Edit.split`): the line it lays is an undrawn boundary,
     /// its ends meet any edge, and what of it closes nothing leaves no stroke.
     var splitting = false
-    /// The boundaries a split laid (the chains of its line; `drawRun`).
-    var splitEdges: [Int] = []
+    /// The boundaries this edit's line laid (the chains of its line; `drawRun`): a split's
+    /// undrawn ones, a drawn line's inked ones.
+    var lineEdges: [Int] = []
 
     init(_ template: Template, snapRadius: Int64 = 1) throws {
         self.snapRadius = snapRadius
@@ -265,8 +266,8 @@ struct EditWork {
         if let r = right(e) {
             replaceRef(in: r, edge: e, reversed: true, with: pieces.reversed().map { EdgeRef(edge: UInt32($0), reversed: true) })
         }
-        // A split's own boundary cut by a later run of it stays the split's in every part.
-        if splitting, splitEdges.contains(e) { splitEdges.append(contentsOf: pieces.dropFirst()) }
+        // A boundary of this edit's line cut by a later run of it stays the line's in every part.
+        if lineEdges.contains(e) { lineEdges.append(contentsOf: pieces.dropFirst()) }
         if cut.grown { noteNewVertex(on: e) }
         return pieces
     }

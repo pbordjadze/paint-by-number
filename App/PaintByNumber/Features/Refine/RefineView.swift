@@ -50,14 +50,16 @@ nonisolated enum RefineBackdrop: Hashable {
 /// `CreateModel.edit(_:)`): no image processing, no new template. A line is the line drawn, as the
 /// outline of the areas it closes too, and nothing the painter didn't touch changes:
 /// - the Pen draws a line as drawn (smoothed as it showed); only an end whose ink touches a
-///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks;
+///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks
+///   (`PenAssist`); the sides of the areas it cuts that the photo tells apart take their own
+///   paints;
 /// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
 ///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
 ///   curve's ends move onto a line their ink touches, as the Pen's do;
-/// - the Color Splitter's stroke divides an area's color where it goes and draws no line
-///   (`TemplateEditor.Edit.split`): each side takes the photo's color there, a different paint
-///   from the other's; it shows dashed while the finger is down, and picking it shows the
-///   painting, where a split shows;
+/// - the Color Splitter, out of the toolbar for now (`offersSplitter`), divides an area's color
+///   where its stroke goes and draws no line (`TemplateEditor.Edit.split`): each side takes the
+///   photo's color there, a different paint from the other's; it shows dashed while the finger
+///   is down, and picking it shows the painting, where a split shows;
 /// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
 ///   tap takes out a dab;
 /// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction;
@@ -682,9 +684,15 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    /// The Pen, the Color Splitter, Shapes, the erasers and Fill, then what shows beneath: one row
-    /// where it fits, else the pens and erasers above Fill and the backdrop (a phone's width holds
-    /// about five of these buttons).
+    /// Whether the toolbar offers the Color Splitter. Out for now (Paul, October 18: "drop the
+    /// color line splitting tool for now… it's not working right"): a Pen line gives the sides it
+    /// parts their own colors instead (`docs/coloring-book.md` › A drawn line's colors). The tool
+    /// and its edit stay, so splits already made lay as ever; true brings it back.
+    static let offersSplitter = false
+
+    /// The Pen, the Color Splitter (when offered), Shapes, the erasers and Fill, then what shows
+    /// beneath: one row where it fits, else the pens and erasers above Fill and the backdrop (a
+    /// phone's width holds about five of these buttons).
     private var lineTools: some View {
         ViewThatFits(in: .horizontal) {
             GlassEffectContainer(spacing: 10) {
@@ -708,8 +716,10 @@ struct RefineView: View {
             .disabled(!model.hasLineArtInput)
             // Draw Your Own Lines: over the tools, which sit at the bottom.
             .gentleTip(.refineDraw, arrowEdge: .bottom)
-        toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
-            .disabled(!model.hasLineArtInput)
+        if Self.offersSplitter {
+            toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
+                .disabled(!model.hasLineArtInput)
+        }
         shapesButton
             .disabled(!model.hasLineArtInput)
         erasersButton

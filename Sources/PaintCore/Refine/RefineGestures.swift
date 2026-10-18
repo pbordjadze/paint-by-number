@@ -237,15 +237,14 @@ public enum RefineGestures {
         func points(_ slice: some Collection<SIMD2<Float>>) -> [CGPoint] { slice.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) } }
         var lines: [[CGPoint]] = []
         for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside {
-            // A layer past `color` is read as `color` (`DrawableLineArt`): not drawn.
-            if let art, art.edgeLayers[e] >= LineLayer.color.rawValue { continue }
+            if let art, !LineLayer.isDrawn(art.edgeLayers[e]) { continue }
             let line = points(t.points(of: edge))
             if line.count >= 2 { lines.append(line) }
         }
         guard let art else { return lines }
         for s in art.strokes
         where s.pointCount >= 2 && Int(s.pointStart) + Int(s.pointCount) <= art.strokePoints.count
-            && Int(s.region) < t.regions.count && s.layer < LineLayer.color.rawValue {
+            && Int(s.region) < t.regions.count && LineLayer.isDrawn(s.layer) {
             lines.append(points(art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]))
         }
         return lines
