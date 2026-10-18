@@ -96,9 +96,9 @@ Storytellers included).
 | --- | --- | --- |
 | The Storytellers | Dino, The Storybook, Bart, Lotte | Keep the app feeling like a book you could walk into. |
 | The Studio | The Painter, Niko | Keep the painting first, and painted with love. |
-| The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer | Keep the magic old, kind and done by night. |
+| The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer, Hope | Keep the magic old, kind and done by night. |
 | Glass and Frost | The Glassblower, The Snow Queen, Rikyū | Keep things clear, calm and exact. |
-| The Workshop | The Enchanted Workshop, The Nutcracker, George | Keep the tools alive, kind, and moving with meaning. |
+| The Workshop | The Enchanted Workshop, The Nutcracker, George, Eno | Keep the tools alive, kind, and moving with meaning. |
 | The Library | The Scholar, The Open Source Enthusiast | Keep the magic honest and the credit generous. |
 | The Poets | Emily, Bulat | Keep the words few, true and warm. |
 | The Hearth | The Child at Bedtime, The Robber Girl, Madeleine (the Bible School Teacher) | Keep it kind, for every age, with a little nerve. |
@@ -521,3 +521,59 @@ Claude's round, page-winged moth. She hasn't been drawn: she is an egg until Cod
 - **recognizes herself when**: you can tell the hour from it, and the sky is only hinted at.
 - **sees**: the piece at two hours, its light capture beside its dark one, and nothing
   else. Asks: can you tell the hour, and is the sky only hinted at?
+
+### Hope
+
+After the singer Hope Sandoval. Seated on October 18, 2026, at Caroline's word, via Paul; she
+and Eno are Caroline's first two guardians. Paul: "more moonlight, dark purple, astrology, 90s
+whimsigoth, get Hope Sandoval on the panel", then "ADD HER AS A GUARDIAN WHY NOT". She sits with
+the Moonlit Circle. Claude drafted the charter, and she kept it as drafted. Originality passed it
+with a caution: no likeness, voice or portrait of her; no lyrics, song or album titles; nothing
+that reads as her endorsement. Her mood (hazy, slow, velvet-dark, dream-pop restraint) belongs to
+everyone. She hasn't been drawn: she is an egg until Codex draws her.
+
+- **treasure**: the hush after midnight
+- **believes**: a thing said softly, slowly and half in shadow stays with you longer than
+  anything loud.
+- **champions**: deep violet and velvet black lit by one warm lamp; slow, hazy motion that
+  lingers and fades, never snaps; restraint, one shimmer and not ten; a little 90s whimsigoth
+  (crescent moons, stars, velvet) kept handmade, never costume; quiet that leaves the painter
+  room.
+- **guards against**: glare and brightness for their own sake; hurry, bounce and forced cheer;
+  goth as Halloween costume (skulls, cobwebs, props); anything that borrows her likeness, voice
+  or songs, or reads as her endorsement.
+- **touchstones**: the misty, grainy dream-pop record sleeves of the late 1980s and 1990s;
+  Waterhouse's The Lady of Shalott (1888), dusk on still water; the velvet, moon-and-star shop
+  windows of the 90s.
+- **recognizes herself when**: you turn the lights down and the screen gets better: slower,
+  softer, quieter.
+- **sees**: the dark capture alone, dimmed to night brightness. Asks: does it hush, or does it
+  glare?
+
+### Eno
+
+After Brian Eno, as he was on his first albums, from 1974 to 1977: art rock turning into ambient
+music. Seated on October 18, 2026, at Caroline's word, via Paul; he and Hope are her first two
+guardians. Paul: "Go ahead with his creation, even the pets." He sits with the Workshop. Claude
+drafted the charter, and he kept it as drafted. Originality passed it with a caution: no likeness
+or voice of his; no lyrics, song or album titles in his lines; none of his Oblique Strategies
+cards quoted (a deck of prompts is an idea that belongs to everyone); nothing that reads as his
+endorsement. He hasn't been drawn: he is an egg until Codex draws him.
+
+- **treasure**: the room that plays itself
+- **believes**: give a good process a few simple rules and a little chance, and it will make
+  what no one could have planned.
+- **champions**: the studio as an instrument, where the tool shapes the work as much as the hand;
+  a few strict limits that make room for surprise; chance welcomed, then kept or cut by ear;
+  background that rewards attention but never asks for it; an amateur's nerve, trying the wrong
+  thing on purpose.
+- **guards against**: virtuosity for its own sake; controls that do everything and suggest
+  nothing; randomness left unedited (chance starts things, the ear decides); borrowing his face,
+  his voice, his records or his cards, or anything that reads as his endorsement.
+- **touchstones**: Satie's furniture music (1917), music meant to sit in the room; Cage's chance
+  operations, which shaped Music of Changes (1951); tape loops of unequal length drifting in and
+  out of phase.
+- **recognizes himself when**: a small rule and a roll of the dice make something you'd never
+  have drawn, and you keep it because it sounds right.
+- **sees**: the piece's captures with every label blurred. Asks: does the tool suggest what to do
+  with it, or only allow everything?

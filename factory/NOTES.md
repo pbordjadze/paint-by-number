@@ -451,6 +451,19 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   that haven't shipped yet": the Lamplit Table (`GUARDIANS.md`), six seats, named by its members.
   Root `CLAUDE.md` › App rules carries the rule on `main`, so every session sees it.
 
+## Paul's point 26: Caroline's first guardians, Hope and Eno (Oct 18)
+
+- Paul, for Caroline: "more moonlight, dark purple, astrology, 90s whimsigoth, get Hope Sandoval
+  on the panel", then "ADD HER AS A GUARDIAN WHY NOT"; and "Brian Eno's first albums, so from
+  Here Come the Warm Jets up to Before and After Science. Go ahead with his creation, even the
+  pets. He and Hope Sandoval are Caroline's two first guardians".
+- One name each, Paul's yes: Hope (`hope`) with the Moonlit Circle, Eno (`eno`) with the
+  Workshop. Claude drafted both charters. No Lamplit Table seats: "Lamplit table needs reworking
+  eventually, we need a select set of guardians for various new features almost."
+- Both are eggs. Hope's drawing (a dark-violet moonflower, a dewdrop holding one star, soft and
+  hazy) went to Codex as briefed; Eno proposes his own, in his words with a reason for each part,
+  because Paul asked how he came up with it.
+
 ## Open questions
 
 - Dino in the Lamp's family style? Paul (Oct 12): leave him as he is for now, he's Dino;
