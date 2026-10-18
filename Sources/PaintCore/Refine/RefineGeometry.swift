@@ -74,31 +74,87 @@ public enum PenPath {
 /// The help the Pen and Shapes give a line's ends, in the template's canvas units: an end whose
 /// ink touches a line of the drawing moves onto it (`SnapLines`), so the cell closes as it looks.
 public enum PenAssist {
-    /// `line`'s ends moved onto the nearest point of `lines` where they come within `reach`, its
-    /// end onto its own start where it comes back that near it (a loop, at least three reaches
-    /// long), so the shape closes. A straight line moves its two ends; otherwise each move eases
-    /// in over `reach` of the line (half the line, if shorter), which the rest keeps. A line the
-    /// moves would fold to under half its length keeps only its start's.
+    /// `line`'s ends brought onto `lines` where they come within `reach`, its end onto its own
+    /// start where it comes back that near it (a loop, at least three reaches long), so the shape
+    /// closes. An end is changed as little as it takes, and never turned back on itself (Paul,
+    /// October 18: "it's snapping lines a bit, but not really in a way that makes them better"):
+    /// one that crossed a line within `reach` of it ends at the crossing, its tail cut off; one
+    /// heading at a line it would meet within `reach` goes straight on to it; otherwise it moves to the nearest point within `reach`, a straight line moving just
+    /// that end and any other easing the move in over `easing` reaches of the line (half the
+    /// line, if shorter), which the rest keeps. A move toward the nearest point alone, eased over
+    /// one reach, bent a line meeting another at a slant into a hook. A line the changes would
+    /// fold to under half its length keeps only its start's.
     public static func joined(_ line: [CGPoint], to lines: SnapLines, reach: CGFloat, straight: Bool) -> [CGPoint] {
         guard line.count >= 2, reach > 0 else { return line }
         let length = PenPath.length(line)
-        let span = min(reach, length / 2)
-        func move(_ points: [CGPoint], atStart: Bool, to target: CGPoint) -> [CGPoint] {
-            guard straight else { return moving(points, atStart: atStart, to: target, span: span) }
+        let span = min(easing * reach, length / 2)
+        // How much of an end may be cut off or added: never half the line, so an end can't be
+        // taken back to a line its start is on.
+        let limit = min(reach, length / 2)
+        /// `points` with its last point brought onto `lines`, or nil when none is near enough.
+        func joinEnd(_ points: [CGPoint]) -> [CGPoint]? {
+            if let cut = trimmed(points, at: lines, within: limit) { return cut }
+            let end = points[points.count - 1]
+            if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
+                return straight ? Array(points.dropLast()) + [hit] : points + [hit]
+            }
+            guard let target = lines.nearestPoint(to: end, within: reach) else { return nil }
+            return move(points, to: target)
+        }
+        func move(_ points: [CGPoint], to target: CGPoint) -> [CGPoint] {
+            guard straight else { return moving(points, atStart: false, to: target, span: span) }
             var points = points
-            points[atStart ? 0 : points.count - 1] = target
+            points[points.count - 1] = target
             return points
         }
         var out = line
-        if let start = lines.nearestPoint(to: line[0], within: reach) { out = move(out, atStart: true, to: start) }
+        if let start = joinEnd(line.reversed()) { out = start.reversed() }
         let started = out
         let last = line[line.count - 1]
-        let own = length >= 3 * reach && PenPath.distance(last, out[0]) <= reach ? out[0] : nil
-        if let end = own ?? lines.nearestPoint(to: last, within: reach) {
-            out = move(out, atStart: false, to: end)
+        let ownStart = length >= 3 * reach && PenPath.distance(last, out[0]) <= reach ? out[0] : nil
+        if let joined = ownStart.map({ move(out, to: $0) }) ?? joinEnd(out) {
+            out = joined
             if PenPath.length(out) < length / 2 { out = started }
         }
         return out
+    }
+
+    /// How far, in reaches, the assist eases a moved end in along the line.
+    static let easing: CGFloat = 4
+
+    /// `points` cut at its last crossing of `lines` within `limit` of its end (along it), nil
+    /// when it crosses none there.
+    static func trimmed(_ points: [CGPoint], at lines: SnapLines, within limit: CGFloat) -> [CGPoint]? {
+        var along: CGFloat = 0
+        for i in stride(from: points.count - 2, through: 0, by: -1) {
+            let a = points[i], b = points[i + 1]
+            if let t = lines.crossing(from: a, to: b, last: true) {
+                let c = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+                guard along + PenPath.distance(c, b) <= limit else { return nil }
+                return Array(points[...i]) + [c]
+            }
+            along += PenPath.distance(a, b)
+            if along > limit { return nil }
+        }
+        return nil
+    }
+
+    /// Where `points`, going straight on from its end (along its last stretch of `limit`), first
+    /// meets `lines` within `limit`.
+    static func ahead(_ points: [CGPoint], of lines: SnapLines, within limit: CGFloat) -> CGPoint? {
+        let end = points[points.count - 1]
+        var back = points[points.count - 2], along = PenPath.distance(back, end)
+        var i = points.count - 2
+        while along < limit, i > 0 {
+            i -= 1
+            along += PenPath.distance(points[i], points[i + 1])
+            back = points[i]
+        }
+        guard along > 1e-9, limit > 0 else { return nil }
+        let unit = CGPoint(x: (end.x - back.x) / along, y: (end.y - back.y) / along)
+        let reachTo = CGPoint(x: end.x + unit.x * limit, y: end.y + unit.y * limit)
+        guard let t = lines.crossing(from: end, to: reachTo, last: false), t > 0 else { return nil }
+        return CGPoint(x: end.x + (reachTo.x - end.x) * t, y: end.y + (reachTo.y - end.y) * t)
     }
 
     /// `points` with an end (the first, or the last) moved to `target`, the move easing in over
@@ -239,6 +295,27 @@ public struct SnapLines: Sendable {
             if piece.count >= 2 { out.append(piece) }
         }
         return out
+    }
+
+    /// Where the segment `a`–`b` crosses a line, as a fraction of the way from `a`: the first
+    /// such point, or with `last` the last. Segments that only touch or lie along one another
+    /// count where they touch.
+    public func crossing(from a: CGPoint, to b: CGPoint, last: Bool) -> CGFloat? {
+        let box = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+        var best: CGFloat?
+        let d = CGPoint(x: b.x - a.x, y: b.y - a.y)
+        for line in lines where line.bounds.insetBy(dx: -1e-6, dy: -1e-6).intersects(box) {
+            for (p, q) in zip(line.points, line.points.dropFirst()) {
+                let e = CGPoint(x: q.x - p.x, y: q.y - p.y)
+                let denominator = d.x * e.y - d.y * e.x
+                guard abs(denominator) > 1e-12 else { continue }
+                let w = CGPoint(x: p.x - a.x, y: p.y - a.y)
+                let t = (w.x * e.y - w.y * e.x) / denominator, u = (w.x * d.y - w.y * d.x) / denominator
+                guard (0...1).contains(t), (0...1).contains(u) else { continue }
+                if best == nil || (last ? t > best! : t < best!) { best = t }
+            }
+        }
+        return best
     }
 
     /// The point on a line nearest `p`, if one lies within `reach`.
