@@ -212,6 +212,8 @@ logs the tuned ones.
   imports (`MemberImportVisibility`), actor isolation at each boundary, API names and signatures
   against iOS 26 / Swift 6.2, and every call site of anything renamed; when unsure of an API, mirror
   an existing use in the repo.
+- Compiler warnings fail CI (`ci/warnings.sh` on the build logs of `core` and the simulator jobs;
+  `main` has none): fix a new one, never silence it.
 - "database is locked" from `tools/swift.sh`: another build is using `.build`; wait and retry.
 - Scratch output goes outside the repo. Never commit `.build/`, eval output, `tools/node_modules`,
   `.claude/worktrees/` or `.claude/corpus/`. Keep a diff to what the task needs; edits to shared
@@ -427,13 +429,18 @@ any port of it, when changing the fitter: work from the paper.
    templates and line-art maps they make on disk (DEBUG `DemoTemplateCache`, `LineArtMapsCache`),
    and each job keeps them between runs in the Actions cache (`ci/demo_caches.sh`), keyed by the
    files that make them; on a miss `ipad-ui` makes the UI tests' first (its warm-up).
-3. Turnaround is about 30 min (both iPad jobs take about that), about 40 when the caches miss (a
-   change to the pipeline, the models or the pictures: the screenshots take twice as long and
-   `ipad-ui` warms up first), longer when branches queue (only 5 macOS jobs run at once: a branch
-   push takes 2, `main` 4; `iphone`, about 85 min, is main's longest). `ci/fetch.sh` waits up to
-   140 min. A newer push to the same branch cancels the older run, which then never reports. Work
-   on something else while it runs.
+3. Turnaround is about 30 min on idle runners (both iPad jobs take about that), about 40 when the
+   caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
+   as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
+   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 4 (`iphone`,
+   about 85 min, is main's longest). `ci/fetch.sh` waits up to 140 min. A newer push to the same
+   branch cancels the older run, which then never reports. Work on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
+   Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
+   `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in
+   STATUS.md; `core` only builds and checks the strings), in about 15 min. Run it before asking
+   for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
+   run is going (the push cancels it).
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
    with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
@@ -457,6 +464,18 @@ benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once
 and its report ref can go. CI owns `sidestore` (never delete or push it) and the `refs/ci-shots/*`
 reports. Local `main` may lag: fetch before comparing.
 
+**The night train.** Several small branches through one full run, then into `main` as one push;
+the train holds one CI slot. The front desk picks who boards: branches reviewed (the last commit's
+message carries the review's notes, which the train's merge keeps), green on a compile check, and
+touching different files. A conductor session it starts (on Sonnet) runs `ci/train.sh make <name>
+<branch>…` (merges each into `claude/train-<name>`, fresh from `origin/main`, leaves off one that
+conflicts, and pushes), waits with `CI_BRANCH=claude/train-<name> ci/fetch.sh`, and on green runs
+`ci/train.sh land <name>`: `main` fast-forwards to the train, the one merge of that `main` run (it
+refuses a red, stale or compile-only report, or a `main` that moved: make the train again). On red,
+`ci/train.sh who <name> <path>…` names the branch that changed the failing file; the conductor
+makes the train again without it, and that branch goes back to its session through the front
+desk. The conductor reports each step to the front desk.
+
 ## Working with Paul
 
 Paul works in bursts, from his phone, often with several sessions going at once. He talks to one
@@ -467,10 +486,15 @@ Every other session keeps to one topic. When a session ships, gets blocked or ne
 tells the front desk with `send_message` if one is running, and Paul with a push notification
 if he has gone quiet.
 
-- **Merging is standing permission, given once.** When a branch's CI is green and the change is
-  what Paul asked for, merge it into `main` without asking. Put anything not yet chosen for the
-  release behind `#if UNRELEASED`, so it reaches his SideStore build only. Don't wait for a
-  "yes".
+- **Merging is standing permission, given once.** When a branch's CI is green, its review is done
+  (below) and the change is what Paul asked for, merge it into `main` without asking. Put
+  anything not yet chosen for the release behind `#if UNRELEASED`, so it reaches his SideStore
+  build only. Don't wait for a "yes".
+- **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
+  write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
+  subagent). Fix what it confirms; anything large or design-level goes to Paul through the front
+  desk. The merge commit's message lists what the review found and what was fixed. No PR, no
+  extra CI run.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about

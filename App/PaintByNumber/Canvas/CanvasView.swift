@@ -182,7 +182,7 @@ final class CanvasView: UIView, PaintingCanvas {
         case first
     }
 
-    private static let margin: CGFloat = 16
+    static let margin: CGFloat = 16
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 

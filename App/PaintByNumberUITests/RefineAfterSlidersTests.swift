@@ -75,7 +75,9 @@ final class RefineAfterSlidersTests: XCTestCase {
         drag(settingSlider("Lines", in: app), to: 0.9)
         XCTAssertTrue(app.staticTexts["Updating…"].waitForExistence(timeout: 10), "The painting never said it was updating")
         refine.tap()
-        XCTAssertEqual(refine.value as? String, "Preparing…", "Refine tapped while updating doesn't say it is waiting")
+        XCTAssertTrue(
+            waitUntil(timeout: 5) { refine.value as? String == "Preparing…" },
+            "Refine tapped while updating doesn't say it is waiting: \(refine.value ?? "")")
         attachScreenshot(of: app, named: "preparing")
 
         // Back to a slider: a drag, as a touch that moves nothing needn't count as one for a slider.
@@ -147,15 +149,23 @@ final class RefineAfterSlidersTests: XCTestCase {
         let updating = app.staticTexts["Updating…"].exists
         let began = Date()
         refine.tap()
-        let preparing = !canvas.exists && refine.value as? String == "Preparing…"
+        // The button says so a moment after the tap (one read straight after it found the old value
+        // now and then), unless the template was made between the status's read and the tap and
+        // Refine opened at once. Read afresh each time: a predicate expectation can time out while
+        // the app is busy with the element already matching.
+        _ = waitUntil(timeout: 5) { canvas.exists || refine.value as? String == "Preparing…" }
+        let preparing = refine.value as? String == "Preparing…"
+        let openedAtOnce = !preparing && canvas.exists
         if preparing { attachScreenshot(of: app, named: "preparing-after-\(what)") }
         let opened = canvas.waitForExistence(timeout: 120)
         let took = Date().timeIntervalSince(began)
         attachNote(
-            "Refine tapped after \(what), when “Updating…” \(updating ? "showed" : "had gone"): the button \(preparing ? "said Preparing…" : "did not say Preparing…"); Refine \(opened ? "opened" : "DID NOT OPEN") \(String(format: "%.1f", took)) s after the tap",
+            "Refine tapped after \(what), when “Updating…” \(updating ? "showed" : "had gone"): the button \(preparing ? "said Preparing…" : openedAtOnce ? "opened Refine at once" : "did not say Preparing…"); Refine \(opened ? "opened" : "DID NOT OPEN") \(String(format: "%.1f", took)) s after the tap",
             named: "refine-after-\(what)")
         XCTAssertTrue(opened, "Refine didn't open \(Int(took)) s after a tap that followed \(what)")
-        if updating { XCTAssertTrue(preparing, "Refine tapped while the painting updated didn't say it was preparing") }
+        if updating && !openedAtOnce {
+            XCTAssertTrue(preparing, "Refine tapped while the painting updated didn't say it was preparing")
+        }
         app.buttons["refine-done"].tap()
         XCTAssertTrue(
             waitFor(refine, toMatch: NSPredicate(format: "value == %@", "No changes")), "Done didn't leave Refine: \(refine.value ?? "")")

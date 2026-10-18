@@ -91,7 +91,8 @@ struct ArtworkNicknameTests {
     func regenerationKeepsTheRecordedVocabulary(version: Int) async throws {
         let library = makeLibrary()
         var item = draft()
-        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+        let photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+        item.photo = photo
         var artwork = try await library.create(item)
         artwork.nicknameVersion = version
         try library.store.writeMeta(artwork)
