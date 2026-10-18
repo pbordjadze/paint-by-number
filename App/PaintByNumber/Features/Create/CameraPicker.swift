@@ -25,12 +25,21 @@ struct CameraPicker: UIViewControllerRepresentable {
         init(parent: CameraPicker) { self.parent = parent }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage, let data = image.jpegData(compressionQuality: 0.95) {
-                parent.onCapture(data)
-            } else {
-                parent.onFailure()
+            let image = info[.originalImage] as? UIImage
+            Task {
+                if let image, let data = await Self.jpeg(image) {
+                    parent.onCapture(data)
+                } else {
+                    parent.onFailure()
+                }
+                parent.dismiss()
             }
-            parent.dismiss()
+        }
+
+        /// Off the main actor: a capture is 12 to 48 megapixels, a few hundred milliseconds to encode.
+        @concurrent
+        private static func jpeg(_ image: UIImage) async -> Data? {
+            image.jpegData(compressionQuality: 0.95)
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

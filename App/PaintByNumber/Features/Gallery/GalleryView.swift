@@ -86,9 +86,9 @@ struct GalleryView: View {
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards.
-        .animation(.snappy, value: shownIDs)
-        .animation(.snappy, value: library.placeholders)
-        .animation(.snappy, value: shownDraft?.photoID)
+        .animation(reduceMotion ? nil : .snappy, value: shownIDs)
+        .animation(reduceMotion ? nil : .snappy, value: library.placeholders)
+        .animation(reduceMotion ? nil : .snappy, value: shownDraft?.photoID)
         .animation(.easeInOut(duration: 0.35), value: isBare)
         .alert("Rename Painting", isPresented: isPresent($renaming), presenting: renaming) { artwork in
             TextField("Title", text: $renameText)

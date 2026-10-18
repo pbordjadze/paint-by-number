@@ -303,7 +303,8 @@ final class Library {
     /// didn't reach the disk, so the caller can try again.
     @discardableResult
     func refreshThumbnail(_ id: UUID, template: Template? = nil, progress: PaintProgress) async -> Bool {
-        guard artwork(with: id)?.needsNewerApp != true else { return false }
+        // A painting deleted meanwhile (closing the screen it was deleted from) has no thumbnail to make.
+        guard let existing = artwork(with: id), !existing.needsNewerApp else { return false }
         let written = await enqueue(id) { store in
             let t = try template ?? store.readTemplate(id)
             guard let png = Library.thumbnailPNG(t, painted: progress.painted) else { return }
@@ -322,12 +323,16 @@ final class Library {
         guard let artwork = artwork(with: id) else { return }
         finalizeDeletion()
         artworks.removeAll { $0.id == id }
-        recentlyDeleted = artwork
-        enqueue(id) { store in try store.moveToTrash(id) }
-        purge = Task { [weak self] in
-            try? await Task.sleep(for: Self.undoWindow)
-            guard !Task.isCancelled else { return }
-            self?.finalizeDeletion()
+        offerUndo(artwork)
+        let moved = enqueue(id) { store in try store.moveToTrash(id) }
+        Task { [weak self] in
+            // The folder never left: the painting is still there, at this launch as at the next.
+            guard await !moved.value, let self, self.artwork(with: id) == nil else { return }
+            if recentlyDeleted?.id == id {
+                purge?.cancel()
+                recentlyDeleted = nil
+            }
+            insert(artwork)
         }
     }
 
@@ -336,8 +341,25 @@ final class Library {
         purge?.cancel()
         recentlyDeleted = nil
         let id = artwork.id
-        enqueue(id) { store in try store.restoreFromTrash(id) }
+        let restored = enqueue(id) { store in try store.restoreFromTrash(id) }
         insert(artwork)
+        Task { [weak self] in
+            // Still in the trash, which the next launch empties: shown as deleted, with Undo again.
+            guard await !restored.value, let self, self.artwork(with: id) != nil else { return }
+            artworks.removeAll { $0.id == id }
+            finalizeDeletion()
+            offerUndo(artwork)
+        }
+    }
+
+    /// Holds `artwork` for Undo until `undoWindow` has passed.
+    private func offerUndo(_ artwork: Artwork) {
+        recentlyDeleted = artwork
+        purge = Task { [weak self] in
+            try? await Task.sleep(for: Self.undoWindow)
+            guard !Task.isCancelled else { return }
+            self?.finalizeDeletion()
+        }
     }
 
     /// Makes the pending deletion permanent (the undo window closed).
@@ -424,7 +446,14 @@ final class Library {
             let old = try Library.readTemplate(id, from: store)
             // Progress from a newer app is never overwritten, even when the template is damaged.
             let saved = try Library.readProgress(id, regionCount: old?.regions.count ?? 0, from: store)
-            return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), store.readRefinements(id))
+            let refinements: TemplateRefinements
+            do {
+                refinements = try store.readRefinements(id)
+            } catch {
+                Log.library.error("Refinements of \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
+                throw OpenError.unreadable
+            }
+            return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), refinements)
         }
         let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
         let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in

@@ -277,11 +277,12 @@ final class SettingsTests: XCTestCase {
         "\(element.label) \(element.value as? String ?? "")"
     }
 
-    /// Waits for a menu picker's row to read `choice` (in its label or its value, see `describe`).
+    /// Waits for a menu picker's row to read `choice` (in its label or its value, see `describe`),
+    /// reading the row afresh each time: a predicate expectation over it timed out on CI with the
+    /// row already reading Bold (main, Oct 18), as the menu's dismissal kept the app busy.
     @MainActor
     private func shows(_ picker: XCUIElement, _ choice: String) -> Bool {
-        let chosen = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", choice, choice)
-        return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
+        waitUntil(timeout: 10) { describe(picker).contains(choice) }
     }
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
