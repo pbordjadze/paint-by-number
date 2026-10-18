@@ -245,6 +245,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: ci/warnings.sh out/warnings.txt out/app-build.log out/release-build.log
       - name: Nickname v2 platform contract (macOS)
+        id: nickname
         if: ${{ !cancelled() && matrix.job == 'ipad' }}
         run: |
           set -o pipefail
@@ -289,7 +290,8 @@ jobs:
           OUTCOMES: >-
             simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
             screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
-            release=${{ steps.release.outcome }} warnings=${{ steps.warnings.outcome }} benchmark=${{ steps.bench.outcome }}
+            release=${{ steps.release.outcome }} warnings=${{ steps.warnings.outcome }} nickname-v2=${{ steps.nickname.outcome }}
+            benchmark=${{ steps.bench.outcome }}
         run: |
           mkdir -p out
           echo "$OUTCOMES" > out/outcomes.txt
