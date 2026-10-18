@@ -119,7 +119,7 @@ it on start, after a burst, and at each check-in:
    (see Usage).
 2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json` (and your
    `decisions.json` when it changed; and `queue.json` and `releases.json`, kept by hand beside
-   this file, when the CI queue or main moved: Paul asked for the queue and the version timeline
+   this file, when the CI queue or main moved: Paul asked for the queue and what is next, estimated
    on the page, Oct 18), each with
    its own Artifact publish call: `url` set to the page, `file_path` set to the file, and
    `asset: true`.
