@@ -90,7 +90,6 @@ struct CreateFlowView: View {
                     TemplatePreviewView(model: model, onStart: start, pictureProbe: previewPicture)
                 }
         }
-        .barTipHost(.newPaintingRefine)
         .task {
             // A dropped photo or demo opens straight on the preview (pushing while the cover
             // is still being presented would stall the presentation).

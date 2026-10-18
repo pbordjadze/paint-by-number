@@ -201,7 +201,7 @@ synchronized folder would bundle it into the app.
   (`DemoMode.isTestHost`). Shared helpers in `Fixtures.swift` (`waitUntil`, `record`, `mosaic`,
   `rasterize`, `PixelReader`, `repositoryRoot`, `sample`: a template of a library picture).
 - `PaintByNumberUITests`: XCTest launching demo scenarios (`-demo`) with `-demoFixedPictures`,
-  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-slowFullResolution <seconds>` (each
+  `-tracePaper`, `-tracePhotoPeek`, `-openFile` (with `-openFileOnQuestion`: once the gallery asks a question), `-slowFullResolution <seconds>` (each
   full-resolution generation of the create flow waits: a phone's tens of seconds, on a simulator),
   `-NSDoubleLocalizedStrings`,
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests
@@ -336,9 +336,7 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, hung by the screen's
-  `.barTipHost(…)` from a clear view laid over the button outside the bar (a popover from the
-  bar's own button grows out of it on iOS 26 and covers it), and `.cardTip(…)` for the two on
+  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
   the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
   to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
   display limit, which would retire it from under that view: `TipDesk` says it once; a card
@@ -554,14 +552,16 @@ Conventions).
   which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
   the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
   template is made, `CreateModel.askForRefine` / `opensRefine`, called off by touching a slider,
-  Start or another photo; it is off only without line art and detail brushes, while the settings
+  Start or another photo; it is off only without line art, while the settings
   are chosen and after a failed generation, the status saying why): the drawing large, on its paper,
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
   `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
-  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Eraser rubs out what it
+  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter (after the Pen) divides
+  an area's color where it goes and draws no line (a split, below; dashed while the finger is
+  down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
   junction; Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
@@ -572,12 +572,15 @@ Conventions).
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
-    tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`), which
+    tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; a Color Splitter stroke:
+    `.split`, the Pen's line as an undrawn boundary whose sides end with different paints,
+    `docs/coloring-book.md` › Split), which
     `CreateModel.edit(_:)` / `fill(at:color:)` lays on the template on screen off the main actor
     (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. A drawn line
     first takes the photo's colors for the pieces it cuts (`TemplateEditor.painted` on the
     template shown and `source.image`, kept in the edit's `paints`; `docs/coloring-book.md` › A
-    drawn line's colors); one sent while the base is being made again is kept as drawn. The
+    drawn line's colors), and so does a split; a line sent while the base is being made again is
+    kept as drawn, a split with the paints of the template on screen (it can't be made without). The
     shown template is a function of the base (what the generator makes from the photo, the
     settings and the refinements' generator inputs, `TemplateRefinements.generatorInputs`) and
     `refinements.edits`,
@@ -587,20 +590,21 @@ Conventions).
     in the drawing's own ink (`RefineInkLayer`; a fill as a swatch, `RefineFillLayer`, which then
     tints the area in its paint), and `RefineView.land` swaps the new drawing, the painting
     beneath it and the end of the pending ink in together, so nothing flickers.
-  - **One queue.** Every change Refine makes (an edit, a brush, a text correction, Undo, Redo,
+  - **One queue.** Every change Refine makes (an edit, a text correction, Undo, Redo,
     Cancel) runs in its turn on `CreateModel`'s queue, from the state the ones before it left, and
     the Undo and Redo stacks live there too (`RefineHistory`, 300 steps; Refine opening clears
     them). Undo and Redo of edits cost no editing: `EditTrail` keeps the templates after the last
     few edits and lays a changed list only from where it parts from the one laid (`move(to:)`);
     deeper steps lay from the nearest kept template or the base. A tap in a filled area removes
     that fill's edit and lays the rest again.
-  - **What still regenerates, and why.** Detail Brushes (Settings › Detail Brushes,
-    `SettingsKey.detailBrushes`, off: brushes for more or less detail, clearing that brushing,
-    and the text corrections, a tap turning a found line off or on, a drag marking one it
-    missed), and the sliders, are image settings: they make the base again (`startGeneration`,
+  - **What still regenerates, and why.** The text corrections (the Text tool, always offered:
+    a tap turning a found line off or on, a drag marking one it missed), and the sliders, are image settings: they make the base again (`startGeneration`,
     reusing a base made before, `made`) and the edits are laid on the new one, those that no
     longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
-    drawing"); they stay in the list, so a brush undone brings them back. A draft (a slider being
+    drawing"); they stay in the list, so a correction undone brings them back. Refine's detail
+    brushes are gone (Paul, October 18: the Color Splitter took their place); areas a build
+    with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
+    paintings and drafts regenerate as they were. A draft (a slider being
     dragged) shows the photo's own drawing, without edits. An edit sent while the base is being
     made again is kept and laid before the new template shows (`generate`).
   - **An edit that can't be made** (`EditTrail.Verdict.declined`: a line that doubles back on
@@ -641,8 +645,10 @@ Conventions).
   suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
   with its refinements, at full resolution: the base, then its `edits` laid on it in order
   (`DraftTests.resumingADraftLaysItsEditsAgain`). Refine's undo and redo stacks are not kept. A draft
-  with any file missing or unreadable, or a photo that won't decode, is no draft: logged and
-  removed, never a failure of the gallery (`DraftTests`; `gallery-draft` is its screenshot).
+  with any file missing or damaged, or a photo that won't decode, is no draft: logged and
+  removed, never a failure of the gallery; one that can't be read just now (an I/O or data
+  protection error) is kept, at launch and on Continue (`DraftTests`; `gallery-draft` is its
+  screenshot).
 - Start Painting into the painting (`StartHandoff`, `Features/Create/StartHandoff.swift`): the
   journey from the settings to the canvas is one picture moving. `AppShellView` owns the hand-off
   object and passes it through the environment (`\.startHandoff`) to the create flow's cover and the
@@ -716,9 +722,7 @@ sends it, the developers collect nothing).
 - `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
   session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
-  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
-  Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
-  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
+  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
@@ -727,7 +731,8 @@ sends it, the developers collect nothing).
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
-  switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
+  switch per sound, haptic and flourish; Settings' paper size, Color Names and Detail Brushes,
+  later Text Corrections, whose Text tool Refine now always offers (Paul, October 18); the Custom palette
   order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›
   Line Weight first; a setting retired later joins `Preferences.retiredKeys`.

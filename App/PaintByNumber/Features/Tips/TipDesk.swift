@@ -2,7 +2,6 @@ import Observation
 import os
 import SwiftUI
 import TipKit
-import UIKit
 
 /// Gives the tips their turns. TipKit decides when a tip is eligible (its rules: events and the
 /// tips-on parameter) and draws it; it has no say in when a tip may appear *now*, so views point
@@ -441,11 +440,11 @@ extension View {
     }
 }
 
-/// Hangs the tip whose turn it is, if it is one of `ids`, from a card on the shelf or the anchor of a
-/// navigation bar button (`BarTipHost`). TipKit's popover tip found nothing to anchor to there (CI:
-/// the tips at the gallery's gear and on its cards never came up while every other popover tip
-/// did), so this is SwiftUI's own popover with the tip's `TipView` inside. A tap outside the
-/// popover closes the tip, as it does TipKit's own.
+/// Hangs the tip whose turn it is, if it is one of `ids`, from a button in a navigation bar or a
+/// card on the shelf. TipKit's popover tip found nothing to anchor to there (CI: the tips at the
+/// gallery's gear and on its cards never came up while every other popover tip did), so this is
+/// SwiftUI's own popover, which those views do carry, with the tip's `TipView` inside. A tap
+/// outside the popover closes the tip, as it does TipKit's own.
 private struct OwnPopoverTipModifier: ViewModifier {
     let ids: [TipID]
     var arrowEdge: Edge
@@ -465,113 +464,11 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
-/// A tip of a navigation bar button: the button leaving the bar (Refine under Enlarge Preview, the
-/// gallery's items during a search) takes its tip's turn with it.
-private struct BarTipModifier: ViewModifier {
-    let id: TipID
-
-    func body(content: Content) -> some View {
-        content.onDisappear { PaintTips.desk.stop(id) }
-    }
-}
-
-/// Finds a navigation bar button on screen by its VoiceOver label. iOS 26 draws a toolbar's buttons
-/// itself: SwiftUI's frame of a toolbar item is not where the button is (CI, October 18: the gear's
-/// tip hung some 50 points above the gear), and a view laid behind its label never reaches the
-/// screen. The bar's own button view carries the label, as UI tests find it.
-@MainActor
-private enum BarButtons {
-    /// The button's frame in its window, if a navigation bar on screen shows one labelled `label`.
-    static func frame(labelled label: String) -> CGRect? {
-        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
-        for window in windows where !window.isHidden {
-            for bar in all(UINavigationBar.self, in: window) where !bar.isHidden && bar.alpha > 0 {
-                if let button = first(in: bar, where: { $0.accessibilityLabel == label && !$0.isHidden && !$0.bounds.isEmpty }) {
-                    return button.convert(button.bounds, to: window)
-                }
-            }
-        }
-        return nil
-    }
-
-    private static func all<V: UIView>(_ type: V.Type, in view: UIView) -> [V] {
-        var found: [V] = []
-        if let match = view as? V { found.append(match) }
-        for subview in view.subviews { found += all(type, in: subview) }
-        return found
-    }
-
-    private static func first(in view: UIView, where matches: (UIView) -> Bool) -> UIView? {
-        if matches(view) { return view }
-        for subview in view.subviews {
-            if let match = first(in: subview, where: matches) { return match }
-        }
-        return nil
-    }
-}
-
-extension TipID {
-    /// The VoiceOver label of the navigation bar button a bar tip hangs from (`hangsFromBar`).
-    fileprivate var barButtonLabel: String? {
-        switch self {
-        case .shelfSettings: String(localized: "Settings")
-        case .shelfNewPainting: String(localized: "New Painting")
-        case .newPaintingRefine: String(localized: "Refine")
-        default: nil
-        }
-    }
-}
-
-/// Hangs the tip of `ids` whose turn it is below its navigation bar button, from a clear view laid
-/// over the button outside the bar: a popover from the bar's own button grows out of it on iOS 26
-/// and covers it (and on a phone the title), with no arrow (the Lamplit Table, October 18: the
-/// button stays in view, the tip hangs below it).
-private struct BarTipHost: View {
-    let ids: [TipID]
-    @State private var anchor: (id: TipID, frame: CGRect)?
-
-    var body: some View {
-        let turn = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
-        GeometryReader { geo in
-            let origin = geo.frame(in: .global).origin
-            if let anchor, anchor.id == turn {
-                Color.clear
-                    .frame(width: anchor.frame.width, height: anchor.frame.height)
-                    .modifier(OwnPopoverTipModifier(ids: [anchor.id], arrowEdge: .top))
-                    .position(x: anchor.frame.midX - origin.x, y: anchor.frame.midY - origin.y)
-            }
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .task(id: turn) {
-            anchor = nil
-            guard let turn, let label = turn.barButtonLabel else { return }
-            // The bar may still be laying its buttons out when the turn comes.
-            for _ in 0..<20 {
-                if let frame = BarButtons.frame(labelled: label) {
-                    Log.tips.notice("bar anchor for \(turn.rawValue, privacy: .public): \(String(describing: frame), privacy: .public)")
-                    anchor = (turn, frame)
-                    return
-                }
-                try? await Task.sleep(for: .milliseconds(150))
-                guard !Task.isCancelled else { return }
-            }
-            Log.tips.notice("no navigation bar button labelled \(label, privacy: .public) for \(turn.rawValue, privacy: .public)")
-        }
-    }
-}
-
 extension View {
-    /// Marks this navigation bar button as where the tip `id` hangs from while it has the turn: below
-    /// it, from the screen's `barTipHost`.
-    func barTip(_ id: TipID) -> some View {
-        modifier(BarTipModifier(id: id))
-    }
-
-    /// Hangs the tips of `ids` below the navigation bar buttons that carry them (`barTip`). On the
-    /// screen's navigation stack, so it reaches over the bar.
-    func barTipHost(_ ids: TipID...) -> some View {
-        overlay { BarTipHost(ids: ids) }
+    /// The tip `id`, as a popover from this navigation bar button while it has the turn.
+    /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
+    func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
+        modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: arrowEdge))
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf.

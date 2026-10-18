@@ -31,9 +31,8 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
-    /// The tips that hang from a button in a navigation bar: the button carries `barTip`, and its
-    /// screen's navigation stack `barTipHost` with the id, which hangs a popover of SwiftUI's own, the
-    /// tip's `TipView` inside, from a clear view over the button.
+    /// The tips that hang from a button in a navigation bar (`barTip`: a popover of SwiftUI's own, with
+    /// the tip's `TipView` inside).
     var hangsFromBar: Bool {
         switch self {
         case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
@@ -46,7 +45,7 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
-    /// The tips about the page itself, a card at the top of the page with no arrow (`pageTip`):
+    /// The tips about the page itself, a card at the top of the page with no arrow (`TipDesk.pageTip`):
     /// Paul, October 18, shown the arrow and none, "No arrow".
     var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }
 
