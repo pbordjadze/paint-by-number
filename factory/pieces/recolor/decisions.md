@@ -33,3 +33,8 @@ The asks, and what Claude does with each:
 Claude's own calls: the Colors button is a fan of swatches (`swatchpalette`) after Fill; picking it
 shows the painting; a tap on an area picks its swatch; Photo puts the photo's colors back (an
 undoable edit, like the rest).
+
+Paul, October 18, 15:14 UTC, on Rikyū's count: "Rikyu has been right before—let's do just 5, save
+the other 3 in case we want them later". The row offers Moonlit, Golden Hour, Pastel, Garden and
+Starry Night after Photo; Sepia (it folds the most paints into one), Water Lilies and Great Wave
+stay defined in PaintCore, one line from coming back. No ripple.
