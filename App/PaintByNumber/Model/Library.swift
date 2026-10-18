@@ -193,23 +193,30 @@ final class Library {
     }
 
     /// A painting someone sent (`SharedPainting`, a `.moonlight` file) as a new painting, blank and
-    /// with its sender's title (else `fallbackTitle`, the file's name). It comes without a photo,
-    /// so it has no photo peek and can't be regenerated, and its colors take nicknames of its own.
+    /// with its sender's title (else `fallbackTitle`, the file's name), and its colors' nicknames
+    /// its own. With the sender's photo (or library picture) it has the photo peek, and a damaged
+    /// template is made again from it, without the sender's edits, which never travel; without,
+    /// neither. A photo that doesn't decode is left out.
     func receive(_ data: Data, fallbackTitle: String?) async throws -> Artwork {
-        let shared: SharedPainting
+        let decoded: (SharedPainting, CGImage?)
         do {
-            shared = try await Background.run { try SharedPaintingCodec.decode(data) }
+            decoded = try await Background.run {
+                let shared = try SharedPaintingCodec.decode(data)
+                return (shared, shared.photo.flatMap { ImageCodec.image(data: $0, maxPixelSize: ArtworkStore.sourceMaxPixelSize) })
+            }
         } catch let error as Template.CodingError where error.requiresNewerReader {
             throw ReceiveError.needsNewerApp
         } catch {
             Log.library.error("A received painting couldn't be read: \(String(describing: error), privacy: .public)")
             throw ReceiveError.damaged
         }
+        let (shared, photo) = decoded
+        if shared.photo != nil, photo == nil { Log.library.error("A received painting's photo couldn't be decoded") }
         let title = shared.title.isEmpty ? fallbackTitle ?? String(localized: "Painting") : shared.title
-        // Settings shape only a regeneration, which a painting without its photo never has.
         let settings = shared.settings ?? (shared.template.lineArt == nil ? Artwork.settingsBeforeLineArt : GenerationSettings())
         do {
-            return try await create(ArtworkDraft(title: title, template: shared.template, settings: settings))
+            return try await create(ArtworkDraft(
+                title: title, template: shared.template, settings: settings, photo: photo, sampleName: shared.sampleName))
         } catch {
             Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
             throw ReceiveError.saveFailed

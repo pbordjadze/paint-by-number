@@ -46,6 +46,8 @@ struct AppShellView: View {
     /// The time-lapse a gallery card's menu is making. Its sheet is presented here, beside
     /// the settings sheet, so a file that arrives meanwhile can close it before the create flow opens.
     @State private var timelapse: TimelapseRequest?
+    /// The painting a card's Send Template… is sending, its sheet presented here like the time-lapse's.
+    @State private var sending: Artwork?
     /// Changes with every file opened, so a create flow already on screen restarts on it.
     @State private var flowID = UUID()
     @State private var isDropTargeted = false
@@ -72,7 +74,7 @@ struct AppShellView: View {
         let flowIdentity = flowID
         NavigationStack(path: $path) {
             GalleryView(
-                namespace: zoom, query: query, timelapse: $timelapse, onCreate: { isCreating = true },
+                namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
                 onContinueDraft: continueDraft)
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
@@ -132,6 +134,10 @@ struct AppShellView: View {
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
             TimelapseExportSheet(request: request)
         }
+        .sheet(item: $sending, onDismiss: presentIncomingImage) { artwork in
+            SendTemplateSheet(artwork: artwork)
+                .environment(library)
+        }
         .alert("Couldn’t Open Painting", isPresented: isShowingReceiveFailure, presenting: receiveFailure) { _ in
             Button("OK") {}
         } message: { failure in
@@ -181,9 +187,10 @@ struct AppShellView: View {
         Binding { receiveFailure != nil } set: { if !$0 { receiveFailure = nil } }
     }
 
-    /// A screen over the shelf: the create flow, Settings, the time-lapse's sheet, the Marginarium.
+    /// A screen over the shelf: the create flow, Settings, the time-lapse's or Send Template's
+    /// sheet, the Marginarium.
     private var isCovered: Bool {
-        isCreating || isShowingSettings || timelapse != nil || isShowingMarginarium
+        isCreating || isShowingSettings || timelapse != nil || sending != nil || isShowingMarginarium
     }
 
     @ToolbarContentBuilder
@@ -278,15 +285,16 @@ struct AppShellView: View {
     }
 
     /// Whether nothing stands in the way of what an opened file shows: on a cold launch the
-    /// first-launch samples are still being made, and the settings, Marginarium or time-lapse
-    /// sheet has to close first (its `onDismiss` comes back to `presentIncomingImage`; dismissing
-    /// the time-lapse sheet cancels its render).
+    /// first-launch samples are still being made, and the settings, Marginarium, time-lapse or
+    /// Send Template sheet has to close first (its `onDismiss` comes back to
+    /// `presentIncomingImage`; dismissing the time-lapse sheet cancels its render).
     private func isClearForIncoming() -> Bool {
         guard library.placeholders.isEmpty else { return false }
-        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil else {
+        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil, sending == nil else {
             isShowingSettings = false
             isShowingMarginarium = false
             timelapse = nil
+            sending = nil
             return false
         }
         return true

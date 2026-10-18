@@ -70,10 +70,12 @@ import PaintCore
 /// - `marginarium-guardian`, with `-dark` and `-long-text`: Dino's brief, opened from Who's
 ///   Who, its egg rocking.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
+/// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
+///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
 /// - `gallery-received`, `gallery-received-dark`: a painting someone sent opened in the app, as
 ///   "Open in Paint by Moonlight" does with a `.moonlight` file: The Great Wave refined as in
-///   `create-refine`, sent as Send Template… makes it (`sentPaintingFile`), added to the empty
-///   library and opened, blank.
+///   `create-refine`, sent with its photo as Send Template… makes it (`sentPaintingFile`), added
+///   to the empty library and opened, blank.
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
 /// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the fixed
@@ -83,7 +85,7 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
-         galleryDraft, galleryOpen, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
@@ -102,6 +104,7 @@ enum ShellDemo: Equatable {
         case "gallery-first-run": .galleryFirstRun
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
+        case "gallery-send", "gallery-send-dark", "gallery-send-long-text": .gallerySend
         case "gallery-received", "gallery-received-dark": .galleryReceived
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
@@ -179,6 +182,8 @@ enum ShellDemo: Equatable {
     var searchText: String? { self == .gallerySearch ? "re" : nil }
 
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
+
+    var sendsTemplate: Bool { self == .gallerySend }
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
@@ -334,6 +339,8 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
+        case .gallerySend:
+            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
@@ -362,7 +369,7 @@ enum ShellDemo: Equatable {
     }
 
     /// What `gallery-received` opens: the first fixed picture refined as `create-refine` does it,
-    /// written as Send Template… writes it.
+    /// written with its photo as Send Template… writes it.
     static func sentPaintingFile() async -> URL? {
         guard let sample = fixedPictures.first else { return nil }
         do {
@@ -371,7 +378,9 @@ enum ShellDemo: Equatable {
             let title = sample.title
             return try await Background.run {
                 let template = try ArtworkFactory.laying(edits, on: draft.template)
-                let data = try SharedPaintingCodec.encode(SharedPainting(title: title, settings: draft.settings, template: template))
+                let photo = draft.photo.flatMap { ImageCodec.jpegData($0, quality: 0.88) }
+                let data = try SharedPaintingCodec.encode(SharedPainting(
+                    title: title, settings: draft.settings, template: template, photo: photo, sampleName: draft.sampleName))
                 return try ArtworkExporter.temporaryFile(
                     data, name: ArtworkExporter.templateName(title: title), pathExtension: SharedPaintingCodec.fileExtension)
             }

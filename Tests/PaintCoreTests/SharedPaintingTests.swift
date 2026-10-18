@@ -27,6 +27,26 @@ struct SharedPaintingTests {
         #expect(shared.encoded() == data)
     }
 
+    /// `Fixtures/shared-v1-photo.moonlight` was written by the encoder of the commit adding the
+    /// photo: `shared-v1.moonlight`'s painting with `"sampleName":"irises"` in its META and, after
+    /// TMPL, an optional PHOT chunk holding a 4×3 JPEG of 663 bytes (Pillow, quality 80). It pins
+    /// the PHOT layout: never regenerate it.
+    @Test func decodesPhotoFixture() throws {
+        let data = try TestFixtures.data("shared-v1-photo.moonlight")
+        #expect(data.count == 11396)
+        let shared = try SharedPainting(encoded: data)
+        #expect(shared.title == "Irises at Dusk" && shared.sampleName == "irises")
+        #expect(try shared.template == Self.fixture().template)
+        let photo = try #require(shared.photo)
+        #expect(photo.count == 663 && photo.prefix(3) == Data([0xFF, 0xD8, 0xFF]))
+        #expect(photo.startIndex == 0)
+        // PHOT closes the file: its tag, flags 0 (optional) and length, then the photo.
+        #expect(data.dropLast(663).suffix(12) == Data([0x50, 0x48, 0x4F, 0x54, 0, 0, 0, 0, 0x97, 0x02, 0, 0]))
+        #expect(shared.encoded() == data)
+        // A reader that doesn't know PHOT would skip it: the painting without its photo.
+        #expect(try Self.fixture().photo == nil)
+    }
+
     static func fixture() throws -> SharedPainting { try SharedPainting(encoded: TestFixtures.data("shared-v1.moonlight")) }
 
     /// A stand-in compressor: any reversible transform proves the method and length reach it.
@@ -61,6 +81,18 @@ struct SharedPaintingTests {
         #expect(try decoded("Iri\u{0}ses\u{7}") == "Irises")
         #expect(try decoded(String(repeating: "é", count: 500)).count == SharedPainting.maximumTitleLength)
         #expect(try decoded(" \t ") == "")
+    }
+
+    @Test func sampleNamesAreLibraryNamesOrNone() throws {
+        let template = try Self.fixture().template
+        func decoded(_ name: String) throws -> String? {
+            try SharedPainting(encoded: SharedPainting(title: "A", settings: nil, template: template, sampleName: name).encoded()).sampleName
+        }
+        #expect(try decoded("great-wave") == "great-wave")
+        #expect(try decoded("red-fuji-2") == "red-fuji-2")
+        for bad in ["", "Great-Wave", "../wave", "wave.jpg", "wave name", String(repeating: "a", count: 65), "vågen"] {
+            #expect(try decoded(bad) == nil, "\(bad)")
+        }
     }
 
     // MARK: - Hostile input
@@ -111,6 +143,11 @@ struct SharedPaintingTests {
         #expect(error(Self.file([Self.meta()])) == .corrupt("missing chunk"))
         #expect(error(Self.file([Self.body(t)])) == .corrupt("missing chunk"))
         #expect(error(Self.file([Self.meta(), Self.body(t)], trailing: Data([0]))) == .corrupt("trailing bytes"))
+        let photo = (tag: SharedPainting.Chunk.photo, flags: UInt32(0), payload: Data([0xFF, 0xD8]))
+        #expect(try SharedPainting(encoded: Self.file([Self.meta(), photo, Self.body(t)])).photo == Data([0xFF, 0xD8]))
+        #expect(error(Self.file([Self.meta(), Self.body(t), photo, photo])) == .corrupt("duplicate chunk"))
+        #expect(error(Self.file([Self.meta(), Self.body(t), (photo.tag, 0, Data())])) == .corrupt("PHOT"))
+        #expect(error(Self.file([Self.meta(), Self.body(t), (photo.tag, 0, Data(count: SharedPainting.maximumPhotoBytes + 1))])) == .corrupt("PHOT"))
         #expect(error(Self.file(chunkCount: 3, [Self.meta(), Self.body(t)])) == .truncated)
         #expect(error(Self.file(chunkCount: 0xFFFF_FFFF, [Self.meta(), Self.body(t)])) == .truncated)
         #expect(error(Self.file([Self.meta(#"{"name":"A"}"#), Self.body(t)])) == .corrupt("META"))
@@ -140,8 +177,9 @@ struct SharedPaintingTests {
     }
 
     /// Every proper prefix of the file is rejected with a `CodingError` (never a trap).
-    @Test func truncationAtEveryOffset() throws {
-        let data = try TestFixtures.data("shared-v1.moonlight")
+    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight"])
+    func truncationAtEveryOffset(_ name: String) throws {
+        let data = try TestFixtures.data(name)
         for length in 0..<data.count {
             #expect(throws: Template.CodingError.self, "length \(length)") { try SharedPainting(encoded: data.prefix(length)) }
         }
@@ -149,8 +187,9 @@ struct SharedPaintingTests {
 
     /// Seeded random byte flips: every case throws a `CodingError` or decodes to a painting whose
     /// template's accessors and `validate()` run without trapping.
-    @Test func randomCorruption() throws {
-        let data = try TestFixtures.data("shared-v1.moonlight")
+    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight"])
+    func randomCorruption(_ name: String) throws {
+        let data = try TestFixtures.data(name)
         var rng = SplitMix64(seed: 0x5EED_5A1E)
         var decoded = 0
         let cases = 3000

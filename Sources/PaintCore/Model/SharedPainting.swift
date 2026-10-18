@@ -1,9 +1,11 @@
 import Foundation
 
 /// A painting one painter sends another to paint: its template exactly as it is (the painter's
-/// refinements are in it), its title and the settings that made it. Nothing else: no photo, no
-/// progress, no refinements to regenerate from, so the receiver paints a blank page and can't
-/// make the template again. The app's `.moonlight` file.
+/// refinements are in it), its title and the settings that made it, and the photo it was made
+/// from if the painter includes it. Never its progress or the refinements themselves (edits read
+/// from a stranger's file would reach the editor unchecked), so the receiver paints a blank page,
+/// and a template made again from the photo is made without the sender's edits. The app's
+/// `.moonlight` file.
 ///
 /// **Format.** Little-endian, like `Template`'s:
 /// ```
@@ -17,10 +19,13 @@ import Foundation
 ///     length bytes of payload
 /// ```
 /// Nothing may follow the last chunk. Unknown chunks are skipped unless flagged required (the
-/// file then needs a newer reader: `Template.CodingError.requiredExtension`). Chunks defined so far,
-/// each required and present exactly once:
-/// - `META`: UTF-8 JSON, at most `maximumMetaBytes`: `{"title": String, "settings": GenerationSettings}`;
-///   unknown keys are ignored, settings that don't decode are none.
+/// file then needs a newer reader: `Template.CodingError.requiredExtension`); none may appear
+/// twice. Chunks defined so far:
+/// - `META` (required): UTF-8 JSON, at most `maximumMetaBytes`:
+///   `{"title": String, "settings": GenerationSettings, "sampleName": String}`, the last two
+///   optional; unknown keys are ignored, settings that don't decode are none, and a `sampleName`
+///   (the library picture the painting was made from) that isn't lowercase letters, digits and
+///   hyphens is none.
 /// - `TMPL`:
 ///   ```
 ///   UInt32 compression      `Compression` raw value; one this reader doesn't know needs a newer one
@@ -28,6 +33,8 @@ import Foundation
 ///   bytes                   `Template.encoded()`, compressed by that method
 ///   ```
 ///   PaintCore compresses nothing itself (it stays portable); the app hands it LZFSE.
+/// - `PHOT` (optional): the photo's encoded image (the app's JPEG), at most `maximumPhotoBytes`,
+///   never empty. PaintCore doesn't look inside it; the app decodes it as any opened image.
 ///
 /// **Safety.** A shared file comes from anyone. Every count and length is checked against the
 /// bytes left, the decompressed length is bounded before decompressing and must come out exact,
@@ -36,11 +43,17 @@ public struct SharedPainting: Sendable, Equatable {
     public var title: String
     public var settings: GenerationSettings?
     public var template: Template
+    /// The encoded photo, when the painter sent it.
+    public var photo: Data?
+    /// The library picture the painting was made from (the app's `Sample.id`).
+    public var sampleName: String?
 
-    public init(title: String, settings: GenerationSettings?, template: Template) {
+    public init(title: String, settings: GenerationSettings?, template: Template, photo: Data? = nil, sampleName: String? = nil) {
         self.title = title
         self.settings = settings
         self.template = template
+        self.photo = photo
+        self.sampleName = sampleName
     }
 
     public static let formatVersion: UInt32 = 1
@@ -48,6 +61,8 @@ public struct SharedPainting: Sendable, Equatable {
     public static let maximumMetaBytes = 64 * 1024
     /// Longer titles are cut to this many characters.
     public static let maximumTitleLength = 200
+    /// Far above the app's photos (at most 2048 px, JPEG).
+    public static let maximumPhotoBytes = 32 * 1024 * 1024
 
     public enum Compression: UInt32, Sendable {
         case none = 0
@@ -57,21 +72,25 @@ public struct SharedPainting: Sendable, Equatable {
     enum Chunk {
         static let meta: UInt32 = 0x4154_454D  // "META"
         static let template: UInt32 = 0x4C50_4D54  // "TMPL"
+        static let photo: UInt32 = 0x544F_4850  // "PHOT"
     }
 
     private struct Meta: Codable {
         var title: String
         var settings: GenerationSettings?
+        var sampleName: String?
 
-        init(title: String, settings: GenerationSettings?) {
+        init(title: String, settings: GenerationSettings?, sampleName: String?) {
             self.title = title
             self.settings = settings
+            self.sampleName = sampleName
         }
 
         init(from decoder: any Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             title = try c.decode(String.self, forKey: .title)
             settings = (try? c.decodeIfPresent(GenerationSettings.self, forKey: .settings)) ?? nil
+            sampleName = ((try? c.decodeIfPresent(String.self, forKey: .sampleName)) ?? nil).flatMap(SharedPainting.cleanSampleName)
         }
     }
 
@@ -86,7 +105,7 @@ public struct SharedPainting: Sendable, Equatable {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
         // A title and settings always encode.
-        let meta = (try? encoder.encode(Meta(title: title, settings: settings))) ?? Data()
+        let meta = (try? encoder.encode(Meta(title: title, settings: settings, sampleName: sampleName))) ?? Data()
 
         var body = BinaryWriter()
         body.write(compression.rawValue)
@@ -96,10 +115,12 @@ public struct SharedPainting: Sendable, Equatable {
         var w = BinaryWriter()
         w.write(Self.magic)
         w.write(Self.formatVersion)
-        w.write(UInt32(2))
-        for (tag, payload) in [(Chunk.meta, meta), (Chunk.template, body.data)] {
+        var chunks = [(Chunk.meta, Template.Chunk.requiredFlag, meta), (Chunk.template, Template.Chunk.requiredFlag, body.data)]
+        if let photo, !photo.isEmpty { chunks.append((Chunk.photo, 0, photo)) }
+        w.write(UInt32(chunks.count))
+        for (tag, flags, payload) in chunks {
             w.write(tag)
-            w.write(Template.Chunk.requiredFlag)
+            w.write(flags)
             w.write(UInt32(payload.count))
             w.write(bytes: payload)
         }
@@ -123,6 +144,7 @@ public struct SharedPainting: Sendable, Equatable {
 
         var meta: Meta?
         var template: Template?
+        var photo: Data?
         let count = try r.readCount(elementSize: Template.Chunk.headerSize)
         for _ in 0..<count {
             let tag = try r.read(UInt32.self)
@@ -146,13 +168,17 @@ public struct SharedPainting: Sendable, Equatable {
                 let raw = compression == .none ? stream : try decompress(compression, stream, length)
                 guard raw.count == length else { throw CodingError.corrupt(Template.Chunk.name(tag)) }
                 template = try Template(encoded: raw)
+            case Chunk.photo:
+                guard photo == nil else { throw CodingError.corrupt("duplicate chunk") }
+                guard !payload.isEmpty, payload.count <= Self.maximumPhotoBytes else { throw CodingError.corrupt(Template.Chunk.name(tag)) }
+                photo = Data(payload)
             default:
                 if flags & Template.Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
             }
         }
         guard r.isAtEnd else { throw CodingError.corrupt("trailing bytes") }
         guard let meta, let template else { throw CodingError.corrupt("missing chunk") }
-        self.init(title: Self.cleanTitle(meta.title), settings: meta.settings, template: template)
+        self.init(title: Self.cleanTitle(meta.title), settings: meta.settings, template: template, photo: photo, sampleName: meta.sampleName)
     }
 
     /// Trimmed, without control characters, and at most `maximumTitleLength` characters.
@@ -160,5 +186,12 @@ public struct SharedPainting: Sendable, Equatable {
         let visible = String(String.UnicodeScalarView(title.unicodeScalars.filter { !CharacterSet.controlCharacters.contains($0) }))
         return String(visible.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maximumTitleLength))
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The name itself when it could be a library picture's (lowercase ASCII letters, digits and
+    /// hyphens, at most 64), else nil.
+    static func cleanSampleName(_ name: String) -> String? {
+        let allowed = name.utf8.allSatisfy { (0x61...0x7A).contains($0) || (0x30...0x39).contains($0) || $0 == 0x2D }
+        return allowed && (1...64).contains(name.utf8.count) ? name : nil
     }
 }

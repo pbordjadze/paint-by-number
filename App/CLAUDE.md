@@ -217,8 +217,9 @@ synchronized folder would bundle it into the app.
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
-  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-received` (with `-dark`)
-  opens a refined painting sent as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the
+  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-send` (with `-dark`,
+  `-long-text`) is Send Template's sheet, `gallery-received` (with `-dark`) opens a refined painting
+  sent with its photo as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the
   gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
   reset TipKit and hide every tip except in the tip scenarios (Tips). The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
@@ -675,10 +676,11 @@ Conventions).
   Share Extension (a hand-written `.appex` target that can't open its app). A painting someone
   sent (a `.moonlight` file, the type `Config/Info.plist` exports, Owner rank) is told from a photo
   by its first bytes (`SharedPaintingCodec.isSharedPainting`): `Library.receive` adds it as a new,
-  blank painting with the sender's title, no photo (no photo peek, no regeneration) and nicknames
-  of its own, and it opens in place of any painting or create flow; one that can't be read adds
-  nothing and says why in an alert (`Library.ReceiveError`). Receiving works in every build, so a
-  TestFlight painter opens what a SideStore one sends.
+  blank painting with the sender's title and nicknames of its own, and with the sender's photo
+  (decoded like any opened image, stored as `source.jpg`) and library picture when they came, so
+  it has the photo peek and a damaged template is made again from the photo, without the sender's
+  edits, which never travel. It opens in place of any painting or create flow; one that can't be
+  read adds nothing and says why in an alert (`Library.ReceiveError`).
 
 ## Sharing and exports
 
@@ -688,11 +690,15 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template `ShareLink`s can't report
 completion, so they rely on the launch purge and the sweep of stale exports each new export runs
 (`ArtworkExporter.staleExportAge`). The completion share picture and the time-lapse stay on light
-paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu, `#if UNRELEASED`;
-`SharedPaintingFile`) shares "<Title> Template.moonlight": PaintCore's `SharedPainting`, the
-template as it is (the painter's refinements are in it) with its title and settings, LZFSE
-inside (`SharedPaintingCodec`), and nothing else: no photo, no progress, no refinements. Whoever
-hasn't the app gets Print Template…'s PDF instead.
+paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu) opens `SendTemplateSheet`: the
+blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),
+then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPainting`): PaintCore's
+`SharedPainting`, the template as it is (the painter's refinements are in it) with its title and
+settings, LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
+picture; never progress or refinements. The sheet deletes the file once the share sheet closes,
+and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
+instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter
+sends it, the developers collect nothing).
 
 ## Settings
 

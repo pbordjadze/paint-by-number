@@ -46,10 +46,14 @@ nonisolated enum ArtworkExporter {
     }
 
     /// The painting to send someone else (`SharedPainting`): its template as it is, refinements
-    /// and all, with its title and settings; no photo and no progress.
-    static func sharedPainting(store: ArtworkStore, artwork: Artwork) throws -> Data {
+    /// and all, with its title and settings, never its progress; with `includesPhoto`, the photo
+    /// it was made from (`source.jpg`) and the library picture it came from.
+    static func sharedPainting(store: ArtworkStore, artwork: Artwork, includesPhoto: Bool) throws -> Data {
         let template = try store.readTemplate(artwork.id)
-        return try SharedPaintingCodec.encode(SharedPainting(title: artwork.title, settings: artwork.settings, template: template))
+        let photo = includesPhoto ? try? Data(contentsOf: store.url(.source, of: artwork.id)) : nil
+        return try SharedPaintingCodec.encode(SharedPainting(
+            title: artwork.title, settings: artwork.settings, template: template, photo: photo,
+            sampleName: includesPhoto ? artwork.sampleName : nil))
     }
 
     /// Writes `data` to a uniquely placed temporary file named after the artwork.
@@ -156,26 +160,6 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     func export() async throws -> URL {
         let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
         return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: "pdf")
-    }
-}
-
-/// "Send Template…": the painting as a `.moonlight` file (`ArtworkExporter.sharedPainting`), made
-/// when the share sheet asks for it, which Paint by Moonlight opens as a new painting.
-nonisolated struct SharedPaintingFile: Transferable, Sendable {
-    let store: ArtworkStore
-    let artwork: Artwork
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .moonlightPainting) { item in
-            SentTransferredFile(try await item.export())
-        }
-    }
-
-    @concurrent
-    func export() async throws -> URL {
-        let data = try ArtworkExporter.sharedPainting(store: store, artwork: artwork)
-        return try ArtworkExporter.temporaryFile(
-            data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: SharedPaintingCodec.fileExtension)
     }
 }
 

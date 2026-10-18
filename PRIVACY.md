@@ -1,6 +1,6 @@
 # Paint by Moonlight: Privacy Policy
 
-*Last updated October 16, 2026*
+*Last updated October 18, 2026*
 
 Paint by Moonlight turns your photos into paint-by-numbers paintings on your iPhone or iPad. It
 has no accounts, no ads, no analytics and no tracking. The only thing it can send off your device
@@ -11,8 +11,9 @@ practice.
 
 Nothing, unless you choose to send feedback. There are no accounts, no ads, no analytics, no
 tracking and no third-party SDKs. The app never sends your photos, your paintings or anything
-about you or your device to us or to anyone else, except when you tap Send in Give Feedback: then
-the feedback you reviewed is uploaded to the developers (see Sharing and feedback below).
+about you or your device to us or to anyone else, except what you share yourself through the share
+sheet and when you tap Send in Give Feedback: then the feedback you reviewed is uploaded to the
+developers (see Sharing and feedback below).
 
 That feedback is the only data the app collects. It is not linked to you (there is no account to
 link it to), it is not used for tracking, and it is used only to fix and improve the app. The
@@ -38,7 +39,12 @@ original photo only if you switch it on (photos).
 ## Sharing and feedback
 
 Nothing leaves your device unless you send or share it yourself. When you share a painting, print
-it or export a time-lapse, you choose where it goes with Apple's share sheet.
+it, export a time-lapse or send a template, you choose where it goes with Apple's share sheet.
+
+**Send Template** makes a file of a painting for someone else to paint: its blank template (with
+any changes you made to the drawing), its title and the settings that made it. It includes the
+original photo unless you switch Original Photo off. It never includes your progress. The file
+goes only where you send it; it doesn't pass through us.
 
 **Give Feedback** puts together a report that you can read before sending. It contains your
 painting with the marks you drew on it and a close-up of each, your notes, the painting's

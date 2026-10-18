@@ -49,16 +49,25 @@ final class GalleryActionsTests: XCTestCase {
         }
     }
 
-    /// Send Template… sits beside Print Template… in Debug and SideStore builds (`UNRELEASED`);
+    /// Send Template… opens its sheet: the page to send, Original Photo on, and Cancel closes it.
     /// `ReceivePaintingTests` opens what it sends.
     @MainActor
-    func testMenuOffersSendTemplate() {
+    func testSendTemplateOffersThePhotoAndCancels() {
         let app = launchGallery()
         let card = revealCard("The Great Wave", in: app)
         card.press(forDuration: 1.5)
-        XCTAssertTrue(app.buttons["Send Template…"].waitForExistence(timeout: 5), "The card menu has no Send Template…")
-        XCTAssertTrue(app.buttons["Print Template…"].exists)
-        attachScreenshot(of: app, named: "card-menu-send-template")
+        let send = app.buttons["Send Template…"]
+        XCTAssertTrue(send.waitForExistence(timeout: 5), "The card menu has no Send Template…")
+        send.tap()
+
+        let photo = app.switches["send-photo"]
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), "No Send Template sheet with the Original Photo switch")
+        XCTAssertEqual(photo.value as? String, "1", "Original Photo isn't on by default")
+        XCTAssertTrue(app.buttons["send-template"].isEnabled)
+        attachScreenshot(of: app, named: "send-template")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(photo.waitForNonExistence(timeout: 5), "Cancel didn't close the sheet")
+        XCTAssertTrue(card.exists)
     }
 
     @MainActor
