@@ -1,7 +1,8 @@
 import XCTest
 
 /// Card menu actions in the gallery: deleting asks first, a time-lapse shows its progress and can be
-/// cancelled, favorites sort first and filter, and the search field narrows the cards.
+/// cancelled, a template can be sent, favorites sort first and filter, and the search field narrows
+/// the cards.
 final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testDeleteAsksForConfirmation() {
@@ -46,6 +47,30 @@ final class GalleryActionsTests: XCTestCase {
             dismissDialog(at: dialog, titled: labels[0], in: app)
             XCTAssertTrue(card.exists, "“\(title)” is gone after the dialog was dismissed")
         }
+    }
+
+    /// Send Template… opens its sheet: the page to send, Original Photo on, and Cancel closes it.
+    /// `ReceivePaintingTests` opens what it sends.
+    @MainActor
+    func testSendTemplateOffersThePhotoAndCancels() {
+        let app = launchGallery()
+        let card = revealCard("The Great Wave", in: app)
+        card.press(forDuration: 1.5)
+        let share = app.buttons["Share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5), "The card menu has no Share")
+        share.tap()
+        let send = app.buttons["Send Template…"]
+        XCTAssertTrue(send.waitForExistence(timeout: 5), "The card menu's Share has no Send Template…")
+        send.tap()
+
+        let photo = app.switches["send-photo"]
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), "No Send Template sheet with the Original Photo switch")
+        XCTAssertEqual(photo.value as? String, "1", "Original Photo isn't on by default")
+        XCTAssertTrue(app.buttons["send-template"].isEnabled)
+        attachScreenshot(of: app, named: "send-template")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(photo.waitForNonExistence(timeout: 5), "Cancel didn't close the sheet")
+        XCTAssertTrue(card.exists)
     }
 
     @MainActor

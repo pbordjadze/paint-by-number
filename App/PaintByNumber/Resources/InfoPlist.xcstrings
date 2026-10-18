@@ -48,6 +48,18 @@
           }
         }
       }
+    },
+    "Paint by Moonlight Painting" : {
+      "comment" : "Name of the document type of a painting sent to someone else to paint (a .moonlight file), shown by the system when it is opened from Messages, AirDrop or Files (CFBundleTypeName and UTTypeDescription in Config/Info.plist)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight Painting"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

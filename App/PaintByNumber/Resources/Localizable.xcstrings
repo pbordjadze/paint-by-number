@@ -673,6 +673,10 @@
       "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
       "extractionState" : "manual"
     },
+    "Couldn’t Open Painting" : {
+      "comment" : "Title of the alert when a painting someone sent (a .moonlight file opened in the app) can't be added to the gallery",
+      "extractionState" : "manual"
+    },
     "Couldn’t Open Photo" : {
       "comment" : "Title shown in the create flow when the chosen photo can't be opened",
       "extractionState" : "manual"
@@ -1757,6 +1761,42 @@
       "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
+    "library.receive.damaged" : {
+      "comment" : "Alert message when a file opened as a painting someone sent can't be read",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file may be damaged, or it isn’t a painting. Ask whoever sent it to send it again."
+          }
+        }
+      }
+    },
+    "library.receive.needsNewerApp" : {
+      "comment" : "Alert message when a painting someone sent was made by a newer version of the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting was sent from a newer version of Paint by Moonlight. Update the app to open it."
+          }
+        }
+      }
+    },
+    "library.receive.saveFailed" : {
+      "comment" : "Alert message when a painting someone sent can't be written to the library",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The painting couldn’t be saved on this device. Free up some space and open it again."
+          }
+        }
+      }
+    },
     "Lifts its lid." : {
       "comment" : "The Marginarium: VoiceOver hint of Pip, the teapot: tapping it makes it lift its lid",
       "extractionState" : "manual"
@@ -1933,6 +1973,66 @@
       "comment" : "Message of the tip titled No Photo at Hand; Samples is the pane or list of the app’s sample pictures",
       "extractionState" : "manual"
     },
+    "Send Template" : {
+      "comment" : "Title of the Send Template sheet, where a painter sends a blank copy of a painting's template to someone else",
+      "extractionState" : "manual"
+    },
+    "Send Template…" : {
+      "comment" : "Item of a gallery card menu's Share submenu: shares the painting's template as a file that Paint by Moonlight opens as a new, blank painting (refinements included, no photo), to send to someone else",
+      "extractionState" : "manual"
+    },
+    "send.explanation.drawingOnly" : {
+      "comment" : "Send Template's note with the Original Photo switch off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included. Your photo stays on this device."
+          }
+        }
+      }
+    },
+    "send.explanation.noPhoto" : {
+      "comment" : "Send Template's note when the painting has no photo to send",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included."
+          }
+        }
+      }
+    },
+    "send.explanation.photo" : {
+      "comment" : "Send Template's note with the Original Photo switch on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included, and your photo to peek at."
+          }
+        }
+      }
+    },
+    "send.preview" : {
+      "comment" : "VoiceOver label of the page shown in Send Template; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A blank copy of “%@”"
+          }
+        }
+      }
+    },
+    "Send…" : {
+      "comment" : "Send Template sheet's button: makes the .moonlight file and opens the share sheet",
+      "extractionState" : "manual"
+    },
     "Settings and Tips" : {
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
@@ -1987,6 +2087,10 @@
     },
     "Share Instead" : {
       "comment" : "Button in the alert after feedback couldn't be sent: opens the share sheet so the painter can send the feedback another way, such as Mail",
+      "extractionState" : "manual"
+    },
+    "The painting couldn’t be prepared for sending." : {
+      "comment" : "Send Template sheet: shown when the painting's file can't be made (its template can't be read)",
       "extractionState" : "manual"
     },
     "The Pencil paints while fingers move the page. Double-tap the Pencil for the next color." : {
@@ -4238,7 +4342,7 @@
       "extractionState" : "manual"
     },
     "Share" : {
-      "comment" : "Accessibility label of the share menu in the completion bar, and the submenu of a gallery card's long-press menu that holds Share Painting, Share Time-lapse and Print Template",
+      "comment" : "Accessibility label of the share menu in the completion bar, and the submenu of a gallery card's long-press menu that holds Share Painting, Share Time-lapse, Print Template and Send Template",
       "extractionState" : "manual"
     },
     "Share Painting" : {

@@ -146,10 +146,12 @@ struct LocalizationTests {
     /// document types that fill Info.plist. A document type is localized under its own English name.
     @Test func infoPlistCatalogMatchesTheBundle() throws {
         let strings = try Self.catalog("InfoPlist")
-        #expect(Set(strings.keys) == ["CFBundleDisplayName", "Image", "NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription"])
+        #expect(Set(strings.keys) == [
+            "CFBundleDisplayName", "Image", "Paint by Moonlight Painting", "NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription",
+        ])
         let documentTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleDocumentTypes") as? [[String: Any]] ?? []
         let typeNames = Set(documentTypes.compactMap { $0["CFBundleTypeName"] as? String })
-        #expect(typeNames == ["Image"])
+        #expect(typeNames == ["Image", "Paint by Moonlight Painting"])
         for (key, entry) in strings {
             let bundled = typeNames.contains(key) ? key : Bundle.main.object(forInfoDictionaryKey: key) as? String
             #expect(bundled == Self.value(of: Self.english(entry)), "\(key): \(bundled ?? "nil")")

@@ -63,6 +63,32 @@ final class Library {
         case saveFailed
     }
 
+    /// Why a painting someone sent (`receive`) couldn't be added.
+    nonisolated enum ReceiveError: LocalizedError, Equatable {
+        /// Sent from a newer app, in a format this one can't read.
+        case needsNewerApp
+        /// Not a painting, or a damaged one.
+        case damaged
+        case saveFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .needsNewerApp:
+                String(localized: "library.receive.needsNewerApp",
+                       defaultValue: "This painting was sent from a newer version of Paint by Moonlight. Update the app to open it.",
+                       comment: "Alert message when a painting someone sent was made by a newer version of the app")
+            case .damaged:
+                String(localized: "library.receive.damaged",
+                       defaultValue: "This file may be damaged, or it isn’t a painting. Ask whoever sent it to send it again.",
+                       comment: "Alert message when a file opened as a painting someone sent can't be read")
+            case .saveFailed:
+                String(localized: "library.receive.saveFailed",
+                       defaultValue: "The painting couldn’t be saved on this device. Free up some space and open it again.",
+                       comment: "Alert message when a painting someone sent can't be written to the library")
+            }
+        }
+    }
+
     @ObservationIgnored let store: ArtworkStore
     /// The create flow's unfinished painting, kept in a folder of the store's root.
     @ObservationIgnored let drafts: Drafts
@@ -165,6 +191,40 @@ final class Library {
         }
         insert(artwork)
         return artwork
+    }
+
+    /// A painting someone sent (`SharedPainting`, a `.moonlight` file) as a new painting, blank and
+    /// with its sender's title (else `fallbackTitle`, the file's name), and its colors' nicknames
+    /// its own. With the sender's photo (or library picture) it has the photo peek, and a damaged
+    /// template is made again from it, without the sender's edits, which never travel; without,
+    /// neither. A photo that doesn't decode is left out.
+    func receive(_ data: Data, fallbackTitle: String?) async throws -> Artwork {
+        let decoded: (SharedPainting, CGImage?)
+        do {
+            decoded = try await Background.run {
+                let shared = try SharedPaintingCodec.decode(data)
+                return (shared, shared.photo.flatMap { ImageCodec.image(data: $0, maxPixelSize: ArtworkStore.sourceMaxPixelSize) })
+            }
+        } catch let error as Template.CodingError where error.requiresNewerReader {
+            throw ReceiveError.needsNewerApp
+        } catch {
+            Log.library.error("A received painting couldn't be read: \(String(describing: error), privacy: .public)")
+            throw ReceiveError.damaged
+        }
+        let (shared, photo) = decoded
+        if shared.photo != nil, photo == nil { Log.library.error("A received painting's photo couldn't be decoded") }
+        let title = shared.title.isEmpty ? fallbackTitle ?? String(localized: "Painting") : shared.title
+        let settings = shared.settings ?? (shared.template.lineArt == nil ? Artwork.settingsBeforeLineArt : GenerationSettings())
+        do {
+            return try await create(ArtworkDraft(
+                title: title, template: shared.template, settings: settings, photo: photo,
+                // A library picture's name only beside its photo: alone it could name any picture,
+                // which a damaged template would then be made again from.
+                sampleName: photo == nil ? nil : shared.sampleName))
+        } catch {
+            Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
+            throw ReceiveError.saveFailed
+        }
     }
 
     /// First launch: prepares a couple of ready-to-paint samples in the background (shown
