@@ -26,6 +26,7 @@ States: `waiting`, `in CI`, `red` (its session is fixing it).
 | 7 | claude/nightfall | Intro animation | waiting (UNRELEASED) |
 | 8 | claude/quiet-painting | Quiet painting mode | waiting (274f6e8, local; rebases on main after fewer-buttons + ux-refinements; UNRELEASED) |
 | 9 | claude/retro-review | Retro code review (Sonnet) | ready (6a01a58, local; 3 small fixes) |
+| 10 | claude/toolbar-tips | Gentle tips check | ready (local; after tip-layout d8fe24e merges; row 43 + a retro finding) |
 
 ## Inbox
 
