@@ -102,7 +102,7 @@ import Testing
     @Test func metricsAreReadStrictly() throws {
         let table = try SpriteMetrics.table(json: shippedMetricsData())
         let spec = try ShowSpec(json: shippedSpecData())
-        #expect(table.count == 24 && Set(spec.crew.pets).isSubset(of: table.keys))
+        #expect(table.count == 25 && Set(spec.crew.pets).isSubset(of: table.keys))
         for (id, m) in table {
             #expect(0 <= m.top && m.top < m.foot && m.foot < SpriteMetrics.cell.height && 0 <= m.cx && m.cx < SpriteMetrics.cell.width, "\(id)")
         }

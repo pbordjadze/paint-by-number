@@ -9854,13 +9854,13 @@
       }
     },
     "lamp.moon.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of The Moon's egg: the guardian hasn't hatched yet, its first drawing withheld",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Moon",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Moon, still an egg: its first try went back to the drawing board"
+            "value" : "The Moon"
           }
         }
       }

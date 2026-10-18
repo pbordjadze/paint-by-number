@@ -368,9 +368,9 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Moon"),
         happiestWhen: String(localized: "lamp.moon.happiestWhen", defaultValue: "It can point to where the night is and where the light falls.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Moon"),
-        petCaption: String(localized: "lamp.moon.petCaption", defaultValue: "The Moon, still an egg: its first try went back to the drawing board",
-                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of The Moon's egg: the guardian hasn't hatched yet, its first drawing withheld"),
-        hatched: false)
+        petCaption: String(localized: "lamp.moon.petCaption", defaultValue: "The Moon",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Moon"),
+        hatched: true)
 
     static let glassblower = MarginariumGuardian(
         id: "glassblower",

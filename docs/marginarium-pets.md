@@ -19,7 +19,7 @@ drew, which chapter 2 shows each in a pet block; Dino's; and the four drawn on O
 Astrologer, Bart, Rikyū and Scherenschnitt), which Who's Who shows (`MarginariumCast`), as it does
 Dino's; chapter 1's margin notes show them beside the words (next section).
 The contents page opens on them all, with Pip and Colophon, as small copies (`MarginariumView`).
-The Moon's drawing is withheld: no `pet-moon.webp` ships and its notes show no pet.
+The Moon's first drawing was withheld; her second, an almanac woodcut, hatched on October 18.
 To add a future atlas pet, place its sheet in
 `App/PaintByNumber/Resources/pet-<id>.webp`, with a lowercase alphanumeric/hyphen identifier,
 then use `pet:<id>` in the chapter. The unique filename survives Xcode's flattened resource
@@ -68,7 +68,7 @@ guardian who signed a margin note, once each, in the order they speak. The impor
 every signature of a note as `speakers` (and the last as `speaker`), so the names are the
 chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
 table from a signature to a pet identifier: "the narrator" is Colophon because chapter 1
-says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" is listed as having none.
+says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" (once listed as having none) is the Moon.
 `MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
 table nor the list of voices without a pet, or maps to a pet that doesn't resolve.
 
@@ -133,6 +133,7 @@ colour fringe; the white ermine is among the five sheets kept lossless.
 | `open-source-enthusiast` | `e65baf20d2646a4766e3eedb2aab01040ae3a4b269a7b56666e34cd28d0e360a` | 907,624 | lossy WebP q100 |
 | `originality` | `041937c51452bbacf19d0218b712ed716e3402182185537726b350adcfd15955` | 674,790 | lossy WebP q100 |
 | `painter` | `06415260a6eadfd84e0c48e5cf385c75567a954a3991f066afd3c2420c7f72ff` | 852,478 | lossy WebP q100 |
+| `moon` | `fad216466f87ef81982c7e4a0f4bbc48d3282f97ff2663f1de125daa35e1e565` | 496,714 | lossy WebP q88 |
 | `pirosmani` | `f914f776aab8d192e2b46b166dba50c9de7d0200e1b3dd9ba655d8b75f5f6c4c` | 912,802 | lossless, copied unchanged |
 | `robber-girl` | `096b6e2b8499ef46ec32587fe5783e0e68993db78b737970d240c1a273e6d332` | 1,025,788 | lossy WebP q93 |
 | `scholar` | `76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c` | 1,028,674 | lossy WebP q100 |
@@ -181,8 +182,10 @@ waving cells at native size and 5x, on white and dark, showed no banding, halo o
 The Glassblower's redraw (Paul: "Both good") replaced the factory's droplet the same day: a
 clearer drop with a curling tip and a warm light inside. Niko followed, painted the way Pirosmani painted animals: house paint on black oilcloth, the black
 left showing as his patches, a crescent and stars on his shoulder (Paul: "Grounding them in the actual
-techniques their namesake used is the right method here"). The twenty-four sheets total
-**19,421,260 bytes (18.52 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
+techniques their namesake used is the right method here"). The Moon hatched too: her first drawing was withheld because, a crescent seen side-on, she
+couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "The moon one is in
+need of a new drawing"), mirrors her right-facing looks for the left. The twenty-five sheets total
+**19,917,974 bytes (19.00 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
