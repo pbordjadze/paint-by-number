@@ -468,6 +468,37 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
+/// Tells the desk which tips a card can point at (`TipDesk.anchor`). The grid builds cards beyond the
+/// screen's edge too: a tip waits for its card to be mostly in view, or it would point off the
+/// screen. A card's tips change as the shelf does (another painting comes first), so it takes back
+/// the ones it gave, not the ones it has now.
+private struct CardTipAnchor: ViewModifier {
+    let ids: [TipID]
+    @State private var isVisible = false
+    @State private var anchored: [TipID] = []
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollVisibilityChange(threshold: 0.6) { visible in
+                isVisible = visible
+                anchor()
+            }
+            .onChange(of: ids) { anchor() }
+            .onDisappear {
+                isVisible = false
+                anchor()
+            }
+    }
+
+    private func anchor() {
+        let now = isVisible ? ids : []
+        guard now != anchored else { return }
+        PaintTips.desk.anchor(anchored, present: false)
+        PaintTips.desk.anchor(now, present: true)
+        anchored = now
+    }
+}
+
 /// Lays the tip whose turn it is, if it is one of `ids`, as a card with no arrow at the top of the
 /// view it modifies, just under the navigation bar whose button it is about. A popover from the
 /// button grew out of it on iOS 26 and covered it (on iPhone the title too), and nothing could
@@ -504,9 +535,11 @@ extension View {
         modifier(BarTipModifier(ids: ids))
     }
 
-    /// Whichever of `ids` has the turn, as a popover from this card on the shelf.
+    /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
+    /// while it is mostly in view.
     func cardTip(_ ids: [TipID], arrowEdge: Edge = .top) -> some View {
         modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
+            .modifier(CardTipAnchor(ids: ids))
     }
 }
 
