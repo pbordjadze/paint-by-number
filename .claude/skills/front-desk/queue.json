@@ -3,8 +3,8 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "4bcffa0: code review fixes + the fix for the flaky Settings test; the first main run with the warnings gate",
-  "state": "main running"
+  "detail": "4bcffa0 red on one iPhone UI test (a test-helper race, not a bug); the fix is in CI, then one push merges it with Refine line-split and Recolor",
+  "state": "red"
  },
  {
   "key": "refine-line-split",
@@ -17,15 +17,15 @@
   "key": "recolor",
   "order": "2",
   "title": "Recolor in Refine",
-  "detail": "Looks + Swatches, five looks; Codex findings fixed. SideStore only · moved up by you",
-  "state": "in CI"
+  "detail": "Green at 21f36b2; merges with the fix and line-split in one push",
+  "state": "green"
  },
  {
   "key": "ci-tags",
   "order": "3",
   "title": "CI tags guard",
   "detail": "The night train refuses a skip tag in its merge message (the reason main 4bcffa0 had to start the gate run). Compile check running.",
-  "state": "waiting"
+  "state": "in CI"
  },
  {
   "key": "ux-refinements",
