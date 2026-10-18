@@ -438,7 +438,8 @@ any port of it, when changing the fitter: work from the paper.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
    Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
    `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in
-   STATUS.md; `core` only builds and checks the strings), in about 15 min. Run it before asking
+   STATUS.md; `core` only builds and checks the strings): about 6 min once a runner takes it (its
+   first, October 18), but it waits for one like any macOS job. Run it before asking
    for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
    run is going (the push cancels it).
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
@@ -494,7 +495,10 @@ if he has gone quiet.
   write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
   subagent). Fix what it confirms; anything large or design-level goes to Paul through the front
   desk. The merge commit's message lists what the review found and what was fixed. No PR, no
-  extra CI run.
+  extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
+  head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
+  `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
+  `[compile]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about
