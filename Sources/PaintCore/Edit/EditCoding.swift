@@ -6,6 +6,7 @@ import Foundation
 ///
 ///     {"kind": "draw",      "points": [[x, y], ...], "closed": false,
 ///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...]}
+///     {"kind": "split",     "points": [[x, y], ...], "closed": false, "paints": [...]}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -35,24 +36,28 @@ extension TemplateEditor.Edit: Codable {
             }
             return first
         }
+        /// A draw's or a split's paints; nil when the file gives none.
+        func decodePaints() throws -> [TemplateEditor.Paint]? {
+            guard c.contains(.paints) else { return nil }
+            var list = try c.nestedUnkeyedContainer(forKey: .paints)
+            var decoded: [TemplateEditor.Paint] = []
+            while !list.isAtEnd {
+                let p = try list.nestedContainer(keyedBy: PaintKeys.self)
+                let at = try p.decode(SIMD2<Float>.self, forKey: .at)
+                let color = try p.decode([Float].self, forKey: .color)
+                guard color.count == 3 else {
+                    throw DecodingError.dataCorruptedError(forKey: .color, in: p, debugDescription: "a color is [L, a, b]")
+                }
+                decoded.append(TemplateEditor.Paint(at: at, color: SIMD3(color[0], color[1], color[2])))
+            }
+            return decoded
+        }
         switch kind {
         case "draw":
-            var paints: [TemplateEditor.Paint]?
-            if c.contains(.paints) {
-                var list = try c.nestedUnkeyedContainer(forKey: .paints)
-                var decoded: [TemplateEditor.Paint] = []
-                while !list.isAtEnd {
-                    let p = try list.nestedContainer(keyedBy: PaintKeys.self)
-                    let at = try p.decode(SIMD2<Float>.self, forKey: .at)
-                    let color = try p.decode([Float].self, forKey: .color)
-                    guard color.count == 3 else {
-                        throw DecodingError.dataCorruptedError(forKey: .color, in: p, debugDescription: "a color is [L, a, b]")
-                    }
-                    decoded.append(TemplateEditor.Paint(at: at, color: SIMD3(color[0], color[1], color[2])))
-                }
-                paints = decoded
-            }
-            self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: paints)
+            self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints())
+        case "split":
+            self = .split(
+                points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints() ?? [])
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -75,14 +80,12 @@ extension TemplateEditor.Edit: Codable {
             try c.encode("draw", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
-            if let paints {
-                var list = c.nestedUnkeyedContainer(forKey: .paints)
-                for paint in paints {
-                    var p = list.nestedContainer(keyedBy: PaintKeys.self)
-                    try p.encode(paint.at, forKey: .at)
-                    try p.encode([paint.color.x, paint.color.y, paint.color.z], forKey: .color)
-                }
-            }
+            if let paints { try encode(paints, in: &c) }
+        case .split(let points, let closed, let paints):
+            try c.encode("split", forKey: .kind)
+            try c.encode(points, forKey: .points)
+            try c.encode(closed, forKey: .closed)
+            try encode(paints, in: &c)
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)
@@ -95,6 +98,15 @@ extension TemplateEditor.Edit: Codable {
             try c.encode("fill", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode([color.x, color.y, color.z], forKey: .color)
+        }
+    }
+
+    private func encode(_ paints: [TemplateEditor.Paint], in c: inout KeyedEncodingContainer<CodingKeys>) throws {
+        var list = c.nestedUnkeyedContainer(forKey: .paints)
+        for paint in paints {
+            var p = list.nestedContainer(keyedBy: PaintKeys.self)
+            try p.encode(paint.at, forKey: .at)
+            try p.encode([paint.color.x, paint.color.y, paint.color.z], forKey: .color)
         }
     }
 }

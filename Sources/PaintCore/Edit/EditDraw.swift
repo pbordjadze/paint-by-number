@@ -92,13 +92,13 @@ extension EditWork {
             }
         }
         let reach = TemplateEditor.reach
-        for e in t.edges.indices where !edgeDead[e] && (isFrame(e) || isInked(e)) {
+        for e in t.edges.indices where !edgeDead[e] && (isFrame(e) || isInked(e) || splitting) {
             let b = box(of: e)
             guard p.x >= b.lo.x - reach, p.x <= b.hi.x + reach, p.y >= b.lo.y - reach, p.y <= b.hi.y + reach else { continue }
             let pts = lattice(of: e)
             for j in 0..<(pts.count - 1) { offer(Lattice.nearest(to: p, on: pts[j], pts[j + 1]), edge: e, stroke: nil, segment: j) }
         }
-        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue {
+        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue && !splitting {
             let pts = stroke.points.map(Lattice.point)
             for j in 0..<(pts.count - 1) { offer(Lattice.nearest(to: p, on: pts[j], pts[j + 1]), edge: nil, stroke: i, segment: j) }
         }
@@ -210,7 +210,8 @@ extension EditWork {
         var lo = LatticePoint(repeating: .max), hi = LatticePoint(repeating: .min)
         for p in run { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
         var candidates: [(index: Int, points: [LatticePoint])] = []
-        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue {
+        // A split divides paint, not ink: the drawing's strokes are no part of it.
+        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue && !splitting {
             let pts = Self.dedupe(stroke.points.map(Lattice.point))
             guard pts.count >= 2 else { continue }
             var slo = LatticePoint(repeating: .max), shi = LatticePoint(repeating: .min)
@@ -254,7 +255,9 @@ extension EditWork {
         }
         var all: [Chain] = []
         for points in Self.chains(of: lines[0].points, nodes: lines[0].nodes) {
-            all.append(Chain(points: points, layer: LineLayer.outline.rawValue, weight: 255, region: nil, fresh: true))
+            all.append(Chain(
+                points: points, layer: splitting ? LineLayer.color.rawValue : LineLayer.outline.rawValue, weight: splitting ? 0 : 255,
+                region: nil, fresh: true))
         }
         for (k, a) in members.enumerated() {
             let stroke = strokes[candidates[a].index]
@@ -308,7 +311,10 @@ extension EditWork {
             let e = addEdge(
                 left: chain.region!, right: chain.region!, points: chain.points, layer: chain.layer, weight: chain.weight)
             byRegion[chain.region!, default: []].append(e)
-            if chain.fresh { fresh.insert(e) }
+            if chain.fresh {
+                fresh.insert(e)
+                if splitting { splitEdges.append(e) }
+            }
         }
         for r in byRegion.keys.sorted() { try splitRegion(r, chains: byRegion[r]!, fresh: fresh) }
         summary.lines += 1
