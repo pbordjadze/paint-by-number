@@ -10,6 +10,9 @@ import UIKit
 final class PaintChromeState {
     /// Per color: bumped to shake its swatch.
     var shakes: [Int: Int] = [:]
+    /// Quiet painting (`QuietPainting`): an area was painted since the progress ring last brought
+    /// the top bar back.
+    var wantsQuiet = false
     /// The window's undo manager: every fill is registered with it (⌘Z, the Edit menu,
     /// three-finger undo and redo).
     @ObservationIgnored weak var undoManager: UndoManager?
@@ -153,6 +156,8 @@ final class PaintChromeState {
 
     private func filled() {
         lastFill = ContinuousClock.now
+        // Strokes paint many times a second: set once, so the bar's observers aren't woken each time.
+        if QuietPainting.isAvailable && !wantsQuiet { wantsQuiet = true }
         fillsThisVisit += 1
         guard !passedQuarter, let session = tipSession, session.fractionComplete >= Self.quarter else { return }
         passedQuarter = true

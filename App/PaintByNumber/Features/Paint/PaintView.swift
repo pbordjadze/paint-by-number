@@ -53,6 +53,8 @@ struct PaintView: View {
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+    @Environment(\.accessibilitySwitchControlEnabled) private var switchControlEnabled
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
@@ -73,13 +75,17 @@ struct PaintView: View {
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
 
-    private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
     /// The top bar below the safe area, the bottom bar above it, and either bar to the canvas
     /// (`canvasInsets` keeps the canvas clear of the bars by these).
     private static let topGap: CGFloat = 6
     private static let bottomGap: CGFloat = 4
     private static let canvasGap: CGFloat = 6
+
+    /// How much bigger the bar's buttons and the swatches are here (`QuietPainting.scale`).
+    private var chromeScale: CGFloat { QuietPainting.scale(regularWidth: sizeClass == .regular) }
+    /// The top bar's height: its round buttons' size, 44 pt on compact widths.
+    private var barHeight: CGFloat { 44 * chromeScale }
 
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
@@ -171,7 +177,7 @@ struct PaintView: View {
             if let thanks {
                 // Below the top bar, like the painting's other toasts; taps reach the canvas.
                 Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
-                    .padding(.top, 62)
+                    .padding(.top, Self.topGap + barHeight + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
             }
@@ -254,7 +260,7 @@ struct PaintView: View {
                     Spacer(minLength: 0)
                     bottomBar(palette)
                         .padding(.trailing, Self.edge)
-                        .padding(.top, Self.sidePaletteTop)
+                        .padding(.top, sidePaletteTop)
                         .padding(.bottom, Self.edge)
                 }
             }
@@ -307,15 +313,17 @@ struct PaintView: View {
         var thickness: CGFloat { metrics.thickness(lines: lines, caption: caption) }
     }
 
-    private var paletteMetrics: PaletteMetrics { PaletteMetrics(dynamicTypeSize: dynamicTypeSize) }
+    private var paletteMetrics: PaletteMetrics {
+        PaletteMetrics(dynamicTypeSize: dynamicTypeSize).scaled(by: chromeScale)
+    }
 
-    private static let sidePaletteTop: CGFloat = topGap + barHeight + 12
+    private var sidePaletteTop: CGFloat { Self.topGap + barHeight + 12 }
 
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
         let count = PaletteBar.visibleColors(session).count
         let metrics = paletteMetrics
         if sizeClass == .regular && size.width > size.height {
-            let length = size.height - Self.sidePaletteTop - Self.edge
+            let length = size.height - sidePaletteTop - Self.edge
             return PaletteLayout(
                 side: true,
                 lines: paletteLines(count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics),
@@ -350,7 +358,7 @@ struct PaintView: View {
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
     private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let top = safe.top + Self.topGap + Self.barHeight + Self.canvasGap
+        let top = safe.top + Self.topGap + barHeight + Self.canvasGap
         if session.isComplete {
             return EdgeInsets(
                 top: top, leading: safe.leading,
@@ -381,23 +389,56 @@ struct PaintView: View {
     /// still offer (the narrowest windows). Give Feedback lives in More, so the bar never shows
     /// more than six controls (Paul, October 18: "nested enough, that there isn't a moment where
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
-    /// window: the bar's width would widen the whole screen.
+    /// window: the bar's width would widen the whole screen. Quiet (`QuietPainting`), it fades
+    /// to `quietRow`.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
         let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true) }
             + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
+        let quiet = isQuiet
         return GlassEffectContainer(spacing: 10) {
-            // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
-            ViewThatFits(in: .horizontal) {
-                ForEach(rows, id: \.self) { row in
-                    topBarRow(badge: row.badge, showsHint: row.showsHint)
+            Group {
+                if quiet {
+                    quietRow
+                        .transition(.opacity)
+                } else {
+                    // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
+                    ViewThatFits(in: .horizontal) {
+                        ForEach(rows, id: \.self) { row in
+                            topBarRow(badge: row.badge, showsHint: row.showsHint)
+                        }
+                    }
+                    .transition(.opacity)
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
         }
-        // The bar keeps its 44 pt height (the canvas insets assume it); larger text sizes
-        // reach its controls through the Large Content Viewer.
+        .environment(\.glassButtonDiameter, barHeight)
+        // A fade, never a move, so Reduce Motion needs nothing else.
+        .animation(.easeInOut(duration: 0.5), value: quiet)
+        // The bar keeps its height (the canvas insets assume it); larger text sizes reach its
+        // controls through the Large Content Viewer.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    /// The top bar has faded to `quietRow` (`QuietPainting.isQuiet`).
+    private var isQuiet: Bool {
+        QuietPainting.isQuiet(
+            wanted: chrome.wantsQuiet, isStarted: session.isStarted, isComplete: session.isComplete,
+            isGivingFeedback: feedback != nil, assistiveTechnology: voiceOverEnabled || switchControlEnabled,
+            tipTurn: PaintTips.desk.turn)
+    }
+
+    /// The quiet bar: Back, the progress ring, which brings the rest back, and Hint.
+    private var quietRow: some View {
+        HStack(spacing: 8) {
+            if let onClose {
+                GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
+            }
+            QuietRingButton(session: session, title: title) { chrome.wantsQuiet = false }
+            Spacer(minLength: 0)
+            GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
+        }
     }
 
     /// One way the top bar can be laid out (`topBar`).
@@ -472,7 +513,7 @@ struct PaintView: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: Self.barHeight)
+        .frame(height: barHeight)
         .glassEffect(.regular, in: .capsule)
     }
 
@@ -495,7 +536,8 @@ struct PaintView: View {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.primary)
-                .frame(width: Self.barHeight, height: Self.barHeight)
+                .imageScale(chromeScale > 1 ? .large : .medium)
+                .frame(width: barHeight, height: barHeight)
                 .glassEffect(.regular.interactive(), in: .circle)
         }
         .accessibilityLabel(Text("More"))
@@ -709,17 +751,8 @@ private struct ProgressGroup: View {
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         HStack(spacing: 8) {
-            ZStack {
-                Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
-                ForEach(Array(paintedArcs.enumerated()), id: \.offset) { _, arc in
-                    Circle()
-                        .trim(from: arc.start, to: arc.end)
-                        .stroke(arc.paint, style: StrokeStyle(lineWidth: 3))
-                        .rotationEffect(.degrees(-90))
-                }
-            }
-            .frame(width: 18, height: 18)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: fraction)
+            ProgressRing(session: session)
+                .frame(width: 18, height: 18)
             if showsTitle {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
@@ -743,8 +776,54 @@ private struct ProgressGroup: View {
             : PaintSpeech.paintingProgress(title: title, percent: percent))
         .accessibilityShowsLargeContentViewer()
     }
+}
 
-    /// The ring fills in paint: each color's painted share of the areas, in palette order.
+/// The quiet bar's progress ring (`QuietPainting`): a glass button whose tap brings the rest of
+/// the bar back. VoiceOver never meets it (the bar stays whole then); the Large Content Viewer
+/// and Voice Control do.
+private struct QuietRingButton: View {
+    let session: PaintingSession
+    let title: String
+    let action: () -> Void
+    @Environment(\.glassButtonDiameter) private var diameter
+
+    var body: some View {
+        let percent = Int(session.shownFraction * 100)
+        Button(action: action) {
+            ProgressRing(session: session)
+                .frame(width: diameter * 0.5, height: diameter * 0.5)
+                .frame(width: diameter - 14, height: diameter - 14)
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .accessibilityIdentifier("quiet-ring")
+        .accessibilityLabel(title.isEmpty
+            ? PaintSpeech.percentPainted(percent)
+            : PaintSpeech.paintingProgress(title: title, percent: percent))
+        .accessibilityHint(Text("Brings back the other controls"))
+        .accessibilityInputLabels([Text("Show Controls")])
+        .accessibilityShowsLargeContentViewer { Label("Show Controls", systemImage: "circle.dashed") }
+    }
+}
+
+/// The progress ring, filled in paint: each color's painted share of the areas, in palette order.
+private struct ProgressRing: View {
+    let session: PaintingSession
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
+            ForEach(Array(paintedArcs.enumerated()), id: \.offset) { _, arc in
+                Circle()
+                    .trim(from: arc.start, to: arc.end)
+                    .stroke(arc.paint, style: StrokeStyle(lineWidth: 3))
+                    .rotationEffect(.degrees(-90))
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: session.shownFraction)
+    }
+
     private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
         let total = Double(max(session.progress.regionCount, 1))
         let shown = session.shownPaintedByColor

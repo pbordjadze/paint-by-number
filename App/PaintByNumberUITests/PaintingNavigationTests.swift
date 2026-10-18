@@ -62,6 +62,26 @@ final class PaintingNavigationTests: XCTestCase {
         dismissDialog(at: dialog, titled: "Restart this painting?", in: app)
     }
 
+    /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
+    /// and a tap on the ring brings Undo and More back.
+    @MainActor
+    func testPaintingQuietsTheBarAndTheRingBringsItBack() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "paint-quiet"]
+        app.launch()
+        let ring = app.buttons["quiet-ring"]
+        XCTAssertTrue(ring.waitForExistence(timeout: 60), "The bar didn't go quiet after a fill")
+        XCTAssertTrue(waitUntil(timeout: 5) { !app.buttons["Undo"].exists && !app.buttons["More"].exists },
+                      "Undo and More stayed on the quiet bar")
+        XCTAssertTrue(app.buttons["Back"].isHittable && app.buttons["Hint"].isHittable)
+        attachScreenshot(of: app, named: "quiet")
+        ring.tap()
+        XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 5), "The ring didn't bring the bar back")
+        XCTAssertTrue(app.buttons["More"].exists)
+        XCTAssertTrue(waitUntil(timeout: 5) { !ring.exists }, "The ring stayed once the bar came back")
+        attachScreenshot(of: app, named: "shown")
+    }
+
     /// The Hint button flies the camera to an unpainted area.
     @MainActor
     func testHintButtonMovesTheCanvas() throws {

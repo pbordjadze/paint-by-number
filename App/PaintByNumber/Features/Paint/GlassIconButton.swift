@@ -21,14 +21,23 @@ struct GlassIconButton: View {
     }
 }
 
-/// The symbol inside a circular glass button; the style's padding brings it to 44 pt.
+/// The symbol inside a circular glass button; the style's 7 pt padding brings it to
+/// `glassButtonDiameter`.
 struct GlassIconLabel: View {
     let systemImage: String
+    @Environment(\.glassButtonDiameter) private var diameter
 
     var body: some View {
         Image(systemName: systemImage)
             .font(.body.weight(.semibold))
+            .imageScale(diameter > 44 ? .large : .medium)
             .foregroundStyle(Color.primary)
-            .frame(width: 30, height: 30)
+            .frame(width: diameter - 14, height: diameter - 14)
     }
+}
+
+extension EnvironmentValues {
+    /// The size of the painting screen's round glass buttons: 44 pt, a quarter more on regular
+    /// widths' top bar (`QuietPainting.scale`).
+    @Entry var glassButtonDiameter: CGFloat = 44
 }
