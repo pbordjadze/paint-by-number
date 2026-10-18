@@ -81,6 +81,16 @@ runs, up to three while it's idle.
 When two sessions are about to touch the same files (check with `git fetch` and
 `git merge-tree --write-tree origin/<a> origin/<b>`), tell both which order to merge in.
 
+## The Codex workbench
+
+Paul (Oct 18, ~16:22 UTC): "Yeah Codex workbench, and the front desk can send things there or
+tell sessions to use it." The workbench is a lean session on the homelab (row 49; its id is in the
+backlog) where the Codex CLI does the work and a Sonnet session only dispatches and checks, to
+save Claude usage. Send it mechanical work: second-opinion reviews of a pushed branch before it
+merges, tests and fixtures, small verified fixes, merging main into a ready branch. Tell other
+sessions to hand it the same. Taste, design, writing, the Lamplit Table and judging what's real
+stay with Claude.
+
 ## Proposals
 
 Sessions and the Lamplit Table send proposals for new work (CLAUDE.md › Working with Paul ›
@@ -118,7 +128,9 @@ it on start, after a burst, and at each check-in:
    --dashboard <scratch dir> --backlog docs/backlog.md`. `<day.json>` is today's opening snapshot
    (see Usage).
 2. Upload the three files it writes, `sessions.json`, `inbox.json` and `account.json` (and your
-   `decisions.json` when it changed), each with
+   `decisions.json` when it changed; and `queue.json` and `releases.json`, kept by hand beside
+   this file, when the CI queue or main moved: Paul asked for the queue and what is next, estimated
+   on the page, Oct 18), each with
    its own Artifact publish call: `url` set to the page, `file_path` set to the file, and
    `asset: true`.
 3. Use `ArtifactData` to `update` `datasets/sessions`, `datasets/inbox` and `datasets/account`.

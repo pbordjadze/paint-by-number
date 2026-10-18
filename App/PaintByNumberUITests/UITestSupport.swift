@@ -47,7 +47,8 @@ extension XCTestCase {
     /// A tap that changed nothing is tapped once more. On the iPad simulator of GitHub's macOS 26
     /// image of October 13, 2026, a tap in Settings' tests is now and then lost: a switch never
     /// moves, or the gallery's Settings button opens nothing, while the app's main thread is free
-    /// and its tree shows nothing in the way (the earlier image and the iPhone never lost one). The
+    /// and its tree shows nothing in the way (the earlier image never lost one; the iPhone lost one in
+    /// each of the Making-of switch test's two tries on main, October 18). The
     /// whole screen, system overlays included, is attached as `lost-tap-<what>` for the diagnosis,
     /// and the second tap is an activity the test's log shows.
     @MainActor
@@ -75,6 +76,20 @@ extension XCTestCase {
         note.name = name
         note.lifetime = .keepAlways
         add(note)
+    }
+
+    /// The New Painting slider of `setting` ("Colors", "Detail", "Smoothness", "Lines"). A compact
+    /// window (iPhone) shows one slider at a time under its chooser (`tuned-setting`), which is
+    /// turned to `setting` first; the iPad shows them all.
+    @MainActor
+    func settingSlider(_ setting: String, in app: XCUIApplication) -> XCUIElement {
+        let slider = app.sliders[setting]
+        let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
+        if !slider.exists, chooser.exists {
+            chooser.buttons[setting].tap()
+            _ = slider.waitForExistence(timeout: 5)
+        }
+        return slider
     }
 
     /// The first element showing exactly `label`, whatever its kind.
