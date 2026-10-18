@@ -371,12 +371,13 @@ struct PaintView: View {
     }
 
     /// How far below the top of the visible canvas the canvas tips hang: just inside the top of the
-    /// page as it first fits there, centered.
+    /// page as it first fits there, centered within the canvas's margin.
     private func pageTipInset(in visible: CGSize) -> CGFloat {
         let template = session.template
-        guard template.width > 0, visible.width > 0, visible.height > 0 else { return 0 }
-        let pageHeight = min(visible.height, visible.width * CGFloat(template.height) / CGFloat(template.width))
-        return max(0, (visible.height - pageHeight) / 2) + min(Self.pageTipDepth, pageHeight / 10)
+        let room = CGSize(width: visible.width - 2 * CanvasView.margin, height: visible.height - 2 * CanvasView.margin)
+        guard template.width > 0, room.width > 0, room.height > 0 else { return 0 }
+        let pageHeight = min(room.height, room.width * CGFloat(template.height) / CGFloat(template.width))
+        return CanvasView.margin + (room.height - pageHeight) / 2 + min(Self.pageTipDepth, pageHeight / 10)
     }
 
     /// How far into the page the canvas tips' arrow reaches.

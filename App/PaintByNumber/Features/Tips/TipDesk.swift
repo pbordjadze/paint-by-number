@@ -494,7 +494,16 @@ extension View {
     /// Marks this navigation bar button as where the tip `id` hangs from while it has the turn: below
     /// it, from the screen's `barTipHost`.
     func barTip(_ id: TipID) -> some View {
-        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { BarTipAnchors.shared.frames[id] = $0 }
+        // A frame that is empty for a moment (a rotation, the bar's morph) keeps the last one: the
+        // anchor leaving would dismiss the popover, which closes the tip for good. A button that
+        // leaves the bar (Refine under Enlarge Preview) takes its tip's turn with it, and its anchor.
+        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            if !frame.isEmpty { BarTipAnchors.shared.frames[id] = frame }
+        }
+        .onDisappear {
+            PaintTips.desk.stop(id)
+            BarTipAnchors.shared.frames[id] = nil
+        }
     }
 
     /// Hangs the tips of `ids` below the navigation bar buttons that carry them (`barTip`). On the

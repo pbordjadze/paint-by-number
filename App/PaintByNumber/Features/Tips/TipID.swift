@@ -31,8 +31,9 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
-    /// The tips that hang from a button in a navigation bar (`barTip`: a popover of SwiftUI's own, with
-    /// the tip's `TipView` inside).
+    /// The tips that hang from a button in a navigation bar: the button carries `barTip`, and its
+    /// screen's navigation stack `barTipHost` with the id, which hangs a popover of SwiftUI's own, the
+    /// tip's `TipView` inside, from a clear view over the button.
     var hangsFromBar: Bool {
         switch self {
         case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
