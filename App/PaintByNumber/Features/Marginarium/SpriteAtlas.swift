@@ -117,16 +117,16 @@ private actor DecodeLimiter {
 }
 
 /// What the pets' players keep of a sheet, shared across pages. A sheet is 14 MiB decoded and
-/// the contents page shows twenty of them at once, so no player keeps one: `frames` decodes a
+/// the contents page shows two dozen of them at once, so no player keeps one: `frames` decodes a
 /// sheet off the main actor (two at a time, in the order asked), redraws the cells the animation
 /// plays into small bitmaps of their own (about 160 KiB each at their largest) and lets the sheet
 /// go. Those bitmaps are what the gallery's byte-bounded, memory-warning-aware `ImageCache`
 /// keeps. Askers for the same frames share one decode. Only cache bookkeeping runs on the main actor.
 final class SpriteAtlasCache {
     static let shared = SpriteAtlasCache()
-    /// Decoded bytes kept: the contents page's twenty drawings' frames (1.5 MiB each at 3x) fit, an
-    /// eighth of the sheets they come from.
-    static let costLimit = 32 << 20
+    /// Decoded bytes kept: the contents page's drawings' frames (1.5 MiB each at 3x; twenty-four
+    /// hatched guardians, with room for two more) fit, an eighth of the sheets they come from.
+    static let costLimit = 40 << 20
 
     private struct Request: Hashable {
         let url: URL

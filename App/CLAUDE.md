@@ -143,11 +143,12 @@ synchronized folder would bundle it into the app.
   most voices share). Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer` keeps only its pet's frames, never a sheet. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 2,
+  Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 2,
   The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
-  budget in `docs/marginarium-pets.md` with Dino's (Paul made it himself in the Codex app; Who's
-  Who shows it); the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
+  budget in `docs/marginarium-pets.md` with Dino's (his own design, repainted in the family style)
+  and the four drawn on October 18 (the Astrologer, Bart, Rikyū, Scherenschnitt; Who's Who shows
+  them); the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
   (`MarginariumWhosWhoView`, from the contents and a drawing's name) shows `MarginariumCast`: the
@@ -159,7 +160,7 @@ synchronized folder would bundle it into the app.
   with Madeline Lengle"): Madeleine, the Bible School Teacher, with her drawing, id, seat on the
   Hearth and signature in the chapters. A guardian's drawing
   is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
-  egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
+  egg's, "The Moon, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
   own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
   (the drawing's `caption` is its VoiceOver label there, never shown).
   `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
