@@ -34,9 +34,11 @@ struct DraftRow: View {
                 }
                 .contentShape(.rect)
                 .onTapGesture(perform: onContinue)
-                if !stacked { buttons(fillsWidth: false) }
+                if !stacked { continueButton(fillsWidth: false) }
+                // Discard keeps its distance from Continue: across the row, or above it when stacked.
+                discardButton
             }
-            if stacked { buttons(fillsWidth: true) }
+            if stacked { continueButton(fillsWidth: true) }
         }
         .padding(14)
         // The whole row, its edges the grid's: a card of its own width left half of a wide row empty.
@@ -89,34 +91,36 @@ struct DraftRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func buttons(fillsWidth: Bool) -> some View {
-        HStack(spacing: 10) {
-            Button(action: onContinue) {
-                Text("Continue Refining")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: fillsWidth ? .infinity : nil)
-            }
-            .buttonStyle(.glassProminent)
-            .tint(Theme.signature)
-            .disabled(isOpening)
-            .accessibilityIdentifier("draft-continue")
-
-            // Glass draws its label in the tint, whatever the role.
-            Button("Discard Draft", systemImage: "trash", role: .destructive) { confirmsDiscard = true }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.glass)
-                .tint(.red)
-                .buttonBorderShape(.circle)
-                .disabled(isOpening)
-                .accessibilityIdentifier("draft-discard")
-                .confirmationDialog("Discard this draft?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
-                    Button(String(localized: "gallery.draft.discard.confirm", defaultValue: "Discard “\(draft.resolvedTitle)”",
-                                  comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
-                           role: .destructive, action: onDiscard)
-                } message: {
-                    Text("Its photo and everything you changed in Refine will be lost.")
-                }
+    private func continueButton(fillsWidth: Bool) -> some View {
+        Button(action: onContinue) {
+            Text("Continue Refining")
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: fillsWidth ? .infinity : nil)
         }
+        .buttonStyle(.glassProminent)
+        .tint(Theme.signature)
         .controlSize(.large)
+        .disabled(isOpening)
+        .accessibilityIdentifier("draft-continue")
+    }
+
+    private var discardButton: some View {
+        // Glass draws its label in the tint, whatever the role.
+        Button("Discard Draft", systemImage: "trash", role: .destructive) { confirmsDiscard = true }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            .tint(.red)
+            .buttonBorderShape(.circle)
+            .controlSize(.large)
+            .disabled(isOpening)
+            .accessibilityIdentifier("draft-discard")
+            .confirmationDialog("Discard this draft?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
+                Button(String(localized: "gallery.draft.discard.confirm", defaultValue: "Discard “\(draft.resolvedTitle)”",
+                              comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
+                       role: .destructive, action: onDiscard)
+            } message: {
+                Text("Its photo and everything you changed in Refine will be lost.")
+            }
+            .padding(.leading, 12)
     }
 }

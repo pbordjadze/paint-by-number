@@ -201,13 +201,19 @@ struct AppShellView: View {
             .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
             .disabled(library.artworks.isEmpty)
         }
-        ToolbarItem(placement: .topBarTrailing) {
-            Button("New Painting", systemImage: "plus") { isCreating = true }
-                .buttonStyle(.glassProminent)
-                .tint(Theme.signature)
-                .barTip(.shelfNewPainting)
+        // An empty gallery's own New Painting is the only one.
+        if !isBare {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("New Painting", systemImage: "plus") { isCreating = true }
+                    .buttonStyle(.glassProminent)
+                    .tint(Theme.signature)
+                    .barTip(.shelfNewPainting)
+            }
         }
     }
+
+    /// Nothing to show at all: the gallery is its empty state (`GalleryView`).
+    private var isBare: Bool { library.isEmpty && library.drafts.current == nil }
 
     private var query: GalleryQuery { GalleryQuery(filter: filter, search: search) }
 
