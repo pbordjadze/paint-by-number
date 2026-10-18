@@ -321,7 +321,11 @@ private struct Swatch: View {
         .scaleEffect(isSelected ? 1.14 : 1)
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.6), value: isSelected)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.35), value: fraction)
-        .contentShape(.circle)
+        // The touch area is the whole pitch, square: a tap between two swatches or in a corner
+        // lands on the nearer one instead of on nothing. The layout keeps the swatch's size.
+        .padding(PaletteMetrics.spacing / 2)
+        .contentShape(.rect)
+        .padding(-PaletteMetrics.spacing / 2)
     }
 }
 
