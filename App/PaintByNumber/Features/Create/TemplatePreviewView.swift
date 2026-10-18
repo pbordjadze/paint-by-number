@@ -6,8 +6,9 @@ import UIKit
 
 /// Second step of the create flow: the generated template, compared with the photo,
 /// tuned live with a few simple controls, and the painting's name. In compact windows (iPhone)
-/// the preview can be enlarged: the comparison then fills the page above the slider of one
-/// setting at a time, Lines first, to look closely while tuning the lines.
+/// the card shows the slider of one setting at a time, chosen above it, and the preview can be
+/// enlarged: the comparison then fills the page above that slider, Lines first, to look closely
+/// while tuning the lines.
 struct TemplatePreviewView: View {
     @Bindable var model: CreateModel
     var onStart: () async throws -> Void
@@ -27,7 +28,7 @@ struct TemplatePreviewView: View {
     @State private var startError: String?
     @State private var isTuning = false
     @State private var isRefining = false
-    /// The setting the enlarged preview's slider tunes; nil until the painter picks one.
+    /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -158,9 +159,11 @@ struct TemplatePreviewView: View {
     private var chosenLayout: Bool {
         let room = roomSize.width > 0 && roomSize.height > 0 ? roomSize : size
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
-        // The stacked controls card: title row, settings chip, three or four sliders, summary, Start.
+        // The stacked controls card: title row, settings chip, the sliders (one and its chooser in
+        // a compact window), summary, Start.
+        let card: CGFloat = room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)
         let stacked = Self.fittedArea(
-            width: room.width - 2 * sidePadding, height: room.height - (hasLines ? 512 : 460), aspect: photoAspect)
+            width: room.width - 2 * sidePadding, height: room.height - card, aspect: photoAspect)
         let beside = Self.fittedArea(
             width: room.width - 2 * sidePadding - panelWidth - 24, height: room.height - 2 * sidePadding, aspect: photoAspect)
         return beside > stacked
@@ -173,7 +176,8 @@ struct TemplatePreviewView: View {
     /// on an iPhone 17 Pro.
     private var rowSpacing: CGFloat { !isSideBySide && isCompact ? 12 : 18 }
     /// A phone's width (or a narrow iPad window), where the stacked comparison is small.
-    private var isCompact: Bool { size.width < 600 }
+    private var isCompact: Bool { size.width < Self.compactWidth }
+    private static let compactWidth: CGFloat = 600
 
     /// The comparison can fill the page: stacked in a compact window, where the controls leave
     /// it a fraction of the screen.
@@ -358,10 +362,18 @@ struct TemplatePreviewView: View {
         VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
             originChip
-            slider(.colors)
-            slider(.detail)
-            slider(.smoothness)
-            if hasLines { slider(.lines) }
+            if isCompact && !isSideBySide {
+                // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
+                // the comparison large and asks one thing at once.
+                settingChooser
+                slider(shownSetting)
+                    .id(shownSetting)
+            } else {
+                slider(.colors)
+                slider(.detail)
+                slider(.smoothness)
+                if hasLines { slider(.lines) }
+            }
             summary
 
             Button(action: start) {
@@ -387,14 +399,7 @@ struct TemplatePreviewView: View {
     /// template's summary. Lines comes first, the lines being what a large preview is for.
     private var tuningTray: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Picker("Setting", selection: Binding(get: { shownSetting }, set: { tunedSetting = $0 })) {
-                Text("Colors").tag(Setting.colors)
-                Text("Detail").tag(Setting.detail)
-                Text("Smoothness").tag(Setting.smoothness)
-                if hasLines { Text("Lines").tag(Setting.lines) }
-            }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("tuned-setting")
+            settingChooser
             slider(shownSetting)
                 // Another setting's slider, not this one's thumb sliding to its value.
                 .id(shownSetting)
@@ -405,9 +410,24 @@ struct TemplatePreviewView: View {
         .padding(.bottom, 8)
     }
 
+    /// Which setting the one slider tunes: the painter's choice, else Colors in the card and
+    /// Lines in the enlarged preview; a choice made in either holds in both.
     private var shownSetting: Setting {
         if let tunedSetting, tunedSetting != .lines || hasLines { return tunedSetting }
-        return hasLines ? .lines : .detail
+        if isEnlarged { return hasLines ? .lines : .detail }
+        return .colors
+    }
+
+    /// The segmented control over the one slider of a compact window and the enlarged preview.
+    private var settingChooser: some View {
+        Picker("Setting", selection: Binding(get: { shownSetting }, set: { tunedSetting = $0 })) {
+            Text("Colors").tag(Setting.colors)
+            Text("Detail").tag(Setting.detail)
+            Text("Smoothness").tag(Setting.smoothness)
+            if hasLines { Text("Lines").tag(Setting.lines) }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("tuned-setting")
     }
 
     /// The settings a slider tunes.

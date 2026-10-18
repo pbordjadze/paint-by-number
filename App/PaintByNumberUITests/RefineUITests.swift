@@ -41,10 +41,13 @@ final class RefineUITests: XCTestCase {
         redo.tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Redo didn't put the line back again")
 
-        let eraser = app.buttons["refine-tool-eraser"]
-        XCTAssertTrue(eraser.exists, "Refine has no eraser")
-        eraser.tap()
-        XCTAssertTrue(waitFor(eraser, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
+        // The Eraser is in the Erasers button, with the Smart Eraser.
+        let erasers = app.buttons["refine-tool-erasers"]
+        XCTAssertTrue(erasers.exists, "Refine has no erasers")
+        erasers.tap()
+        menuItem("Eraser", in: app).tap()
+        XCTAssertTrue(waitFor(erasers, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
+        XCTAssertEqual(erasers.value as? String, "Eraser")
         // Across the line just drawn, which runs from (0.25, 0.4) to (0.7, 0.45): rubbing bare paper
         // changes nothing, and so isn't a change.
         drag(on: canvas, from: CGVector(dx: 0.45, dy: 0.3), to: CGVector(dx: 0.5, dy: 0.6))
@@ -60,13 +63,17 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-filled")
 
-        let painting = app.buttons["refine-painting"]
-        XCTAssertTrue(painting.exists, "Refine can't show the painting")
-        painting.tap()
-        XCTAssertTrue(waitFor(painting, toMatch: NSPredicate(format: "isSelected == true")), "The painting didn't show")
+        // The photo and the painting beneath the drawing are in one button.
+        let backdrop = app.buttons["refine-backdrop"]
+        XCTAssertTrue(backdrop.exists, "Refine can't show the painting")
+        backdrop.tap()
+        menuItem("Painting", in: app).tap()
+        XCTAssertTrue(waitFor(backdrop, toMatch: NSPredicate(format: "value == %@", "Painting")), "The painting didn't show")
+        XCTAssertTrue(backdrop.isSelected)
         attachScreenshot(of: app, named: "refine-painting")
-        painting.tap()
-        XCTAssertTrue(waitFor(painting, toMatch: NSPredicate(format: "isSelected == false")), "The painting didn't go")
+        backdrop.tap()
+        menuItem("Painting", in: app).tap()
+        XCTAssertTrue(waitFor(backdrop, toMatch: NSPredicate(format: "value == %@", "Paper")), "The painting didn't go")
 
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("3 changes")), "Done didn't keep the changes")
@@ -75,13 +82,15 @@ final class RefineUITests: XCTestCase {
         refine.tap()
         XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Refine didn't open again")
         let shapes = app.buttons["refine-tool-shapes"]
-        XCTAssertTrue(shapes.exists && app.buttons["refine-tool-smart-eraser"].exists, "Refine has no Shapes or Smart Eraser")
+        XCTAssertTrue(shapes.exists, "Refine has no Shapes")
+        // No line under the tools says how they work: their VoiceOver hints do, and a tip once.
+        XCTAssertFalse(app.staticTexts["refine-hint"].exists, "Refine still explains its tools under them")
         shapes.tap()
         let rectangle = app.buttons["Rectangle"]
         XCTAssertTrue(rectangle.waitForExistence(timeout: 5), "Shapes offers no rectangle")
         rectangle.tap()
         XCTAssertTrue(
-            waitFor(app.staticTexts["refine-hint"], toMatch: NSPredicate(format: "label CONTAINS[c] 'rectangle'")),
+            waitFor(shapes, toMatch: NSPredicate(format: "isSelected == true AND value == %@", "Rectangle")),
             "Shapes didn't become the tool with the rectangle")
         drag(on: canvas, from: CGVector(dx: 0.4, dy: 0.3), to: CGVector(dx: 0.7, dy: 0.5))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The rectangle didn't count")
@@ -111,7 +120,7 @@ final class RefineUITests: XCTestCase {
         splitter.tap()
         XCTAssertTrue(waitFor(splitter, toMatch: NSPredicate(format: "isSelected == true")), "The splitter didn't become the tool")
         XCTAssertTrue(
-            waitFor(app.buttons["refine-painting"], toMatch: NSPredicate(format: "isSelected == true")),
+            waitFor(app.buttons["refine-backdrop"], toMatch: NSPredicate(format: "value == %@", "Painting")),
             "Picking the splitter didn't show the painting")
         // Down the open sky of The Great Wave, from above the wave's outline to inside little Fuji:
         // crossing a line at each end, it divides the sky between them.
@@ -133,6 +142,14 @@ final class RefineUITests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    /// An item of the open menu: a button, or a toggle's switch.
+    @MainActor
+    private func menuItem(_ label: String, in app: XCUIApplication) -> XCUIElement {
+        let button = app.buttons[label]
+        if button.waitForExistence(timeout: 5) { return button }
+        return app.switches[label]
+    }
 
     /// The Great Wave's preview once its settings are chosen.
     @MainActor

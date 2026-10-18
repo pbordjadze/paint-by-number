@@ -98,10 +98,10 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(chip.value as? String, "Suggested for this photo")
         XCTAssertEqual(chip.label, "Settings")
 
-        let detail = app.sliders["Detail"]
-        XCTAssertTrue(detail.exists, "No Detail slider")
         // The book's lines on a slider of their own.
-        XCTAssertEqual(app.sliders["Lines"].value as? String, "Balanced")
+        XCTAssertEqual(settingSlider("Lines", in: app).value as? String, "Balanced")
+        let detail = settingSlider("Detail", in: app)
+        XCTAssertTrue(detail.exists, "No Detail slider")
         XCTAssertTrue(detail.isEnabled, "The Detail slider still waits for the suggestion")
         let suggested = try XCTUnwrap(detail.value as? String)
         // Far from the suggestion, so the slider's word changes.
@@ -255,7 +255,9 @@ final class CreateFlowTests: XCTestCase {
         first.tap()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
-        let detail = app.sliders["Detail"]
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings-origin"].waitForExistence(timeout: 10), "The preview has no settings")
+        let detail = settingSlider("Detail", in: app)
         XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
 
         // Along the slider from its leading end (the thumb is rarely there), then from its title.

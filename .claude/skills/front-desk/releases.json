@@ -2,15 +2,15 @@
  {
   "key": "now",
   "day": "Now",
-  "time": "11:05",
-  "title": "main builds the Refine test fix; tips layout and Calmer menus in CI",
-  "detail": "Their reports are due about 11:15–11:30",
+  "time": "11:55",
+  "title": "main's run (with its long iPhone job) still going; tips layout and Calmer menus in CI",
+  "detail": "All three report about 12:00–12:15",
   "kind": "running"
  },
  {
   "key": "merge-1",
   "day": "Late morning",
-  "time": "~11:30",
+  "time": "~12:20",
   "title": "Tips layout + Calmer menus merge together",
   "detail": "One main run (~45 min) → SideStore. The warnings gate starts CI beside it",
   "kind": "SideStore"
@@ -18,9 +18,9 @@
  {
   "key": "merge-2",
   "day": "Midday",
-  "time": "~12:15",
+  "time": "~1:05",
   "title": "Warnings gate merges",
-  "detail": "Then the Refine line split and Recolor, each as soon as it's built (both still being built)",
+  "detail": "Then the Refine line split (still being built) and Recolor (ready)",
   "kind": "SideStore"
  },
  {

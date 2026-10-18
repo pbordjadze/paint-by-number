@@ -14,7 +14,7 @@ final class RefineAfterSlidersTests: XCTestCase {
     @MainActor
     func testRefineOpensByItselfAfterADrag() throws {
         let app = launchPreview()
-        let detail = app.sliders["Detail"]
+        let detail = settingSlider("Detail", in: app)
         centre(detail, in: app)
         let before = detail.value as? String
         drag(detail, to: 0.95)
@@ -28,9 +28,9 @@ final class RefineAfterSlidersTests: XCTestCase {
     @MainActor
     func testRefineOpensAfterATapOnTheTrack() throws {
         let app = launchPreview()
-        let detail = app.sliders["Detail"], lines = app.sliders["Lines"]
-        drag(lines, to: 0.9)
+        drag(settingSlider("Lines", in: app), to: 0.9)
         XCTAssertTrue(app.staticTexts["Updating…"].waitForExistence(timeout: 10), "The painting never said it was updating")
+        let detail = settingSlider("Detail", in: app)
         let before = detail.value as? String
         detail.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         attachNote("Detail read \(before ?? "nil"), then \(detail.value as? String ?? "nil") after the tap", named: "track-tap")
@@ -41,10 +41,9 @@ final class RefineAfterSlidersTests: XCTestCase {
     @MainActor
     func testRefineOpensAfterTwoQuickDrags() throws {
         let app = launchPreview()
-        let detail = app.sliders["Detail"], lines = app.sliders["Lines"]
-        centre(detail, in: app)
-        drag(lines, to: 0.9)
-        drag(detail, to: 0.1)
+        centre(settingSlider("Detail", in: app), in: app)
+        drag(settingSlider("Lines", in: app), to: 0.9)
+        drag(settingSlider("Detail", in: app), to: 0.1)
         tapRefine(app, after: "two quick drags")
     }
 
@@ -53,10 +52,10 @@ final class RefineAfterSlidersTests: XCTestCase {
     @MainActor
     func testATouchDuringTheUpdateDoesntLoseTheTemplate() throws {
         let app = launchPreview()
-        let lines = app.sliders["Lines"], smoothness = app.sliders["Smoothness"]
-        centre(smoothness, in: app)
-        drag(lines, to: 0.9)
+        centre(settingSlider("Smoothness", in: app), in: app)
+        drag(settingSlider("Lines", in: app), to: 0.9)
         XCTAssertTrue(app.staticTexts["Updating…"].waitForExistence(timeout: 10), "The painting never said it was updating")
+        let smoothness = settingSlider("Smoothness", in: app)
         // Smoothness rests in its middle, where its thumb is: a press there moves nothing.
         let smoothValue = smoothness.value as? String
         smoothness.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.05)
@@ -70,11 +69,10 @@ final class RefineAfterSlidersTests: XCTestCase {
     @MainActor
     func testTouchingASliderCallsOffAWaitingRefine() throws {
         let app = launchPreview()
-        let lines = app.sliders["Lines"], smoothness = app.sliders["Smoothness"]
         let refine = app.buttons["refine"]
         let canvas = app.descendants(matching: .any)["refine-canvas"]
-        centre(smoothness, in: app)
-        drag(lines, to: 0.9)
+        centre(settingSlider("Smoothness", in: app), in: app)
+        drag(settingSlider("Lines", in: app), to: 0.9)
         XCTAssertTrue(app.staticTexts["Updating…"].waitForExistence(timeout: 10), "The painting never said it was updating")
         refine.tap()
         XCTAssertTrue(
@@ -83,7 +81,7 @@ final class RefineAfterSlidersTests: XCTestCase {
         attachScreenshot(of: app, named: "preparing")
 
         // Back to a slider: a drag, as a touch that moves nothing needn't count as one for a slider.
-        drag(smoothness, to: 0.6)
+        drag(settingSlider("Smoothness", in: app), to: 0.6)
         XCTAssertTrue(
             waitFor(refine, toMatch: NSPredicate(format: "value == %@", "No changes"), timeout: 5),
             "A drag of a slider didn't call the wait off: \(refine.value ?? "")")
