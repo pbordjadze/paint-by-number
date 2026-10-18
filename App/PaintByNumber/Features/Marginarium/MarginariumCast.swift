@@ -142,10 +142,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "library",
             name: String(localized: "lamp.team.library.name", defaultValue: "The Library",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Scholar, The Open Source Enthusiast)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Scholar, The Open Source Enthusiast, Maynard)"),
             purpose: String(localized: "lamp.team.library.purpose", defaultValue: "Keep the magic honest and the credit generous.",
                             comment: "The Marginarium, Who is Who: what the team The Library is for, under its name"),
-            members: [scholar, openSourceEnthusiast]),
+            members: [scholar, openSourceEnthusiast, keynes]),
         MarginariumTeam(
             id: "poets",
             name: String(localized: "lamp.team.poets.name", defaultValue: "The Poets",
@@ -762,6 +762,30 @@ nonisolated enum MarginariumCast {
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Eno"),
         petCaption: String(localized: "lamp.eno.petCaption", defaultValue: "Eno, still an egg",
                            comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Eno's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let keynes = MarginariumGuardian(
+        id: "keynes",
+        name: String(localized: "lamp.keynes.name", defaultValue: "Maynard",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Maynard"),
+        after: String(localized: "lamp.keynes.after", defaultValue: "After the economist John Maynard Keynes, in his Bloomsbury years in London.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Maynard"),
+        portrait: String(localized: "lamp.keynes.portrait", defaultValue: "He is one of Caroline's guardians: the Bloomsbury friend who paid for the paintings and built a theatre, with the Cambridge of his student days still in him.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Maynard"),
+        guards: String(localized: "lamp.keynes.guards", defaultValue: "the evening the money is for",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Maynard"),
+        believes: String(localized: "lamp.keynes.believes", defaultValue: "Money and machinery are only the means; the point is a good life: friends, beauty, talk, and art made well and paid for well.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Maynard"),
+        loves: String(localized: "lamp.keynes.loves", defaultValue: "Paying for art and for the people who make it; spending generously where it does the most good, and now, not someday; plain, clear argument that changes its mind when the facts change; friends who disagree over dinner and stay friends; good things open to everyone, not just a circle.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Maynard"),
+        watchesFor: String(localized: "lamp.keynes.watchesFor", defaultValue: "Thrift that starves what matters; machinery admired for its own sake; cleverness that sneers; a design that treats the painter as a line in a ledger; borrowing his face, his voice or the Bloomsbury painters' own pictures, or anything that reads as his endorsement.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Maynard"),
+        looksUpTo: String(localized: "lamp.keynes.looksUpTo", defaultValue: "The Economic Consequences of the Peace (1919), argued plainly and in anger; his essay Economic Possibilities for our Grandchildren (1930), where the machines are for leisure and the art of living; G. E. Moore's Principia Ethica (1903), the Cambridge Apostles' book on friendship and beauty; the Cambridge Arts Theatre (1936), which he built and paid for.",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Maynard"),
+        happiestWhen: String(localized: "lamp.keynes.happiestWhen", defaultValue: "The sums come out right and the evening is still lovely.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Maynard"),
+        petCaption: String(localized: "lamp.keynes.petCaption", defaultValue: "Maynard, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Maynard's egg: the guardian hasn't hatched yet"),
         hatched: false)
 
     static let originality = MarginariumGuardian(
