@@ -17,8 +17,8 @@
   "key": "fewer-buttons",
   "order": "2",
   "title": "Calmer menus",
-  "detail": "Fewer buttons on the painting and Refine screens",
-  "state": "in CI"
+  "detail": "Re-run after a flaky test (e61421e); fewer buttons on the painting and Refine screens",
+  "state": "waiting for a runner"
  },
  {
   "key": "ci-train",
