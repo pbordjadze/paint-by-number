@@ -65,8 +65,11 @@ struct TemplateValidationTests {
     @Test func rejectsRepeatedRegionRingSpans() throws {
         var template = Self.square()
         template.regions = Array(repeating: template.regions[0], count: 4096)
-        let decoded = try Template(encoded: template.encoded())
-        let report = decoded.validate()
+        #expect(throws: Template.CodingError.corrupt("overlapping region rings")) {
+            try Template(encoded: template.encoded())
+        }
+        // In-memory templates still need the work limit, independently of decoding.
+        let report = template.validate()
         #expect(!report.isValid)
         #expect(report.workLimitReason?.contains("ring point spans") == true)
     }
