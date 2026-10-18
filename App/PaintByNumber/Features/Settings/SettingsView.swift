@@ -23,6 +23,8 @@ struct SettingsView: View {
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
+    /// iPad and the simulator have no haptics: nothing to switch, and the header says Sound alone.
+    private let supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
     private enum Destination: Hashable { case acknowledgements }
     private static let paintingLengthRow = "painting-length"
@@ -42,15 +44,6 @@ struct SettingsView: View {
                         Toggle(isOn: $autoAdvance) {
                             SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
                         }
-                    } header: {
-                        // Not the "Painting" key: that one names a picture, this one the activity.
-                        Text(String(localized: "settings.section.painting", defaultValue: "Painting",
-                                    comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
-                    } footer: {
-                        Text("When you finish a color, the next one is picked up automatically.")
-                    }
-
-                    Section {
                         Picker(selection: $paperAppearance) {
                             ForEach(PaperAppearance.allCases) { appearance in
                                 Text(appearance.name).tag(appearance)
@@ -67,8 +60,10 @@ struct SettingsView: View {
                             SwiftUI.Label("Line Weight", systemImage: "lineweight")
                         }
                         .accessibilityIdentifier("settings-line-weight")
-                    } footer: {
-                        Text("Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper.")
+                    } header: {
+                        // Not the "Painting" key: that one names a picture, this one the activity.
+                        Text(String(localized: "settings.section.painting", defaultValue: "Painting",
+                                    comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color, Paper and Line Weight"))
                     }
 
                     Section {
@@ -92,15 +87,20 @@ struct SettingsView: View {
                         Text("Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.")
                     }
 
-                    Section("Sound & Haptics") {
-                        // iPad and the simulator have no haptics: nothing to switch.
-                        if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
+                    Section {
+                        if supportsHaptics {
                             Toggle(isOn: $haptics) {
                                 SwiftUI.Label("Haptics", systemImage: "hand.tap")
                             }
                         }
                         Toggle(isOn: $sounds) {
                             SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
+                        }
+                    } header: {
+                        if supportsHaptics {
+                            Text("Sound & Haptics")
+                        } else {
+                            Text("Sound")
                         }
                     }
 
@@ -124,7 +124,20 @@ struct SettingsView: View {
                                     comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
                     }
 
+                    // Painting Length last, so its footer sits under it.
                     Section {
+                        Picker(selection: $previewStyle) {
+                            ForEach(PreviewStyle.allCases) { style in
+                                Text(style.name).tag(style)
+                            }
+                        } label: {
+                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
+                        }
+                        .accessibilityIdentifier("settings-preview")
+                        Toggle(isOn: $detailBrushes) {
+                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
+                        }
+                        .accessibilityIdentifier("settings-detail-brushes")
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)
@@ -142,28 +155,6 @@ struct SettingsView: View {
                     } footer: {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")
-                    }
-
-                    Section {
-                        Picker(selection: $previewStyle) {
-                            ForEach(PreviewStyle.allCases) { style in
-                                Text(style.name).tag(style)
-                            }
-                        } label: {
-                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
-                        }
-                        .accessibilityIdentifier("settings-preview")
-                    } footer: {
-                        Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
-                    }
-
-                    Section {
-                        Toggle(isOn: $detailBrushes) {
-                            SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
-                        }
-                        .accessibilityIdentifier("settings-detail-brushes")
-                    } footer: {
-                        Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
                     }
 
                     #if UNRELEASED

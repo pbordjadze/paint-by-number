@@ -977,10 +977,6 @@
       "comment" : "Create flow chip above the sliders once a slider was moved: the settings are the painter's own, not the suggestion; also the chip's VoiceOver value",
       "extractionState" : "manual"
     },
-    "Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper." : {
-      "comment" : "Footer under the Paper and Line Weight pickers in Settings",
-      "extractionState" : "manual"
-    },
     "Delete" : {
       "comment" : "Context menu item that deletes a painting from the gallery",
       "extractionState" : "manual"
@@ -2945,10 +2941,6 @@
       "comment" : "Settings picker choosing what a new painting's preview shows beside the photo (Painting or Line Art)",
       "extractionState" : "manual"
     },
-    "Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them." : {
-      "comment" : "Footer under the Settings › Preview picker",
-      "extractionState" : "manual"
-    },
     "paintingLength.detailed" : {
       "comment" : "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting",
       "extractionState" : "manual",
@@ -3295,10 +3287,6 @@
     },
     "Refine" : {
       "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where the painter draws and erases the template's lines",
-      "extractionState" : "manual"
-    },
-    "Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found." : {
-      "comment" : "Footer under the Detail Brushes switch in Settings",
       "extractionState" : "manual"
     },
     "refine.canvas" : {
@@ -4222,7 +4210,7 @@
       }
     },
     "settings.section.painting" : {
-      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
+      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color, Paper and Line Weight",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4307,6 +4295,10 @@
     },
     "Sound & Haptics" : {
       "comment" : "Header of the Settings section for sounds and haptics while painting (Haptics shows only on devices with haptics)",
+      "extractionState" : "manual"
+    },
+    "Sound" : {
+      "comment" : "Header of the Settings section for sounds on devices without haptics (iPad), where it holds only Sounds",
       "extractionState" : "manual"
     },
     "Sounds" : {
@@ -4603,10 +4595,6 @@
     },
     "What would make this painting better?" : {
       "comment" : "Feedback's review sheet: placeholder of the note field",
-      "extractionState" : "manual"
-    },
-    "When you finish a color, the next one is picked up automatically." : {
-      "comment" : "Footer under the Advance to Next Color setting",
       "extractionState" : "manual"
     },
     "With thanks to the museums and archives that share these pictures." : {
