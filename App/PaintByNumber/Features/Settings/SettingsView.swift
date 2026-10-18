@@ -45,8 +45,6 @@ struct SettingsView: View {
                         // Not the "Painting" key: that one names a picture, this one the activity.
                         Text(String(localized: "settings.section.painting", defaultValue: "Painting",
                                     comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
-                    } footer: {
-                        Text("When you finish a color, the next one is picked up automatically.")
                     }
 
                     Section {

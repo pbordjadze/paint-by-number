@@ -20,14 +20,15 @@ nonisolated enum TipPlace: String, CaseIterable, Codable, Sendable {
     }
 }
 
-/// The 22 tips, by the design's ids. Pure data: the tips themselves (TipKit) are made from these in
+/// The 23 tips, by the design's ids (22, and Refine's Draw Your Own Lines, which took the place of
+/// the line under Refine's tools: Paul's calmer menus, October 18). Pure data: the tips themselves (TipKit) are made from these in
 /// `TipID.tip`, and everything that decides when one may appear (`TipPacing`, `TipMoments`) speaks
 /// of ids alone.
 nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case shelfStarter, shelfNewPainting, shelfHold, shelfTimeLapse, shelfSettings
     case newPaintingSamples
     case newPaintingDivider, newPaintingSuggested, newPaintingReset, newPaintingSliders, newPaintingRefine
-    case refineFill
+    case refineDraw, refineFill
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
@@ -49,12 +50,16 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// the tip from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
     var hasOwnPopover: Bool { hangsFromBar || hangsFromCard }
 
+    /// How to use a screen at all, so it waits for neither the gap nor something done
+    /// (`TipPacing`): Tap to Paint, and Refine's Draw Your Own Lines.
+    var isHowTo: Bool { self == .benchTap || self == .refineDraw }
+
     var place: TipPlace {
         switch self {
         case .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings: .shelf
         case .newPaintingSamples: .newPainting
         case .newPaintingDivider, .newPaintingSuggested, .newPaintingReset, .newPaintingSliders, .newPaintingRefine: .preview
-        case .refineFill: .refine
+        case .refineDraw, .refineFill: .refine
         case .benchTap, .benchZoom, .benchFind, .benchDrag, .benchPencil, .benchShowPhoto, .benchReplay, .benchZen,
              .benchFeedback: .bench
         case .drawerWorthALook: .drawer
