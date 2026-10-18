@@ -283,6 +283,23 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A setting changed after Refine was tapped calls the wait off, even when the slider's touch
+    /// was never heard (CI, Oct 18: a drag's start never reached `setAdjusting`).
+    @Test func aRefineWaitedForIsCalledOffByAChangedSetting() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForRefine()
+        #expect(model.isWaitingToRefine)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        #expect(!model.isWaitingToRefine, "A changed setting left the wait on")
+        model.cancelAll()
+    }
+
     /// A Refine waited for is called off by going back to the sliders, by Start and by another
     /// photo: it must not open over what the painter went on to.
     @Test func aRefineWaitedForIsCalledOffByTheSlidersStartAndAnotherPhoto() async throws {

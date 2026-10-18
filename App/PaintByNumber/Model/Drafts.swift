@@ -97,7 +97,8 @@ final class Drafts {
     }
 
     /// The draft and its photo as they are on disk, once the writes before are done. Nil when
-    /// there is no draft, or it turns out to be damaged: that is removed.
+    /// there is no draft, or it can't be read: a damaged one is removed, one that can't be read
+    /// just now (an I/O or data protection error) is kept, as at launch.
     func open() async -> Opened? {
         await flush()
         guard current != nil else { return nil }
@@ -107,6 +108,9 @@ final class Drafts {
                 guard let draft = try store.read() else { throw DraftStore.StoreError.missingPhoto }
                 return Opened(draft: draft, photo: try store.photoData())
             }
+        } catch let error as CocoaError where !Library.isDamage(error) {
+            Log.create.error("The draft can't be opened now: \(String(describing: error), privacy: .public)")
+            return nil
         } catch {
             Log.create.error("Removing a draft that can't be opened: \(String(describing: error), privacy: .public)")
             discard()

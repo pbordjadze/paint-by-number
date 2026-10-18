@@ -67,7 +67,7 @@ struct SendTemplateTests {
         #expect(library.artworks.count == 2)
         #expect(!library.store.hasSource(received.id))
         #expect(!ArtworkFactory.canRegenerate(received, store: library.store))
-        #expect(library.store.readRefinements(received.id).isEmpty)
+        #expect(try library.store.readRefinements(received.id).isEmpty)
         #expect(library.store.thumbnail(received.id) != nil)
         let document = try await library.loadForPainting(received.id)
         #expect(document.template == Fixtures.stripes())
@@ -87,7 +87,7 @@ struct SendTemplateTests {
         #expect(received.sampleName == "great-wave" && received.paintedCount == 0)
         #expect(library.store.source(received.id)?.width == 120)
         #expect(ArtworkFactory.canRegenerate(received, store: library.store))
-        #expect(library.store.readRefinements(received.id).isEmpty)
+        #expect(try library.store.readRefinements(received.id).isEmpty)
         #expect(try await library.loadForPainting(received.id).template == Fixtures.stripes())
     }
 

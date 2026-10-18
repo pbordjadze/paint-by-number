@@ -341,6 +341,7 @@ struct TemplatePreviewView: View {
             case .failed(let message):
                 StatusCapsule {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        .accessibilityHidden(true)
                     Text(message).lineLimit(2)
                 }
             default:

@@ -453,6 +453,8 @@ final class CreateModel {
                 }
             } catch is CancellationError {
             } catch {
+                // A photo given up for another one fails with its own error: it is not news now.
+                guard load == loadID else { return }
                 Log.create.error("Loading photo failed: \(String(describing: error), privacy: .private)")
                 phase = .failed((error as? CreateError ?? .unreadable).localizedDescription)
             }
@@ -469,6 +471,9 @@ final class CreateModel {
     /// are back on the suggestion's (the sliders' detents).
     func settingsChanged() {
         guard source != nil, !isChoosingSettings else { return }
+        // A Refine tapped before is not wanted now, even when the slider's touch was never heard
+        // (`setAdjusting`): its template would be for settings that are gone.
+        refineAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
         if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
         if isAdjusting {
