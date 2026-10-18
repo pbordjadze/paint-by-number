@@ -143,7 +143,9 @@ public enum TemplateEditor {
     public static let inkWidth: Float = 3
     /// How near a tap must be to a line to take it out, canvas units.
     public static let tapReach: Float = 8
-    /// Points of one edit beyond this are ignored (the app's help has already thinned them).
+    /// Points of one edit beyond this are ignored (the app's help has already thinned them), and so
+    /// are paints of one drawn line or split beyond as many (a hand-made `refinements.json` alone
+    /// could carry more).
     public static let maximumPoints = 4000
 
     static var reach: Int64 { Int64((inkWidth * Float(Lattice.unit)).rounded()) }
@@ -197,12 +199,12 @@ public enum TemplateEditor {
         switch edit {
         case .draw(let points, let closed, let paints):
             try work.draw(points, closed: closed, nudging: paints != nil)
-            if let paints { try work.paint(paints) }
+            if let paints { try work.paint(Array(paints.prefix(maximumPoints))) }
         case .split(let points, let closed, let paints):
             work.splitting = true
             try work.draw(points, closed: closed, nudging: true)
             guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the split divides no area") }
-            try work.paint(paints)
+            try work.paint(Array(paints.prefix(maximumPoints)))
             if !reading { try work.checkSplitPaints() }
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)

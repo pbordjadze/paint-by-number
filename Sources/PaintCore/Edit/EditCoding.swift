@@ -18,8 +18,10 @@ import Foundation
 /// leaves such an edit out). A new field gets a default that is what the kind did before it, so
 /// files already written keep their meaning: never rename or repurpose a key or a kind. A missing
 /// `closed` is false, a missing `radius` or `reach` the editor's own default (as `pbn edit`'s). A
-/// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`):
-/// it is written only when there are paints, so a draw without them is written as it always was.
+/// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`,
+/// nil): such a draw is written without the key, as it always was. A draw with a list writes it,
+/// empty too (`[]`), which reads back as a draw with no paints to give: it lays nudged, unlike one
+/// without the key.
 /// An older reader skips `paints` and lays such a draw as before, in the paints it had. `look` and
 /// `repaint` (Refine's Colors) have no points; an older reader leaves them out of the list, and the
 /// painting it saved keeps their colors. A look's name is a `TemplateEditor.Look`; one this build
