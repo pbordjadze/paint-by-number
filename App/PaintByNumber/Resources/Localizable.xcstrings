@@ -317,10 +317,6 @@
       "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
       "extractionState" : "manual"
     },
-    "Choose a photo with a clear subject and good light. It becomes your canvas." : {
-      "comment" : "Instruction above the photo picker in the create flow",
-      "extractionState" : "manual"
-    },
     "Choose Photo" : {
       "comment" : "Accessibility label of the inline photo library picker in the create flow",
       "extractionState" : "manual"

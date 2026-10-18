@@ -60,11 +60,6 @@ struct PhotoSourceView: View {
         // cannot arbitrate between its pan and an in-process ancestor's pan across that
         // boundary, so a drag that started on the picker moved neither.
         VStack(alignment: .leading, spacing: 14) {
-            Text("Choose a photo with a clear subject and good light. It becomes your canvas.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, horizontalPadding + 4)
             if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
@@ -80,12 +75,15 @@ struct PhotoSourceView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
-                    .help("Browse all photos and albums")
-                    // Give the full picker its own presenter rather than the inline picker's
-                    // ancestor: Browse All once stayed on the photo step with no sheet.
-                    .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
+            // iPhone's Photos pane is Choose Photo, the same picker: no second way to it here.
+            if embedsPicker {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
+                        .help("Browse all photos and albums")
+                        // Give the full picker its own presenter rather than the inline picker's
+                        // ancestor: Browse All once stayed on the photo step with no sheet.
+                        .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
+                }
             }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
@@ -178,6 +176,8 @@ struct PhotoSourceView: View {
                 .tint(Theme.signature)
                 .controlSize(.large)
                 .accessibilityIdentifier("choose-photo")
+                // The full picker's presenter on iPhone, as Browse All's button is on iPad.
+                .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, horizontalPadding)

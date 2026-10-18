@@ -413,7 +413,9 @@ final class CreateFlowTests: XCTestCase {
         if isPad {
             XCTAssertTrue(app.images.matching(photoPredicate).firstMatch.waitForExistence(timeout: 10), "The inline picker hasn't loaded")
         }
-        XCTAssertTrue(waitUntil(timeout: 10) { app.buttons["Browse All…"].isHittable }, "Browse All isn't ready for a tap")
+        // iPhone has no Browse All: its Photos pane's Choose Photo presents the same picker.
+        let browse = isPad ? app.buttons["Browse All…"] : app.buttons["choose-photo"]
+        XCTAssertTrue(waitUntil(timeout: 10) { browse.isHittable }, "Browse All isn't ready for a tap")
         return SheetDetector(app)
     }
 
