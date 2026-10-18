@@ -210,6 +210,8 @@ logs the tuned ones.
   imports (`MemberImportVisibility`), actor isolation at each boundary, API names and signatures
   against iOS 26 / Swift 6.2, and every call site of anything renamed; when unsure of an API, mirror
   an existing use in the repo.
+- Compiler warnings fail CI (`ci/warnings.sh` on the build logs of `core` and the simulator jobs;
+  `main` has none): fix a new one, never silence it.
 - "database is locked" from `tools/swift.sh`: another build is using `.build`; wait and retry.
 - Scratch output goes outside the repo. Never commit `.build/`, eval output, `tools/node_modules`,
   `.claude/worktrees/` or `.claude/corpus/`. Keep a diff to what the task needs; edits to shared
@@ -462,10 +464,15 @@ Every other session keeps to one topic. When a session ships, gets blocked or ne
 tells the front desk with `send_message` if one is running, and Paul with a push notification
 if he has gone quiet.
 
-- **Merging is standing permission, given once.** When a branch's CI is green and the change is
-  what Paul asked for, merge it into `main` without asking. Put anything not yet chosen for the
-  release behind `#if UNRELEASED`, so it reaches his SideStore build only. Don't wait for a
-  "yes".
+- **Merging is standing permission, given once.** When a branch's CI is green, its review is done
+  (below) and the change is what Paul asked for, merge it into `main` without asking. Put
+  anything not yet chosen for the release behind `#if UNRELEASED`, so it reaches his SideStore
+  build only. Don't wait for a "yes".
+- **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
+  write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
+  subagent). Fix what it confirms; anything large or design-level goes to Paul through the front
+  desk. The merge commit's message lists what the review found and what was fixed. No PR, no
+  extra CI run.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about

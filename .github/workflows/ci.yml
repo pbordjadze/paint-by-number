@@ -64,6 +64,11 @@ jobs:
           set -o pipefail
           mkdir -p out
           swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+      - name: Compiler warnings
+        # A new warning fails the job (main has none); the test build compiles every target.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: ci/warnings.sh out/warnings.txt out/core-test.log
       - name: Feedback relay tests
         # The Worker behind Give Feedback (feedback-relay/) against a mocked GitHub; Ubuntu's node 18.
         if: ${{ !cancelled() }}
@@ -221,6 +226,11 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
           ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
+      - name: Compiler warnings
+        id: warnings
+        # A new warning in the app, its tests or PaintCore fails the job (main has none).
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ci/warnings.sh out/warnings.txt out/app-build.log out/release-build.log
       - name: Nickname v2 platform contract (macOS)
         if: ${{ !cancelled() && matrix.job == 'ipad' }}
         run: |
@@ -266,7 +276,7 @@ jobs:
           OUTCOMES: >-
             simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
             screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
-            release=${{ steps.release.outcome }} benchmark=${{ steps.bench.outcome }}
+            release=${{ steps.release.outcome }} warnings=${{ steps.warnings.outcome }} benchmark=${{ steps.bench.outcome }}
         run: |
           mkdir -p out
           echo "$OUTCOMES" > out/outcomes.txt

@@ -30,6 +30,7 @@ struct ScreenFrame {
         return Double(total) / Double(grays.count * 255)
     }
 
+    @MainActor
     private static func grays(of shot: XCUIScreenshot) -> [UInt8] {
         guard let image = shot.image.cgImage else { return [] }
         var grays = [UInt8](repeating: 0, count: size.width * size.height)

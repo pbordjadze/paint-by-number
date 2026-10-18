@@ -126,6 +126,19 @@ def stalls(lines):
     return found
 
 
+def warning_notes(job, job_dir):
+    """The compiler warnings ci/warnings.sh found in the job's build logs, a few of them."""
+    try:
+        with open(os.path.join(job_dir, "warnings.txt"), errors="replace") as f:
+            found = [line.rstrip() for line in f if line.strip()]
+    except OSError:
+        return []
+    if not found:
+        return []
+    more = f" (all {len(found)} in {job}/warnings.txt)" if len(found) > 5 else ""
+    return [f"  compiler warnings: {len(found)}{more}"] + [f"    {line}" for line in found[:5]]
+
+
 def stall_notes(job, job_dir):
     """How long the main thread stalled (`+`: the app ended first) and the logs with the stacks."""
     paths = [os.path.join(job_dir, "test-app.log")]
@@ -164,6 +177,7 @@ def simulator_lines(job, job_dir, steps):
     detail = "; ".join(part for part in parts if part) or "every step passed"
     notes += screenshot_notes(job_dir)
     notes += stall_notes(job, job_dir)
+    notes += warning_notes(job, job_dir)
     crashes = os.path.join(job_dir, "crashes")
     if os.path.isdir(crashes) and os.listdir(crashes):
         notes.append(f"  crash reports: {len(os.listdir(crashes))} in {job}/crashes/")
@@ -201,6 +215,9 @@ def main(argv):
                 last = last_line(os.path.join(job_dir, path))
                 if last:
                     head.append(f"{label}: {last}")
+            notes = warning_notes(job, job_dir)
+            if notes:
+                details += [f"{job}: {notes[0].strip()}"] + notes[1:]
     print("\n".join(head))
     if details:
         print()
