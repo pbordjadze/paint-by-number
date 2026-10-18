@@ -130,7 +130,7 @@ enough").
 1. `python3 .claude/skills/front-desk/sessions.py <list file> --previous <day.json>
    --dashboard <scratch dir> --backlog docs/backlog.md` (`<day.json>`: today's opening snapshot,
    see Usage); skip it when only cards, the queue or what's next changed.
-2. Keep `queue.json` and `releases.json` (what's next, estimated) beside this file by hand, and
+2. Keep `queue.json`, `releases.json` (what's next, estimated; its `detail` is the per-workstream "now building" line) and `links.json` (the page's "Pages" strip: `id`, `order`, `title`, `url`, `note`) beside this file by hand, and
    your `decisions.json` with `page.py`.
 3. `python3 .claude/skills/front-desk/live.py <scratch dir> <decisions.json> <live.json>` merges
    them into one `live.json` (every row has `kind` and a unique `key`).
@@ -143,7 +143,7 @@ enough").
 
 The page leads with **Yours to decide**: the `decision` rows of `datasets/live`, from a hand-written file
 `decisions.json` (rows of `id`, `order`, `group` = `now` | `whenever` | `later`, `title`, `ask`,
-`options` [{label, detail}], `items`, `recommend`, `reply`, `link`, `from`, `asked`). Each row
+`options` [{label, detail}], `items`, `recommend`, `reply`, `link` (+ `link_label`, default "Open": shown as a button on the card), `from`, `asked`). Each row
 is a short review guide for one decision only Paul can make: the question, the choices, what
 the session recommends, and the reply to type. Each card asks one question, its options
 lettered (a, b, …) so a one-letter reply can't land on the wrong one. Keep it in step with what
