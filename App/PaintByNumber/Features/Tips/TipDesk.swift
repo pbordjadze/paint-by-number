@@ -104,7 +104,7 @@ final class TipDesk {
     func leave(_ place: TipPlace) {
         places.removeAll { $0 == place }
         if offering?.place == place { stopOffering() }
-        if let turn, turn.place == place { release(turn) }
+        if let turn, turn.place == place { retire(turn) }
         noteActivity()
     }
 
@@ -312,10 +312,7 @@ final class TipDesk {
                 break
             }
             if elapsed > Self.lapse {
-                // Said once, read or not: a tip the app draws itself has no display limit of
-                // TipKit's to say so.
-                if id.isDrawnByTheApp { id.tip.invalidate(reason: .displayCountExceeded) }
-                release(id)
+                retire(id)
                 return
             }
         }
@@ -342,6 +339,14 @@ final class TipDesk {
         watching = nil
         pacing.hide(id)
         store.save(pacing)
+    }
+
+    /// `id` has had its say, read or not (left alone, or its screen went), and leaves the screen: a tip
+    /// the app draws itself has no display limit of TipKit's to say it once.
+    private func retire(_ id: TipID) {
+        guard turn == id else { return }
+        if id.isDrawnByTheApp { id.tip.invalidate(reason: .displayCountExceeded) }
+        release(id)
     }
 
     /// Its thing was used: the tip on screen, if it is this one, goes.

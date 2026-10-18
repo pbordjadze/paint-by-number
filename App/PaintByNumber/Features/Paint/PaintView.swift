@@ -276,6 +276,7 @@ struct PaintView: View {
         // The completion bar slides in for the palette (at the bottom or the side) as the
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
+        .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
     }
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
