@@ -10,17 +10,27 @@ import Foundation
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
+///     {"kind": "look",      "points": [], "look": "moonlit", "strength": 1, "lightness": [L, ...]}
+///     {"kind": "repaint",   "points": [], "from": [L, a, b], "color": [L, a, b], "family": true}
 ///
 /// Versioning is by `kind` and by fields: a reader skips fields it does not know, and a kind it
 /// does not know fails that one edit's decoding (a list of edits decodes each on its own and
 /// leaves such an edit out). A new field gets a default that is what the kind did before it, so
 /// files already written keep their meaning: never rename or repurpose a key or a kind. A missing
 /// `closed` is false, a missing `radius` or `reach` the editor's own default (as `pbn edit`'s). A
-/// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`):
-/// it is written only when there are paints, so a draw without them is written as it always was.
-/// An older reader skips `paints` and lays such a draw as before, in the paints it had.
+/// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`,
+/// nil): such a draw is written without the key, as it always was. A draw with a list writes it,
+/// empty too (`[]`), which reads back as a draw with no paints to give: it lays nudged, unlike one
+/// without the key.
+/// An older reader skips `paints` and lays such a draw as before, in the paints it had. `look` and
+/// `repaint` (Refine's Colors) have no points; an older reader leaves them out of the list, and the
+/// painting it saved keeps their colors. A look's name is a `TemplateEditor.Look`; one this build
+/// does not know fails the edit as an unknown kind does. A missing `lightness` is none, a missing
+/// `family` false.
 extension TemplateEditor.Edit: Codable {
-    private enum CodingKeys: String, CodingKey { case kind, points, closed, radius, reach, color, paints }
+    private enum CodingKeys: String, CodingKey {
+        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
+    }
     private enum PaintKeys: String, CodingKey { case at, color }
 
     /// The eraser's radius when a file gives none, canvas units (`pbn edit`'s default).
@@ -52,6 +62,13 @@ extension TemplateEditor.Edit: Codable {
             }
             return decoded
         }
+        func lab(_ key: CodingKeys) throws -> SIMD3<Float> {
+            let color = try c.decode([Float].self, forKey: key)
+            guard color.count == 3 else {
+                throw DecodingError.dataCorruptedError(forKey: key, in: c, debugDescription: "a color is [L, a, b]")
+            }
+            return SIMD3(color[0], color[1], color[2])
+        }
         switch kind {
         case "draw":
             self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints())
@@ -63,11 +80,18 @@ extension TemplateEditor.Edit: Codable {
         case "eraseLine":
             self = .eraseLine(at: try point(), reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
         case "fill":
-            let color = try c.decode([Float].self, forKey: .color)
-            guard color.count == 3 else {
-                throw DecodingError.dataCorruptedError(forKey: .color, in: c, debugDescription: "a color is [L, a, b]")
+            self = .fill(at: try point(), color: try lab(.color))
+        case "look":
+            let name = try c.decode(String.self, forKey: .look)
+            guard let look = TemplateEditor.Look(rawValue: name) else {
+                throw DecodingError.dataCorruptedError(forKey: .look, in: c, debugDescription: "unknown look: \(name)")
             }
-            self = .fill(at: try point(), color: SIMD3(color[0], color[1], color[2]))
+            self = .look(
+                look, strength: try c.decode(Float.self, forKey: .strength),
+                lightness: try c.decodeIfPresent([Float].self, forKey: .lightness) ?? [])
+        case "repaint":
+            self = .repaint(
+                from: try lab(.from), to: try lab(.color), family: try c.decodeIfPresent(Bool.self, forKey: .family) ?? false)
         default:
             throw DecodingError.dataCorruptedError(forKey: .kind, in: c, debugDescription: "unknown kind of edit: \(kind)")
         }
@@ -98,6 +122,18 @@ extension TemplateEditor.Edit: Codable {
             try c.encode("fill", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode([color.x, color.y, color.z], forKey: .color)
+        case .look(let look, let strength, let lightness):
+            try c.encode("look", forKey: .kind)
+            try c.encode([SIMD2<Float>](), forKey: .points)
+            try c.encode(look, forKey: .look)
+            try c.encode(strength, forKey: .strength)
+            if !lightness.isEmpty { try c.encode(lightness, forKey: .lightness) }
+        case .repaint(let from, let to, let family):
+            try c.encode("repaint", forKey: .kind)
+            try c.encode([SIMD2<Float>](), forKey: .points)
+            try c.encode([from.x, from.y, from.z], forKey: .from)
+            try c.encode([to.x, to.y, to.z], forKey: .color)
+            try c.encode(family, forKey: .family)
         }
     }
 

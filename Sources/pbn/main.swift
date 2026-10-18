@@ -35,7 +35,9 @@
 //       "points": [[x, y], ...], "closed": false, "paints": [{"at": [x, y], "color": [L, a,
 //       b]}]}, {"kind": "erase", "radius": r,
 //       "points": [...]}, {"kind": "eraseLine", "points": [[x, y]], "reach": r}, {"kind": "fill",
-//       "points": [[x, y]], "color": [L, a, b] | "paint": n}, {"kind": "split", as "draw"}], all in canvas units (the
+//       "points": [[x, y]], "color": [L, a, b] | "paint": n}, {"kind": "split", as "draw"},
+//       {"kind": "look", "look": "moonlit", "strength": 1}, {"kind": "repaint", "from": [L, a,
+//       b], "color": [L, a, b], "family": true}], all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
 //       line drawn exactly as given and cutting the cell it closes (with "paints", nudged through
 //       the junctions it crosses beside and each piece it cuts recolored; --photo reads those
@@ -43,7 +45,10 @@
 //       ink at the edge of its reach (the cells it frees merging), a line tapped away from
 //       junction to junction, the shape under a point made one detail area of a paint (the
 //       color's, within a just-noticeable difference, else a new one), a split dividing the
-//       colors on either side of the line without drawing it; a kind pbn doesn't know is
+//       colors on either side of the line without drawing it, Refine's Colors (a look over every
+//       paint, its lightness read from the template when the file gives none, or one paint
+//       repainted with or without its family; later edits bring their colors through them, as
+//       the app's trail does); a kind pbn doesn't know is
 //       skipped with a warning. Writes the edited template.pbnt, the same previews as generate
 //       (raster.ppm, boundaries.ppm, painted.svg, template.svg, painted-outlined.svg) and
 //       stats.json: the template's counts and validation, per edit what it did (a draw: how far

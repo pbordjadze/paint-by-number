@@ -177,4 +177,18 @@ struct EditPaintTests {
         let written = String(decoding: try JSONEncoder().encode(Self.draw(nil)), as: UTF8.self)
         #expect(!written.contains("paints"), "a draw without paints is written as before")
     }
+
+    /// A line's paints past `maximumPoints` are ignored, as its points are: a paint there, which
+    /// would recolor the piece it lies in, changes nothing.
+    @Test func paintsPastTheCapAreIgnored() throws {
+        let line: [SIMD2<Float>] = [SIMD2(15, -4), SIMD2(18.5, 30.25), SIMD2(15, 71)]
+        let nowhere = [TemplateEditor.Paint](
+            repeating: TemplateEditor.Paint(at: SIMD2(-50, -50), color: SIMD3(0.5, 0, 0)), count: TemplateEditor.maximumPoints)
+        let past = TemplateEditor.Paint(at: SIMD2(5, 30), color: SIMD3(0.3, 0.2, -0.2))
+        let capped = try TemplateEditor.apply(.draw(points: line, paints: nowhere + [past]), to: Self.scene).template
+        let bare = try TemplateEditor.apply(.draw(points: line, paints: []), to: Self.scene).template
+        let painted = try TemplateEditor.apply(.draw(points: line, paints: [past]), to: Self.scene).template
+        #expect(capped == bare)
+        #expect(painted != bare, "the paint past the cap would have recolored its piece")
+    }
 }

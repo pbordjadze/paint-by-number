@@ -396,6 +396,24 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas
   told apart, which the palette often has no paint for. Without a reachable line nothing shows
   where a split was, so Undo is the way back.
+- **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
+  over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
+  or without its family (the paints of about its hue, full within 30° and none past 60°, turning
+  and growing as the swatch did; a gray's family is the colors within 0.1 of it). One swatch
+  alone often looks wrong: the red parrot is six paints, and turning one of them blue leaves a
+  patchy bird, which is why the family moves by default. Where a changed paint lands within a
+  just-noticeable difference of another, the two become one paint (the lower number) and the
+  numbers after the higher close up, so a number only loses digits; areas the two paints kept
+  apart across an undrawn boundary become one, as the eraser joins them. Every look is a fixed
+  function of a color (`+ - * /`, `min`, `max`, `sqrt`: the same bits everywhere, pinned by
+  `EditRecolorTests.looksArePinned`), so edits laid after it bring their colors through it (a
+  drawn line's pieces, a fill: `TemplateEditor.recolored`), and a line drawn under Moonlit takes
+  Moonlit's paint. The painting looks place a paint on the painting's ramp by its rank among the
+  palette's lightnesses, which the edit records when it is made (`lightness`, nine quantiles), so
+  a color laid later finds its place among them. Of the eight looks at full strength on the
+  parrots, lighthouse and hibiscus books (24 paints each) all 24 were made and validate, in 20 to
+  150 ms; Moonlit, Golden Hour, Garden and the painters' looks merge 0 to 7 paints, Pastel 0 to 4
+  (a first, narrower Pastel merged 10 on the lighthouse), Sepia 7 to 11 (hue is gone).
 - **What stays.** Regions, outlines, fill triangles, numbers, edges, strokes and paints the edit
   does not reach are copied as they were (`EditWork.finish` lays the survivors out again, so
   indices after a merged region shift). Neighbours of an edit gain a vertex where a line meets
