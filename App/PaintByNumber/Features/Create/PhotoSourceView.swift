@@ -328,8 +328,14 @@ private struct SampleTile: View {
                     .shadow(color: .black.opacity(0.35), radius: 4, y: 1)
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // Starts above the caption and is dark by its first line: white spray or sky
+                    // behind a title (The Great Wave's) left it unreadable.
                     .background(alignment: .bottom) {
-                        LinearGradient(colors: [.clear, .black.opacity(0.68)], startPoint: .top, endPoint: .bottom)
+                        LinearGradient(
+                            stops: [.init(color: .clear, location: 0), .init(color: .black.opacity(0.5), location: 0.45),
+                                    .init(color: .black.opacity(0.72), location: 1)],
+                            startPoint: .top, endPoint: .bottom)
+                            .padding(.top, -28)
                     }
             }
             .background(Theme.surface)
