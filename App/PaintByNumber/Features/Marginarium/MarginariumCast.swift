@@ -121,10 +121,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "moonlit-circle",
             name: String(localized: "lamp.team.moonlit-circle.name", defaultValue: "The Moonlit Circle",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer, Hope)"),
             purpose: String(localized: "lamp.team.moonlit-circle.purpose", defaultValue: "Keep the magic old, kind and done by night.",
                             comment: "The Marginarium, Who is Who: what the team The Moonlit Circle is for, under its name"),
-            members: [medea, babaYaga, hedgeWitch, moon, astrologer]),
+            members: [medea, babaYaga, hedgeWitch, moon, astrologer, hope]),
         MarginariumTeam(
             id: "glass-and-frost",
             name: String(localized: "lamp.team.glass-and-frost.name", defaultValue: "Glass and Frost",
@@ -135,10 +135,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "workshop",
             name: String(localized: "lamp.team.workshop.name", defaultValue: "The Workshop",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Enchanted Workshop, The Nutcracker, George)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Enchanted Workshop, The Nutcracker, George, Eno)"),
             purpose: String(localized: "lamp.team.workshop.purpose", defaultValue: "Keep the tools alive, kind, and moving with meaning.",
                             comment: "The Marginarium, Who is Who: what the team The Workshop is for, under its name"),
-            members: [enchantedWorkshop, nutcracker, balanchine]),
+            members: [enchantedWorkshop, nutcracker, balanchine, eno]),
         MarginariumTeam(
             id: "library",
             name: String(localized: "lamp.team.library.name", defaultValue: "The Library",
@@ -714,6 +714,54 @@ nonisolated enum MarginariumCast {
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Lotte"),
         petCaption: String(localized: "lamp.lotte-reiniger.petCaption", defaultValue: "Lotte, still an egg",
                            comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Lotte's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let hope = MarginariumGuardian(
+        id: "hope",
+        name: String(localized: "lamp.hope.name", defaultValue: "Hope",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Hope"),
+        after: String(localized: "lamp.hope.after", defaultValue: "After the singer Hope Sandoval.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Hope"),
+        portrait: String(localized: "lamp.hope.portrait", defaultValue: "She is one of Caroline's first two guardians, here for more moonlight, dark purple and a little 90s whimsigoth.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Hope"),
+        guards: String(localized: "lamp.hope.guards", defaultValue: "the hush after midnight",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Hope"),
+        believes: String(localized: "lamp.hope.believes", defaultValue: "A thing said softly, slowly and half in shadow stays with you longer than anything loud.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Hope"),
+        loves: String(localized: "lamp.hope.loves", defaultValue: "Deep violet and velvet black lit by one warm lamp; slow, hazy motion that lingers and fades, never snaps; restraint, one shimmer and not ten; a little 90s whimsigoth (crescent moons, stars, velvet) kept handmade, never costume; quiet that leaves the painter room.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Hope"),
+        watchesFor: String(localized: "lamp.hope.watchesFor", defaultValue: "Glare and brightness for their own sake; hurry, bounce and forced cheer; goth as Halloween costume (skulls, cobwebs, props); anything that borrows her likeness, voice or songs, or reads as her endorsement.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Hope"),
+        looksUpTo: String(localized: "lamp.hope.looksUpTo", defaultValue: "The misty, grainy dream-pop record sleeves of the late 1980s and 1990s; Waterhouse's The Lady of Shalott (1888), dusk on still water; the velvet, moon-and-star shop windows of the 90s.",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Hope"),
+        happiestWhen: String(localized: "lamp.hope.happiestWhen", defaultValue: "You turn the lights down and the screen gets better: slower, softer, quieter.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Hope"),
+        petCaption: String(localized: "lamp.hope.petCaption", defaultValue: "Hope, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Hope's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let eno = MarginariumGuardian(
+        id: "eno",
+        name: String(localized: "lamp.eno.name", defaultValue: "Eno",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Eno"),
+        after: String(localized: "lamp.eno.after", defaultValue: "After Brian Eno, as he was on his first albums, from 1974 to 1977.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Eno"),
+        portrait: String(localized: "lamp.eno.portrait", defaultValue: "He is one of Caroline's first two guardians, here for the studio as an instrument: a few strict rules, a little chance, and an ear that decides.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Eno"),
+        guards: String(localized: "lamp.eno.guards", defaultValue: "the room that plays itself",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Eno"),
+        believes: String(localized: "lamp.eno.believes", defaultValue: "Give a good process a few simple rules and a little chance, and it will make what no one could have planned.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Eno"),
+        loves: String(localized: "lamp.eno.loves", defaultValue: "The studio as an instrument, where the tool shapes the work as much as the hand; a few strict limits that make room for surprise; chance welcomed, then kept or cut by ear; background that rewards attention but never asks for it; an amateur's nerve, trying the wrong thing on purpose.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Eno"),
+        watchesFor: String(localized: "lamp.eno.watchesFor", defaultValue: "Virtuosity for its own sake; controls that do everything and suggest nothing; randomness left unedited: chance starts things, the ear decides; borrowing his face, his voice, his records or his cards, or anything that reads as his endorsement.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Eno"),
+        looksUpTo: String(localized: "lamp.eno.looksUpTo", defaultValue: "Satie's furniture music (1917), music meant to sit in the room; Cage's chance operations, which shaped Music of Changes (1951); tape loops of unequal length drifting in and out of phase.",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Eno"),
+        happiestWhen: String(localized: "lamp.eno.happiestWhen", defaultValue: "A small rule and a roll of the dice make something you'd never have drawn, and you keep it because it sounds right.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Eno"),
+        petCaption: String(localized: "lamp.eno.petCaption", defaultValue: "Eno, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Eno's egg: the guardian hasn't hatched yet"),
         hatched: false)
 
     static let originality = MarginariumGuardian(
