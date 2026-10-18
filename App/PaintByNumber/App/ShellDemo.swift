@@ -1,6 +1,7 @@
 #if DEBUG
 import CoreGraphics
 import Foundation
+import os
 import PaintCore
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
@@ -69,6 +70,10 @@ import PaintCore
 /// - `marginarium-guardian`, with `-dark` and `-long-text`: Dino's brief, opened from Who's
 ///   Who, its egg rocking.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
+/// - `gallery-received`, `gallery-received-dark`: a painting someone sent opened in the app, as
+///   "Open in Paint by Moonlight" does with a `.moonlight` file: The Great Wave refined as in
+///   `create-refine`, sent as Send Template… makes it (`sentPaintingFile`), added to the empty
+///   library and opened, blank.
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
 /// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the fixed
@@ -78,7 +83,7 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
-         galleryDraft, galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryDraft, galleryOpen, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
@@ -97,6 +102,7 @@ enum ShellDemo: Equatable {
         case "gallery-first-run": .galleryFirstRun
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
+        case "gallery-received", "gallery-received-dark": .galleryReceived
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
         case "gallery-timelapse-long-text": .galleryTimelapseLongText
@@ -329,7 +335,7 @@ enum ShellDemo: Equatable {
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,
@@ -353,6 +359,26 @@ enum ShellDemo: Equatable {
                 sampleName: sample.id, refinements: Self.refinements(canvas: CGSize(width: canvas.width, height: canvas.height))),
             photo: image)
         await library.drafts.flush()
+    }
+
+    /// What `gallery-received` opens: the first fixed picture refined as `create-refine` does it,
+    /// written as Send Template… writes it.
+    static func sentPaintingFile() async -> URL? {
+        guard let sample = fixedPictures.first else { return nil }
+        do {
+            let draft = try await ArtworkFactory.draft(sample: sample, photoMaxPixelSize: 560)
+            let edits = refinements(for: draft.template).edits
+            let title = sample.title
+            return try await Background.run {
+                let template = try ArtworkFactory.laying(edits, on: draft.template)
+                let data = try SharedPaintingCodec.encode(SharedPainting(title: title, settings: draft.settings, template: template))
+                return try ArtworkExporter.temporaryFile(
+                    data, name: ArtworkExporter.templateName(title: title), pathExtension: SharedPaintingCodec.fileExtension)
+            }
+        } catch {
+            Log.demo.error("The sent painting couldn't be made: \(String(describing: error), privacy: .public)")
+            return nil
+        }
     }
 
     /// The first six pictures painted to various stages: three in progress, one nobody has painted

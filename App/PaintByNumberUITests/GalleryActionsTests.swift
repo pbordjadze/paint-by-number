@@ -1,7 +1,8 @@
 import XCTest
 
 /// Card menu actions in the gallery: deleting asks first, a time-lapse shows its progress and can be
-/// cancelled, favorites sort first and filter, and the search field narrows the cards.
+/// cancelled, a template can be sent, favorites sort first and filter, and the search field narrows
+/// the cards.
 final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testDeleteAsksForConfirmation() {
@@ -46,6 +47,18 @@ final class GalleryActionsTests: XCTestCase {
             dismissDialog(at: dialog, titled: labels[0], in: app)
             XCTAssertTrue(card.exists, "“\(title)” is gone after the dialog was dismissed")
         }
+    }
+
+    /// Send Template… sits beside Print Template… in Debug and SideStore builds (`UNRELEASED`);
+    /// `ReceivePaintingTests` opens what it sends.
+    @MainActor
+    func testMenuOffersSendTemplate() {
+        let app = launchGallery()
+        let card = revealCard("The Great Wave", in: app)
+        card.press(forDuration: 1.5)
+        XCTAssertTrue(app.buttons["Send Template…"].waitForExistence(timeout: 5), "The card menu has no Send Template…")
+        XCTAssertTrue(app.buttons["Print Template…"].exists)
+        attachScreenshot(of: app, named: "card-menu-send-template")
     }
 
     @MainActor

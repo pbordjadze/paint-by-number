@@ -26,7 +26,8 @@ before planning app work).
     the style guide `ColorNicknameTests` lints).
   - `Model/`: `Template` + `TemplateCoding` (geometry conventions on `BoundaryEdge`, `Ring`,
     `FillMesh`, `Template.coordinateQuantum` and `points`), `GenerationSettings`, `Segmentation`,
-    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `PaintingTime` (the one painting-time
+    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `SharedPainting` (the `.moonlight` file Send
+    Template… writes: a template and its title, no photo), `PaintingTime` (the one painting-time
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
@@ -238,7 +239,9 @@ Saved paintings must open in every later build. The format history is documented
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
   chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
   strokes) must keep decoding (they are never regenerated). Add
-  a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
+  a fixture file and decode test for every new `formatVersion`, chunk or trailing field. A
+  painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
+  input) follows the same rules: `shared-v1.moonlight` keeps decoding.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base layout

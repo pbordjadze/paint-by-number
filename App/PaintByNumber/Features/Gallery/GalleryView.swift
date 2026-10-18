@@ -295,6 +295,16 @@ struct GalleryView: View {
         ) {
             Label("Print Template…", systemImage: "printer")
         }
+        #if UNRELEASED
+        // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
+        // is for whoever hasn't the app.
+        ShareLink(
+            item: SharedPaintingFile(store: library.store, artwork: artwork),
+            preview: SharePreview(ArtworkExporter.templateName(title: artwork.title), image: previewImage(artwork))
+        ) {
+            Label("Send Template…", systemImage: "paperplane")
+        }
+        #endif
         Divider()
         Button("Restart", systemImage: "arrow.counterclockwise") {
             PaintTips.used(.shelfHold)

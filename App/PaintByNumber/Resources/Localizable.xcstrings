@@ -673,6 +673,10 @@
       "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
       "extractionState" : "manual"
     },
+    "Couldn’t Open Painting" : {
+      "comment" : "Title of the alert when a painting someone sent (a .moonlight file opened in the app) can't be added to the gallery",
+      "extractionState" : "manual"
+    },
     "Couldn’t Open Photo" : {
       "comment" : "Title shown in the create flow when the chosen photo can't be opened",
       "extractionState" : "manual"
@@ -1757,6 +1761,42 @@
       "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
+    "library.receive.damaged" : {
+      "comment" : "Alert message when a file opened as a painting someone sent can't be read",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file is damaged, or isn’t a painting."
+          }
+        }
+      }
+    },
+    "library.receive.needsNewerApp" : {
+      "comment" : "Alert message when a painting someone sent was made by a newer version of the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting was sent from a newer version of Paint by Moonlight. Update the app to open it."
+          }
+        }
+      }
+    },
+    "library.receive.saveFailed" : {
+      "comment" : "Alert message when a painting someone sent can't be written to the library",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The painting couldn’t be saved on this device. Free up some space and open it again."
+          }
+        }
+      }
+    },
     "Lifts its lid." : {
       "comment" : "The Marginarium: VoiceOver hint of Pip, the teapot: tapping it makes it lift its lid",
       "extractionState" : "manual"
@@ -1931,6 +1971,10 @@
     },
     "Samples has paintings and photographs ready to use." : {
       "comment" : "Message of the tip titled No Photo at Hand; Samples is the pane or list of the app’s sample pictures",
+      "extractionState" : "manual"
+    },
+    "Send Template…" : {
+      "comment" : "Gallery card menu item: shares the painting's template as a file that Paint by Moonlight opens as a new, blank painting (refinements included, no photo), to send to someone else",
       "extractionState" : "manual"
     },
     "Settings and Tips" : {
