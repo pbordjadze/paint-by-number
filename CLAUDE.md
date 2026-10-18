@@ -437,7 +437,8 @@ any port of it, when changing the fitter: work from the paper.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
    Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
    `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in
-   STATUS.md; `core` only builds and checks the strings), in about 15 min. Run it before asking
+   STATUS.md; `core` only builds and checks the strings): about 6 min once a runner takes it (its
+   first, October 18), but it waits for one like any macOS job. Run it before asking
    for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
    run is going (the push cancels it).
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
