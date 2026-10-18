@@ -464,6 +464,12 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   hazy) went to Codex as briefed; Eno proposes his own, in his words with a reason for each part,
   because Paul asked how he came up with it.
 
+- Row 63, Caroline's third: Keynes. Paul, 21:04: "Bloomsbury London. But they are both him I
+  suppose"; to the front desk's echo (his Bloomsbury years, the Cambridge Apostles as part of the
+  same man), 21:40: "Yeah go ahead". Claude proposed the name Maynard (his Bloomsbury friends'
+  name for him) and the Library, for Paul to confirm; his pet follows Paul's 21:23 method, in
+  the Bloomsbury painters' own manner.
+
 ## Open questions
 
 - Dino in the Lamp's family style? Paul (Oct 12): leave him as he is for now, he's Dino;

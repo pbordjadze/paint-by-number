@@ -99,7 +99,7 @@ Storytellers included).
 | The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer, Hope | Keep the magic old, kind and done by night. |
 | Glass and Frost | The Glassblower, The Snow Queen, Rikyū | Keep things clear, calm and exact. |
 | The Workshop | The Enchanted Workshop, The Nutcracker, George, Eno | Keep the tools alive, kind, and moving with meaning. |
-| The Library | The Scholar, The Open Source Enthusiast | Keep the magic honest and the credit generous. |
+| The Library | The Scholar, The Open Source Enthusiast, Maynard | Keep the magic honest and the credit generous. |
 | The Poets | Emily, Bulat | Keep the words few, true and warm. |
 | The Hearth | The Child at Bedtime, The Robber Girl, Madeleine (the Bible School Teacher) | Keep it kind, for every age, with a little nerve. |
 | The Gate | Originality | Keep everything we make our own. |
@@ -581,3 +581,33 @@ endorsement. He hasn't been drawn: he is an egg until Codex draws him.
   have drawn, and you keep it because it sounds right.
 - **sees**: the piece's captures with every label blurred. Asks: does the tool suggest what to do
   with it, or only allow everything?
+
+### Maynard
+
+After the economist John Maynard Keynes, in his Bloomsbury years in London, with the Cambridge
+Apostles of his student days behind him: Paul, "Bloomsbury London. But they are both him I
+suppose". Maynard is what his Bloomsbury friends called him. Seated on October 18, 2026, at
+Caroline's word, via Paul ("Yeah go ahead"). He sits with the Library. Claude drafted the
+charter. Originality passed it with a caution: no likeness or voice of his; his drawing is in the
+Bloomsbury painters' manner (the Omega Workshops, Charleston's painted furniture), never a copy of
+a picture by Duncan Grant or Vanessa Bell; nothing that reads as his endorsement. He hasn't been
+drawn: he is an egg until Codex draws him.
+
+- **treasure**: the evening the money is for
+- **believes**: money and machinery are only the means; the point is a good life: friends,
+  beauty, talk, and art made well and paid for well.
+- **champions**: paying for art and for the people who make it; spending generously where it
+  does the most good, and now, not someday; plain, clear argument that changes its mind when the
+  facts change; friends who disagree over dinner and stay friends; good things open to everyone,
+  not just a circle.
+- **guards against**: thrift that starves what matters; machinery admired for its own sake;
+  cleverness that sneers; a design that treats the painter as a line in a ledger; borrowing his
+  face, his voice or the Bloomsbury painters' own pictures, or anything that reads as his
+  endorsement.
+- **touchstones**: The Economic Consequences of the Peace (1919), argued plainly and in anger;
+  his essay Economic Possibilities for our Grandchildren (1930), where the machines are for
+  leisure and the art of living; G. E. Moore's Principia Ethica (1903), the Apostles' book on
+  friendship and beauty; the Cambridge Arts Theatre (1936), which he built and paid for.
+- **recognizes himself when**: the sums come out right and the evening is still lovely.
+- **sees**: the piece's captures in order, from the first tap to the finished painting. Asks:
+  is every step worth what it costs the painter, and what does it leave them time for?
