@@ -10,9 +10,10 @@ import Testing
 struct BundledPetsTests {
     private static let guardians = [
         "astrologer", "baba-yaga", "balanchine", "bartimaeus", "bible-school-teacher", "bulat-okudzhava",
-        "child-at-bedtime", "dinotopia", "emily-dickinson", "enchanted-workshop", "glassblower", "hedge-witch",
-        "lotte-reiniger", "medea", "moon", "nutcracker", "open-source-enthusiast", "originality", "painter", "pirosmani",
-        "robber-girl", "scholar", "sen-no-rikyu", "snow-queen", "storybook",
+        "child-at-bedtime", "dinotopia", "emily-dickinson", "enchanted-workshop", "eno", "glassblower",
+        "hedge-witch", "hope", "keynes", "lotte-reiniger", "medea", "moon", "nutcracker", "open-source-enthusiast",
+        "originality", "painter", "pirosmani", "robber-girl", "scholar", "sen-no-rikyu", "snow-queen",
+        "storybook",
     ]
 
     private var sheets: [URL] {

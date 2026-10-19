@@ -9046,7 +9046,7 @@
       }
     },
     "lamp.team.moonlit-circle.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer, Hope)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9094,7 +9094,7 @@
       }
     },
     "lamp.team.workshop.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Enchanted Workshop, The Nutcracker, George)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Enchanted Workshop, The Nutcracker, George, Eno)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9118,7 +9118,7 @@
       }
     },
     "lamp.team.library.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Scholar, The Open Source Enthusiast)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Scholar, The Open Source Enthusiast, Maynard)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11441,6 +11441,366 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Astrologer"
+          }
+        }
+      }
+    },
+    "lamp.hope.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hope"
+          }
+        }
+      }
+    },
+    "lamp.hope.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the singer Hope Sandoval."
+          }
+        }
+      }
+    },
+    "lamp.hope.portrait" : {
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "She is one of Caroline's first two guardians, here for more moonlight, dark purple and a little 90s whimsigoth."
+          }
+        }
+      }
+    },
+    "lamp.hope.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the hush after midnight"
+          }
+        }
+      }
+    },
+    "lamp.hope.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A thing said softly, slowly and half in shadow stays with you longer than anything loud."
+          }
+        }
+      }
+    },
+    "lamp.hope.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep violet and velvet black lit by one warm lamp; slow, hazy motion that lingers and fades, never snaps; restraint, one shimmer and not ten; a little 90s whimsigoth (crescent moons, stars, velvet) kept handmade, never costume; quiet that leaves the painter room."
+          }
+        }
+      }
+    },
+    "lamp.hope.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glare and brightness for their own sake; hurry, bounce and forced cheer; goth as Halloween costume (skulls, cobwebs, props); anything that borrows her likeness, voice or songs, or reads as her endorsement."
+          }
+        }
+      }
+    },
+    "lamp.hope.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The misty, grainy dream-pop record sleeves of the late 1980s and 1990s; Waterhouse's The Lady of Shalott (1888), dusk on still water; the velvet, moon-and-star shop windows of the 90s."
+          }
+        }
+      }
+    },
+    "lamp.hope.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You turn the lights down and the screen gets better: slower, softer, quieter."
+          }
+        }
+      }
+    },
+    "lamp.hope.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Hope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hope"
+          }
+        }
+      }
+    },
+    "lamp.eno.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eno"
+          }
+        }
+      }
+    },
+    "lamp.eno.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After Brian Eno, as he was on his first albums, from 1974 to 1977."
+          }
+        }
+      }
+    },
+    "lamp.eno.portrait" : {
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He is one of Caroline's first two guardians, here for the studio as an instrument: a few strict rules, a little chance, and an ear that decides."
+          }
+        }
+      }
+    },
+    "lamp.eno.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the room that plays itself"
+          }
+        }
+      }
+    },
+    "lamp.eno.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give a good process a few simple rules and a little chance, and it will make what no one could have planned."
+          }
+        }
+      }
+    },
+    "lamp.eno.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The studio as an instrument, where the tool shapes the work as much as the hand; a few strict limits that make room for surprise; chance welcomed, then kept or cut by ear; background that rewards attention but never asks for it; an amateur's nerve, trying the wrong thing on purpose."
+          }
+        }
+      }
+    },
+    "lamp.eno.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuosity for its own sake; controls that do everything and suggest nothing; randomness left unedited: chance starts things, the ear decides; borrowing his face, his voice, his records or his cards, or anything that reads as his endorsement."
+          }
+        }
+      }
+    },
+    "lamp.eno.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satie's furniture music (1917), music meant to sit in the room; Cage's chance operations, which shaped Music of Changes (1951); tape loops of unequal length drifting in and out of phase."
+          }
+        }
+      }
+    },
+    "lamp.eno.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A small rule and a roll of the dice make something you'd never have drawn, and you keep it because it sounds right."
+          }
+        }
+      }
+    },
+    "lamp.eno.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Eno",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eno"
+          }
+        }
+      }
+    },
+    "lamp.keynes.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maynard"
+          }
+        }
+      }
+    },
+    "lamp.keynes.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the economist John Maynard Keynes, in his Bloomsbury years in London."
+          }
+        }
+      }
+    },
+    "lamp.keynes.portrait" : {
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He is one of Caroline's guardians: the Bloomsbury friend who paid for the paintings and built a theatre, with the Cambridge of his student days still in him."
+          }
+        }
+      }
+    },
+    "lamp.keynes.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the evening the money is for"
+          }
+        }
+      }
+    },
+    "lamp.keynes.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Money and machinery are only the means; the point is a good life: friends, beauty, talk, and art made well and paid for well."
+          }
+        }
+      }
+    },
+    "lamp.keynes.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paying for art and for the people who make it; spending generously where it does the most good, and now, not someday; plain, clear argument that changes its mind when the facts change; friends who disagree over dinner and stay friends; good things open to everyone, not just a circle."
+          }
+        }
+      }
+    },
+    "lamp.keynes.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thrift that starves what matters; machinery admired for its own sake; cleverness that sneers; a design that treats the painter as a line in a ledger; borrowing his face, his voice or the Bloomsbury painters' own pictures, or anything that reads as his endorsement."
+          }
+        }
+      }
+    },
+    "lamp.keynes.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Economic Consequences of the Peace (1919), argued plainly and in anger; his essay Economic Possibilities for our Grandchildren (1930), where the machines are for leisure and the art of living; G. E. Moore's Principia Ethica (1903), the Cambridge Apostles' book on friendship and beauty; the Cambridge Arts Theatre (1936), which he built and paid for."
+          }
+        }
+      }
+    },
+    "lamp.keynes.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The sums come out right and the evening is still lovely."
+          }
+        }
+      }
+    },
+    "lamp.keynes.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Maynard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maynard"
           }
         }
       }

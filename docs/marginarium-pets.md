@@ -142,7 +142,7 @@ colour fringe; the white ermine is among the five sheets kept lossless.
 | **The factory's nineteen** | | **16,841,140** | factory lossless total 25,641,918 |
 | **All twenty** | | **17,488,286** | |
 
-The sheets in the app total **16,841,140 bytes (16.06 MiB)**, 8,800,778 bytes fewer than the
+The factory’s nineteen sheets in the app totalled **16,841,140 bytes (16.06 MiB)**, 8,800,778 bytes fewer than the
 lossless originals: 4,110,306 in the five copied sheets and 12,730,834 in the fourteen lossy
 ones; the largest is `medea` at 1,035,302 bytes. Zipped at DEFLATE level 9 the nineteen add
 16,820,351 bytes of payload (16.04 MiB; the archive with headers is 16,822,611), because WebP
@@ -190,8 +190,25 @@ clearer drop with a curling tip and a warm light inside. Niko followed, painted 
 left showing as his patches, a crescent and stars on his shoulder (Paul: "Grounding them in the actual
 techniques their namesake used is the right method here"). The Moon hatched too: her first drawing was withheld because, a crescent seen side-on, she
 couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "The moon one is in
-need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The Hedge Witch followed as the approved redraw (Paul: "A for now"; a real woodcut by his mom someday). Bulat followed as a lit window with a black cat on the sill and a guitar inside, its idle calmed to one blink at Paul's tap. Dino followed from the top as a Dinotopia-style journal sketch of a shifty-eyed plesiosaur (Paul: "SKETCHES like the Dinotopia book had"). The twenty-five sheets total
+need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The Hedge Witch followed as the approved redraw (Paul: "A for now"; a real woodcut by his mom someday). Bulat followed as a lit window with a black cat on the sill and a guitar inside, its idle calmed to one blink at Paul's tap. Dino followed from the top as a Dinotopia-style journal sketch of a shifty-eyed plesiosaur (Paul: "SKETCHES like the Dinotopia book had"). The twenty-five sheets totalled
 **19,190,522 bytes (18.30 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
+
+## October 18: Hope, Eno and Maynard hatch
+
+Caroline's first two guardians, drawn on October 18 with the create-pet skill from stills Paul
+approved first and signed off ("Hope is sick", "Both good"): Hope, a half-open moonflower with
+no face, and Eno, two mismatched tape spools, a slack loop of tape, a wildflower and a die; then
+Maynard (id `keynes`), a plump songbird painted like an Omega Workshops object, Bloomsbury circles
+and leaves in ochre, terracotta, sage and dusty blue.
+Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and dark).
+
+| Pet id | Source SHA-256 (lossless PNG) | App bytes | Encoding |
+| --- | --- | ---: | --- |
+| `eno` | `d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026` | 894,894 | lossy WebP q88 |
+| `keynes` | `3e5b881edeecc6565dba724c14ead34c75d7d40ccc23fb0b138f53e2dcc96824` | 742,584 | lossy WebP q88 |
+| `hope` | `18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31` | 692,990 | lossy WebP q88 |
+
+The twenty-eight sheets total **21,520,990 bytes (20.52 MiB)** of the 24 MiB budget.
