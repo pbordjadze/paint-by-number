@@ -195,6 +195,70 @@ struct RefineFillLayer: View, Equatable {
     }
 }
 
+/// Every area using Colors' picked paint, outlined in screen points even while zooming.
+/// Each area's closed rings include its holes, just as `RefineFillLayer`'s even-odd paths do.
+struct RefinePaintGlow: View, Equatable {
+    let base: CreateModel.Preview?
+    let paint: Int?
+    let rect: CGRect
+    let reduceMotion: Bool
+
+    @State private var haloOpacity = 0.22
+
+    nonisolated static func == (a: RefinePaintGlow, b: RefinePaintGlow) -> Bool {
+        a.base?.id == b.base?.id && a.paint == b.paint && a.rect == b.rect && a.reduceMotion == b.reduceMotion
+    }
+
+    nonisolated static func areas(of paint: Int, in template: Template) -> [Int] {
+        template.regions.indices.filter { Int(template.regions[$0].colorIndex) == paint }
+    }
+
+    var body: some View {
+        ZStack {
+            outlines(width: 8)
+                .blur(radius: 2)
+                .opacity(reduceMotion ? 0.22 : haloOpacity)
+            outlines(width: 2)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .task(id: paint) {
+            haloOpacity = 0.22
+            guard paint != nil, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.42 }
+            do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
+            guard !Task.isCancelled, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.22 }
+        }
+        .onChange(of: reduceMotion) { _, _ in haloOpacity = 0.22 }
+    }
+
+    private func outlines(width: CGFloat) -> some View {
+        let rings = base.flatMap { base in
+            paint.map { Self.areas(of: $0, in: base.template).map { base.template.polygons(ofRegion: $0) } }
+        } ?? []
+        let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
+        let rect = rect, color = Theme.signature
+        return Canvas { context, _ in
+            guard size.width > 0, size.height > 0, rect.width > 0, rect.height > 0 else { return }
+            let s = max(rect.width / size.width, rect.height / size.height)
+            let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+            var glowing = context
+            glowing.clip(to: Path(rect))
+            glowing.translateBy(x: origin.x, y: origin.y)
+            glowing.scaleBy(x: s, y: s)
+            for area in rings {
+                var path = Path()
+                for ring in area where ring.count >= 3 {
+                    path.addLines(ring.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
+                    path.closeSubpath()
+                }
+                glowing.stroke(path, with: .color(color), style: RefineInkLayer.style(width / s))
+            }
+        }
+    }
+}
+
 /// A line the eraser was tapped on, glowing in the signature color as it goes (its view fades it).
 struct RefineTappedLine: View {
     let points: [SIMD2<Float>]

@@ -1989,6 +1989,30 @@
       "comment" : "Message of the tip titled Shape the Lines Yourself; Refine is the optional step of the New Painting screen, a button at its top right",
       "extractionState" : "manual"
     },
+    "refine.colors.areas" : {
+      "comment" : "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then the count of areas using it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Paint %1$@: %2$lld area"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Paint %1$@: %2$lld areas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "refine.colors.look.hint" : {
       "comment" : "Refine screen, Colors: VoiceOver hint of a look's chip (Moonlit, Starry Night, …)",
       "extractionState" : "manual",

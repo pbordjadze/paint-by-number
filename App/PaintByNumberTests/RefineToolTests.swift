@@ -48,6 +48,17 @@ struct RefineToolTests {
         #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
     }
 
+    /// A picked paint glows in every area that uses it, including separated areas.
+    @Test func aPickedPaintFindsExactlyItsAreas() {
+        var template = Fixtures.stripes(count: 4)
+        template.regions[0].colorIndex = 2
+        template.regions[3].colorIndex = 2
+        #expect(RefinePaintGlow.areas(of: 2, in: template) == [0, 2, 3])
+        #expect(RefinePaintGlow.areas(of: 1, in: template) == [1])
+        // Paint zero is still in the palette, but no area uses it.
+        #expect(RefinePaintGlow.areas(of: 0, in: template).isEmpty)
+    }
+
     /// A tap anywhere in the detail area a fill made takes out the fills made there (not those
     /// elsewhere); a tap in another area, or in a detail area no fill made, is a new fill. On three
     /// stripes 20 units wide, the middle one a detail area.

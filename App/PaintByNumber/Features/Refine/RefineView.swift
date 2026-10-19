@@ -1,3 +1,5 @@
+import Accessibility
+import Foundation
 import PaintCore
 import SwiftUI
 
@@ -127,6 +129,9 @@ struct RefineView: View {
     /// Colors' paint picked, an index of the template's palette, and whether its family follows it.
     @State private var colorPaint: Int?
     @State private var colorFamily = true
+    #if DEBUG
+    @State private var didPickDemoPaint = false
+    #endif
 
     init(model: CreateModel) {
         self.model = model
@@ -160,6 +165,17 @@ struct RefineView: View {
             model.dismissNote()
             PaintTips.desk.leave(.refine)
         }
+        #if UNRELEASED
+        .onChange(of: colorPaint) { _, paint in
+            guard tool == .colors, let paint, let template = base?.template else { return }
+            let count = RefinePaintGlow.areas(of: paint, in: template).count
+            let number = (paint + 1).formatted()
+            let announcement = String(
+                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(count) areas",
+                comment: "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then the count of areas using it")
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+        #endif
         .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: backdrop == .painting)) {
             await land()
         }
@@ -223,6 +239,12 @@ struct RefineView: View {
                         base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
                         showsAreas: painted == nil)
                         .equatable()
+                    #if UNRELEASED
+                    if tool == .colors {
+                        RefinePaintGlow(base: base, paint: colorPaint, rect: picture, reduceMotion: reduceMotion)
+                            .equatable()
+                    }
+                    #endif
                     let figure = shapeTrace
                     RefineInkLayer(
                         lines: pending, trace: tool == .shape ? figure : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
@@ -510,6 +532,14 @@ struct RefineView: View {
                 // Only a painting of this template: an older one would show lines that are gone.
                 painting = image?.preview == preview.id ? image : nil
             }
+            #if DEBUG
+            // Pick from the refined template once its edits have landed, as a painter would.
+            if ShellDemo.current?.picksColorPaint == true, !didPickDemoPaint, preview.refinements == model.refinements {
+                let counts = preview.template.regionCountsByColor
+                colorPaint = counts.indices.max { counts[$0] < counts[$1] }
+                didPickDemoPaint = true
+            }
+            #endif
         }
         submitted.removeAll { $0.id <= settled }
     }
@@ -1003,6 +1033,9 @@ struct RefineView: View {
         // A stroke under way was the other tool's, and a curve waiting to be bent stays straight.
         endStroke()
         finishCurve()
+        #if UNRELEASED
+        if self.tool == .colors { colorPaint = nil }
+        #endif
         self.tool = tool
         if tool.erases { eraser = tool }
         // A split draws no line, and Colors changes only paints: they show over the painting.
