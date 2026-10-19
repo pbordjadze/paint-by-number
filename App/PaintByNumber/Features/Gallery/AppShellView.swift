@@ -95,6 +95,10 @@ struct AppShellView: View {
                 .navigationTitle("Paint by Moonlight")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
+                // The gear's tip (where tips can be turned off), under the bar.
+                .barTips(.shelfSettings)
+                // An empty gallery has no + in its bar: the tip waits for one.
+                .barTips(.shelfNewPainting, active: !library.isBare)
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
                     // The zoom is for pushes from a card and for the way back to it; the painting
@@ -210,8 +214,6 @@ struct AppShellView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
-                // Where the tips can be turned off: hung below the gear.
-                .barTip(.shelfSettings)
         }
         #if UNRELEASED
         if showsMarginarium {
@@ -244,7 +246,6 @@ struct AppShellView: View {
                 Button("New Painting", systemImage: "plus") { isCreating = true }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
-                    .barTip(.shelfNewPainting)
             }
         }
     }

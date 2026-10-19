@@ -214,10 +214,6 @@ struct GalleryView: View {
         }
         .buttonStyle(PressableCardStyle())
         .cardTip(tips(of: artwork))
-        // The grid builds cards beyond the screen's edge too: a tip waits for its card to be mostly
-        // in view, or it would point off the screen.
-        .onScrollVisibilityChange(threshold: 0.6) { visible in PaintTips.desk.anchor(tips(of: artwork), present: visible) }
-        .onDisappear { PaintTips.desk.anchor(tips(of: artwork), present: false) }
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery

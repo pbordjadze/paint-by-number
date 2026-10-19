@@ -342,10 +342,12 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `TipDesk.pageTip`,
-  a card on the page, for Zoom, Drag and Pencil; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
-  the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
-  to on CI: SwiftUI's own popover with the tip's `TipView` inside; these and the page's have no
+  a card on the page, for Zoom, Drag and Pencil; `.barTips(…)`, a card with no arrow at the top of
+  the screen, under the bar, for the three about its buttons, the gear, + and Refine (a popover
+  from the button covered it on iOS 26; Paul, October 18: a card, as on the page), and
+  `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
+  tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
+  these, the bar's and the page's have no
   TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
   it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card
   anchors its tip only while it is mostly in view). A screen reports the
@@ -371,8 +373,8 @@ where they live.
   switch back to on, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the
   scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
   `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
-  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
-  bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (the tip about a navigation
+  bar button, under the bar), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
   them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
   (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
