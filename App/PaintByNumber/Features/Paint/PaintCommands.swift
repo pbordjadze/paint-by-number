@@ -23,6 +23,9 @@ struct PaintCommands: Commands {
     @FocusedValue(\.painting) private var painting
 
     var body: some Commands {
+        #if DEBUG
+        let _ = RenderMeter.tick("PaintCommands", "\(painting.map { "\(ObjectIdentifier($0.session)) \($0.isGivingFeedback)" } ?? "nil")")
+        #endif
         CommandMenu("Paint") {
             Group {
                 Button("Next Color") { step(1) }
