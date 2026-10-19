@@ -15,10 +15,11 @@ from atlas row 0, `pip-wave-0...3` from row 3, 192 × 208 at the same 2x slot) a
 as Codex redrew it, so its lid-lift tap and timings are unchanged.
 
 The guardians' drawings are bundled as `pet-<id>.webp` (the table below): the nineteen the factory
-drew, which chapter 2 shows each in a pet block, and Dino's, which Paul made in the Codex app
-before Dino joined the Lamp (Who's Who shows it, `MarginariumCast`), and chapter 1's margin notes show them beside the words (next section).
+drew, which chapter 2 shows each in a pet block; Dino's; and the four drawn on October 18 (the
+Astrologer, Bart, Rikyū and Scherenschnitt), which Who's Who shows (`MarginariumCast`), as it does
+Dino's; chapter 1's margin notes show them beside the words (next section).
 The contents page opens on them all, with Pip and Colophon, as small copies (`MarginariumView`).
-The Moon's drawing is withheld: no `pet-moon.webp` ships and its notes show no pet.
+The Moon's first drawing was withheld; her second, an almanac woodcut, hatched on October 18.
 To add a future atlas pet, place its sheet in
 `App/PaintByNumber/Resources/pet-<id>.webp`, with a lowercase alphanumeric/hyphen identifier,
 then use `pet:<id>` in the chapter. The unique filename survives Xcode's flattened resource
@@ -41,7 +42,7 @@ sheet go: a crop of a sheet shares its pixels and keeps all of them alive, which
 players holding "small copies" on a 3x iPhone held 281 MB. The sheet is drawn once into plain
 memory first, and the cells are cut from that: drawing a crop of the decoded WebP decoded the
 whole sheet again for each cell (about 60 ms each on CI, as long as the decode itself). Those frames are what the gallery's
-memory-warning-aware `ImageCache` keeps, with a 32 MiB decoded-byte limit, so the contents page's
+memory-warning-aware `ImageCache` keeps, with a 40 MiB decoded-byte limit (raised from 32 MiB when the twenty became twenty-four), so the contents page's
 twenty drawings (1.5 MiB each) fit and a later page reuses them. Askers for the same frames share
 one decode. Visible players retain their frames and let go when they scroll away; evicted frames
 can decode again. Unreadable or wrong-size sheets produce no image or active button; the caption
@@ -67,8 +68,7 @@ guardian who signed a margin note, once each, in the order they speak. The impor
 every signature of a note as `speakers` (and the last as `speaker`), so the names are the
 chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
 table from a signature to a pet identifier: "the narrator" is Colophon because chapter 1
-says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" and "Bart" (who hasn't
-hatched) are listed as having none.
+says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" (once listed as having none) is the Moon.
 `MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
 table nor the list of voices without a pet, or maps to a pet that doesn't resolve.
 
@@ -90,7 +90,9 @@ arrives, so a note doesn't change shape.
 
 ## Bundled size budget
 
-Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 20 MiB total** for all of them,
+Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 24 MiB total** for all of them
+(20 MiB until October 18, raised for the guardians still coming; the Marginarium ships only in
+SideStore builds),
 kept as WebP resources instead of expanding every frame into an imageset. This disk budget is
 separate from the decoded-memory cache limit above. `BundledPetsTests` checks both limits on
 the shipped files, that every sheet loads through `SpriteAtlas` with the v2 contract, and that
@@ -131,6 +133,7 @@ colour fringe; the white ermine is among the five sheets kept lossless.
 | `open-source-enthusiast` | `e65baf20d2646a4766e3eedb2aab01040ae3a4b269a7b56666e34cd28d0e360a` | 907,624 | lossy WebP q100 |
 | `originality` | `041937c51452bbacf19d0218b712ed716e3402182185537726b350adcfd15955` | 674,790 | lossy WebP q100 |
 | `painter` | `06415260a6eadfd84e0c48e5cf385c75567a954a3991f066afd3c2420c7f72ff` | 852,478 | lossy WebP q100 |
+| `moon` | `fad216466f87ef81982c7e4a0f4bbc48d3282f97ff2663f1de125daa35e1e565` | 496,714 | lossy WebP q88 |
 | `pirosmani` | `f914f776aab8d192e2b46b166dba50c9de7d0200e1b3dd9ba655d8b75f5f6c4c` | 912,802 | lossless, copied unchanged |
 | `robber-girl` | `096b6e2b8499ef46ec32587fe5783e0e68993db78b737970d240c1a273e6d332` | 1,025,788 | lossy WebP q93 |
 | `scholar` | `76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c` | 1,028,674 | lossy WebP q100 |
@@ -151,5 +154,41 @@ Dino's sheet came later, from Paul: his Codex pet, exported from the app as a 15
 (SHA-256 `e38ebb034a4cbafaeeb8e0da841a1d5954ffeb45f0d83079db18fef3826856b0`) that passes the v2
 contract, its unused cells fully transparent. The factory keeps it as lossless WebP
 (1,258,032 bytes, pixel-identical); the app's copy is lossy at q100 by the recipe above, 647,146
-bytes, its alpha bit-identical and its error 0.5 of 255 over the sheet. The twenty sheets total
+bytes, its alpha bit-identical and its error 0.5 of 255 over the sheet. The twenty sheets totalled
 17,488,286 bytes (16.68 MiB).
+
+## October 18: four hatch, and Dino is redrawn
+
+Paul and Caroline signed off five sheets drawn on October 18 with the create-pet skill, each
+from a still Paul approved first: the Astrologer, Bart (a small crimson ink-smoke djinn with an
+asterisk topknot), Rikyū, Scherenschnitt (Lotte until Paul renamed her; after the animator Lotte
+Reiniger), and Dino in the family's paint, his own design kept and replacing his Codex-app sheet.
+Their lossless sources are 1536 × 2288 PNGs (`factory/pets/<id>/` on the factory branch keeps
+them). To keep the total low, these five are lossy WebP at quality 88 (the recipe
+above, `quality=88`) rather than the highest that fits 1 MiB: the alpha channel is bit-identical
+to the sources, the mean absolute error over visible pixels is 2.6 to 6.9 of 255, and idle and
+waving cells at native size and 5x, on white and dark, showed no banding, halo or fringe.
+
+| Pet id | Source SHA-256 (lossless PNG) | App bytes | Encoding |
+| --- | --- | ---: | --- |
+| `astrologer` | `53307856a9967efb7ad4045159a96ac76af733eac8c9db1be0544fc9e4b55a70` | 741,688 | lossy WebP q88 |
+| `bartimaeus` | `e370590298eab989ccfc12b639de3c8bd130347c540f129623701ed875259958` | 582,478 | lossy WebP q88 |
+| `dinotopia` | `ab1586dff623570a9039f3aeb6649b89ffa1aa2fd9ec8a122219d994e1f0f75a` | 683,880 | lossy WebP q88 |
+| `glassblower` | `6e418069d9c869691d244f6fa78bfe8e6292a088912d1583718f96c809c22b97` | 600,066 | lossy WebP q88 |
+| `pirosmani` | `a6f2a4dc88da046c0f0ac3cc5341f1f32d18ffd45df0a9bb2422c4565ce6acd4` | 676,122 | lossy WebP q88 |
+| `lotte-reiniger` | `e861b9c0812ac7d4c8168797c7613f02352c26f571aefcd5336fd685e8ca8570` | 488,422 | lossy WebP q88 |
+| `sen-no-rikyu` | `e89af5f75afa5fd6d14975baaec874ae9680d16ef154311145f8b04dd95dc7ef` | 704,938 | lossy WebP q88 |
+| `snow-queen` | `66425c1d1d999695626963d813f5fc76c2c6e129eb8f03d919d300963e52dd88` | 570,650 | lossy WebP q88 |
+| `medea` | `5a65e726c0cdb2bba67292db3476efc4766518538d7b1b01d0a52452438a4553` | 665,758 | lossy WebP q88 |
+| `lotte-reiniger` | `93eede589fba5dc67b351692b86d49c77be296d4fc2ee282784822972bbd43d6` | 658,824 | lossy WebP q88 |
+
+The Glassblower's redraw (Paul: "Both good") replaced the factory's droplet the same day: a
+clearer drop with a curling tip and a warm light inside. Niko followed, painted the way Pirosmani painted animals: house paint on black oilcloth, the black
+left showing as his patches, a crescent and stars on his shoulder (Paul: "Grounding them in the actual
+techniques their namesake used is the right method here"). The Moon hatched too: her first drawing was withheld because, a crescent seen side-on, she
+couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "The moon one is in
+need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The twenty-five sheets total
+**19,256,368 bytes (18.36 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
+first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
+factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
+so they stand a little larger beside them.

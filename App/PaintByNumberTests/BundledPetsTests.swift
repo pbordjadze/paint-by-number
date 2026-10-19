@@ -5,14 +5,14 @@ import Testing
 
 /// The guardians' sheets that ship in the app (`Resources/pet-<id>.webp`): each loads through the
 /// app's own loader with the v2 contract, and together they stay inside the budget in
-/// `docs/marginarium-pets.md`. The Moon's drawing is withheld, so no sheet is named for it.
+/// `docs/marginarium-pets.md`.
 @MainActor
 struct BundledPetsTests {
     private static let guardians = [
-        "baba-yaga", "balanchine", "bible-school-teacher", "bulat-okudzhava", "child-at-bedtime",
-        "dinotopia", "emily-dickinson", "enchanted-workshop", "glassblower", "hedge-witch", "medea", "nutcracker",
-        "open-source-enthusiast", "originality", "painter", "pirosmani", "robber-girl", "scholar",
-        "snow-queen", "storybook",
+        "astrologer", "baba-yaga", "balanchine", "bartimaeus", "bible-school-teacher", "bulat-okudzhava",
+        "child-at-bedtime", "dinotopia", "emily-dickinson", "enchanted-workshop", "glassblower", "hedge-witch",
+        "lotte-reiniger", "medea", "moon", "nutcracker", "open-source-enthusiast", "originality", "painter", "pirosmani",
+        "robber-girl", "scholar", "sen-no-rikyu", "snow-queen", "storybook",
     ]
 
     private var sheets: [URL] {
@@ -56,7 +56,7 @@ struct BundledPetsTests {
         }
     }
 
-    /// What the contents page keeps of all twenty drawings on a 3x iPhone (72 pt asks for 234 px):
+    /// What the contents page keeps of all its drawings on a 3x iPhone (72 pt asks for 234 px):
     /// each drawing's ten frames at the cell's own size, 1.5 MiB, in place of its 13.4 MiB sheet.
     @Test func theContentsPageKeepsEachDrawingsFramesAndNotItsSheet() async throws {
         let cache = SpriteAtlasCache()
@@ -86,6 +86,6 @@ struct BundledPetsTests {
             #expect(size <= 1 << 20, "\(url.lastPathComponent) is over 1 MiB")
             total += size
         }
-        #expect(total <= 20 << 20)
+        #expect(total <= 24 << 20)
     }
 }

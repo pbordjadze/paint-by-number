@@ -8998,7 +8998,7 @@
       }
     },
     "lamp.team.storytellers.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart, Lotte)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart, Scherenschnitt)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10006,13 +10006,13 @@
       }
     },
     "lamp.moon.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of The Moon's egg: the guardian hasn't hatched yet, its first drawing withheld",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Moon",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Moon, still an egg: its first try went back to the drawing board"
+            "value" : "The Moon"
           }
         }
       }
@@ -10606,13 +10606,13 @@
       }
     },
     "lamp.bartimaeus.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Bart's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Bart",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bart, still an egg"
+            "value" : "Bart"
           }
         }
       }
@@ -11434,13 +11434,13 @@
       }
     },
     "lamp.astrologer.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of The Astrologer's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Astrologer",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Astrologer, still an egg"
+            "value" : "The Astrologer"
           }
         }
       }
@@ -11554,31 +11554,31 @@
       }
     },
     "lamp.sen-no-rikyu.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Rikyū's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Rikyū",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rikyū, still an egg"
+            "value" : "Rikyū"
           }
         }
       }
     },
     "lamp.lotte-reiniger.name" : {
-      "comment" : "The Marginarium, Who is Who: its name, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lotte"
+            "value" : "Scherenschnitt"
           }
         }
       }
     },
     "lamp.lotte-reiniger.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11590,7 +11590,7 @@
       }
     },
     "lamp.lotte-reiniger.portrait" : {
-      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11602,7 +11602,7 @@
       }
     },
     "lamp.lotte-reiniger.guards" : {
-      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11614,7 +11614,7 @@
       }
     },
     "lamp.lotte-reiniger.believes" : {
-      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11626,7 +11626,7 @@
       }
     },
     "lamp.lotte-reiniger.loves" : {
-      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11638,7 +11638,7 @@
       }
     },
     "lamp.lotte-reiniger.watchesFor" : {
-      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11650,7 +11650,7 @@
       }
     },
     "lamp.lotte-reiniger.looksUpTo" : {
-      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11662,7 +11662,7 @@
       }
     },
     "lamp.lotte-reiniger.happiestWhen" : {
-      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11674,13 +11674,13 @@
       }
     },
     "lamp.lotte-reiniger.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Lotte's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lotte, still an egg"
+            "value" : "Scherenschnitt"
           }
         }
       }
