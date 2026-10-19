@@ -802,7 +802,7 @@ private struct ProgressGroup: View {
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         HStack(spacing: 8) {
-            ProgressRing(session: session)
+            PaintedRing(session: session)
                 .frame(width: 18, height: 18)
             if showsTitle {
                 Text(title)
@@ -841,7 +841,7 @@ private struct QuietRingButton: View {
     var body: some View {
         let percent = Int(session.shownFraction * 100)
         Button(action: action) {
-            ProgressRing(session: session)
+            PaintedRing(session: session)
                 .frame(width: diameter * 0.5, height: diameter * 0.5)
                 .frame(width: diameter - 14, height: diameter - 14)
         }
@@ -858,7 +858,7 @@ private struct QuietRingButton: View {
 }
 
 /// The progress ring, filled in paint: each color's painted share of the areas, in palette order.
-private struct ProgressRing: View {
+private struct PaintedRing: View {
     let session: PaintingSession
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
