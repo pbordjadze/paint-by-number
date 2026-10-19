@@ -166,7 +166,22 @@ struct DecoderHostileInputTests {
     }
 
     @Test func sharedChunkCountsAndLengthsAreBounded() throws {
-        let data = SharedPaintingTests.file([SharedPaintingTests.meta(), SharedPaintingTests.body(try SharedPaintingTests.templateBytes())])
+        let template = try SharedPaintingTests.templateBytes()
+        let data = SharedPaintingTests.file([
+            SharedPaintingTests.meta(),
+            SharedPaintingTests.body(method: SharedPainting.Compression.lzfse.rawValue,
+                                     length: UInt32(template.count), SharedPaintingTests.reversed(template)),
+        ])
+        // Prove this fixture reaches the decompressor before corrupting its envelope.
+        var validCalls = 0
+        let decoded = try SharedPainting(encoded: data) { method, stream, length in
+            validCalls += 1
+            #expect(method == .lzfse)
+            #expect(length == template.count)
+            return SharedPaintingTests.reversed(stream)
+        }
+        #expect(validCalls == 1)
+        #expect(try decoded.template == Template(encoded: template))
         // Header count, META length, TMPL length, and TMPL's decompressed length.
         let templateHeader = 24 + SharedPaintingTests.meta().payload.count
         var rng = SplitMix64(seed: 0x5A1E_BAD)
@@ -178,7 +193,7 @@ struct DecoderHostileInputTests {
                 #expect(throws: Template.CodingError.self, "offset \(offset), case \(iteration)") {
                     try SharedPainting(encoded: bytes) { _, _, _ in calls += 1; return Data() }
                 }
-                #expect(calls == 0)
+                #expect(calls == 0, "offset \(offset), case \(iteration)")
             }
         }
     }
