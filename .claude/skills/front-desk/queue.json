@@ -3,75 +3,54 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "4bcffa0 red on one iPhone UI test (a test-helper race, not a bug); the fix is in CI, then one push merges it with Refine line-split and Recolor",
-  "state": "red"
- },
- {
-  "key": "refine-line-split",
-  "order": "1",
-  "title": "Refine: lines split colors",
-  "detail": "Green; in the batch (compile check green), waiting on the iPhone fix run",
-  "state": "green"
- },
- {
-  "key": "recolor",
-  "order": "2",
-  "title": "Recolor in Refine",
-  "detail": "Green at 21f36b2; merges with the fix and line-split in one push",
-  "state": "green"
- },
- {
-  "key": "ci-tags",
-  "order": "3",
-  "title": "CI tags guard",
-  "detail": "Green at cd27a17; joins the batch to main",
-  "state": "green"
+  "detail": "e935f3a: Refine line-split, Recolor, the iPhone test fix and the CI-tags guard in one push",
+  "state": "main running"
  },
  {
   "key": "ux-refinements",
-  "order": "4",
+  "order": "1",
   "title": "Your UX picks",
   "detail": "Both batches built (21 picks + Music row + Stop)",
   "state": "in CI"
  },
  {
   "key": "nightfall",
-  "order": "5",
+  "order": "2",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
   "state": "in CI"
  },
  {
   "key": "quiet-painting",
-  "order": "6",
+  "order": "3",
   "title": "Quiet painting",
   "detail": "Built; Codex review clean; rebases after your UX picks. SideStore only",
   "state": "ready"
  },
  {
   "key": "toolbar-tips",
-  "order": "7",
+  "order": "4",
   "title": "Toolbar tips as cards",
   "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
   "state": "ready"
  },
  {
   "key": "codex-decoder-fuzz",
-  "order": "8",
+  "order": "5",
   "title": "Decoder stress tests",
   "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
   "state": "ready soon"
  },
  {
   "key": "pets-oct18",
-  "order": "9",
+  "order": "6",
   "title": "Five new pet drawings",
   "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
   "state": "ready"
  },
  {
   "key": "caroline-guardians",
-  "order": "10",
+  "order": "7",
   "title": "New guardians: Hope, Eno, Maynard",
   "detail": "claude/keynes-guardian 81466f9a (stacks caroline-guardians): eggs and hatches. Runs after the pets branch, not alongside it (shared generated files).",
   "state": "ready"
