@@ -79,3 +79,16 @@ What it means for the Marginarium when the people join its cast (nothing is buil
 — Paul
 
 </details>
+
+## The guardians, gently in the app (Caroline's idea, with Paul's addition)
+
+Caroline's idea, as Paul told the front desk on October 18, 2026:
+
+> Marginarium — an idea for how it could be gently in the main app— a second acknowledgements
+> tab, with like, "these are our creative and artistic inspirations and how they contributed" —
+> very minimally, just paying some homage—and maybe a user could pick one to be like, a mascot in
+> the main app sometimes — part of the finished painting animation, even (this is further down the
+> backlog and Paul's addition to Caroline's idea) as the guide for the tips! This is ambitious but
+> log this idea down. Idea here was Caroline's.
+
+— Caroline, via Paul

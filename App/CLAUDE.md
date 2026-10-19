@@ -87,9 +87,10 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
-  the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
+  the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `EmptyGalleryView` (its sketch paints
+  itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -143,11 +144,12 @@ synchronized folder would bundle it into the app.
   most voices share). Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer` keeps only its pet's frames, never a sheet. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 2,
+  Colophon, Codex is Pip, the Moon is the Moon), and a test fails on an unmapped speaker. Chapter 2,
   The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
-  budget in `docs/marginarium-pets.md` with Dino's (Paul made it himself in the Codex app; Who's
-  Who shows it); the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
+  budget in `docs/marginarium-pets.md` with Dino's (his own design, repainted in the family style)
+  and the four drawn on October 18 (the Astrologer, Bart, Rikyū, Scherenschnitt; Who's Who shows
+  them); the Moon hatched on October 18 with her second drawing. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
   (`MarginariumWhosWhoView`, from the contents and a drawing's name) shows `MarginariumCast`: the
@@ -159,7 +161,7 @@ synchronized folder would bundle it into the app.
   with Madeline Lengle"): Madeleine, the Bible School Teacher, with her drawing, id, seat on the
   Hearth and signature in the chapters. A guardian's drawing
   is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
-  egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
+  egg's, "<name>, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
   own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
   (the drawing's `caption` is its VoiceOver label there, never shown).
   `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
@@ -242,6 +244,9 @@ synchronized folder would bundle it into the app.
   `MakingOfDemoView`) make the show of a portrait photograph and hold it at a moment (the paints
   step's rings, the ink step's sparks, the template step's stars); `MakingOfUITests` turns the
   setting on with `-playsMakingOf YES`, starts a painting, and skips the show into it.
+  `paint-nightfall` (with `-dark`) is `paint-finish` by Moon, ready at the night's fullest; with
+  `gallery-empty` (ready once its sketch has painted itself) it is in `NightfallUITests`, whose
+  frames (stretched by Debug's `-introSlowdown <factor>`) are the two animations to look at.
 
 ## Painting screen
 
@@ -258,15 +263,25 @@ synchronized folder would bundle it into the app.
   canvas also gets direct `PaintingCanvas` calls.
 - Finishing: the last fill lingers; once it has landed (and the stroke that painted it has
   ended), `CanvasView.finish` eases the camera out to the whole painting, which shines as the
-  camera lands (Reduce Motion: a cut after a pause, no shine). A flight to fit follows layout
+  camera lands (Reduce Motion: a cut after a pause, no shine). In SideStore and Debug builds
+  (`#if UNRELEASED`, until Paul has seen it) night then falls over the painting, about 3 s once
+  the shine has swept (`Nightfall`, `CanvasView.finale`; the Lamplit Table's round
+  `pieces/intro-animation` on `claude/vibe-factory`, which put it here rather than at launch): dusk
+  settles, a gold crescent is inked into its top corner and two stars come out, then it lifts; by
+  Sun only a warm evening light; no sound; Reduce Motion fades one still; VoiceOver hears "The moon
+  rises over your painting." Its layers follow the camera and go with an undo or a replay. A flight to fit follows layout
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
   `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
-  progress badge then names no color (nothing is on the brush); during a replay its ring and
+  progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
+  completion bar names the painting only when the badge doesn't (`badgeShowsTitle`, from the top
+  bar's row that fits); during a replay its ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
-  the saved progress stay whole).
+  the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
+  canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
+  bar and More, holds Stop (`CanvasView.stopReplay`).
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -291,7 +306,9 @@ synchronized folder would bundle it into the app.
   mode, VoiceOver, Switch Control and a tip at Photo or More keep the whole bar. On regular widths
   the bar's buttons (`glassButtonDiameter`) and the swatches (`PaletteMetrics.scaled`) are a
   quarter bigger, always. `paint-quiet` (with `-dark`) is its screenshot.
-- Tips: the bench's moments are in `PaintChromeState` (see Tips below).
+- Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
+  lie on the page as a card with no arrow, just inside its top as it first fits
+  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -301,8 +318,8 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Music, a plain
-  list: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sound's Music,
+  one row like Paper's: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
   time zone and Moon the rest; Paul's calls; a theme, never tied to the dark appearance or the
   paper; decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
@@ -342,11 +359,15 @@ where they live.
   `donations.count`); every tip's rules also read `TipSwitch.tipsOn`. A tip has no button but TipKit's
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
-  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
-  three at buttons of a navigation bar, the gear, + and Refine, and `.cardTip(…)` for the two on
-  the shelf's cards, Hold and the time-lapse, where TipKit's popover tip found nothing to anchor
-  to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip has no TipKit
-  display limit, which would retire it from under that view: `TipDesk` says it once; a card
+  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `TipDesk.pageTip`,
+  a card on the page, for Zoom, Drag and Pencil; `.barTips(…)`, a card with no arrow at the top of
+  the screen, under the bar, for the three about its buttons, the gear, + and Refine (a popover
+  from the button covered it on iOS 26; Paul, October 18: a card, as on the page), and
+  `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
+  tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
+  these, the bar's and the page's have no
+  TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
+  it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card
   anchors its tip only while it is mostly in view). A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
@@ -370,8 +391,8 @@ where they live.
   switch back to on, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the
   scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
   `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
-  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
-  bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (the tip about a navigation
+  bar button, under the bar), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
   them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
   (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
@@ -503,7 +524,8 @@ Conventions).
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
-  (`GalleryFilter`, `@SceneStorage("galleryFilter")`) and `.searchable` make a `GalleryQuery`
+  (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it
+  filters) and `.searchable` make a `GalleryQuery`
   (`Library.inProgress`/`readyToPaint`/`finished` list favorites first; the gallery's sections are
   these three, a painting nobody has painted on being ready to paint, not in progress, and
   `GalleryCounts` is the subtitle that counts them); `TitleSearch.matches` needs every query
@@ -524,7 +546,7 @@ Conventions).
   picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
   picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search; "Browse All…" presents the full system picker, the way in when the embedded
+  albums and search; "Browse All…" (the toolbar, iPad only) presents the full system picker, the way in when the embedded
   one doesn't take taps.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
@@ -564,9 +586,10 @@ Conventions).
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
-  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
-  `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
-  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter (after the Pen) divides
+  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
+  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
+  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter, out of the toolbar for now
+  (`RefineView.offersSplitter`, Paul, October 18: a Pen line recolors the sides it parts instead), divides
   an area's color where it goes and draws no line (a split, below; dashed while the finger is
   down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
@@ -575,7 +598,17 @@ Conventions).
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
   what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
-  out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
+  out (`EditFills`). Colors (after Fill; SideStore and Debug builds only for now, `#if UNRELEASED`,
+  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then the
+  five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
+  Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
+  there or by a tap on its area taking a new color from the system `ColorPicker` (its family
+  along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
+  (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
+  a repaint of the color the last one repainted replaces it (the picker still moving is one step
+  of the history); paints made alike merge and a note says so. New colors cross-fade in (none
+  under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
+  12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.

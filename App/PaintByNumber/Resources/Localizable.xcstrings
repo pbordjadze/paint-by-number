@@ -21,6 +21,10 @@
       "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
       "extractionState" : "manual"
     },
+    "Color" : {
+      "comment" : "Refine screen, Colors: VoiceOver label of the color picker that gives the paint picked a new color",
+      "extractionState" : "manual"
+    },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
@@ -335,10 +339,6 @@
     },
     "Check your connection and try again, or share it another way. What you wrote is kept." : {
       "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
-      "extractionState" : "manual"
-    },
-    "Choose a photo with a clear subject and good light. It becomes your canvas." : {
-      "comment" : "Instruction above the photo picker in the create flow",
       "extractionState" : "manual"
     },
     "Choose Photo" : {
@@ -685,8 +685,8 @@
       "comment" : "Create flow: label of the slider for the number of colors in the palette",
       "extractionState" : "manual"
     },
-    "Comparison of photo and template" : {
-      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
+    "Comparison of photo and painting" : {
+      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its painting (or its line art)",
       "extractionState" : "manual"
     },
     "Couldn’t Create Painting" : {
@@ -810,13 +810,13 @@
       }
     },
     "create.error.renderFailed" : {
-      "comment" : "Error when the template can't be generated from the photo",
+      "comment" : "Error when the painting can't be made from the photo",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The template couldn’t be created. Try different settings."
+            "value" : "The painting couldn’t be made. Try different settings."
           }
         }
       }
@@ -989,8 +989,8 @@
         }
       }
     },
-    "Creating template…" : {
-      "comment" : "Status shown while the template is first generated from the photo",
+    "Making the painting…" : {
+      "comment" : "Status shown while a new painting is first made from the photo",
       "extractionState" : "manual"
     },
     "Curve" : {
@@ -999,10 +999,6 @@
     },
     "Custom" : {
       "comment" : "Create flow chip above the sliders once a slider was moved: the settings are the painter's own, not the suggestion; also the chip's VoiceOver value",
-      "extractionState" : "manual"
-    },
-    "Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper." : {
-      "comment" : "Footer under the Paper and Line Weight pickers in Settings",
       "extractionState" : "manual"
     },
     "Delete" : {
@@ -1440,7 +1436,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings."
+            "value" : "Its file is damaged. It can be made again from its photo."
           }
         }
       }
@@ -1452,7 +1448,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings. Painted areas can’t be recovered, so it will start fresh."
+            "value" : "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh."
           }
         }
       }
@@ -1464,7 +1460,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged, and the original photo isn’t available to regenerate it."
+            "value" : "Its file is damaged, and its photo is gone, so it can’t be made again."
           }
         }
       }
@@ -1536,7 +1532,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The painting couldn’t be read just now. Nothing was changed: go back and open it again."
+            "value" : "It couldn’t be opened just now. Nothing changed: go back and try again."
           }
         }
       }
@@ -1733,6 +1729,18 @@
         }
       }
     },
+    "Garden" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: soil, mushroom, moss, sage and birch colors",
+      "extractionState" : "manual"
+    },
+    "Golden Hour" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: warm, as the last hour of sun",
+      "extractionState" : "manual"
+    },
+    "Great Wave" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Hokusai's The Great Wave off Kanagawa",
+      "extractionState" : "manual"
+    },
     "Haptics" : {
       "comment" : "Settings toggle for vibration feedback while painting",
       "extractionState" : "manual"
@@ -1865,6 +1873,10 @@
         }
       }
     },
+    "Looks" : {
+      "comment" : "Refine screen, Colors: VoiceOver label of the row of looks (Moonlit, Starry Night, …) that each change every paint of the painting",
+      "extractionState" : "manual"
+    },
     "Make a Shape Its Own" : {
       "comment" : "Title of the tip at the Fill tool of Refine, shown after the first line is drawn",
       "extractionState" : "manual"
@@ -1949,6 +1961,10 @@
         }
       }
     },
+    "Moonlit" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: darker, cool and quiet, as by moonlight",
+      "extractionState" : "manual"
+    },
     "More for Each Painting" : {
       "comment" : "Title of the tip at a painting in the gallery about its touch-and-hold menu",
       "extractionState" : "manual"
@@ -1959,6 +1975,10 @@
     },
     "Painting Length sets how long new pages take. The Making-of shows a photo becoming its page." : {
       "comment" : "Message of the tip titled Worth a Look Here, at the Painting Length setting; the Making-of is a setting that plays a show after Start Painting",
+      "extractionState" : "manual"
+    },
+    "Pastel" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: light and soft",
       "extractionState" : "manual"
     },
     "Peek at the Photo" : {
@@ -1976,6 +1996,90 @@
     "Refine, top right, lets you draw or erase lines and fill shapes. It is optional." : {
       "comment" : "Message of the tip titled Shape the Lines Yourself; Refine is the optional step of the New Painting screen, a button at its top right",
       "extractionState" : "manual"
+    },
+    "refine.colors.look.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of a look's chip (Moonlit, Starry Night, …)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lays this look on every paint."
+          }
+        }
+      }
+    },
+    "refine.colors.paint" : {
+      "comment" : "Refine screen, Colors: the paint picked to take a new color, by its number; the argument is the number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint %lld"
+          }
+        }
+      }
+    },
+    "refine.colors.paint.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of a paint's swatch; once picked, a color picker changes its color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picks this paint to give it a new color."
+          }
+        }
+      }
+    },
+    "refine.colors.photo.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of the Photo chip, which takes every look and new color out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puts the photo’s own colors back."
+          }
+        }
+      }
+    },
+    "refine.hint.colors" : {
+      "comment" : "Refine screen: how Colors works (a look changes every paint of the painting; a paint picked, from the row of paints or by a tap on its area, takes a new color from the color picker), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a look for every paint, or tap a paint or an area to give it a new color."
+          }
+        }
+      }
+    },
+    "refine.note.alike" : {
+      "comment" : "Refine screen toast after a look or a new color in Colors made some paints too alike to tell apart: they became one paint, with one number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors that came out alike share a number now."
+          }
+        }
+      }
+    },
+    "refine.note.notRecolored" : {
+      "comment" : "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Those colors couldn’t be changed."
+          }
+        }
+      }
     },
     "Replay Painting plays your page back from the first fill." : {
       "comment" : "Message of the tip titled Watch It Again; Replay Painting plays a finished painting back from its first fill",
@@ -2045,6 +2149,10 @@
       "comment" : "Send Template sheet's button: makes the .moonlight file and opens the share sheet",
       "extractionState" : "manual"
     },
+    "Sepia" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: brown ink on old paper",
+      "extractionState" : "manual"
+    },
     "Settings and Tips" : {
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
@@ -2057,8 +2165,20 @@
       "comment" : "Title of the tip at a finished painting in the gallery about sharing its time-lapse",
       "extractionState" : "manual"
     },
+    "Similar colors too" : {
+      "comment" : "Refine screen, Colors: a switch; on, the paints of about the same hue as the paint picked take its new color along with it",
+      "extractionState" : "manual"
+    },
     "Skip" : {
       "comment" : "Button over the making-of show that ends it and opens the new painting",
+      "extractionState" : "manual"
+    },
+    "Starry Night" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Van Gogh's The Starry Night",
+      "extractionState" : "manual"
+    },
+    "Strength" : {
+      "comment" : "Refine screen, Colors: the slider that softens the look chosen, from none of it to all of it (its label, and VoiceOver's)",
       "extractionState" : "manual"
     },
     "Tap + to turn one of your photos, or a sample, into a page to paint." : {
@@ -2139,6 +2259,10 @@
     },
     "Watch the preview change. Reset to Suggested returns every slider to where it started." : {
       "comment" : "Message of the tip titled You Can Always Go Back; Reset to Suggested is the New Painting button that returns the sliders to the suggested settings",
+      "extractionState" : "manual"
+    },
+    "Water Lilies" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Monet's Water Lilies",
       "extractionState" : "manual"
     },
     "Waves hello." : {
@@ -3053,10 +3177,6 @@
       "comment" : "Settings picker choosing what a new painting's preview shows beside the photo (Painting or Line Art)",
       "extractionState" : "manual"
     },
-    "Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them." : {
-      "comment" : "Footer under the Settings › Preview picker",
-      "extractionState" : "manual"
-    },
     "paintingLength.detailed" : {
       "comment" : "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting",
       "extractionState" : "manual",
@@ -3689,16 +3809,20 @@
       "comment" : "Title of the alert for renaming a painting",
       "extractionState" : "manual"
     },
-    "Rendering frames" : {
-      "comment" : "Label of the progress bar while the time-lapse movie is rendered",
-      "extractionState" : "manual"
-    },
     "Replay" : {
       "comment" : "Accessibility label of the replay button in the completion bar",
       "extractionState" : "manual"
     },
+    "Stop" : {
+      "comment" : "Accessibility label of the completion bar's button that stops the replay playing, in the Replay button's place",
+      "extractionState" : "manual"
+    },
     "Replay Painting" : {
       "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
+      "extractionState" : "manual"
+    },
+    "Stop Replay" : {
+      "comment" : "Menu item on the painting screen, in Replay Painting's place while the replay plays: stops it and shows the painting whole",
       "extractionState" : "manual"
     },
     "Reset to Suggested" : {
@@ -4314,7 +4438,7 @@
       }
     },
     "settings.section.painting" : {
-      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
+      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color, Paper and Line Weight",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4401,12 +4525,16 @@
       "comment" : "Header of the Settings section for sounds and haptics while painting (Haptics shows only on devices with haptics)",
       "extractionState" : "manual"
     },
+    "Sound" : {
+      "comment" : "Header of the Settings section for sounds on devices without haptics (iPad), where it holds only Sounds",
+      "extractionState" : "manual"
+    },
     "Sounds" : {
       "comment" : "Settings toggle for sound feedback while painting",
       "extractionState" : "manual"
     },
     "Music" : {
-      "comment" : "Settings: the header of the section that lists the music painting plays, Sun, Moon and Auto (also the list's own label, which VoiceOver may read)",
+      "comment" : "Settings: the label of the row that picks the music painting plays, Sun, Moon or Auto (a menu, like Paper)",
       "extractionState" : "manual"
     },
     "sky.sun" : {
@@ -4433,6 +4561,30 @@
         }
       }
     },
+    "nightfall.moon" : {
+      "comment" : "VoiceOver announcement as a painting is finished by night: dusk falls over it and a crescent and two stars come out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The moon rises over your painting."
+          }
+        }
+      }
+    },
+    "nightfall.evening" : {
+      "comment" : "VoiceOver announcement as a painting is finished by day: a warm evening light settles over it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evening light falls over your painting."
+          }
+        }
+      }
+    },
     "sky.auto" : {
       "comment" : "Choice of Settings › Music: Sun by day and Moon by night, by the painter's own clock",
       "extractionState" : "manual",
@@ -4446,7 +4598,7 @@
       }
     },
     "settings.sky.footer" : {
-      "comment" : "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
+      "comment" : "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -8854,7 +9006,7 @@
       }
     },
     "lamp.team.storytellers.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart, Lotte)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart, Scherenschnitt)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9862,13 +10014,13 @@
       }
     },
     "lamp.moon.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of The Moon's egg: the guardian hasn't hatched yet, its first drawing withheld",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Moon",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Moon, still an egg: its first try went back to the drawing board"
+            "value" : "The Moon"
           }
         }
       }
@@ -10462,13 +10614,13 @@
       }
     },
     "lamp.bartimaeus.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Bart's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Bart",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bart, still an egg"
+            "value" : "Bart"
           }
         }
       }
@@ -11290,13 +11442,13 @@
       }
     },
     "lamp.astrologer.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of The Astrologer's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Astrologer",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Astrologer, still an egg"
+            "value" : "The Astrologer"
           }
         }
       }
@@ -11410,31 +11562,31 @@
       }
     },
     "lamp.sen-no-rikyu.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Rikyū's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Rikyū",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rikyū, still an egg"
+            "value" : "Rikyū"
           }
         }
       }
     },
     "lamp.lotte-reiniger.name" : {
-      "comment" : "The Marginarium, Who is Who: its name, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lotte"
+            "value" : "Scherenschnitt"
           }
         }
       }
     },
     "lamp.lotte-reiniger.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11446,7 +11598,7 @@
       }
     },
     "lamp.lotte-reiniger.portrait" : {
-      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11458,7 +11610,7 @@
       }
     },
     "lamp.lotte-reiniger.guards" : {
-      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11470,7 +11622,7 @@
       }
     },
     "lamp.lotte-reiniger.believes" : {
-      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11482,7 +11634,7 @@
       }
     },
     "lamp.lotte-reiniger.loves" : {
-      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11494,7 +11646,7 @@
       }
     },
     "lamp.lotte-reiniger.watchesFor" : {
-      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11506,7 +11658,7 @@
       }
     },
     "lamp.lotte-reiniger.looksUpTo" : {
-      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11518,7 +11670,7 @@
       }
     },
     "lamp.lotte-reiniger.happiestWhen" : {
-      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Lotte",
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11530,13 +11682,13 @@
       }
     },
     "lamp.lotte-reiniger.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of Lotte's egg: the guardian hasn't hatched yet",
+      "comment" : "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Scherenschnitt",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lotte, still an egg"
+            "value" : "Scherenschnitt"
           }
         }
       }

@@ -28,15 +28,15 @@ struct MarginariumSpeakersTests {
         }
     }
 
-    @Test func theTableMapsToPetsThatShipAndTheMoonHasNone() {
+    @Test func theTableMapsToPetsThatShip() {
         for (speaker, id) in MarginariumSpeakers.petIDs {
             #expect(MarginariumPet.named(id) != nil, "\(speaker) → \(id)")
         }
         #expect(Set(MarginariumSpeakers.petIDs.values).count == MarginariumSpeakers.petIDs.count, "One pet per speaker")
-        #expect(MarginariumSpeakers.withoutPet == ["the Moon", "Bart"])
+        #expect(MarginariumSpeakers.withoutPet.isEmpty)
+        #expect(MarginariumSpeakers.petIDs["Bart"] == "bartimaeus")
         #expect(Set(MarginariumSpeakers.petIDs.keys).isDisjoint(with: MarginariumSpeakers.withoutPet))
-        #expect(MarginariumPet.named("moon") == nil)
-        #expect(Bundle.main.url(forResource: "pet-moon", withExtension: "webp") == nil)
+        #expect(MarginariumSpeakers.petIDs["the Moon"] == "moon")
         #expect(MarginariumSpeakers.petIDs["Codex"] == "pip")
     }
 
@@ -55,7 +55,7 @@ struct MarginariumSpeakersTests {
             ["Emily", "the Child at Bedtime"]: ["emily-dickinson", "child-at-bedtime"],
             ["Medea", "Niko", "George"]: ["medea", "pirosmani", "balanchine"],
             ["the Baba Yaga", "the narrator"]: ["baba-yaga", "colophon"],
-            ["the Moon"]: [],
+            ["the Moon"]: ["moon"],
         ]
         for (speakers, ids) in expected {
             let note = try #require(notes.first { $0.speakers == speakers }, "No note is signed by \(speakers)")
@@ -78,7 +78,7 @@ struct MarginariumSpeakersTests {
         let notes = try #require(document.chapters.first).blocks
         #expect(notes.map(\.speakers) == [["George"], ["the Moon", "George"], []])
         #expect(MarginariumSpeakers.pets(for: notes[0]).map(\.id) == ["balanchine"])
-        #expect(MarginariumSpeakers.pets(for: notes[1]).map(\.id) == ["balanchine"])
+        #expect(MarginariumSpeakers.pets(for: notes[1]).map(\.id) == ["moon", "balanchine"])
         #expect(MarginariumSpeakers.pets(for: notes[2]).isEmpty)
     }
 }

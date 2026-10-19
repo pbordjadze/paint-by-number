@@ -9,8 +9,8 @@ import UIKit
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
 /// samples in a scrolling column beside it, in two sections: paintings, then photographs. The
-/// picker's own top bar reaches the albums and search; "Browse All…" presents the full system
-/// picker, a way in that doesn't depend on the embedded one taking taps.
+/// picker's own top bar reaches the albums and search; "Browse All…" (iPad's toolbar) presents
+/// the full system picker, a way in that doesn't depend on the embedded one taking taps.
 ///
 /// iPhone doesn't embed the picker (`embedsPicker`): on Paul's iPhone its grid never took a tap,
 /// though its bar did, after three layouts that each picked photos on the simulator (Sept 30,
@@ -60,11 +60,6 @@ struct PhotoSourceView: View {
         // cannot arbitrate between its pan and an in-process ancestor's pan across that
         // boundary, so a drag that started on the picker moved neither.
         VStack(alignment: .leading, spacing: 14) {
-            Text("Choose a photo with a clear subject and good light. It becomes your canvas.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, horizontalPadding + 4)
             if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
@@ -80,12 +75,15 @@ struct PhotoSourceView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
-                    .help("Browse all photos and albums")
-                    // Give the full picker its own presenter rather than the inline picker's
-                    // ancestor: Browse All once stayed on the photo step with no sheet.
-                    .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
+            // iPhone's Photos pane is Choose Photo, the same picker: no second way to it here.
+            if embedsPicker {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
+                        .help("Browse all photos and albums")
+                        // Give the full picker its own presenter rather than the inline picker's
+                        // ancestor: Browse All once stayed on the photo step with no sheet.
+                        .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
+                }
             }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
@@ -178,6 +176,8 @@ struct PhotoSourceView: View {
                 .tint(Theme.signature)
                 .controlSize(.large)
                 .accessibilityIdentifier("choose-photo")
+                // The full picker's presenter on iPhone, as Browse All's button is on iPad.
+                .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, horizontalPadding)
@@ -328,8 +328,14 @@ private struct SampleTile: View {
                     .shadow(color: .black.opacity(0.35), radius: 4, y: 1)
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // Starts above the caption and is dark by its first line: white spray or sky
+                    // behind a title (The Great Wave's) left it unreadable.
                     .background(alignment: .bottom) {
-                        LinearGradient(colors: [.clear, .black.opacity(0.68)], startPoint: .top, endPoint: .bottom)
+                        LinearGradient(
+                            stops: [.init(color: .clear, location: 0), .init(color: .black.opacity(0.5), location: 0.45),
+                                    .init(color: .black.opacity(0.72), location: 1)],
+                            startPoint: .top, endPoint: .bottom)
+                            .padding(.top, -28)
                     }
             }
             .background(Theme.surface)

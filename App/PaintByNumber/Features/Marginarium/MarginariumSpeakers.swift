@@ -28,10 +28,12 @@ enum MarginariumSpeakers {
         "Bulat": "bulat-okudzhava",
         "Originality": "originality",
         "the Bible School Teacher": "bible-school-teacher",
+        "Bart": "bartimaeus",
+        "the Moon": "moon",
     ]
 
-    /// Voices with no drawing to show: the Moon's was withheld, and Bart hasn't hatched.
-    static let withoutPet: Set<String> = ["the Moon", "Bart"]
+    /// Voices with no drawing to show: none since the Moon hatched (October 18), kept for the next.
+    static let withoutPet: Set<String> = []
 
     /// The pet of each guardian who signed the note, once each, in the order they speak.
     static func pets(for note: MarginariumDocument.Block) -> [MarginariumPet] {

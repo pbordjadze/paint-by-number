@@ -50,7 +50,6 @@ nonisolated struct ZoomTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.smallMisses) { $0.donations.count >= 2 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// After 15 single fills: one stroke paints many areas.
@@ -63,7 +62,6 @@ nonisolated struct DragPaintTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.singleTaps) { $0.donations.count >= 15 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// The first Pencil touch on the page: the Pencil paints while fingers navigate.
@@ -76,7 +74,6 @@ nonisolated struct PencilTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.pencilStrokes) { $0.donations.count >= 1 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// Configuration, the Tips switch, and the bridge from what the painter does to TipKit donations
@@ -166,7 +163,7 @@ enum PaintTips {
     }
 
     /// The painter dismissed the tip that has the turn in a way TipKit doesn't see (a tap outside
-    /// the popover of `barTip`): it stays closed, as it does when TipKit's own popover is dismissed.
+    /// the popover of `cardTip`): it stays closed, as it does when TipKit's own popover is dismissed.
     static func closed(_ id: TipID) {
         guard desk.turn == id else { return }
         desk.stop(id)

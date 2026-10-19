@@ -2,6 +2,7 @@
 import CoreGraphics
 import PaintCore
 import PencilKit
+import QuartzCore
 import SwiftUI
 import os
 import simd
@@ -16,6 +17,10 @@ import simd
 /// - `paint-complete`: finished painting (line art dissolved)
 /// - `paint-finish`: everything but one area painted, zoomed ~3× onto it; after 1.5 s it is painted,
 ///   and the camera eases out to the whole painting (ready once it lands)
+/// - `paint-nightfall`: `paint-finish` by Moon (Settings › Music), ready once night has fallen
+///   over the finished painting, the crescent inked and both stars out (`Nightfall`, SideStore and
+///   Debug builds); `-introSlowdown <factor>` stretches the finish and the night for UI tests
+/// - `paint-nightfall-dark`: `paint-nightfall` in dark appearance
 /// - `paint-dark`: `paint-progress` for dark appearance
 /// - `paint-dark-paper`: `paint-progress` on dark paper (the Paper setting at Dark)
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
@@ -214,7 +219,12 @@ private final class Demo {
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
         case "paint-complete", "paint-complete-long-text":
             paint(fraction: 1)
-        case "paint-finish":
+        case "paint-finish", "paint-nightfall", "paint-nightfall-dark":
+            if scenario.hasPrefix("paint-nightfall") {
+                UserDefaults.standard.register(defaults: [SettingsKey.sky: SkySetting.moon.rawValue])
+                let slowdown = UserDefaults.standard.double(forKey: "introSlowdown")
+                if slowdown > 0 { fillDurationScale = Float(slowdown) }
+            }
             // Everything but a mid-sized area near the middle, zoomed in on it.
             let middle = SIMD2(Float(t.width), Float(t.height)) * 0.5
             let last = t.regions.indices.filter { t.regions[$0].inscribedRadius > 6 }
@@ -412,7 +422,7 @@ private final class Demo {
             }
             return
         }
-        if scenario == "paint-finish", let last = lastArea {
+        if scenario == "paint-finish" || scenario.hasPrefix("paint-nightfall"), let last = lastArea {
             try? await Task.sleep(for: .seconds(1.5))
             session.paint([last], from: Self.center(session.template, last), animated: true)
             // Ready once the camera has landed on the whole painting.
@@ -427,6 +437,20 @@ private final class Demo {
                 try? await Task.sleep(for: .milliseconds(50))
             }
             Log.demo.notice("demo paint-finish: relative zoom \(zoom, privacy: .public)")
+            #if UNRELEASED
+            if scenario.hasPrefix("paint-nightfall") {
+                // Ready at the night's fullest: it falls once the shine has swept.
+                while clock.now < deadline + .seconds(20) {
+                    if let canvas = session.canvas as? CanvasView, let peak = canvas.nightfallPeak {
+                        let wait = peak - CACurrentMediaTime()
+                        if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+                        break
+                    }
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
+                Log.demo.notice("demo paint-nightfall: night at its fullest")
+            }
+            #endif
             return
         }
         if scenario == "paint-replay" {

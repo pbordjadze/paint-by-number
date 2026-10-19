@@ -36,6 +36,23 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(returned, "The edge swipe didn't return to the gallery")
     }
 
+    /// A finished painting has no Hint. While it plays back (`paint-replay`, slowed) Undo is off and
+    /// Replay's slot holds Stop, which shows the painting whole and brings Replay back.
+    @MainActor
+    func testReplayCanBeStopped() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "paint-replay"]
+        app.launch()
+        let stop = app.buttons["Stop"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 60), "The replay's bar has no Stop")
+        XCTAssertFalse(app.buttons["Hint"].exists, "A finished painting offers a hint")
+        XCTAssertFalse(app.buttons["Undo"].isEnabled, "Undo can take back a fill during the replay")
+        attachScreenshot(of: app, named: "replay-stop")
+        stop.tap()
+        XCTAssertTrue(app.buttons["Replay"].waitForExistence(timeout: 5), "Stop didn't bring Replay back")
+        XCTAssertTrue(app.buttons["Undo"].isEnabled, "Undo stayed off after the replay")
+    }
+
     /// The top bar's icon buttons act (Undo takes back painted areas).
     @MainActor
     func testUndoButtonActs() throws {

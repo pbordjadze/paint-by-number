@@ -57,6 +57,40 @@ struct EditPaintTests {
         #expect(u == plain)
     }
 
+    /// Paul, October 18: "colors should get recalculated when a new line is drawn". Each side's
+    /// photo within the book's tolerance of the sky's paint, so each alone keeps it, but the two
+    /// told apart: the sides part, the box taking its photo's color.
+    @Test func sidesThePhotoTellsApartPart() throws {
+        let t = Self.scene
+        let sky = try TemplateEditorTests.region(t, 100, 5)
+        let own = t.palette[Int(t.regions[sky].colorIndex)].oklab
+        let inside = own + SIMD3(-EditWork.splitShadeStep, 0, 0), outside = own + SIMD3(0.004, 0, 0)
+        let tolerance = TemplateEditor.paintTolerance(t.palette)
+        let nearest = { (c: SIMD3<Float>) in t.palette.map { ColorScience.distance($0.oklab, c) }.min()! }
+        #expect(nearest(inside) == ColorScience.distance(own, inside) && nearest(inside) <= tolerance,
+                "alone, the box's photo keeps the sky's paint")
+        let paints: [TemplateEditor.Paint] = [.init(at: Self.inBox, color: inside), .init(at: SIMD2(100, 5), color: outside)]
+        let (u, outcome) = try TemplateEditorTests.apply(Self.draw(paints), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.recolored == 1)
+        let box = try TemplateEditorTests.region(u, Self.inBox.x, Self.inBox.y), rest = try TemplateEditorTests.region(u, 100, 5)
+        #expect(u.regions[rest].colorIndex == t.regions[sky].colorIndex)
+        #expect(u.regions[box].colorIndex != u.regions[rest].colorIndex)
+        #expect(ColorScience.distance(u.palette[Int(u.regions[box].colorIndex)].oklab, inside) <= SegmentationParameters.jnd)
+        #expect(u.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        #expect(try TemplateEditorTests.apply(Self.draw(paints), to: t).0 == u)
+    }
+
+    /// Sides whose photos are closer than `splitShadeStep` keep the one paint.
+    @Test func sidesThePhotoHoldsAsOneKeepTheirPaint() throws {
+        let t = Self.scene
+        let sky = try TemplateEditorTests.region(t, 100, 5)
+        let own = t.palette[Int(t.regions[sky].colorIndex)].oklab
+        let paints: [TemplateEditor.Paint] = [
+            .init(at: Self.inBox, color: own + SIMD3(-0.012, 0, 0)), .init(at: SIMD2(100, 5), color: own + SIMD3(0.012, 0, 0))]
+        let (u, outcome) = try TemplateEditorTests.apply(Self.draw(paints), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.recolored == 0 && u.palette == t.palette)
+    }
+
     @Test func aPaintOutsideThePiecesChangesNothing() throws {
         let t = Self.scene
         let (u, outcome) = try TemplateEditorTests.apply(
@@ -87,6 +121,23 @@ struct EditPaintTests {
         // Other edits come back as they were.
         let fill = Edit.fill(at: Self.inBox, color: magenta)
         #expect(TemplateEditor.painted(fill, on: t, photo: photo) == fill)
+    }
+
+    /// A sliver across a large bounding box can fall between the points of the sampling grid
+    /// (retro review, October 18): its color is still read, every pixel then.
+    @Test func aThinSliverStillHasItsColorRead() throws {
+        var t = Self.scene
+        let r = 0, other = UInt32(1)
+        for y in 0..<t.height { for x in 0..<t.width { t.regionMap[x, y] = x == y + 1 ? UInt32(r) : other } }
+        t.regions[r].bounds = PixelBounds(minX: 0, minY: 0, maxX: Int32(t.width - 1), maxY: Int32(t.height - 1))
+        var pixels = [UInt8](repeating: 255, count: t.width * t.height * 4)
+        for y in 0..<t.height where y + 1 < t.width {
+            pixels.replaceSubrange(((y * t.width) + y + 1) * 4..<((y * t.width) + y + 1) * 4 + 3, with: [230, 0, 200])
+        }
+        let photo = RGBAImage(width: t.width, height: t.height, pixels: pixels)
+        let magenta = ColorScience.encodedToOKLab(SIMD3(230, 0, 200) / 255, space: .sRGB)
+        let color = try #require(LineEdit.photoColor(ofRegion: r, in: t, image: photo))
+        #expect(ColorScience.distance(color, magenta) < 0.01)
     }
 
     /// A line with paints crossing an edge just beside a junction passes through the junction; a
@@ -125,5 +176,19 @@ struct EditPaintTests {
         #expect(try JSONDecoder().decode(Edit.self, from: old) == .draw(points: [SIMD2(1, 2), SIMD2(30, 40)], closed: false, paints: nil))
         let written = String(decoding: try JSONEncoder().encode(Self.draw(nil)), as: UTF8.self)
         #expect(!written.contains("paints"), "a draw without paints is written as before")
+    }
+
+    /// A line's paints past `maximumPoints` are ignored, as its points are: a paint there, which
+    /// would recolor the piece it lies in, changes nothing.
+    @Test func paintsPastTheCapAreIgnored() throws {
+        let line: [SIMD2<Float>] = [SIMD2(15, -4), SIMD2(18.5, 30.25), SIMD2(15, 71)]
+        let nowhere = [TemplateEditor.Paint](
+            repeating: TemplateEditor.Paint(at: SIMD2(-50, -50), color: SIMD3(0.5, 0, 0)), count: TemplateEditor.maximumPoints)
+        let past = TemplateEditor.Paint(at: SIMD2(5, 30), color: SIMD3(0.3, 0.2, -0.2))
+        let capped = try TemplateEditor.apply(.draw(points: line, paints: nowhere + [past]), to: Self.scene).template
+        let bare = try TemplateEditor.apply(.draw(points: line, paints: []), to: Self.scene).template
+        let painted = try TemplateEditor.apply(.draw(points: line, paints: [past]), to: Self.scene).template
+        #expect(capped == bare)
+        #expect(painted != bare, "the paint past the cap would have recolored its piece")
     }
 }

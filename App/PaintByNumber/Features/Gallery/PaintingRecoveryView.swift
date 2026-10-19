@@ -45,6 +45,9 @@ struct PaintingRecoveryView: View {
                             .buttonStyle(.glassProminent)
                             .tint(Theme.signature)
                     }
+                    Button("Back to Gallery", action: onClose)
+                        .buttonStyle(.glass)
+                    // Last and set apart: never beside the way out.
                     if let artwork {
                         // Glass draws its label in the tint, whatever the role.
                         Button("Delete Painting", systemImage: "trash", role: .destructive) { confirmsDelete = true }
@@ -55,9 +58,8 @@ struct PaintingRecoveryView: View {
                             } message: {
                                 DeleteConfirmationMessage(artwork: artwork)
                             }
+                            .padding(.top, 20)
                     }
-                    Button("Back to Gallery", action: onClose)
-                        .buttonStyle(.glass)
                 }
             }
         }
@@ -89,20 +91,20 @@ struct PaintingRecoveryView: View {
         case .damaged(canRegenerate: true) where artwork != nil:
             if artwork?.isStarted == true {
                 text = String(localized: "gallery.recovery.damaged.regenerableFresh",
-                              defaultValue: "Its file is damaged. Regenerate it from the original photo with the same settings. Painted areas can’t be recovered, so it will start fresh.",
+                              defaultValue: "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh.",
                               comment: "Recovery screen text for a damaged painting that has paint on it and can be regenerated from its photo")
             } else {
                 text = String(localized: "gallery.recovery.damaged.regenerable",
-                              defaultValue: "Its file is damaged. Regenerate it from the original photo with the same settings.",
+                              defaultValue: "Its file is damaged. It can be made again from its photo.",
                               comment: "Recovery screen text for a damaged painting that can be regenerated from its photo")
             }
         case .unreadable:
             text = String(localized: "gallery.recovery.unreadable",
-                          defaultValue: "The painting couldn’t be read just now. Nothing was changed: go back and open it again.",
+                          defaultValue: "It couldn’t be opened just now. Nothing changed: go back and try again.",
                           comment: "Recovery screen text when a painting's files exist but couldn't be read (a passing storage error)")
         case .damaged:
             text = String(localized: "gallery.recovery.damaged.unavailable",
-                          defaultValue: "Its file is damaged, and the original photo isn’t available to regenerate it.",
+                          defaultValue: "Its file is damaged, and its photo is gone, so it can’t be made again.",
                           comment: "Recovery screen text for a damaged painting whose original photo is gone")
         }
         if didFail {

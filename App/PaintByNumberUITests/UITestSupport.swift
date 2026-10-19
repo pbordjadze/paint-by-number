@@ -47,7 +47,8 @@ extension XCTestCase {
     /// A tap that changed nothing is tapped once more. On the iPad simulator of GitHub's macOS 26
     /// image of October 13, 2026, a tap in Settings' tests is now and then lost: a switch never
     /// moves, or the gallery's Settings button opens nothing, while the app's main thread is free
-    /// and its tree shows nothing in the way (the earlier image and the iPhone never lost one). The
+    /// and its tree shows nothing in the way (the earlier image never lost one; the iPhone lost one in
+    /// each of the Making-of switch test's two tries on main, October 18). The
     /// whole screen, system overlays included, is attached as `lost-tap-<what>` for the diagnosis,
     /// and the second tap is an activity the test's log shows.
     @MainActor
@@ -63,7 +64,9 @@ extension XCTestCase {
         let target = NSPredicate(format: "value == %@", on ? "1" : "0")
         let tap = { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
         tap()
-        if waitFor(toggle, toMatch: target, timeout: 3) { return true }
+        // CI's simulator has taken 7 s to report a tap that landed (main, fbdcd8c): a tap that
+        // landed late is not lost, and tapping again would flip the switch back.
+        if waitFor(toggle, toMatch: target, timeout: 10) { return true }
         retapIfLost(toggle.label, tap)
         return waitFor(toggle, toMatch: target, timeout: 5)
     }
@@ -84,9 +87,11 @@ extension XCTestCase {
     func settingSlider(_ setting: String, in app: XCUIApplication) -> XCUIElement {
         let slider = app.sliders[setting]
         let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
-        if !slider.exists, chooser.exists {
+        // A tap as the full resolution lands is lost (main, 4bcffa0: twice, each within half a
+        // second of it), so the chooser is tapped until its slider shows.
+        for _ in 0..<3 where !slider.exists && chooser.exists {
             chooser.buttons[setting].tap()
-            _ = slider.waitForExistence(timeout: 5)
+            if slider.waitForExistence(timeout: 5) { break }
         }
         return slider
     }
