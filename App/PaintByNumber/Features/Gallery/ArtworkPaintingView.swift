@@ -75,6 +75,10 @@ struct ArtworkPaintingView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        // Diagnostic (claude/start-handoff-hang): what invalidates this body, for ci/collect.sh.
+        let _ = Self._logChanges()
+        #endif
         ZStack {
             Theme.paper.ignoresSafeArea()
             if let autosaver, hasLanded {

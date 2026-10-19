@@ -106,6 +106,10 @@ struct PaintView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        // Diagnostic (claude/start-handoff-hang): what invalidates this body, for ci/collect.sh.
+        let _ = Self._logChanges()
+        #endif
         GeometryReader { geo in
             if canvasUnavailable {
                 CanvasUnavailableView(onClose: onClose)

@@ -148,6 +148,10 @@ struct PaletteBar: View {
     private static let darkInkLuminance: Float = 0.36
 
     var body: some View {
+        #if DEBUG
+        // Diagnostic (claude/start-handoff-hang): what invalidates this body, for ci/collect.sh.
+        let _ = Self._logChanges()
+        #endif
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
