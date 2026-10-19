@@ -12,6 +12,10 @@ name: CI
 #   ipad-ui  Debug build, the other UI tests
 #   iphone   Debug build, screenshots, unit and UI tests: on the shipping branch, main, or on
 #            request (workflow_dispatch's `iphone`, or `[iphone]` in the pushed commit's message)
+#   compile  `[compile]` in a branch's pushed commit's message (never main's), instead of the three above: the Debug
+#            build (app and both test targets), the Release build and its check and the warnings
+#            gate, on one runner and with no simulator; `core` only builds and checks the strings.
+#            A branch's quick check before it takes a full slot.
 # iPad is the primary device, its work split in two so a push waits for about half of it. The
 # shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and a
 # SideStore source listing the latest builds (branch `sidestore`).
@@ -37,6 +41,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  COMPILE: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '1' || '0' }}
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
@@ -63,17 +68,23 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p out
-          swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+          if [[ "$COMPILE" == 1 ]]; then BUILD=(build --build-tests); else BUILD=(test); fi
+          swift "${BUILD[@]}" 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+      - name: Compiler warnings
+        # A new warning fails the job (main has none); the test build compiles every target.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: ci/warnings.sh out/warnings.txt out/core-test.log
       - name: Feedback relay tests
         # The Worker behind Give Feedback (feedback-relay/) against a mocked GitHub; Ubuntu's node 18.
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.COMPILE != '1' }}
         shell: bash
         run: |
           apt-get install -y -qq --no-install-recommends nodejs > /dev/null
           node --test feedback-relay/worker.test.js
       - name: Quality regression
         # Also after failed tests: the metrics help explain them.
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.COMPILE != '1' }}
         shell: bash
         run: |
           set -o pipefail
@@ -85,7 +96,7 @@ jobs:
       - name: Making-of show (Python reference)
         # Sources/MakingOf's tests replay the fixtures these write; this fails when a fixture is not
         # what the Python makes now, or the Python's own cases break (no node or ffmpeg needed).
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.COMPILE != '1' }}
         shell: bash
         run: python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'
       - name: String catalog
@@ -105,7 +116,7 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
-    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || 'iPhone — build, screenshots, tests' }}
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || 'iPhone — build, screenshots, tests' }}
     runs-on: macos-26
     # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
     # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
@@ -114,8 +125,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # iphone as the header says; the report job asks the same.
-        job: ${{ fromJSON((github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
+        # compile and iphone as the header says; the report job asks the same.
+        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2 }
@@ -128,10 +139,12 @@ jobs:
             ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
             ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
             iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
+            compile) plan=(DEVICE=ipad SHOTS=0 RELEASE=1 ONLY= SKIP=) ;;
           esac
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
       - name: Start simulator
         id: sim
+        if: env.COMPILE != '1'
         run: |
           # The first boot on a fresh runner takes minutes; it overlaps the build.
           read -r _ UDID MODEL RUNTIME < <(ci/simulators.sh "$DEVICE")
@@ -146,12 +159,14 @@ jobs:
           # arm64 only: a generic destination builds every simulator architecture, and the
           # runners are Apple silicon. No index store: nothing here reads it.
           set -o pipefail
+          mkdir -p out
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -IDEBuildingContinueBuildingAfterErrors=YES \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
       - name: Wait for simulator
         id: boot
+        if: env.COMPILE != '1'
         run: |
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b > /dev/null
           # A UI test's `XCUIDevice.shared.appearance` changes nothing on a simulator whose
@@ -160,6 +175,7 @@ jobs:
           xcrun simctl ui "${{ steps.sim.outputs.udid }}" appearance light || true
       - name: Demo caches key
         id: demo-key
+        if: env.COMPILE != '1'
         # Everything that makes the line-art maps and templates the demos and tests seed
         # (ci/demo_caches.sh): a change to any of it starts from empty caches.
         env:
@@ -168,6 +184,7 @@ jobs:
           echo "key=demo-caches-${{ matrix.job }}-${{ steps.sim.outputs.runtime }}-$INPUTS" >> "$GITHUB_OUTPUT"
       - name: Restore demo caches
         id: demo-cache
+        if: env.COMPILE != '1'
         uses: actions/cache/restore@v5
         with:
           path: build/demo-caches
@@ -190,7 +207,7 @@ jobs:
         id: warmup
         # Without screenshots before them, the UI tests would make the fixed pictures' templates
         # and the previews' maps inside their own waits: on empty caches these scenarios do.
-        if: env.SHOTS == '0' && steps.demo-cache.outputs.cache-hit != 'true'
+        if: env.SHOTS == '0' && env.COMPILE != '1' && steps.demo-cache.outputs.cache-hit != 'true'
         run: |
           ci/screenshots.sh "$APP" build/warm-up "$DEVICE" "${{ steps.sim.outputs.udid }}" \
             gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180
@@ -222,14 +239,20 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
           ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
+      - name: Compiler warnings
+        id: warnings
+        # A new warning in the app, its tests or PaintCore fails the job (main has none).
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ci/warnings.sh out/warnings.txt out/app-build.log out/release-build.log
       - name: Nickname v2 platform contract (macOS)
+        id: nickname
         if: ${{ !cancelled() && matrix.job == 'ipad' }}
         run: |
           set -o pipefail
           swift test --filter ColorNicknameV2Tests 2>&1 | tee out/nickname-v2-test.log | tail -60
       - name: Pipeline benchmark (Apple silicon)
         id: bench
-        if: ${{ !cancelled() && env.RELEASE == '1' }}
+        if: ${{ !cancelled() && env.RELEASE == '1' && env.COMPILE != '1' }}
         run: |
           # Only when PaintCore differs from the shipping branch (on the shipping branch itself:
           # from the previous commit), so a feature branch's later app-only commits keep
@@ -267,7 +290,8 @@ jobs:
           OUTCOMES: >-
             simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
             screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
-            release=${{ steps.release.outcome }} benchmark=${{ steps.bench.outcome }}
+            release=${{ steps.release.outcome }} warnings=${{ steps.warnings.outcome }} nickname-v2=${{ steps.nickname.outcome }}
+            benchmark=${{ steps.bench.outcome }}
         run: |
           mkdir -p out
           echo "$OUTCOMES" > out/outcomes.txt
@@ -378,8 +402,12 @@ jobs:
           {
             echo "commit: ${GITHUB_SHA}"
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            python3 ../src/ci/report.py . core=${{ needs.core.result }} ipad=${{ needs.apple.result }} \
-              ipad-ui=${{ needs.apple.result }} iphone="$IPHONE" ipa=${{ needs.ipa.result }}
+            if [[ "$COMPILE" == 1 ]]; then
+              JOBS=(compile=${{ needs.apple.result }})
+            else
+              JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE")
+            fi
+            python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }}
           } > STATUS.md
           cat STATUS.md
           echo "${GITHUB_SHA}" > COMMIT

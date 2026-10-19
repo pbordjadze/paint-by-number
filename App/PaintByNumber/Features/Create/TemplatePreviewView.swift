@@ -101,6 +101,8 @@ struct TemplatePreviewView: View {
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        // Refine's button goes while the preview is enlarged, and its tip with it.
+        .barTips(.newPaintingRefine, active: !isEnlarged)
         // Shrink Preview is the way back from the enlarged preview. There is none while Start
         // Painting saves: leaving then would open the painting from whichever flow closes next.
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
@@ -139,7 +141,8 @@ struct TemplatePreviewView: View {
         }
         #endif
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("Try Again", action: start)
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text(startError ?? "")
         }
@@ -237,7 +240,6 @@ struct TemplatePreviewView: View {
                 .accessibilityValue(
                     model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
-                .barTip(.newPaintingRefine)
             }
         }
         if offersEnlarging && !isEnlarged {
@@ -337,7 +339,7 @@ struct TemplatePreviewView: View {
                     ProgressView(value: model.progress)
                         .frame(width: 64)
                     if model.preview == nil {
-                        Text("Creating template…")
+                        Text("Making the painting…")
                     } else {
                         Text("Updating…")
                     }

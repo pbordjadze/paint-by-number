@@ -80,30 +80,30 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(shows(picker, "Regular"), "Choosing Regular didn't change the picker: \(describe(picker))")
     }
 
-    /// Settings › Music lists Sun, Moon and Auto, starts on Auto, keeps the choice and says when
-    /// Auto brings the Sun and the Moon, by the painter's clock.
+    /// Settings › Music offers Sun, Moon and Auto in one row, starts on Auto, keeps the choice and
+    /// says when Auto brings the Sun and the Moon, by the painter's clock.
     @MainActor
-    func testMusicListChangesTheChoice() throws {
+    func testMusicPickerChangesTheChoice() throws {
         let app = openSettings()
-        let moon = app.buttons["Moon"], auto = app.buttons["Auto"]
-        // Row by row, top to bottom: an iPhone shows only some of them at once, and scrolling
-        // straight to Auto carried Sun off the top.
-        for name in ["Sun", "Moon", "Auto"] {
-            let row = app.buttons[name]
-            scroll(app, to: row)
-            XCTAssertTrue(row.exists, "Settings › Music has no \(name)")
-        }
-        XCTAssertTrue(auto.isSelected, "Music doesn't start on Auto")
-        // The footer sits right under Auto, so scrolling to it keeps Moon and Auto in view.
+        let picker = app.descendants(matching: .any)["settings-music"]
+        scroll(app, to: picker)
+        XCTAssertTrue(picker.exists, "Settings has no Music picker")
+        XCTAssertTrue(describe(picker).contains("Auto"), "Music doesn't start on Auto: \(describe(picker))")
         let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
         scroll(app, to: footer)
         XCTAssertTrue(footer.exists, "Music's footer doesn't say when Auto brings the Sun and the Moon")
-        moon.tap()
-        XCTAssertTrue(waitUntil { moon.isSelected && !auto.isSelected }, "Choosing Moon didn't select it alone")
+        picker.tap()
+        for choice in ["Sun", "Moon", "Auto"] {
+            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Music picker has no \(choice)")
+        }
+        app.buttons["Moon"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Moon"), "Choosing Moon didn't change the picker: \(describe(picker))")
         attachScreenshot(of: app, named: "settings-music-moon")
         // The choice is stored in the simulator's defaults: back to Auto for the other tests.
-        auto.tap()
-        XCTAssertTrue(waitUntil { auto.isSelected && !moon.isSelected }, "Choosing Auto didn't select it")
+        picker.tap()
+        XCTAssertTrue(app.buttons["Auto"].waitForExistence(timeout: 5))
+        app.buttons["Auto"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Auto"), "Choosing Auto didn't change the picker: \(describe(picker))")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps

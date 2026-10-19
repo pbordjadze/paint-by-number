@@ -84,6 +84,18 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
 
     init() {}
 
+    /// Every field may be missing, so a field added later keeps what an earlier build stored.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        lastShown = try c.decodeIfPresent(Date.self, forKey: .lastShown)
+        didSomethingSince = try c.decodeIfPresent(Bool.self, forKey: .didSomethingSince) ?? true
+        lastSeen = try c.decodeIfPresent(Date.self, forKey: .lastSeen)
+        shownThisSession = try c.decodeIfPresent(Int.self, forKey: .shownThisSession) ?? 0
+        day = try c.decodeIfPresent(String.self, forKey: .day)
+        shownToday = try c.decodeIfPresent(Int.self, forKey: .shownToday) ?? 0
+        firstPaintingLeft = try c.decodeIfPresent(Int.self, forKey: .firstPaintingLeft)
+    }
+
     /// The calendar day of `date` as a key (`2026-10-17`).
     static func dayKey(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
@@ -112,7 +124,9 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
             }
         }
         if !id.isHowTo, let lastShown {
-            if now.timeIntervalSince(lastShown) < Self.minimumGap { return .tooSoon }
+            // A clock set back is no reason to wait (`continuesSession` reads it so too).
+            let gap = now.timeIntervalSince(lastShown)
+            if gap >= 0, gap < Self.minimumGap { return .tooSoon }
             if !didSomethingSince { return .nothingDone }
         }
         return nil
@@ -187,7 +201,20 @@ nonisolated struct TipHistory: Codable, Equatable, Sendable {
     private(set) var firstFinishedAt: Date?
     private(set) var opened: [String] = []
 
+    private enum CodingKeys: String, CodingKey {
+        case tipsOnSince, hasFilled, firstFinishedAt, opened
+    }
+
     init() {}
+
+    /// Every field may be missing, so a field added later keeps what an earlier build stored.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        tipsOnSince = try c.decodeIfPresent(Date.self, forKey: .tipsOnSince)
+        hasFilled = try c.decodeIfPresent(Bool.self, forKey: .hasFilled) ?? false
+        firstFinishedAt = try c.decodeIfPresent(Date.self, forKey: .firstFinishedAt)
+        opened = try c.decodeIfPresent([String].self, forKey: .opened) ?? []
+    }
 
     mutating func tipsTurnedOn(at date: Date) {
         if tipsOnSince == nil { tipsOnSince = date }

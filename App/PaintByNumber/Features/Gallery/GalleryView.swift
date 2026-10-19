@@ -43,21 +43,21 @@ struct GalleryView: View {
                     // A painting nobody has painted on is ready to paint, not in progress.
                     let active = library.inProgress(matching: query)
                     if !active.isEmpty {
-                        section("In Progress", count: active.count) {
+                        section("In Progress") {
                             ForEach(active) { card($0) }
                         }
                     }
                     let ready = library.readyToPaint(matching: query)
                     let preparing = shownPlaceholders
                     if !ready.isEmpty || !preparing.isEmpty {
-                        section("Ready to Paint", count: ready.count + preparing.count, tip: .shelfStarter) {
+                        section("Ready to Paint", tip: .shelfStarter) {
                             ForEach(preparing) { PlaceholderCard(placeholder: $0) }
                             ForEach(ready) { card($0) }
                         }
                     }
                     let finished = library.finished(matching: query)
                     if !finished.isEmpty {
-                        section("Finished", count: finished.count) {
+                        section("Finished") {
                             ForEach(finished) { card($0) }
                         }
                     }
@@ -142,7 +142,7 @@ struct GalleryView: View {
     private var shownDraft: CreateDraft? { query.isActive ? nil : library.drafts.current }
 
     /// Nothing to list, not even a draft: the invitation to the first painting shows instead.
-    private var isBare: Bool { library.isEmpty && library.drafts.current == nil }
+    private var isBare: Bool { library.isBare }
 
     @ViewBuilder
     private var narrowedEmptyState: some View {
@@ -175,18 +175,13 @@ struct GalleryView: View {
     /// `tip` is a tip inline under the header while it has the turn (a popover would have nothing to
     /// point at).
     private func section<Content: View>(
-        _ title: LocalizedStringKey, count: Int, tip: TipID? = nil, @ViewBuilder content: () -> Content
+        _ title: LocalizedStringKey, tip: TipID? = nil, @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title).font(.display(.title2))
-                Text(count, format: .number)
-                    .font(.display(.title3, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 4)
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
+            // No count beside it: the subtitle under the gallery's title counts every section.
+            Text(title).font(.display(.title2))
+                .padding(.horizontal, 4)
+                .accessibilityAddTraits(.isHeader)
 
             if let tip, PaintTips.desk.turn == tip {
                 GentleTipView(id: tip)
@@ -219,10 +214,6 @@ struct GalleryView: View {
         }
         .buttonStyle(PressableCardStyle())
         .cardTip(tips(of: artwork))
-        // The grid builds cards beyond the screen's edge too: a tip waits for its card to be mostly
-        // in view, or it would point off the screen.
-        .onScrollVisibilityChange(threshold: 0.6) { visible in PaintTips.desk.anchor(tips(of: artwork), present: visible) }
-        .onDisappear { PaintTips.desk.anchor(tips(of: artwork), present: false) }
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery
@@ -304,11 +295,13 @@ struct GalleryView: View {
             Label("Share", systemImage: "square.and.arrow.up")
         }
         Divider()
-        Button("Restart", systemImage: "arrow.counterclockwise") {
-            PaintTips.used(.shelfHold)
-            restarting = artwork
+        // Nothing to clear on a painting nobody has painted on.
+        if artwork.isStarted {
+            Button("Restart", systemImage: "arrow.counterclockwise") {
+                PaintTips.used(.shelfHold)
+                restarting = artwork
+            }
         }
-        .disabled(!artwork.isStarted)
         deleteButton(for: artwork)
     }
 

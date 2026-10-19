@@ -328,7 +328,32 @@ struct TipPacingTests {
         #expect(refusal(pacing, .benchDrag, at: 3.5) == nil)
     }
 
+    /// A clock set back (by hand, or by the network's time) puts the last hint in the future: no
+    /// reason to wait for it.
+    @Test func aClockSetBackIsNoReasonToWait() {
+        var pacing = TipPacing()
+        shownAndDone(&pacing, .benchZoom, at: 60)
+        #expect(refusal(pacing, .benchDrag, at: 61) == .tooSoon)
+        #expect(refusal(pacing, .benchDrag, at: 30) == nil)
+    }
+
     // MARK: Keeping state
+
+    /// What an earlier build kept lacks the fields added since: they take their defaults and the
+    /// rest is kept, never started over.
+    @Test func keptStateWithoutSomeFieldsKeepsTheRest() throws {
+        let pacing = try JSONDecoder().decode(TipPacing.self, from: Data(#"{"shownToday":2,"day":"2026-10-17"}"#.utf8))
+        #expect(pacing.shownToday == 2)
+        #expect(pacing.day == "2026-10-17")
+        #expect(pacing.didSomethingSince)
+        #expect(pacing.shownThisSession == 0)
+        #expect(pacing.lastShown == nil)
+
+        let history = try JSONDecoder().decode(TipHistory.self, from: Data(#"{"hasFilled":true}"#.utf8))
+        #expect(history.hasFilled)
+        #expect(history.opened.isEmpty)
+        #expect(history.tipsOnSince == nil)
+    }
 
     @Test func theStateSurvivesBeingKept() throws {
         var pacing = TipPacing()
@@ -438,8 +463,13 @@ struct TipPacingTests {
     }
 
     @Test func theTipsAtNavigationBarButtonsAreTheGearThePlusAndRefine() {
-        let bar = TipID.allCases.filter { $0.hangsFromBar }
+        let bar = TipID.allCases.filter { $0.liesUnderTheBar }
         #expect(Set(bar) == [.shelfSettings, .shelfNewPainting, .newPaintingRefine])
+    }
+
+    @Test func theTipsOnThePageAreZoomDragAndPencil() {
+        let page = TipID.allCases.filter { $0.liesOnThePage }
+        #expect(Set(page) == [.benchZoom, .benchDrag, .benchPencil])
     }
 
     @Test func theTipsOnCardsAreTheHoldAndTheTimeLapse() {

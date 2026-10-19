@@ -22,6 +22,8 @@ struct SettingsView: View {
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
+    /// iPad and the simulator have no haptics: nothing to switch, and the header says Sound alone.
+    private let supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
     private enum Destination: Hashable { case acknowledgements }
     private static let paintingLengthRow = "painting-length"
@@ -41,13 +43,6 @@ struct SettingsView: View {
                         Toggle(isOn: $autoAdvance) {
                             SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
                         }
-                    } header: {
-                        // Not the "Painting" key: that one names a picture, this one the activity.
-                        Text(String(localized: "settings.section.painting", defaultValue: "Painting",
-                                    comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
-                    }
-
-                    Section {
                         Picker(selection: $paperAppearance) {
                             ForEach(PaperAppearance.allCases) { appearance in
                                 Text(appearance.name).tag(appearance)
@@ -64,8 +59,10 @@ struct SettingsView: View {
                             SwiftUI.Label("Line Weight", systemImage: "lineweight")
                         }
                         .accessibilityIdentifier("settings-line-weight")
-                    } footer: {
-                        Text("Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper.")
+                    } header: {
+                        // Not the "Painting" key: that one names a picture, this one the activity.
+                        Text(String(localized: "settings.section.painting", defaultValue: "Painting",
+                                    comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color, Paper and Line Weight"))
                     }
 
                     Section {
@@ -89,9 +86,8 @@ struct SettingsView: View {
                         Text("Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like.")
                     }
 
-                    Section("Sound & Haptics") {
-                        // iPad and the simulator have no haptics: nothing to switch.
-                        if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
+                    Section {
+                        if supportsHaptics {
                             Toggle(isOn: $haptics) {
                                 SwiftUI.Label("Haptics", systemImage: "hand.tap")
                             }
@@ -99,29 +95,39 @@ struct SettingsView: View {
                         Toggle(isOn: $sounds) {
                             SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                         }
-                    }
-
-                    // A theme of its own, apart from the appearance and the paper: two music choices
-                    // and Auto, as a plain list (Paul: "a list of two music options").
-                    Section {
+                        // A theme of its own, apart from the appearance and the paper: Sun, Moon or
+                        // Auto, one row like Paper's (Paul, October 18, from the plain list he
+                        // first asked for).
                         Picker(selection: $sky) {
                             ForEach(SkySetting.allCases) { choice in
                                 Text(choice.name).tag(choice)
                             }
                         } label: {
-                            Text("Music")
+                            SwiftUI.Label("Music", systemImage: "music.note")
                         }
-                        .pickerStyle(.inline)
-                        .labelsHidden()
+                        .accessibilityIdentifier("settings-music")
                     } header: {
-                        Text("Music")
+                        if supportsHaptics {
+                            Text("Sound & Haptics")
+                        } else {
+                            Text("Sound")
+                        }
                     } footer: {
                         Text(String(localized: "settings.sky.footer",
                                     defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
-                                    comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
+                                    comment: "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
                     }
 
+                    // Painting Length last, so its footer sits under it.
                     Section {
+                        Picker(selection: $previewStyle) {
+                            ForEach(PreviewStyle.allCases) { style in
+                                Text(style.name).tag(style)
+                            }
+                        } label: {
+                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
+                        }
+                        .accessibilityIdentifier("settings-preview")
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)
@@ -139,19 +145,6 @@ struct SettingsView: View {
                     } footer: {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")
-                    }
-
-                    Section {
-                        Picker(selection: $previewStyle) {
-                            ForEach(PreviewStyle.allCases) { style in
-                                Text(style.name).tag(style)
-                            }
-                        } label: {
-                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
-                        }
-                        .accessibilityIdentifier("settings-preview")
-                    } footer: {
-                        Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
                     }
 
                     #if UNRELEASED
