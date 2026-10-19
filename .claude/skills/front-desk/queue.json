@@ -3,63 +3,49 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "e935f3a green but for an iPhone runner fault; its one re-run is going. Next push: Toolbar tips + your UX picks",
+  "detail": "6722f203: your UX picks and Toolbar tips (one push)",
   "state": "main running"
  },
  {
-  "key": "ux-refinements",
-  "order": "1",
-  "title": "Your UX picks",
-  "detail": "Green at 67b719c, Lamplit Table 5–0; merges with Toolbar tips",
-  "state": "green"
- },
- {
   "key": "nightfall",
-  "order": "2",
+  "order": "1",
   "title": "Intro animations",
   "detail": "Green; waiting for your pick on the two cards",
   "state": "green"
  },
  {
   "key": "quiet-painting",
-  "order": "3",
+  "order": "2",
   "title": "Quiet painting",
   "detail": "Built; Codex review clean; rebases after your UX picks. SideStore only",
   "state": "ready"
  },
  {
-  "key": "toolbar-tips",
-  "order": "4",
-  "title": "Toolbar tips as cards",
-  "detail": "Re-running at c5443d7 after its review fixed two lost-tip bugs",
-  "state": "in CI"
- },
- {
   "key": "codex-decoder-fuzz",
-  "order": "5",
+  "order": "3",
   "title": "Decoder stress tests",
   "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
   "state": "ready soon"
  },
  {
   "key": "pets-oct18",
-  "order": "6",
+  "order": "4",
   "title": "Five new pet drawings",
   "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
   "state": "ready"
  },
  {
   "key": "caroline-guardians",
-  "order": "7",
+  "order": "5",
   "title": "New guardians: Hope, Eno, Maynard",
   "detail": "claude/keynes-guardian 81466f9a (stacks caroline-guardians): eggs and hatches. Runs after the pets branch, not alongside it (shared generated files).",
   "state": "ready"
  },
  {
   "key": "palette-first-reveal",
-  "order": "8",
+  "order": "6",
   "title": "Palette first reveal",
   "detail": "Small robustness fix from the UX picks review (cfa215b, local)",
-  "state": "waiting"
+  "state": "in CI"
  }
 ]
