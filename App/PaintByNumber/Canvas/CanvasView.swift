@@ -38,7 +38,8 @@ enum PencilAction {
 /// the replay.
 ///
 /// Finishing the painting (`finish`): its last fill lingers, the camera then eases out to the
-/// whole painting, and a shine sweeps all of it as the camera lands. A flight to the whole
+/// whole painting, and a shine sweeps all of it as the camera lands; in SideStore and Debug
+/// builds night then falls over it for about three seconds (`Nightfall`). A flight to the whole
 /// painting follows layout changes on the way (the completion bar replacing the palette, a
 /// rotation) instead of stopping.
 final class CanvasView: UIView, PaintingCanvas {
@@ -140,6 +141,14 @@ final class CanvasView: UIView, PaintingCanvas {
     private var finishTask: Task<Void, Never>?
     /// The painting was finished by a stroke still under way: the finish flies once it ends.
     private var finishAwaitsStroke = false
+    #if UNRELEASED
+    /// Night falling over the painting just finished (`Nightfall`), while it plays.
+    private var nightfall: Nightfall?
+    private var nightfallTask: Task<Void, Never>?
+    /// When the latest night over the finished painting was at its fullest (media time; demos
+    /// wait for it).
+    private(set) var nightfallPeak: CFTimeInterval?
+    #endif
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -883,6 +892,9 @@ final class CanvasView: UIView, PaintingCanvas {
         replayTask?.cancel()
         // The replay ends with a finish of its own.
         cancelFinish()
+        #if UNRELEASED
+        endNightfall()
+        #endif
         let painted = session.progress.log.map { Int($0.region) }
         isReplaying = true
         // Undo and the bar's Stop follow at once, not at the replay's first tick.
@@ -991,7 +1003,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private func finish() {
         cancelFinish()
         guard abs(camera.zoom - 1) > Self.finishFitSlack else {
-            shine(color: -1, after: max(0.6, fillsLand - now()))
+            finale(after: max(0.6, fillsLand - now()))
             return
         }
         if session.isStroking {
@@ -1019,13 +1031,13 @@ final class CanvasView: UIView, PaintingCanvas {
         // A stroke begun meanwhile (it paints nothing now): the canvas is the painter's, as
         // after a pan.
         guard !session.isStroking else {
-            shine(color: -1, after: 0)
+            finale(after: 0)
             return
         }
         // The fill moment's sparkles sit in view space: the flight would leave them behind.
         for sparkle in sparkleLayers { sparkle.removeAnimation(forKey: "sparkle") }
         flyToFit(duration: Self.finishFlight)
-        shine(color: -1, after: Float(Self.finishFlight))
+        finale(after: Float(Self.finishFlight))
     }
 
     private func cancelFinish() {
@@ -1039,8 +1051,63 @@ final class CanvasView: UIView, PaintingCanvas {
     private func finishYieldsCamera() {
         guard finishTask != nil || finishAwaitsStroke else { return }
         cancelFinish()
-        shine(color: -1, after: 0)
+        finale(after: 0)
     }
+
+    /// The finished painting shines `delay` seconds from now; then, in SideStore and Debug builds,
+    /// night falls over it (`Nightfall`).
+    private func finale(after delay: Float) {
+        shine(color: -1, after: delay)
+        #if UNRELEASED
+        // Once the shine has swept (it takes about a second); without it, a moment after the cut.
+        scheduleNightfall(after: Double(delay) + (reduceMotion ? 0.4 : 1.1))
+        #endif
+    }
+
+    #if UNRELEASED
+    private func scheduleNightfall(after delay: Double) {
+        nightfallTask?.cancel()
+        nightfallTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard let self, !Task.isCancelled else { return }
+            nightfallTask = nil
+            startNightfall()
+        }
+    }
+
+    private func startNightfall() {
+        guard session.isComplete, !isReplaying, !isAnnotating else { return }
+        let painting = paintingFrame
+        guard painting.width > 40, painting.height > 40 else { return }
+        nightfall?.end()
+        let night = Nightfall(over: painting, in: layer, sky: Sky.current(), reduceMotion: reduceMotion,
+                              pace: Double(fillDurationScale))
+        nightfall = night
+        nightfallPeak = night.peak
+        Announcer.announce(night.announcement)
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(night.duration + 0.1))
+            guard let self, nightfall === night else { return }
+            night.remove()
+            nightfall = nil
+        }
+    }
+
+    /// Lifts a night still falling or about to (an undo, a replay).
+    private func endNightfall() {
+        nightfallTask?.cancel()
+        nightfallTask = nil
+        nightfall?.end()
+        nightfall = nil
+    }
+
+    /// The whole painting's frame in view space.
+    private var paintingFrame: CGRect {
+        let a = viewPoint(forCanvas: .zero)
+        let b = viewPoint(forCanvas: SIMD2(Float(template.width), Float(template.height)))
+        return CGRect(x: a.x, y: a.y, width: b.x - a.x, height: b.y - a.y)
+    }
+    #endif
 
     private func bump(_ region: Int) {
         bumpRegion = region
@@ -1138,6 +1205,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     func session(_ session: PaintingSession, didUnpaint regions: [Int]) {
         if isReplaying { endReplay() }
+        #if UNRELEASED
+        endNightfall()
+        #endif
         accessibilityChanged()
         guard let renderer else { return }
         let time = now()
@@ -1603,12 +1673,18 @@ extension CanvasView: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         accessibilityChanged(post: false)
         requestRender()
+        #if UNRELEASED
+        nightfall?.follow(paintingFrame)
+        #endif
     }
 
     func scrollViewDidZoom(_ scrollView: UIScrollView) {
         if !isApplyingCamera { scrollView.contentInset = insets(forZoom: scrollView.zoomScale) }
         accessibilityChanged(post: false)
         requestRender()
+        #if UNRELEASED
+        nightfall?.follow(paintingFrame)
+        #endif
         onZoomChange?(relativeZoom)
     }
 

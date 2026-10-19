@@ -4553,6 +4553,30 @@
         }
       }
     },
+    "nightfall.moon" : {
+      "comment" : "VoiceOver announcement as a painting is finished by night: dusk falls over it and a crescent and two stars come out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The moon rises over your painting."
+          }
+        }
+      }
+    },
+    "nightfall.evening" : {
+      "comment" : "VoiceOver announcement as a painting is finished by day: a warm evening light settles over it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evening light falls over your painting."
+          }
+        }
+      }
+    },
     "sky.auto" : {
       "comment" : "Choice of Settings › Music: Sun by day and Moon by night, by the painter's own clock",
       "extractionState" : "manual",

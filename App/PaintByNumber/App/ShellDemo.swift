@@ -17,7 +17,7 @@ import PaintCore
 ///   field (two results).
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
-/// - `gallery-empty`: the empty state.
+/// - `gallery-empty`: the empty state, once its sketch has painted itself (SideStore and Debug).
 /// - `gallery-first-run`: the gallery as the first launch leaves it: the library's two starter
 ///   paintings, none of them painted on (ready to paint, nothing in progress).
 /// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
@@ -411,7 +411,8 @@ enum ShellDemo: Equatable {
     }
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
-    /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || (opensSettings && self != .settingsTip) }
+    /// once their content has been generated or loaded; `gallery-empty` once its sketch has
+    /// painted itself, `SelfPaintingSketch`).
+    var isReadyOnAppear: Bool { opensSettings && self != .settingsTip }
 }
 #endif
