@@ -59,7 +59,8 @@ final class GalleryActionsTests: XCTestCase {
     /// A confirmation points at the card whose menu asked for it, wherever the card sits: the
     /// unstarted card, alone in its section (the Delete of a painter's "October 6", in the third
     /// row), a started one for Restart, and a finished one below the fold. A dialog on the whole gallery
-    /// opens over the middle of it, whichever card was chosen.
+    /// opens over the middle of it, whichever card was chosen. The unstarted card has no Restart:
+    /// nothing is painted to clear.
     @MainActor
     func testConfirmationsPointAtTheirCard() {
         let app = launchGallery()
@@ -69,6 +70,9 @@ final class GalleryActionsTests: XCTestCase {
             card.press(forDuration: 1.5)
             let item = app.buttons[action]
             XCTAssertTrue(item.waitForExistence(timeout: 5), "The menu of “\(title)” has no \(action)")
+            if title == "The Milkmaid" {
+                XCTAssertFalse(app.buttons["Restart"].exists, "An unpainted card offers Restart")
+            }
             item.tap()
 
             let labels = action == "Delete"
@@ -154,7 +158,8 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(waitUntil { self.precedes(wave, fox) }, "The card didn't return to its place")
     }
 
-    /// The Show menu lists favorites only; with none left the gallery explains how to add one.
+    /// The Show menu lists favorites only; with none left the gallery explains how to add one,
+    /// and once All is back the menu goes until there is a favorite again.
     @MainActor
     func testShowMenuFiltersFavorites() {
         let app = launchGallery()
@@ -177,6 +182,7 @@ final class GalleryActionsTests: XCTestCase {
 
         chooseShow("All", in: app)
         XCTAssertTrue(app.buttons["The Great Wave"].firstMatch.waitForExistence(timeout: 5), "All didn't bring the paintings back")
+        XCTAssertTrue(app.buttons["Show"].waitForNonExistence(timeout: 5), "The Show menu stays with no favorite to show")
     }
 
     @MainActor

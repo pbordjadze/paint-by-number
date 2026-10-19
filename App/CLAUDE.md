@@ -263,10 +263,14 @@ synchronized folder would bundle it into the app.
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
   `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
-  progress badge then names no color (nothing is on the brush); during a replay its ring and
+  progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
+  completion bar names the painting only when the badge doesn't (`badgeShowsTitle`, from the top
+  bar's row that fits); during a replay its ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
-  the saved progress stay whole).
+  the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
+  canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
+  bar and More, holds Stop (`CanvasView.stopReplay`).
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -296,8 +300,8 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Music, a plain
-  list: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sound's Music,
+  one row like Paper's: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
   time zone and Moon the rest; Paul's calls; a theme, never tied to the dark appearance or the
   paper; decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
@@ -500,7 +504,8 @@ Conventions).
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
-  (`GalleryFilter`, `@SceneStorage("galleryFilter")`) and `.searchable` make a `GalleryQuery`
+  (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it
+  filters) and `.searchable` make a `GalleryQuery`
   (`Library.inProgress`/`readyToPaint`/`finished` list favorites first; the gallery's sections are
   these three, a painting nobody has painted on being ready to paint, not in progress, and
   `GalleryCounts` is the subtitle that counts them); `TitleSearch.matches` needs every query
@@ -521,7 +526,7 @@ Conventions).
   picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
   picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search; "Browse All…" presents the full system picker, the way in when the embedded
+  albums and search; "Browse All…" (the toolbar, iPad only) presents the full system picker, the way in when the embedded
   one doesn't take taps.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first

@@ -329,6 +329,9 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: Lifecycle
 
     override var canBecomeFirstResponder: Bool { true }
+    /// None while a replay plays: ⌘Z, the Edit menu and three-finger undo would take fills off
+    /// the painting being played back.
+    override var undoManager: UndoManager? { isReplaying ? nil : super.undoManager }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -880,10 +883,12 @@ final class CanvasView: UIView, PaintingCanvas {
         replayTask?.cancel()
         // The replay ends with a finish of its own.
         cancelFinish()
+        let painted = session.progress.log.map { Int($0.region) }
         isReplaying = true
+        // Undo and the bar's Stop follow at once, not at the replay's first tick.
+        session.showReplayed(painted.count)
         numbersChanged()
         zoomToFit()
-        let painted = session.progress.log.map { Int($0.region) }
         let reduceMotion = self.reduceMotion
         let lift: Float = reduceMotion ? 0 : 0.45
         let time = now()
@@ -927,8 +932,13 @@ final class CanvasView: UIView, PaintingCanvas {
         }
     }
 
-    /// Ends a replay the session changed under (a fill, an undo, a restart): the canvas shows
-    /// what the session holds, not the log the replay was started from.
+    /// Stop: the replay ends where it is and the painting shows whole.
+    func stopReplay() {
+        if isReplaying { endReplay() }
+    }
+
+    /// Ends a replay that was stopped or that the session changed under (a fill, a restart): the
+    /// canvas shows what the session holds, not the log the replay was started from.
     private func endReplay() {
         replayTask?.cancel()
         replayTask = nil

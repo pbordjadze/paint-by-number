@@ -160,6 +160,8 @@ final class Library {
     func readyToPaint(matching query: GalleryQuery) -> [Artwork] { readyToPaint.filter(query.includes) }
     func finished(matching query: GalleryQuery) -> [Artwork] { finished.filter(query.includes) }
     var isEmpty: Bool { artworks.isEmpty && placeholders.isEmpty }
+    /// No painting and no draft: the gallery is its empty state, with its own New Painting.
+    var isBare: Bool { isEmpty && drafts.current == nil }
 
     func artwork(with id: UUID) -> Artwork? { artworks.first { $0.id == id } }
 

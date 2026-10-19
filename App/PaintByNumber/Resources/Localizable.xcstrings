@@ -333,10 +333,6 @@
       "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
       "extractionState" : "manual"
     },
-    "Choose a photo with a clear subject and good light. It becomes your canvas." : {
-      "comment" : "Instruction above the photo picker in the create flow",
-      "extractionState" : "manual"
-    },
     "Choose Photo" : {
       "comment" : "Accessibility label of the inline photo library picker in the create flow",
       "extractionState" : "manual"
@@ -681,8 +677,8 @@
       "comment" : "Create flow: label of the slider for the number of colors in the palette",
       "extractionState" : "manual"
     },
-    "Comparison of photo and template" : {
-      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
+    "Comparison of photo and painting" : {
+      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its painting (or its line art)",
       "extractionState" : "manual"
     },
     "Couldn’t Create Painting" : {
@@ -806,13 +802,13 @@
       }
     },
     "create.error.renderFailed" : {
-      "comment" : "Error when the template can't be generated from the photo",
+      "comment" : "Error when the painting can't be made from the photo",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The template couldn’t be created. Try different settings."
+            "value" : "The painting couldn’t be made. Try different settings."
           }
         }
       }
@@ -985,8 +981,8 @@
         }
       }
     },
-    "Creating template…" : {
-      "comment" : "Status shown while the template is first generated from the photo",
+    "Making the painting…" : {
+      "comment" : "Status shown while a new painting is first made from the photo",
       "extractionState" : "manual"
     },
     "Curve" : {
@@ -995,10 +991,6 @@
     },
     "Custom" : {
       "comment" : "Create flow chip above the sliders once a slider was moved: the settings are the painter's own, not the suggestion; also the chip's VoiceOver value",
-      "extractionState" : "manual"
-    },
-    "Dark paper is easier on the eyes in a dark room. Line Weight sets how heavy a painting’s drawn lines are, on screen and on paper." : {
-      "comment" : "Footer under the Paper and Line Weight pickers in Settings",
       "extractionState" : "manual"
     },
     "Delete" : {
@@ -1436,7 +1428,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings."
+            "value" : "Its file is damaged. It can be made again from its photo."
           }
         }
       }
@@ -1448,7 +1440,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings. Painted areas can’t be recovered, so it will start fresh."
+            "value" : "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh."
           }
         }
       }
@@ -1460,7 +1452,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its file is damaged, and the original photo isn’t available to regenerate it."
+            "value" : "Its file is damaged, and its photo is gone, so it can’t be made again."
           }
         }
       }
@@ -1532,7 +1524,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The painting couldn’t be read just now. Nothing was changed: go back and open it again."
+            "value" : "It couldn’t be opened just now. Nothing changed: go back and try again."
           }
         }
       }
@@ -3177,10 +3169,6 @@
       "comment" : "Settings picker choosing what a new painting's preview shows beside the photo (Painting or Line Art)",
       "extractionState" : "manual"
     },
-    "Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them." : {
-      "comment" : "Footer under the Settings › Preview picker",
-      "extractionState" : "manual"
-    },
     "paintingLength.detailed" : {
       "comment" : "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting",
       "extractionState" : "manual",
@@ -3813,16 +3801,20 @@
       "comment" : "Title of the alert for renaming a painting",
       "extractionState" : "manual"
     },
-    "Rendering frames" : {
-      "comment" : "Label of the progress bar while the time-lapse movie is rendered",
-      "extractionState" : "manual"
-    },
     "Replay" : {
       "comment" : "Accessibility label of the replay button in the completion bar",
       "extractionState" : "manual"
     },
+    "Stop" : {
+      "comment" : "Accessibility label of the completion bar's button that stops the replay playing, in the Replay button's place",
+      "extractionState" : "manual"
+    },
     "Replay Painting" : {
       "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
+      "extractionState" : "manual"
+    },
+    "Stop Replay" : {
+      "comment" : "Menu item on the painting screen, in Replay Painting's place while the replay plays: stops it and shows the painting whole",
       "extractionState" : "manual"
     },
     "Reset to Suggested" : {
@@ -4438,7 +4430,7 @@
       }
     },
     "settings.section.painting" : {
-      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
+      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color, Paper and Line Weight",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4525,12 +4517,16 @@
       "comment" : "Header of the Settings section for sounds and haptics while painting (Haptics shows only on devices with haptics)",
       "extractionState" : "manual"
     },
+    "Sound" : {
+      "comment" : "Header of the Settings section for sounds on devices without haptics (iPad), where it holds only Sounds",
+      "extractionState" : "manual"
+    },
     "Sounds" : {
       "comment" : "Settings toggle for sound feedback while painting",
       "extractionState" : "manual"
     },
     "Music" : {
-      "comment" : "Settings: the header of the section that lists the music painting plays, Sun, Moon and Auto (also the list's own label, which VoiceOver may read)",
+      "comment" : "Settings: the label of the row that picks the music painting plays, Sun, Moon or Auto (a menu, like Paper)",
       "extractionState" : "manual"
     },
     "sky.sun" : {
@@ -4570,7 +4566,7 @@
       }
     },
     "settings.sky.footer" : {
-      "comment" : "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
+      "comment" : "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
