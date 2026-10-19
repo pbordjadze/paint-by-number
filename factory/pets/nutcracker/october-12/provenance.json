@@ -1,0 +1,507 @@
+{
+  "key": "redo-nutcracker",
+  "pet": "nutcracker",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "style": {
+    "name": "Warm Oilcloth Family",
+    "preset": "painterly",
+    "style_notes": "Paint each creature as something loved: broad, flat color, sincere eyes and a slight wobble in the edge. Keep marks few and steady between frames. Dark paint belongs inside the creature; the surrounding cell stays clear. Glass keeps its clear heart and soft rim, while ink gives solid bodies their weight. Warmth comes from care, not a shine added to everything.",
+    "framing": "Use transparent 192 × 208 cells. Keep every pose inside x=16–176 and y=16–192, with standing feet or body base at y=184. Reserve room above for jumps and beside the body for waves. Fit tall creatures by gently bending their posture, keeping their defining shape. Lock scale, face placement and carried objects across frames. Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid. Keep motion within the cell; movement across the screen belongs to the player. One-shot rows finish in a stable pose. Idle and waiting use small movements and long holds.",
+    "palette": "Core paint: soot #262321, cream #F1DFC1, ochre #C59A46, rust #AC5740, herb green #65764C and blue #557589. Preserve each seed's own colors: the trolleybus stays blue, the ram gold, the ermine white and the droplet clear. Lights stay within their existing flame, lantern, window or body. V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+    "line": "Solid bodies use irregular ink edges about 3 pixels wide, with essential inner marks at least 2 pixels wide. Keep important gaps at least 4 pixels open. Suggest texture with a few broad marks fixed to the body, never changing noise. The glass droplet is the deliberate exception: use a broad, soft, partly open rim and a clear center, without a hard black enclosure. The magnifying glass has an ink frame and a clear lens. Family likeness comes from shared proportions, restraint and timing, rather than forcing glass to become opaque ink.",
+    "boundaries": "All twenty seeds remain themselves. Keep the magnifying glass's raised eyebrow and searching tilt; the ram's gold fleece, herb sprig and attached twig that greens with happiness; the hut's chicken legs, kerchief roof and door broom; the sleepy mushroom's moss, tarragon and herb basket; the crescent's lantern; the still white ermine's distinct frost crown; the bold calf's embroidered felt blanket and hoof stamp; the book's flapping covers and changing ink pictures; the determined brush's legs and paint jar; the thoughtful inkpot's spectacles and tucked quill; the quiet palette's paint spots and brush tail; the curled lamb's striped cap and candle; the calm clear droplet; the gentle giraffe's long neck and sincere eyes; the precise bee's white collar and pressed flower; the generous pomegranate's opening rind and visible seeds; the courteous wooden soldier's back key and salute; the tuning fork's poised turns; the blue trolleybus's warm windows and guitar visible on its seat; and the clay lamp's grapevine handle. Use new poses, markings and patterns. Existing belongings remain attached, held or securely contained. Do not add shared herbs, keys, lamps, costumes or ornaments to other seeds. Sweeping leaves no footprint marks; frost appears only on the crown or feet; underlining and writing become small gestures without drawn words; shared seeds stay cupped in the open rind. Humming and ringing read through posture without sound symbols. No floating effects, scene background, text, speech bubbles, shadows or new review props. Review uses only the creature and its existing belongings. All pets and sheets remain local. Paul waived approval steps and retains a later veto.",
+    "rows": {
+      "idle": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "running-right": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "running-left": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "waving": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "jumping": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "failed": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "waiting": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "running": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "review": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once."
+    },
+    "why": "I want each pet to look cared for, with its own work and temper still visible. The dark oilcloth feeling lives in the painted body and can meet a dark app surface without baking a background into the sprite. No veto is proposed. Originality may veto only in a jury and never ranks taste. The Painter checks function at native size across all nine rows and sixteen added looks. Any function flag must name the pet, look, row and frame, and describe visible evidence such as a vanished eyebrow, a clipped crown or two actions with the same silhouette. These are checks to perform, not defects claimed without images. Any later charter veto must quote the exact guards-against line and give a concrete reason."
+  },
+  "brief": {
+    "display_name": "Kindwind",
+    "description": "A tiny wooden nutcracker soldier whose careful clockwork movements show courage, courtesy and warmth.",
+    "brief": "Kindwind is a tiny wooden nutcracker soldier with a broad wooden jaw, short legs and a clockwork key fixed securely in its back. Its low, rounded cap and short herb-green uniform give it a compact silhouette; a blue collar and one off-center ochre fastening make the uniform its own. Cream wood shows through at the cheeks and hands. Sincere soot-dark eyes meet the viewer without a hard military stare.\n\nThis soldier protects by paying attention. It makes room, offers an open palm and approaches difficult work with steady patience. Precision lives in its hinged elbows and measured steps; warmth lives in the slight head tilt before each action. Its signature is a modest salute when a task finishes, followed by a relaxed, friendly stance.\n\nGive it quiet delight, alert concern, clear disappointment and renewed resolve. Failure lowers its shoulders and gaze without breaking its body or turning distress into a joke. Courage straightens its posture without making it threatening. Waiting reaches outward through an expectant lean; focused work uses planted, deliberate hand movements; review turns inward to inspect a wooden wrist joint.\n\nKeep the key attached and every mark anchored to the body. Use broad matte paint, restrained texture and gently uneven ink edges. Add no weapons, loose ornaments, floating effects, scene background, text, speech bubbles, shadows or review props. All pet assets remain local.",
+    "pet_notes": "A squat wooden soldier with a broad jaw, rounded low cap, short herb-green tunic, blue collar and off-center ochre fastening. Cream cheeks and hands frame sincere soot-dark eyes; rust touches the small mouth. The back key has two broad, readable lobes. Use matte fills, roughly three-pixel uneven ink edges and a few fixed wood marks, with open gaps around arms and key.",
+    "rows": {
+      "idle": "Across six frames, stand balanced with arms loose, blink once, breathe slightly through the shoulders and return to a long settled hold.",
+      "running-right": "Across eight frames, face right and cycle through alternating short strides with courteous bent-arm swings, keeping the attached back key clear of the body.",
+      "running-left": "Across eight frames, redraw the left-facing stride cycle while preserving the fastening's true placement and the key's attachment instead of mirroring the finished drawings.",
+      "waving": "Across four frames, turn toward the viewer, lift an open hand, make one broad greeting sweep and lower the arm into a stable stance.",
+      "jumping": "Across five frames, crouch, rise about twelve pixels, reach the peak, descend and soften into a stable landing without trails or marks.",
+      "failed": "Across eight frames, stop with elbows briefly lifted, sink through the knees, hold dropped shoulders and a lowered gaze, then recover slightly while remaining plainly disappointed.",
+      "waiting": "Across six frames, keep eyes open and hands behind the hips, lean toward the expected action, hold, make one questioning head tilt and return without pacing.",
+      "running": "Across six frames, stay planted with both forearms forward, prepare the hands, deliberately close and reopen them in an alternating clockwork exercise, check their alignment and reset.",
+      "review": "Across six frames, turn slightly sideways, raise one wrist toward the face, inspect its wooden joint with the other hand beneath it, hold, nod and finish with a compact task-complete salute."
+    },
+    "do_not_resemble": [
+      "No franchise look-alike, logo, real-person likeness or copied artwork.",
+      "A wooden nutcracker soldier reads as the Nutcracker of the ballet and of Disney's film. Give it its own uniform and proportions rather than the ballet's classic nutcracker costume."
+    ],
+    "why": "As The Nutcracker, I chose careful hinges, open hands and a modest salute to express a helpful machine with a warm heart. I assume the soldier can exercise and inspect its existing hand joints without extra equipment; its key remains attached throughout. The compact cap, short uniform and uneven fastening establish its own proportions. Codex's technical decision follows v2: one transparent 1536 × 2288 atlas, eight columns by eleven rows, with 192 × 208 cells and row 0–8 frame counts of 6, 8, 8, 4, 5, 8, 6, 6 and 6; all unused cells remain fully transparent. Retain the sheet's 8 fps as playback guidance, without adding frames to reach two seconds. Keep poses within x=16–176 and y=16–192, with standing feet at y=184, stable scale and body-anchored face placement. Preserve essential inner marks at least two pixels wide and important gaps at least four pixels open. Rows 9 and 10 contain static gaze and pose directions, with the same palette and paint treatment: row 9 is 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5; row 10 is 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. Angles run clockwise in screen coordinates, with 000 up, 090 right, 180 down and 270 left. Use coordinated head and torso turns so adjacent directions differ visibly. These replace the sheet's sixteen paint variants. The Painter's supplied readability guidance informs the distinct silhouettes: loose arms for idle, hands behind hips and outward lean for waiting, paired forward hands for work, and a raised wrist with sideways inspection for review; carry these distinctions into every later image prompt. No images were supplied for this pet, so no measured function defect or validation result is claimed. Later function flags must identify pet, direction or base treatment, row, frame and visible evidence. Motion measurements remain guidance recorded in provenance; only skill validators gate a rendered pet. No veto is proposed; Originality may veto only in juries and never ranks taste. Paul waived approval steps, retains a later veto, and all assets remain local."
+  },
+  "reference": "/root/factory-out/F36/lamp/hatches/pilot-style-12-medea/attempt-pqzhqrsw/package/contact-sheet.webp",
+  "reference_sha256": "71ec194ada7b533702d84934c10a555e3f60843ccf7224e73ec3c643509a6604",
+  "redo": {
+    "previous": {
+      "key": "set-nutcracker",
+      "pet": "nutcracker",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "status": "validated",
+      "worker_policy": 3,
+      "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+      "fresh_attempts": 0,
+      "resumed_from": "/root/factory-out/F36/lamp/hatches/set-nutcracker/result.json",
+      "resume_action": "provider_retry",
+      "provider_stop": [
+        {
+          "log": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-nxo5yniw/codex.jsonl",
+          "line": 3,
+          "code": "",
+          "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+        },
+        {
+          "log": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-nxo5yniw/codex.jsonl",
+          "line": 4,
+          "code": "",
+          "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+        }
+      ],
+      "reason": "Local candidate saved at final/spritesheet.webp. Exact 1536 × 2288 WebP passes bundled atlas, quality and blind-direction validators. Required reports are in qa/ and previews in previews/. Atlas, compressed contact and metadata total 1,904,743 bytes. No service or Library calls.",
+      "image_generations": 18,
+      "repairs": [
+        "failed row repair 1: separated touching source poses that broke component extraction.",
+        "jumping row repair 1: corrected cross-state body-size inconsistency caused by the tall source sweep.",
+        "Deterministic registration: normalized row-wide scales and baseline while preserving jump displacement.",
+        "look-cardinals repair 1: strengthened upward pitch, kept torso and boots frontal, and increased source padding.",
+        "look-row-9 repair 1: corrected the reversed horizontal sweep.",
+        "look-row-9 repair 2: corrected remaining wrong-left diagonals using the approved right-facing anchor."
+      ],
+      "contract_overrides": [
+        {
+          "source": "style.framing",
+          "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+          "replacement": "Rows 0–8 contain 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Preserve 8 fps as drawing guidance; use bundled preview durations and holds, without adding frames for two seconds.",
+          "reason": "The v2 contract fixes frame counts; the bundled renderer supplies state-specific preview timing."
+        },
+        {
+          "source": "style.palette",
+          "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+          "replacement": "Sixteen static gaze/pose directions in one unchanged palette and matte paint treatment: row 9 = 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5; row 10 = 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. Clockwise screen coordinates: up, right, down, left at 000, 090, 180, 270.",
+          "reason": "The v2 contract defines directional looks, not sixteen paint variants or extra animation sheets."
+        },
+        {
+          "source": "style.rows.idle",
+          "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+          "replacement": "Across six frames, stand balanced with arms loose, blink once, breathe slightly through the shoulders and return to a long settled hold. Beat mapping: frames 0–1 settled, 2 blink, 3–4 breath, 5 return/hold.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.running-right",
+          "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+          "replacement": "Across eight frames, face right and cycle through alternating short strides with courteous bent-arm swings, keeping the attached back key clear of the body. Beat mapping: frames 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.running-left",
+          "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+          "replacement": "Across eight frames, redraw the left-facing stride cycle while preserving the fastening's true placement and the key's attachment instead of mirroring the finished drawings. Beat mapping: frames 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return; redraw, do not mirror.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.waving",
+          "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+          "replacement": "Across four frames, turn toward the viewer, lift an open hand, make one broad greeting sweep and lower the arm into a stable stance. Beat mapping: frame 0 face viewer, 1 raise, 2 sweep, 3 settle.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.jumping",
+          "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+          "replacement": "Across five frames, crouch, rise about twelve pixels, reach the peak, descend and soften into a stable landing without trails or marks. Beat mapping: frame 0 crouch, 1 rise, 2 peak, 3 descend, 4 land/settle.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.failed",
+          "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+          "replacement": "Across eight frames, stop with elbows briefly lifted, sink through the knees, hold dropped shoulders and a lowered gaze, then recover slightly while remaining plainly disappointed. Beat mapping: frames 0–1 stop, 2–3 sink, 4–5 disappointed hold, 6–7 slight recovery.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.waiting",
+          "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+          "replacement": "Across six frames, keep eyes open and hands behind the hips, lean toward the expected action, hold, make one questioning head tilt and return without pacing. Beat mapping: frame 0 expectant lean, 1–2 hold, 3–4 questioning tilt, 5 return/hold.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.running",
+          "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+          "replacement": "Across six frames, stay planted with both forearms forward, prepare the hands, deliberately close and reopen them in an alternating clockwork exercise, check their alignment and reset. Beat mapping: frame 0 prepare, 1–2 alternating hand exercise, 3–4 check alignment, 5 reset; feet planted.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "style.rows.review",
+          "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+          "replacement": "Across six frames, turn slightly sideways, raise one wrist toward the face, inspect its wooden joint with the other hand beneath it, hold, nod and finish with a compact task-complete salute. Beat mapping: frame 0 attentive, 1–2 raise/inspect wrist, 3 hold, 4 nod, 5 compact salute and settle.",
+          "reason": "Remap four four-frame beats to the contract frame count while retaining the intended action and rhythm."
+        },
+        {
+          "source": "create-pet lifecycle",
+          "original": "Use ChatGPT Library throughout every pet-artwork workflow.",
+          "replacement": "All artifacts remain local; no Library, Pets MCP, upload, create, select, activate, or service update calls.",
+          "reason": "Explicit user instruction overrides skill lifecycle requirements."
+        }
+      ],
+      "decisions": [
+        "Previous attempt was inspected and preserved; it contains logs only and no reusable generated art.",
+        "Use built-in imagegen sequentially with one art worker; keep every used generated source and its cache path in local logs.",
+        "Attach the unchanged family reference to every job; use it for painting treatment only, never ram anatomy or belongings.",
+        "Redraw running-left because the off-center fastening and back key must retain physical placement.",
+        "Use genuine generated transparency, with the pipeline-selected chroma key retained for deterministic QA and one final despill pass.",
+        "Preserve matte herb-green uniform, blue collar, ochre fastening, cream wood, soot edges, rust mouth; no palette variants.",
+        "Waiting uses hands behind hips and an expectant lean; work uses planted paired forward hands; review raises and inspects a wrist then salutes.",
+        "Look mechanics: planted feet and lower torso remain fixed; neck hinge turns and pitches head, eyes follow the nose, shoulders follow subtly; key stays attached, face remains visible.",
+        "Style motion amplitudes are drawing guidance only; measure observed movement after assembly and record it without extra acceptance thresholds.",
+        "Use bundled preview timing, whose longer end holds retain the requested calm rhythm; no extra frames to force two-second rows.",
+        "Register extracted rows with a shared transform per row: scale 0.74 for ordinary rows and 0.84 for the jump whose extraction viewport includes airspace; register standing soles to y=184. This brings jump physical body size near idle while preserving all source vertical displacement and generous safe padding.",
+        "Combine the COMPLETE unaltered family and standard contact sheets side-by-side with labels in references/family-and-standard.png to stay within five image references without dropping either visual. Labels are reference-only.",
+        "Observed jump sole lift is [0, 7, 27, 8, 0] px versus guidance 10–14/about 12 px; it clearly crouches, rises and lands, retaining the intended hop. Idle top bounds are [35, 36, 36, 34, 36, 35] versus 1–2 px breathing guidance, with one blink and a restrained tilt. These observations add no acceptance gate.",
+        "Labeled look review accepts subtle steps at 067.5, 157.5, 202.5 and 315 as warnings: intended quadrants remain visible and the loop does not reverse. The 157.5→180 continuity outlier reflects head pitch/foreshortening with planted boots and attached key, not a visible registration jump.",
+        "Three independent read-only blind reviewers were used under the skill; strict-majority bundled validation passed every tested axis. An independent labeled final review passed with warnings about similar intermediate looks and general hand activity.",
+        "Export lossless RGBA WebP and a quality-78 compressed contact WebP. Final previews are extracted from the exact final WebP: nine state GIFs, all-state GIF/MP4, native idle-jump-idle GIF/MP4, look-loop GIF/MP4, four labeled stills and contact/direction sheets.",
+        "Final bundled jump measurement uses alpha>16 and reports 28 px lift with 1 px landing delta; all-alpha observation reports 27 px lift and exact y=184 registration. Both retain the intended jump and do not enforce the style amplitude.",
+        "Retain all 18 generated sources in sources/ and record original cache paths, SHA-256 hashes, exact prompts/inputs and repair history in logs/provenance.json; no whole-pet redo, service mutation, or Library operation occurred."
+      ],
+      "atlas_sha256": "054e1b8b3a60bd40e81068c63b79d5762b6d4a5ef170a2315196858ca161ca0c",
+      "validators": {
+        "atlas": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd/gate/atlas.json",
+        "quality": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd/gate/quality.json"
+      },
+      "package": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd/package",
+      "bytes": 1906784,
+      "contact": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd/package/contact-sheet.webp",
+      "previews": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd/previews",
+      "package_hashes": {
+        "contact-sheet.webp": "0624516e1c29b2119451922d3b7eedfa684eea0d446e9196da5c5d5db80bde5d",
+        "pet.json": "e4a4f670a654a6ae103764e5b0ffd7d001aa2fc47f90ccddd185af22cf5f11f9",
+        "provenance.json": "5df98e2f77c12de4a3f16feea84f9332b4168afad0f98f35cc515e29e8e3adad",
+        "spritesheet.webp": "054e1b8b3a60bd40e81068c63b79d5762b6d4a5ef170a2315196858ca161ca0c"
+      },
+      "work": "/root/factory-out/F36/lamp/hatches/set-nutcracker/attempt-ipje03rd"
+    },
+    "reasons": [
+      {
+        "seat": "nutcracker",
+        "target": "nutcracker",
+        "why": "Base animation, row 7, frames 1–4: arm positions change, but the hands remain rounded closed shapes. The specified opening and closing exercise reads mainly as arm movement."
+      }
+    ]
+  },
+  "readability_notes": {
+    "style_id": "style-12",
+    "rules_sha256": "e06e7bf41b0b6253203f6cd6dacd7d291c7032c0ca8af554d239df33cf6f4b6e",
+    "instruction": "Readability notes from the image jury: make waiting, focused work (running row 7), and review read differently from idle and from each other at 192 × 208. Apply the winning style's supplied attributed drawing notes to this pet, including the reference pet. Carry them into every image prompt. These are drawing guidance; keep the fixed family reference and the v2 contract.",
+    "flags": [
+      {
+        "seat": "painter",
+        "target": "style-12",
+        "why": "Trolleybus, base animation, review row 8 frames 1–4: blinking and small gaze changes carry most of the action while the body and guitar remain still. Inspection is difficult to distinguish from idle. Running/work row 7 frames 1–2 shows concentration, but the work itself is unclear."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 0–5, mainly shows eye changes and a closing smile. Inspection of the seated guitar is not clearly readable; frames 0–3 remain close to idle. This is a state-readability concern, not a charter veto."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Ram, directional looks: row 10, frames 5–7 (292.5–337.5), show closely similar upward head turns. The broad direction reads, but the separate steps are weak."
+      },
+      {
+        "seat": "robber-girl",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 1–4, relies on small eye changes and a blink much like idle row 0, frames 1–3. Inspection of the seated guitar is hard to read."
+      },
+      {
+        "seat": "storybook",
+        "target": "style-12",
+        "why": "Trolleybus, base treatment: review row 8, frames 0–5, mostly shows forward attention and blinking, much like idle row 0. The intended inspection of the seated guitar is not clear in the supplied drawings."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Bulat, base look, running row 7, frames 1–2: lowered eyebrows show concentration, but the seated guitar shows no clear working action. Review row 8, frames 1–5 reads mostly as looking and blinking. Work and inspection are weakly distinguished."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Medea, base look, running row 7 and review row 8, frames 1–4: both use head dips toward the mouth-held herbs. The separate act, check and inspect beats are difficult to distinguish."
+      }
+    ]
+  },
+  "worker_reply": {
+    "status": "complete",
+    "reason": "Saved final/spritesheet.webp. Exact 1536 × 2288 WebP passes bundled atlas, quality and blind-cardinal validators. Only row 7 changed. Required reports are in qa/; GIF/MP4 previews are in previews/. Combined delivery size: 1,707,129 bytes. Intermediate-direction warnings retained. No Pets or Library calls.",
+    "image_generations": 1,
+    "repairs": [
+      "Regenerated row 7 with visibly alternating open palms and closed hands, addressing the jury defect.",
+      "Registered all six replacement poses with one shared 0.74 scale and y=184 baseline; no additional image repairs."
+    ],
+    "contract_overrides": [
+      {
+        "source": "style.framing",
+        "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+        "replacement": "Rows 0–8 contain 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Preserve 8 fps as drawing guidance; use bundled preview durations and holds, without adding frames for two seconds.",
+        "reason": "V2 fixes frame counts; the bundled renderer supplies state-specific timing."
+      },
+      {
+        "source": "style.palette",
+        "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+        "replacement": "Sixteen static gaze/pose directions with unchanged palette and material: row 9 = 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5; row 10 = 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. Clockwise screen coordinates: up=000, right=090, down=180, left=270.",
+        "reason": "V2 defines directional looks, not paint variants or additional animation sheets."
+      },
+      {
+        "source": "style.rows.idle",
+        "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+        "replacement": "Six frames: 0–1 settled, 2 blink, 3–4 breath, 5 return/hold.",
+        "reason": "Remap four beats to the required frame count while preserving rhythm."
+      },
+      {
+        "source": "style.rows.running-right",
+        "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+        "replacement": "Eight right-facing frames: 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return; attached key stays secure.",
+        "reason": "Remap four beats to eight frames."
+      },
+      {
+        "source": "style.rows.running-left",
+        "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+        "replacement": "Eight redrawn left-facing frames: 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return; preserve fastening placement and key attachment.",
+        "reason": "Remap four beats to eight frames while preserving asymmetric identity."
+      },
+      {
+        "source": "style.rows.waving",
+        "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+        "replacement": "Four frames: 0 face viewer, 1 raise hand, 2 greeting sweep, 3 lower/settle.",
+        "reason": "Remap four beats to four frames."
+      },
+      {
+        "source": "style.rows.jumping",
+        "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+        "replacement": "Five frames: 0 crouch, 1 rise, 2 peak, 3 descend, 4 land/settle. Retain approximately twelve pixels as drawing guidance only.",
+        "reason": "Remap four beats to five frames without introducing a motion-amplitude acceptance gate."
+      },
+      {
+        "source": "style.rows.failed",
+        "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+        "replacement": "Eight frames: 0–1 stop, 2–3 sink, 4–5 disappointed hold, 6–7 slight recovery with lowered gaze.",
+        "reason": "Remap four beats to eight frames."
+      },
+      {
+        "source": "style.rows.waiting",
+        "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+        "replacement": "Six frames: 0 expectant lean, 1–2 hold, 3–4 questioning tilt, 5 return/hold; eyes open and hands behind hips.",
+        "reason": "Remap four beats to six frames while preserving waiting's distinct silhouette."
+      },
+      {
+        "source": "style.rows.running",
+        "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+        "replacement": "Six planted work frames: 0 prepare, 1–2 alternating hand exercise, 3–4 continue/check alignment, 5 reset.",
+        "reason": "Remap four beats to six frames and preserve focused work rather than locomotion."
+      },
+      {
+        "source": "style.rows.review",
+        "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+        "replacement": "Six frames: 0 attentive, 1–2 raise/inspect wrist, 3 hold, 4 nod, 5 compact salute and settle.",
+        "reason": "Remap four beats to six frames using existing wooden joints."
+      },
+      {
+        "source": "create-pet lifecycle",
+        "original": "Use ChatGPT Library throughout every pet-artwork workflow.",
+        "replacement": "Keep every artifact local; never call Library or service-pet tools.",
+        "reason": "Explicit user restriction overrides lifecycle requirements."
+      },
+      {
+        "source": "create-pet generation lifecycle",
+        "original": "Generate the canonical base first.",
+        "replacement": "Reuse the approved base, identity/gait checks, unaffected animation rows, cardinals and look rows; regenerate only row 7.",
+        "reason": "The authorized redo targets the hand exercise and prohibits a whole-pet redo."
+      },
+      {
+        "source": "style.palette",
+        "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+        "replacement": "No material variants; directional looks preserve Kindwind's matte wooden treatment.",
+        "reason": "V2 looks are directions, and Kindwind is wooden."
+      },
+      {
+        "source": "create-pet MCP preflight",
+        "original": "Call `validate_pet_spritesheet` with `file` set to the final encoded sprite-sheet artifact.",
+        "replacement": "Run bundled local validators on the exact final WebP; never call Pets MCP.",
+        "reason": "The local-only restriction expressly includes preflight."
+      },
+      {
+        "source": "prepared running prompt background",
+        "original": "Output exactly 6 full-body frames in one left-to-right row on flat pure blue #0000FF.",
+        "replacement": "Output six full-body frames on genuine transparency and preserve alpha.",
+        "reason": "User requires transparency; blue remains the deterministic chroma QA key."
+      }
+    ],
+    "decisions": [
+      "Repair only row 7; reuse the approved base, identity/gait checks and all unaffected rows.",
+      "Use one art owner and sequential built-in imagegen; make no service or Library calls.",
+      "Attach the complete unchanged family reference, canonical base, original work strip and six-cell guide.",
+      "Make open palms broad with separated fingers and closed hands compact; keep elbows nearly fixed.",
+      "Preserve matte wood, palette, off-center fastening, attached two-lobed key and calm expression; add no props.",
+      "Use bundled playback durations without adding frames to reach two seconds.",
+      "Treat numeric motion targets as drawing guidance only.",
+      "Apply shared scale 0.74 and translation [25,33] to the six extracted replacement poses, with soles at y=184.",
+      "Observed unchanged jump lift is [0,7,27,8,0] pixels versus 10–14/about 12 guidance. Idle top bounds are [35,36,36,34,36,35], retaining restrained breathing and a blink.",
+      "Pixel comparison confirms rows 0–6 and 8–10 are identical to the prior candidate.",
+      "Reassemble from pre-despill sources using approved look registration; apply exactly one despill pass.",
+      "Frames 1 and 3 open the screen-left hand, frame 2 opens screen-right, frame 4 opens both, and frames 0 and 5 close both.",
+      "Retain reviewed warnings for subtle intermediate directions and the 157.5→180 cap-pitch transition.",
+      "Export lossless transparent WebP and quality-78 compressed contact. Render nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4, ordered jump strip and four labeled stills from the final WebP.",
+      "Three isolated blind reviewers confirm cardinals. Horizontal disagreements at 135, 157.5, 202.5 and 225 remain intermediate warnings after labeled ear/nose review.",
+      "Independent native-size review confirms the hand repair and attached identity; that reviewer assessed stills, while the parent inspected ordered frames and generated playback artifacts.",
+      "This redo used one new image generation; the inherited candidate's 18 generations are recorded separately. Sources, cache path, prompt and references are preserved locally.",
+      "The bundled quality gate measures 28 pixels of jump lift and one pixel of landing delta at its alpha threshold; this unchanged motion passes without enforcing the style amplitude."
+    ]
+  },
+  "work": "/root/factory-out/F36/lamp/hatches/redo-nutcracker/attempt-t014z3t7",
+  "worker_policy": 3,
+  "contract": "The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,\none transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:\nidle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,\nrunning 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.\nRows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:\nrow 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;\nrow 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.\n000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same\npalette and treatment, not sixteen palette variants, paint treatments or separate animations.\n",
+  "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+  "motion_guidance_difference": null,
+  "contract_overrides": [
+    {
+      "source": "style.framing",
+      "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+      "replacement": "Rows 0–8 contain 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Preserve 8 fps as drawing guidance; use bundled preview durations and holds, without adding frames for two seconds.",
+      "reason": "V2 fixes frame counts; the bundled renderer supplies state-specific timing."
+    },
+    {
+      "source": "style.palette",
+      "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+      "replacement": "Sixteen static gaze/pose directions with unchanged palette and material: row 9 = 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5; row 10 = 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. Clockwise screen coordinates: up=000, right=090, down=180, left=270.",
+      "reason": "V2 defines directional looks, not paint variants or additional animation sheets."
+    },
+    {
+      "source": "style.rows.idle",
+      "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "replacement": "Six frames: 0–1 settled, 2 blink, 3–4 breath, 5 return/hold.",
+      "reason": "Remap four beats to the required frame count while preserving rhythm."
+    },
+    {
+      "source": "style.rows.running-right",
+      "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "replacement": "Eight right-facing frames: 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return; attached key stays secure.",
+      "reason": "Remap four beats to eight frames."
+    },
+    {
+      "source": "style.rows.running-left",
+      "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "replacement": "Eight redrawn left-facing frames: 0–1 contact, 2–3 lift/pass, 4–5 opposite contact, 6–7 lift/return; preserve fastening placement and key attachment.",
+      "reason": "Remap four beats to eight frames while preserving asymmetric identity."
+    },
+    {
+      "source": "style.rows.waving",
+      "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "replacement": "Four frames: 0 face viewer, 1 raise hand, 2 greeting sweep, 3 lower/settle.",
+      "reason": "Remap four beats to four frames."
+    },
+    {
+      "source": "style.rows.jumping",
+      "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "replacement": "Five frames: 0 crouch, 1 rise, 2 peak, 3 descend, 4 land/settle. Retain approximately twelve pixels as drawing guidance only.",
+      "reason": "Remap four beats to five frames without introducing a motion-amplitude acceptance gate."
+    },
+    {
+      "source": "style.rows.failed",
+      "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "replacement": "Eight frames: 0–1 stop, 2–3 sink, 4–5 disappointed hold, 6–7 slight recovery with lowered gaze.",
+      "reason": "Remap four beats to eight frames."
+    },
+    {
+      "source": "style.rows.waiting",
+      "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "replacement": "Six frames: 0 expectant lean, 1–2 hold, 3–4 questioning tilt, 5 return/hold; eyes open and hands behind hips.",
+      "reason": "Remap four beats to six frames while preserving waiting's distinct silhouette."
+    },
+    {
+      "source": "style.rows.running",
+      "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "replacement": "Six planted work frames: 0 prepare, 1–2 alternating hand exercise, 3–4 continue/check alignment, 5 reset.",
+      "reason": "Remap four beats to six frames and preserve focused work rather than locomotion."
+    },
+    {
+      "source": "style.rows.review",
+      "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+      "replacement": "Six frames: 0 attentive, 1–2 raise/inspect wrist, 3 hold, 4 nod, 5 compact salute and settle.",
+      "reason": "Remap four beats to six frames using existing wooden joints."
+    },
+    {
+      "source": "create-pet lifecycle",
+      "original": "Use ChatGPT Library throughout every pet-artwork workflow.",
+      "replacement": "Keep every artifact local; never call Library or service-pet tools.",
+      "reason": "Explicit user restriction overrides lifecycle requirements."
+    },
+    {
+      "source": "create-pet generation lifecycle",
+      "original": "Generate the canonical base first.",
+      "replacement": "Reuse the approved base, identity/gait checks, unaffected animation rows, cardinals and look rows; regenerate only row 7.",
+      "reason": "The authorized redo targets the hand exercise and prohibits a whole-pet redo."
+    },
+    {
+      "source": "style.palette",
+      "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+      "replacement": "No material variants; directional looks preserve Kindwind's matte wooden treatment.",
+      "reason": "V2 looks are directions, and Kindwind is wooden."
+    },
+    {
+      "source": "create-pet MCP preflight",
+      "original": "Call `validate_pet_spritesheet` with `file` set to the final encoded sprite-sheet artifact.",
+      "replacement": "Run bundled local validators on the exact final WebP; never call Pets MCP.",
+      "reason": "The local-only restriction expressly includes preflight."
+    },
+    {
+      "source": "prepared running prompt background",
+      "original": "Output exactly 6 full-body frames in one left-to-right row on flat pure blue #0000FF.",
+      "replacement": "Output six full-body frames on genuine transparency and preserve alpha.",
+      "reason": "User requires transparency; blue remains the deterministic chroma QA key."
+    }
+  ],
+  "decisions": [
+    "Repair only row 7; reuse the approved base, identity/gait checks and all unaffected rows.",
+    "Use one art owner and sequential built-in imagegen; make no service or Library calls.",
+    "Attach the complete unchanged family reference, canonical base, original work strip and six-cell guide.",
+    "Make open palms broad with separated fingers and closed hands compact; keep elbows nearly fixed.",
+    "Preserve matte wood, palette, off-center fastening, attached two-lobed key and calm expression; add no props.",
+    "Use bundled playback durations without adding frames to reach two seconds.",
+    "Treat numeric motion targets as drawing guidance only.",
+    "Apply shared scale 0.74 and translation [25,33] to the six extracted replacement poses, with soles at y=184.",
+    "Observed unchanged jump lift is [0,7,27,8,0] pixels versus 10–14/about 12 guidance. Idle top bounds are [35,36,36,34,36,35], retaining restrained breathing and a blink.",
+    "Pixel comparison confirms rows 0–6 and 8–10 are identical to the prior candidate.",
+    "Reassemble from pre-despill sources using approved look registration; apply exactly one despill pass.",
+    "Frames 1 and 3 open the screen-left hand, frame 2 opens screen-right, frame 4 opens both, and frames 0 and 5 close both.",
+    "Retain reviewed warnings for subtle intermediate directions and the 157.5→180 cap-pitch transition.",
+    "Export lossless transparent WebP and quality-78 compressed contact. Render nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4, ordered jump strip and four labeled stills from the final WebP.",
+    "Three isolated blind reviewers confirm cardinals. Horizontal disagreements at 135, 157.5, 202.5 and 225 remain intermediate warnings after labeled ear/nose review.",
+    "Independent native-size review confirms the hand repair and attached identity; that reviewer assessed stills, while the parent inspected ordered frames and generated playback artifacts.",
+    "This redo used one new image generation; the inherited candidate's 18 generations are recorded separately. Sources, cache path, prompt and references are preserved locally.",
+    "The bundled quality gate measures 28 pixels of jump lift and one pixel of landing delta at its alpha threshold; this unchanged motion passes without enforcing the style amplitude."
+  ],
+  "resumed_from": null,
+  "atlas_sha256": "5139e69baa40fdf79a6bc7f033e12ed8d445e51e1398879979aa40e38c3df258",
+  "validators": {
+    "atlas": "/root/factory-out/F36/lamp/hatches/redo-nutcracker/attempt-t014z3t7/gate/atlas.json",
+    "quality": "/root/factory-out/F36/lamp/hatches/redo-nutcracker/attempt-t014z3t7/gate/quality.json"
+  },
+  "image_generations_source": "worker report; raw events and generation logs retained",
+  "redo_count": 1,
+  "local_only": true
+}
