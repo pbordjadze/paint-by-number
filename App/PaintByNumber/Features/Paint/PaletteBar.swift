@@ -150,7 +150,10 @@ struct PaletteBar: View {
     var body: some View {
         let visible = Set(Self.visibleColors(session))
         #if DEBUG
-        let _ = RenderMeter.tick("PaletteBar", "position \(position) lines \(lines) axis \(axis) shakes \(shakes) details \(String(describing: detailsColor)) color \(String(describing: session.selectedColor)) scale \(metrics.scale) order \(order.count)")
+        let _ = RenderMeter.tick("PaletteBar", RenderMeter.paletteBarState(
+            position: position, lines: lines, axis: axis,
+            shakes: shakes, details: String(describing: detailsColor), color: String(describing: session.selectedColor),
+            scale: metrics.scale, order: order.count))
         #endif
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)

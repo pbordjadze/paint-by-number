@@ -76,7 +76,10 @@ struct ArtworkPaintingView: View {
 
     var body: some View {
         #if DEBUG
-        let _ = RenderMeter.tick("ArtworkPaintingView", "landed \(hasLanded) cover \(isUnderCover) failure \(failure != nil) notice \(notice != nil) saveFailed \(saveFailed) regen \(regenerationFailed) autosaver \(autosaver != nil) photo \(sourcePhotoLoader != nil)")
+        let _ = RenderMeter.tick("ArtworkPaintingView", RenderMeter.artworkPaintingViewState(
+            landed: hasLanded, cover: isUnderCover, failure: failure != nil,
+            notice: notice != nil, saveFailed: saveFailed, regen: regenerationFailed,
+            autosaver: autosaver != nil, photo: sourcePhotoLoader != nil))
         #endif
         ZStack {
             Theme.paper.ignoresSafeArea()

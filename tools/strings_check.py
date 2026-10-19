@@ -125,8 +125,10 @@ ALLOWED_LITERALS = {
 # developers in English like pbn's output and never shown in the app; the uploader's HTTP header
 # lines (`Content-Disposition: form-data; name=…`, sent to the relay and never shown); and the
 # Marginarium's speaker table, whose strings are the signatures `marginarium.json` records,
-# matched and never shown. Their localizable sentences still go through the forms.
+# matched and never shown; and DEBUG render diagnostics, logged only for developers.
+# Their localizable sentences still go through the forms.
 VERBATIM_FILES = {
+    "App/RenderMeter.swift",
     "Features/Settings/License.swift", "Features/Settings/Acknowledgements.swift", "Features/Feedback/FeedbackReport.swift",
     "Features/Feedback/FeedbackUploader.swift", "Features/Marginarium/MarginariumSpeakers.swift",
 }
