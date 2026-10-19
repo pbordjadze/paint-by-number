@@ -210,5 +210,7 @@ Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and
 | `eno` | `d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026` | 894,894 | lossy WebP q88 |
 | `keynes` | `3e5b881edeecc6565dba724c14ead34c75d7d40ccc23fb0b138f53e2dcc96824` | 742,584 | lossy WebP q88 |
 | `hope` | `18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31` | 692,990 | lossy WebP q88 |
+| `baba-yaga` | `ca8e067349c80a203df5b32f0ae52c931399c26ec1bc21f6c687f7aa75c66860` | 1,007,550 | lossy WebP q88 |
 
-The twenty-eight sheets total **21,520,990 bytes (20.52 MiB)** of the 24 MiB budget.
+The Baba Yaga followed as a Russian lubok woodblock print. The twenty-eight sheets total
+**21,809,830 bytes (20.80 MiB)** of the 24 MiB budget.
