@@ -3,22 +3,22 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "e935f3a: Refine line-split, Recolor, the iPhone test fix and the CI-tags guard in one push",
+  "detail": "e935f3a green but for an iPhone runner fault; its one re-run is going. Next push: Toolbar tips + your UX picks",
   "state": "main running"
  },
  {
   "key": "ux-refinements",
   "order": "1",
   "title": "Your UX picks",
-  "detail": "Both batches built (21 picks + Music row + Stop)",
+  "detail": "Lamplit Table 5–0; re-run at 67b719c after a test fix",
   "state": "in CI"
  },
  {
   "key": "nightfall",
   "order": "2",
   "title": "Intro animations",
-  "detail": "SideStore only; you see the frame strips before it merges",
-  "state": "in CI"
+  "detail": "Green; waiting for your pick on the two cards",
+  "state": "green"
  },
  {
   "key": "quiet-painting",
@@ -31,8 +31,8 @@
   "key": "toolbar-tips",
   "order": "4",
   "title": "Toolbar tips as cards",
-  "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
-  "state": "ready"
+  "detail": "Re-running at c5443d7 after its review fixed two lost-tip bugs",
+  "state": "in CI"
  },
  {
   "key": "codex-decoder-fuzz",
