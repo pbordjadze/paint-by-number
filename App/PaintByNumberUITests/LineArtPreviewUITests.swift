@@ -50,10 +50,18 @@ final class LineArtPreviewUITests: XCTestCase {
         XCTAssertTrue(lines.exists, "The enlarged preview doesn't start on Lines")
         XCTAssertFalse(app.sliders["Colors"].exists, "The enlarged preview shows more than one slider")
         XCTAssertEqual(lines.value as? String, "Balanced")
-        // The end of the track: under load the thumb lands short of where it was taken (0.95 read
-        // More, at 0.76, on CI's iPhone).
+        // Under CI load the thumb rebounds short even when taken to the track's end (0.952 fell
+        // to 0.691 on iPhone). Recheck, then repeat the absolute adjustment once if needed.
         lines.adjust(toNormalizedSliderPosition: 1)
-        XCTAssertTrue(waitFor(lines, toMatch: NSPredicate(format: "value == %@", "Most")), "Lines reads \(lines.value ?? "")")
+        let most = NSPredicate(format: "value == %@", "Most")
+        if !waitFor(lines, toMatch: most) {
+            retapIfLost("Lines-to-Most") {
+                if !most.evaluate(with: lines) {
+                    lines.adjust(toNormalizedSliderPosition: 1)
+                }
+            }
+        }
+        XCTAssertTrue(waitFor(lines, toMatch: most), "Lines reads \(lines.value ?? "")")
         attachScreenshot(of: app, named: "create-enlarged-lines")
 
         let detail = chooser.buttons["Detail"]

@@ -30,9 +30,19 @@ final class CreateFlowTests: XCTestCase {
         // A double tap zooms both layers in; a drag then pans them, leaving the divider where it
         // is; another double tap fits them again.
         let split = try XCTUnwrap(compare.value as? String)
-        compare.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.3)).doubleTap()
-        let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value CONTAINS %@", "zoomed"), object: compare)
-        XCTAssertEqual(XCTWaiter.wait(for: [zoomed], timeout: 5), .completed, "A double tap didn't zoom in")
+        let zoom = {
+            compare.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.3)).doubleTap()
+        }
+        let zoomed = NSPredicate(format: "value CONTAINS %@", "zoomed")
+        zoom()
+        // CI sometimes loses the first double tap, leaving the divider unzoomed. Recheck before
+        // retrying once: a late zoom must not be double-tapped back to fit.
+        if !waitFor(compare, toMatch: zoomed) {
+            retapIfLost("comparison-zoom") {
+                if !zoomed.evaluate(with: compare) { zoom() }
+            }
+        }
+        XCTAssertTrue(waitFor(compare, toMatch: zoomed), "A double tap didn't zoom in")
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.7))
             .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
         attachScreenshot(of: app, named: "compare-zoomed")
@@ -582,8 +592,11 @@ private struct SheetDetector {
     private static func dismissFrames(in app: XCUIApplication) -> [CGRect] {
         let screen = app.windows.firstMatch.frame
         let buttons = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
-        return buttons.allElementsBoundByIndex.compactMap { button in
-            guard let element = try? button.snapshot(), element.isEnabled else { return nil }
+        // CI's picker can time out enumerating buttons as its sheet changes. Resolve each index
+        // inside the throwing snapshot so the caller's polling can retry a failed read.
+        return (0..<8).compactMap { index in
+            guard let element = try? buttons.element(boundBy: index).snapshot(),
+                  element.isEnabled else { return nil }
             let frame = element.frame
             return !frame.isEmpty && screen.contains(CGPoint(x: frame.midX, y: frame.midY)) ? frame : nil
         }
