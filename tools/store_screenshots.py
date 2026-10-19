@@ -122,7 +122,7 @@ SLIDES = {
             crop("create-line-art", (.04, .96, .203, .489), 1.11, "c", 960, radius=56, shadow=True, tilt=1.5),
             crop("create-line-art", (0, 1, .721, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
         dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others, built right in.", crops=[
-            crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
+            crop("create-samples-paintings", (.02, .98, .186, .941), 1.25, "c", 800, radius=56, shadow=True)]),
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
             crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
@@ -159,7 +159,7 @@ SLIDES = {
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
             crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
         dict(title="Van Gogh could<br>use <span class=mark>a hand</span>", sub="Paintings by Hokusai, Van Gogh, Vermeer and others, built right in.", crops=[
-            crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
+            crop("create-samples-paintings", (.585, .985, .084, .511), 1.9, "c", 860, radius=56, shadow=True)]),
         dict(night=True, title="Soft paper for<br>the <span class=mark>night owls</span>", sub="Dark paper is easier on the eyes in a dark room.", crops=[
             crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
             crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
