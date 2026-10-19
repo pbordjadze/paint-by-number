@@ -3,7 +3,8 @@ import SwiftUI
 
 /// Before/after: the photo on the leading side of a draggable divider, the template's picture
 /// (the painting, or its line art: Settings › Preview) on the trailing side. New pictures
-/// crossfade in. Pinch or double-tap zooms both layers alike (up to `maxZoom`) to check an eye or
+/// crossfade in, a photo's first with the divider sweeping in from the trailing edge
+/// (`sweepIn`). Pinch or double-tap zooms both layers alike (up to `maxZoom`) to check an eye or
 /// a line of writing, and the zoom holds while the sliders change the template; zoomed in, a drag
 /// pans and the divider moves by its handle. The comparison takes the photo's shape, or fills
 /// the space it is given (`fillsSpace`, the enlarged preview) with the picture fitted inside it,
@@ -29,6 +30,8 @@ struct CompareView: View {
     @State private var liveZoom: CGFloat?
     @State private var liveOffset: CGSize?
     @State private var frameSize: CGSize = .zero
+    /// The divider has swept in for this photo's first picture (`sweepIn`).
+    @State private var hasSwept = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let maxZoom: CGFloat = 4
@@ -127,13 +130,21 @@ struct CompareView: View {
             // A resized frame (the enlarged preview, a rotation) keeps the zoomed picture over it.
             offset = clamped(offset, zoom: zoom, in: size)
         }
-        // Another photo starts fitted.
+        // Another photo starts fitted, its divider waiting at the trailing edge for the picture.
         .onChange(of: ObjectIdentifier(photo)) {
             zoom = 1
             offset = .zero
+            hasSwept = false
+            if after == nil { split = 1 }
+        }
+        // Without a picture the divider stands at the trailing edge whatever `split` is: setting
+        // it there before one arrives gives the sweep its start without a frame of its own.
+        .onAppear { if after == nil { split = 1 } }
+        .onChange(of: after == nil) { _, isNil in
+            if !isNil { sweepIn() }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Comparison of photo and template")
+        .accessibilityLabel("Comparison of photo and painting")
         .accessibilityValue(accessibilityValue)
         .accessibilityAdjustableAction { direction in
             switch direction {
@@ -291,6 +302,21 @@ struct CompareView: View {
     }
 
     private static let space = "compare"
+
+    /// The photo's first picture arrives from the trailing edge, the divider sweeping from there
+    /// to the middle: before and after, shown rather than said. Once per photo, when the view
+    /// saw it arrive; Reduce Motion or a zoom puts the divider in the middle at once, and a
+    /// divider the painter moved while waiting stays where it is.
+    private func sweepIn() {
+        guard !hasSwept else { return }
+        hasSwept = true
+        guard split == 1 else { return }
+        if reduceMotion || zoom != 1 || liveZoom != nil || liveOffset != nil {
+            split = 0.5
+        } else {
+            withAnimation(.smooth(duration: 0.9).delay(0.15)) { split = 0.5 }
+        }
+    }
 
     private func labels(split: CGFloat) -> some View {
         // Tight enough for both words on a tall photo's narrow preview on a phone.

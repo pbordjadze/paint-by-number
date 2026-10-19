@@ -11,11 +11,16 @@ struct CompletionBar: View {
 
     let session: PaintingSession
     let title: String
+    /// False while the top bar's progress badge names the painting: the caption says it's all
+    /// painted instead.
+    var showsTitle = true
     let share: CompletionShare
     /// The seal bounces each time this grows (`PaintView` bumps it once the bar is up: a bar
     /// inserted with the painting's completion never sees that change).
     let sealBounces: Int
     let onReplay: () -> Void
+    /// Replay's slot holds Stop while the painting plays back.
+    let onStopReplay: () -> Void
     let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
 
@@ -29,7 +34,7 @@ struct CompletionBar: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
                 Group {
-                    if title.isEmpty {
+                    if title.isEmpty || !showsTitle {
                         Text("Every region is painted.")
                     } else {
                         Text(title)
@@ -42,9 +47,13 @@ struct CompletionBar: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
-            GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
-                // The only hint after a finish: over the bar, which sits at the bottom.
-                .gentleTip(.benchReplay, arrowEdge: .bottom)
+            if session.isReplaying {
+                GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
+            } else {
+                GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
+                    // The only hint after a finish: over the bar, which sits at the bottom.
+                    .gentleTip(.benchReplay, arrowEdge: .bottom)
+            }
             if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 // UIImage keeps the picture's Display P3 colors.

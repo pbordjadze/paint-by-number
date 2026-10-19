@@ -11,6 +11,8 @@ final class CanvasController {
     func zoomToFit() { view?.zoomToFit() }
     func zoom(by factor: CGFloat) { view?.zoom(by: factor) }
     func replay() { view?.replay() }
+    /// The painting shows whole again at once.
+    func stopReplay() { view?.stopReplay() }
     /// Where the template is in the canvas (the canvas's own coordinates), and whether the first
     /// frame has been on screen (`PaintCanvas.watchesFirstFrame`): the start of a painting is handed
     /// over to the canvas (`StartHandoff`).

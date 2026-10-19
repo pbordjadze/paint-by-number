@@ -116,7 +116,8 @@ struct TimelapseExportSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        // A progress bar and a button: half a screen is room enough, with nothing to pull up to.
+        .presentationDetents([.medium])
         .task(id: attempt) { await model.run() }
         #if DEBUG
         .onChange(of: model.phase) { _, phase in
@@ -133,12 +134,14 @@ struct TimelapseExportSheet: View {
     private var status: some View {
         switch model.phase {
         case .rendering(let fraction):
+            // No label of its own: the title above says what it measures.
             ProgressView(value: fraction) {
-                Text("Rendering frames")
+                EmptyView()
             } currentValueLabel: {
                 Text(fraction, format: .percent.precision(.fractionLength(0)))
                     .monospacedDigit()
             }
+            .accessibilityLabel(Text("Making Your Time-lapse"))
             Button("Cancel") { dismiss() }
                 .buttonStyle(.glass)
                 .keyboardShortcut(.cancelAction)

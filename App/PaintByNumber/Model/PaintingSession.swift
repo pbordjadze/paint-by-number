@@ -67,6 +67,9 @@ final class PaintingSession {
     /// Only the progress badge reads it (`shownFraction`, `shownPaintedByColor`), so it says what
     /// the canvas shows.
     private(set) var replayed: Int?
+    /// A replay plays: Undo waits and Replay becomes Stop. Stored apart from `replayed`, which
+    /// changes many times a second, so the screen around the badge renders only as it starts and ends.
+    private(set) var isReplaying = false
 
     @ObservationIgnored weak var canvas: PaintingCanvas?
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
@@ -224,6 +227,7 @@ final class PaintingSession {
     func showReplayed(_ count: Int?) {
         let shown = count.map { min(max($0, 0), progress.regionCount) }
         if replayed != shown { replayed = shown }
+        if isReplaying != (shown != nil) { isReplaying = shown != nil }
     }
 
     /// The share of the areas the screen shows painted: the replay's while one plays, else

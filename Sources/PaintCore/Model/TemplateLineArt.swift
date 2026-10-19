@@ -9,6 +9,11 @@ public enum LineLayer: UInt8, Sendable, CaseIterable {
     case texture = 2
     /// A boundary where only the paint changes and nothing is drawn (banded skies, shading).
     case color = 3
+
+    /// Whether a line stored with layer `raw` is part of the drawing: every layer before
+    /// `color`. A layer past it (from a newer app) reads as `color`, never drawn. The one rule
+    /// for the screen (`DrawableLineArt`) and Refine's gestures (`RefineGestures.drawingLines`).
+    public static func isDrawn(_ raw: UInt8) -> Bool { raw < color.rawValue }
 }
 
 /// Line data of a template made from an edge map: which edges are lines of the drawing, in

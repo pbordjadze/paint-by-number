@@ -34,6 +34,8 @@ import PaintCore
 /// - `create-refine`, `create-refine-dark`: The Great Wave's Refine screen, refined as a painter
 ///   might (`refinements(canvas:)`, edits made to the template by hand): the big cloud's edge drawn
 ///   in, exactly as drawn, the spray off the wave's crest rubbed out.
+/// - `create-refine-colors`, `create-refine-colors-dark`: the same, in Starry Night, with Refine's
+///   Colors open over the painting (`RefineColorsPanel`).
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -45,8 +47,8 @@ import PaintCore
 /// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
 ///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
 ///   `paint-tip` (`PaintTips.configure`).
-/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips hung below the
-///   gear. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
+/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips as a card under
+///   the bar. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
 /// - `create-tip`: the photograph starter's preview with Already Chosen for You at the
 ///   "Suggested for this photo" chip (the divider's tip is closed already).
 /// - `settings`: the settings sheet over the gallery.
@@ -86,7 +88,7 @@ import PaintCore
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
+         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createSuggested, createCustom, createFromFile,
          galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
@@ -116,6 +118,7 @@ enum ShellDemo: Equatable {
         case "create-preview", "create-preview-dark": .createPreview
         case "create-line-art": .createLineArt
         case "create-refine", "create-refine-dark": .createRefine
+        case "create-refine-colors", "create-refine-colors-dark": .createRefineColors
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -187,7 +190,7 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
-            || self == .createSuggested || self == .createCustom || self == .createTip
+            || self == .createRefineColors || self == .createSuggested || self == .createCustom || self == .createTip
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
@@ -234,7 +237,7 @@ enum ShellDemo: Equatable {
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
-        case .createCustom, .createRefine: pictures.first
+        case .createCustom, .createRefine, .createRefineColors: pictures.first
         default: nil
         }
     }
@@ -247,12 +250,17 @@ enum ShellDemo: Equatable {
 
     /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
     /// and shows the Refine screen.
-    var refines: Bool { self == .createRefine }
+    var refines: Bool { self == .createRefine || self == .createRefineColors }
+
+    /// Refine opens on Colors, over the painting.
+    var opensColors: Bool { self == .createRefineColors }
 
     /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
     /// canvas of `template`.
     static func refinements(for template: Template) -> TemplateRefinements {
-        refinements(canvas: CGSize(width: template.width, height: template.height))
+        var refinements = refinements(canvas: CGSize(width: template.width, height: template.height))
+        if current?.opensColors == true { refinements.edits.append(TemplateEditor.look(.starryNight, strength: 1, on: template)) }
+        return refinements
     }
 
     /// The same for a canvas of `size`, in canvas units: laid on the template by hand, as Refine
@@ -342,7 +350,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,

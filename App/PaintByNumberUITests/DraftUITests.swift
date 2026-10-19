@@ -25,7 +25,7 @@ final class DraftUITests: XCTestCase {
         // Refine is on while the template is made again; the picture is the final one once the
         // status has gone.
         XCTAssertTrue(
-            waitFor(app.staticTexts["Creating template…"], toMatch: NSPredicate(format: "exists == false"), timeout: 120),
+            waitFor(app.staticTexts["Making the painting…"], toMatch: NSPredicate(format: "exists == false"), timeout: 120),
             "The resumed draft's template was never made")
         XCTAssertTrue(
             waitFor(app.staticTexts["Updating…"], toMatch: NSPredicate(format: "exists == false"), timeout: 120),

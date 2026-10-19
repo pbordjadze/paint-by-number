@@ -32,17 +32,17 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
-    /// The tips that hang from a button in a navigation bar (`barTip`: a popover of SwiftUI's own, with
-    /// the tip's `TipView` inside).
-    var hangsFromBar: Bool {
+    /// The tips about a button in a navigation bar, a card with no arrow at the top of its screen
+    /// (`barTips`).
+    var liesUnderTheBar: Bool {
         switch self {
         case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
         default: false
         }
     }
 
-    /// The tips that hang from a painting's card on the shelf, in a popover of SwiftUI's own like the
-    /// bar's (`cardTip`): TipKit's popover tip never came up on a card (CI, October 17: the turn
+    /// The tips that hang from a painting's card on the shelf, in a popover of SwiftUI's own
+    /// (`cardTip`): TipKit's popover tip never came up on a card (CI, October 17: the turn
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
@@ -50,10 +50,10 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// Paul, October 18, shown the arrow and none, "No arrow".
     var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }
 
-    /// Tips the app draws itself, in a popover of SwiftUI's own or on the page. They have no display
+    /// Tips the app draws itself, in a popover of SwiftUI's own or as a card on the screen. They have no display
     /// limit of TipKit's, which would retire the tip from under its own view: closing, using or leaving
     /// it unread (`TipDesk`) says it once.
-    var isDrawnByTheApp: Bool { hangsFromBar || hangsFromCard || liesOnThePage }
+    var isDrawnByTheApp: Bool { liesUnderTheBar || hangsFromCard || liesOnThePage }
 
     /// How to use a screen at all, so it waits for neither the gap nor something done
     /// (`TipPacing`): Tap to Paint, and Refine's Draw Your Own Lines.

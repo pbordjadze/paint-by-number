@@ -11,6 +11,9 @@ import Foundation
 /// where it does nothing again; so a list laid on a new base shows what still fits it, and the
 /// edits that no longer apply are counted (`Replay.left`), not lost.
 ///
+/// An edit brings its colors through the looks and repaints made before it
+/// (`TemplateEditor.recolored`), so a line drawn under a look takes the look.
+///
 /// The templates after the last few edits are kept (`snapshotsKept`), so taking back or putting
 /// back an edit costs no editing, and a changed list is laid again only from where it parts from
 /// the one before.
@@ -21,6 +24,8 @@ public struct EditTrail: Sendable {
     public private(set) var edits: [TemplateEditor.Edit] = []
     /// `base` with `edits` laid.
     public private(set) var template: Template
+    /// Whether each of `edits` changed the template it was laid on.
+    private var made: [Bool] = []
     /// The template after the first `count` edits (`count` below `edits.count`, above 0), for the
     /// last few counts.
     private var earlier: [Int: Template] = [:]
@@ -71,10 +76,11 @@ public struct EditTrail: Sendable {
     /// as it was, and is not added to `edits`.
     @discardableResult
     public mutating func add(_ edit: TemplateEditor.Edit) -> Verdict {
-        let (next, verdict) = Self.lay(edit, on: template)
+        let (next, verdict) = Self.lay(edit, on: template, after: recolors(before: edits.count))
         guard verdict.isMade else { return verdict }
         if !edits.isEmpty { earlier[edits.count] = template }
         edits.append(edit)
+        made.append(true)
         template = next
         Self.prune(&earlier)
         return verdict
@@ -91,10 +97,14 @@ public struct EditTrail: Sendable {
         var (position, current) = known(atMost: common)
         var kept = earlier.filter { $0.key <= common && $0.key < target.count }
         var replay = Replay()
+        var made = Array(self.made.prefix(position))
         while position < target.count {
             try cancel.throwIfCancelled()
             if position > 0 { kept[position] = current }
-            let (next, verdict) = Self.lay(target[position], on: current)
+            let recolors = target.indices.prefix(position)
+                .filter { made[$0] && TemplateEditor.isRecolor(target[$0]) }.map { target[$0] }
+            let (next, verdict) = Self.lay(target[position], on: current, after: recolors)
+            made.append(verdict.isMade)
             switch verdict {
             case .made(let tooSmall):
                 replay.made += 1
@@ -107,6 +117,7 @@ public struct EditTrail: Sendable {
             Self.prune(&kept)
         }
         edits = target
+        self.made = made
         template = current
         earlier = kept
         return replay
@@ -120,9 +131,16 @@ public struct EditTrail: Sendable {
         return (0, base)
     }
 
-    private static func lay(_ edit: TemplateEditor.Edit, on template: Template) -> (Template, Verdict) {
+    /// The looks and repaints among the first `count` edits that changed the template.
+    private func recolors(before count: Int) -> [TemplateEditor.Edit] {
+        edits.indices.prefix(count).filter { made[$0] && TemplateEditor.isRecolor(edits[$0]) }.map { edits[$0] }
+    }
+
+    private static func lay(
+        _ edit: TemplateEditor.Edit, on template: Template, after recolors: [TemplateEditor.Edit]
+    ) -> (Template, Verdict) {
         do {
-            let (next, outcome) = try TemplateEditor.apply(edit, to: template)
+            let (next, outcome) = try TemplateEditor.apply(TemplateEditor.recolored(edit, by: recolors), to: template)
             if let declined = outcome.declined { return (template, .declined(declined.reason)) }
             guard outcome.changed else { return (template, .nothing) }
             return (next, .made(tooSmall: !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0))

@@ -20,13 +20,16 @@ nonisolated enum RefineTool: Hashable {
     /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
     /// one it missed.
     case text
+    /// Colors: looks over every paint and new colors for a paint (`RefineColorsPanel`); a tap on
+    /// an area picks its paint.
+    case colors
 
     /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
     var pencilPartner: RefineTool? {
         switch self {
         case .pen, .shape: .eraser
         case .eraser, .smartEraser: .pen
-        case .fill, .splitter, .text: nil
+        case .fill, .splitter, .text, .colors: nil
         }
     }
 
@@ -50,14 +53,16 @@ nonisolated enum RefineBackdrop: Hashable {
 /// `CreateModel.edit(_:)`): no image processing, no new template. A line is the line drawn, as the
 /// outline of the areas it closes too, and nothing the painter didn't touch changes:
 /// - the Pen draws a line as drawn (smoothed as it showed); only an end whose ink touches a
-///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks;
+///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks
+///   (`PenAssist`); the sides of the areas it cuts that the photo tells apart take their own
+///   paints;
 /// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
 ///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
 ///   curve's ends move onto a line their ink touches, as the Pen's do;
-/// - the Color Splitter's stroke divides an area's color where it goes and draws no line
-///   (`TemplateEditor.Edit.split`): each side takes the photo's color there, a different paint
-///   from the other's; it shows dashed while the finger is down, and picking it shows the
-///   painting, where a split shows;
+/// - the Color Splitter, out of the toolbar for now (`offersSplitter`), divides an area's color
+///   where its stroke goes and draws no line (`TemplateEditor.Edit.split`): each side takes the
+///   photo's color there, a different paint from the other's; it shows dashed while the finger
+///   is down, and picking it shows the painting, where a split shows;
 /// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
 ///   tap takes out a dab;
 /// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction;
@@ -119,12 +124,21 @@ struct RefineView: View {
     @State private var picture: CGRect = .zero
     @State private var zoom: CGFloat = 1
     @State private var canvasSize: CGSize = .zero
+    /// Colors' paint picked, an index of the template's palette, and whether its family follows it.
+    @State private var colorPaint: Int?
+    @State private var colorFamily = true
 
     init(model: CreateModel) {
         self.model = model
         // Never a draft: its canvas is smaller than the one the edits will be laid on.
         _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
         _tool = State(initialValue: .pen)
+        #if DEBUG
+        if ShellDemo.current?.opensColors == true {
+            _tool = State(initialValue: .colors)
+            _backdrop = State(initialValue: .painting)
+        }
+        #endif
     }
 
     var body: some View {
@@ -195,6 +209,9 @@ struct RefineView: View {
                             .interpolation(.high)
                             .frame(width: picture.width, height: picture.height)
                             .position(x: picture.midX, y: picture.midY)
+                            // New colors cross-fade in (`land`).
+                            .id(painting?.preview)
+                            .transition(.opacity)
                     }
                     if let base {
                         LineArtLayer(
@@ -276,8 +293,8 @@ struct RefineView: View {
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
             case .eraseLine:
                 if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
-            case .fill, .split:
-                // `RefineFillLayer` shows fills; a split draws nothing.
+            case .fill, .split, .look, .repaint:
+                // `RefineFillLayer` shows fills; a split and Colors draw nothing.
                 break
             }
         }
@@ -345,8 +362,8 @@ struct RefineView: View {
         case .pen, .splitter, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
         case .text: mark(touch, at: point)
-        // A fill is a tap: a drag does nothing.
-        case .fill: break
+        // A fill is a tap, and so is picking a paint: a drag does nothing.
+        case .fill, .colors: break
         }
     }
 
@@ -485,9 +502,14 @@ struct RefineView: View {
                 guard !Task.isCancelled else { return }
                 if let made { image = (preview.id, made) }
             }
-            base = preview
-            // Only a painting of this template: an older one would show lines that are gone.
-            painting = image?.preview == preview.id ? image : nil
+            // Colors' changes cross-fade in, the Lamplit Table's gentler landing (the Child at
+            // Bedtime); every other edit is there the moment it lands.
+            let fades = tool == .colors && !reduceMotion && painting != nil && image?.preview != painting?.preview
+            withAnimation(fades ? .easeInOut(duration: 0.35) : nil) {
+                base = preview
+                // Only a painting of this template: an older one would show lines that are gone.
+                painting = image?.preview == preview.id ? image : nil
+            }
         }
         submitted.removeAll { $0.id <= settled }
     }
@@ -524,7 +546,17 @@ struct RefineView: View {
             fill(at: point)
         case .text:
             toggleText(at: point)
+        case .colors:
+            pickPaint(at: point)
         }
+    }
+
+    /// Colors: the paint of the area under a tap is picked, or let go when it was.
+    private func pickPaint(at point: SIMD2<Float>) {
+        guard let template = base?.template, let region = template.region(at: canvasPoint(point)) else { return }
+        let paint = Int(template.regions[region].colorIndex)
+        FeedbackEngine.shared.selectionChanged()
+        colorPaint = colorPaint == paint ? nil : paint
     }
 
     /// Takes out the drawn line under a tap from junction to junction (`LineChains` finds it for
@@ -652,6 +684,16 @@ struct RefineView: View {
     /// what comes next.
     private var tools: some View {
         VStack(spacing: 12) {
+            #if UNRELEASED
+            if tool == .colors, let base {
+                RefineColorsPanel(
+                    template: base.template, paintsBefore: model.paintsBeforeEdits,
+                    edits: base.refinements.edits, paint: $colorPaint, family: $colorFamily,
+                    change: model.recolor)
+                    .disabled(model.phase == .generating)
+                    .transition(.opacity)
+            }
+            #endif
             if tool == .shape, shape == .curve, curve != nil {
                 Text(hint(for: .shape))
                     .font(.footnote)
@@ -682,9 +724,15 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    /// The Pen, the Color Splitter, Shapes, the erasers and Fill, then what shows beneath: one row
-    /// where it fits, else the pens and erasers above Fill and the backdrop (a phone's width holds
-    /// about five of these buttons).
+    /// Whether the toolbar offers the Color Splitter. Out for now (Paul, October 18: "drop the
+    /// color line splitting tool for now… it's not working right"): a Pen line gives the sides it
+    /// parts their own colors instead (`docs/coloring-book.md` › A drawn line's colors). The tool
+    /// and its edit stay, so splits already made lay as ever; true brings it back.
+    static let offersSplitter = false
+
+    /// The Pen, the Color Splitter (when offered), Shapes, the erasers and Fill, then what shows
+    /// beneath: one row where it fits, else the pens and erasers above Fill and the backdrop (a
+    /// phone's width holds about five of these buttons).
     private var lineTools: some View {
         ViewThatFits(in: .horizontal) {
             GlassEffectContainer(spacing: 10) {
@@ -708,8 +756,10 @@ struct RefineView: View {
             .disabled(!model.hasLineArtInput)
             // Draw Your Own Lines: over the tools, which sit at the bottom.
             .gentleTip(.refineDraw, arrowEdge: .bottom)
-        toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
-            .disabled(!model.hasLineArtInput)
+        if Self.offersSplitter {
+            toolButton(.splitter, systemImage: "scissors", label: Text("Color Splitter"), id: "splitter")
+                .disabled(!model.hasLineArtInput)
+        }
         shapesButton
             .disabled(!model.hasLineArtInput)
         erasersButton
@@ -722,6 +772,10 @@ struct RefineView: View {
             .disabled(!model.hasLineArtInput)
             // Make a Shape Its Own: over the tools, which sit at the bottom.
             .gentleTip(.refineFill, arrowEdge: .bottom)
+        #if UNRELEASED
+        toolButton(.colors, systemImage: "swatchpalette", label: Text("Colors"), id: "colors")
+            .disabled(!model.hasLineArtInput)
+        #endif
         Capsule()
             .fill(Color.primary.opacity(0.15))
             .frame(width: 1, height: 24)
@@ -783,6 +837,10 @@ struct RefineView: View {
             String(localized: "refine.hint.splitter",
                    defaultValue: "Draw across an area to split it into two colors, with no line between them. Two fingers zoom and move.",
                    comment: "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), read by VoiceOver as the hint of its button")
+        case .colors:
+            String(localized: "refine.hint.colors",
+                   defaultValue: "Pick a look for every paint, or tap a paint or an area to give it a new color.",
+                   comment: "Refine screen: how Colors works (a look changes every paint of the painting; a paint picked, from the row of paints or by a tap on its area, takes a new color from the color picker), read by VoiceOver as the hint of its button")
         case .text:
             String(localized: "refine.hint.text",
                    defaultValue: "Tap a line of text to keep or ignore it, or drag across a line the app missed.",
@@ -947,8 +1005,8 @@ struct RefineView: View {
         finishCurve()
         self.tool = tool
         if tool.erases { eraser = tool }
-        // A split draws no line: its colors show over the painting.
-        if tool == .splitter, base != nil { backdrop = .painting }
+        // A split draws no line, and Colors changes only paints: they show over the painting.
+        if tool == .splitter || tool == .colors, base != nil { backdrop = .painting }
     }
 
     /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.

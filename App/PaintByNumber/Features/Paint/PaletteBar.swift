@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import PaintCore
 import SwiftUI
@@ -48,6 +49,40 @@ nonisolated struct PaletteMetrics: Equatable, Sendable {
     }
 }
 
+/// Where the palette's scroll view stands along the bar, and the offset that brings a lane of
+/// swatches into view (`PaletteBar.reveal`). The glass may clip the scroll view: only `shown`
+/// points of it, from `hiddenBefore` points in, can be seen, and only they count as in view.
+nonisolated struct PaletteWindow: Equatable, Sendable {
+    /// The scroll view's content offset, its length and its content's, along the bar.
+    var offset: CGFloat
+    var viewport: CGFloat
+    var content: CGFloat
+    var hiddenBefore: CGFloat = 0
+    var shown: CGFloat
+
+    /// The offset that shows the swatches of `lane` whole, with `PaletteMetrics.endPadding` to spare
+    /// on the side they come in from, moving as little as it can; nil while they show already (or
+    /// the bar can't scroll further).
+    func offset(revealing lane: Int, metrics: PaletteMetrics) -> CGFloat? {
+        let start = PaletteMetrics.endPadding + CGFloat(lane) * metrics.pitch
+        let end = start + metrics.pitch - PaletteMetrics.spacing
+        let margin = PaletteMetrics.endPadding
+        let before = min(max(hiddenBefore, 0), viewport)
+        let length = max(0, min(shown, viewport - before))
+        let first = offset + before
+        let target: CGFloat
+        if start - margin < first {
+            target = start - margin - before
+        } else if end + margin > first + length {
+            target = end + margin - length - before
+        } else {
+            return nil
+        }
+        let clamped = min(max(target, 0), max(0, content - viewport))
+        return abs(clamped - offset) < 0.5 ? nil : clamped
+    }
+}
+
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
@@ -70,6 +105,19 @@ struct PaletteBar: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The color whose details popover is open (long-press on its swatch).
     @State private var detailsColor: Int?
+    @State private var position = ScrollPosition(idType: Int.self)
+    @State private var scroll = ScrollState()
+
+    /// Where the scroll view and the bar's clipped glass are, and how far it has scrolled. A
+    /// reference, so that scrolling renders nothing.
+    private final class ScrollState {
+        var geometry: ScrollGeometry?
+        /// Global frames: the scroll view's, and the bar's as the glass clips it.
+        var frame = CGRect.null
+        var clip = CGRect.null
+        /// A color to bring into view once all three are known (the bar appearing).
+        var pending: Int?
+    }
 
     /// Colors still to paint (plus the selected one): finished colors leave the palette.
     static func visibleColors(_ session: PaintingSession) -> [Int] {
@@ -126,41 +174,82 @@ struct PaletteBar: View {
                     .padding(.top, 8)
                     .padding(.horizontal, PaletteMetrics.endPadding)
             }
-            ScrollViewReader { proxy in
-                ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
-                    along {
-                        ForEach(lanes.indices, id: \.self) { lane in
-                            across {
-                                ForEach(lanes[lane], id: \.self) { index in
-                                    swatch(index).id(index)
-                                        .transition(transition)
-                                }
+            ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
+                along {
+                    ForEach(lanes.indices, id: \.self) { lane in
+                        across {
+                            ForEach(lanes[lane], id: \.self) { index in
+                                swatch(index).id(index)
+                                    .transition(transition)
                             }
                         }
                     }
-                    .padding(axis == .horizontal ? .horizontal : .vertical, PaletteMetrics.endPadding)
-                    .padding(axis == .horizontal ? .vertical : .horizontal, PaletteMetrics.padding)
-                    .frame(minWidth: minLength, alignment: .center)
                 }
-                // No anchor: the bar moves only as far as brings the selected swatch into view, and
-                // not at all while it shows. Centring it pulled the palette to its middle at every
-                // change of color.
-                .onAppear {
-                    if let selected = session.selectedColor { proxy.scrollTo(selected) }
-                }
-                .onChange(of: session.selectedColor) { _, selected in
-                    guard let selected else { return }
-                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.35)) { proxy.scrollTo(selected) }
-                }
+                .padding(axis == .horizontal ? .horizontal : .vertical, PaletteMetrics.endPadding)
+                .padding(axis == .horizontal ? .vertical : .horizontal, PaletteMetrics.padding)
+                .frame(minWidth: minLength, alignment: .center)
+            }
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { _, geometry in
+                scroll.geometry = geometry
+                revealPending()
+            }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                scroll.frame = frame
+                revealPending()
+            }
+            // The bar moves only as far as brings the selected swatch into view, and not at all while
+            // it shows: centring it pulled the palette to its middle at every change of color.
+            .onAppear {
+                if let selected = session.selectedColor { reveal(selected, animated: false) }
+            }
+            .onChange(of: session.selectedColor) { _, selected in
+                if let selected { reveal(selected, animated: true) }
             }
         }
         .frame(width: axis == .vertical ? thickness : nil,
                height: axis == .horizontal ? thickness : nil)
         .frame(maxWidth: axis == .horizontal ? max(metrics.length(count: count, lines: lineCount), minLength) : nil,
                maxHeight: axis == .vertical ? metrics.length(count: count, lines: lineCount) : nil)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            scroll.clip = frame
+            revealPending()
+        }
         .clipShape(.rect(cornerRadius: radius))
         .glassEffect(.regular, in: .rect(cornerRadius: radius))
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
+    }
+
+    /// Scrolls the swatch of `color` whole into view, as little as it can. Not `ScrollViewReader`'s
+    /// `scrollTo` without an anchor: on a phone it left the swatch three places past the bar's
+    /// leading edge, under the glass (Paul, October 18: "When I tap "10" the palette scrolls but not
+    /// such that 10 is visible"); the scroll view counted more of itself in view than the glass shows.
+    /// So the offset is worked out here, from the swatches' places and what the glass shows.
+    private func reveal(_ color: Int, animated: Bool) {
+        let horizontal = axis == .horizontal
+        guard let geometry = scroll.geometry, !scroll.frame.isNull, !scroll.clip.isNull else {
+            scroll.pending = color
+            return
+        }
+        scroll.pending = nil
+        let visible = Set(Self.visibleColors(session))
+        let colors = order.filter(visible.contains)
+        let lanes = Self.lanes(colors, lines: max(1, min(lines, colors.count)))
+        guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
+        let window = PaletteWindow(
+            offset: horizontal ? geometry.contentOffset.x : geometry.contentOffset.y,
+            viewport: horizontal ? geometry.containerSize.width : geometry.containerSize.height,
+            content: horizontal ? geometry.contentSize.width : geometry.contentSize.height,
+            hiddenBefore: horizontal ? scroll.clip.minX - scroll.frame.minX : scroll.clip.minY - scroll.frame.minY,
+            shown: horizontal ? scroll.clip.width : scroll.clip.height)
+        guard let target = window.offset(revealing: lane, metrics: metrics) else { return }
+        withAnimation(animated && !reduceMotion ? .smooth(duration: 0.35) : nil) {
+            if horizontal { position.scrollTo(x: target) } else { position.scrollTo(y: target) }
+        }
+    }
+
+    private func revealPending() {
+        if let color = scroll.pending { reveal(color, animated: false) }
     }
 
     private func swatch(_ index: Int) -> some View {
@@ -321,7 +410,11 @@ private struct Swatch: View {
         .scaleEffect(isSelected ? 1.14 : 1)
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.6), value: isSelected)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.35), value: fraction)
-        .contentShape(.circle)
+        // The touch area is the whole pitch, square: a tap between two swatches or in a corner
+        // lands on the nearer one instead of on nothing. The layout keeps the swatch's size.
+        .padding(PaletteMetrics.spacing / 2)
+        .contentShape(.rect)
+        .padding(-PaletteMetrics.spacing / 2)
     }
 }
 

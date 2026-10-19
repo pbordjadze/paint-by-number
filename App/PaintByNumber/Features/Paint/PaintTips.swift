@@ -163,7 +163,7 @@ enum PaintTips {
     }
 
     /// The painter dismissed the tip that has the turn in a way TipKit doesn't see (a tap outside
-    /// the popover of `barTip`): it stays closed, as it does when TipKit's own popover is dismissed.
+    /// the popover of `cardTip`): it stays closed, as it does when TipKit's own popover is dismissed.
     static func closed(_ id: TipID) {
         guard desk.turn == id else { return }
         desk.stop(id)

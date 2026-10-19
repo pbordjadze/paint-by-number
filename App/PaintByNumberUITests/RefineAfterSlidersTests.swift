@@ -110,13 +110,13 @@ final class RefineAfterSlidersTests: XCTestCase {
         return app
     }
 
-    /// Waits for the painting to be made: the status has no "Updating…" or "Creating template…".
+    /// Waits for the painting to be made: the status has no "Updating…" or "Making the painting…".
     @MainActor
     private func settle(_ app: XCUIApplication) {
         // The full resolution starts a moment after a slider moved.
         _ = app.staticTexts["Updating…"].waitForExistence(timeout: 3)
         let gone = NSPredicate(format: "exists == false")
-        for text in ["Creating template…", "Updating…"] {
+        for text in ["Making the painting…", "Updating…"] {
             XCTAssertTrue(waitFor(app.staticTexts[text], toMatch: gone, timeout: 120), "“\(text)” never went")
         }
     }

@@ -29,11 +29,15 @@ extension EditWork {
     /// piece decides it. A piece keeps the paint it has where the one it would take is a
     /// neighbour's across an undrawn edge (one area to the eye, with two numbers), or where its
     /// number has no room for the new paint's digits.
-    /// A split's pieces (`splitting`) are painted so, and where that leaves one paint on both
-    /// sides of the split (the photo is about the same color across it), the smaller side takes a
-    /// shade of that paint toward its photo color (`shade(of:toward:)`), an existing paint within
-    /// a just-noticeable difference of it or else a new one: the painter asked for the area to be
-    /// told apart.
+    /// Where that leaves one paint on both sides of a boundary the line laid, the paint wasn't
+    /// recalculated: the book's tolerance holds a piece's color and the paint it had as one. A
+    /// drawn line's two sides then part where the photo tells them apart (their colors at least
+    /// `splitShadeStep` apart): the side farther from the paint, else the other, takes a shade of
+    /// it toward its photo color (`shade(of:toward:)`, the photo's own color that far away), an
+    /// existing paint within a just-noticeable difference of it or else a new one; the painter drew a line between them
+    /// (Paul, October 18: "colors should get recalculated when a new line is drawn"). A split's
+    /// pieces (`splitting`) part whatever the photo: the smaller side takes the shade, the painter
+    /// having asked for the area to be told apart.
     mutating func paint(_ paints: [TemplateEditor.Paint]) throws {
         if splitting { for r in summary.pieces where regionAlive[r] { refreshColorWeights(around: r) } }
         guard !paints.isEmpty, !summary.pieces.isEmpty else { return }
@@ -58,22 +62,32 @@ extension EditWork {
             guard fresh || nearest != current, fresh || !hasUndrawnNeighbour(r, painted: UInt32(nearest)) else { continue }
             recolor(r, to: fresh ? t.palette.count : nearest, adding: fresh ? color : nil)
         }
-        guard splitting else { return }
-        for e in splitEdges where !edgeDead[e] {
+        for e in lineEdges where !edgeDead[e] {
             guard let b = right(e) else { continue }
             let a = left(e)
             guard a != b, t.regions[a].colorIndex == t.regions[b].colorIndex else { continue }
-            let (areaA, areaB) = (area(of: a), area(of: b))
-            let smaller = areaA != areaB ? (areaA < areaB ? a : b) : max(a, b)
-            // The larger side takes the shade where the smaller has no room for its number.
-            for r in [smaller, smaller == a ? b : a] {
+            let order: [Int]
+            if splitting {
+                let (areaA, areaB) = (area(of: a), area(of: b))
+                let smaller = areaA != areaB ? (areaA < areaB ? a : b) : max(a, b)
+                // The larger side takes the shade where the smaller has no room for its number.
+                order = [smaller, smaller == a ? b : a]
+            } else {
+                guard let colorA = colors[a], let colorB = colors[b],
+                      ColorScience.distance(colorA, colorB) >= Self.splitShadeStep
+                else { continue }
+                let paint = t.palette[Int(t.regions[a].colorIndex)].oklab
+                let (offA, offB) = (ColorScience.distance(paint, colorA), ColorScience.distance(paint, colorB))
+                order = offA != offB ? (offA > offB ? [a, b] : [b, a]) : [max(a, b), min(a, b)]
+            }
+            for r in order {
                 if let color = colors[r], shadeSplit(r, toward: color) { break }
             }
         }
     }
 
-    /// Paints `r`, one side of a split whose other side has its paint, a shade of that paint
-    /// toward `color` (`shade(of:toward:step:)`): an existing paint within a just-noticeable
+    /// Paints `r`, one side of a split or a drawn line whose other side has its paint, a shade of
+    /// that paint toward `color` (`shade(of:toward:step:)`): an existing paint within a just-noticeable
     /// difference of the shade or else a new one, a step farther out each time a shade lands on a
     /// paint a neighbour across an undrawn edge has, or has no room for its number. False when no
     /// shade fits.
@@ -97,7 +111,8 @@ extension EditWork {
         return false
     }
 
-    /// How far a split's shade (`shade(of:toward:)`) is from the paint it parts from: half again a
+    /// How far a split's shade (`shade(of:toward:)`) is from the paint it parts from, and how far
+    /// apart the photo's colors of a drawn line's sides must be for them to part: half again a
     /// just-noticeable difference, the least that reads as another paint on the canvas.
     static let splitShadeStep: Float = 1.5 * SegmentationParameters.jnd
 
@@ -141,7 +156,7 @@ extension EditWork {
     /// A split whose new boundary has the same paint on both sides divides nothing the painter
     /// could see: two numbers on one color.
     func checkSplitPaints() throws {
-        for e in splitEdges where !edgeDead[e] {
+        for e in lineEdges where !edgeDead[e] {
             guard let other = right(e) else { continue }
             if t.regions[left(e)].colorIndex == t.regions[other].colorIndex {
                 throw EditFailure.invalid("both sides of the split have the same paint")
