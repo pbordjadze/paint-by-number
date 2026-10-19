@@ -39,6 +39,19 @@ struct MarginariumCastTests {
         #expect(MarginariumCast.team(of: MarginariumCast.rikyu)?.id == "glass-and-frost")
     }
 
+    /// Paul, October 18, 2026: Hope and Eno are Caroline's first two guardians, Hope with the
+    /// Moonlit Circle and Eno with the Workshop; Maynard (after Keynes)
+    /// followed, with the Library.
+    @Test func carolinesGuardiansJoinTheirTeams() {
+        #expect(MarginariumCast.team(of: MarginariumCast.hope)?.id == "moonlit-circle")
+        #expect(MarginariumCast.team(of: MarginariumCast.eno)?.id == "workshop")
+        #expect(MarginariumCast.hope.after == "After the singer Hope Sandoval.")
+        #expect(MarginariumCast.hope.portrait?.contains("Caroline") == true)
+        #expect(MarginariumCast.eno.portrait?.contains("Caroline") == true)
+        #expect(MarginariumCast.team(of: MarginariumCast.keynes)?.id == "library")
+        #expect(MarginariumCast.keynes.portrait?.contains("Caroline") == true)
+    }
+
     @Test func everyBriefIsComplete() {
         for guardian in MarginariumCast.guardians {
             let fields = [guardian.name, guardian.guards, guardian.believes, guardian.loves, guardian.watchesFor,
@@ -58,8 +71,7 @@ struct MarginariumCastTests {
             #expect(guardian.hatched == (MarginariumPet.named(guardian.id) != nil),
                     "\(guardian.id): hatched must match whether its pet ships")
         }
-        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted()
-            == ["astrologer", "bartimaeus", "lotte-reiniger", "moon", "sen-no-rikyu"])
+        #expect(MarginariumCast.guardians.filter { !$0.hatched }.isEmpty)
         #expect(MarginariumCast.helpers.compactMap(\.pet) == ["pip", "colophon"])
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }
