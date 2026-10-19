@@ -425,6 +425,9 @@ private struct GentleTipModifier: ViewModifier {
     var arrowEdge: Edge?
 
     func body(content: Content) -> some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("GentleTip", "\(ids) \(active)")
+        #endif
         // `isPresented: nil` leaves it to TipKit to show and dismiss the popover by the tip's status
         // (and picks the one overload of `popoverTip` that takes an arrow edge that may be nil).
         content.popoverTip(active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge)

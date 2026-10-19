@@ -107,10 +107,12 @@ struct PaintView: View {
 
     var body: some View {
         #if DEBUG
-        // Diagnostic (claude/start-handoff-hang): what invalidates this body, for ci/collect.sh.
-        let _ = Self._logChanges()
+        let _ = RenderMeter.tick("PaintView", "title \(badgeShowsTitle) handoff \(String(describing: startHandoff?.phase)) peek \(peek.isShown) seal \(sealBounces) feedback \(feedback != nil) thanks \(thanks ?? "-") complete \(session.isComplete) started \(session.isStarted) color \(String(describing: session.selectedColor)) replay \(session.isReplaying) size \(String(describing: sizeClass)) type \(dynamicTypeSize) unavailable \(canvasUnavailable) \(photoUnavailable) numbers \(showsNumbers) zen \(zenMode)")
         #endif
         GeometryReader { geo in
+            #if DEBUG
+            let _ = RenderMeter.tick("PaintView.geo", "\(geo.size) \(geo.safeAreaInsets)")
+            #endif
             if canvasUnavailable {
                 CanvasUnavailableView(onClose: onClose)
             } else {
@@ -414,6 +416,9 @@ struct PaintView: View {
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
     /// window: the bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
+        #if DEBUG
+        RenderMeter.tick("PaintView.topBar", "\(width) \(badgeVariants.count)")
+        #endif
         let badges = badgeVariants
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }

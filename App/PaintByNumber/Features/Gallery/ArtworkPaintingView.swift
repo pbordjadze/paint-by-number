@@ -76,8 +76,7 @@ struct ArtworkPaintingView: View {
 
     var body: some View {
         #if DEBUG
-        // Diagnostic (claude/start-handoff-hang): what invalidates this body, for ci/collect.sh.
-        let _ = Self._logChanges()
+        let _ = RenderMeter.tick("ArtworkPaintingView", "landed \(hasLanded) cover \(isUnderCover) failure \(failure != nil) notice \(notice != nil) saveFailed \(saveFailed) regen \(regenerationFailed) autosaver \(autosaver != nil) photo \(sourcePhotoLoader != nil)")
         #endif
         ZStack {
             Theme.paper.ignoresSafeArea()

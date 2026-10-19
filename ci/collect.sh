@@ -11,17 +11,6 @@ cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || t
 xcrun simctl spawn "$UDID" log show --last 90m --info --style compact \
   --predicate 'subsystem == "com.pbordjadze.paintbynumber" AND category IN {"feedback", "library", "demo", "canvas", "create"}' \
   > out/test-app.log 2>/dev/null || true
-# Diagnostic (claude/start-handoff-hang): the DEBUG bodies' `_logChanges`, counted, so a render loop
-# names what keeps invalidating it; then the last lines, for when.
-xcrun simctl spawn "$UDID" log show --last 90m --info --debug --style compact \
-  --predicate 'subsystem == "com.apple.SwiftUI" AND category == "Changed Body Properties"' \
-  > out/body-changes-raw.log 2>/dev/null || true
-sed -E 's/^[0-9-]+ [0-9:.]+ +[A-Za-z]+ +[^ ]+ +//' out/body-changes-raw.log | sort | uniq -c | sort -rn | head -80 \
-  > out/body-changes.txt || true
-grep -c . out/body-changes-raw.log >> out/body-changes.txt 2>/dev/null || true
-awk '{print substr($2,1,5)}' out/body-changes-raw.log | sort | uniq -c > out/body-changes-per-minute.txt || true
-tail -n 300 out/body-changes-raw.log > out/body-changes-tail.log 2>/dev/null || true
-rm -f out/body-changes-raw.log
 grep -hE "error:|FAIL:" out/app-build.log out/app-test.log out/release-build.log out/release-check.log 2>/dev/null \
   | sort -u > out/errors.txt || true
 if [ -d build/Tests.xcresult ]; then
