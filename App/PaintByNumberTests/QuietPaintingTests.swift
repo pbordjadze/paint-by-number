@@ -57,13 +57,15 @@ struct QuietPaintingTests {
         })
         let areas = template.regions.indices.filter { session.colorOf($0) == color }
         session.select(color: color)
+        let first = try #require(template.labels(ofRegion: areas[0]).first).position
+        let second = try #require(template.labels(ofRegion: areas[1]).first).position
 
-        session.paint([areas[0]], from: template.labels(ofRegion: areas[0])[0].position, animated: false)
+        session.paint([areas[0]], from: first, animated: false)
         #expect(chrome.wantsQuiet)
         chrome.wantsQuiet = false
         session.undo()
         #expect(!chrome.wantsQuiet, "Undo doesn't quiet the bar")
-        session.paint([areas[1]], from: template.labels(ofRegion: areas[1])[0].position, animated: false)
+        session.paint([areas[1]], from: second, animated: false)
         #expect(chrome.wantsQuiet)
         chrome.close()
     }
