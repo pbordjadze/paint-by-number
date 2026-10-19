@@ -45,11 +45,12 @@ final class TipDesk {
     @ObservationIgnored private var places: [TipPlace] = []
     /// The shelf has given a hint on this visit: one a visit, so each waits for a visit of its own.
     @ObservationIgnored private var servedShelf = false
-    /// How many views that can point each of `needsAnchor` are on screen, mostly in view.
+    /// How many views that can point each of `needsAnchor` are on screen (a card mostly in view, a
+    /// bar's button in its bar).
     @ObservationIgnored private var anchored: [TipID: Int] = [:]
-    /// Tips that point at a view the shelf builds only when it is near the screen (a card in the
-    /// grid): given a turn only while one is.
-    private static let needsAnchor: Set<TipID> = [.shelfHold, .shelfTimeLapse]
+    /// Tips about a view that may not be there: a card the shelf builds only near the screen, a bar
+    /// button that goes while the preview is enlarged. Given a turn only while one is (`TipAnchor`).
+    private static let needsAnchor: Set<TipID> = Set(TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar })
 
     /// How long TipKit gets to find a tip eligible (a donation or a parameter just changed), and
     /// the least a moment waits before it takes the first one that is.
@@ -416,8 +417,7 @@ final class TipDesk {
     }
 }
 
-/// Points the tip whose turn it is at the view it modifies, a popover on it (`barTip` for a button
-/// in a navigation bar). Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
+/// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
 /// at a time.
 private struct GentleTipModifier: ViewModifier {
     let ids: [TipID]
@@ -468,34 +468,49 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
-/// Tells the desk which tips a card can point at (`TipDesk.anchor`). The grid builds cards beyond the
-/// screen's edge too: a tip waits for its card to be mostly in view, or it would point off the
-/// screen. A card's tips change as the shelf does (another painting comes first), so it takes back
-/// the ones it gave, not the ones it has now.
-private struct CardTipAnchor: ViewModifier {
+/// Tells the desk which of `ids` this view can point at now (`TipDesk.anchor`): while it is on
+/// screen and `isPresent`. Its tips change as the screen does (another painting comes first), so it
+/// takes back the ones it gave, not the ones it has now; and a screen pushed over it takes them all
+/// back until it shows again.
+private struct TipAnchor: ViewModifier {
     let ids: [TipID]
-    @State private var isVisible = false
+    let isPresent: Bool
+    @State private var isOnScreen = false
     @State private var anchored: [TipID] = []
 
     func body(content: Content) -> some View {
         content
-            .onScrollVisibilityChange(threshold: 0.6) { visible in
-                isVisible = visible
+            .onAppear {
+                isOnScreen = true
+                anchor()
+            }
+            .onDisappear {
+                isOnScreen = false
                 anchor()
             }
             .onChange(of: ids) { anchor() }
-            .onDisappear {
-                isVisible = false
-                anchor()
-            }
+            .onChange(of: isPresent) { anchor() }
     }
 
     private func anchor() {
-        let now = isVisible ? ids : []
+        let now = isOnScreen && isPresent ? ids : []
         guard now != anchored else { return }
         PaintTips.desk.anchor(anchored, present: false)
         PaintTips.desk.anchor(now, present: true)
         anchored = now
+    }
+}
+
+/// A card's tips anchor while it is mostly in view: the grid builds cards beyond the screen's edge
+/// too, and a tip would point off the screen.
+private struct CardTipAnchor: ViewModifier {
+    let ids: [TipID]
+    @State private var isVisible = false
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollVisibilityChange(threshold: 0.6) { isVisible = $0 }
+            .modifier(TipAnchor(ids: ids, isPresent: isVisible))
     }
 }
 
@@ -517,12 +532,16 @@ private struct BarTipModifier: ViewModifier {
                         .frame(maxWidth: Self.width)
                         .padding(.horizontal, Self.margin)
                         .padding(.top, Self.margin)
+                        // Laid over the screen, it would come last to VoiceOver.
+                        .accessibilitySortPriority(1)
                         .transition(.opacity)
                 }
             }
             // A fade, on the card alone: the screen under it changes as it likes.
             .animation(.easeInOut(duration: 0.25), value: shown)
         }
+        // While its button is in the bar: hidden, the tip waits for its turn (`TipDesk.needsAnchor`).
+        .modifier(TipAnchor(ids: ids, isPresent: active))
     }
 
     private static let width: CGFloat = 420

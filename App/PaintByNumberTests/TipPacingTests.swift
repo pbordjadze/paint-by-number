@@ -328,7 +328,7 @@ struct TipPacingTests {
         #expect(refusal(pacing, .benchDrag, at: 3.5) == nil)
     }
 
-    /// A clock set back (by hand, or a time zone's change) puts the last hint in the future: no
+    /// A clock set back (by hand, or by the network's time) puts the last hint in the future: no
     /// reason to wait for it.
     @Test func aClockSetBackIsNoReasonToWait() {
         var pacing = TipPacing()
