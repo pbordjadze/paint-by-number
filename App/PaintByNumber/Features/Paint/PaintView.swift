@@ -107,7 +107,7 @@ struct PaintView: View {
 
     var body: some View {
         #if DEBUG
-        let _ = RenderMeter.tick("PaintView", "title \(badgeShowsTitle) handoff \(String(describing: startHandoff?.phase)) peek \(peek.isShown) seal \(sealBounces) feedback \(feedback != nil) thanks \(thanks ?? "-") complete \(session.isComplete) started \(session.isStarted) color \(String(describing: session.selectedColor)) replay \(session.isReplaying) size \(String(describing: sizeClass)) type \(dynamicTypeSize) unavailable \(canvasUnavailable) \(photoUnavailable) numbers \(showsNumbers) zen \(zenMode)")
+        let _ = RenderMeter.tick("PaintView", "title \(badgeShowsTitle) handoff \(String(describing: startHandoff?.phase)) peek \(peek.isShown) seal \(sealBounces) feedback \(feedback != nil) thanks \(thanks ?? "-") complete \(session.isComplete) started \(session.isStarted) color \(String(describing: session.selectedColor)) replay \(session.isReplaying) size \(String(describing: sizeClass)) type \(dynamicTypeSize) unavailable \(canvasUnavailable) \(photoUnavailable) numbers \(showsNumbers) zen \(zenMode) undo \(undoManager.map { "\(ObjectIdentifier($0))" } ?? "nil") scale \(displayScale) scheme \(colorScheme) photoLoader \(photoLoader != nil) source \(String(describing: feedbackSource)) paper \(paperAppearance) weight \(lineWeight) rows \(paletteRows) order \(paletteOrder) shakes \(chrome.shakes) colorOrder \(colorOrder) turn \(String(describing: PaintTips.desk.turn)) motion \(reduceMotion)")
         #endif
         GeometryReader { geo in
             #if DEBUG

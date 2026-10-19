@@ -76,6 +76,9 @@ struct PaintCanvas: UIViewRepresentable {
     }
 
     func updateUIView(_ view: CanvasView, context: Context) {
+        #if DEBUG
+        RenderMeter.tick("PaintCanvas.update", "\(chromeInsets) \(showsNumbers) \(showsPhoto) \(isAnnotating)")
+        #endif
         let rtl = context.environment.layoutDirection == .rightToLeft
         view.chromeInsets = UIEdgeInsets(
             top: chromeInsets.top, left: rtl ? chromeInsets.trailing : chromeInsets.leading,

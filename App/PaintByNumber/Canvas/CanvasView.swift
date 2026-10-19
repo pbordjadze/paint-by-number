@@ -363,6 +363,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        #if DEBUG
+        RenderMeter.tick("CanvasView.layout", "\(bounds.size) \(chromeInsets)")
+        #endif
         let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 2
         if contentScaleFactor != scale { contentScaleFactor = scale }
         let drawable = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
