@@ -24,6 +24,12 @@ struct RefineGesturesTests {
         #expect(RefineGestures.drawingLines(of: t).count == drawn.count + strokes.count)
     }
 
+    /// Every layer before `color` is drawn; `color` and any layer past it (a newer app's) are not.
+    @Test func theDrawnLayersAreThoseBeforeColor() {
+        #expect([LineLayer.outline, .detail, .texture].allSatisfy { LineLayer.isDrawn($0.rawValue) })
+        #expect(!LineLayer.isDrawn(LineLayer.color.rawValue) && !LineLayer.isDrawn(4) && !LineLayer.isDrawn(255))
+    }
+
     /// Samples closer than a point on screen to the last kept add nothing; the last is kept.
     @Test func aTraceKeepsSamplesAPointApart() {
         let samples = (0...10).map { SIMD2(Float($0) * 0.0005, 0.5) }  // 0.48 points apart

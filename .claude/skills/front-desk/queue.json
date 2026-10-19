@@ -3,77 +3,56 @@
   "key": "main",
   "order": "·",
   "title": "main",
-  "detail": "Calmer menus merged (fbdcd8c); its main run is finishing, then tips layout merges",
+  "detail": "e935f3a: Refine line-split, Recolor, the iPhone test fix and the CI-tags guard in one push",
   "state": "main running"
  },
  {
-  "key": "tip-layout",
+  "key": "ux-refinements",
   "order": "1",
-  "title": "Gentle tips layout",
-  "detail": "Page tips as a card, no arrow",
-  "state": "green, merging"
- },
- {
-  "key": "ci-train",
-  "order": "2",
-  "title": "Warnings gate",
-  "detail": "The warnings gate (and the night train, compile check); Codex-reviewed",
+  "title": "Your UX picks",
+  "detail": "Both batches built (21 picks + Music row + Stop)",
   "state": "in CI"
  },
  {
-  "key": "refine-line-split",
-  "order": "3",
-  "title": "Refine: lines split colors",
-  "detail": "Lines recolor what they split, hook fixed, Splitter hidden; Codex review clean · moved up by you",
-  "state": "ready"
- },
- {
-  "key": "recolor",
-  "order": "4",
-  "title": "Recolor in Refine",
-  "detail": "Looks + Swatches, five looks; Codex findings fixed. SideStore only · moved up by you",
-  "state": "ready"
- },
- {
-  "key": "ux-refinements",
-  "order": "5",
-  "title": "Your UX picks",
-  "detail": "Both batches built (21 picks + Music row + Stop)",
-  "state": "ready"
- },
- {
   "key": "nightfall",
-  "order": "6",
+  "order": "2",
   "title": "Intro animations",
   "detail": "SideStore only; you see the frame strips before it merges",
-  "state": "waiting"
+  "state": "in CI"
  },
  {
   "key": "quiet-painting",
-  "order": "7",
+  "order": "3",
   "title": "Quiet painting",
   "detail": "Built; Codex review clean; rebases after your UX picks. SideStore only",
   "state": "ready"
  },
  {
-  "key": "retro-review",
-  "order": "8",
-  "title": "Code review fixes",
-  "detail": "Three small fixes from the Sonnet review; a night-train candidate",
-  "state": "ready"
- },
- {
   "key": "toolbar-tips",
-  "order": "9",
+  "order": "4",
   "title": "Toolbar tips as cards",
   "detail": "Gear, + and Refine tips as a card under the bar, no arrow",
   "state": "ready"
  },
  {
   "key": "codex-decoder-fuzz",
-  "order": "10",
+  "order": "5",
   "title": "Decoder stress tests",
   "detail": "Codex's hostile-file tests for saved paintings; no crashes found",
   "state": "ready soon"
+ },
+ {
+  "key": "pets-oct18",
+  "order": "6",
+  "title": "Five new pet drawings",
+  "detail": "Astrologer, Rikyū, Dino, Scherenschnitt, Bart; signed off",
+  "state": "ready"
+ },
+ {
+  "key": "caroline-guardians",
+  "order": "7",
+  "title": "New guardians: Hope, Eno, Maynard",
+  "detail": "claude/keynes-guardian 81466f9a (stacks caroline-guardians): eggs and hatches. Runs after the pets branch, not alongside it (shared generated files).",
+  "state": "ready"
  }
 ]

@@ -28,7 +28,9 @@ import Foundation
 ///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
 ///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
 ///   `painted(_:on:photo:)`): the paint nearest it within the book's own tolerance for one color
-///   (`paintTolerance`), else a new paint of that color added last.
+///   (`paintTolerance`), else a new paint of that color added last. Where that leaves one paint
+///   on both sides of the line and the photo tells the sides apart, the side farther from it
+///   takes its photo's color, or a shade of the paint toward it (`EditWork.paint`).
 /// - **Split.** The Color Splitter's line, laid as a draw with paints is, but as an undrawn
 ///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
 ///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
@@ -44,6 +46,11 @@ import Foundation
 /// - **Fill.** The closed shape under the point, bounded by ink (the tapped region alone if it
 ///   reaches the canvas frame), becomes one detail area painted with the paint within a
 ///   just-noticeable difference of the color, else a new paint added last.
+/// - **Look, repaint.** Paints alone change color (Refine's Colors): a look over all of them, or
+///   one paint with or without its family (`recolor(_:by:)`). Paints that land within a
+///   just-noticeable difference of each other become one, and areas that then share a paint
+///   across an undrawn boundary one area. Edits laid after one bring their colors through it
+///   (`apply(_:to:verify:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
 public enum TemplateEditor {
     public enum Edit: Sendable, Equatable {
         /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's
@@ -59,6 +66,12 @@ public enum TemplateEditor {
         case eraseLine(at: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The shape under `point`, painted `color` (OKLab, as `LineEdit.photoColor` reads it).
         case fill(at: SIMD2<Float>, color: SIMD3<Float>)
+        /// Every paint in `look` at `strength` (0 to 1); `lightness`, the painting's lightness
+        /// quantiles when the look was chosen (`TemplateEditor.look(_:strength:on:)`).
+        case look(Look, strength: Float, lightness: [Float] = [])
+        /// The paint of color `from` made `to` (OKLab); with `family`, the paints of about its
+        /// hue (or near it, for a gray) move along with it.
+        case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
     }
 
     /// The photo's color of a piece a drawn line cuts: `at`, a point inside the piece (its number's
@@ -107,6 +120,9 @@ public enum TemplateEditor {
         public var paintsAdded = 0
         /// Pieces a line's paints gave another paint.
         public var recolored = 0
+        /// Paints a look or a repaint gave another color, and paints it made one with another.
+        public var paintsChanged = 0
+        public var paintsMerged = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
         /// centre.
         public var tooSmall: [SIMD2<Float>] = []
@@ -129,7 +145,9 @@ public enum TemplateEditor {
     public static let inkWidth: Float = 3
     /// How near a tap must be to a line to take it out, canvas units.
     public static let tapReach: Float = 8
-    /// Points of one edit beyond this are ignored (the app's help has already thinned them).
+    /// Points of one edit beyond this are ignored (the app's help has already thinned them), and so
+    /// are paints of one drawn line or split beyond as many (a hand-made `refinements.json` alone
+    /// could carry more).
     public static let maximumPoints = 4000
 
     static var reach: Int64 { Int64((inkWidth * Float(Lattice.unit)).rounded()) }
@@ -183,12 +201,12 @@ public enum TemplateEditor {
         switch edit {
         case .draw(let points, let closed, let paints):
             try work.draw(points, closed: closed, nudging: paints != nil)
-            if let paints { try work.paint(paints) }
+            if let paints { try work.paint(Array(paints.prefix(maximumPoints))) }
         case .split(let points, let closed, let paints):
             work.splitting = true
             try work.draw(points, closed: closed, nudging: true)
             guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the split divides no area") }
-            try work.paint(paints)
+            try work.paint(Array(paints.prefix(maximumPoints)))
             if !reading { try work.checkSplitPaints() }
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
@@ -202,9 +220,13 @@ public enum TemplateEditor {
             // A color OKLab can hold: lightness 0 to 1, chroma axes within the gamuts' reach.
             let lab = pointwiseMin(pointwiseMax(color, SIMD3(0, -0.5, -0.5)), SIMD3(1, 0.5, 0.5))
             try work.fill(at: Lattice.clampedPoint(point), color: lab)
+        case .look, .repaint:
+            try work.recolor(edit)
         }
         let s = work.summary
-        guard s.lines > 0 || s.erased > 0 || s.fills > 0 else { return (template, unchanged(template)) }
+        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.paintsChanged > 0 || s.paintsMerged > 0 else {
+            return (template, unchanged(template))
+        }
         let (result, mapping) = try work.finish()
         if verify {
             let report = result.validate(minLabelRadius: LabelSizing.minimumRadius)
@@ -225,6 +247,8 @@ public enum TemplateEditor {
         outcome.fills = s.fills
         outcome.paintsAdded = s.paintsAdded
         outcome.recolored = s.recolored
+        outcome.paintsChanged = s.paintsChanged
+        outcome.paintsMerged = s.paintsMerged
         outcome.pieces = mapping.pieces
         outcome.tooSmall = s.declined
         outcome.touchedRegions = mapping.touched
@@ -266,13 +290,16 @@ public enum TemplateEditor {
     }
 
     /// Applies edits in order; one that is declined leaves the template as it was for the next.
+    /// Each brings its colors through the looks and repaints made before it (`recolored`).
     public static func apply(
         _ edits: [Edit], to template: Template, verify: Bool = true
     ) throws -> (template: Template, outcomes: [Outcome]) {
         var current = template
         var outcomes: [Outcome] = []
+        var recolors: [Edit] = []
         for edit in edits {
-            let (next, outcome) = try apply(edit, to: current, verify: verify)
+            let (next, outcome) = try apply(recolored(edit, by: recolors), to: current, verify: verify)
+            if isRecolor(edit), outcome.changed { recolors.append(edit) }
             current = next
             outcomes.append(outcome)
         }

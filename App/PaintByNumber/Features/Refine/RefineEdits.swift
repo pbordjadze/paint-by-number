@@ -28,6 +28,39 @@ nonisolated enum RefineChange: Sendable, Equatable {
     }
 }
 
+/// A change Refine's Colors makes to the edits (`CreateModel.recolor(_:)`), described so it lands
+/// on the edits as they are when its turn comes. A look and the photo's colors start the colors
+/// over: they take every look and repaint out first, so looks never stack and the strength slider
+/// replaces the look it moves.
+nonisolated enum RefineColors: Sendable, Equatable {
+    /// Every paint in `look` at `strength` (0 to 1).
+    case look(TemplateEditor.Look, strength: Float)
+    /// The photo's own colors: no look, no repaint.
+    case photo
+    /// The paint of color `from` (OKLab) made `to`, with the paints of about its hue when `family`.
+    case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
+
+    /// `edits` without Colors' own: what a look or the photo's colors start from.
+    static func withoutColors(_ edits: [TemplateEditor.Edit]) -> [TemplateEditor.Edit] {
+        edits.filter { !TemplateEditor.isRecolor($0) }
+    }
+
+    /// Whether this change takes the place of the last of `edits` rather than joining them: a
+    /// repaint of the color the last one repainted, the color picker still moving.
+    func replacesLast(of edits: [TemplateEditor.Edit]) -> Bool {
+        guard case .repaint(let from, _, _) = self, case .repaint(let last, _, _)? = edits.last else { return false }
+        return from == last
+    }
+
+    /// The look `edits` lay, with its strength; nil for the photo's colors.
+    static func look(in edits: [TemplateEditor.Edit]) -> (look: TemplateEditor.Look, strength: Float)? {
+        for edit in edits.reversed() {
+            if case .look(let look, let strength, _) = edit { return (look, strength) }
+        }
+        return nil
+    }
+}
+
 /// What Undo and Redo step through on the Refine screen: the refinements as they were before each
 /// change, newest last. It lives in the model (`CreateModel.history`), whose queue makes the
 /// changes one after another, so a step is always taken back from the state it was made in, even
@@ -68,6 +101,10 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// A Color Splitter stroke that could not split an area (it closed none off, or its sides
         /// would keep one paint).
         case notSplit
+        /// Colors that could not be changed (a look or a repaint the template couldn't take).
+        case notRecolored
+        /// Paints Colors made alike became one, sharing a number.
+        case alike
         /// A shape a line closed has no room for a number, so it was not cut off: the line stays.
         case tooSmall
         /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
@@ -81,6 +118,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             case .split: self = .notSplit
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
+            case .look, .repaint: self = .notRecolored
             }
         }
     }
@@ -102,6 +140,12 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notSplit:
             String(localized: "refine.note.notSplit", defaultValue: "That area couldn’t be split there.",
                    comment: "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed")
+        case .notRecolored:
+            String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
+                   comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
+        case .alike:
+            String(localized: "refine.note.alike", defaultValue: "Colors that came out alike share a number now.",
+                   comment: "Refine screen toast after a look or a new color in Colors made some paints too alike to tell apart: they became one paint, with one number")
         case .tooSmall:
             String(localized: "refine.note.tooSmall", defaultValue: "That shape is too small for a number.",
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
@@ -114,7 +158,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .left: "exclamationmark.circle"
+        case .alike: "swatchpalette"
+        case .notDrawn, .notErased, .notFilled, .notSplit, .notRecolored, .left: "exclamationmark.circle"
         }
     }
 }

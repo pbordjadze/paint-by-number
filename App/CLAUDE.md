@@ -87,7 +87,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
   the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
@@ -563,9 +563,10 @@ Conventions).
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
-  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
-  `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
-  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter (after the Pen) divides
+  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
+  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
+  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter, out of the toolbar for now
+  (`RefineView.offersSplitter`, Paul, October 18: a Pen line recolors the sides it parts instead), divides
   an area's color where it goes and draws no line (a split, below; dashed while the finger is
   down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
@@ -574,7 +575,17 @@ Conventions).
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
   what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
-  out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
+  out (`EditFills`). Colors (after Fill; SideStore and Debug builds only for now, `#if UNRELEASED`,
+  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then the
+  five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
+  Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
+  there or by a tap on its area taking a new color from the system `ColorPicker` (its family
+  along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
+  (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
+  a repaint of the color the last one repainted replaces it (the picker still moving is one step
+  of the history); paints made alike merge and a note says so. New colors cross-fade in (none
+  under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
+  12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.

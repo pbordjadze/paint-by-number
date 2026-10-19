@@ -52,25 +52,49 @@ struct RefineGeometryTests {
         p.map { PenPath.distance($0, q) <= tolerance } ?? false
     }
 
-    /// A straight line whose ink touches a line ends on it, still straight; its other end, near
-    /// nothing, stays.
+    /// A straight line whose ink touches a line goes straight on to it, still straight along
+    /// its own way; its other end, near nothing, stays.
     @Test func aStraightLineEndsOnTheLineItTouches() {
         let lines = SnapLines([[CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 200)]])
         let joined = PenAssist.joined([CGPoint(x: 10, y: 50), CGPoint(x: 98.5, y: 54)], to: lines, reach: 2, straight: true)
         #expect(joined.count == 2 && joined.first == CGPoint(x: 10, y: 50))
-        #expect(Self.near(joined.last, CGPoint(x: 100, y: 54)))
+        #expect(Self.near(joined.last, CGPoint(x: 100, y: 50 + 4 * 90 / 88.5), within: 1e-9))
     }
 
-    /// A curve's end moved onto a line it overshot eases in over the reach: the end lands on the
-    /// line, the line before the reach keeps every point, and nothing folds back.
-    @Test func aCurvesEndEasesOntoTheLine() throws {
+    /// A curve that ran past a line ends where it crossed it: the tail is cut off, every point
+    /// before the crossing stays, and nothing folds back.
+    @Test func aCurveThatOvershotEndsAtTheCrossing() throws {
         let lines = SnapLines([[CGPoint(x: 110, y: -50), CGPoint(x: 110, y: 50)]])
         let curve = (0...12).map { CGPoint(x: CGFloat($0) * 10, y: CGFloat($0 * $0) / 10) }
         let joined = PenAssist.joined(curve, to: lines, reach: 16, straight: false)
         let end = try #require(joined.last)
-        #expect(Self.near(end, CGPoint(x: 110, y: 14.4)), "\(end)")
-        for p in curve where p.x <= 100 { #expect(joined.contains(p), "\(p) moved") }
-        #expect(zip(joined, joined.dropFirst()).allSatisfy { $0.x <= $1.x }, "\(joined)")
+        #expect(Self.near(end, CGPoint(x: 110, y: 12.1), within: 1e-9), "\(end)")
+        #expect(Array(joined.dropLast()) == Array(curve.prefix(12)))
+    }
+
+    /// Paul's wedge (October 18): a stroke meeting another at a slant, its end just short of it.
+    /// It goes straight on to the line, where the nearest point would have bent it back into a
+    /// hook; an end beside a line it isn't heading at still moves to the nearest point, eased
+    /// over several reaches so it bends gently.
+    @Test func aSlantedEndMeetsTheLineWithoutAHook() throws {
+        let lines = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 200, y: 0)]])
+        // Rising at 20° toward the line, stopping 1 short of it (measured straight down).
+        let slope = tan(20 * CGFloat.pi / 180)
+        let stroke = (0...20).map { k -> CGPoint in
+            let x = CGFloat(k) * 5
+            return CGPoint(x: x, y: 1 + (100 - x) * slope)
+        }
+        let joined = PenAssist.joined(stroke, to: lines, reach: 4, straight: false)
+        let end = try #require(joined.last)
+        #expect(abs(end.y) < 1e-9 && abs(end.x - (100 + 1 / slope)) < 1e-6, "\(end)")
+        #expect(zip(joined, joined.dropFirst()).allSatisfy { $0.x <= $1.x && $0.y >= $1.y }, "\(joined)")
+        #expect(Array(joined.dropLast()) == stroke)
+
+        // Running alongside, 2 below it: the end can't head at it, so it eases up onto it.
+        let alongside = (0...20).map { CGPoint(x: CGFloat($0) * 5, y: 2) }
+        let eased = PenAssist.joined(alongside, to: lines, reach: 4, straight: false)
+        #expect(Self.near(eased.last, CGPoint(x: 100, y: 0)))
+        for (p, q) in zip(eased, eased.dropFirst()) { #expect(abs(q.y - p.y) <= 2 / 16 * PenPath.distance(p, q) + 1e-9) }
     }
 
     /// The Pen moves an end only onto a line its ink touches: within the reach it's given, onto

@@ -17,6 +17,10 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Color" : {
+      "comment" : "Refine screen, Colors: VoiceOver label of the color picker that gives the paint picked a new color",
+      "extractionState" : "manual"
+    },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
@@ -1725,6 +1729,18 @@
         }
       }
     },
+    "Garden" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: soil, mushroom, moss, sage and birch colors",
+      "extractionState" : "manual"
+    },
+    "Golden Hour" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: warm, as the last hour of sun",
+      "extractionState" : "manual"
+    },
+    "Great Wave" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Hokusai's The Great Wave off Kanagawa",
+      "extractionState" : "manual"
+    },
     "Haptics" : {
       "comment" : "Settings toggle for vibration feedback while painting",
       "extractionState" : "manual"
@@ -1857,6 +1873,10 @@
         }
       }
     },
+    "Looks" : {
+      "comment" : "Refine screen, Colors: VoiceOver label of the row of looks (Moonlit, Starry Night, …) that each change every paint of the painting",
+      "extractionState" : "manual"
+    },
     "Make a Shape Its Own" : {
       "comment" : "Title of the tip at the Fill tool of Refine, shown after the first line is drawn",
       "extractionState" : "manual"
@@ -1941,6 +1961,10 @@
         }
       }
     },
+    "Moonlit" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: darker, cool and quiet, as by moonlight",
+      "extractionState" : "manual"
+    },
     "More for Each Painting" : {
       "comment" : "Title of the tip at a painting in the gallery about its touch-and-hold menu",
       "extractionState" : "manual"
@@ -1951,6 +1975,10 @@
     },
     "Painting Length sets how long new pages take. The Making-of shows a photo becoming its page." : {
       "comment" : "Message of the tip titled Worth a Look Here, at the Painting Length setting; the Making-of is a setting that plays a show after Start Painting",
+      "extractionState" : "manual"
+    },
+    "Pastel" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: light and soft",
       "extractionState" : "manual"
     },
     "Peek at the Photo" : {
@@ -1968,6 +1996,90 @@
     "Refine, top right, lets you draw or erase lines and fill shapes. It is optional." : {
       "comment" : "Message of the tip titled Shape the Lines Yourself; Refine is the optional step of the New Painting screen, a button at its top right",
       "extractionState" : "manual"
+    },
+    "refine.colors.look.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of a look's chip (Moonlit, Starry Night, …)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lays this look on every paint."
+          }
+        }
+      }
+    },
+    "refine.colors.paint" : {
+      "comment" : "Refine screen, Colors: the paint picked to take a new color, by its number; the argument is the number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint %lld"
+          }
+        }
+      }
+    },
+    "refine.colors.paint.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of a paint's swatch; once picked, a color picker changes its color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picks this paint to give it a new color."
+          }
+        }
+      }
+    },
+    "refine.colors.photo.hint" : {
+      "comment" : "Refine screen, Colors: VoiceOver hint of the Photo chip, which takes every look and new color out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puts the photo’s own colors back."
+          }
+        }
+      }
+    },
+    "refine.hint.colors" : {
+      "comment" : "Refine screen: how Colors works (a look changes every paint of the painting; a paint picked, from the row of paints or by a tap on its area, takes a new color from the color picker), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a look for every paint, or tap a paint or an area to give it a new color."
+          }
+        }
+      }
+    },
+    "refine.note.alike" : {
+      "comment" : "Refine screen toast after a look or a new color in Colors made some paints too alike to tell apart: they became one paint, with one number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors that came out alike share a number now."
+          }
+        }
+      }
+    },
+    "refine.note.notRecolored" : {
+      "comment" : "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Those colors couldn’t be changed."
+          }
+        }
+      }
     },
     "Replay Painting plays your page back from the first fill." : {
       "comment" : "Message of the tip titled Watch It Again; Replay Painting plays a finished painting back from its first fill",
@@ -2037,6 +2149,10 @@
       "comment" : "Send Template sheet's button: makes the .moonlight file and opens the share sheet",
       "extractionState" : "manual"
     },
+    "Sepia" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: brown ink on old paper",
+      "extractionState" : "manual"
+    },
     "Settings and Tips" : {
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
@@ -2049,8 +2165,20 @@
       "comment" : "Title of the tip at a finished painting in the gallery about sharing its time-lapse",
       "extractionState" : "manual"
     },
+    "Similar colors too" : {
+      "comment" : "Refine screen, Colors: a switch; on, the paints of about the same hue as the paint picked take its new color along with it",
+      "extractionState" : "manual"
+    },
     "Skip" : {
       "comment" : "Button over the making-of show that ends it and opens the new painting",
+      "extractionState" : "manual"
+    },
+    "Starry Night" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Van Gogh's The Starry Night",
+      "extractionState" : "manual"
+    },
+    "Strength" : {
+      "comment" : "Refine screen, Colors: the slider that softens the look chosen, from none of it to all of it (its label, and VoiceOver's)",
       "extractionState" : "manual"
     },
     "Tap + to turn one of your photos, or a sample, into a page to paint." : {
@@ -2131,6 +2259,10 @@
     },
     "Watch the preview change. Reset to Suggested returns every slider to where it started." : {
       "comment" : "Message of the tip titled You Can Always Go Back; Reset to Suggested is the New Painting button that returns the sliders to the suggested settings",
+      "extractionState" : "manual"
+    },
+    "Water Lilies" : {
+      "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Monet's Water Lilies",
       "extractionState" : "manual"
     },
     "Waves hello." : {

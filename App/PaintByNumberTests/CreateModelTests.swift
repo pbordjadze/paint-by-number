@@ -667,6 +667,48 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// Refine's Colors: a look is laid on the template on screen alone, as the editor lays it; its
+    /// strength takes its place; a color the picker moves on is one step of the history; and the
+    /// photo's colors take them all out, back to the template it was.
+    @Test func colorsLayLooksAndRepaintsOnTheTemplateOnScreen() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        func shows(_ edits: [TemplateEditor.Edit]) -> Bool {
+            model.refinements.edits == edits && model.preview?.refinements == model.refinements && model.isFinal
+        }
+
+        var generated = false
+        model.recolor(.look(.moonlit, strength: 1))
+        let look = TemplateEditor.look(.moonlit, strength: 1, on: before)
+        try await waitUntil(polling: .milliseconds(2)) {
+            if model.phase == .generating { generated = true }
+            return shows([look])
+        }
+        #expect(!generated, "A look generated the template again")
+        #expect(model.preview?.template == (try TemplateEditor.apply(look, to: before).template))
+
+        model.recolor(.look(.moonlit, strength: 0.5))
+        let softer = TemplateEditor.look(.moonlit, strength: 0.5, on: before)
+        try await waitUntil { shows([softer]) }
+
+        let from = try #require(model.preview?.template.palette.first?.oklab)
+        let first = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: true)
+        let moved = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: true)
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: true))
+        try await waitUntil { shows([softer, first]) }
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: true))
+        try await waitUntil { shows([softer, moved]) }
+        model.undo()
+        try await waitUntil { shows([softer]) }
+
+        model.recolor(.photo)
+        try await waitUntil { shows([]) }
+        #expect(model.preview?.template == before)
+        model.cancelAll()
+    }
+
     /// The sliders make the template again and the edits are laid on the new one, as the editor
     /// lays them: the painter's lines survive.
     @Test func aSliderChangeLaysTheEditsOnTheNewTemplate() async throws {
