@@ -464,14 +464,18 @@ struct PaintView: View {
     }
 
     /// The quiet bar: Back, the progress ring, which brings the rest back, and Hint.
+    /// Spaced and held to their circles as `topBarRow`'s are, so Back stays where it was.
     private var quietRow: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
+                    .frame(width: barHeight, height: barHeight)
             }
             QuietRingButton(session: session, title: title) { chrome.wantsQuiet = false }
+                .frame(width: barHeight, height: barHeight)
             Spacer(minLength: 0)
             GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
+                .frame(width: barHeight, height: barHeight)
         }
     }
 
