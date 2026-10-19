@@ -10,8 +10,8 @@
   "key": "ux-refinements",
   "order": "1",
   "title": "Your UX picks",
-  "detail": "Lamplit Table 5–0; re-run at 67b719c after a test fix",
-  "state": "in CI"
+  "detail": "Green at 67b719c, Lamplit Table 5–0; merges with Toolbar tips",
+  "state": "green"
  },
  {
   "key": "nightfall",
@@ -54,5 +54,12 @@
   "title": "New guardians: Hope, Eno, Maynard",
   "detail": "claude/keynes-guardian 81466f9a (stacks caroline-guardians): eggs and hatches. Runs after the pets branch, not alongside it (shared generated files).",
   "state": "ready"
+ },
+ {
+  "key": "palette-first-reveal",
+  "order": "8",
+  "title": "Palette first reveal",
+  "detail": "Small robustness fix from the UX picks review (cfa215b, local)",
+  "state": "waiting"
  }
 ]
