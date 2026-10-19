@@ -102,11 +102,11 @@ import Testing
     @Test func metricsAreReadStrictly() throws {
         let table = try SpriteMetrics.table(json: shippedMetricsData())
         let spec = try ShowSpec(json: shippedSpecData())
-        #expect(table.count == 25 && Set(spec.crew.pets).isSubset(of: table.keys))
+        #expect(table.count == 28 && Set(spec.crew.pets).isSubset(of: table.keys))
         for (id, m) in table {
             #expect(0 <= m.top && m.top < m.foot && m.foot < SpriteMetrics.cell.height && 0 <= m.cx && m.cx < SpriteMetrics.cell.width, "\(id)")
         }
-        #expect(table["dinotopia"] == SpriteMetrics(top: 6, foot: 201, cx: 90.12758642643408))
+        #expect(table["dinotopia"] == SpriteMetrics(top: 15, foot: 198, cx: 97.22912235927974))
 
         func decode(_ json: String) throws -> [String: SpriteMetrics] { try SpriteMetrics.table(json: Data(json.utf8)) }
         let ok = #"{"version":1,"cell":[192,208],"pets":{"a":{"top":10,"foot":100,"cx":90.5}}}"#
