@@ -1,0 +1,24 @@
+{
+  "pet": "dinotopia",
+  "made_by": "Codex (create-pet skill 0.1.6, one model at low effort) on the homelab, 2026-10-18, driven by Claude; backlog row 42.",
+  "approved": "Paul (and Caroline) approved the still first; every row was generated from it. Sheet signed off 2026-10-18.",
+  "image_generations": 14,
+  "source_png_sha256": "ab1586dff623570a9039f3aeb6649b89ffa1aa2fd9ec8a122219d994e1f0f75a",
+  "atlas_sha256": "f88544c174b46156d0e2683e97ff4e96c9e06f13010f811d0ea936b0bd05cfdb",
+  "atlas": "spritesheet.webp is the final PNG as lossless WebP, pixel-identical (exact).",
+  "validation": {
+    "ok": true,
+    "width": 1536,
+    "height": 2288,
+    "errors": [],
+    "warnings": []
+  },
+  "quality_gate": {
+    "ok": false,
+    "errors": [
+      "look directions contain transparent interior holes or seam bands: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5"
+    ]
+  },
+  "notes": "14 images. Passes the v2 contract after a cleanup of leftover magenta edge pixels. The skill's quality gate flags the gaps between his neck, legs and tail as \"holes\" (a false alarm for this shape) and his jump poses as a size jump; the reader plays neither.",
+  "replaces": "codex-app/: Paul's own Codex-app sheet (2026-10-12), kept as history."
+}
