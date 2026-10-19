@@ -213,6 +213,7 @@ Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and
 | `baba-yaga` | `ca8e067349c80a203df5b32f0ae52c931399c26ec1bc21f6c687f7aa75c66860` | 1,007,550 | lossy WebP q88 |
 | `balanchine` | `5d63100bdb63a32443b9c2c0762188820ab9b147698f729c1e052753d1fd0f21` | 810,354 | lossy WebP q88 |
 | `bible-school-teacher` | `a2ed66097ae23ffaa03d8dec77b6e98978c55c7d658dfd48260d9107eb0e00e6` | 679,522 | lossy WebP q88 |
+| `nutcracker` | `c20fe48fc1e857f2cacf223ff0c05281f999c0a422728428123ade9438c0ad4a` | 797,986 | lossy WebP q88 |
 
-The Baba Yaga followed as a Russian lubok woodblock print. George followed as a Ballets Russes costume sketch in gouache. Madeleine followed as a Sunday-school flannelgraph in cut felt. The twenty-eight sheets total
-**21,657,588 bytes (20.65 MiB)** of the 24 MiB budget.
+The Baba Yaga followed as a Russian lubok woodblock print. George followed as a Ballets Russes costume sketch in gouache. Madeleine followed as a Sunday-school flannelgraph in cut felt. The Nutcracker followed as a turned and painted Erzgebirge wooden toy. The twenty-eight sheets total
+**21,597,998 bytes (20.60 MiB)** of the 24 MiB budget.
