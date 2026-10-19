@@ -181,14 +181,17 @@ waving cells at native size and 5x, on white and dark, showed no banding, halo o
 | `snow-queen` | `66425c1d1d999695626963d813f5fc76c2c6e129eb8f03d919d300963e52dd88` | 570,650 | lossy WebP q88 |
 | `medea` | `5a65e726c0cdb2bba67292db3476efc4766518538d7b1b01d0a52452438a4553` | 665,758 | lossy WebP q88 |
 | `lotte-reiniger` | `93eede589fba5dc67b351692b86d49c77be296d4fc2ee282784822972bbd43d6` | 658,824 | lossy WebP q88 |
+| `hedge-witch` | `b92e413b072925bfba4f5e04fa1d489c43dce2d04b0b063a32928c494ed9f537` | 964,322 | lossy WebP q88 |
+| `dinotopia` | `4b3c413a56666d73215da8b6966202c4874aa7659eaf65194093fbfee644d85e` | 631,532 | lossy WebP q88 |
+| `bulat-okudzhava` | `fe7e51b3f633f3076e5ffedfe0ba31a653825227b56f37a631dd8841a7581857` | 1,017,574 | lossy WebP q85 |
 
 The Glassblower's redraw (Paul: "Both good") replaced the factory's droplet the same day: a
 clearer drop with a curling tip and a warm light inside. Niko followed, painted the way Pirosmani painted animals: house paint on black oilcloth, the black
 left showing as his patches, a crescent and stars on his shoulder (Paul: "Grounding them in the actual
 techniques their namesake used is the right method here"). The Moon hatched too: her first drawing was withheld because, a crescent seen side-on, she
 couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "The moon one is in
-need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The twenty-five sheets total
-**19,256,368 bytes (18.36 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
+need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The Hedge Witch followed as the approved redraw (Paul: "A for now"; a real woodcut by his mom someday). Bulat followed as a lit window with a black cat on the sill and a guitar inside, its idle calmed to one blink at Paul's tap. Dino followed from the top as a Dinotopia-style journal sketch of a shifty-eyed plesiosaur (Paul: "SKETCHES like the Dinotopia book had"). The twenty-five sheets total
+**19,190,522 bytes (18.30 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
 factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
 so they stand a little larger beside them.
