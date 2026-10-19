@@ -4,8 +4,8 @@
     python3 .claude/skills/front-desk/live.py <dash dir> <decisions.json> <out live.json>
 
 <dash dir> holds sessions.json, inbox.json and account.json (sessions.py --dashboard writes
-them); queue.json and releases.json are read from beside this file. Every row gets `kind`
-(decision, queue, next, inbox, session, account) and a unique `key` ("<kind>:<id>"); the page
+them); queue.json, releases.json and links.json (the status page's "Pages" strip: id, order, title, url, note) are read from beside this file. Every row gets `kind`
+(decision, link, queue, next, inbox, session, account) and a unique `key` ("<kind>:<id>"); the page
 filters by kind. Publish the result with one Artifact upload and point datasets/live at it.
 """
 import json
@@ -39,6 +39,7 @@ def main():
             live.append(r)
 
     add("decision", rows(decisions), lambda r: r["id"])
+    add("link", rows(os.path.join(HERE, "links.json")), lambda r: r["id"])
     add("queue", rows(os.path.join(HERE, "queue.json")), lambda r: r["ref"])
     add("next", rows(os.path.join(HERE, "releases.json")), lambda r: r["ref"])
     add("inbox", rows(os.path.join(dash, "inbox.json")), lambda r: r["n"])

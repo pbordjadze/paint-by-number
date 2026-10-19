@@ -2,23 +2,23 @@
  {
   "key": "now",
   "day": "Now",
-  "time": "1:00",
-  "title": "main finishing Calmer menus; tips layout green; warnings gate in CI",
-  "detail": "Tips layout merges as soon as main's run ends",
+  "time": "1:45",
+  "title": "main checks the tips merge; the warnings gate in CI",
+  "detail": "Main went red on a flaky Settings test; its fix goes next",
   "kind": "running"
  },
  {
   "key": "m1",
   "day": "Early afternoon",
-  "time": "~1:45",
-  "title": "Warnings gate merges",
-  "detail": "Then the Refine line-split fix (ready, Codex-clean)",
+  "time": "~2:30",
+  "title": "Warnings gate merges; the flaky-test fix runs",
+  "detail": "Then the Refine line-split fix",
   "kind": "SideStore"
  },
  {
   "key": "m2",
   "day": "Afternoon",
-  "time": "~2:30",
+  "time": "~3:15",
   "title": "Refine line-split fix, then Recolor",
   "detail": "About 45 min of CI each",
   "kind": "SideStore"
@@ -26,7 +26,7 @@
  {
   "key": "m3",
   "day": "Afternoon",
-  "time": "~3:30",
+  "time": "~4:30",
   "title": "Your UX picks (both batches), intro animations",
   "detail": "You see the animations' frame strips first",
   "kind": "SideStore"

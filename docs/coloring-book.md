@@ -347,6 +347,21 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   pieces), adding 5 paints and none; the rest lay where the photo agrees with the paint there, and
   stay so, each piece with its own number. Slivers the nudge doesn't reach (20 and 41, under a line
   running within a unit of another) are left as before.
+  That tolerance held too much as one color: a piece's photo up to three just-noticeable
+  differences from its paint kept it, so a line between two shades the book had flattened left
+  both sides one paint, and Paul saw a line that didn't recalculate the colors (October 18:
+  "colors should get recalculated when a new line is drawn"; on the parrots book, six strokes
+  across the bokeh, the chest, the red back and the leaves recolored 3 pieces of 11). Now, where
+  a boundary the line laid still has one paint on both sides and the photo's colors of the two
+  sides are at least `splitShadeStep` (1.5 differences) apart, the side farther from the paint
+  takes a shade toward its photo color as a split's side does (`shadeSplit`: the photo's own color,
+  or a paint within a just-noticeable difference of it). Sides the photo holds as one keep their
+  paint. Of 40 random shapes (one at a time) on the parrots, lighthouse, hibiscus and barn books,
+  31, 25, 35 and 33 changed paints (24, 22, 32 and 30 before), recoloring 126, 147, 186 and 137
+  pieces (56, 122, 136, 91) and adding 69, 22, 46 and 43 paints (2, 0, 1, 0): one to two a line,
+  the price of the colors the book had flattened. Reusing the palette's nearest other paint
+  within the book's tolerance instead added a third fewer, but gave a near-grey bokeh a green
+  and a pink 2.5 differences off its photo, so a side takes its own color. None was declined.
 - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach
   (stadium by stadium; the cut is the lattice point nearest the circle). Ink between two regions
   that this breaks lets the paint through: the regions merge (the larger by area keeps its index
@@ -359,7 +374,10 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   regions become one, painted with the nearest paint within `SegmentationParameters.jnd`, else a
   new paint appended last (the palette is never reordered), and a detail area, kept whatever its
   size, as `CellMap.fill` made it.
-- **Split.** The Color Splitter (Paul, October 18, in place of the detail brushes: "a new brush
+- **Split.** Out of Refine's toolbar for now (Paul, October 18: "it's not working right, it like,
+  says 'this area is too small to be a number' or else just doesn't really do it"; the Pen's line
+  recolors what it cuts instead, above); the edit stays, so splits made meanwhile lay as ever.
+  The Color Splitter (Paul, October 18, in place of the detail brushes: "a new brush
   to separate a color cell WITHOUT a line") lays the Pen's line as a draw with paints does,
   nudged the same way, but as undrawn boundaries (`LineLayer.color`): it divides the paint and
   draws nothing. Its ends meet any edge within `inkWidth`, inked or not (a color cell's outline
@@ -378,6 +396,24 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas
   told apart, which the palette often has no paint for. Without a reachable line nothing shows
   where a split was, so Undo is the way back.
+- **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
+  over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
+  or without its family (the paints of about its hue, full within 30° and none past 60°, turning
+  and growing as the swatch did; a gray's family is the colors within 0.1 of it). One swatch
+  alone often looks wrong: the red parrot is six paints, and turning one of them blue leaves a
+  patchy bird, which is why the family moves by default. Where a changed paint lands within a
+  just-noticeable difference of another, the two become one paint (the lower number) and the
+  numbers after the higher close up, so a number only loses digits; areas the two paints kept
+  apart across an undrawn boundary become one, as the eraser joins them. Every look is a fixed
+  function of a color (`+ - * /`, `min`, `max`, `sqrt`: the same bits everywhere, pinned by
+  `EditRecolorTests.looksArePinned`), so edits laid after it bring their colors through it (a
+  drawn line's pieces, a fill: `TemplateEditor.recolored`), and a line drawn under Moonlit takes
+  Moonlit's paint. The painting looks place a paint on the painting's ramp by its rank among the
+  palette's lightnesses, which the edit records when it is made (`lightness`, nine quantiles), so
+  a color laid later finds its place among them. Of the eight looks at full strength on the
+  parrots, lighthouse and hibiscus books (24 paints each) all 24 were made and validate, in 20 to
+  150 ms; Moonlit, Golden Hour, Garden and the painters' looks merge 0 to 7 paints, Pastel 0 to 4
+  (a first, narrower Pastel merged 10 on the lighthouse), Sepia 7 to 11 (hue is gone).
 - **What stays.** Regions, outlines, fill triangles, numbers, edges, strokes and paints the edit
   does not reach are copied as they were (`EditWork.finish` lays the survivors out again, so
   indices after a merged region shift). Neighbours of an edit gain a vertex where a line meets

@@ -15,9 +15,12 @@ final class CreateFlowTests: XCTestCase {
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
 
-        let compare = app.descendants(matching: .any)["Comparison of photo and template"]
+        let compare = app.descendants(matching: .any)["Comparison of photo and painting"]
         XCTAssertTrue(compare.exists)
-        XCTAssertEqual(compare.value as? String, "50 percent photo")
+        // The divider sweeps in from the trailing edge with the first picture and rests in the middle.
+        XCTAssertTrue(
+            waitFor(compare, toMatch: NSPredicate(format: "value == %@", "50 percent photo"), timeout: 5),
+            "The divider didn't come to rest in the middle: \(compare.value ?? "")")
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)))
         let moved = waitFor(compare, toMatch: NSPredicate(format: "value != nil AND value != %@", "50 percent photo"))
@@ -415,7 +418,9 @@ final class CreateFlowTests: XCTestCase {
         if isPad {
             XCTAssertTrue(app.images.matching(photoPredicate).firstMatch.waitForExistence(timeout: 10), "The inline picker hasn't loaded")
         }
-        XCTAssertTrue(waitUntil(timeout: 10) { app.buttons["Browse All…"].isHittable }, "Browse All isn't ready for a tap")
+        // iPhone has no Browse All: its Photos pane's Choose Photo presents the same picker.
+        let browse = isPad ? app.buttons["Browse All…"] : app.buttons["choose-photo"]
+        XCTAssertTrue(waitUntil(timeout: 10) { browse.isHittable }, "Browse All isn't ready for a tap")
         return SheetDetector(app)
     }
 

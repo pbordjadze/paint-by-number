@@ -45,11 +45,12 @@ final class TipDesk {
     @ObservationIgnored private var places: [TipPlace] = []
     /// The shelf has given a hint on this visit: one a visit, so each waits for a visit of its own.
     @ObservationIgnored private var servedShelf = false
-    /// How many views that can point each of `needsAnchor` are on screen, mostly in view.
+    /// How many views that can point each of `needsAnchor` are on screen (a card mostly in view, a
+    /// bar's button in its bar).
     @ObservationIgnored private var anchored: [TipID: Int] = [:]
-    /// Tips that point at a view the shelf builds only when it is near the screen (a card in the
-    /// grid): given a turn only while one is.
-    private static let needsAnchor: Set<TipID> = [.shelfHold, .shelfTimeLapse]
+    /// Tips about a view that may not be there: a card the shelf builds only near the screen, a bar
+    /// button that goes while the preview is enlarged. Given a turn only while one is (`TipAnchor`).
+    private static let needsAnchor: Set<TipID> = Set(TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar })
 
     /// How long TipKit gets to find a tip eligible (a donation or a parameter just changed), and
     /// the least a moment waits before it takes the first one that is.
@@ -78,6 +79,12 @@ final class TipDesk {
 
     // MARK: What a view asks
 
+    /// The tip of the turn, if it lies on the page (`TipID.liesOnThePage`).
+    var pageTip: (any Tip)? {
+        guard let turn, turn.liesOnThePage else { return nil }
+        return turn.tip
+    }
+
     /// The tip of the turn, if it is one of `ids`.
     func tip(among ids: [TipID]) -> (any Tip)? {
         guard let turn, ids.contains(turn) else { return nil }
@@ -98,7 +105,7 @@ final class TipDesk {
     func leave(_ place: TipPlace) {
         places.removeAll { $0 == place }
         if offering?.place == place { stopOffering() }
-        if let turn, turn.place == place { release(turn) }
+        if let turn, turn.place == place { retire(turn) }
         noteActivity()
     }
 
@@ -306,10 +313,7 @@ final class TipDesk {
                 break
             }
             if elapsed > Self.lapse {
-                // Said once, read or not: a tip in a popover of its own has no display limit of
-                // TipKit's to say so.
-                if id.hasOwnPopover { id.tip.invalidate(reason: .displayCountExceeded) }
-                release(id)
+                retire(id)
                 return
             }
         }
@@ -336,6 +340,14 @@ final class TipDesk {
         watching = nil
         pacing.hide(id)
         store.save(pacing)
+    }
+
+    /// `id` has had its say, read or not (left alone, or its screen went), and leaves the screen: a tip
+    /// the app draws itself has no display limit of TipKit's to say it once.
+    private func retire(_ id: TipID) {
+        guard turn == id else { return }
+        if id.isDrawnByTheApp { id.tip.invalidate(reason: .displayCountExceeded) }
+        release(id)
     }
 
     /// Its thing was used: the tip on screen, if it is this one, goes.
@@ -405,8 +417,7 @@ final class TipDesk {
     }
 }
 
-/// Points the tip whose turn it is at the view it modifies, a popover on it (`barTip` for a button
-/// in a navigation bar). Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
+/// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
 /// at a time.
 private struct GentleTipModifier: ViewModifier {
     let ids: [TipID]
@@ -434,11 +445,10 @@ extension View {
     }
 }
 
-/// Hangs the tip whose turn it is, if it is one of `ids`, from a button in a navigation bar or a
-/// card on the shelf. TipKit's popover tip found nothing to anchor to there (CI: the tips at the
-/// gallery's gear and on its cards never came up while every other popover tip did), so this is
-/// SwiftUI's own popover, which those views do carry, with the tip's `TipView` inside. A tap
-/// outside the popover closes the tip, as it does TipKit's own.
+/// Hangs the tip whose turn it is, if it is one of `ids`, from a card on the shelf. TipKit's
+/// popover tip found nothing to anchor to there (CI: the tips on its cards never came up while
+/// every other popover tip did), so this is SwiftUI's own popover, which a card does carry, with
+/// the tip's `TipView` inside. A tap outside the popover closes the tip, as it does TipKit's own.
 private struct OwnPopoverTipModifier: ViewModifier {
     let ids: [TipID]
     var arrowEdge: Edge
@@ -458,16 +468,98 @@ private struct OwnPopoverTipModifier: ViewModifier {
     }
 }
 
-extension View {
-    /// The tip `id`, as a popover from this navigation bar button while it has the turn.
-    /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
-    func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
-        modifier(OwnPopoverTipModifier(ids: [id], arrowEdge: arrowEdge))
+/// Tells the desk which of `ids` this view can point at now (`TipDesk.anchor`): while it is on
+/// screen and `isPresent`. Its tips change as the screen does (another painting comes first), so it
+/// takes back the ones it gave, not the ones it has now; and a screen pushed over it takes them all
+/// back until it shows again.
+private struct TipAnchor: ViewModifier {
+    let ids: [TipID]
+    let isPresent: Bool
+    @State private var isOnScreen = false
+    @State private var anchored: [TipID] = []
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                isOnScreen = true
+                anchor()
+            }
+            .onDisappear {
+                isOnScreen = false
+                anchor()
+            }
+            .onChange(of: ids) { anchor() }
+            .onChange(of: isPresent) { anchor() }
     }
 
-    /// Whichever of `ids` has the turn, as a popover from this card on the shelf.
+    private func anchor() {
+        let now = isOnScreen && isPresent ? ids : []
+        guard now != anchored else { return }
+        PaintTips.desk.anchor(anchored, present: false)
+        PaintTips.desk.anchor(now, present: true)
+        anchored = now
+    }
+}
+
+/// A card's tips anchor while it is mostly in view: the grid builds cards beyond the screen's edge
+/// too, and a tip would point off the screen.
+private struct CardTipAnchor: ViewModifier {
+    let ids: [TipID]
+    @State private var isVisible = false
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollVisibilityChange(threshold: 0.6) { isVisible = $0 }
+            .modifier(TipAnchor(ids: ids, isPresent: isVisible))
+    }
+}
+
+/// Lays the tip whose turn it is, if it is one of `ids`, as a card with no arrow at the top of the
+/// view it modifies, just under the navigation bar whose button it is about. A popover from the
+/// button grew out of it on iOS 26 and covered it (on iPhone the title too), and nothing could
+/// hang one below it (Paul, October 18: a card on the page, as the painting's Zoom, Drag and
+/// Pencil are).
+private struct BarTipModifier: ViewModifier {
+    let ids: [TipID]
+    var active: Bool
+
+    func body(content: Content) -> some View {
+        let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
+        content.overlay(alignment: .top) {
+            ZStack {
+                if let shown {
+                    TipView(shown.tip, isPresented: nil, arrowEdge: nil)
+                        .frame(maxWidth: Self.width)
+                        .padding(.horizontal, Self.margin)
+                        .padding(.top, Self.margin)
+                        // Laid over the screen, it would come last to VoiceOver.
+                        .accessibilitySortPriority(1)
+                        .transition(.opacity)
+                }
+            }
+            // A fade, on the card alone: the screen under it changes as it likes.
+            .animation(.easeInOut(duration: 0.25), value: shown)
+        }
+        // While its button is in the bar: hidden, the tip waits for its turn (`TipDesk.needsAnchor`).
+        .modifier(TipAnchor(ids: ids, isPresent: active))
+    }
+
+    private static let width: CGFloat = 420
+    private static let margin: CGFloat = 12
+}
+
+extension View {
+    /// Whichever of `ids` has the turn, as a card at the top of this screen: the tips about a
+    /// button of its navigation bar (`TipID.liesUnderTheBar`), while `active` (the button is there).
+    func barTips(_ ids: TipID..., active: Bool = true) -> some View {
+        modifier(BarTipModifier(ids: ids, active: active))
+    }
+
+    /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
+    /// while it is mostly in view.
     func cardTip(_ ids: [TipID], arrowEdge: Edge = .top) -> some View {
         modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
+            .modifier(CardTipAnchor(ids: ids))
     }
 }
 

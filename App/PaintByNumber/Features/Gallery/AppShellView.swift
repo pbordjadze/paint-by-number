@@ -95,6 +95,10 @@ struct AppShellView: View {
                 .navigationTitle("Paint by Moonlight")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
+                // The gear's tip (where tips can be turned off), under the bar.
+                .barTips(.shelfSettings)
+                // An empty gallery has no + in its bar: the tip waits for one.
+                .barTips(.shelfNewPainting, active: !library.isBare)
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
                     // The zoom is for pushes from a card and for the way back to it; the painting
@@ -210,8 +214,6 @@ struct AppShellView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
-                // Where the tips can be turned off: hung below the gear.
-                .barTip(.shelfSettings)
         }
         #if UNRELEASED
         if showsMarginarium {
@@ -220,26 +222,31 @@ struct AppShellView: View {
             }
         }
         #endif
-        ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                Picker("Show", selection: $filter) {
-                    Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
-                    Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+        // An empty gallery's own New Painting is its only control there: nothing to filter, and
+        // no second New Painting.
+        if !library.isBare {
+            // Favorites are all it filters by: it comes once there is one, and stays while it is on.
+            if filter == .favorites || library.artworks.contains(where: \.isFavorite) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Show", selection: $filter) {
+                            Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
+                            Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Label("Show", systemImage: filter == .all
+                              ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                    }
+                    // The filled icon says a filter is on; VoiceOver hears which one.
+                    .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
                 }
-                .pickerStyle(.inline)
-            } label: {
-                Label("Show", systemImage: filter == .all
-                      ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
             }
-            // The filled icon says a filter is on; VoiceOver hears which one.
-            .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
-            .disabled(library.artworks.isEmpty)
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-            Button("New Painting", systemImage: "plus") { isCreating = true }
-                .buttonStyle(.glassProminent)
-                .tint(Theme.signature)
-                .barTip(.shelfNewPainting)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("New Painting", systemImage: "plus") { isCreating = true }
+                    .buttonStyle(.glassProminent)
+                    .tint(Theme.signature)
+            }
         }
     }
 

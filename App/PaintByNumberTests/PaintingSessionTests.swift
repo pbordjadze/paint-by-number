@@ -497,7 +497,9 @@ struct PaintingSessionTests {
         #expect(session.shownPaintedByColor == session.totalByColor)
 
         let revision = session.revision
+        #expect(!session.isReplaying)
         session.showReplayed(0)
+        #expect(session.isReplaying, "Undo and Replay wait while a replay plays")
         #expect(session.shownFraction == 0)
         #expect(session.shownPaintedByColor.allSatisfy { $0 == 0 })
         #expect(session.isComplete && session.progress.paintedCount == total && session.revision == revision)
@@ -514,7 +516,7 @@ struct PaintingSessionTests {
         session.showReplayed(total + 100)
         #expect(session.replayed == total, "never more than the painting has")
         session.showReplayed(nil)
-        #expect(session.replayed == nil && session.shownFraction == 1)
+        #expect(session.replayed == nil && session.shownFraction == 1 && !session.isReplaying)
     }
 
     /// A replay tells the session how much is on the canvas, and lets go of it when the session
@@ -538,6 +540,25 @@ struct PaintingSessionTests {
         try #require(session.undo() != nil)
         #expect(session.replayed == nil, "a replay the session changed under tells the screen nothing more")
         #expect(session.shownFraction < 1 && session.shownFraction > 0)
+    }
+
+    /// The completion bar's Stop: the replay ends where it is and the painting shows whole, with
+    /// nothing taken from it.
+    @Test func stoppingAReplayShowsThePaintingWhole() async throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        view.reduceMotion = true
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.layoutIfNeeded()
+        session.paint(Array(template.regions.indices), from: .zero, animated: false)
+        let revision = session.revision
+        view.replay()
+        try await waitUntil(timeout: .seconds(10)) { session.isReplaying }
+        view.stopReplay()
+        #expect(!session.isReplaying && session.shownFraction == 1)
+        #expect(session.isComplete && session.revision == revision, "stopping changed the painting")
+        view.stopReplay()
+        #expect(!session.isReplaying, "a second Stop does nothing")
     }
 
     @Test func hintWithNothingLeftStaysQuiet() {

@@ -207,7 +207,8 @@ struct FeedbackSheet: View {
     }
 
     /// Sends the written files to the developers: thanks if they took them, the alert if not.
-    /// A sent feedback closes the sheet no sooner than `notBefore`.
+    /// Neither closes the sheet nor shows the alert again sooner than `notBefore`: offline, a
+    /// send fails at once.
     private func upload(_ files: FeedbackPackage.Files, notBefore: ContinuousClock.Instant? = nil) async {
         phase = .sending
         do {
@@ -219,6 +220,7 @@ struct FeedbackSheet: View {
             onSent(.sent)
         } catch {
             Log.feedback.error("Sending feedback failed: \(String(describing: error), privacy: .public)")
+            if let notBefore { try? await Task.sleep(until: notBefore) }
             phase = .notSent
         }
     }
