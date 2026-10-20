@@ -280,6 +280,7 @@ func runEdit(_ options: Options) throws {
         case .erase: step.kind = "erase"
         case .eraseLine: step.kind = "eraseLine"
         case .fill: step.kind = "fill"
+        case .paintArea: step.kind = "paintArea"
         case .look: step.kind = "look"
         case .repaint: step.kind = "repaint"
         }

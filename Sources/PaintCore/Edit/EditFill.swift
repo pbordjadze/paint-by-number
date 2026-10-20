@@ -34,18 +34,7 @@ extension EditWork {
         if open { members = [tapped] }
         members.sort()
 
-        var paint = -1
-        var nearest = Float.infinity
-        for (k, c) in t.palette.enumerated() {
-            let d = ColorScience.distance(c.oklab, color)
-            if d < nearest { paint = k; nearest = d }
-        }
-        if paint < 0 || nearest > SegmentationParameters.jnd {
-            t.palette.append(PaletteColor(oklab: color, space: t.colorSpace))
-            paint = t.palette.count - 1
-            summary.paintsAdded += 1
-        }
-        let color = UInt32(paint)
+        let color = UInt32(paint(matching: color))
         let keep = members.contains(tapped) ? tapped : members[0]
         if members.count > 1 {
             try merge(members, keep: keep, color: color, detail: true)
@@ -62,5 +51,51 @@ extension EditWork {
         }
         summary.fills += 1
         summary.detailAreas += 1
+    }
+
+    /// The paint a tapped color (OKLab) takes: the nearest within a just-noticeable difference,
+    /// else a new paint of that color, added last so no other number changes.
+    mutating func paint(matching color: SIMD3<Float>) -> Int {
+        var paint = -1
+        var nearest = Float.infinity
+        for (k, c) in t.palette.enumerated() {
+            let d = ColorScience.distance(c.oklab, color)
+            if d < nearest { paint = k; nearest = d }
+        }
+        if paint < 0 || nearest > SegmentationParameters.jnd {
+            t.palette.append(PaletteColor(oklab: color, space: t.colorSpace))
+            paint = t.palette.count - 1
+            summary.paintsAdded += 1
+        }
+        return paint
+    }
+
+    /// The region under `p` alone, flooding nothing (Refine's Only This Area: the generator had
+    /// given a husky's eyes the sky's blue), painted `color` (OKLab) with the paint a fill would
+    /// take (`paint(matching:)`). It stays a detail area or not as it was, and its numbers are
+    /// sized for the new paint's digits: an area without room for them is declined. A paint it
+    /// leaves with no area goes, the numbers after it closing up as a repaint's merge closes them
+    /// (`renumberPaints`); no other region's paint changes. Where the area then meets one of its
+    /// new paint across an undrawn boundary, the two become one area (`joinAreas`). A color whose
+    /// paint the region has already changes nothing.
+    mutating func paintArea(at p: LatticePoint, color: SIMD3<Float>) throws {
+        guard let r = locate(p) else { throw EditFailure.invalid("the tap is off the canvas") }
+        let before = t.regions.map(\.colorIndex)
+        let old = Int(before[r])
+        var new = paint(matching: color)
+        guard new != old else { return }
+        if !t.regions.indices.contains(where: { $0 != r && regionAlive[$0] && Int(t.regions[$0].colorIndex) == old }) {
+            // The area was its paint's last: that paint becomes the new one, so the area's number
+            // is the new paint's once the numbers after the old have closed up.
+            var target = Array(t.palette.indices)
+            target[old] = new
+            try renumberPaints(into: target, colors: t.palette.map(\.oklab))
+            new = Int(t.regions[r].colorIndex)
+            summary.paintsMerged += 1
+        }
+        guard recolor(r, to: new, adding: nil) else {
+            throw EditFailure.invalid("the area has no room for the number of its new paint")
+        }
+        try joinAreas(paintedBefore: before)
     }
 }

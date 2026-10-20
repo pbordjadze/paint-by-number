@@ -119,7 +119,8 @@ extension TemplateEditor {
     static let familyChroma: Float = 0.04
 
     /// `color` as a recoloring edit makes it, and as every color laid after that edit is made
-    /// (a drawn line's photo colors, a fill's), so later edits bring paints in the same colors.
+    /// (a drawn line's photo colors, a fill's, a painted area's), so later edits bring paints in
+    /// the same colors.
     /// Any other edit leaves it as it is.
     public static func recolor(_ color: SIMD3<Float>, by edit: Edit) -> SIMD3<Float> {
         switch edit {
@@ -176,8 +177,8 @@ extension TemplateEditor {
         }
     }
 
-    /// `edit` with the colors it brings (a drawn line's or a split's paints, a fill's color) as
-    /// the recoloring edits laid before it make them, in order.
+    /// `edit` with the colors it brings (a drawn line's or a split's paints, a fill's or a painted
+    /// area's color) as the recoloring edits laid before it make them, in order.
     public static func recolored(_ edit: Edit, by recolors: [Edit]) -> Edit {
         guard !recolors.isEmpty else { return edit }
         func map(_ c: SIMD3<Float>) -> SIMD3<Float> { recolors.reduce(c) { recolor($0, by: $1) } }
@@ -186,6 +187,7 @@ extension TemplateEditor {
         case .draw(let points, let closed, let paints): return .draw(points: points, closed: closed, paints: paints.map(map))
         case .split(let points, let closed, let paints): return .split(points: points, closed: closed, paints: map(paints))
         case .fill(let point, let color): return .fill(at: point, color: map(color))
+        case .paintArea(let point, let color): return .paintArea(at: point, color: map(color))
         default: return edit
         }
     }
@@ -212,17 +214,33 @@ extension EditWork {
                 }
             }
         }
+        let merged = old.indices.filter { target[$0] != $0 }.count
+        let changed = old.indices.filter { target[$0] == $0 && new[$0] != old[$0] }.count
+        guard merged > 0 || changed > 0 else { return }
+        let before = t.regions.map(\.colorIndex)
+        try renumberPaints(into: target, colors: new)
+        try joinAreas(paintedBefore: before)
+        for e in t.edges.indices where !edgeDead[e] && !isInked(e) {
+            guard let r = right(e) else { continue }
+            weights[e] = colorWeight(t.regions[left(e)].colorIndex, t.regions[r].colorIndex)
+        }
+        summary.paintsChanged += changed
+        summary.paintsMerged += merged
+    }
+
+    /// Lays the palette out again: each paint `k` becomes paint `target[k]` (itself, or a paint
+    /// that is its own target) of color `colors[k]`. A paint made another leaves the palette and
+    /// the numbers after it close up (a number only loses digits, so every label keeps its room);
+    /// every region takes the number its paint has now.
+    mutating func renumberPaints(into target: [Int], colors new: [SIMD3<Float>]) throws {
+        let old = t.palette.map(\.oklab)
         var index = [Int](repeating: -1, count: old.count)
         var palette: [PaletteColor] = []
         for k in old.indices where target[k] == k {
             index[k] = palette.count
             palette.append(new[k] == old[k] ? t.palette[k] : PaletteColor(oklab: new[k], space: t.colorSpace))
         }
-        let merged = old.count - palette.count
-        let changed = old.indices.filter { target[$0] == $0 && new[$0] != old[$0] }.count
-        guard merged > 0 || changed > 0 else { return }
         t.palette = palette
-        let before = t.regions.map(\.colorIndex)
         for r in t.regions.indices {
             let k = Int(t.regions[r].colorIndex)
             guard k < target.count else { throw EditFailure.invalid("a region's paint is not in the palette") }
@@ -233,22 +251,20 @@ extension EditWork {
                 summary.touched.insert(r)
             }
         }
+    }
 
+    /// Areas that share a paint across an undrawn boundary now and did not `before` (each region's
+    /// paint then) become one area, the larger keeping its index, as the eraser joins them. Areas
+    /// that shared a paint before keep their boundary.
+    mutating func joinAreas(paintedBefore before: [UInt32]) throws {
         var groups = Groups()
         for e in t.edges.indices where !edgeDead[e] && !isInked(e) {
             guard let r = right(e) else { continue }
             let l = left(e)
-            // Only paints this edit made one: areas that shared a paint before keep their boundary.
             if regionAlive[l], regionAlive[r], before[l] != before[r], t.regions[l].colorIndex == t.regions[r].colorIndex {
                 groups.join(l, r)
             }
         }
         try mergeGroups(groups.groups(), surviving: [:])
-        for e in t.edges.indices where !edgeDead[e] && !isInked(e) {
-            guard let r = right(e) else { continue }
-            weights[e] = colorWeight(t.regions[left(e)].colorIndex, t.regions[r].colorIndex)
-        }
-        summary.paintsChanged += changed
-        summary.paintsMerged += merged
     }
 }
