@@ -686,6 +686,12 @@ Conventions).
     screen, no regeneration) and a refined painting's `refinements.json` carry the edits, and
     `Library.regenerate` makes the base and lays them (`ArtworkFactory.laying`). PaintCore's
     `LineEdits` (root `CLAUDE.md` › Line art) stays the way the generator reads `lines`.
+    Its `start` (Start From's Blank; missing or unknown reads as `generated`) makes the base
+    the photo as one area on the generator's canvas wherever a base is made (`CreateModel`'s
+    drafts and full resolution, `ArtworkFactory.blank` for regeneration; no making-of show),
+    is a refinement though it counts no change, and Undo takes it back; Simple is no start but
+    the sliders' plainest settings (`CreateModel.Sliders.simple`, kept beside each step of the
+    history so Undo and Cancel put the sliders back, and Generated the ones Simple found).
 - Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter
   refined and didn't start, so closing the flow, or iOS ending the app, loses nothing. A flow has
   a draft (`CreateModel.draft`) once its photo has refinements, and not while its settings are

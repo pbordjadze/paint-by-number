@@ -12,10 +12,11 @@ import SwiftUI
 /// is being dragged, the full resolution once it settles — always discarding stale work.
 ///
 /// The template shown at full resolution is the one the generator makes from the photo, the
-/// settings and the refinements' generator inputs (the base), with the painter's manual edits laid
-/// on it in order (`EditTrail`, `refinements.edits`). Refine's edits are made to that template
-/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its text corrections and the sliders
-/// make the base again and the edits are laid on the new one. `MARK: Refine` says how.
+/// settings and the refinements' generator inputs (the base; for a blank start, the photo as one
+/// area), with the painter's manual edits laid on it in order (`EditTrail`, `refinements.edits`).
+/// Refine's edits are made to that template alone (`edit(_:)`, `fill(at:color:)`: no
+/// regeneration), its text corrections, Start From and the sliders make the base again and the
+/// edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
     struct Source {
@@ -92,6 +93,46 @@ final class CreateModel {
         }
     }
 
+    /// Where Refine's template starts from (its Start From, until the first edit; `start(from:)`).
+    nonisolated enum RefineStart: Hashable, Sendable {
+        /// What the generator makes of the photo on the sliders' settings.
+        case generated
+        /// The same, on Simple's settings (`Sliders.simple`): a few big shapes for a painter who
+        /// draws their own detail.
+        case simple
+        /// The photo as one area, which the painter's lines cut (`TemplateRefinements.Start.blank`).
+        case blank
+    }
+
+    /// The four sliders' values together: what Refine's Simple puts on them, and puts back.
+    nonisolated struct Sliders: Equatable, Sendable {
+        var colorCount: Double
+        var detail: Double
+        var smoothness: Double
+        var lines: Double
+
+        /// Simple's: the generator at its plainest, through the sliders alone: the fewest colors
+        /// the Colors slider offers (but at least 12), Detail at its lowest, Smoothness at its
+        /// highest and Lines at its Fewer end.
+        static let simple = Sliders(
+            colorCount: Double(max(GenerationSettings.colorCountRange.lowerBound, 12)), detail: 0, smoothness: 1, lines: 0)
+
+        init(colorCount: Double, detail: Double, smoothness: Double, lines: Double) {
+            self.colorCount = colorCount
+            self.detail = detail
+            self.smoothness = smoothness
+            self.lines = lines
+        }
+
+        /// `settings` on the sliders, the Lines slider at its middle (the base line art), as a
+        /// suggestion's candidates carry it.
+        init(_ settings: GenerationSettings) {
+            self.init(
+                colorCount: Double(settings.colorCount), detail: Double(settings.detail),
+                smoothness: Double(settings.smoothness), lines: 0.5)
+        }
+    }
+
     private(set) var source: Source?
     private(set) var preview: Preview?
     /// Stats of the latest full-resolution template.
@@ -129,6 +170,11 @@ final class CreateModel {
     private(set) var refinements = TemplateRefinements()
     /// What Undo and Redo step through on the Refine screen, and what Cancel puts back.
     private(set) var history = RefineHistory()
+    /// The sliders beside each state of `history`, in step with it: a start moves them (Simple),
+    /// so Undo, Redo and Cancel put them back with the refinements.
+    @ObservationIgnored private var sliderHistory = SliderHistory()
+    /// The sliders as Simple found them, which choosing Generated puts back.
+    @ObservationIgnored private var beforeSimple: Sliders?
     /// The newest edit sent (`edit(_:)`, `fill(at:color:)`) whose result `preview` shows, or that
     /// did nothing: Refine draws the edits sent after it over the template on screen.
     private(set) var settledEdits = 0
@@ -210,6 +256,13 @@ final class CreateModel {
 
     private var currentKey: BaseKey { BaseKey(settings: settings, inputs: refinements.generatorInputs) }
 
+    /// The sliders of `history`'s opening and of each of its Undo and Redo steps.
+    nonisolated private struct SliderHistory {
+        var opening: Sliders?
+        var undo: [Sliders] = []
+        var redo: [Sliders] = []
+    }
+
     /// The base template on screen with the edits laid on it, and what it is the base of.
     @ObservationIgnored private var trail: EditTrail?
     @ObservationIgnored private var trailKey: BaseKey?
@@ -240,10 +293,25 @@ final class CreateModel {
         smoothness = Double(initial.smoothness)
     }
 
-    var settings: GenerationSettings {
+    var settings: GenerationSettings { settings(of: sliders) }
+
+    /// The settings `sliders` make.
+    private func settings(of sliders: Sliders) -> GenerationSettings {
         GenerationSettings(
-            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt
+            colorCount: Int(sliders.colorCount.rounded()), detail: Float(sliders.detail), smoothness: Float(sliders.smoothness),
+            lineArt: Self.lineArt(baseLineArt, lines: sliders.lines)
         ).normalized
+    }
+
+    /// The four sliders together.
+    private var sliders: Sliders {
+        get { Sliders(colorCount: colorCount, detail: detail, smoothness: smoothness, lines: lines) }
+        set {
+            colorCount = newValue.colorCount
+            detail = newValue.detail
+            smoothness = newValue.smoothness
+            lines = newValue.lines
+        }
     }
 
     /// The photo's settings are still being chosen: the sliders wait for them.
@@ -570,9 +638,10 @@ final class CreateModel {
     /// What the making-of show of `draft` (the painting Start saved, as `artworkID`) is made from:
     /// this photo and the generator inputs its base was made with, so making the base again with an
     /// observer gives its stage pictures, and the painting's own template. Seeded by the artwork, so
-    /// a painting's show is the same each time it is made.
+    /// a painting's show is the same each time it is made. None for a blank start: its areas are
+    /// the painter's, not the steps the show plays, and the painting opens as it does without one.
     func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
-        guard let source else { return nil }
+        guard let source, draft.refinements.start == .generated else { return nil }
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
@@ -606,10 +675,7 @@ final class CreateModel {
     /// A suggestion's settings on the sliders; its candidates carry the base line art, the Lines
     /// slider's middle.
     private func apply(_ settings: GenerationSettings) {
-        colorCount = Double(settings.colorCount)
-        detail = Double(settings.detail)
-        smoothness = Double(settings.smoothness)
-        lines = 0.5
+        sliders = Sliders(settings)
     }
 
     /// Generates the current settings as the cancellable full-resolution job, so setting
@@ -790,6 +856,9 @@ final class CreateModel {
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
     //   sliders do the same with the settings. A base made before is reused (`made`).
+    // - Start From (`start(from:)`) makes the base again too: Blank through the refinements
+    //   (`TemplateRefinements.start`), Simple through the sliders, which each step of the history
+    //   keeps beside the refinements (`sliderHistory`) for Undo, Redo and Cancel to put back.
     // - While the base is being made again, an edit is kept with the others and the new template
     //   has it laid before it shows (`generate`).
     //
@@ -868,7 +937,7 @@ final class CreateModel {
                 if replaces { next.edits[next.edits.count - 1] = edit } else { next.edits.append(edit) }
             }
             guard next != before, next.edits.count <= TemplateRefinements.maximumEdits, refinements == before else { return }
-            if !replaces { history.push(before) }
+            if !replaces { pushStep(before) }
             let paints = current.template.palette.count
             await settle(on: next)
             if refinements == next, let shown = trail?.template, shown.palette.count < paints { say(.alike) }
@@ -879,13 +948,48 @@ final class CreateModel {
     /// Colors show themselves on.
     var paintsBeforeEdits: [PaletteColor] { trail?.base.palette ?? preview?.template.palette ?? [] }
 
+    /// Where the template starts from, as Refine's Start From shows it: Blank for a blank start,
+    /// Simple while the sliders hold Simple's settings, else Generated.
+    var refineStart: RefineStart {
+        if refinements.start == .blank { return .blank }
+        return holdsSimple ? .simple : .generated
+    }
+
+    /// Whether the sliders make Simple's settings.
+    private var holdsSimple: Bool { settings == settings(of: .simple) }
+
+    /// Refine's Start From, in its turn, a step of the history. Blank makes the base the photo as
+    /// one area; Generated and Simple make it the generator's again. Simple puts its settings on
+    /// the sliders, remembering the ones it found, which Generated puts back (the suggestion's when
+    /// none were kept, as for a draft left on Simple's); Blank leaves the sliders be. The sliders
+    /// move as the painter's own would (`settingsChanged`): the chip and the draft follow them.
+    func start(from start: RefineStart) {
+        enqueue { [self] in
+            var next = refinements
+            next.start = start == .blank ? .blank : .generated
+            let moved: Sliders
+            switch start {
+            case .simple where !holdsSimple:
+                beforeSimple = sliders
+                moved = .simple
+            case .generated where holdsSimple:
+                moved = beforeSimple ?? Sliders(decision?.settings ?? GenerationSettings())
+            default:
+                moved = sliders
+            }
+            guard next != refinements || moved != sliders else { return }
+            pushStep(refinements)
+            await settle(on: next, sliders: moved)
+        }
+    }
+
     /// A correction of the text, in its turn.
     func change(_ change: RefineChange) {
         enqueue { [self] in
             var next = refinements
             change.apply(to: &next)
             guard next != refinements else { return }
-            history.push(refinements)
+            pushStep(refinements)
             take(next)
         }
     }
@@ -895,7 +999,9 @@ final class CreateModel {
         enqueue { [self] in
             guard let previous = history.undo.popLast() else { return }
             history.redo.append(refinements)
-            await settle(on: previous)
+            let earlier = sliderHistory.undo.popLast() ?? sliders
+            sliderHistory.redo.append(sliders)
+            await settle(on: previous, sliders: earlier)
         }
     }
 
@@ -904,7 +1010,9 @@ final class CreateModel {
         enqueue { [self] in
             guard let next = history.redo.popLast() else { return }
             history.undo.append(refinements)
-            await settle(on: next)
+            let later = sliderHistory.redo.popLast() ?? sliders
+            sliderHistory.undo.append(sliders)
+            await settle(on: next, sliders: later)
         }
     }
 
@@ -915,17 +1023,31 @@ final class CreateModel {
     func beginRefining() {
         enqueue { [self] in
             history = RefineHistory(opening: refinements)
+            sliderHistory = SliderHistory(opening: sliders)
             dismissNote()
         }
     }
 
-    /// Refine's Cancel: back to what it opened with.
+    /// Refine's Cancel: back to what it opened with, the sliders too.
     func cancelRefining() {
         enqueue { [self] in
             let opening = history.opening
+            let openingSliders = sliderHistory.opening ?? sliders
             history = RefineHistory(opening: opening)
-            await settle(on: opening)
+            sliderHistory = SliderHistory(opening: openingSliders)
+            await settle(on: opening, sliders: openingSliders)
         }
+    }
+
+    /// `state`, the refinements, is about to change: Undo goes back to it and to the sliders as
+    /// they are, and what was undone is gone (`RefineHistory.push`).
+    private func pushStep(_ state: TemplateRefinements) {
+        history.push(state)
+        sliderHistory.undo.append(sliders)
+        if sliderHistory.undo.count > RefineHistory.limit {
+            sliderHistory.undo.removeFirst(sliderHistory.undo.count - RefineHistory.limit)
+        }
+        sliderHistory.redo.removeAll()
     }
 
     func dismissNote() {
@@ -963,6 +1085,8 @@ final class CreateModel {
         trail = nil
         trailKey = nil
         history = RefineHistory()
+        sliderHistory = SliderHistory()
+        beforeSimple = nil
         sentEdits = 0
         handledEdits = 0
         leftOutEdits = 0
@@ -988,6 +1112,15 @@ final class CreateModel {
 
     private func settle(on target: TemplateRefinements) async {
         if take(target) { await converge() }
+    }
+
+    /// `target` with the sliders at `sliders`. Sliders that move change the settings as the
+    /// painter's own would (`settingsChanged`): the base is made again and the edits laid on it.
+    private func settle(on target: TemplateRefinements, sliders: Sliders) async {
+        guard sliders != self.sliders else { return await settle(on: target) }
+        self.sliders = sliders
+        refinements = target
+        settingsChanged()
     }
 
     /// The edit numbered `serial` has had its turn; `shown` when the template on screen shows
@@ -1034,7 +1167,7 @@ final class CreateModel {
             }
             let now = refinements
             if now.edits.count < TemplateRefinements.maximumEdits {
-                history.push(now)
+                pushStep(now)
                 refinements.edits.append(kept)
             }
             handled(serial, shown: false)
@@ -1046,7 +1179,7 @@ final class CreateModel {
             if !cleared.isEmpty {
                 var next = before
                 next.edits = before.edits.indices.filter { !cleared.contains($0) }.map { before.edits[$0] }
-                history.push(before)
+                pushStep(before)
                 await settle(on: next)
                 handled(serial)
                 return
@@ -1065,7 +1198,7 @@ final class CreateModel {
             next.edits[next.edits.count - 1] = laid.edit
             guard refinements == before, trailKey == key else {
                 // Something else changed the refinements meanwhile: the edit joins them.
-                history.push(refinements)
+                pushStep(refinements)
                 refinements.edits.append(laid.edit)
                 await converge()
                 handled(serial)
@@ -1073,7 +1206,7 @@ final class CreateModel {
             }
             switch laid.verdict {
             case .made(let tooSmall):
-                history.push(before)
+                pushStep(before)
                 refinements = next
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
@@ -1188,18 +1321,24 @@ final class CreateModel {
     }
 
     /// The template of `settings` made from the generator inputs of `refinements` (`aspect`: the
-    /// photo's width over height), with its edits laid unless it is a draft, its preview recording
-    /// `recorded` (the sliders' settings a draft stands for).
+    /// photo's width over height), or for a blank start `image` as one area (`ArtworkFactory.blank`),
+    /// with its edits laid unless it is a draft, its preview recording `recorded` (the sliders'
+    /// settings a draft stands for).
     @concurrent
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
         progress: (@Sendable (Float) -> Void)?
     ) async throws -> Shown {
-        let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
-        let template = try TemplateGenerator(settings: settings)
-            .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
-            .template
+        let template: Template
+        if refinements.start == .blank {
+            template = try ArtworkFactory.blank(from: image, settings: settings)
+        } else {
+            let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
+            template = try TemplateGenerator(settings: settings)
+                .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+                .template
+        }
         try Task.checkCancellation()
         return try composed(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }

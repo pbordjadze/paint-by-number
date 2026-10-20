@@ -199,6 +199,31 @@ struct TemplateRefinementsTests {
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data(hostile.utf8)).edits.count == TemplateRefinements.maximumEdits)
     }
 
+    /// A blank start is kept in the file and is a refinement and a generator input, though it
+    /// counts no change; a file from before it, or with a start this app doesn't know, starts
+    /// from the generator's template and keeps the rest.
+    @Test func aBlankStartIsKeptAndOtherFilesStartGenerated() throws {
+        var blank = TemplateRefinements()
+        #expect(blank.start == .generated && blank.isEmpty)
+        blank.start = .blank
+        #expect(!blank.isEmpty && blank.changeCount == 0)
+        #expect(blank.generatorInputs == blank && blank.generatorInputs != TemplateRefinements())
+        let data = try JSONEncoder().encode(blank)
+        #expect(String(decoding: data, as: UTF8.self).contains(#""start":"blank""#))
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: data) == blank)
+
+        let draw = TemplateEditor.Edit.draw(points: [SIMD2(1, 2), SIMD2(3, 4)], closed: false)
+        let older = #"{"lines":[],"edits":[{"kind":"draw","points":[[1,2],[3,4]]}],"strokes":[],"hiddenText":[],"addedText":[]}"#
+        let before = try JSONDecoder().decode(TemplateRefinements.self, from: Data(older.utf8))
+        #expect(before.start == .generated && before.edits == [draw])
+
+        let newer = #"{"start":"stencil","edits":[{"kind":"draw","points":[[1,2],[3,4]]}]}"#
+        let unknown = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
+        #expect(unknown.start == .generated && unknown.edits == [draw])
+        let wrong = try JSONDecoder().decode(TemplateRefinements.self, from: Data(#"{"start":7}"#.utf8))
+        #expect(wrong.start == .generated && wrong.isEmpty)
+    }
+
     /// A line drawn on a template draws: one across the middle of a coloring book adds to its
     /// drawing; erased again it is gone.
     @Test func aDrawnLineShowsInTheTemplate() throws {
