@@ -348,6 +348,18 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []
     }
 
+    /// The fields in their order; `start` only for a blank start, so a file that starts from the
+    /// generator's template is byte for byte what it was before there were starts.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        if start == .blank { try c.encode(start, forKey: .start) }
+        try c.encode(lines, forKey: .lines)
+        try c.encode(edits, forKey: .edits)
+        try c.encode(strokes, forKey: .strokes)
+        try c.encode(hiddenText, forKey: .hiddenText)
+        try c.encode(addedText, forKey: .addedText)
+    }
+
     private struct Lossy<Value: Decodable>: Decodable {
         let value: Value?
         init(from decoder: Decoder) throws { value = try? Value(from: decoder) }

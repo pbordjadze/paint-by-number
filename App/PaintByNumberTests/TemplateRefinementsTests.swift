@@ -200,9 +200,20 @@ struct TemplateRefinementsTests {
     }
 
     /// A blank start is kept in the file and is a refinement and a generator input, though it
-    /// counts no change; a file from before it, or with a start this app doesn't know, starts
-    /// from the generator's template and keeps the rest.
+    /// counts no change; one that starts from the generator's template writes no `start`, so its
+    /// file is what it was before starts; a file from before them, or with a start this app
+    /// doesn't know, starts from the generator's template and keeps the rest.
     @Test func aBlankStartIsKeptAndOtherFilesStartGenerated() throws {
+        func keys(_ refinements: TemplateRefinements) throws -> Set<String> {
+            let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(refinements))
+            let fields = try #require(object as? [String: Any])
+            return Set(fields.keys)
+        }
+        var edited = TemplateRefinements()
+        edited.edits = [.draw(points: [SIMD2(1, 2), SIMD2(3, 4)], closed: false)]
+        #expect(try keys(TemplateRefinements()) == ["lines", "edits", "strokes", "hiddenText", "addedText"])
+        #expect(try keys(edited).contains("start") == false)
+
         var blank = TemplateRefinements()
         #expect(blank.start == .generated && blank.isEmpty)
         blank.start = .blank
