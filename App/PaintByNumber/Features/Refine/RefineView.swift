@@ -198,11 +198,11 @@ struct RefineView: View {
         #if UNRELEASED
         .onChange(of: colorPaint) { _, paint in
             guard tool == .colors, let paint, let template = base?.template else { return }
-            let count = RefinePaintGlow.areas(of: paint, in: template).count
             let number = (paint + 1).formatted()
+            let areas = TemplateCounts.areas(RefinePaintGlow.areas(of: paint, in: template).count)
             let announcement = String(
-                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(count) areas",
-                comment: "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then the count of areas using it")
+                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(areas)",
+                comment: "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then how many areas use it (\"3 areas\")")
             AccessibilityNotification.Announcement(announcement).post()
         }
         .onChange(of: model.closedShape) { _, shape in

@@ -411,7 +411,11 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onPencilTap = onPencilTap
         view.onLongPress = onLongPress
         view.aspectRatio = aspectRatio
-        if let focus, focus.id != view.focused { view.focus(on: focus) }
+        // Zooming reports the layout, which sets state: never within SwiftUI's update.
+        if let focus, focus.id != view.focusedRequest {
+            view.focusedRequest = focus.id
+            Task { @MainActor in view.focus(on: focus) }
+        }
     }
 }
 
@@ -434,9 +438,10 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     static let maximumZoom: CGFloat = 12
     /// Room around the picture at zoom 1, so it reads as a card.
     static let margin: CGFloat = 12
-    /// How long a touch is held still before it is a long press: about a third of a second, a
-    /// little longer than iOS's own, so a stroke that pauses before it moves still draws.
-    static let pressDuration: TimeInterval = 0.4
+    /// How long a touch is held still before it is a long press, iOS's own half second, and how
+    /// far it may wander meanwhile: little, so a slow, careful stroke still draws.
+    static let pressDuration: TimeInterval = 0.5
+    static let pressMovement: CGFloat = 4
 
     private let scrollView = UIScrollView()
     /// The picture at zoom 1, which the scroll view zooms: touches read in its coordinates.
@@ -476,6 +481,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         // fail, which it does the moment the finger lifts early.
         press.addTarget(self, action: #selector(handlePress(_:)))
         press.minimumPressDuration = Self.pressDuration
+        press.allowableMovement = Self.pressMovement
         press.delegate = self
         scrollView.addGestureRecognizer(press)
         tap.require(toFail: press)
@@ -534,12 +540,12 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         scrollView.contentInset = UIEdgeInsets(top: y, left: x, bottom: y, right: x)
     }
 
-    /// The last focus brought up close.
-    private(set) var focused: Int?
+    /// The last focus asked for (`RefineFocus.id`).
+    var focusedRequest: Int?
 
     /// Zooms in on `focus.rect` (normalized to the picture).
     func focus(on focus: RefineFocus) {
-        focused = focus.id
+        focusedRequest = focus.id
         guard fittedSize.width > 0, fittedSize.height > 0 else { return }
         let rect = CGRect(
             x: focus.rect.minX * fittedSize.width, y: focus.rect.minY * fittedSize.height,

@@ -38,8 +38,7 @@ nonisolated struct RefineAreaPick: Identifiable, Equatable {
 /// new color for this area alone (Only This Area: the eyes the generator gave the sky's blue, in a
 /// blue of their own while the sky stays), or another of the painting's paints for it, and the
 /// other areas of its paint, glowing (`RefinePaintGlow`). A popover beside the area on iPad, a
-/// sheet on iPhone and at the largest text sizes, as the Lamplit Table read its split vote
-/// (`factory/pieces/refine-studio`).
+/// sheet on iPhone, as the Lamplit Table read its split vote (`factory/pieces/refine-studio`).
 struct RefineAreaCard: View {
     /// The template on screen.
     let template: Template
@@ -129,10 +128,10 @@ struct RefineAreaCard: View {
 
     /// "Paint 1 · 3 areas".
     nonisolated static func subtitle(paint: Int, count: Int) -> String {
-        let number = (paint + 1).formatted()
+        let number = (paint + 1).formatted(), areas = TemplateCounts.areas(count)
         return String(
-            localized: "refine.card.paint", defaultValue: "Paint \(number) · \(count) areas",
-            comment: "Refine screen, an area's card: under the paint's color name, its number (formatted) and how many areas have that paint")
+            localized: "refine.card.paint", defaultValue: "Paint \(number) · \(areas)",
+            comment: "Refine screen, an area's card: under the paint's color name, its number (formatted), then how many areas have that paint (\"3 areas\")")
     }
 
     /// The painting's other paints, one of which the area may take instead.

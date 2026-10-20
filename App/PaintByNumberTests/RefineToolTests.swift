@@ -83,6 +83,7 @@ struct RefineToolTests {
         #expect(RefineAreaCard.areaCount(of: 1, in: template) == 1)
         #expect(RefineAreaCard.areaCount(of: 0, in: template) == 0)
         #expect(RefineAreaCard.subtitle(paint: 1, count: 3) == "Paint 2 · 3 areas")
+        #expect(RefineAreaCard.subtitle(paint: 0, count: 1) == "Paint 1 · 1 area")
     }
 
     /// Only numbers near their floor count as tiny, top to bottom; the zoom frames each one.

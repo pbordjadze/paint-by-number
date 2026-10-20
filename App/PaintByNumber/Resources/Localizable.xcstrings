@@ -102,25 +102,13 @@
       }
     },
     "refine.card.paint" : {
-      "comment" : "Refine screen, an area's card: under the paint's color name, its number (formatted) and how many areas have that paint",
+      "comment" : "Refine screen, an area's card: under the paint's color name, its number (formatted), then how many areas have that paint (\"3 areas\")",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Paint %1$@ · %2$lld area"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Paint %1$@ · %2$lld areas"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint %1$@ · %2$@"
           }
         }
       }
@@ -2134,25 +2122,13 @@
       "extractionState" : "manual"
     },
     "refine.colors.areas" : {
-      "comment" : "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then the count of areas using it",
+      "comment" : "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then how many areas use it (\"3 areas\")",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Paint %1$@: %2$lld area"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Paint %1$@: %2$lld areas"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint %1$@: %2$@"
           }
         }
       }

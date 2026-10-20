@@ -822,17 +822,16 @@ final class CreateModel {
 
     /// Only This Area, in its turn: the area under `point` (canvas units) takes `color` (OKLab), a
     /// paint of its own or the painting's paint of that color (`TemplateEditor.Edit.paintArea`),
-    /// in place of the last edit when that gave the same area its color (the color picker still
-    /// moving is one step of the history). Numbered as `edit(_:)` is.
+    /// in place of the last edit when that was the same card's (the same point: the color picker
+    /// still moving is one step of the history). Numbered as `edit(_:)` is.
     @discardableResult
     func paintArea(at point: SIMD2<Float>, color: SIMD3<Float>) -> Int {
         sentEdits += 1
         let serial = sentEdits
         enqueue { [self] in
             let edit = TemplateEditor.Edit.paintArea(at: point, color: color)
-            guard let current = trail, let key = trailKey, key == currentKey,
-                  case .paintArea(let last, _)? = refinements.edits.last,
-                  let area = current.template.region(at: point), current.template.region(at: last) == area
+            guard trail != nil, let key = trailKey, key == currentKey,
+                  case .paintArea(let last, _)? = refinements.edits.last, last == point
             else {
                 await lay(edit, serial: serial, tapped: false)
                 return
