@@ -21,6 +21,10 @@
       "comment" : "Refine screen: the group of tools that shape the painting's areas (Fill), one of the segments Lines, Areas and Paints above the tools",
       "extractionState" : "manual"
     },
+    "Blank" : {
+      "comment" : "Refine screen, Start From: the photo as one area, which the painter's lines then split into the photo's colors",
+      "extractionState" : "manual"
+    },
     "Brings back the other controls" : {
       "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
       "extractionState" : "manual"
@@ -39,6 +43,10 @@
     },
     "Erasers" : {
       "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
+      "extractionState" : "manual"
+    },
+    "Generated" : {
+      "comment" : "Refine screen, Start From: the template the app made from the photo (the default)",
       "extractionState" : "manual"
     },
     "Only This Area" : {
@@ -2309,12 +2317,20 @@
       "comment" : "Refine screen, Colors: a switch; on, the paints of about the same hue as the paint picked take its new color along with it",
       "extractionState" : "manual"
     },
+    "Simple" : {
+      "comment" : "Refine screen, Start From: the same photo made into a few big shapes with few paints, for a painter who draws their own detail",
+      "extractionState" : "manual"
+    },
     "Skip" : {
       "comment" : "Button over the making-of show that ends it and opens the new painting",
       "extractionState" : "manual"
     },
     "Starry Night" : {
       "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Van Gogh's The Starry Night",
+      "extractionState" : "manual"
+    },
+    "Start From" : {
+      "comment" : "Refine screen: the label (for VoiceOver) of the segmented control, shown until the first edit, that picks what the template starts from: Generated, Simple or Blank",
       "extractionState" : "manual"
     },
     "Strength" : {
