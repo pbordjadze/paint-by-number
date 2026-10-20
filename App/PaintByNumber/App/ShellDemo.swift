@@ -36,6 +36,8 @@ import PaintCore
 ///   in, exactly as drawn, the spray off the wave's crest rubbed out.
 /// - `create-refine-colors`, `create-refine-colors-dark`: the same, in Starry Night, with Refine's
 ///   Colors open over the painting (`RefineColorsPanel`).
+/// - `create-refine-colors-picked`, `create-refine-colors-picked-dark`: Colors with the paint
+///   used by the most areas picked, all of those areas glowing (`RefinePaintGlow`).
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -88,7 +90,7 @@ import PaintCore
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createSuggested, createCustom, createFromFile,
+         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createSuggested, createCustom, createFromFile,
          galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
@@ -119,6 +121,7 @@ enum ShellDemo: Equatable {
         case "create-line-art": .createLineArt
         case "create-refine", "create-refine-dark": .createRefine
         case "create-refine-colors", "create-refine-colors-dark": .createRefineColors
+        case "create-refine-colors-picked", "create-refine-colors-picked-dark": .createRefineColorsPicked
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -190,7 +193,7 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
-            || self == .createRefineColors || self == .createSuggested || self == .createCustom || self == .createTip
+            || opensColors || self == .createSuggested || self == .createCustom || self == .createTip
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
@@ -237,7 +240,7 @@ enum ShellDemo: Equatable {
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
-        case .createCustom, .createRefine, .createRefineColors: pictures.first
+        case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked: pictures.first
         default: nil
         }
     }
@@ -250,10 +253,13 @@ enum ShellDemo: Equatable {
 
     /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
     /// and shows the Refine screen.
-    var refines: Bool { self == .createRefine || self == .createRefineColors }
+    var refines: Bool { self == .createRefine || opensColors }
 
     /// Refine opens on Colors, over the painting.
-    var opensColors: Bool { self == .createRefineColors }
+    var opensColors: Bool { self == .createRefineColors || picksColorPaint }
+
+    /// Refine picks the paint used by the most areas when it opens Colors.
+    var picksColorPaint: Bool { self == .createRefineColorsPicked }
 
     /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
     /// canvas of `template`.
@@ -350,7 +356,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,

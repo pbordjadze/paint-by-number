@@ -603,7 +603,8 @@ Conventions).
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
-  along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
+  along while Similar Colors Too is on); the picked paint's areas glow (`RefinePaintGlow`).
+  `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
   of the history); paints made alike merge and a note says so. New colors cross-fade in (none
