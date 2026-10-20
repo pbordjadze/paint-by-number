@@ -150,7 +150,7 @@ struct RefineView: View {
     /// on screen, and the shape's smaller side on screen.
     @State private var sparkles: (id: Int, point: CGPoint, extent: CGFloat)?
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
-    @State private var tiny: [(region: Int, label: Label)] = []
+    @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
     #endif
 
@@ -170,7 +170,9 @@ struct RefineView: View {
         }
         #endif
         #if UNRELEASED
-        _group = State(initialValue: RefineGroup.of(_tool.wrappedValue))
+        #if DEBUG
+        if ShellDemo.current?.opensColors == true { _group = State(initialValue: .paints) }
+        #endif
         #endif
     }
 

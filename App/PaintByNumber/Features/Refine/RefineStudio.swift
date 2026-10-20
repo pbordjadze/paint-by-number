@@ -261,8 +261,8 @@ nonisolated enum RefineTinyAreas {
     static let margin: Float = 1.25
 
     /// The tiny areas of `template`, top to bottom, left to right, each with its number's spot.
-    static func find(in template: Template) -> [(region: Int, label: Label)] {
-        var found: [(region: Int, label: Label)] = []
+    static func find(in template: Template) -> [(region: Int, label: PaintCore.Label)] {
+        var found: [(region: Int, label: PaintCore.Label)] = []
         for region in template.regions.indices {
             guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { continue }
             let digits = LabelSizing.digitCount(colorIndex: template.regions[region].colorIndex)
@@ -276,7 +276,7 @@ nonisolated enum RefineTinyAreas {
 
     /// The part of the picture (normalized) to zoom to for `label`: a few numbers' room around
     /// it, at least a twentieth of the picture across.
-    static func focus(on label: Label, in template: Template) -> CGRect {
+    static func focus(on label: PaintCore.Label, in template: Template) -> CGRect {
         let width = Float(max(template.width, 1)), height = Float(max(template.height, 1))
         let side = max(label.radius * 16, max(width, height) / 20)
         return CGRect(
