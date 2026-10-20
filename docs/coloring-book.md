@@ -377,6 +377,21 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   regions become one, painted with the nearest paint within `SegmentationParameters.jnd`, else a
   new paint appended last (the palette is never reordered), and a detail area, kept whatever its
   size, as `CellMap.fill` made it.
+- **Paint one area** (`paintArea`, Refine's Only This Area). The generator often gives two things
+  one paint (a husky's eyes took the sky's blue); the painter wants the one area another paint
+  and the rest left as they are. The region under the point alone, with no flood, takes its paint
+  as a fill does (`EditWork.paint(matching:)`: the nearest within `SegmentationParameters.jnd`,
+  else a new paint appended last), and no other region's paint changes. It stays a detail area
+  or not as it was, its numbers kept where they have room for the new paint's digits (a new paint
+  can need one more); an area without that room is declined. A paint it leaves with no area
+  leaves the palette and the numbers after it close up, as a repaint's merge closes them
+  (`renumberPaints`: a number only loses digits), so no paint is left with nothing to paint.
+  Where the area then meets one of its new paint across an undrawn boundary, the two become one
+  area (`joinAreas`), as a repaint joins them. A color whose nearest paint the area has already
+  changes nothing. Unlike a fill's photo color, its color is one of the template on screen
+  (the area card's picker and its palette chips read it with every look in it), so looks and
+  repaints laid before it leave it as sent (`TemplateEditor.recolored`): a paint's own color,
+  picked after a look, lands on that paint.
 - **Split.** Out of Refine's toolbar for now (Paul, October 18: "it's not working right, it like,
   says 'this area is too small to be a number' or else just doesn't really do it"; the Pen's line
   recolors what it cuts instead, above); the edit stays, so splits made meanwhile lay as ever.

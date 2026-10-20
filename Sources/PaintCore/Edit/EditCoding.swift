@@ -10,6 +10,7 @@ import Foundation
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
+///     {"kind": "paintArea", "points": [[x, y]],      "color": [L, a, b]}
 ///     {"kind": "look",      "points": [], "look": "moonlit", "strength": 1, "lightness": [L, ...]}
 ///     {"kind": "repaint",   "points": [], "from": [L, a, b], "color": [L, a, b], "family": true}
 ///
@@ -23,10 +24,10 @@ import Foundation
 /// empty too (`[]`), which reads back as a draw with no paints to give: it lays nudged, unlike one
 /// without the key.
 /// An older reader skips `paints` and lays such a draw as before, in the paints it had. `look` and
-/// `repaint` (Refine's Colors) have no points; an older reader leaves them out of the list, and the
-/// painting it saved keeps their colors. A look's name is a `TemplateEditor.Look`; one this build
-/// does not know fails the edit as an unknown kind does. A missing `lightness` is none, a missing
-/// `family` false.
+/// `repaint` (Refine's Colors) have no points; an older reader leaves them, and a `paintArea`, out
+/// of the list, and the painting it saved keeps their colors. A look's name is a
+/// `TemplateEditor.Look`; one this build does not know fails the edit as an unknown kind does. A
+/// missing `lightness` is none, a missing `family` false.
 extension TemplateEditor.Edit: Codable {
     private enum CodingKeys: String, CodingKey {
         case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
@@ -81,6 +82,8 @@ extension TemplateEditor.Edit: Codable {
             self = .eraseLine(at: try point(), reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
         case "fill":
             self = .fill(at: try point(), color: try lab(.color))
+        case "paintArea":
+            self = .paintArea(at: try point(), color: try lab(.color))
         case "look":
             let name = try c.decode(String.self, forKey: .look)
             guard let look = TemplateEditor.Look(rawValue: name) else {
@@ -120,6 +123,10 @@ extension TemplateEditor.Edit: Codable {
             try c.encode(reach, forKey: .reach)
         case .fill(let point, let color):
             try c.encode("fill", forKey: .kind)
+            try c.encode([point], forKey: .points)
+            try c.encode([color.x, color.y, color.z], forKey: .color)
+        case .paintArea(let point, let color):
+            try c.encode("paintArea", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode([color.x, color.y, color.z], forKey: .color)
         case .look(let look, let strength, let lightness):
