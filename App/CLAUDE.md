@@ -613,6 +613,23 @@ Conventions).
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.
+  - **The Studio** (SideStore and Debug builds, `#if UNRELEASED`; Paul's go, October 20, on the
+    design claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, its mock-ups put to the Lamplit Table,
+    `factory/pieces/refine-studio`): the tools in groups (`RefineGroup`: Lines, Areas, Paints) in
+    one segmented row, the group's tools in the row beneath (at most five; Paints shows the
+    colors panel instead; captions under them on iPad), Shapes' figures in a bar above, open the
+    first time Shapes is picked and then on a second tap; Painting, Paper and Photo in the
+    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
+    Start From control picks the base (`CreateModel.RefineStart`: Generated, Simple, Blank).
+    A long press (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
+    (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
+    share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
+    `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
+    Paints. A line that cuts off an area pops two gold sparkles where its ends met
+    (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
+    Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
+    each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card.
+    The release keeps the one row of buttons described above.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
