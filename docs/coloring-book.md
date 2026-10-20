@@ -297,6 +297,9 @@ template and keeps the templates after the last few, so taking an edit back or p
 costs no editing; an edit that does nothing on a template (declined, or nothing to change) is left
 out of what it shows and counted. The app's Refine makes every edit this way, and regenerating a
 painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md` › Create flow).
+Refine's Blank start is a base with nothing drawn (`TemplateEditor.blank`): the photo as one area,
+its ring the canvas frame and its paint the photo's color over it, with the edits laid on it as on
+any other, so the Pen's first lines cut it into pieces of the photo's colors.
 
 - **Exact.** Geometry is decided in `Int64` on the quantum grid (`Lattice`: orientation, segment
   contact, containment), so an edit gives the same bytes on every device and core count. A
