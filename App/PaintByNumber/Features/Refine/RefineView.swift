@@ -318,7 +318,6 @@ struct RefineView: View {
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         #if UNRELEASED
         .overlay(alignment: .topTrailing) { tinyBadge.padding(12) }
-        .overlay(alignment: .top) { startChooser.padding(.top, 12) }
         #endif
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
@@ -1318,26 +1317,6 @@ extension RefineView {
                     choose(.paints)
                     colorPaint = paint
                 })
-        }
-    }
-
-    /// Where the template starts from, asked until the first edit: what the generator made (the
-    /// default), the same photo in a few big shapes (Simple), or the photo as one area (Blank).
-    @ViewBuilder
-    private var startChooser: some View {
-        if model.refinements.edits.isEmpty, model.hasLineArtInput, tool != .colors, model.note == nil {
-            Picker("Start From", selection: Binding(get: { model.refineStart }, set: { model.start(from: $0) })) {
-                Text("Generated").tag(CreateModel.RefineStart.generated)
-                Text("Simple").tag(CreateModel.RefineStart.simple)
-                Text("Blank").tag(CreateModel.RefineStart.blank)
-            }
-            .pickerStyle(.segmented)
-            .fixedSize()
-            .padding(6)
-            .glassEffect(.regular, in: .capsule)
-            .disabled(model.phase == .generating)
-            .accessibilityIdentifier("refine-start")
-            .transition(.opacity)
         }
     }
 

@@ -619,9 +619,7 @@ Conventions).
     one segmented row, the group's tools in the row beneath (at most five; Paints shows the
     colors panel instead; captions under them on iPad), Shapes' figures in a bar above, open the
     first time Shapes is picked and then on a second tap; Painting, Paper and Photo in the
-    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
-    Start From control picks the base (`CreateModel.RefineStart`: Generated, Simple, Blank).
-    A long press (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
+    navigation bar (a menu on compact widths), opening on the painting. A long press (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
     (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
     `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
