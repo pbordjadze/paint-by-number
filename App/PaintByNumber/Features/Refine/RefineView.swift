@@ -93,6 +93,11 @@ nonisolated enum RefineBackdrop: Hashable {
 /// on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
 /// (`CreateModel.history`; an edit taken back or put back comes at once from the templates kept),
 /// Cancel puts back what the screen opened with, Done keeps them.
+///
+/// SideStore and Debug builds (`#if UNRELEASED`) lay the tools out as the Studio: groups and
+/// their tools in two rows, an area's card on a long press, sparkles where a line closes off an
+/// area and a badge for numbers near their floor (`RefineStudio.swift`, App/CLAUDE.md › Create
+/// flow › The Studio).
 struct RefineView: View {
     let model: CreateModel
 
