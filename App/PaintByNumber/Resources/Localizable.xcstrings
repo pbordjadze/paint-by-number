@@ -17,6 +17,10 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Areas" : {
+      "comment" : "Refine screen: the group of tools that shape the painting's areas (Fill), one of the segments Lines, Areas and Paints above the tools",
+      "extractionState" : "manual"
+    },
     "Brings back the other controls" : {
       "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
       "extractionState" : "manual"
@@ -36,6 +40,138 @@
     "Erasers" : {
       "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
       "extractionState" : "manual"
+    },
+    "Only This Area" : {
+      "comment" : "Refine screen, an area's card (a long press on an area): the label of the color picker that gives the pressed area a paint of its own, while the other areas of its paint keep theirs",
+      "extractionState" : "manual"
+    },
+    "Or Use a Paint" : {
+      "comment" : "Refine screen, an area's card: the caption over a row of the painting's paints, one of which the pressed area can take instead",
+      "extractionState" : "manual"
+    },
+    "Paints" : {
+      "comment" : "Refine screen: the group that changes the painting's paints (looks, new colors), one of the segments Lines, Areas and Paints above the tools",
+      "extractionState" : "manual"
+    },
+    "refine.areaMade" : {
+      "comment" : "VoiceOver announcement on the Refine screen when a line the painter drew closed off an area of its own",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New area"
+          }
+        }
+      }
+    },
+    "refine.card.color.hint" : {
+      "comment" : "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives this paint a new color."
+          }
+        }
+      }
+    },
+    "refine.card.only.hint" : {
+      "comment" : "Refine screen, an area's card: VoiceOver hint of Only This Area, a color picker that gives the pressed area a paint of its own",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives this area a color of its own; the other areas of its paint keep theirs."
+          }
+        }
+      }
+    },
+    "refine.card.others.hint" : {
+      "comment" : "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens Paints with the area's paint picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows every area of this paint, glowing, in Paints."
+          }
+        }
+      }
+    },
+    "refine.card.paint" : {
+      "comment" : "Refine screen, an area's card: under the paint's color name, its number (formatted) and how many areas have that paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Paint %1$@ · %2$lld area"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Paint %1$@ · %2$lld areas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refine.card.use.hint" : {
+      "comment" : "Refine screen, an area's card: VoiceOver hint of one of the painting's paints, which the pressed area takes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives this area this paint."
+          }
+        }
+      }
+    },
+    "refine.tiny" : {
+      "comment" : "Refine screen: a badge counting the areas whose numbers are near the smallest a painter can read; a tap zooms in on the next one. The argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tiny number"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tiny numbers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refine.tiny.hint" : {
+      "comment" : "Refine screen: VoiceOver hint of the badge that counts the areas whose numbers are near the smallest size; a tap zooms in on the next one",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the next one up close."
+          }
+        }
+      }
     },
     "Show Controls" : {
       "comment" : "Voice Control name and Large Content Viewer label of the painting screen's progress ring while the top bar is quiet: a tap brings back the other controls",
@@ -2189,6 +2325,10 @@
       "comment" : "Title of the tip at a finished painting in the gallery about sharing its time-lapse",
       "extractionState" : "manual"
     },
+    "Show Its Other Areas" : {
+      "comment" : "Refine screen, an area's card: a button that opens Paints with the area's paint picked, every area of that paint glowing",
+      "extractionState" : "manual"
+    },
     "Similar colors too" : {
       "comment" : "Refine screen, Colors: a switch; on, the paints of about the same hue as the paint picked take its new color along with it",
       "extractionState" : "manual"
@@ -2263,6 +2403,10 @@
     },
     "Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like." : {
       "comment" : "Footer of the Settings section with the Tips switch and Show Tips Again",
+      "extractionState" : "manual"
+    },
+    "Tools" : {
+      "comment" : "Refine screen: the label (for VoiceOver) of the segmented control that picks a group of tools: Lines, Areas, Paints",
       "extractionState" : "manual"
     },
     "Touch and hold a finished painting and choose Share for a time-lapse of it." : {
@@ -4883,6 +5027,10 @@
     },
     "Worth a Look Here" : {
       "comment" : "Title of the tip at Painting Length when Settings opens for the first time",
+      "extractionState" : "manual"
+    },
+    "Writing" : {
+      "comment" : "Refine screen, the Lines group: the tool that corrects the writing (lines of text) the app found in the photo: a tap turns a found line off or on, a drag marks one it missed (button label, its caption on iPad, VoiceOver)",
       "extractionState" : "manual"
     },
     "You Can Always Go Back" : {

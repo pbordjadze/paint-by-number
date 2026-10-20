@@ -1,7 +1,8 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens, the eraser and Fill, no Color Splitter, the
-/// text marks, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
+/// The create flow's optional Refine step, as the Studio lays it out in Debug builds (its groups:
+/// Lines, Areas, Paints): the pens, the eraser and Fill, no Color Splitter, the text marks, an
+/// area's card, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
@@ -41,13 +42,12 @@ final class RefineUITests: XCTestCase {
         redo.tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Redo didn't put the line back again")
 
-        // The Eraser is in the Erasers button, with the Smart Eraser.
-        let erasers = app.buttons["refine-tool-erasers"]
-        XCTAssertTrue(erasers.exists, "Refine has no erasers")
-        erasers.tap()
-        menuItem("Eraser", in: app).tap()
-        XCTAssertTrue(waitFor(erasers, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
-        XCTAssertEqual(erasers.value as? String, "Eraser")
+        // The Eraser and the Smart Eraser are tools of the Lines group, beside the Pen.
+        XCTAssertTrue(app.buttons["refine-tool-smartEraser"].exists, "Refine has no Smart Eraser")
+        let eraser = app.buttons["refine-tool-eraser"]
+        XCTAssertTrue(eraser.exists, "Refine has no eraser")
+        eraser.tap()
+        XCTAssertTrue(waitFor(eraser, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
         // Across the line just drawn, which runs from (0.25, 0.4) to (0.7, 0.45): rubbing bare paper
         // changes nothing, and so isn't a change.
         drag(on: canvas, from: CGVector(dx: 0.45, dy: 0.3), to: CGVector(dx: 0.5, dy: 0.6))
@@ -55,25 +55,20 @@ final class RefineUITests: XCTestCase {
             waitFor(canvas, toMatch: changes("2 changes")), "Rubbing out didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-erased")
 
+        // Fill is in the Areas group, which picks it.
+        app.buttons["Areas"].tap()
         let fill = app.buttons["refine-tool-fill"]
-        XCTAssertTrue(fill.exists, "Refine has no Fill")
-        fill.tap()
+        XCTAssertTrue(fill.waitForExistence(timeout: 5), "Refine has no Fill")
         XCTAssertTrue(waitFor(fill, toMatch: NSPredicate(format: "isSelected == true")), "Fill didn't become the tool")
         canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-filled")
 
-        // The photo and the painting beneath the drawing are in one button.
-        let backdrop = app.buttons["refine-backdrop"]
-        XCTAssertTrue(backdrop.exists, "Refine can't show the painting")
-        backdrop.tap()
-        menuItem("Painting", in: app).tap()
-        XCTAssertTrue(waitFor(backdrop, toMatch: NSPredicate(format: "value == %@", "Painting")), "The painting didn't show")
-        XCTAssertTrue(backdrop.isSelected)
+        // Refine opens on the painting; the bar's switcher shows the paper beneath, and the painting again.
         attachScreenshot(of: app, named: "refine-painting")
-        backdrop.tap()
-        menuItem("Painting", in: app).tap()
-        XCTAssertTrue(waitFor(backdrop, toMatch: NSPredicate(format: "value == %@", "Paper")), "The painting didn't go")
+        show("Paper", in: app)
+        attachScreenshot(of: app, named: "refine-paper")
+        show("Painting", in: app)
 
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("3 changes")), "Done didn't keep the changes")
@@ -137,7 +132,48 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")
     }
 
+    /// A long press on an area opens its card; one of the painting's paints there gives the area
+    /// that paint (a change), and Done keeps it.
+    @MainActor
+    func testAreaCardGivesAnAreaAnotherPaint() throws {
+        let app = launchPreview()
+        let refine = app.buttons["refine"]
+        refine.tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+        // The open sky of The Great Wave, above the wave.
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).press(forDuration: 1.2)
+        let card = app.descendants(matching: .any)["refine-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "A long press didn't open the area's card")
+        XCTAssertEqual(canvas.value as? String, "No changes", "A long press drew something")
+        attachScreenshot(of: app, named: "refine-card")
+        let paint = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "refine-card-paint-")).firstMatch
+        XCTAssertTrue(paint.waitForExistence(timeout: 5), "The card offers no other paint")
+        paint.tap()
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The paint didn't count: \(canvas.value ?? "")")
+        // Away from the card: a popover's dismissal region on iPad, the sheet swiped down on iPhone.
+        let outside = app.otherElements["PopoverDismissRegion"]
+        if outside.exists { outside.tap() } else { card.swipeDown() }
+        XCTAssertTrue(waitFor(card, toMatch: NSPredicate(format: "exists == false")), "The card didn't close")
+        app.buttons["refine-done"].tap()
+        XCTAssertTrue(waitFor(refine, toMatch: changes("1 change")), "Done didn't keep the change")
+    }
+
     // MARK: - Helpers
+
+    /// Picks what shows beneath the drawing: a segment in the bar where there is room, else the
+    /// bar's menu.
+    @MainActor
+    private func show(_ name: String, in app: XCUIApplication) {
+        let segment = app.navigationBars.buttons[name]
+        if segment.waitForExistence(timeout: 2) {
+            segment.tap()
+            XCTAssertTrue(waitFor(segment, toMatch: NSPredicate(format: "isSelected == true")), "\(name) didn't show")
+        } else {
+            app.buttons["refine-backdrop"].tap()
+            menuItem(name, in: app).tap()
+        }
+    }
 
     /// An item of the open menu: a button, or a toggle's switch.
     @MainActor

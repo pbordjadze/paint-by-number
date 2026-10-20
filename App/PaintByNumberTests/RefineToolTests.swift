@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import PaintCore
 import Testing
@@ -57,6 +58,51 @@ struct RefineToolTests {
         #expect(RefinePaintGlow.areas(of: 1, in: template) == [1])
         // Paint zero is still in the palette, but no area uses it.
         #expect(RefinePaintGlow.areas(of: 0, in: template).isEmpty)
+    }
+
+    /// The Studio's groups hold every tool once, at most five on screen, the Pen first; Colors is
+    /// Paints', Fill is Areas'.
+    @Test func theStudioGroupsHoldEveryToolOnce() {
+        let all = RefineGroup.allCases.flatMap(\.tools)
+        #expect(Set(all).count == all.count)
+        #expect(RefineGroup.allCases.allSatisfy { !$0.tools.isEmpty && $0.tools.count <= 5 })
+        #expect(RefineGroup.lines.tools.first == .pen)
+        for tool in [RefineTool.pen, .shape, .eraser, .smartEraser, .text, .fill, .colors] {
+            #expect(all.contains(tool), "\(tool) is in no group")
+        }
+        #expect(RefineGroup.of(.colors) == .paints && RefineGroup.of(.fill) == .areas && RefineGroup.of(.text) == .lines)
+        #expect(all.contains(.splitter) == RefineView.offersSplitter)
+    }
+
+    /// A card counts the areas of its paint, separate ones too, as the glow finds them.
+    @Test func anAreaCardCountsItsPaintsAreas() {
+        var template = Fixtures.stripes(count: 4)
+        template.regions[0].colorIndex = 2
+        template.regions[3].colorIndex = 2
+        #expect(RefineAreaCard.areaCount(of: 2, in: template) == 3)
+        #expect(RefineAreaCard.areaCount(of: 1, in: template) == 1)
+        #expect(RefineAreaCard.areaCount(of: 0, in: template) == 0)
+        #expect(RefineAreaCard.subtitle(paint: 1, count: 3) == "Paint 2 · 3 areas")
+    }
+
+    /// Only numbers near their floor count as tiny, top to bottom; the zoom frames each one.
+    @Test func tinyNumbersAreThoseNearTheirFloor() {
+        var template = Fixtures.stripes(count: 3)
+        #expect(RefineTinyAreas.find(in: template).isEmpty)
+        let region = Int(template.labels[0].region)
+        template.labels[0].radius = LabelSizing.minimumRadius(digits: 1)
+        let found = RefineTinyAreas.find(in: template)
+        #expect(found.map(\.region) == [region])
+        let rect = RefineTinyAreas.focus(on: found[0].label, in: template)
+        let p = found[0].label.position
+        #expect(rect.contains(CGPoint(x: CGFloat(p.x) / CGFloat(template.width), y: CGFloat(p.y) / CGFloat(template.height))))
+    }
+
+    /// The sparkles stay within a shape's smaller side.
+    @Test func aShapesExtentIsItsSmallerSide() {
+        #expect(CreateModel.extent(of: [SIMD2(0, 0), SIMD2(10, 4), SIMD2(3, 2)]) == 4)
+        #expect(CreateModel.extent(of: [SIMD2(5, 5)]) == 0)
+        #expect(CreateModel.extent(of: []) == 0)
     }
 
     /// A tap anywhere in the detail area a fill made takes out the fills made there (not those
