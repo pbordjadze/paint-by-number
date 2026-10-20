@@ -299,6 +299,13 @@ synchronized folder would bundle it into the app.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
+- Quiet painting (`QuietPainting`, Debug and SideStore builds only: `#if UNRELEASED`): once an
+  area is painted (`PaintChromeState.wantsQuiet`) the top bar fades to Back, the progress ring
+  and Hint; a tap on the ring (`quiet-ring`) brings the rest back until the next fill. The canvas
+  insets don't change, so the painting never moves. A painting not begun or finished, feedback
+  mode, VoiceOver, Switch Control and a tip at Photo or More keep the whole bar. On regular widths
+  the bar's buttons (`glassButtonDiameter`) and the swatches (`PaletteMetrics.scaled`) are a
+  quarter bigger, always. `paint-quiet` (with `-dark`) is its screenshot.
 - Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
   lie on the page as a card with no arrow, just inside its top as it first fits
   (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").

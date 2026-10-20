@@ -18,6 +18,12 @@ nonisolated struct PaletteMetrics: Equatable, Sendable {
         scale = steps.last(where: { $0.0 <= dynamicTypeSize })?.1 ?? 1
     }
 
+    /// These metrics `factor` times larger, at most 1.6× in all (regular widths' bigger swatches,
+    /// `QuietPainting.scale`, on top of the text size's).
+    func scaled(by factor: CGFloat) -> PaletteMetrics {
+        factor == 1 ? self : PaletteMetrics(scale: min(scale * factor, 1.6))
+    }
+
     static let standard = PaletteMetrics(scale: 1)
     static let spacing: CGFloat = 8
     static let padding: CGFloat = 14

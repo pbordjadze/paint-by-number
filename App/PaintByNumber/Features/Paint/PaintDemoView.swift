@@ -27,6 +27,9 @@ import simd
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
 /// - `paint-replay`: a finished painting mid-replay
 /// - `paint-photo`: the source photo shown over a painting in progress
+/// - `paint-quiet`, `paint-quiet-dark`: `paint-progress`, then an area of the selected color is
+///   painted and the top bar fades to Back, the progress ring and Hint (`QuietPainting`; Debug
+///   and SideStore builds)
 /// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
 ///   with the gallery's, the create flow's and Settings' tip scenarios the only ones that show
 ///   tips (`PaintTips.configure`)
@@ -183,7 +186,7 @@ private final class Demo {
         }
 
         switch scenario {
-        case "paint-progress", "paint-dark", "paint-ax", "paint-long-text":
+        case "paint-progress", "paint-dark", "paint-ax", "paint-long-text", "paint-quiet", "paint-quiet-dark":
             paint(fraction: 0.55)
         case "paint-dark-paper":
             paint(fraction: 0.55)
@@ -374,6 +377,16 @@ private final class Demo {
             let marks = feedback.draft?.marks.count ?? -1
             Log.demo.notice("demo \(self.scenario, privacy: .public): \(marks, privacy: .public) marks")
             try? await Task.sleep(for: .seconds(1))
+            return
+        }
+        if scenario.hasPrefix("paint-quiet") {
+            // A tap's fill, as a painter's would land; ready once it has and the bar has faded.
+            try? await Task.sleep(for: .seconds(1))
+            if let color = session.selectedColor,
+               let area = session.template.regions.indices.first(where: { session.colorOf($0) == color && !session.isPainted($0) }) {
+                session.paint([area], from: Self.center(session.template, area), animated: true)
+            }
+            try? await Task.sleep(for: .seconds(1.5))
             return
         }
         if scenario == "paint-hint" {

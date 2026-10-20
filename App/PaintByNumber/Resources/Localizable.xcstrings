@@ -17,6 +17,10 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Brings back the other controls" : {
+      "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
+      "extractionState" : "manual"
+    },
     "Color" : {
       "comment" : "Refine screen, Colors: VoiceOver label of the color picker that gives the paint picked a new color",
       "extractionState" : "manual"
@@ -31,6 +35,10 @@
     },
     "Erasers" : {
       "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
+      "extractionState" : "manual"
+    },
+    "Show Controls" : {
+      "comment" : "Voice Control name and Large Content Viewer label of the painting screen's progress ring while the top bar is quiet: a tap brings back the other controls",
       "extractionState" : "manual"
     },
     "acknowledgements.codeFooter" : {

@@ -56,15 +56,17 @@ struct PhotoPeekButton: View {
     @Binding var peek: PhotoPeek
     @GestureState private var isPressing = false
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.glassButtonDiameter) private var diameter
     /// Every accessibility value the control has had, under `DemoMode.tracesPhotoPeek`.
     @State private var valueTrace: [String] = []
 
     var body: some View {
         Image(systemName: peek.isShown ? "photo.fill" : "photo")
             .font(.system(size: 17, weight: .semibold))
+            .imageScale(diameter > 44 ? .large : .medium)
             .foregroundStyle(peek.isShown ? Color.white : Color.primary)
             .opacity(isEnabled ? 1 : 0.35)
-            .frame(width: 44, height: 44)
+            .frame(width: diameter, height: diameter)
             // Not interactive glass: it would take the touches this control handles itself.
             .glassEffect(peek.isShown ? Glass.regular.tint(Theme.signature) : Glass.regular, in: .circle)
             .scaleEffect(isPressing && isEnabled ? 0.92 : 1)
