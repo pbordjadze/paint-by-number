@@ -1,3 +1,5 @@
+import Accessibility
+import Foundation
 import PaintCore
 import SwiftUI
 
@@ -91,6 +93,11 @@ nonisolated enum RefineBackdrop: Hashable {
 /// on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
 /// (`CreateModel.history`; an edit taken back or put back comes at once from the templates kept),
 /// Cancel puts back what the screen opened with, Done keeps them.
+///
+/// SideStore and Debug builds (`#if UNRELEASED`) lay the tools out as the Studio: groups and
+/// their tools in two rows, an area's card on a long press, sparkles where a line closes off an
+/// area and a badge for numbers near their floor (`RefineStudio.swift`, App/CLAUDE.md › Create
+/// flow › The Studio).
 struct RefineView: View {
     let model: CreateModel
 
@@ -127,17 +134,50 @@ struct RefineView: View {
     /// Colors' paint picked, an index of the template's palette, and whether its family follows it.
     @State private var colorPaint: Int?
     @State private var colorFamily = true
+    /// A part of the picture the touch surface is to bring up close.
+    @State private var focus: RefineFocus?
+    #if DEBUG
+    @State private var didPickDemoPaint = false
+    @State private var didOpenDemoCard = false
+    #endif
+    #if UNRELEASED
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The Studio's group on screen (`RefineGroup`), and the tool last picked in each.
+    @State private var group = RefineGroup.lines
+    @State private var lastTool: [RefineGroup: RefineTool] = [:]
+    /// Shapes' figures, in a bar above the tools: open the first time Shapes is picked, then a
+    /// second tap on Shapes opens or closes them.
+    @State private var showsShapes = false
+    @State private var shapesSeen = false
+    /// The area a long press opened the card of (`RefineAreaCard`).
+    @State private var card: RefineAreaPick?
+    /// The sparkles where a line closed off an area last: the line's number, where its ends met
+    /// on screen, and the shape's smaller side on screen.
+    @State private var sparkles: (id: Int, point: CGPoint, extent: CGFloat)?
+    /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
+    @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
+    @State private var tinyShown = -1
+    #endif
 
     init(model: CreateModel) {
         self.model = model
         // Never a draft: its canvas is smaller than the one the edits will be laid on.
         _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
         _tool = State(initialValue: .pen)
+        #if UNRELEASED
+        // The Studio opens on the painting in its paints (the Lamplit Table, 6 to 0).
+        _backdrop = State(initialValue: .painting)
+        #endif
         #if DEBUG
         if ShellDemo.current?.opensColors == true {
             _tool = State(initialValue: .colors)
             _backdrop = State(initialValue: .painting)
         }
+        #endif
+        #if UNRELEASED
+        #if DEBUG
+        if ShellDemo.current?.opensColors == true { _group = State(initialValue: .paints) }
+        #endif
         #endif
     }
 
@@ -160,6 +200,20 @@ struct RefineView: View {
             model.dismissNote()
             PaintTips.desk.leave(.refine)
         }
+        #if UNRELEASED
+        .onChange(of: colorPaint) { _, paint in
+            guard tool == .colors, let paint, let template = base?.template else { return }
+            let number = (paint + 1).formatted()
+            let areas = TemplateCounts.areas(RefinePaintGlow.areas(of: paint, in: template).count)
+            let announcement = String(
+                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(areas)",
+                comment: "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then how many areas use it (\"3 areas\")")
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+        .onChange(of: model.closedShape) { _, shape in
+            if let shape { closed(shape) }
+        }
+        #endif
         .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: backdrop == .painting)) {
             await land()
         }
@@ -223,6 +277,12 @@ struct RefineView: View {
                         base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
                         showsAreas: painted == nil)
                         .equatable()
+                    #if UNRELEASED
+                    if tool == .colors || card != nil {
+                        RefinePaintGlow(base: base, paint: glowPaint, rect: picture, reduceMotion: reduceMotion)
+                            .equatable()
+                    }
+                    #endif
                     let figure = shapeTrace
                     RefineInkLayer(
                         lines: pending, trace: tool == .shape ? figure : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
@@ -250,11 +310,20 @@ struct RefineView: View {
                     picture = rect
                     self.zoom = zoom
                 },
-                onDraw: draw, onTap: tap, onUndo: undo, onPencilTap: pencilTap)
+                onDraw: draw, onTap: tap, onUndo: undo, onPencilTap: pencilTap, onLongPress: openCard, focus: focus)
+            #if UNRELEASED
+            if let sparkles {
+                RefineSparkles(point: sparkles.point, extent: sparkles.extent, stars: Sky.current() == .moon)
+                    .id(sparkles.id)
+            }
+            #endif
         }
         .clipped()
         .overlay(alignment: .bottom) { status.padding(12) }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
+        #if UNRELEASED
+        .overlay(alignment: .topTrailing) { tinyBadge.padding(12) }
+        #endif
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
@@ -264,6 +333,9 @@ struct RefineView: View {
             comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
         .accessibilityValue(Self.changes(model.refinements.changeCount))
         .accessibilityIdentifier("refine-canvas")
+        #if UNRELEASED
+        .popover(item: $card, attachmentAnchor: .rect(.rect(cardAnchor))) { pick in areaCard(pick) }
+        #endif
     }
 
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
@@ -293,7 +365,7 @@ struct RefineView: View {
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
             case .eraseLine:
                 if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
-            case .fill, .split, .look, .repaint:
+            case .fill, .split, .look, .repaint, .paintArea:
                 // `RefineFillLayer` shows fills; a split and Colors draw nothing.
                 break
             }
@@ -510,6 +582,29 @@ struct RefineView: View {
                 // Only a painting of this template: an older one would show lines that are gone.
                 painting = image?.preview == preview.id ? image : nil
             }
+            #if UNRELEASED
+            tiny = RefineTinyAreas.find(in: preview.template)
+            if tinyShown >= tiny.count { tinyShown = -1 }
+            #endif
+            #if DEBUG
+            // Pick from the refined template once its edits have landed, as a painter would.
+            if ShellDemo.current?.picksColorPaint == true, !didPickDemoPaint, preview.refinements == model.refinements {
+                let counts = preview.template.regionCountsByColor
+                colorPaint = counts.indices.max { counts[$0] < counts[$1] }
+                didPickDemoPaint = true
+            }
+            #if UNRELEASED
+            if ShellDemo.current?.opensCard == true, !didOpenDemoCard, preview.refinements == model.refinements {
+                let template = preview.template
+                if let largest = template.regions.indices.max(by: { template.regions[$0].area < template.regions[$1].area }),
+                   let label = template.labels(ofRegion: largest).max(by: { $0.radius < $1.radius }) {
+                    let at = label.position
+                    card = RefineAreaPick(point: SIMD2(at.x / Float(template.width), at.y / Float(template.height)), at: at)
+                }
+                didOpenDemoCard = true
+            }
+            #endif
+            #endif
         }
         submitted.removeAll { $0.id <= settled }
     }
@@ -670,6 +765,9 @@ struct RefineView: View {
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
         }
+        #if UNRELEASED
+        ToolbarItem(placement: .principal) { backdropPicker }
+        #endif
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
                 .tint(Theme.signature)
@@ -703,6 +801,9 @@ struct RefineView: View {
                     .frame(maxWidth: 480)
                     .accessibilityIdentifier("refine-hint")
             }
+            #if UNRELEASED
+            studioBar
+            #else
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     lineTools
@@ -713,6 +814,7 @@ struct RefineView: View {
                     lineTools
                 }
             }
+            #endif
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
@@ -728,7 +830,7 @@ struct RefineView: View {
     /// color line splitting tool for now… it's not working right"): a Pen line gives the sides it
     /// parts their own colors instead (`docs/coloring-book.md` › A drawn line's colors). The tool
     /// and its edit stay, so splits already made lay as ever; true brings it back.
-    static let offersSplitter = false
+    nonisolated static let offersSplitter = false
 
     /// The Pen, the Color Splitter (when offered), Shapes, the erasers and Fill, then what shows
     /// beneath: one row where it fits, else the pens and erasers above Fill and the backdrop (a
@@ -852,7 +954,7 @@ struct RefineView: View {
     @ViewBuilder
     private func toolButton(_ tool: RefineTool, systemImage: String, label: Text, id: String) -> some View {
         let selected = self.tool == tool
-        let button = Button { pick(tool) } label: {
+        let button = Button { toolTapped(tool) } label: {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(selected ? Color.white : Color.primary)
@@ -1003,10 +1105,45 @@ struct RefineView: View {
         // A stroke under way was the other tool's, and a curve waiting to be bent stays straight.
         endStroke()
         finishCurve()
+        #if UNRELEASED
+        if self.tool == .colors { colorPaint = nil }
+        #endif
         self.tool = tool
         if tool.erases { eraser = tool }
+        #if UNRELEASED
+        if tool != .shape { showsShapes = false }
+        group = RefineGroup.of(tool)
+        #endif
         // A split draws no line, and Colors changes only paints: they show over the painting.
         if tool == .splitter || tool == .colors, base != nil { backdrop = .painting }
+    }
+
+    /// A tool's button: picks it. A second tap on Shapes opens or closes its figures, which open by
+    /// themselves the first time it is picked (the Studio).
+    private func toolTapped(_ tool: RefineTool) {
+        #if UNRELEASED
+        if tool == .shape {
+            if self.tool == .shape {
+                withAnimation(reduceMotion ? nil : .snappy) { showsShapes.toggle() }
+                return
+            }
+            if !shapesSeen {
+                shapesSeen = true
+                showsShapes = true
+            }
+        }
+        #endif
+        pick(tool)
+    }
+
+    /// A long press on an area opens its card (the Studio; nothing in the release).
+    private func openCard(at point: SIMD2<Float>) {
+        #if UNRELEASED
+        guard let template = base?.template, model.hasLineArtInput, template.region(at: canvasPoint(point)) != nil else { return }
+        endStroke()
+        FeedbackEngine.shared.selectionChanged()
+        card = RefineAreaPick(point: point, at: canvasPoint(point))
+        #endif
     }
 
     /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.
@@ -1015,3 +1152,220 @@ struct RefineView: View {
         pick(partner)
     }
 }
+
+#if UNRELEASED
+// MARK: The Studio
+
+extension RefineView {
+    /// The Studio's two rows: the groups, then the picked group's tools (Paints shows its panel
+    /// above instead). Shapes' figures sit above them while open.
+    @ViewBuilder
+    private var studioBar: some View {
+        if tool == .shape, showsShapes {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach(RefineShape.allCases, id: \.self) { shapeOption($0) }
+                }
+            }
+            .transition(.opacity)
+        }
+        Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
+            Text("Lines").tag(RefineGroup.lines)
+            Text("Areas").tag(RefineGroup.areas)
+            Text("Paints").tag(RefineGroup.paints)
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 420)
+        .disabled(!model.hasLineArtInput)
+        .accessibilityIdentifier("refine-groups")
+        if group != .paints {
+            GlassEffectContainer(spacing: 10) {
+                HStack(alignment: .top, spacing: sizeClass == .regular ? 14 : 8) {
+                    ForEach(group.tools, id: \.self) { studioTool($0) }
+                }
+            }
+        }
+    }
+
+    /// A tool's button, its name under it where there is room (iPad).
+    private func studioTool(_ kind: RefineTool) -> some View {
+        VStack(spacing: 4) {
+            studioButton(kind)
+                .disabled(!model.hasLineArtInput)
+            if sizeClass == .regular {
+                toolName(kind)
+                    .font(.caption2.weight(tool == kind ? .semibold : .regular))
+                    .foregroundStyle(tool == kind ? Theme.accent : .secondary)
+                    .lineLimit(1)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func studioButton(_ kind: RefineTool) -> some View {
+        switch kind {
+        case .pen:
+            toolButton(.pen, systemImage: "pencil.tip", label: toolName(.pen), id: "pen")
+                .gentleTip(.refineDraw, arrowEdge: .bottom)
+        case .shape:
+            toolButton(.shape, systemImage: shape.systemImage, label: toolName(.shape), id: "shapes")
+                .accessibilityValue(shapeName(shape))
+        case .eraser:
+            toolButton(.eraser, systemImage: "eraser", label: toolName(.eraser), id: "eraser")
+        case .smartEraser:
+            toolButton(.smartEraser, systemImage: "wand.and.stars", label: toolName(.smartEraser), id: "smartEraser")
+        case .text:
+            toolButton(.text, systemImage: "text.viewfinder", label: toolName(.text), id: "text")
+        case .fill:
+            toolButton(.fill, systemImage: "drop.fill", label: toolName(.fill), id: "fill")
+                .gentleTip(.refineFill, arrowEdge: .bottom)
+        case .splitter:
+            toolButton(.splitter, systemImage: "scissors", label: toolName(.splitter), id: "splitter")
+        case .colors:
+            toolButton(.colors, systemImage: "swatchpalette", label: toolName(.colors), id: "colors")
+        }
+    }
+
+    private func toolName(_ kind: RefineTool) -> Text {
+        switch kind {
+        case .pen: Text("Pen")
+        case .shape: Text("Shapes")
+        case .eraser: Text("Eraser")
+        case .smartEraser: Text("Smart Eraser")
+        case .text: Text("Writing")
+        case .fill: Text("Fill")
+        case .splitter: Text("Color Splitter")
+        case .colors: Text("Colors")
+        }
+    }
+
+    /// One of Shapes' figures: picks it and closes the figures.
+    private func shapeOption(_ kind: RefineShape) -> some View {
+        let selected = shape == kind
+        let button = Button {
+            pickShape(kind)
+            withAnimation(reduceMotion ? nil : .snappy) { showsShapes = false }
+        } label: {
+            Label { shapeName(kind) } icon: { Image(systemName: kind.systemImage) }
+                .labelStyle(.iconOnly)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .frame(width: 26, height: 26)
+        }
+        .buttonBorderShape(.circle)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("refine-shape-\(kind)")
+        return Group {
+            if selected {
+                button.buttonStyle(.glassProminent).tint(Theme.signature)
+            } else {
+                button.buttonStyle(.glass)
+            }
+        }
+    }
+
+    /// Another group on screen, with the tool last picked there.
+    private func choose(_ next: RefineGroup) {
+        guard next != group else { return }
+        lastTool[group] = tool
+        pick(lastTool[next] ?? next.tools[0])
+        group = next
+    }
+
+    /// What shows beneath the drawing: a segmented control in the bar where there is room, else a
+    /// menu.
+    @ViewBuilder
+    private var backdropPicker: some View {
+        let picker = Picker("Show", selection: $backdrop) {
+            Text("Painting").tag(RefineBackdrop.painting)
+            Text("Paper").tag(RefineBackdrop.paper)
+            Text("Photo").tag(RefineBackdrop.photo)
+        }
+        .accessibilityIdentifier("refine-backdrop")
+        if sizeClass == .regular {
+            picker.pickerStyle(.segmented).fixedSize()
+        } else {
+            picker.pickerStyle(.menu)
+        }
+    }
+
+    /// The paint whose areas glow: the card's area's, else the one Colors picked.
+    private var glowPaint: Int? {
+        if let card, let template = base?.template, let region = template.region(at: card.at) {
+            return Int(template.regions[region].colorIndex)
+        }
+        return colorPaint
+    }
+
+    /// Where the card points: the pressed spot, on screen.
+    private var cardAnchor: CGRect {
+        guard let card else { return .zero }
+        let p = onScreen(card.point)
+        return CGRect(x: p.x - 12, y: p.y - 12, width: 24, height: 24)
+    }
+
+    /// A point of the picture (0…1) on screen.
+    private func onScreen(_ p: SIMD2<Float>) -> CGPoint {
+        CGPoint(x: picture.minX + CGFloat(p.x) * picture.width, y: picture.minY + CGFloat(p.y) * picture.height)
+    }
+
+    @ViewBuilder
+    private func areaCard(_ pick: RefineAreaPick) -> some View {
+        if let template = base?.template {
+            RefineAreaCard(
+                template: template, at: pick.at,
+                paintArea: { model.paintArea(at: pick.at, color: $0) },
+                repaint: { from, to in model.recolor(.repaint(from: from, to: to, family: false)) },
+                showPaint: { paint in
+                    card = nil
+                    choose(.paints)
+                    colorPaint = paint
+                })
+        }
+    }
+
+    /// How many numbers are near the smallest: a tap brings the next of them up close.
+    @ViewBuilder
+    private var tinyBadge: some View {
+        if !tiny.isEmpty, let template = base?.template {
+            Button {
+                tinyShown = (tinyShown + 1) % tiny.count
+                let label = tiny[tinyShown].label
+                focus = RefineFocus(
+                    id: (focus?.id ?? 0) + 1, rect: RefineTinyAreas.focus(on: label, in: template), animated: !reduceMotion)
+                FeedbackEngine.shared.selectionChanged()
+            } label: {
+                Label { Text(Self.tinyText(tiny.count)) } icon: { Image(systemName: "magnifyingglass") }
+                    .font(.footnote.weight(.semibold))
+            }
+            .buttonStyle(.glass)
+            .accessibilityHint(Text(String(
+                localized: "refine.tiny.hint", defaultValue: "Shows the next one up close.",
+                comment: "Refine screen: VoiceOver hint of the badge that counts the areas whose numbers are near the smallest size; a tap zooms in on the next one")))
+            .accessibilityIdentifier("refine-tiny")
+            .transition(.opacity)
+        }
+    }
+
+    /// "12 tiny numbers".
+    nonisolated static func tinyText(_ count: Int) -> String {
+        String(
+            localized: "refine.tiny", defaultValue: "\(count) tiny numbers",
+            comment: "Refine screen: a badge counting the areas whose numbers are near the smallest a painter can read; a tap zooms in on the next one. The argument is the count")
+    }
+
+    /// A line closed off an area of its own: a soft tap, VoiceOver hears of it, and the sparkles
+    /// pop where its ends met (none under Reduce Motion).
+    private func closed(_ shape: CreateModel.ClosedShape) {
+        FeedbackEngine.shared.areaMade()
+        AccessibilityNotification.Announcement(String(
+            localized: "refine.areaMade", defaultValue: "New area",
+            comment: "VoiceOver announcement on the Refine screen when a line the painter drew closed off an area of its own")).post()
+        let size = templateSize
+        guard !reduceMotion, size.width > 0, size.height > 0 else { return }
+        let point = onScreen(SIMD2(shape.at.x / Float(size.width), shape.at.y / Float(size.height)))
+        sparkles = (shape.serial, point, CGFloat(shape.extent) * picture.width / size.width)
+    }
+}
+#endif

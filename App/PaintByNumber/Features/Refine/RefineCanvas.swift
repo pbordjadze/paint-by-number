@@ -195,6 +195,70 @@ struct RefineFillLayer: View, Equatable {
     }
 }
 
+/// Every area using Colors' picked paint, outlined in screen points even while zooming.
+/// Each area's closed rings include its holes, just as `RefineFillLayer`'s even-odd paths do.
+struct RefinePaintGlow: View, Equatable {
+    let base: CreateModel.Preview?
+    let paint: Int?
+    let rect: CGRect
+    let reduceMotion: Bool
+
+    @State private var haloOpacity = 0.22
+
+    nonisolated static func == (a: RefinePaintGlow, b: RefinePaintGlow) -> Bool {
+        a.base?.id == b.base?.id && a.paint == b.paint && a.rect == b.rect && a.reduceMotion == b.reduceMotion
+    }
+
+    nonisolated static func areas(of paint: Int, in template: Template) -> [Int] {
+        template.regions.indices.filter { Int(template.regions[$0].colorIndex) == paint }
+    }
+
+    var body: some View {
+        ZStack {
+            outlines(width: 8)
+                .blur(radius: 2)
+                .opacity(reduceMotion ? 0.22 : haloOpacity)
+            outlines(width: 2)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .task(id: paint) {
+            haloOpacity = 0.22
+            guard paint != nil, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.42 }
+            do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
+            guard !Task.isCancelled, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.22 }
+        }
+        .onChange(of: reduceMotion) { _, _ in haloOpacity = 0.22 }
+    }
+
+    private func outlines(width: CGFloat) -> some View {
+        let rings = base.flatMap { base in
+            paint.map { Self.areas(of: $0, in: base.template).map { base.template.polygons(ofRegion: $0) } }
+        } ?? []
+        let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
+        let rect = rect, color = Theme.signature
+        return Canvas { context, _ in
+            guard size.width > 0, size.height > 0, rect.width > 0, rect.height > 0 else { return }
+            let s = max(rect.width / size.width, rect.height / size.height)
+            let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+            var glowing = context
+            glowing.clip(to: Path(rect))
+            glowing.translateBy(x: origin.x, y: origin.y)
+            glowing.scaleBy(x: s, y: s)
+            for area in rings {
+                var path = Path()
+                for ring in area where ring.count >= 3 {
+                    path.addLines(ring.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
+                    path.closeSubpath()
+                }
+                glowing.stroke(path, with: .color(color), style: RefineInkLayer.style(width / s))
+            }
+        }
+    }
+}
+
 /// A line the eraser was tapped on, glowing in the signature color as it goes (its view fades it).
 struct RefineTappedLine: View {
     let points: [SIMD2<Float>]
@@ -307,6 +371,13 @@ struct RefineMarks: View {
     }
 }
 
+/// A part of the picture to bring up close (normalized, 0…1), each request with its own `id`.
+struct RefineFocus: Equatable {
+    let id: Int
+    let rect: CGRect
+    let animated: Bool
+}
+
 /// Where a finger is in a stroke on the refine canvas.
 enum RefineTouch {
     case began, moved, ended, cancelled
@@ -316,9 +387,10 @@ enum RefineTouch {
 /// fingers, with the system's feel (the painting canvas's way), while one finger draws or taps;
 /// a tap of two fingers undoes, as in drawing apps. Once an Apple Pencil touches it (or with
 /// Only Draw with Apple Pencil on), the Pencil draws and taps, and one finger moves the picture
-/// too, as on the painting canvas; the Pencil's double tap is reported. Reports where the
-/// picture is in its frame and its zoom, and touches in picture coordinates (0…1, origin
-/// top-left).
+/// too, as on the painting canvas; the Pencil's double tap is reported. A finger (or the Pencil)
+/// held still on the picture for a moment is a long press, which no tool draws with: it opens the
+/// area's card. Reports where the picture is in its frame and its zoom, and touches in picture
+/// coordinates (0…1, origin top-left).
 struct RefineTouchSurface: UIViewRepresentable {
     var aspectRatio: CGFloat
     var onLayout: (CGRect, CGFloat) -> Void
@@ -326,6 +398,8 @@ struct RefineTouchSurface: UIViewRepresentable {
     var onTap: (SIMD2<Float>) -> Void
     var onUndo: () -> Void
     var onPencilTap: () -> Void
+    var onLongPress: (SIMD2<Float>) -> Void = { _ in }
+    var focus: RefineFocus?
 
     func makeUIView(context: Context) -> RefineSurfaceView { RefineSurfaceView() }
 
@@ -335,7 +409,13 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onTap = onTap
         view.onUndo = onUndo
         view.onPencilTap = onPencilTap
+        view.onLongPress = onLongPress
         view.aspectRatio = aspectRatio
+        // Zooming reports the layout, which sets state: never within SwiftUI's update.
+        if let focus, focus.id != view.focusedRequest {
+            view.focusedRequest = focus.id
+            Task { @MainActor in view.focus(on: focus) }
+        }
     }
 }
 
@@ -348,6 +428,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onTap: ((SIMD2<Float>) -> Void)?
     var onUndo: (() -> Void)?
     var onPencilTap: (() -> Void)?
+    var onLongPress: ((SIMD2<Float>) -> Void)?
 
     /// The Pencil draws and fingers only move the picture: an Apple Pencil touched the canvas,
     /// or Only Draw with Apple Pencil is on. Stays so while the screen is open.
@@ -357,12 +438,17 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     static let maximumZoom: CGFloat = 12
     /// Room around the picture at zoom 1, so it reads as a card.
     static let margin: CGFloat = 12
+    /// How long a touch is held still before it is a long press, iOS's own half second, and how
+    /// far it may wander meanwhile: little, so a slow, careful stroke still draws.
+    static let pressDuration: TimeInterval = 0.5
+    static let pressMovement: CGFloat = 4
 
     private let scrollView = UIScrollView()
     /// The picture at zoom 1, which the scroll view zooms: touches read in its coordinates.
     private let content = UIView()
     private let brush = UIPanGestureRecognizer()
     private let tap = UITapGestureRecognizer()
+    private let press = UILongPressGestureRecognizer()
     private var fittedSize: CGSize = .zero
     private var reported: (rect: CGRect, zoom: CGFloat)?
     private var isLayingOut = false
@@ -391,6 +477,14 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         scrollView.addGestureRecognizer(brush)
         tap.addTarget(self, action: #selector(handleTap(_:)))
         scrollView.addGestureRecognizer(tap)
+        // Held still, a touch is a long press; moved, the brush's. A tap waits for the press to
+        // fail, which it does the moment the finger lifts early.
+        press.addTarget(self, action: #selector(handlePress(_:)))
+        press.minimumPressDuration = Self.pressDuration
+        press.allowableMovement = Self.pressMovement
+        press.delegate = self
+        scrollView.addGestureRecognizer(press)
+        tap.require(toFail: press)
         let undo = UITapGestureRecognizer(target: self, action: #selector(handleUndo(_:)))
         undo.numberOfTouchesRequired = 2
         scrollView.addGestureRecognizer(undo)
@@ -406,6 +500,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         let drawing = [UITouch.TouchType.pencil, .indirectPointer].map { NSNumber(value: $0.rawValue) }
         brush.allowedTouchTypes = drawing
         tap.allowedTouchTypes = drawing
+        press.allowedTouchTypes = drawing
         scrollView.panGestureRecognizer.minimumNumberOfTouches = 1
         scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         scrollView.pinchGestureRecognizer?.allowedTouchTypes = [UITouch.TouchType.direct, .indirectPointer]
@@ -443,6 +538,19 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         let size = content.frame.size
         let x = max(0, (bounds.width - size.width) / 2), y = max(0, (bounds.height - size.height) / 2)
         scrollView.contentInset = UIEdgeInsets(top: y, left: x, bottom: y, right: x)
+    }
+
+    /// The last focus asked for (`RefineFocus.id`).
+    var focusedRequest: Int?
+
+    /// Zooms in on `focus.rect` (normalized to the picture).
+    func focus(on focus: RefineFocus) {
+        focusedRequest = focus.id
+        guard fittedSize.width > 0, fittedSize.height > 0 else { return }
+        let rect = CGRect(
+            x: focus.rect.minX * fittedSize.width, y: focus.rect.minY * fittedSize.height,
+            width: focus.rect.width * fittedSize.width, height: focus.rect.height * fittedSize.height)
+        scrollView.zoom(to: rect, animated: focus.animated)
     }
 
     private func report() {
@@ -505,6 +613,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         onTap?(normalized(recognizer.location(in: content)))
     }
 
+    @objc private func handlePress(_ recognizer: UILongPressGestureRecognizer) {
+        guard recognizer.state == .began else { return }
+        onLongPress?(normalized(recognizer.location(in: content)))
+    }
+
     @objc private func handleUndo(_ recognizer: UITapGestureRecognizer) {
         guard recognizer.state == .ended else { return }
         onUndo?()
@@ -519,7 +632,17 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// cancel its stroke (`cancelDrawing`) rather than lose to it.
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
-    ) -> Bool { true }
+    ) -> Bool {
+        // A press and a stroke are one finger's: whichever comes first has it.
+        !(gestureRecognizer === press && other === brush) && !(gestureRecognizer === brush && other === press)
+    }
+
+    /// A stroke can't begin under a press that has begun, nor a press under a stroke.
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === brush { return press.state != .began && press.state != .changed }
+        if gestureRecognizer === press { return brush.state != .began && brush.state != .changed }
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
 
     /// The first touch of an Apple Pencil hands drawing to it (the brush sees every touch until
     /// then).

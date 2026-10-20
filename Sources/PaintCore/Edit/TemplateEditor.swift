@@ -46,6 +46,14 @@ import Foundation
 /// - **Fill.** The closed shape under the point, bounded by ink (the tapped region alone if it
 ///   reaches the canvas frame), becomes one detail area painted with the paint within a
 ///   just-noticeable difference of the color, else a new paint added last.
+/// - **Paint one area.** Refine's Only This Area: the region under the point alone, flooding
+///   nothing, takes the paint a fill would; no other region's paint changes. It stays a detail
+///   area or not as it was, its numbers sized for the new paint's digits (an area without room
+///   for them is declined). A paint it leaves with no area goes, the numbers after it closing up
+///   as a repaint's merge closes them, and where the area then meets one of its new paint across
+///   an undrawn boundary the two become one area. Its color is one of the template on screen
+///   (Refine's picker and palette chips read it with every look in it), so looks and repaints
+///   laid before it leave it as sent: a paint's own color lands on that paint.
 /// - **Look, repaint.** Paints alone change color (Refine's Colors): a look over all of them, or
 ///   one paint with or without its family (`recolor(_:by:)`). Paints that land within a
 ///   just-noticeable difference of each other become one, and areas that then share a paint
@@ -66,6 +74,9 @@ public enum TemplateEditor {
         case eraseLine(at: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The shape under `point`, painted `color` (OKLab, as `LineEdit.photoColor` reads it).
         case fill(at: SIMD2<Float>, color: SIMD3<Float>)
+        /// The region under `point` alone painted `color` (OKLab, a color of the template on
+        /// screen, which looks laid before it don't move).
+        case paintArea(at: SIMD2<Float>, color: SIMD3<Float>)
         /// Every paint in `look` at `strength` (0 to 1); `lightness`, the painting's lightness
         /// quantiles when the look was chosen (`TemplateEditor.look(_:strength:on:)`).
         case look(Look, strength: Float, lightness: [Float] = [])
@@ -118,9 +129,10 @@ public enum TemplateEditor {
         public var erased = 0
         public var fills = 0
         public var paintsAdded = 0
-        /// Pieces a line's paints gave another paint.
+        /// Pieces a line's paints gave another paint, and an area painted alone (`paintArea`).
         public var recolored = 0
-        /// Paints a look or a repaint gave another color, and paints it made one with another.
+        /// Paints a look or a repaint gave another color, and paints that left the palette: made
+        /// one with another, or left with no area by an area painted alone.
         public var paintsChanged = 0
         public var paintsMerged = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
@@ -215,16 +227,20 @@ public enum TemplateEditor {
             guard point.x.isFinite, point.y.isFinite else { break }
             try work.eraseLine(
                 near: Lattice.clampedPoint(point), reach: Int64((min(max(reach.isFinite ? reach : 0, 0), 1024) * Float(Lattice.unit)).rounded()))
-        case .fill(let point, let color):
+        case .fill(let point, let color), .paintArea(let point, let color):
             guard point.x.isFinite, point.y.isFinite, color.x.isFinite, color.y.isFinite, color.z.isFinite else { break }
             // A color OKLab can hold: lightness 0 to 1, chroma axes within the gamuts' reach.
             let lab = pointwiseMin(pointwiseMax(color, SIMD3(0, -0.5, -0.5)), SIMD3(1, 0.5, 0.5))
-            try work.fill(at: Lattice.clampedPoint(point), color: lab)
+            if case .fill = edit {
+                try work.fill(at: Lattice.clampedPoint(point), color: lab)
+            } else {
+                try work.paintArea(at: Lattice.clampedPoint(point), color: lab)
+            }
         case .look, .repaint:
             try work.recolor(edit)
         }
         let s = work.summary
-        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.paintsChanged > 0 || s.paintsMerged > 0 else {
+        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0 else {
             return (template, unchanged(template))
         }
         let (result, mapping) = try work.finish()

@@ -65,6 +65,11 @@ final class FeedbackEngine {
         if hapticsEnabled { haptics.tick() }
     }
 
+    /// A line in Refine closed off an area of its own: a soft tap, smaller than a fill's.
+    func areaMade() {
+        if hapticsEnabled { haptics.paint(strength: 0.3, duration: 0.12) }
+    }
+
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
         let sky = melody.sky ?? Sky.current()

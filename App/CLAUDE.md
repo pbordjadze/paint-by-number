@@ -603,7 +603,8 @@ Conventions).
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
-  along while Similar Colors Too is on). `CreateModel.recolor(_:)` makes them edits
+  along while Similar Colors Too is on); the picked paint's areas glow (`RefinePaintGlow`).
+  `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
   of the history); paints made alike merge and a note says so. New colors cross-fade in (none
@@ -612,6 +613,21 @@ Conventions).
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.
+  - **The Studio** (SideStore and Debug builds, `#if UNRELEASED`; Paul's go, October 20, on the
+    design claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, its mock-ups put to the Lamplit Table,
+    `factory/pieces/refine-studio`): the tools in groups (`RefineGroup`: Lines, Areas, Paints) in
+    one segmented row, the group's tools in the row beneath (at most five; Paints shows the
+    colors panel instead; captions under them on iPad), Shapes' figures in a bar above, open the
+    first time Shapes is picked and then on a second tap; Painting, Paper and Photo in the
+    navigation bar (a menu on compact widths), opening on the painting. A long press (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
+    (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
+    share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
+    `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
+    Paints. A line that cuts off an area pops two gold sparkles where its ends met
+    (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
+    Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
+    each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card.
+    The release keeps the one row of buttons described above.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser

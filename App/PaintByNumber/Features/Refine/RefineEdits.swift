@@ -118,7 +118,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             case .split: self = .notSplit
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
-            case .look, .repaint: self = .notRecolored
+            case .look, .repaint, .paintArea: self = .notRecolored
             }
         }
     }

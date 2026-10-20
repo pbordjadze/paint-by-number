@@ -134,6 +134,18 @@ final class CreateModel {
     private(set) var settledEdits = 0
     /// What Refine tells the painter: an edit that could not be made, edits that no longer fit.
     private(set) var note: RefineNote?
+    /// The last line that closed off an area of its own, for Refine's sparkles.
+    private(set) var closedShape: ClosedShape?
+
+    /// A line that closed off an area of its own (`closedShape`).
+    nonisolated struct ClosedShape: Equatable, Sendable {
+        /// The edit's number (`edit(_:)`).
+        let serial: Int
+        /// Where its ends met (a loop's start, else its last point), canvas units.
+        let at: SIMD2<Float>
+        /// The line's smaller side across, canvas units: how large the sparkles may be.
+        let extent: Float
+    }
     /// The painter tapped Refine before the final template was there (`askForRefine()`): it opens
     /// as soon as it is.
     private(set) var refineAsked = false
@@ -808,6 +820,30 @@ final class CreateModel {
         return serial
     }
 
+    /// Only This Area, in its turn: the area under `point` (canvas units) takes `color` (OKLab), a
+    /// paint of its own or the painting's paint of that color (`TemplateEditor.Edit.paintArea`),
+    /// in place of the last edit when that was the same card's (the same point: the color picker
+    /// still moving is one step of the history). Numbered as `edit(_:)` is.
+    @discardableResult
+    func paintArea(at point: SIMD2<Float>, color: SIMD3<Float>) -> Int {
+        sentEdits += 1
+        let serial = sentEdits
+        enqueue { [self] in
+            let edit = TemplateEditor.Edit.paintArea(at: point, color: color)
+            guard trail != nil, let key = trailKey, key == currentKey,
+                  case .paintArea(let last, _)? = refinements.edits.last, last == point
+            else {
+                await lay(edit, serial: serial, tapped: false)
+                return
+            }
+            var next = refinements
+            next.edits[next.edits.count - 1] = edit
+            await settle(on: next)
+            handled(serial)
+        }
+        return serial
+    }
+
     /// Refine's Colors, in its turn: a look over every paint (in place of any look or repaint
     /// before it, read on the template the other edits make), the photo's colors again, or one
     /// paint repainted (in place of the last edit when that repainted the same color: the color
@@ -1041,6 +1077,11 @@ final class CreateModel {
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
                 if tooSmall { say(.tooSmall) }
+                // A line that cut a piece off made an area: drawing adds areas and never joins them.
+                if case .draw(let points, let isClosed, _) = laid.edit, let end = isClosed ? points.first : points.last,
+                   laid.trail.template.regions.count > current.template.regions.count {
+                    closedShape = ClosedShape(serial: serial, at: end, extent: Self.extent(of: points))
+                }
             case .nothing:
                 handled(serial)
             case .declined(let why):
@@ -1194,6 +1235,13 @@ final class CreateModel {
         try Task.checkCancellation()
         let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
         return Shown(preview: preview, trail: trail, replay: replay)
+    }
+
+    /// The smaller side of the box around `points`.
+    nonisolated static func extent(of points: [SIMD2<Float>]) -> Float {
+        guard let first = points.first else { return 0 }
+        let low = points.reduce(first) { pointwiseMin($0, $1) }, high = points.reduce(first) { pointwiseMax($0, $1) }
+        return min(high.x - low.x, high.y - low.y)
     }
 
     /// `look` at `strength` as an edit, with the lightness of the paints `edits` make on `trail`'s

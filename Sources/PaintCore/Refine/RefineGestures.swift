@@ -221,7 +221,7 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .split, .look, .repaint:
+            case .fill, .paintArea, .split, .look, .repaint:
                 break
             }
         }
