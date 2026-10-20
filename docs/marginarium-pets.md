@@ -210,5 +210,11 @@ Lossy WebP at quality 88 (alpha bit-identical; checked at 1x and 5x on light and
 | `eno` | `d3422743cdca9b1377a0efb70fb06be1554947bb0ab76ba2cb3780c5dda32026` | 894,894 | lossy WebP q88 |
 | `keynes` | `3e5b881edeecc6565dba724c14ead34c75d7d40ccc23fb0b138f53e2dcc96824` | 742,584 | lossy WebP q88 |
 | `hope` | `18589cde63b0628bdfc55c21a84904ccee3b04b1f06fd79391f0d7892bb0cb31` | 692,990 | lossy WebP q88 |
+| `baba-yaga` | `ca8e067349c80a203df5b32f0ae52c931399c26ec1bc21f6c687f7aa75c66860` | 1,007,550 | lossy WebP q88 |
+| `balanchine` | `5d63100bdb63a32443b9c2c0762188820ab9b147698f729c1e052753d1fd0f21` | 810,354 | lossy WebP q88 |
+| `bible-school-teacher` | `a2ed66097ae23ffaa03d8dec77b6e98978c55c7d658dfd48260d9107eb0e00e6` | 679,522 | lossy WebP q88 |
+| `nutcracker` | `c20fe48fc1e857f2cacf223ff0c05281f999c0a422728428123ade9438c0ad4a` | 797,986 | lossy WebP q88 |
+| `robber-girl` | `f32c01d7216b828ca47c98dee560dff8b4cfb35eca17d417958ed5538cdc42f4` | 928,702 | lossy WebP q88 |
 
-The twenty-eight sheets total **21,520,990 bytes (20.52 MiB)** of the 24 MiB budget.
+The Baba Yaga followed as a Russian lubok woodblock print. George followed as a Ballets Russes costume sketch in gouache. Madeleine followed as a Sunday-school flannelgraph in cut felt. The Nutcracker followed as a turned and painted Erzgebirge wooden toy. The Robber Girl followed in Sámi felt appliqué. The twenty-eight sheets total
+**21,500,912 bytes (20.50 MiB)** of the 24 MiB budget.
