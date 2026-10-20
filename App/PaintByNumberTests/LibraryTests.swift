@@ -101,6 +101,36 @@ struct LibraryTests {
         #expect(try library.store.readRefinements(artwork.id) == refinements)
     }
 
+    /// A painting started blank regenerates the way it was made: the photo as one area on the
+    /// canvas the generator would make of it, the painter's line laid on that, never on the
+    /// generator's template; and the same each time.
+    @Test func regeneratingABlankStartMakesTheSameTemplate() async throws {
+        let library = makeLibrary()
+        let settings = GenerationSettings(colorCount: 6, detail: 0)
+        var refinements = TemplateRefinements()
+        refinements.start = .blank
+        var refined = draft(photo: try stripesPhoto())
+        refined.refinements = refinements
+        let artwork = try await library.create(refined)
+        let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: library.store)
+        let size = settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        let blank = try TemplateEditor.blank(width: size.width, height: size.height, photo: photo, colorSpace: photo.colorSpace)
+        #expect(try ArtworkFactory.blank(from: photo, settings: settings) == blank)
+        let edit = TemplateEditor.painted(
+            .draw(points: [SIMD2(Float(size.width) / 2, -6), SIMD2(Float(size.width) / 2, Float(size.height) + 6)]),
+            on: blank, photo: photo)
+        // The line as Refine would have drawn it on that blank, its pieces in the photo's colors.
+        refinements.edits = [edit]
+        try JSONEncoder().encode(refinements).write(to: library.store.url(.refinements, of: artwork.id))
+
+        let document = try await library.regenerate(artwork: artwork.id, settings: settings)
+        #expect(document.template == (try ArtworkFactory.laying([edit], on: blank)))
+        #expect(document.template.regions.count == 2, "The line didn't cut the blank in two")
+        let again = try await library.regenerate(artwork: artwork.id, settings: settings)
+        #expect(again.template == document.template)
+        #expect(try library.store.readRefinements(artwork.id) == refinements)
+    }
+
     @Test func savesProgressCompletionAndThumbnail() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())

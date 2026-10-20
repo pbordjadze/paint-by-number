@@ -328,6 +328,32 @@ struct DraftTests {
         #expect(made.sampleName == "red-fox")
     }
 
+    /// A blank start is a refinement of its own: the flow keeps a draft of it before any edit, and
+    /// the draft resumes blank, the photo as one area.
+    @Test func aBlankStartIsKeptAndResumesBlank() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        model.start(from: .blank)
+        try await waitUntil { model.refinements.start == .blank && model.isFinal }
+        let saved = try #require(model.draft, "A blank start left no draft")
+        #expect(saved.refinements.start == .blank && saved.refinements.edits.isEmpty)
+
+        let store = store
+        try store.write(saved, photo: try #require(model.source?.preview))
+        let stored = try store.read()
+        let read = try #require(stored)
+        #expect(read == saved)
+
+        let resumed = CreateModel()
+        resumed.load(draft: read, photo: try store.photoData())
+        try await waitUntil { resumed.isFinal }
+        #expect(resumed.refineStart == .blank && resumed.draft == read)
+        #expect(resumed.preview?.template.regions.count == 1)
+        model.cancelAll()
+        resumed.cancelAll()
+    }
+
     /// The edits a draft keeps are laid again on resuming it, in order, as the editor lays them:
     /// the template shown is the editor's result on the template the generator makes, which
     /// clearing the edits shows.

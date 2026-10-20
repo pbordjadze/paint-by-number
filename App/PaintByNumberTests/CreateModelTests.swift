@@ -781,6 +781,80 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    // MARK: Start From
+
+    /// A blank start makes the template the photo as one area on the canvas the generator would
+    /// make, before any edit; a Pen line across it cuts it in two, each side in the photo's color
+    /// there; Undo takes the line back, and then the blank start, back to the generator's template.
+    @Test func aBlankStartIsOneAreaThatAPenLineSplits() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.hasLineArtInput && model.refineStart == .generated)
+        let generated = try #require(model.preview?.template)
+        model.beginRefining()
+
+        model.start(from: .blank)
+        try await waitUntil { model.refinements.start == .blank && model.isFinal }
+        #expect(model.refineStart == .blank && model.canUndo && model.refinements.changeCount == 0)
+        let blank = try #require(model.preview?.template)
+        let photo = try #require(model.source?.image)
+        #expect(blank.regions.count == 1 && blank.palette.count == 1)
+        #expect(blank.width == generated.width && blank.height == generated.height)
+        #expect(blank == (try TemplateEditor.blank(width: blank.width, height: blank.height, photo: photo, colorSpace: photo.colorSpace)))
+
+        let w = Float(blank.width), h = Float(blank.height)
+        let pen = TemplateEditor.Edit.draw(points: [SIMD2(0.5 * w, -6), SIMD2(0.5 * w, h + 6)])
+        try await waitForEdits(model, model.edit(pen))
+        let cut = try #require(model.preview?.template)
+        #expect(cut.regions.count == 2, "The line didn't cut the blank in two")
+        let laid = TemplateEditor.painted(pen, on: blank, photo: photo)
+        #expect(model.refinements.edits == [laid] && model.refinements.start == .blank)
+        #expect(cut == (try TemplateEditor.apply(laid, to: blank).template))
+        #expect(model.closedShape != nil)
+        // Start saves it as it shows; the making-of has no steps of the generator's to play.
+        let made = try await model.makeDraft()
+        #expect(made.template == cut && made.refinements.start == .blank)
+        #expect(model.makingOfSource(for: made, artworkID: UUID()) == nil)
+
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == blank)
+        model.undo()
+        try await waitUntil { model.refinements.start == .generated && model.isFinal }
+        #expect(model.preview?.template == generated && model.refinements.isEmpty && !model.canUndo)
+        model.cancelAll()
+    }
+
+    /// Simple puts the sliders' plainest settings on them as the painter's own (the chip says
+    /// so), Generated puts back the ones it found, and Undo steps back through both.
+    @Test func simpleThenGeneratedPutsTheSettingsBack() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        model.beginRefining()
+        let before = model.settings, lines = model.lines
+        #expect(model.refineStart == .generated && model.settingsOrigin == .suggested)
+
+        model.start(from: .simple)
+        try await waitUntil { model.refineStart == .simple && model.isFinal }
+        let simple = CreateModel.Sliders.simple
+        #expect(model.colorCount == simple.colorCount && model.detail == 0 && model.smoothness == 1 && model.lines == 0)
+        #expect(model.settings.colorCount == 12 && model.settingsOrigin == .custom)
+        #expect(model.preview?.settings == model.settings && model.refinements.isEmpty && model.canUndo)
+
+        model.start(from: .generated)
+        try await waitUntil { model.refineStart == .generated && model.isFinal }
+        #expect(model.settings == before && model.lines == lines && model.settingsOrigin == .suggested)
+
+        model.undo()
+        try await waitUntil { model.refineStart == .simple && model.isFinal }
+        model.undo()
+        try await waitUntil { model.refineStart == .generated && model.isFinal }
+        #expect(model.settings == before && model.settingsOrigin == .suggested && !model.canUndo)
+        model.cancelAll()
+    }
+
     /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
     /// them; the middle and classic line art are left as they are.
     @Test func linesMapToTheLineArt() {
