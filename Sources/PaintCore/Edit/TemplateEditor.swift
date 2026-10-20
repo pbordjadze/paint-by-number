@@ -51,7 +51,9 @@ import Foundation
 ///   area or not as it was, its numbers sized for the new paint's digits (an area without room
 ///   for them is declined). A paint it leaves with no area goes, the numbers after it closing up
 ///   as a repaint's merge closes them, and where the area then meets one of its new paint across
-///   an undrawn boundary the two become one area.
+///   an undrawn boundary the two become one area. Its color is one of the template on screen
+///   (Refine's picker and palette chips read it with every look in it), so looks and repaints
+///   laid before it leave it as sent: a paint's own color lands on that paint.
 /// - **Look, repaint.** Paints alone change color (Refine's Colors): a look over all of them, or
 ///   one paint with or without its family (`recolor(_:by:)`). Paints that land within a
 ///   just-noticeable difference of each other become one, and areas that then share a paint
@@ -72,7 +74,8 @@ public enum TemplateEditor {
         case eraseLine(at: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The shape under `point`, painted `color` (OKLab, as `LineEdit.photoColor` reads it).
         case fill(at: SIMD2<Float>, color: SIMD3<Float>)
-        /// The region under `point` alone painted `color` (OKLab, as a fill's).
+        /// The region under `point` alone painted `color` (OKLab, a color of the template on
+        /// screen, which looks laid before it don't move).
         case paintArea(at: SIMD2<Float>, color: SIMD3<Float>)
         /// Every paint in `look` at `strength` (0 to 1); `lightness`, the painting's lightness
         /// quantiles when the look was chosen (`TemplateEditor.look(_:strength:on:)`).

@@ -199,25 +199,32 @@ struct EditPaintAreaTests {
         #expect(made.changed && u.regions[painted].colorIndex == UInt32(other))
     }
 
-    /// Laid after a look, the area takes the look's color of what it asks, as a fill does. It is
-    /// no recolor itself, so a look or Photo taking the looks out keeps it.
-    @Test func aLookLaidBeforeChangesTheColorItLandsWith() throws {
+    /// Its color is one of the template on screen, the look already in it (the area card's picker
+    /// and palette chips read it so), so a look laid before leaves it as sent: a paint's own color
+    /// picked after a look lands on that paint, and a new color is the paint as sent. It is no
+    /// recolor itself, so a look or Photo taking the looks out keeps it.
+    @Test func aLookLaidBeforeLeavesItsColorAsSent() throws {
         let look = TemplateEditor.look(.moonlit, strength: 1, on: Self.base)
-        let edit = Edit.paintArea(at: Self.inA, color: Self.magenta)
-        let looked = TemplateEditor.recolor(Self.magenta, by: look)
-        #expect(!TemplateEditor.isRecolor(edit))
-        #expect(TemplateEditor.recolored(edit, by: [look]) == .paintArea(at: Self.inA, color: looked))
+        let fresh = Edit.paintArea(at: Self.inB, color: Self.magenta)
+        #expect(!TemplateEditor.isRecolor(fresh))
+        #expect(TemplateEditor.recolored(fresh, by: [look]) == fresh)
         var trail = EditTrail(base: Self.base)
-        #expect(trail.add(look).isMade && trail.add(edit).isMade)
-        let t = trail.template
-        expectValid(t)
-        let paint = try Self.paint(t, Self.inA)
-        #expect(ColorScience.distance(paint, looked) <= SegmentationParameters.jnd)
-        #expect(ColorScience.distance(paint, Self.magenta) > SegmentationParameters.jnd, "the color asked, without the look")
-        // The list laid at once gives the same template; taking the look back lays the color asked.
-        #expect(try TemplateEditor.apply([look, edit], to: Self.base).template == t)
-        try trail.move(to: [edit])
-        #expect(trail.template == (try TemplateEditor.apply(edit, to: Self.base).template))
+        #expect(trail.add(look).isMade)
+        let looked = trail.template
+        // The ground's paint as the screen shows it, under the look.
+        let pick = Edit.paintArea(at: Self.inA, color: try Self.paint(looked, Self.ground))
+        #expect(trail.add(pick).isMade)
+        let picked = trail.template
+        expectValid(picked)
+        let a = try Self.region(picked, Self.inA), ground = try Self.region(picked, Self.ground)
+        #expect(picked.regions[a].colorIndex == picked.regions[ground].colorIndex && picked.palette == looked.palette)
+
+        #expect(trail.add(fresh).isMade)
+        expectValid(trail.template)
+        #expect(try Self.paint(trail.template, Self.inB) == Self.magenta)
+        #expect(trail.template.palette.count == looked.palette.count + 1)
+        // The list laid at once gives the same template.
+        #expect(try TemplateEditor.apply([look, pick, fresh], to: Self.base).template == trail.template)
     }
 
     /// A tap off the canvas, or numbers that aren't, change nothing; reading the photo for an edit

@@ -385,7 +385,10 @@ painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md`
   (`renumberPaints`: a number only loses digits), so no paint is left with nothing to paint.
   Where the area then meets one of its new paint across an undrawn boundary, the two become one
   area (`joinAreas`), as a repaint joins them. A color whose nearest paint the area has already
-  changes nothing.
+  changes nothing. Unlike a fill's photo color, its color is one of the template on screen
+  (the area card's picker and its palette chips read it with every look in it), so looks and
+  repaints laid before it leave it as sent (`TemplateEditor.recolored`): a paint's own color,
+  picked after a look, lands on that paint.
 - **Split.** Out of Refine's toolbar for now (Paul, October 18: "it's not working right, it like,
   says 'this area is too small to be a number' or else just doesn't really do it"; the Pen's line
   recolors what it cuts instead, above); the edit stays, so splits made meanwhile lay as ever.

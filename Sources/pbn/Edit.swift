@@ -4,8 +4,8 @@ import PaintCore
 /// `pbn edit`'s edits.json: an array of `{"kind": "draw" | "erase" | "eraseLine" | "fill",
 /// "points": [[x, y], ...]}` in canvas units, plus `"closed"` for a draw (the last point joins
 /// the first), `"radius"` for an erase (canvas units), `"reach"` for an eraseLine (canvas
-/// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill, and
-/// `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
+/// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill or a
+/// `"paintArea"` (the area under the point alone), and `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
 /// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
 /// `"paints"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
 /// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
@@ -58,6 +58,11 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             if let c = entry.color, c.count == 3 { return .fill(at: point, color: SIMD3(c[0], c[1], c[2])) }
             if let n = entry.paint, (1...palette.count).contains(n) { return .fill(at: point, color: palette[n - 1].oklab) }
             fail("\(path): a fill needs \"color\": [L, a, b] or \"paint\": a number of the palette")
+        case "paintArea":
+            guard let point = points.first else { fail("\(path): a paintArea needs a point") }
+            if let c = entry.color, c.count == 3 { return .paintArea(at: point, color: SIMD3(c[0], c[1], c[2])) }
+            if let n = entry.paint, (1...palette.count).contains(n) { return .paintArea(at: point, color: palette[n - 1].oklab) }
+            fail("\(path): a paintArea needs \"color\": [L, a, b] or \"paint\": a number of the palette")
         case "look":
             guard let name = entry.look, let look = TemplateEditor.Look(rawValue: name) else {
                 fail("\(path): a look needs \"look\": one of \(TemplateEditor.Look.allCases.map(\.rawValue).joined(separator: ", "))")
@@ -70,7 +75,8 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             return .repaint(from: SIMD3(f[0], f[1], f[2]), to: SIMD3(c[0], c[1], c[2]), family: entry.family ?? false)
         default:
             FileHandle.standardError.write(Data(
-                "\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine, fill, look or repaint)\n".utf8))
+                "\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine, fill, paintArea, look or repaint)\n"
+                    .utf8))
             return nil
         }
     }

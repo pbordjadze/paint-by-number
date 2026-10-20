@@ -77,7 +77,8 @@ extension EditWork {
     /// leaves with no area goes, the numbers after it closing up as a repaint's merge closes them
     /// (`renumberPaints`); no other region's paint changes. Where the area then meets one of its
     /// new paint across an undrawn boundary, the two become one area (`joinAreas`). A color whose
-    /// paint the region has already changes nothing.
+    /// paint the region has already changes nothing. `color` is one of the template on screen,
+    /// as sent, not a photo's brought through the looks (`TemplateEditor.recolored`).
     mutating func paintArea(at p: LatticePoint, color: SIMD3<Float>) throws {
         guard let r = locate(p) else { throw EditFailure.invalid("the tap is off the canvas") }
         let before = t.regions.map(\.colorIndex)

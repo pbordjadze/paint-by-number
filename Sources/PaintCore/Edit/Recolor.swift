@@ -119,8 +119,7 @@ extension TemplateEditor {
     static let familyChroma: Float = 0.04
 
     /// `color` as a recoloring edit makes it, and as every color laid after that edit is made
-    /// (a drawn line's photo colors, a fill's, a painted area's), so later edits bring paints in
-    /// the same colors.
+    /// (a drawn line's photo colors, a fill's), so later edits bring paints in the same colors.
     /// Any other edit leaves it as it is.
     public static func recolor(_ color: SIMD3<Float>, by edit: Edit) -> SIMD3<Float> {
         switch edit {
@@ -177,8 +176,9 @@ extension TemplateEditor {
         }
     }
 
-    /// `edit` with the colors it brings (a drawn line's or a split's paints, a fill's or a painted
-    /// area's color) as the recoloring edits laid before it make them, in order.
+    /// `edit` with the colors it brings (a drawn line's or a split's paints, a fill's color) as
+    /// the recoloring edits laid before it make them, in order. A painted area's color
+    /// (`paintArea`) is one of the template on screen, the looks already in it, and stays as sent.
     public static func recolored(_ edit: Edit, by recolors: [Edit]) -> Edit {
         guard !recolors.isEmpty else { return edit }
         func map(_ c: SIMD3<Float>) -> SIMD3<Float> { recolors.reduce(c) { recolor($0, by: $1) } }
@@ -187,7 +187,6 @@ extension TemplateEditor {
         case .draw(let points, let closed, let paints): return .draw(points: points, closed: closed, paints: paints.map(map))
         case .split(let points, let closed, let paints): return .split(points: points, closed: closed, paints: map(paints))
         case .fill(let point, let color): return .fill(at: point, color: map(color))
-        case .paintArea(let point, let color): return .paintArea(at: point, color: map(color))
         default: return edit
         }
     }
