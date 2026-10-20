@@ -725,28 +725,33 @@ struct CreateModelTests {
         model.detail = settings.detail < 0.75 ? Double(settings.detail) + 0.25 : Double(settings.detail) - 0.25
         model.settingsChanged()
         try await waitUntil { model.isFinal }
-        #expect(model.preview?.settings != settings && model.preview?.settings == model.settings)
+        let moved = model.settings
+        #expect(model.preview?.settings != settings && model.preview?.settings == moved)
         #expect(model.preview?.refinements.edits == [edit] && model.refinements.edits == [edit])
         let shown = try #require(model.preview?.template)
         #expect(shown != drawn)
 
         // Taking the edit back shows the new template without it: the edit was laid on that one.
+        // Undo of an edit leaves the sliders as they were moved after it.
         model.undo()
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.settings == moved && model.preview?.settings == moved)
         let base = try #require(model.preview?.template)
         #expect(try TemplateEditor.apply(edit, to: base).template == shown)
         model.cancelAll()
     }
 
-    /// Edits sent while the template is being made again are laid on it before it shows (a drawn
-    /// line as drawn: there was no template to read its pieces' colors on).
+    /// Edits sent while the template is being made again on the same canvas (here with other
+    /// colors) are laid on it before it shows (a drawn line as drawn: there was no template to read
+    /// its pieces' colors on). One made on another canvas declines them
+    /// (`anEditSentWhileTheCanvasChangesIsDeclined`).
     @Test func editsSentWhileTheTemplateIsMadeAgainAreNotLost() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
         let edit = line(in: try #require(model.preview?.template))
 
-        model.detail = model.detail < 0.75 ? model.detail + 0.25 : model.detail - 0.25
+        model.colorCount = model.colorCount < 20 ? 28 : 12
         model.settingsChanged()
         let serial = model.edit(edit)
         try await waitUntil { model.settledEdits >= serial && model.isFinal }
@@ -852,6 +857,94 @@ struct CreateModelTests {
         model.undo()
         try await waitUntil { model.refineStart == .generated && model.isFinal }
         #expect(model.settings == before && model.settingsOrigin == .suggested && !model.canUndo)
+        model.cancelAll()
+    }
+
+    /// Only Start From's steps move the sliders back and forth: after Simple, Undo of an edit
+    /// leaves Simple's settings on them, the next Undo puts back the ones Simple found, Redo steps
+    /// forward through both, and Cancel puts back what Refine opened with, the sliders too.
+    @Test func undoOfSimplePutsTheSlidersBackAndUndoOfAnEditLeavesThem() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let generated = try #require(model.preview?.template)
+        let before = model.settings
+        model.beginRefining()
+
+        model.start(from: .simple)
+        try await waitUntil { model.refineStart == .simple && model.isFinal }
+        let simple = model.settings
+        let plain = try #require(model.preview?.template)
+        try await waitForEdits(model, model.edit(line(in: plain)))
+        #expect(model.refinements.edits.count == 1 && model.settings == simple)
+
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.settings == simple && model.preview?.template == plain)
+        model.undo()
+        try await waitUntil { model.refineStart == .generated && model.isFinal }
+        #expect(model.settings == before && model.settingsOrigin == .suggested && model.preview?.template == generated)
+        #expect(!model.canUndo && model.canRedo)
+
+        model.redo()
+        try await waitUntil { model.refineStart == .simple && model.isFinal }
+        #expect(model.settings == simple && model.preview?.template == plain)
+        model.redo()
+        try await waitUntil { model.refinements.edits.count == 1 && model.isFinal }
+        #expect(model.settings == simple && !model.canRedo)
+
+        model.cancelRefining()
+        try await waitUntil { model.refinements.isEmpty && model.refineStart == .generated && model.isFinal }
+        #expect(model.settings == before && model.settingsOrigin == .suggested && model.preview?.template == generated)
+        model.cancelAll()
+    }
+
+    /// Start From picks the base only before the first edit: picked with an edit on its way (sent
+    /// before its turn came) or made, it leaves the base and the sliders as they are.
+    @Test func startFromDoesNothingOnceAnEditIsSent() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let generated = try #require(model.preview?.template)
+        let before = model.settings
+        model.beginRefining()
+
+        model.start(from: .simple)
+        try await waitForEdits(model, model.edit(line(in: generated)))
+        #expect(model.refineStart == .generated && model.settings == before && model.refinements.edits.count == 1)
+
+        model.start(from: .blank)
+        // Start Painting waits for the changes sent before it.
+        let made = try await model.makeDraft()
+        #expect(made.refinements.start == .generated && made.refinements.edits.count == 1 && made.settings == before)
+        model.cancelAll()
+    }
+
+    /// An edit sent while the base is made again on another canvas (Undo of Simple, whose Detail
+    /// is the lowest) is declined: drawn on the canvas on screen, it would land elsewhere on the
+    /// new one. Nothing changes, and the painter is told.
+    @Test func anEditSentWhileTheCanvasChangesIsDeclined() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        // Detail well above Simple's, so the canvases differ.
+        model.detail = 0.6
+        model.settingsChanged()
+        try await waitUntil { model.isFinal }
+        let generated = try #require(model.preview?.template)
+        model.beginRefining()
+        model.start(from: .simple)
+        try await waitUntil { model.refineStart == .simple && model.isFinal }
+        let plain = try #require(model.preview?.template)
+        #expect(plain.width < generated.width)
+
+        // Its turn comes after Undo's, which starts making the generated base again.
+        model.undo()
+        let serial = model.edit(line(in: plain))
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial }
+        #expect(model.note?.kind == .notDrawn && model.refinements.edits.isEmpty)
+        try await waitUntil { model.refineStart == .generated && model.isFinal }
+        #expect(model.preview?.template == generated && model.refinements.edits.isEmpty && model.canRedo)
         model.cancelAll()
     }
 

@@ -170,10 +170,11 @@ final class CreateModel {
     private(set) var refinements = TemplateRefinements()
     /// What Undo and Redo step through on the Refine screen, and what Cancel puts back.
     private(set) var history = RefineHistory()
-    /// The sliders beside each state of `history`, in step with it: a start moves them (Simple),
-    /// so Undo, Redo and Cancel put them back with the refinements.
+    /// The sliders beside the steps of `history`, in step with it: a step of Start From that
+    /// moved them (Simple, and Generated after it) keeps the ones it found, which Undo, Redo and
+    /// Cancel put back with the refinements; every other step leaves the sliders be.
     @ObservationIgnored private var sliderHistory = SliderHistory()
-    /// The sliders as Simple found them, which choosing Generated puts back.
+    /// The sliders as Simple found them since Refine opened, which choosing Generated puts back.
     @ObservationIgnored private var beforeSimple: Sliders?
     /// The newest edit sent (`edit(_:)`, `fill(at:color:)`) whose result `preview` shows, or that
     /// did nothing: Refine draws the edits sent after it over the template on screen.
@@ -256,11 +257,39 @@ final class CreateModel {
 
     private var currentKey: BaseKey { BaseKey(settings: settings, inputs: refinements.generatorInputs) }
 
-    /// The sliders of `history`'s opening and of each of its Undo and Redo steps.
+    /// The sliders beside `history`'s Undo and Redo steps, one entry per step: the sliders a step
+    /// moved the sliders from (or, on the Redo side, to), nil for a step that left them be.
     nonisolated private struct SliderHistory {
+        /// The sliders before the first step that moved them, which Cancel puts back; nil while
+        /// none has.
         var opening: Sliders?
-        var undo: [Sliders] = []
-        var redo: [Sliders] = []
+        var undo: [Sliders?] = []
+        var redo: [Sliders?] = []
+
+        /// A step was pushed (`RefineHistory.push`), which moved the sliders from `found` (nil:
+        /// it left them be). Trimmed as `RefineHistory` is, so the two stay in step.
+        mutating func push(_ found: Sliders?) {
+            if let found, opening == nil { opening = found }
+            undo.append(found)
+            if undo.count > RefineHistory.limit { undo.removeFirst(undo.count - RefineHistory.limit) }
+            redo.removeAll()
+        }
+
+        /// Undo takes back a step: the sliders to put back, nil to leave them be; `current`, the
+        /// sliders now, is kept for Redo when they move.
+        mutating func back(from current: Sliders) -> Sliders? {
+            let earlier: Sliders? = undo.popLast() ?? nil
+            redo.append(earlier == nil ? nil : current)
+            return earlier
+        }
+
+        /// Redo puts a step back: the sliders to put back, nil to leave them be; `current` is kept
+        /// for Undo when they move.
+        mutating func forward(from current: Sliders) -> Sliders? {
+            let later: Sliders? = redo.popLast() ?? nil
+            undo.append(later == nil ? nil : current)
+            return later
+        }
     }
 
     /// The base template on screen with the edits laid on it, and what it is the base of.
@@ -856,11 +885,14 @@ final class CreateModel {
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
     //   sliders do the same with the settings. A base made before is reused (`made`).
-    // - Start From (`start(from:)`) makes the base again too: Blank through the refinements
-    //   (`TemplateRefinements.start`), Simple through the sliders, which each step of the history
-    //   keeps beside the refinements (`sliderHistory`) for Undo, Redo and Cancel to put back.
+    // - Start From (`start(from:)`, only before the first edit) makes the base again too: Blank
+    //   through the refinements (`TemplateRefinements.start`), Simple through the sliders, which
+    //   the steps that move them keep beside the refinements (`sliderHistory`) for Undo, Redo and
+    //   Cancel to put back.
     // - While the base is being made again, an edit is kept with the others and the new template
-    //   has it laid before it shows (`generate`).
+    //   has it laid before it shows (`generate`), unless the new base has another canvas (Simple,
+    //   and Undo and Redo across it, move Detail: `GenerationSettings.workingSize`): drawn on the
+    //   canvas on screen, it would land elsewhere, so it is declined.
     //
     // `settledEdits` says which edits sent the template on screen already shows, so Refine draws
     // only the ones after it.
@@ -957,13 +989,16 @@ final class CreateModel {
     /// Whether the sliders make Simple's settings.
     private var holdsSimple: Bool { settings == settings(of: .simple) }
 
-    /// Refine's Start From, in its turn, a step of the history. Blank makes the base the photo as
-    /// one area; Generated and Simple make it the generator's again. Simple puts its settings on
-    /// the sliders, remembering the ones it found, which Generated puts back (the suggestion's when
-    /// none were kept, as for a draft left on Simple's); Blank leaves the sliders be. The sliders
-    /// move as the painter's own would (`settingsChanged`): the chip and the draft follow them.
+    /// Refine's Start From, in its turn, a step of the history, and only before the first edit:
+    /// with an edit made, or one sent and still on its way, it does nothing (an edit is drawn on the
+    /// base on screen). Blank makes the base the photo as one area; Generated and Simple make it
+    /// the generator's again. Simple puts its settings on the sliders, remembering the ones it found
+    /// since Refine opened, which Generated puts back (the suggestion's when none were kept, as for a
+    /// draft left on Simple's); Blank leaves the sliders be. Sliders it moves are the painter's own
+    /// settings (`settle(on:sliders:)`): the chip and the draft follow them.
     func start(from start: RefineStart) {
         enqueue { [self] in
+            guard refinements.edits.isEmpty, handledEdits == sentEdits else { return }
             var next = refinements
             next.start = start == .blank ? .blank : .generated
             let moved: Sliders
@@ -977,7 +1012,7 @@ final class CreateModel {
                 moved = sliders
             }
             guard next != refinements || moved != sliders else { return }
-            pushStep(refinements)
+            pushStep(refinements, sliders: moved == sliders ? nil : sliders)
             await settle(on: next, sliders: moved)
         }
     }
@@ -998,8 +1033,7 @@ final class CreateModel {
         enqueue { [self] in
             guard let previous = history.undo.popLast() else { return }
             history.redo.append(refinements)
-            let earlier = sliderHistory.undo.popLast() ?? sliders
-            sliderHistory.redo.append(sliders)
+            let earlier = sliderHistory.back(from: sliders)
             await settle(on: previous, sliders: earlier)
         }
     }
@@ -1009,8 +1043,7 @@ final class CreateModel {
         enqueue { [self] in
             guard let next = history.redo.popLast() else { return }
             history.undo.append(refinements)
-            let later = sliderHistory.redo.popLast() ?? sliders
-            sliderHistory.undo.append(sliders)
+            let later = sliderHistory.forward(from: sliders)
             await settle(on: next, sliders: later)
         }
     }
@@ -1018,35 +1051,34 @@ final class CreateModel {
     var canUndo: Bool { !history.undo.isEmpty }
     var canRedo: Bool { !history.redo.isEmpty }
 
-    /// Refine opened: its history starts here.
+    /// Refine opened: its history starts here, and Simple has found no sliders yet.
     func beginRefining() {
         enqueue { [self] in
             history = RefineHistory(opening: refinements)
-            sliderHistory = SliderHistory(opening: sliders)
+            sliderHistory = SliderHistory()
+            beforeSimple = nil
             dismissNote()
         }
     }
 
-    /// Refine's Cancel: back to what it opened with, the sliders too.
+    /// Refine's Cancel: back to what it opened with, and the sliders too when Start From moved them.
     func cancelRefining() {
         enqueue { [self] in
             let opening = history.opening
-            let openingSliders = sliderHistory.opening ?? sliders
+            let openingSliders = sliderHistory.opening
             history = RefineHistory(opening: opening)
-            sliderHistory = SliderHistory(opening: openingSliders)
+            sliderHistory = SliderHistory()
+            beforeSimple = nil
             await settle(on: opening, sliders: openingSliders)
         }
     }
 
-    /// `state`, the refinements, is about to change: Undo goes back to it and to the sliders as
-    /// they are, and what was undone is gone (`RefineHistory.push`).
-    private func pushStep(_ state: TemplateRefinements) {
+    /// `state`, the refinements, is about to change: Undo goes back to it, and to `sliders` when
+    /// the change moves the sliders from them (Start From; nil for every other change, which leaves
+    /// them be), and what was undone is gone (`RefineHistory.push`).
+    private func pushStep(_ state: TemplateRefinements, sliders found: Sliders? = nil) {
         history.push(state)
-        sliderHistory.undo.append(sliders)
-        if sliderHistory.undo.count > RefineHistory.limit {
-            sliderHistory.undo.removeFirst(sliderHistory.undo.count - RefineHistory.limit)
-        }
-        sliderHistory.redo.removeAll()
+        sliderHistory.push(found)
     }
 
     func dismissNote() {
@@ -1113,13 +1145,16 @@ final class CreateModel {
         if take(target) { await converge() }
     }
 
-    /// `target` with the sliders at `sliders`. Sliders that move change the settings as the
-    /// painter's own would (`settingsChanged`): the base is made again and the edits laid on it.
-    private func settle(on target: TemplateRefinements, sliders: Sliders) async {
-        guard sliders != self.sliders else { return await settle(on: target) }
+    /// `target` with the sliders at `sliders` (nil: as they are). Sliders that move are the
+    /// painter's own settings, or the suggestion's again (`settingsOrigin`), and the base is made
+    /// again at once, as `take` makes it, with the edits laid on it.
+    private func settle(on target: TemplateRefinements, sliders: Sliders?) async {
+        guard let sliders, sliders != self.sliders else { return await settle(on: target) }
         self.sliders = sliders
         refinements = target
-        settingsChanged()
+        if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
+        guard source != nil, !isChoosingSettings else { return }
+        startGeneration(draftFirst: false)
     }
 
     /// The edit numbered `serial` has had its turn; `shown` when the template on screen shows
@@ -1155,11 +1190,28 @@ final class CreateModel {
         }
     }
 
+    /// Whether the template the settings make has the canvas of the one on screen (true without
+    /// one): Detail sizes it (`GenerationSettings.workingSize`), which Start From's Simple, and Undo
+    /// and Redo across it, move while Refine is open.
+    private var keepsCanvas: Bool {
+        guard let shown = trail?.template, let photo = source?.image else { return true }
+        let size = settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        return size.width == shown.width && size.height == shown.height
+    }
+
     private func lay(_ edit: TemplateEditor.Edit, serial: Int, tapped: Bool) async {
         let before = refinements
         guard let current = trail, let key = trailKey, key == currentKey else {
-            // The template on screen is being made again: it has the edit laid with the others. A
-            // split can't be made without its paints, so it takes them from the template on screen.
+            // The template on screen is being made again: it has the edit laid with the others,
+            // unless it is made on another canvas, where the edit, in the units of the one on
+            // screen, would land elsewhere. A split can't be made without its paints, so it takes
+            // them from the template on screen.
+            guard keepsCanvas else {
+                Log.create.info("An edit was declined: the template is being made on another canvas")
+                say(.init(declined: edit))
+                handled(serial)
+                return
+            }
             var kept = edit
             if case .split = edit, let shown = trail?.template, let photo = source?.image {
                 kept = await Self.painting(edit, on: shown, photo: photo)

@@ -667,7 +667,9 @@ Conventions).
     with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
     paintings and drafts regenerate as they were. A draft (a slider being
     dragged) shows the photo's own drawing, without edits. An edit sent while the base is being
-    made again is kept and laid before the new template shows (`generate`).
+    made again is kept and laid before the new template shows (`generate`), unless the new base
+    has another canvas (Start From's Simple, and Undo and Redo across it, move Detail): drawn in
+    the units of the one on screen, it would land elsewhere, so it is declined (`keepsCanvas`).
   - **An edit that can't be made** (`EditTrail.Verdict.declined`: a line that doubles back on
     itself, lines closer than the lattice can tell apart, a fill with no room for its number)
     changes nothing, is not kept and takes no step of the history; a toast says so
@@ -690,8 +692,10 @@ Conventions).
     the photo as one area on the generator's canvas wherever a base is made (`CreateModel`'s
     drafts and full resolution, `ArtworkFactory.blank` for regeneration; no making-of show),
     is a refinement though it counts no change, and Undo takes it back; Simple is no start but
-    the sliders' plainest settings (`CreateModel.Sliders.simple`, kept beside each step of the
-    history so Undo and Cancel put the sliders back, and Generated the ones Simple found).
+    the sliders' plainest settings (`CreateModel.Sliders.simple`, the sliders it found kept beside
+    its step of the history so Undo, Redo and Cancel put them back, every other step leaving the
+    sliders be, and Generated the ones Simple found since Refine opened). Start From does nothing
+    once an edit is made or on its way (`CreateModel.start(from:)`).
 - Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter
   refined and didn't start, so closing the flow, or iOS ending the app, loses nothing. A flow has
   a draft (`CreateModel.draft`) once its photo has refinements, and not while its settings are
