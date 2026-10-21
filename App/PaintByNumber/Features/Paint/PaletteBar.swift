@@ -92,7 +92,8 @@ nonisolated struct PaletteWindow: Equatable, Sendable {
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
-/// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view.
+/// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view,
+/// or the swatch a tap on its color's area just shook.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal

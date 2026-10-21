@@ -902,4 +902,6 @@ state JSON; `play-settled` reports canvas/animation idleness, and `play-screen-s
 the canvas display scale for screenshot-pixel drags. These readouts stay live as the camera
 moves and never paint through accessibility activation. `PaintByNumberUITests/PlayTests`
 consumes `PLAY_MAILBOX`, or skips when unset; its temporary-mailbox self-test runs in CI's
-`ipad` group. All hooks and tests are guarded by `#if DEBUG`.
+`ipad` group. All hooks and tests are guarded by `#if DEBUG`, but for
+`PaintingNavigationTests`' tap on another color, which only passes `-playHarness` to find an area
+of a paint whose swatch is out of view.
