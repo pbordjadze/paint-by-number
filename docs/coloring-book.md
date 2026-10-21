@@ -423,6 +423,20 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   which is what it is for, not a reason to decline. One that divides no area is declined. Areas
   of one paint across an undrawn edge stay two until one is painted; painted back to that paint
   (`paintArea`), the two become one area again, as Only This Area joins them.
+- **Merge** (`merge`, Refine's Merge). The Refine Toolbox's way to change a cell's shape by
+  joining (Paul, October 21: "it should be possible to do ANYTHING with them"): a drag across
+  cells joins them into one. The regions under the path (walked in steps of half a unit, a point
+  off the canvas or in no region left out), in the order it first enters them, from the one under
+  its first point: each next one joins if it shares an edge with those joined so far, else it is
+  passed over, so a drag that slips through a junction into a cell touching the others only at a
+  point leaves that cell out. Every edge between them goes, ink and all: unlike the eraser's
+  join, which keeps the rest of a boundary's ink as strokes, a merged boundary leaves no stroke,
+  since the painter asked for one cell where the line was (the strokes inside the cells stay).
+  The joined area keeps the first region's index, paint and number (`EditWork.merge`, its rings
+  traced again, so a cell joined with the one round it fills its hole), and is a detail area only
+  if the first was: the painter dragged from it, so the area is it, grown. A paint left with no
+  area leaves the palette and the numbers after it close up, as Only This Area's does
+  (`dropPaints`). A merge that joins fewer than two areas is declined.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

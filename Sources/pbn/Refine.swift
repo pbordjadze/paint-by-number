@@ -12,6 +12,7 @@ import PaintCore
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
+///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
 ///        {"tool": "smartEraser", "at": [x, y]},
 ///        {"tool": "fill", "at": [x, y]},
 ///        {"tool": "undo"}, {"tool": "redo"}]}
@@ -148,6 +149,8 @@ func runRefine(_ options: Options) throws {
             edit = RefineGestures.cellEdge(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "eraser":
             edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
+        case "merge":
+            edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
         case "shape":
             let a = point(g.from, "from", k), b = point(g.to, "to", k)
             marks = [[a, b]]
@@ -195,7 +198,7 @@ func runRefine(_ options: Options) throws {
             }
             step.verdict = "redo"
         default:
-            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, smartEraser, fill, undo, redo)")
+            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, smartEraser, fill, undo, redo)")
         }
 
         if let target {
@@ -225,6 +228,7 @@ func runRefine(_ options: Options) throws {
                 case .draw: step.toast = "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
+                case .merge: step.toast = "Those areas couldn’t be joined."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
                 case .paintArea, .look, .repaint: step.toast = "Those colors couldn’t be changed."
@@ -249,7 +253,7 @@ func runRefine(_ options: Options) throws {
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
         case .draw(let points, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points
-        case .erase(let path, _)?: around += path
+        case .erase(let path, _)?, .merge(let path)?: around += path
         case .eraseLine(let at, _)?, .fill(let at, _)?, .paintArea(let at, _)?: around.append(at)
         case .look?, .repaint?, nil: break
         }

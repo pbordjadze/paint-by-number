@@ -40,6 +40,13 @@ import Foundation
 /// - **Cell edge.** Refine's Cell Edge: a split that takes no paints, so one cell becomes two of
 ///   the paint it had, for the painter to paint one of them. A cell edge that divides no area is
 ///   declined; one that leaves the same paint on both sides is what it is for.
+/// - **Merge.** Refine's Merge: a drag across cells joins them into one. The regions under the
+///   path, in the order it first enters them, from the one under its first point: each next one
+///   joins if it shares an edge with those joined so far, else it is passed over. Every edge
+///   between them goes, ink and all, leaving no stroke (the strokes inside them stay); the joined
+///   area has the first region's paint and number, and is a detail area only if the first was.
+///   A paint left with no area leaves the palette as Only This Area's does. A merge that joins
+///   fewer than two areas is declined.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -74,6 +81,8 @@ public enum TemplateEditor {
         /// Refine's Cell Edge: `points` divide a cell along an undrawn boundary, both pieces keeping
         /// its paint.
         case cellEdge(points: [SIMD2<Float>], closed: Bool = false)
+        /// Refine's Merge: the regions `points` cross, joined into the first.
+        case merge(points: [SIMD2<Float>])
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -231,6 +240,9 @@ public enum TemplateEditor {
             try work.draw(points, closed: closed, nudging: true)
             guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the cell edge divides no area") }
             try work.paint([])
+        case .merge(let points):
+            let lattice = points.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
+            try work.merge(along: lattice)
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
@@ -251,7 +263,9 @@ public enum TemplateEditor {
             try work.recolor(edit)
         }
         let s = work.summary
-        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0 else {
+        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0
+            || s.regionsMerged > 0
+        else {
             return (template, unchanged(template))
         }
         let (result, mapping) = try work.finish()

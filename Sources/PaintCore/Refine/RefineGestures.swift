@@ -142,6 +142,13 @@ public enum RefineGestures {
         return .erase(path: path, radius: screen.eraserRadius * Float(max(size.width, size.height)))
     }
 
+    /// The Merge's drag as an edit: its path in canvas units, thinned as the eraser's is. Nil for
+    /// no touch.
+    public static func merge(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
+        guard !points.isEmpty, screen.canvas.width > 0, screen.canvas.height > 0 else { return nil }
+        return .merge(points: simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint))
+    }
+
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
     /// moves; for a curve whose ends are down (`curve`), the curve bent through `b`. Nil while it
     /// is too small to draw.
@@ -228,7 +235,8 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .cellEdge, .look, .repaint:
+            case .fill, .paintArea, .split, .cellEdge, .merge, .look, .repaint:
+                // The lines a merge takes out go when the template shows it.
                 break
             }
         }

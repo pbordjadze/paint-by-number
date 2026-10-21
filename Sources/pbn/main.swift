@@ -37,6 +37,7 @@
 //       "points": [...]}, {"kind": "eraseLine", "points": [[x, y]], "reach": r}, {"kind": "fill",
 //       "points": [[x, y]], "color": [L, a, b] | "paint": n}, {"kind": "paintArea", as "fill"},
 //       {"kind": "split", as "draw"}, {"kind": "cellEdge", "points": [...], "closed": false},
+//       {"kind": "merge", "points": [...]},
 //       {"kind": "look", "look": "moonlit", "strength": 1}, {"kind": "repaint", "from": [L, a,
 //       b], "color": [L, a, b], "family": true}], all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
@@ -49,7 +50,9 @@
 //       alone given that paint (Only This Area: a paint it leaves with no area leaves the
 //       palette), a split dividing the
 //       colors on either side of the line without drawing it, a cell edge dividing a cell along the
-//       line without drawing it, both pieces keeping its paint, Refine's Colors (a look over every
+//       line without drawing it, both pieces keeping its paint, a merge joining the cells a path
+//       crosses into the first (each next one that borders those joined; the boundaries between
+//       them go, ink and all, and a paint left with no area leaves the palette), Refine's Colors (a look over every
 //       paint, its lightness read from the template when the file gives none, or one paint
 //       repainted with or without its family; later edits bring their colors through them, as
 //       the app's trail does, but for an area's, a color of the template as it is then); a kind
@@ -64,7 +67,7 @@
 //   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm [--lines drawing.pgm]]
 //       [generate options]
 //       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
-//       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes, the Eraser's reach on screen, the Smart
+//       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes, the Eraser's reach on screen, the Merge, the Smart
 //       Eraser's line from junction to junction, Fill with the photo's color there, Undo, Redo)
 //       on the coloring book of the photo (generated as the app does, the coloring book at its
 //       defaults unless --line-style says otherwise, or --template), each edit laid as the app lays
