@@ -1401,7 +1401,7 @@ extension RefineView {
             .transition(.opacity)
         }
         if group == .cells || group == .paint, let template = base?.template {
-            RefinePaletteBar(template: template, current: $currentPaint, merge: tool == .editPaint ? mergePaints : nil)
+            RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
                 .disabled(!model.hasLineArtInput)
         }
         if !usesRail {
@@ -1736,6 +1736,12 @@ extension RefineView {
     /// The current paint's number less one, when the painting has it.
     private var currentIndex: Int? {
         RefinePalette.index(of: currentPaint, in: base?.template.palette ?? [])
+    }
+
+    /// What a swatch dropped on another does: in Edit Paint, `mergePaints`; elsewhere nothing.
+    private var paletteMerge: ((Int, Int) -> Void)? {
+        guard tool == .editPaint else { return nil }
+        return { from, into in mergePaints(from, into: into) }
     }
 
     /// Edit Paint's swatch dropped on another: paint `from` takes the color of `into`, so the two
