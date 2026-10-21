@@ -12,10 +12,11 @@ import SwiftUI
 /// is being dragged, the full resolution once it settles — always discarding stale work.
 ///
 /// The template shown at full resolution is the one the generator makes from the photo, the
-/// settings and the refinements' generator inputs (the base), with the painter's manual edits laid
-/// on it in order (`EditTrail`, `refinements.edits`). Refine's edits are made to that template
-/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its text corrections and the sliders
-/// make the base again and the edits are laid on the new one. `MARK: Refine` says how.
+/// settings and the refinements' generator inputs (the base; for a blank start, the photo as one
+/// area), with the painter's manual edits laid on it in order (`EditTrail`, `refinements.edits`).
+/// Refine's edits are made to that template alone (`edit(_:)`, `fill(at:color:)`: no
+/// regeneration), its text corrections, Start From and the sliders make the base again and the
+/// edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
     struct Source {
@@ -570,9 +571,10 @@ final class CreateModel {
     /// What the making-of show of `draft` (the painting Start saved, as `artworkID`) is made from:
     /// this photo and the generator inputs its base was made with, so making the base again with an
     /// observer gives its stage pictures, and the painting's own template. Seeded by the artwork, so
-    /// a painting's show is the same each time it is made.
+    /// a painting's show is the same each time it is made. None for a blank start: its areas are
+    /// the painter's, not the steps the show plays, and the painting opens as it does without one.
     func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
-        guard let source else { return nil }
+        guard let source, draft.refinements.start == .generated else { return nil }
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
@@ -790,6 +792,9 @@ final class CreateModel {
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
     //   sliders do the same with the settings. A base made before is reused (`made`).
+    // - Start From (`start(from:)`, only before the first edit) makes the base again too, through
+    //   the refinements (`TemplateRefinements.start`): Blank the photo as one area on the canvas
+    //   the generator would make, Generated the generator's template.
     // - While the base is being made again, an edit is kept with the others and the new template
     //   has it laid before it shows (`generate`).
     //
@@ -877,6 +882,21 @@ final class CreateModel {
     /// The paints of the template the generator made, before any edit: what the looks of Refine's
     /// Colors show themselves on.
     var paintsBeforeEdits: [PaletteColor] { trail?.base.palette ?? preview?.template.palette ?? [] }
+
+    /// Refine's Start From, in its turn, a step of the history, and only before the first edit:
+    /// with an edit made, or one sent and still on its way, it does nothing (an edit is drawn on the
+    /// base on screen). Blank makes the base the photo as one area, Generated the generator's again;
+    /// the sliders are left be.
+    func start(from start: TemplateRefinements.Start) {
+        enqueue { [self] in
+            guard refinements.edits.isEmpty, handledEdits == sentEdits else { return }
+            var next = refinements
+            next.start = start
+            guard next != refinements else { return }
+            history.push(refinements)
+            await settle(on: next)
+        }
+    }
 
     /// A correction of the text, in its turn.
     func change(_ change: RefineChange) {
@@ -1196,18 +1216,24 @@ final class CreateModel {
     }
 
     /// The template of `settings` made from the generator inputs of `refinements` (`aspect`: the
-    /// photo's width over height), with its edits laid unless it is a draft, its preview recording
-    /// `recorded` (the sliders' settings a draft stands for).
+    /// photo's width over height), or for a blank start `image` as one area (`ArtworkFactory.blank`),
+    /// with its edits laid unless it is a draft, its preview recording `recorded` (the sliders'
+    /// settings a draft stands for).
     @concurrent
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
         progress: (@Sendable (Float) -> Void)?
     ) async throws -> Shown {
-        let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
-        let template = try TemplateGenerator(settings: settings)
-            .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
-            .template
+        let template: Template
+        if refinements.start == .blank {
+            template = try ArtworkFactory.blank(from: image, settings: settings)
+        } else {
+            let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
+            template = try TemplateGenerator(settings: settings)
+                .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+                .template
+        }
         try Task.checkCancellation()
         return try composed(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }

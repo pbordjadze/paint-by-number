@@ -635,7 +635,11 @@ Conventions).
     the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
     (`RefineColorsPanel`'s two modes). See: Writing (the Text tool). The views (Painting, Paper,
     Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
-    navigation bar (a menu on compact widths), opening on the painting. A long press
+    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
+    Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
+    `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
+    canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
+    `refinements.json`, a step of the history, and no making-of show). A long press
     (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
     (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's

@@ -48,7 +48,8 @@ nonisolated enum ArtworkFactory {
     /// from Vision (when available) guides colors and detail, and line art (the coloring book by
     /// default) draws from the photo's `LineArtInputs`: the drawing, the contours, the eyes and
     /// the subjects. The painter's `refinements` come with it: the generator's inputs shape the
-    /// template, and the edits are laid on it in order (`laying`). Polls task cancellation.
+    /// template (a blank start makes none: `blank`), and the edits are laid on it in order
+    /// (`laying`). Polls task cancellation.
     @concurrent
     static func template(
         from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements = TemplateRefinements(),
@@ -63,6 +64,10 @@ nonisolated enum ArtworkFactory {
         from photo: RGBAImage, image: CGImage?, settings: GenerationSettings,
         refinements: TemplateRefinements = TemplateRefinements(), progress: (@Sendable (Float) -> Void)?
     ) async throws -> Template {
+        // The photo as one area needs neither Vision nor the line-art models.
+        if refinements.start == .blank {
+            return try laying(refinements.edits, on: blank(from: photo, settings: settings))
+        }
         let importance = image.flatMap(SubjectImportance.map(for:))
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
@@ -72,6 +77,15 @@ nonisolated enum ArtworkFactory {
             .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
         return try laying(refinements.edits, on: base)
+    }
+
+    /// The base of a blank start (`TemplateRefinements.Start.blank`): `photo`, the image the
+    /// generator would read, as one area (`TemplateEditor.blank`) on the canvas the generator
+    /// would make of it for `settings` (`GenerationSettings.workingSize`), in its color space. A
+    /// canvas the editor can't take throws, as a failed generation does.
+    static func blank(from photo: RGBAImage, settings: GenerationSettings) throws -> Template {
+        let size = settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        return try TemplateEditor.blank(width: size.width, height: size.height, photo: photo, colorSpace: photo.colorSpace)
     }
 
     /// `base` with the painter's edits laid on it, in order, exactly as the create flow shows

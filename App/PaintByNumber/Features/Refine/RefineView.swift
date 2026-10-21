@@ -126,9 +126,10 @@ nonisolated enum RefineBackdrop: Hashable {
 /// SideStore and Debug builds (`#if UNRELEASED`) lay the tools out as the Toolbox, a drawing app's:
 /// Ink, Cells, Paint and See, every tool in a rail on iPad and in group tabs on iPhone; a Pen of ink
 /// alone with Snap and Color from Photo, Select, Cell Edge, Merge, a palette with a current paint,
-/// the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks; an area's card on a long press, sparkles where a
-/// line closes off an area and a badge for numbers near their floor (`RefineStudio.swift`,
-/// `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The Toolbox).
+/// the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks; Start From until the first edit
+/// (the generator's template, or the photo as one area to draw and paint everything on); an area's
+/// card on a long press, sparkles where a line closes off an area and a badge for numbers near their
+/// floor (`RefineStudio.swift`, `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The Toolbox).
 struct RefineView: View {
     let model: CreateModel
 
@@ -367,7 +368,7 @@ struct RefineView: View {
         .overlay(alignment: .bottom) { status.padding(12) }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         #if UNRELEASED
-        .overlay(alignment: .topTrailing) { tinyBadge.padding(12) }
+        .overlay(alignment: .top) { topControls.padding(12) }
         #endif
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
@@ -1723,6 +1724,45 @@ extension RefineView {
                     currentPaint = template.palette[paint].oklab
                     self.pick(.editPaint)
                 })
+        }
+    }
+
+    /// Start From at the top's leading end and the tiny-numbers badge at its trailing one, clear of
+    /// each other; where they don't fit side by side (larger text) the badge goes under the chooser.
+    private var topControls: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 8) {
+                startChooser
+                Spacer(minLength: 0)
+                tinyBadge
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                startChooser
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    tinyBadge
+                }
+            }
+        }
+    }
+
+    /// Where the template starts from, asked until the first edit: what the generator made (the
+    /// default), or the photo as one area (Blank), which the painter's lines and paint then make
+    /// into the picture. Out of the way while a note shows at the top.
+    @ViewBuilder
+    private var startChooser: some View {
+        if model.refinements.edits.isEmpty, submitted.isEmpty, model.hasLineArtInput, model.note == nil {
+            Picker("Start From", selection: Binding(get: { model.refinements.start }, set: { model.start(from: $0) })) {
+                Text("Generated").tag(TemplateRefinements.Start.generated)
+                Text("Blank").tag(TemplateRefinements.Start.blank)
+            }
+            .pickerStyle(.segmented)
+            .fixedSize()
+            .padding(6)
+            .glassEffect(.regular, in: .capsule)
+            .disabled(model.phase == .generating)
+            .accessibilityIdentifier("refine-start")
+            .transition(.opacity)
         }
     }
 

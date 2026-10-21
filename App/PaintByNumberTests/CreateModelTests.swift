@@ -781,6 +781,89 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    // MARK: Start From
+
+    /// A blank start makes the template the photo as one area on the canvas the generator would
+    /// make, before any edit; a Pen line across it cuts it in two, each side in the photo's color
+    /// there; Undo takes the line back, and then the blank start, back to the generator's template.
+    @Test func aBlankStartIsOneAreaThatAPenLineSplits() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.hasLineArtInput && model.refinements.start == .generated)
+        let generated = try #require(model.preview?.template)
+        model.beginRefining()
+
+        model.start(from: .blank)
+        try await waitUntil { model.refinements.start == .blank && model.isFinal }
+        #expect(model.canUndo && model.refinements.changeCount == 0)
+        let blank = try #require(model.preview?.template)
+        let photo = try #require(model.source?.image)
+        #expect(blank.regions.count == 1 && blank.palette.count == 1)
+        #expect(blank.width == generated.width && blank.height == generated.height)
+        #expect(blank == (try TemplateEditor.blank(width: blank.width, height: blank.height, photo: photo, colorSpace: photo.colorSpace)))
+
+        let w = Float(blank.width), h = Float(blank.height)
+        let pen = TemplateEditor.Edit.draw(points: [SIMD2(0.5 * w, -6), SIMD2(0.5 * w, h + 6)])
+        try await waitForEdits(model, model.edit(pen))
+        let cut = try #require(model.preview?.template)
+        #expect(cut.regions.count == 2, "The line didn't cut the blank in two")
+        let laid = TemplateEditor.painted(pen, on: blank, photo: photo)
+        #expect(model.refinements.edits == [laid] && model.refinements.start == .blank)
+        #expect(cut == (try TemplateEditor.apply(laid, to: blank).template))
+        #expect(model.closedShape != nil)
+        // Start saves it as it shows; the making-of has no steps of the generator's to play.
+        let made = try await model.makeDraft()
+        #expect(made.template == cut && made.refinements.start == .blank)
+        #expect(model.makingOfSource(for: made, artworkID: UUID()) == nil)
+
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == blank)
+        model.undo()
+        try await waitUntil { model.refinements.start == .generated && model.isFinal }
+        #expect(model.preview?.template == generated && model.refinements.isEmpty && !model.canUndo)
+        model.cancelAll()
+    }
+
+    /// Cancel puts back what Refine opened with: a blank start chosen in it goes, and the
+    /// generator's template shows again.
+    @Test func cancelTakesABlankStartBack() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let generated = try #require(model.preview?.template)
+        model.beginRefining()
+
+        model.start(from: .blank)
+        try await waitUntil { model.refinements.start == .blank && model.isFinal }
+        model.cancelRefining()
+        try await waitUntil { model.refinements.start == .generated && model.isFinal }
+        #expect(model.preview?.template == generated && model.refinements.isEmpty && !model.canUndo)
+        model.cancelAll()
+    }
+
+    /// Start From picks the base only before the first edit: picked with an edit on its way (sent
+    /// before its turn came) or made, it leaves the base as it is.
+    @Test func startFromDoesNothingOnceAnEditIsSent() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let generated = try #require(model.preview?.template)
+        let before = model.settings
+        model.beginRefining()
+
+        model.start(from: .blank)
+        try await waitForEdits(model, model.edit(line(in: generated)))
+        #expect(model.refinements.start == .generated && model.refinements.edits.count == 1)
+
+        model.start(from: .blank)
+        // Start Painting waits for the changes sent before it.
+        let made = try await model.makeDraft()
+        #expect(made.refinements.start == .generated && made.refinements.edits.count == 1 && made.settings == before)
+        model.cancelAll()
+    }
+
     /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
     /// them; the middle and classic line art are left as they are.
     @Test func linesMapToTheLineArt() {

@@ -17,6 +17,10 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Blank" : {
+      "comment" : "Refine screen, Start From: the photo as one area, which the painter's lines then split into the photo's colors",
+      "extractionState" : "manual"
+    },
     "Brings back the other controls" : {
       "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
       "extractionState" : "manual"
@@ -67,6 +71,10 @@
     },
     "Fill Shape" : {
       "comment" : "Refine screen: the tool whose tap makes a closed shape of the drawing an area of its own; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Generated" : {
+      "comment" : "Refine screen, Start From: the template the app made from the photo (the default)",
       "extractionState" : "manual"
     },
     "Ink" : {
@@ -2575,6 +2583,10 @@
     },
     "Starry Night" : {
       "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Van Gogh's The Starry Night",
+      "extractionState" : "manual"
+    },
+    "Start From" : {
+      "comment" : "Refine screen: the label (for VoiceOver) of the segmented control, shown until the first edit, that picks what the template starts from: Generated or Blank",
       "extractionState" : "manual"
     },
     "Strength" : {
