@@ -1,0 +1,32 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "subsystem == "com.pbordjadze.paintbynumber""
+Timestamp               Ty Process[PID:TID]
+2026-10-21 21:00:36.185 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-10-21 21:00:37.743 Df PaintByNumber[17775:d017] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.557597625 seconds
+2026-10-21 21:01:21.772 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 45.07634325 seconds
+2026-10-21 21:01:22.175 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-10-21 21:01:56.134 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 34.344158542 seconds
+2026-10-21 21:01:56.194 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-10-21 21:01:56.779 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-10-21 21:02:41.909 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+2026-10-21 21:05:38.158 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted newPaintingSamples
+2026-10-21 21:05:40.001 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSamples
+2026-10-21 21:06:44.036 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn over: newPaintingSamples
+2026-10-21 21:07:20.816 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Draft #1 started for 40 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-10-21 21:07:21.236 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-10-21 21:07:21.249 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Full #2 started for 40 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-10-21 21:07:22.266 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-10-21 21:07:22.296 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-10-21 21:07:42.607 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-10-21 21:07:43.180 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted refineDraw
+2026-10-21 21:07:44.483 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+2026-10-21 21:07:58.617 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] turn over: refineDraw
+2026-10-21 21:09:14.122 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted
+2026-10-21 21:09:14.530 Df PaintByNumber[17775:1b2e6] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.416608 seconds
+2026-10-21 21:09:35.121 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted
+2026-10-21 21:12:06.654 I  PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] An edit was declined: the merge joins no areas
+2026-10-21 21:31:16.161 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-10-21 21:31:16.922 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted
+2026-10-21 21:37:50.619 I  PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:create] An edit was declined: there is no room for the number there
+2026-10-21 21:38:20.279 Df PaintByNumber[17775:cf81] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted
+Child process terminated with signal 15: Terminated
