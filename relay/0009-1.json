@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn: \"Back\"\n- waitForAnimationToEnd:\n    timeout: 6000\n"
+ },
+ "seconds": 8.3,
+ "isError": false,
+ "text": [
+  "{\"success\":true,\"device_id\":\"99DEE653-946C-406D-8E9E-238D1FCE93C9\",\"commands_executed\":3,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+ ],
+ "images": []
+}
