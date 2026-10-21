@@ -56,6 +56,10 @@ on:
       relay_branch:
         description: 'relay: the branch the agent commits its calls to (claude/qa-relay…)'
         default: 'claude/qa-relay'
+  # Only for the branch: GitHub dispatches only a workflow it knows, the default branch's or one
+  # that has run, so creating a branch from a commit with this file registers it (its job skips).
+  # Drop it if this file goes to main, where every new branch would log a skipped run.
+  create:
 
 permissions:
   # refs/qa-runs/<run id>, and the relay branch's deletion.
@@ -88,6 +92,7 @@ env:
 jobs:
   explore:
     name: Explore (${{ inputs.mode }}, ${{ inputs.device }})
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 120
     steps:
