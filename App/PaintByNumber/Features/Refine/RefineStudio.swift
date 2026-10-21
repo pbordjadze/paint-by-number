@@ -50,7 +50,7 @@ struct RefineAreaCard: View {
     let paintArea: (SIMD3<Float>) -> Void
     /// The paint's new color (OKLab), from `from`, when the area is its paint's only one.
     let repaint: (_ from: SIMD3<Float>, _ to: SIMD3<Float>) -> Void
-    /// Shows every area of a paint (Paints, with it picked).
+    /// Shows every area of a paint (Edit Paint, with it the current paint).
     let showPaint: (Int) -> Void
 
     @Environment(\.self) private var environment

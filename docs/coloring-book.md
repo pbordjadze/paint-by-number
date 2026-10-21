@@ -422,7 +422,9 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   room for a number not cut off, but it takes no paints: both pieces keep the paint the cell had,
   which is what it is for, not a reason to decline. One that divides no area is declined. Areas
   of one paint across an undrawn edge stay two until one is painted; painted back to that paint
-  (`paintArea`), the two become one area again, as Only This Area joins them.
+  (`paintArea`), the two become one area again, as Only This Area joins them. A build from
+  before it leaves a cell edge out of the edits it lays (an unknown kind), so a `paintArea` after
+  one lands there on the whole undivided cell; only SideStore and Debug builds make them.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

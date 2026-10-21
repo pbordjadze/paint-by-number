@@ -49,7 +49,8 @@ nonisolated enum RefineTool: Hashable {
         }
     }
 
-    /// The tool changes paints alone, so the painting shows beneath it.
+    /// What the tool does shows in the painting (paints, and a cell edge, which draws no line), so
+    /// the painting shows beneath it.
     var paints: Bool { self == .splitter || self == .cellEdge || self == .bucket || self == .editPaint || self == .looks }
 
     var erases: Bool { self == .eraser || self == .smartEraser }
@@ -176,6 +177,8 @@ struct RefineView: View {
     /// The cell Select picked, by a point in it (canvas units), so it follows its region through
     /// edits.
     @State private var selection: SIMD2<Float>?
+    /// The undrawn edges of the template on screen, made once per template (`RefineCellEdges`).
+    @State private var cellEdges: (id: UUID, path: Path)?
     /// The Studio's group on screen (`RefineGroup`), and the tool last picked in each.
     @State private var group = RefineGroup.ink
     @State private var lastTool: [RefineGroup: RefineTool] = [:]
@@ -236,15 +239,6 @@ struct RefineView: View {
             PaintTips.desk.leave(.refine)
         }
         #if UNRELEASED
-        .onChange(of: currentPaint) { _, _ in
-            guard tool == .editPaint || tool == .eyedropper, let paint = currentIndex, let template = base?.template else { return }
-            let number = (paint + 1).formatted()
-            let areas = TemplateCounts.areas(RefinePaintGlow.areas(of: paint, in: template).count)
-            let announcement = String(
-                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(areas)",
-                comment: "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then how many areas use it (\"3 areas\")")
-            AccessibilityNotification.Announcement(announcement).post()
-        }
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
@@ -315,8 +309,8 @@ struct RefineView: View {
                         showsAreas: painted == nil)
                         .equatable()
                     #if UNRELEASED
-                    if group == .cells {
-                        RefineCellEdges(base: base, rect: picture)
+                    if group == .cells, let cellEdges {
+                        RefineCellEdges(id: cellEdges.id, size: templateSize, path: cellEdges.path, rect: picture)
                             .equatable()
                     }
                     if !glowAreas.isEmpty {
@@ -666,6 +660,7 @@ struct RefineView: View {
             tiny = RefineTinyAreas.find(in: preview.template)
             if tinyShown >= tiny.count { tinyShown = -1 }
             currentPaint = RefinePalette.following(currentPaint, from: before, to: preview.template.palette)
+            if cellEdges?.id != preview.id { cellEdges = (preview.id, RefineCellEdges.path(of: preview.template)) }
             #if DEBUG
             // Pick from the refined template once its edits have landed, as a painter would.
             if !didPickDemoPaint, preview.refinements == model.refinements, let demo = ShellDemo.current {
@@ -1193,7 +1188,7 @@ struct RefineView: View {
         if tool != .select { selection = nil }
         group = RefineGroup.of(tool)
         #endif
-        // A split, a cell edge and the paint tools change only paints: they show over the painting.
+        // A split, a cell edge and the paint tools show only in the painting: it shows beneath them.
         if tool.paints, base != nil, !showsPainting { backdrop = .painting }
     }
 
@@ -1333,6 +1328,7 @@ extension RefineView {
         .accessibilityHint(Text(hint(for: kind)))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("refine-tool-\(toolID(kind))")
+        .accessibilityShowsLargeContentViewer { Label { toolName(kind) } icon: { Image(systemName: symbol(kind)) } }
         switch kind {
         case .pen: row.gentleTip(.refineDraw, arrowEdge: .leading)
         case .fill: row.gentleTip(.refineFill, arrowEdge: .leading)
@@ -1590,7 +1586,8 @@ extension RefineView {
             submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
             PaintTips.refineEdited()
         case .eyedropper:
-            if backdrop == .photo || backdrop == .photoBehind, let photo = model.source?.image {
+            // The photo where it is what shows: on its own, or more than the painting over it.
+            if backdrop == .photo || (backdrop == .photoBehind && photoShows > 0.5), let photo = model.source?.image {
                 currentPaint = RefinePalette.snapped(LineEdit.photoColor(at: point, in: photo), to: template.palette)
             } else if let region {
                 currentPaint = template.palette[Int(template.regions[region].colorIndex)].oklab
@@ -1598,13 +1595,31 @@ extension RefineView {
                 return
             }
             FeedbackEngine.shared.selectionChanged()
+            announceCurrentPaint(in: template)
         case .editPaint:
             guard let region else { return }
             FeedbackEngine.shared.selectionChanged()
             currentPaint = template.palette[Int(template.regions[region].colorIndex)].oklab
+            announceCurrentPaint(in: template)
         default:
             break
         }
+    }
+
+    /// VoiceOver hears the paint a tap picked: its number and how many areas use it, or that it is
+    /// a new one.
+    private func announceCurrentPaint(in template: Template) {
+        let announcement: String
+        if let paint = RefinePalette.index(of: currentPaint, in: template.palette) {
+            let number = (paint + 1).formatted()
+            let areas = TemplateCounts.areas(RefinePaintGlow.areas(of: paint, in: template).count)
+            announcement = String(
+                localized: "refine.colors.areas", defaultValue: "Paint \(number): \(areas)",
+                comment: "VoiceOver announcement when picking a paint in Refine: the formatted paint number, then how many areas use it (\"3 areas\")")
+        } else {
+            announcement = String(localized: "New Paint")
+        }
+        AccessibilityNotification.Announcement(announcement).post()
     }
 
     /// Where the card points: the pressed spot, on screen.

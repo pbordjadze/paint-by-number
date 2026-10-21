@@ -26,14 +26,16 @@ nonisolated enum RefinePalette {
     static let justNoticeable: Float = 0.02
 
     /// The current paint once the palette went from `before` to `after`: still its color when a
-    /// paint has it, else the color of the paint of the same number when only colors changed (a
-    /// look, a repaint), else the paint within a just-noticeable difference, else the color as it
-    /// was (a paint not made yet). With none, the first paint.
+    /// paint has it. A color no paint had (from the picker or the photo) stays, or becomes the
+    /// paint within a just-noticeable difference of it. A paint that took another color takes it
+    /// along: the paint of its number, when that number's color is new (a look, a repaint);
+    /// otherwise (paints made one, a paint gone) the paint nearest it. With none, the first paint.
     static func following(_ current: SIMD3<Float>?, from before: [PaletteColor]?, to after: [PaletteColor]) -> SIMD3<Float>? {
         guard let current else { return after.first?.oklab }
         if index(of: current, in: after) != nil { return current }
-        if let before, before.count == after.count, let k = index(of: current, in: before) { return after[k].oklab }
-        return snapped(current, to: after)
+        guard let before, let k = index(of: current, in: before) else { return snapped(current, to: after) }
+        if before.count == after.count, index(of: after[k].oklab, in: before) == nil { return after[k].oklab }
+        return after.min { ColorScience.distance($0.oklab, current) < ColorScience.distance($1.oklab, current) }?.oklab
     }
 
     /// `lab` as a SwiftUI color, in the template's color space.
@@ -51,6 +53,7 @@ struct RefinePaletteBar: View {
     @Binding var current: SIMD3<Float>?
 
     @Environment(\.self) private var environment
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let selected = RefinePalette.index(of: current, in: template.palette)
@@ -69,7 +72,7 @@ struct RefinePaletteBar: View {
                 .scrollIndicators(.hidden)
                 .onChange(of: selected) { _, index in
                     guard let index else { return }
-                    withAnimation(.snappy) { reader.scrollTo(index) }
+                    withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo(index) }
                 }
             }
             ColorPicker(selection: picked, supportsOpacity: false) { Text("New Paint") }
@@ -111,6 +114,9 @@ struct RefinePaletteBar: View {
             comment: "Refine screen, the palette: VoiceOver hint of a paint's swatch, which makes it the paint the Bucket gives and Edit Paint changes")))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("refine-paint-\(index + 1)")
+        .accessibilityShowsLargeContentViewer {
+            Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName))
+        }
     }
 
     /// The current color, which no paint has yet: ringed, with a plus, as the Bucket will add it.
@@ -203,13 +209,17 @@ struct RefineSelectionBar: View {
 
 /// The cells' undrawn edges (the boundaries between colors with no ink: a cell edge, a soft edge
 /// of the photo), dashed over the drawing in `rect` while a Cells tool is picked, so every cell
-/// shows whatever its paint.
+/// shows whatever its paint. Their path is made once per template (`path(of:)`, in `land`), so a
+/// zoom only moves it.
 struct RefineCellEdges: View, Equatable {
-    let base: CreateModel.Preview?
+    /// The template's id, its canvas, and its undrawn edges in canvas units.
+    let id: UUID?
+    let size: CGSize
+    let path: Path
     let rect: CGRect
 
     nonisolated static func == (a: RefineCellEdges, b: RefineCellEdges) -> Bool {
-        a.base?.id == b.base?.id && a.rect == b.rect
+        a.id == b.id && a.size == b.size && a.rect == b.rect
     }
 
     /// The undrawn edges between regions of `t`, in canvas units: none for a classic template,
@@ -223,10 +233,17 @@ struct RefineCellEdges: View, Equatable {
         }
     }
 
+    /// `edges(of:)` as one path.
+    nonisolated static func path(of t: Template) -> Path {
+        var path = Path()
+        for line in edges(of: t) where line.count >= 2 {
+            path.addLines(line.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
+        }
+        return path
+    }
+
     var body: some View {
-        let lines = base.map { Self.edges(of: $0.template) } ?? []
-        let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
-        let rect = rect, color = Theme.signature
+        let size = size, rect = rect, path = path, color = Theme.signature
         Canvas { context, _ in
             guard size.width > 0, size.height > 0, rect.width > 0, rect.height > 0 else { return }
             let s = max(rect.width / size.width, rect.height / size.height)
@@ -235,10 +252,6 @@ struct RefineCellEdges: View, Equatable {
             dashed.clip(to: Path(rect))
             dashed.translateBy(x: origin.x, y: origin.y)
             dashed.scaleBy(x: s, y: s)
-            var path = Path()
-            for line in lines where line.count >= 2 {
-                path.addLines(line.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
-            }
             var style = StrokeStyle(lineWidth: 1.25 / s, lineCap: .butt, lineJoin: .round)
             style.dash = [4 / s, 3 / s]
             dashed.stroke(path, with: .color(color.opacity(0.8)), style: style)

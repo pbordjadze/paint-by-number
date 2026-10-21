@@ -2194,7 +2194,7 @@
       }
     },
     "Looks" : {
-      "comment" : "Refine screen, Colors: VoiceOver label of the row of looks (Moonlit, Starry Night, …) that each change every paint of the painting",
+      "comment" : "Refine screen: the Looks tool (its name in the tool rail and its VoiceOver label), and the VoiceOver label of its row of looks (Moonlit, Starry Night, …) that each change every paint of the painting",
       "extractionState" : "manual"
     },
     "Make a Shape Its Own" : {
@@ -2318,7 +2318,7 @@
       "extractionState" : "manual"
     },
     "refine.colors.areas" : {
-      "comment" : "VoiceOver announcement when picking a paint in Refine Colors: the formatted paint number, then how many areas use it (\"3 areas\")",
+      "comment" : "VoiceOver announcement when picking a paint in Refine (the Eyedropper, Edit Paint): the formatted paint number, then how many areas use it (\"3 areas\")",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2558,7 +2558,7 @@
       "extractionState" : "manual"
     },
     "Tools" : {
-      "comment" : "Refine screen: the label (for VoiceOver) of the segmented control that picks a group of tools: Lines, Areas, Paints",
+      "comment" : "Refine screen: the label (for VoiceOver) of the segmented control that picks a group of tools on iPhone: Ink, Cells, Paint, See",
       "extractionState" : "manual"
     },
     "Touch and hold a finished painting and choose Share for a time-lapse of it." : {
@@ -2970,7 +2970,7 @@
       "extractionState" : "manual"
     },
     "Paint" : {
-      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area",
+      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area; on the Refine screen, the group of tools that give areas their paint (a section of the tool rail on iPad, a tab on iPhone)",
       "extractionState" : "manual"
     },
     "Paint by Moonlight" : {
@@ -3538,7 +3538,7 @@
       "extractionState" : "manual"
     },
     "Palette" : {
-      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order",
+      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order; on the Refine screen, VoiceOver label of the row of the painting's paints",
       "extractionState" : "manual"
     },
     "palette.order.darkToLight" : {
@@ -5182,7 +5182,7 @@
       "extractionState" : "manual"
     },
     "Writing" : {
-      "comment" : "Refine screen, the Lines group: the tool that corrects the writing (lines of text) the app found in the photo: a tap turns a found line off or on, a drag marks one it missed (button label, its caption on iPad, VoiceOver)",
+      "comment" : "Refine screen, the See group: the tool that corrects the writing (lines of text) the app found in the photo: a tap turns a found line off or on, a drag marks one it missed (button label, its caption on iPad, VoiceOver)",
       "extractionState" : "manual"
     },
     "You Can Always Go Back" : {

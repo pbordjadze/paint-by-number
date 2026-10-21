@@ -81,7 +81,10 @@ final class RefineAfterSlidersTests: XCTestCase {
         attachScreenshot(of: app, named: "preparing")
 
         // Back to a slider: a drag, as a touch that moves nothing needn't count as one for a slider.
-        drag(settingSlider("Smoothness", in: app), to: 0.6)
+        // Lines, the one on screen: on iPhone another slider is a chooser's tap away, and that tap
+        // and the slider's coming took the test 11 s on main's run of f55728e, by when the slowed
+        // full resolution had landed and Refine had rightly opened.
+        drag(settingSlider("Lines", in: app), to: 0.6)
         XCTAssertTrue(
             waitFor(refine, toMatch: NSPredicate(format: "value == %@", "No changes"), timeout: 5),
             "A drag of a slider didn't call the wait off: \(refine.value ?? "")")

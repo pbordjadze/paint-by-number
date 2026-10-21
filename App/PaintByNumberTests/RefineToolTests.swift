@@ -86,7 +86,8 @@ struct RefineToolTests {
 
     /// The current paint is a color: a paint's exactly, a new one's, or within a just-noticeable
     /// difference of a paint, that paint's. It follows its paint through a look (same count, new
-    /// colors), stays when a paint is added, and with none is the first paint.
+    /// colors) and through paints made one, stays when a paint is added, and with none is the
+    /// first paint.
     @Test func theCurrentPaintFollowsItsPaint() {
         let palette = [
             PaletteColor(oklab: SIMD3(0.3, 0.1, 0), space: .sRGB), PaletteColor(oklab: SIMD3(0.7, -0.1, 0.05), space: .sRGB),
@@ -106,6 +107,9 @@ struct RefineToolTests {
         #expect(RefinePalette.following(second, from: palette, to: palette + [PaletteColor(oklab: new, space: .sRGB)]) == second)
         #expect(RefinePalette.following(new, from: palette, to: palette + [PaletteColor(oklab: new, space: .sRGB)]) == new)
         #expect(RefinePalette.following(new, from: palette, to: looked) == new)
+        // Two paints made one (a look that made them alike): the paint nearest it, never a new one.
+        let merged = [PaletteColor(oklab: SIMD3(0.68, -0.08, 0.04), space: .sRGB)]
+        #expect(RefinePalette.following(second, from: palette, to: merged) == merged[0].oklab)
         #expect(RefinePalette.following(nil, from: nil, to: palette) == palette[0].oklab)
         #expect(RefinePalette.following(nil, from: nil, to: []) == nil)
     }
