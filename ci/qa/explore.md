@@ -45,7 +45,9 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
 
 Observe before you act and after: take a screenshot, decide one thing to do, do it, look again,
 and compare what you see with what you expected. When something surprises you, investigate it:
-repeat it, vary it, check the log, before deciding what it is.
+repeat it, vary it, check the log, before deciding what it is. Screenshots reach you scaled down,
+so small things are easy to misread: when a screenshot and `inspect_screen` disagree, take another
+screenshot a moment later, and in the report say which you trusted.
 
 ## The app, briefly
 
@@ -56,8 +58,11 @@ repeat it, vary it, check the log, before deciding what it is.
   picture, then a preview with sliders and Start Painting. Making a painting can take tens of
   seconds here.
 - The painting screen: numbered swatches (the palette) and the canvas, where each area carries
-  a number. Tapping an area whose number matches the selected swatch paints it; a one-finger
-  drag paints along its path. A quick double tap where nothing gets painted zooms in about 2.5×
+  a number. Tapping an area whose number matches the selected swatch paints it. Only the
+  selected paint's unpainted areas are hatched; other unpainted areas are plain paper with their
+  numbers. Pressing for about a third of a second and then dragging paints along the path; a
+  plain one-finger drag moves a zoomed-in canvas. Maestro's `swipe` can't press first, so list
+  drag painting under Not tested. A quick double tap where nothing gets painted zooms in about 2.5×
   around that point, and a double tap when deep in zooms back out. The lightbulb (Hint) flies to
   an unpainted area of the selected color. The More menu has Fit to Screen and Give Feedback
   (mark up the painting if you like, but never tap Send: it goes to the people who make the app). Back returns to the gallery. Progress is
