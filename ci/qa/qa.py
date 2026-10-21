@@ -340,6 +340,10 @@ def send(args):
         git("fetch", "-q", "origin", f"+{ref}:{ref}", check=False)
         if subprocess.run(["git", "cat-file", "-e", f"{ref}:{wanted}"], capture_output=True).returncode == 0:
             break
+        status = subprocess.run(["git", "show", f"{ref}:STATUS.md"], capture_output=True, text=True)
+        if status.returncode == 0:
+            print(f"the run has ended without {wanted}:\n{status.stdout}", file=sys.stderr)
+            return 2
         if time.monotonic() > deadline:
             print(f"no {wanted} in {ref} after {args.wait} s", file=sys.stderr)
             return 1
