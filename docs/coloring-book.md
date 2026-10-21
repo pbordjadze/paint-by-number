@@ -414,6 +414,15 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas
   told apart, which the palette often has no paint for. Without a reachable line nothing shows
   where a split was, so Undo is the way back.
+- **Cell edge** (`cellEdge`, Refine's Cell Edge). Refine as a drawing app (Paul, October 21,
+  the Refine Toolbox: ink, cells and paint are separate layers, and each tool does one visible
+  thing): the Cell Edge draws a boundary between cells with no ink and changes no paint, so the
+  Bucket can then paint one side. It lays the Pen's line as a split does, an undrawn boundary
+  whose ends meet any edge and whose stretches that close nothing leave nothing, a piece with no
+  room for a number not cut off, but it takes no paints: both pieces keep the paint the cell had,
+  which is what it is for, not a reason to decline. One that divides no area is declined. Areas
+  of one paint across an undrawn edge stay two until one is painted; painted back to that paint
+  (`paintArea`), the two become one area again, as Only This Area joins them.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

@@ -37,6 +37,9 @@ import Foundation
 ///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
 ///   else a new paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
 ///   is declined.
+/// - **Cell edge.** Refine's Cell Edge: a split that takes no paints, so one cell becomes two of
+///   the paint it had, for the painter to paint one of them. A cell edge that divides no area is
+///   declined; one that leaves the same paint on both sides is what it is for.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -68,6 +71,9 @@ public enum TemplateEditor {
         /// The Color Splitter's line: `points` divide the paint along an undrawn boundary, and the
         /// pieces take `paints`.
         case split(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint] = [])
+        /// Refine's Cell Edge: `points` divide a cell along an undrawn boundary, both pieces keeping
+        /// its paint.
+        case cellEdge(points: [SIMD2<Float>], closed: Bool = false)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -220,6 +226,11 @@ public enum TemplateEditor {
             guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the split divides no area") }
             try work.paint(Array(paints.prefix(maximumPoints)))
             if !reading { try work.checkSplitPaints() }
+        case .cellEdge(let points, let closed):
+            work.splitting = true
+            try work.draw(points, closed: closed, nudging: true)
+            guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the cell edge divides no area") }
+            try work.paint([])
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))

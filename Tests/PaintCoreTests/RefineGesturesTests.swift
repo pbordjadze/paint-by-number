@@ -61,6 +61,16 @@ struct RefineGesturesTests {
         #expect(RefineGestures.splitter([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
     }
 
+    /// The Cell Edge's stroke is the Pen's line, as a cell edge.
+    @Test func theCellEdgeIsThePensLineAsACellEdge() throws {
+        let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
+        let pen = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: Self.lines))
+        let edge = try #require(RefineGestures.cellEdge(samples, on: Self.screen, snapping: Self.lines))
+        guard case .draw(let line, false, nil) = pen else { Issue.record("\(pen)"); return }
+        #expect(edge == .cellEdge(points: line))
+        #expect(RefineGestures.cellEdge([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
+    }
+
     /// Shapes: a rectangle is a closed line through its corners, an oval closed too, a curve takes
     /// its ends from one drag and its bend from the next; one too small to draw is none.
     @Test func shapesMakeTheirLines() throws {
