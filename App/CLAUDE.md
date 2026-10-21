@@ -292,7 +292,9 @@ synchronized folder would bundle it into the app.
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
   (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch, finishing the
   selected color selects the first color left (`firstIncompleteColor`; the finished swatch
-  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it.
+  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it. A tap on an
+  area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only

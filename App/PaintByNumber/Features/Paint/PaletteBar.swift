@@ -125,6 +125,11 @@ struct PaletteBar: View {
         var pending: Int?
     }
 
+    /// The color whose swatch was just shaken (its count went up), the lowest if several were.
+    static func shaken(from old: [Int: Int], to new: [Int: Int]) -> Int? {
+        new.filter { $0.value > old[$0.key, default: 0] }.keys.min()
+    }
+
     /// Colors still to paint (plus the selected one): finished colors leave the palette.
     static func visibleColors(_ session: PaintingSession) -> [Int] {
         (0..<session.paletteCount).filter { !session.isColorComplete($0) || session.selectedColor == $0 }
@@ -211,6 +216,11 @@ struct PaletteBar: View {
             }
             .onChange(of: session.selectedColor) { _, selected in
                 if let selected { reveal(selected, animated: true) }
+            }
+            // A tap on another color's area shakes that color's swatch: scrolled out of view, it
+            // shook unseen and the tap seemed to do nothing (QA, October 21), so the bar brings it in.
+            .onChange(of: shakes) { old, new in
+                if let shaken = Self.shaken(from: old, to: new) { reveal(shaken, animated: true) }
             }
         }
         .frame(width: axis == .vertical ? thickness : nil,
