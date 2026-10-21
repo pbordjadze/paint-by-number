@@ -43,6 +43,9 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   - A selector that matches nothing makes `run` wait about 17 s, then fail.
   - Maestro's `doubleTapOn` didn't zoom the canvas there (twice): try it once; if nothing
     changes, zoom with Hint and Fit to Screen and list double-tap zoom under Automation problems.
+  - This simulator has no hardware keyboard, and a menu (the painting's More) can bring up the
+    software keyboard with nothing to type in: the simulator's doing, not the app's (devices
+    don't). List it under Automation problems, not as an app bug.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -87,10 +90,10 @@ screenshot a moment later, and in the report say which you trusted.
 
 Report these only if they look wrong in another way:
 
-- A tap on an unpainted area of another color doesn't select that color: its swatch shakes
-  (wherever it is in the palette; scrolled out of view, the shake can't be seen) and the tapped
-  number grows for a moment, unless an unpainted area of the selected color lies within about 14
-  points, which the tap paints instead. Colors are picked from the palette.
+- A tap on an unpainted area of another color doesn't select that color: its swatch shakes, the
+  palette scrolling it into view if it was out of it, and the tapped number grows for a moment,
+  unless an unpainted area of the selected color lies within about 14 points, which the tap
+  paints instead. Colors are picked from the palette.
 - A painting opens on the palette's first swatch, not the color last used.
 - Progress counts areas, not surface: a large area moves it as much as a small one.
 - On the New Painting preview, the Colors slider sets the most paints; the line under the preview
