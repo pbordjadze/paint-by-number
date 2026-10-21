@@ -73,7 +73,7 @@ struct PaintSpeechTests {
         var progress = PaintProgress(regionCount: total)
         for region in 0..<total {
             let artwork = Artwork(title: "Mosaic", template: template, settings: GenerationSettings(), progress: progress)
-            #expect(ArtworkCard.percent(artwork) == PaintSpeech.percent(painted: region, total: total))
+            #expect(ProgressCaption.percent(artwork) == PaintSpeech.percent(painted: region, total: total))
             progress.paint(region)
         }
     }
