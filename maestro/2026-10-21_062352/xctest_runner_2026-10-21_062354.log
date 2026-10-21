@@ -1,0 +1,79 @@
+2026-10-21 06:24:04.058 xcodebuild[26083:74544] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-10-21 06:24:04.179 xcodebuild[26083:74544] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-10-21 06:24:05.605 xcodebuild[26083:74544] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WAR2026-10-21 06:24:23.821695+0000 maestro-driver-iosUITests-Runner[27183:77287] [Default] Running tests...
+2026-10-21 06:24:23.940401+0000 maestro-driver-iosUITests-Runner[27183:77287] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+2026-10-21 06:24:24.271689+0000 maestro-driver-iosUITests-Runner[27183:77287] snapshotKeyHonorModalViews configured to value: (null)
+objc[27183]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5** BUILD INTERRUPTED **
+ources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1089f4310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x108a88398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-21 06:24:39.678.
+Test Suite 'maestro-driver-iosUITests.xctest' started at 2026-10-21 06:24:39.679.
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' started at 2026-10-21 06:24:39.680.
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' started.
+    t =     0.01s Start Test at 2026-10-21 06:24:39.690
+    t =     0.02s Set Up
+    t =     0.04s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' passed (0.040 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.729
+    t =     0.01s Set Up
+    t =     0.01s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' passed (0.008 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.758
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' passed (0.003 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.761
+    t =     0.00s Set Up
+    t =     0.03s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' passed (0.032 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.793
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' passed (0.003 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.839
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' passed (0.004 seconds).
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' passed at 2026-10-21 06:24:39.844.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.089 (0.163) seconds
+Test Suite 'maestro_driver_iosUITests' started at 2026-10-21 06:24:39.844.
+    t =      nans Suite Set Up
+Test Case '-[maestro_driver_iosUITests.maestro_driver_iosUITests testHttpServer]' started.
+    t =     0.00s Start Test at 2026-10-21 06:24:39.846
+    t =     0.00s Set Up
+2026-10-21 06:24:39.850036+0000 maestro-driver-iosUITests-Runner[27183:77509] [maestro_driver_iosUITests] Will start HTTP server
+2026-10-21 06:24:40.071460+0000 maestro-driver-iosUITests-Runner[27183:77512] [FlyingFox] starting server 127.0.0.1:22087
+2026-10-21 06:24:40.224269+0000 maestro-driver-iosUITests-Runner[27183:77509] [FlyingFox] <127.0.0.1> open connection
+2026-10-21 06:24:40.233783+0000 maestro-driver-iosUITests-Runner[27183:77509] [FlyingFox] <127.0.0.1> request: GET /status
+2026-10-21 06:24:40.364712+0000 maestro-driver-iosUITests-Runner[27183:77509] [FlyingFox] <127.0.0.1> open connection
+2026-10-21 06:24:40.366895+0000 maestro-driver-iosUITests-Runner[27183:77512] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-10-21 06:24:50.193982+0000 maestro-driver-iosUITests-Runner[27183:79241] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    10.35s Getting device orientation
+2026-10-21 06:24:53.105072+0000 maestro-driver-iosUITests-Runner[27183:77287] Using singleton test manager
+2026-10-21 06:24:53.128568+0000 maestro-driver-iosUITests-Runner[27183:77287] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    13.30s Getting device orientation
+    t =    13.30s Find the Application 'com.pbordjadze.paintbynumber'
+2026-10-21 06:24:54.173874+0000 maestro-driver-iosUITests-Runner[27183:77287] Device orientation is 1
+2026-10-21 06:24:56.108730+0000 maestro-driver-iosUITests-Runner[27183:77508] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-10-21 06:24:56.144384+0000 maestro-driver-iosUITests-Runner[27183:77287] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-10-21 06:24:56.145468+0000 maestro-driver-iosUITests-Runner[27183:77287] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-10-21 06:24:56.145665+0000 maestro-driver-iosUITests-Runner[27183:77287] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    16.30s Find the Application 'com.pbordjadze.paintbynumber'
+2026-10-21 06:24:56.245230+0000 maestro-driver-iosUITests-Runner[27183:77287] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-10-21 06:24:56.246407+0000 maestro-driver-iosUITests-Runner[27183:77287] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    16.40s Checking existence of `StatusBar (First Match)`
+    t =    16.67s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    16.76s Find the StatusBar (Element at index 0)
+    t =    16.79s Find the StatusBar (Element at index 1)
+2026-10-21 06:24:56.678380+0000 maestro-driver-iosUITests-Runner[27183:77287] Fetch status bar hierarchy - duration 0.43161797523498535
+2026-10-21 06:24:56.678597+0000 maestro-driver-iosUITests-Runner[27183:77287] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-10-21 06:24:56.685779+0000 maestro-driver-iosUITests-Runner[27183:77287] Fetch Safari WebView hierarchy - duration 0.007139921188354492
+    t =    16.84s Find the Application 'com.apple.springboard'
+2026-10-21 06:24:56.713119+0000 maestro-driver-iosUITests-Runner[27183:77287] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-10-21 06:24:58.323102+0000 maestro-driver-iosUITests-Runner[27183:77509] [FlyingFox] <127.0.0.1> request: GET /status
