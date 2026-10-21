@@ -748,8 +748,10 @@ final class PreviewPictureProbe {
 /// the drags meant for the sliders (one that missed the thumb, or met a slider waiting for the
 /// suggestion) and for the comparison, and left for the photo step. SwiftUI has no switch for
 /// it, so this turns that content-area recognizer off while the preview shows; the edge swipe
-/// and Back keep working (`CreateFlowTests.testSwipeAcrossSettingsStaysOnPreview`).
-private struct ContentSwipeBackOff: UIViewControllerRepresentable {
+/// and Back keep working (`CreateFlowTests.testSwipeAcrossSettingsStaysOnPreview`). The Tool
+/// Guide's pages have it too, on iPhone, where a stroke to the right on a practice canvas went
+/// back to the list (`RefineUITests.testToolGuidePracticesAndResets`).
+struct ContentSwipeBackOff: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> Controller { Controller() }
 
     func updateUIViewController(_ controller: Controller, context: Context) {}
