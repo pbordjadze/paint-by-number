@@ -7,6 +7,7 @@ import Foundation
 ///     {"kind": "draw",      "points": [[x, y], ...], "closed": false,
 ///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...]}
 ///     {"kind": "split",     "points": [[x, y], ...], "closed": false, "paints": [...]}
+///     {"kind": "cellEdge",  "points": [[x, y], ...], "closed": false}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -27,7 +28,8 @@ import Foundation
 /// `repaint` (Refine's Colors) have no points; an older reader leaves them, and a `paintArea`, out
 /// of the list, and the painting it saved keeps their colors. A look's name is a
 /// `TemplateEditor.Look`; one this build does not know fails the edit as an unknown kind does. A
-/// missing `lightness` is none, a missing `family` false.
+/// missing `lightness` is none, a missing `family` false. An older reader leaves a `cellEdge` out
+/// of the list too, and the cells it divided stay one.
 extension TemplateEditor.Edit: Codable {
     private enum CodingKeys: String, CodingKey {
         case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
@@ -76,6 +78,8 @@ extension TemplateEditor.Edit: Codable {
         case "split":
             self = .split(
                 points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints() ?? [])
+        case "cellEdge":
+            self = .cellEdge(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false)
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -113,6 +117,10 @@ extension TemplateEditor.Edit: Codable {
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
             try encode(paints, in: &c)
+        case .cellEdge(let points, let closed):
+            try c.encode("cellEdge", forKey: .kind)
+            try c.encode(points, forKey: .points)
+            try c.encode(closed, forKey: .closed)
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)
