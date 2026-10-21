@@ -1,5 +1,31 @@
 # Front desk inbox
 
+## Front desk retired (October 21, 2026, ~01:45 UTC)
+
+Paul: "I'm not sure we have enough going on to justify the front desk pattern anymore right now",
+then "Do all five yeah". Sessions now report to Paul directly (push notification when something
+reaches SideStore, is blocked or needs him); everything else in CLAUDE.md › Working with Paul still
+holds. The table below is as of October 18 and is no longer kept.
+
+**Running:** Refine Toolbox builder (`session_01FVkR2j8KVZmvGcQ4pnFc1u`): the whole Refine
+Toolbox (https://claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH), a drawing app at its core, behind
+UNRELEASED, in three batches; batch 1 on `claude/refine-toolbox-1`. Paul (00:51): "Build it all
+please, not just the first batch… it should be possible to do ANYTHING with them"; Pen ink-only
+(Color from Photo off), a snap on/off switch, a rail with every tool on iPad. On SideStore now:
+Refine Studio phase 1 (main f55728e, 1.0.512). Parked: Start From at
+`claude/refine-studio-starts-next@25a658f` (Blank rides batch 2; Simple "later").
+
+**Waiting on Paul:**
+- TestFlight upload: needs his "go TestFlight".
+- Deleting the merged branches: needs "go, delete the merged branches" in the Codex workbench
+  session (`session_01EmGdVfvj8FnB9TcT95JZP3`), where auto mode asks for it.
+- Refine: a look chosen after Only This Area re-tints that area (keep or not).
+- iPhone: the gear tip covers the "Finished" header.
+- GentleTip render churn (advice: after TestFlight).
+- Marginarium pets page: the Scholar, Originality, the softer Storybook; the Child at Bedtime
+  and Emily on hold.
+- Parked unpushed: the LandscapeLayout flake fix on `claude/flake-fixes-2` in the workbench.
+
 Everything Paul asks for, decides or is waiting on, kept by the front desk session
 (`.claude/skills/front-desk/SKILL.md`), which alone edits this file and commits it with
 `[skip ci]`. Paul's ideas worth keeping as visions still go to `docs/ideas.md`, in his words; this
