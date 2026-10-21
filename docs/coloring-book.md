@@ -497,7 +497,9 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   (`TemplateEditor.reshapedChain`, the same moved points without laying them) 0.4 ms. With the
   falloff spanning the whole chain, four of five drags of 25 to 45 units on that book's outlines
   were declined, a long outline moving along most of its length into the details beside it near
-  its far ends, which the spread was made to stop.
+  its far ends. Bending within a spread of the grab (max(3 × the drag, 24 units) a side), three
+  of the five were made; the two declined would have met a line beside them, which a bend that
+  far must.
 - **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
   cell. The number nearest the drag's start, within its radius and `TemplateEditor.tapReach`,
   goes where the finger lifts when that is inside its own region (not on its outline) and a
