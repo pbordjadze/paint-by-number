@@ -1,7 +1,8 @@
 name: QA explore
 
-# An exploratory QA pass: the app built from source (CI's Debug build) on one iOS simulator, used
-# through Maestro's MCP server (`maestro mcp`: screenshots, the screen's elements, flows of taps,
+# An exploratory QA pass: the app built from source on one iOS simulator (`build`: release, what
+# the App Store gets, as ci.yml's Release check builds it; or debug, CI's Debug build with the
+# UNRELEASED features SideStore has), used through Maestro's MCP server (`maestro mcp`: screenshots, the screen's elements, flows of taps,
 # swipes and text) by an agent that is given goals, not a script. Manual only (Actions › QA explore
 # › Run workflow, or the API), one run at a time in a concurrency group of its own that cancels
 # nothing; it leaves ci.yml, its reports (refs/ci-shots/*) and main alone.
@@ -21,6 +22,9 @@ name: QA explore
 #          `ci/qa/qa.py relay` runs the Maestro calls it commits to `relay_branch` (`qa.py send`;
 #          each commit `[skip ci]`, so no workflow runs on it) and publishes every result. Uses no
 #          model on the runner. The branch is deleted when the run ends.
+# Give Feedback's Send is the one thing the app sends off the device, and a Release build sends it
+# for real: every run points the feedback relay's host (FeedbackUploader.endpoint) at nowhere on
+# the runner first, and the brief says never to send.
 # Every run first probes the toolchain (`qa.py probe`: Maestro's tools, a screenshot, the screen's
 # elements), so a broken simulator or Maestro fails before any model is used. The report (STATUS.md,
 # the agent's report.md and transcript, the probe, screenshots, the app's log, crash reports) is the
@@ -36,6 +40,11 @@ on:
         type: choice
         options: [agent, relay]
         default: agent
+      build:
+        description: "release: what the App Store gets; debug: CI's Debug build, with SideStore's unreleased features"
+        type: choice
+        options: [release, debug]
+        default: release
       device:
         description: 'Simulator'
         type: choice
@@ -72,7 +81,6 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
-  APP: build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
   BUNDLE_ID: com.pbordjadze.paintbynumber
   MAESTRO_VERSION: '2.11.0'
   CLAUDE_CODE_VERSION: '2.1.301'
@@ -80,6 +88,7 @@ env:
   MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: 'true'
   MAESTRO_DRIVER_STARTUP_TIMEOUT: '240000'
   MODE: ${{ inputs.mode }}
+  BUILD: ${{ inputs.build }}
   DEVICE: ${{ inputs.device }}
   MINUTES: ${{ inputs.minutes }}
   TURNS: ${{ inputs.max_turns }}
@@ -131,11 +140,13 @@ jobs:
       - name: Build
         id: build
         run: |
-          # ci.yml's Debug build, the app alone.
+          # ci.yml's Debug build or its Release check's build, the app alone.
           set -o pipefail
-          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+          CONFIG=Debug; [[ "$BUILD" == release ]] && CONFIG=Release
+          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -80
+          echo "APP=build/dd/Build/Products/$CONFIG-iphonesimulator/PaintByNumber.app" >> "$GITHUB_ENV"
       - name: Install Maestro
         run: |
           set -o pipefail
@@ -153,6 +164,16 @@ jobs:
       - name: Prepare the simulator
         id: prepare
         run: |
+          # No feedback reaches the developers from a test session: the relay's host resolves to
+          # nowhere on this runner, whose resolver the simulator shares. Found in the source, so a
+          # moved endpoint stops the run instead of slipping past.
+          HOST=$(sed -n 's#.*static let endpoint = URL(string: "https://\([^/"]*\).*#\1#p' \
+            App/PaintByNumber/Features/Feedback/FeedbackUploader.swift)
+          if [[ -z "$HOST" ]]; then echo "::error::no host in FeedbackUploader.endpoint to block"; exit 1; fi
+          printf '127.0.0.1 %s\n::1 %s\n' "$HOST" "$HOST" | sudo tee -a /etc/hosts > /dev/null
+          sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
+          if curl -s -m 10 -o /dev/null "https://$HOST/"; then echo "::error::$HOST still answers"; exit 1; fi
+          echo "feedback relay blocked: $HOST"
           xcrun simctl bootstatus "$UDID" -b > /dev/null
           xcrun simctl install "$UDID" "$APP"
           # A photo for the create flow's picker.
@@ -216,7 +237,7 @@ jobs:
           # An empty secret is no credential: unset, it can't shadow the other.
           [[ -n "$ANTHROPIC_API_KEY" ]] || unset ANTHROPIC_API_KEY
           [[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]] || unset CLAUDE_CODE_OAUTH_TOKEN
-          sed -e "s#{{DIR}}#$WORK#g" -e "s#{{UDID}}#$UDID#g" -e "s#{{DEVICE}}#$(cat out/simulator.txt | cut -d' ' -f1 | tr _ ' ')#g" \
+          sed -e "s#{{DIR}}#$WORK#g" -e "s#{{UDID}}#$UDID#g" -e "s#{{BUILD}}#$BUILD#g" -e "s#{{DEVICE}}#$(cat out/simulator.txt | cut -d' ' -f1 | tr _ ' ')#g" \
             -e "s#{{MINUTES}}#$MINUTES#g" -e "s#{{TURNS}}#$TURNS#g" ci/qa/explore.md > "$WORK/brief.md"
           if [[ -n "$FOCUS" ]]; then printf '\n## This session\n\n%s\n' "$FOCUS" >> "$WORK/brief.md"; fi
           # Claude Code hands its own environment to Maestro: env takes the secrets out.
@@ -281,7 +302,7 @@ jobs:
           fi
           python3 -I "$TOOLS/qa.py" scrub out QA_PUSH_TOKEN ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN
           {
-            echo "# QA explore: $MODE on $(cat out/simulator.txt 2>/dev/null)"
+            echo "# QA explore: $MODE, $BUILD build, on $(cat out/simulator.txt 2>/dev/null)"
             echo
             echo "- commit: $GITHUB_SHA"
             echo "- run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
