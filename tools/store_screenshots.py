@@ -94,11 +94,14 @@ def photo(n, x, y, w, tilt, landscape=False):
     return dict(n=n, x=x, y=y, w=w, tilt=tilt, landscape=landscape)
 
 
+# The painter's shots were taken on October 17 and 18, before the first release: their `own` crops leave out what it
+# changed (Refine's button, the old chip and sliders, the bar's Give Feedback), the iPad's zoomed slide keeping
+# the badge that names Inkpot as a card of its own.
 SLIDES = {
     "iphone": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Your phone turns any photo<br>into a painting to fill by number.", crops=[
             crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 110, 1990, 560, -5)],
-             own=dict(crops=[crop("create-preview", (0, 1, .063, .965), .82, 150, 770, radius=72, shadow=True, slot="pet-preview", tilt=-2)],
+             own=dict(crops=[crop("create-preview", (.412, .69, .14, .378), 2.5, "c", 960, radius=64, shadow=True, slot="pet-preview", tilt=-2)],
                       photos=[photo(1, 790, 470, 400, 7)])),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
@@ -132,13 +135,13 @@ SLIDES = {
     "ipad": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=170, sub="Your iPad turns any photo into a painting to fill by number.", crops=[
             crop("create-preview", (.031, .968, .089, .561), 1.05, "c", 1000, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 140, 2000, 520, -5)],
-             own=dict(crops=[crop("create-preview", (0, 1, .022, 1), .64, 190, 900, radius=64, shadow=True, slot="pet-preview", tilt=-2)],
+             own=dict(crops=[crop("create-preview", (.228, .772, .07, .58), 1.18, 170, 830, radius=48, shadow=True, slot="pet-preview", tilt=-2)],
                       photos=[photo(1, 1470, 860, 470, 7)])),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 760, slot="pet-progress"),
             crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True,
                  slot="pet-progress")], photos=[photo(2, 1500, 600, 440, 5)],
-             own=dict(crops=[crop("paint-book-progress", (0, 1, .02, .9), .76, "c", 780, radius=48, shadow=True, slot="pet-progress", tilt=-1.5),
+             own=dict(crops=[crop("paint-book-progress", (0, 1, .052, .9), .76, "c", 847, radius=48, shadow=True, slot="pet-progress", tilt=-1.5),
                              crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2470, radius=70, shadow=True, over=True,
                                   slot="pet-progress")], photos=[photo(2, 1560, 600, 420, 6)])),
         dict(title="Just between you<br>and <span class=mark>your iPad</span>", sub="Your photo becomes a painting right on your iPad, and stays there.", crops=[
@@ -153,7 +156,8 @@ SLIDES = {
             crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240, slot="pet-zoomed")],
              photos=[photo(3, 1340, 840, 600, -4, landscape=True)],
              own=dict(sub="Every paint has a name. This one is Inkpot.",
-                      crops=[crop("paint-book-zoomed", (0, 1, .015, 1), .69, "c", 860, radius=56, shadow=True, slot="pet-zoomed", tilt=1.5)],
+                      crops=[crop("paint-book-zoomed", (0, 1, .045, 1), .69, "c", 917, radius=56, shadow=True, slot="pet-zoomed", tilt=1.5),
+                             crop("paint-book-zoomed", (.07, .366, .004, .037), 1.15, 200, 830, radius=52, shadow=True, over=True, slot="pet-zoomed", tilt=-2)],
                       photos=[photo(3, 1480, 640, 470, -4, landscape=True)])),
         dict(title="Twenty <span class=mark>cozy</span><br>minutes", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
             crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True, tilt=1.2),
