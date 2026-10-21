@@ -43,6 +43,9 @@ import PaintCore
 /// - `create-refine-select`, `create-refine-select-dark`: the Toolbox on Select with the largest
 ///   area selected: its outline, its bar (`RefineSelectionBar`), the palette and the cells' undrawn
 ///   edges.
+/// - `create-refine-guide`, `-dark`, `-long-text`: Refine's Tool Guide over the Toolbox, on Merge's
+///   page: the practice picture on its canvas, the words beside it (`RefineGuideView`); ready once
+///   the canvas shows.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -95,7 +98,7 @@ import PaintCore
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createSuggested, createCustom, createFromFile,
+         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createRefineGuide, createSuggested, createCustom, createFromFile,
          galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
@@ -129,6 +132,7 @@ enum ShellDemo: Equatable {
         case "create-refine-colors-picked", "create-refine-colors-picked-dark": .createRefineColorsPicked
         case "create-refine-card", "create-refine-card-dark": .createRefineCard
         case "create-refine-select", "create-refine-select-dark": .createRefineSelect
+        case "create-refine-guide", "create-refine-guide-dark", "create-refine-guide-long-text": .createRefineGuide
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -200,7 +204,7 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
-            || opensColors || opensCard || selectsCell || self == .createSuggested || self == .createCustom || self == .createTip
+            || opensColors || opensCard || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom || self == .createTip
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
@@ -247,7 +251,8 @@ enum ShellDemo: Equatable {
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
-        case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect:
+        case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect,
+             .createRefineGuide:
             pictures.first
         default: nil
         }
@@ -261,10 +266,14 @@ enum ShellDemo: Equatable {
 
     /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
     /// and shows the Refine screen.
-    var refines: Bool { self == .createRefine || opensColors || opensCard || selectsCell }
+    var refines: Bool { self == .createRefine || opensColors || opensCard || selectsCell || opensGuide != nil }
 
     /// Refine opens the card of its largest area once its edits have landed.
     var opensCard: Bool { self == .createRefineCard }
+
+    /// Refine opens the Tool Guide on this page, ready once its practice canvas shows
+    /// (`RefineView.land`).
+    var opensGuide: RefineGuideTopic? { self == .createRefineGuide ? .tool(.merge) : nil }
 
     /// Refine opens on Select with its largest area selected once its edits have landed.
     var selectsCell: Bool { self == .createRefineSelect }
@@ -370,7 +379,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,

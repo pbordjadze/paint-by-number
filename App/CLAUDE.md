@@ -671,6 +671,28 @@ Conventions).
     each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
     `create-refine-select` (with `-dark`) selects it. Without `UNRELEASED` the screen keeps the
     one row of buttons described above (the release has no Refine at all).
+  - **The Tool Guide** (`RefineGuide.swift`, with the Toolbox in `#if UNRELEASED`; Paul, October 21:
+    "each tool with a scenario that you can play with and reset easily", built for painters who
+    will use Refine seriously, with tweaks, new tools and retired ones to come). Refine's toolbar
+    opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; moving around) and
+    Views, then a page per tool the Toolbox offers, listed from `RefineGroup`, so a tool the Toolbox
+    stops offering leaves the guide with it. A page's words are `RefineGuidePage.of(_:)`, one
+    exhaustive switch over `RefineTool` (a new tool doesn't compile without its page): what it does,
+    How to Use It, Try This (on the practice picture), Good to Know and Goes Well With (links to
+    other pages); `RefineGuideTests` checks every listed tool has one. Beside the words (above them
+    on narrow widths) is the practice canvas: `RefineView` in practice mode
+    (`RefinePracticeSetup`: the tool alone, its options and palette, Undo, Redo, the views and
+    Reset; no rail, no Start From, no tips, nothing saved; the tool stays the page's, and Snap,
+    Color from Photo and Size live in `RefinePracticeSetup.settings`, seeded from the painter's as
+    the guide opens, so a page leaves Refine's as they were) on a `CreateModel` of its own
+    (`CreateModel.practice(_:scene:)`: the photo and base given, final at once, never generated, so
+    no text corrections or sliders are offered). The picture is PaintCore's `RefinePractice`, a
+    drawn moonlit evening made a template by the editor's own draws (`painted`: every shape in the
+    photo's colors; `inked`: outlines over the hills' paints, for Fill, the Bucket and Color from
+    Photo), made once a launch off the main actor (`RefinePracticePicture`). Reset is Cancel's
+    way back (`cancelRefining`) and the canvas made again (`.id`). Writing has no practice (the
+    picture has no text). `create-refine-guide` (with `-dark`, `-long-text`) opens it on Merge;
+    `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
