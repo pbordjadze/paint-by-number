@@ -8,6 +8,8 @@ import Foundation
 ///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...]}
 ///     {"kind": "split",     "points": [[x, y], ...], "closed": false, "paints": [...]}
 ///     {"kind": "cellEdge",  "points": [[x, y], ...], "closed": false}
+///     {"kind": "merge",     "points": [[x, y], ...]}
+///     {"kind": "brush",     "points": [[x, y], ...], "radius": 6, "color": [L, a, b]}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -29,7 +31,9 @@ import Foundation
 /// of the list, and the painting it saved keeps their colors. A look's name is a
 /// `TemplateEditor.Look`; one this build does not know fails the edit as an unknown kind does. A
 /// missing `lightness` is none, a missing `family` false. An older reader leaves a `cellEdge` out
-/// of the list too, and the cells it divided stay one.
+/// of the list too, and the cells it divided stay one; a `merge` too, and the cells it joined stay
+/// apart, and a `brush`, whose paint the painting then lacks. A brush needs its `radius` and
+/// `color`.
 extension TemplateEditor.Edit: Codable {
     private enum CodingKeys: String, CodingKey {
         case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
@@ -80,6 +84,10 @@ extension TemplateEditor.Edit: Codable {
                 points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints() ?? [])
         case "cellEdge":
             self = .cellEdge(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false)
+        case "merge":
+            self = .merge(points: points)
+        case "brush":
+            self = .brush(path: points, radius: try c.decode(Float.self, forKey: .radius), color: try lab(.color))
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -121,6 +129,14 @@ extension TemplateEditor.Edit: Codable {
             try c.encode("cellEdge", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
+        case .merge(let points):
+            try c.encode("merge", forKey: .kind)
+            try c.encode(points, forKey: .points)
+        case .brush(let path, let radius, let color):
+            try c.encode("brush", forKey: .kind)
+            try c.encode(path, forKey: .points)
+            try c.encode(radius, forKey: .radius)
+            try c.encode([color.x, color.y, color.z], forKey: .color)
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)

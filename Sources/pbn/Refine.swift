@@ -12,13 +12,17 @@ import PaintCore
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
+///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
+///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "paint": n},
+///                                                                   the Paint Brush's stroke
 ///        {"tool": "smartEraser", "at": [x, y]},
 ///        {"tool": "fill", "at": [x, y]},
 ///        {"tool": "undo"}, {"tool": "redo"}]}
 ///
 /// `screen.width` is the picture's width on screen fitted (points; 960 by default, about a 13"
 /// iPad's Refine), `zoom` how far it is zoomed in (1 to 12); a gesture may give its own `zoom`.
-/// A curve without `bend` is laid straight. Any gesture may carry a `caption` for the sheet.
+/// A curve without `bend` is laid straight. A brush without `color` or `paint` (a number of the
+/// palette shown) paints the photo's color under its first point. Any gesture may carry a `caption` for the sheet.
 struct RefineScript: Decodable {
     struct Screen: Decodable {
         var width: Double?
@@ -32,6 +36,8 @@ struct RefineScript: Decodable {
         var to: [Float]?
         var bend: [Float]?
         var at: [Float]?
+        var color: [Float]?
+        var paint: Int?
         var zoom: Double?
         var caption: String?
     }
@@ -148,6 +154,20 @@ func runRefine(_ options: Options) throws {
             edit = RefineGestures.cellEdge(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "eraser":
             edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
+        case "merge":
+            edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
+        case "brush":
+            let color: SIMD3<Float>
+            if let c = g.color, c.count == 3 {
+                color = SIMD3(c[0], c[1], c[2])
+            } else if let n = g.paint, (1...t.palette.count).contains(n) {
+                color = t.palette[n - 1].oklab
+            } else if let first = samples.first {
+                color = LineEdit.photoColor(at: first, in: photo)
+            } else {
+                fail("gesture \(k + 1): a brush needs points")
+            }
+            edit = RefineGestures.brush(RefineGestures.trace(samples, on: screen), on: screen, color: color)
         case "shape":
             let a = point(g.from, "from", k), b = point(g.to, "to", k)
             marks = [[a, b]]
@@ -195,7 +215,7 @@ func runRefine(_ options: Options) throws {
             }
             step.verdict = "redo"
         default:
-            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, smartEraser, fill, undo, redo)")
+            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, brush, smartEraser, fill, undo, redo)")
         }
 
         if let target {
@@ -225,6 +245,8 @@ func runRefine(_ options: Options) throws {
                 case .draw: step.toast = "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
+                case .merge: step.toast = "Those areas couldn’t be joined."
+                case .brush: step.toast = "That couldn’t be painted there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
                 case .paintArea, .look, .repaint: step.toast = "Those colors couldn’t be changed."
@@ -249,7 +271,7 @@ func runRefine(_ options: Options) throws {
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
         case .draw(let points, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points
-        case .erase(let path, _)?: around += path
+        case .erase(let path, _)?, .merge(let path)?, .brush(let path, _, _)?: around += path
         case .eraseLine(let at, _)?, .fill(let at, _)?, .paintArea(let at, _)?: around.append(at)
         case .look?, .repaint?, nil: break
         }
