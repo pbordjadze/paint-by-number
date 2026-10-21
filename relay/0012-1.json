@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn: \"Close\"\n- tapOn:\n    id: \"swatch-4\"\n- waitForAnimationToEnd:\n    timeout: 4000\n"
+ },
+ "seconds": 17.5,
+ "isError": true,
+ "text": [
+  "Failed to run flow: Element not found: Text matching regex: Close"
+ ],
+ "images": []
+}
