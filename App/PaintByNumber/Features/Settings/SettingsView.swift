@@ -113,9 +113,13 @@ struct SettingsView: View {
                             Text("Sound")
                         }
                     } footer: {
-                        Text(String(localized: "settings.sky.footer",
-                                    defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
-                                    comment: "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
+                        // Only Auto has hours to explain: under Sun or Moon the line described a
+                        // choice not made.
+                        if sky == .auto {
+                            Text(String(localized: "settings.sky.footer",
+                                        defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
+                                        comment: "Footer of Settings › Sound, under its Music row while it is set to Auto (the other choices are Sun and Moon). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
+                        }
                     }
 
                     // Painting Length last, so its footer sits under it.

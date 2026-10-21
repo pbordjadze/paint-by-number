@@ -198,7 +198,8 @@ synchronized folder would bundle it into the app.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
-  scene manifest, ProMotion on iPhone.
+  scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
+  flashed before the gallery's paper; `ci/check_release.sh` checks it).
 
 ## Tests and demos
 
@@ -289,9 +290,15 @@ synchronized folder would bundle it into the app.
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
-  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch, finishing the
-  selected color selects the first color left (`firstIncompleteColor`; the finished swatch
-  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it.
+  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch
+  (`firstIncompleteColor`), finishing the selected color selects the next color left after it
+  (`nextIncompleteColor`, coming round; the finished swatch leaves, and the first swatch left
+  sent a painter in the middle of a long palette back to 1), but the first swatch left in an
+  order by areas left, which re-sorts as the painting goes (Nearly Done, Most Left:
+  `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
+  double tap and the Paint menu's `]`/`[` step along it. A tap on an
+  area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only
@@ -301,7 +308,11 @@ synchronized folder would bundle it into the app.
   canvas touches hide a latched photo instead of painting.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
-  selected paint lifted until it reads on the paper.
+  selected paint lifted until it reads on the paper. Dark paper makes the bars, their popovers
+  and the painting's toasts dark on a light system too (`PaintView.chromeScheme`: light glass
+  slabs sat on it); the canvas, outside them, keeps its own trait collection.
+  `paint-book-night-paper` (and its `--tip-benchFind`) is that case's screenshot: a scenario
+  named `dark` is captured in dark appearance.
 - Quiet painting (`QuietPainting`, Debug and SideStore builds only: `#if UNRELEASED`): once an
   area is painted (`PaintChromeState.wantsQuiet`) the top bar fades to Back, the progress ring
   and Hint; a tap on the ring (`quiet-ring`) brings the rest back until the next fill. The canvas
@@ -899,4 +910,6 @@ state JSON; `play-settled` reports canvas/animation idleness, and `play-screen-s
 the canvas display scale for screenshot-pixel drags. These readouts stay live as the camera
 moves and never paint through accessibility activation. `PaintByNumberUITests/PlayTests`
 consumes `PLAY_MAILBOX`, or skips when unset; its temporary-mailbox self-test runs in CI's
-`ipad` group. All hooks and tests are guarded by `#if DEBUG`.
+`ipad` group. All hooks and tests are guarded by `#if DEBUG`, but for
+`PaintingNavigationTests`' tap on another color, which only passes `-playHarness` to find an area
+of a paint whose swatch is out of view.

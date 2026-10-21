@@ -92,7 +92,8 @@ nonisolated struct PaletteWindow: Equatable, Sendable {
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
-/// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view.
+/// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view,
+/// or the swatch a tap on its color's area just shook.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -123,6 +124,11 @@ struct PaletteBar: View {
         var clip = CGRect.null
         /// A color to bring into view once both frames are known (the bar appearing).
         var pending: Int?
+    }
+
+    /// The color whose swatch was just shaken (its count went up), the lowest if several were.
+    static func shaken(from old: [Int: Int], to new: [Int: Int]) -> Int? {
+        new.filter { $0.value > old[$0.key, default: 0] }.keys.min()
     }
 
     /// Colors still to paint (plus the selected one): finished colors leave the palette.
@@ -211,6 +217,11 @@ struct PaletteBar: View {
             }
             .onChange(of: session.selectedColor) { _, selected in
                 if let selected { reveal(selected, animated: true) }
+            }
+            // A tap on another color's area shakes that color's swatch: scrolled out of view, it
+            // shook unseen and the tap seemed to do nothing (QA, October 21), so the bar brings it in.
+            .onChange(of: shakes) { old, new in
+                if let shaken = Self.shaken(from: old, to: new) { reveal(shaken, animated: true) }
             }
         }
         .frame(width: axis == .vertical ? thickness : nil,

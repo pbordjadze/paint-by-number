@@ -90,6 +90,14 @@ struct PaintView: View {
     private var chromeScale: CGFloat { QuietPainting.scale(regularWidth: sizeClass == .regular) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.
     private var barHeight: CGFloat { 44 * chromeScale }
+    private var chromeScheme: ColorScheme { Self.chromeScheme(paper: paperAppearance, system: colorScheme) }
+
+    /// The bars' appearance: dark over dark paper whatever the system's (on a light system the
+    /// palette and the completion bar were light slabs on it, and the progress ring's track was
+    /// lost in its glass), else the system's.
+    static func chromeScheme(paper: PaperAppearance, system: ColorScheme) -> ColorScheme {
+        paper.usesDarkPaper(interfaceIsDark: system == .dark) ? .dark : system
+    }
 
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
@@ -142,6 +150,7 @@ struct PaintView: View {
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
+        .onChange(of: paletteOrder, initial: true) { _, order in session.advancesToFirstLeft = order.followsProgress }
         .onChange(of: zenMode, initial: true) { _, zen in
             session.flowsToNextArea = zen
             if zen { PaintTips.used(.benchZen) }
@@ -184,6 +193,7 @@ struct PaintView: View {
                     .padding(.top, Self.topGap + barHeight + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
+                    .environment(\.colorScheme, chromeScheme)
             }
         }
         .animation(.snappy, value: thanks)
@@ -237,6 +247,7 @@ struct PaintView: View {
                         height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(visiblePadding)
+                    .environment(\.colorScheme, chromeScheme)
                     .transition(.opacity)
             }
 
@@ -266,6 +277,7 @@ struct PaintView: View {
                         .padding(.bottom, Self.bottomGap)
                 }
             }
+            .environment(\.colorScheme, chromeScheme)
             if feedback == nil && palette.side && !session.isComplete {
                 HStack {
                     Spacer(minLength: 0)
@@ -274,6 +286,7 @@ struct PaintView: View {
                         .padding(.top, sidePaletteTop)
                         .padding(.bottom, Self.edge)
                 }
+                .environment(\.colorScheme, chromeScheme)
             }
 
             // The capture's flash as feedback starts.
@@ -798,9 +811,7 @@ private struct ProgressGroup: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let fraction = session.shownFraction
-        // Whole percent, rounded down: 100 only once the last area is painted.
-        let percent = Int(fraction * 100)
+        let percent = PaintSpeech.percent(painted: session.shownPaintedCount, total: session.progress.regionCount)
         HStack(spacing: 8) {
             PaintedRing(session: session)
                 .frame(width: 18, height: 18)
@@ -839,7 +850,7 @@ private struct QuietRingButton: View {
     @Environment(\.glassButtonDiameter) private var diameter
 
     var body: some View {
-        let percent = Int(session.shownFraction * 100)
+        let percent = PaintSpeech.percent(painted: session.shownPaintedCount, total: session.progress.regionCount)
         Button(action: action) {
             PaintedRing(session: session)
                 .frame(width: diameter * 0.5, height: diameter * 0.5)

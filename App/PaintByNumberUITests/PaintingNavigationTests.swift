@@ -127,6 +127,63 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(selected, "Tapping a swatch didn't select it")
     }
 
+    /// A tap on another color's area shakes that color's swatch, and a palette scrolled away from
+    /// it brings the swatch into view: out of view, it shook unseen and the tap seemed to do
+    /// nothing (QA, October 21). A phone's palette: an iPad's shows every color at once. The play
+    /// harness names every area with its paint.
+    @MainActor
+    func testATapOnAnotherColorBringsItsSwatchIntoView() throws {
+        try XCTSkipIf(UIDevice.current.userInterfaceIdiom == .pad, "An iPad's palette shows every color at once")
+        let app = openSeededPainting(playHarness: true)
+        let settled = app.descendants(matching: .any)["play-settled"]
+        XCTAssertTrue(waitUntil(timeout: 20) { (settled.value as? String) == "1" }, "The canvas never settled")
+        // One snapshot: the harness's hundreds of areas are slow to query one by one.
+        func all(_ element: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
+            [element] + element.children.flatMap(all)
+        }
+        let elements = try all(app.snapshot())
+        let swatches = elements.filter { $0.identifier.hasPrefix("swatch-") }
+        // The nearest swatch wholly past the screen's trailing edge.
+        let width = app.frame.width
+        let offScreen = swatches.filter { $0.frame.minX >= width }.min { $0.frame.minX < $1.frame.minX }
+        guard let identifier = offScreen?.identifier else { throw XCTSkip("Every color's swatch is on screen") }
+        let paint = String(identifier.dropFirst("swatch-".count))
+        let selectedPaint = swatches.first { $0.isSelected }.map { String($0.identifier.dropFirst("swatch-".count)) }
+        // Its areas on the open canvas, clear of the top bar and the palette, farthest first from the
+        // selected paint's: a tap within a fingertip of one of those paints it instead.
+        let top = app.buttons["Back"].frame.maxY + 24
+        let bottom = (swatches.map { $0.frame.minY }.min() ?? app.frame.maxY) - 40
+        let canvas = try XCTUnwrap(elements.first { $0.identifier == "canvas" }?.frame, "The canvas has no frame")
+        func center(_ element: any XCUIElementSnapshot) -> CGPoint { CGPoint(x: element.frame.midX, y: element.frame.midY) }
+        let areas = elements.filter { $0.identifier.hasPrefix("area-") }
+        let selectedPoints = areas.filter { ($0.value as? String) == selectedPaint }.map(center)
+        func clearance(_ point: CGPoint) -> CGFloat {
+            selectedPoints.map { hypot($0.x - point.x, $0.y - point.y) }.min() ?? .greatestFiniteMagnitude
+        }
+        let candidates = areas.filter { ($0.value as? String) == paint }.map(center)
+            .filter { canvas.insetBy(dx: 24, dy: 0).contains($0) && $0.y > top && $0.y < bottom }
+            .sorted { clearance($0) > clearance($1) }
+        try XCTSkipIf(candidates.isEmpty, "No area of paint \(paint) on screen")
+        let hidden = app.buttons[identifier]
+        let state = app.descendants(matching: .any)["play-state"]
+        func filledAreas() -> Int {
+            guard let text = state.value as? String, let object = try? JSONSerialization.jsonObject(with: Data(text.utf8)),
+                  let filled = (object as? [String: Any])?["filled_areas"] as? [Any] else { return -1 }
+            return filled.count
+        }
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        for point in candidates.prefix(5) {
+            let filled = filledAreas()
+            origin.withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+            // A tap that painted the selected color instead: the next area.
+            _ = waitUntil(timeout: 3) { hidden.isHittable || filledAreas() != filled }
+            if hidden.isHittable { break }
+        }
+        attachScreenshot(of: app, named: "another-color-swatch")
+        XCTAssertTrue(hidden.isHittable, "Swatch \(paint) stayed out of view after a tap on its color's area")
+        XCTAssertFalse(hidden.isSelected, "A tap on another color's area selected it")
+    }
+
     /// Hardware keyboard: `]` selects the next color; a fill is undone with ⌘Z and redone
     /// with ⇧⌘Z (window undo manager).
     @MainActor
@@ -279,9 +336,10 @@ final class PaintingNavigationTests: XCTestCase {
 
     /// Launches the demo that seeds a painting in the background and opens it once it is ready.
     @MainActor
-    private func openSeededPainting(tracingPhotoPeek: Bool = false) -> XCUIApplication {
+    private func openSeededPainting(tracingPhotoPeek: Bool = false, playHarness: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery-open"] + (tracingPhotoPeek ? ["-tracePhotoPeek", "YES"] : [])
+            + (playHarness ? ["-playHarness"] : [])
         app.launch()
         // "Back" alone could be another screen's (CI once swiped to the New Painting sheet); the progress
         // badge is the painting's own.
