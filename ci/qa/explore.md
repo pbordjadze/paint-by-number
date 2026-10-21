@@ -46,6 +46,14 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   - This simulator has no hardware keyboard, and a menu (the painting's More) can bring up the
     software keyboard with nothing to type in: the simulator's doing, not the app's (devices
     don't). List it under Automation problems, not as an app bug.
+  - `tapOn` waits for the screen to stop changing before it returns, so a short animation (a
+    Replay, a swatch's shake, a fill's shine) can be over by your next screenshot: a Replay
+    looked as if it hadn't played. To watch one, give the tap `waitToSettleTimeoutMs: 300` and
+    take the screenshot in the same `run`, right after it.
+  - A tap that changes nothing in the hierarchy at once may be tapped again
+    (`retryTapIfNoChange`): on the New Painting preview that made a double tap, which zoomed the
+    comparison in. Give taps that open, close, toggle or zoom something
+    `retryTapIfNoChange: false`.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -95,6 +103,9 @@ Report these only if they look wrong in another way:
   unless an unpainted area of the selected color lies within about 14 points, which the tap
   paints instead. Colors are picked from the palette.
 - A painting opens on the palette's first swatch, not the color last used.
+- Every painting the app makes is a coloring book: its lines are the drawing's, so where two
+  paints meet without a drawn line there is no outline; the numbers (and the selected paint's
+  hatch) mark those areas.
 - Progress counts areas, not surface: a large area moves it as much as a small one.
 - On the New Painting preview, the Colors slider sets the most paints; the line under the preview
   counts the paints the painting ended with, often fewer (paints left unused or too alike are
