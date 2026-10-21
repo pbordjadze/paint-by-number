@@ -93,12 +93,12 @@
       "comment" : "Refine screen: the tool that rubs lines out, or takes a whole line out with a tap; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
-    "Make It the Current Paint" : {
-      "comment" : "Refine screen, Edit Paint: VoiceOver action on a paint's swatch that makes that paint one with the current paint (its areas take the current paint)",
-      "extractionState" : "manual"
-    },
     "Merge" : {
       "comment" : "Refine screen: the tool that joins the areas a drag crosses into one; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Merge Into Current Paint" : {
+      "comment" : "Refine screen, Edit Paint: VoiceOver action on a paint's swatch that merges that paint into the current one (its areas take the current paint and it leaves the palette)",
       "extractionState" : "manual"
     },
     "Move Edge" : {

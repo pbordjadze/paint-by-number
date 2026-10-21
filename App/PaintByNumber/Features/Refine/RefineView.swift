@@ -1,7 +1,6 @@
 import Accessibility
 import Foundation
 import PaintCore
-import simd
 import SwiftUI
 
 /// What one finger (or the Pencil) does on the Refine screen.
@@ -72,6 +71,9 @@ nonisolated enum RefineTool: Hashable {
 
     /// What the tool does shows in the painting (paints, and a cell edge, which draws no line), so
     /// the painting shows beneath it.
+    /// The tool drags something already there (a line, an edge, a number), drawing no ink.
+    var drags: Bool { self == .bendLine || self == .moveEdge || self == .moveNumber }
+
     var paints: Bool {
         self == .splitter || self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
     }
@@ -139,9 +141,10 @@ nonisolated enum RefineBackdrop: Hashable {
 /// Cancel puts back what the screen opened with, Done keeps them.
 ///
 /// SideStore and Debug builds (`#if UNRELEASED`) lay the tools out as the Toolbox, a drawing app's:
-/// Ink, Cells, Paint and See, every tool in a rail on iPad and in group tabs on iPhone; a Pen of ink
-/// alone with Snap and Color from Photo, Select, Cell Edge, Merge, a palette with a current paint,
-/// the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks; Start From until the first edit
+/// Ink, Cells, Paint, Numbers and See, every tool in a rail on iPad and in group tabs on iPhone; a
+/// Pen of ink alone with Snap and Color from Photo, Bend Line, Select, Cell Edge, Merge, Move Edge,
+/// a palette with a current paint, the Bucket, the Paint Brush, the Eyedropper, Edit Paint and
+/// Looks, Move Number, Try Painting; Start From until the first edit
 /// (the generator's template, or the photo as one area to draw and paint everything on); an area's
 /// card on a long press, sparkles where a line closes off an area and a badge for numbers near their
 /// floor (`RefineStudio.swift`, `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The Toolbox).
@@ -186,6 +189,8 @@ struct RefineView: View {
     /// The demo's paint, cell or card is picked once its edits have landed.
     @State private var didPickDemoPaint = false
     #endif
+    /// The screen has begun refining (`CreateModel.beginRefining`), once.
+    @State private var opened = false
     /// How plainly the photo shows through the painting in Photo Behind: 0 the painting, 1 the photo.
     @State private var photoShows = 0.5
     #if UNRELEASED
@@ -257,8 +262,12 @@ struct RefineView: View {
                 .toolbar { toolbar }
         }
         .onAppear {
-            model.beginRefining()
             PaintTips.desk.enter(.refine)
+            // Once: Try Painting's cover makes it disappear and appear again, and the history and
+            // what Cancel puts back are the screen's, not the cover's.
+            guard !opened else { return }
+            opened = true
+            model.beginRefining()
             // A draft refined before (Continue Refining) has found how to draw already.
             if model.refinements.isEmpty { PaintTips.refineShown() }
         }
@@ -286,6 +295,9 @@ struct RefineView: View {
         let edit: TemplateEditor.Edit
         /// A line tapped away, as the tap found it, normalized.
         var chain: [SIMD2<Float>]?
+        /// A line Bend Line moved, as it was and as it goes, normalized, which shows until the
+        /// template has it.
+        var bent: (original: [SIMD2<Float>], moved: [SIMD2<Float>])?
         /// A swatch of the photo's color shows where a fill was tapped, until the template has it.
         var showsSwatch = false
     }
@@ -356,13 +368,17 @@ struct RefineView: View {
                     #endif
                     let figure = shapeTrace
                     RefineInkLayer(
-                        lines: pending, trace: tool == .shape ? figure : tool == .brush ? nil : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
+                        lines: pending, trace: tool == .shape ? figure : tool.drags || tool == .brush ? nil : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
                         dashed: tool == .splitter || tool == .cellEdge, merging: tool == .merge,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
                         beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     #if UNRELEASED
                     if let bend {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
+                    }
+                    if group == .numbers, let base {
+                        RefineNumbers(base: base, rect: picture)
+                            .equatable()
                     }
                     if let held = heldNumber, let template = base?.template {
                         RefineHeldNumber(template: template, paint: held.paint, at: held.at, rect: picture)
@@ -447,7 +463,13 @@ struct RefineView: View {
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
             case .eraseLine:
                 if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
-            case .fill, .split, .cellEdge, .merge, .brush, .look, .repaint, .paintArea, .reshape, .moveLabel:
+            case .reshape:
+                // A line Bend Line moved: gone from where it was, drawn where it goes.
+                if let bent = item.bent {
+                    lines.append(.init(kind: .eraseLine, radius: 0, points: bent.original))
+                    lines.append(.init(kind: .draw, radius: 0, points: bent.moved))
+                }
+            case .fill, .split, .cellEdge, .merge, .brush, .look, .repaint, .paintArea, .moveLabel:
                 // `RefineFillLayer` shows fills, `brushes` the brush's strokes; a split, a cell
                 // edge, a merge and paint draw nothing.
                 break
@@ -554,9 +576,11 @@ struct RefineView: View {
 
     /// Sends an edit to the template (`CreateModel.edit(_:)`), which draws it in a moment; until
     /// then it shows over the template (`pending`).
-    private func submit(_ edit: TemplateEditor.Edit, chain: [SIMD2<Float>]? = nil) {
+    private func submit(
+        _ edit: TemplateEditor.Edit, chain: [SIMD2<Float>]? = nil, bent: (original: [SIMD2<Float>], moved: [SIMD2<Float>])? = nil
+    ) {
         let edit = inked(edit)
-        submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain))
+        submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain, bent: bent))
         PaintTips.refineEdited()
         if case .draw = edit { PaintTips.refineLineDrawn() }
     }
@@ -620,35 +644,49 @@ struct RefineView: View {
             trace = [start, point]
         case .ended:
             guard let start = trace?.first else { return }
+            trace = [start, point]
+            // Bend Line's line shows where it goes until the template has it; a cell edge has no ink.
+            let shown = tool == .bendLine ? bend.map { (normalized($0.original), normalized($0.moved)) } : nil
             trace = nil
             let edit = tool == .moveNumber
                 ? RefineGestures.moveLabel(from: start, to: point, on: screen)
-                : RefineGestures.reshape(from: start, to: point, on: screen)
-            if let edit { submit(edit) }
+                : RefineGestures.reshape(from: start, to: point, on: screen, target: tool == .bendLine ? .ink : .edge)
+            if let edit { submit(edit, bent: shown) }
         case .cancelled:
             trace = nil
         }
     }
 
-    /// The line Bend Line or Move Edge holds, as it was and moved to the finger (canvas units),
-    /// the same moved points the edit will lay (`TemplateEditor.reshapedChain`).
+    /// How near a drag must begin to a line or a number to take it: a finger's reach on screen, in
+    /// canvas units (`RefineGestures.fingerReach`, as the edits it sends).
+    private var fingerReach: Float {
+        picture.width > 0 ? Float(RefineGestures.fingerReach * templateSize.width / picture.width) : TemplateEditor.tapReach
+    }
+
+    /// Canvas points normalized to the picture.
+    private func normalized(_ points: [SIMD2<Float>]) -> [SIMD2<Float>] {
+        let size = SIMD2(Float(max(templateSize.width, 1)), Float(max(templateSize.height, 1)))
+        return points.map { $0 / size }
+    }
+
+    /// The line Bend Line (ink) or Move Edge (a cell's edge) holds, as it was and moved to the
+    /// finger (canvas units), the same moved points the edit will lay (`TemplateEditor.reshapedChain`).
     private var bend: (original: [SIMD2<Float>], moved: [SIMD2<Float>])? {
         guard tool == .bendLine || tool == .moveEdge, let trace, trace.count == 2, let template = base?.template,
               picture.width > 0, screen.onScreenLength(trace[1] - trace[0]) >= 1
         else { return nil }
-        let reach = Float(RefineGestures.fingerReach * templateSize.width / picture.width)
-        return TemplateEditor.reshapedChain(on: template, from: canvasPoint(trace[0]), to: canvasPoint(trace[1]), reach: reach)
+        return TemplateEditor.reshapedChain(
+            on: template, from: canvasPoint(trace[0]), to: canvasPoint(trace[1]), reach: fingerReach,
+            target: tool == .bendLine ? .ink : .edge)
     }
 
-    /// The number Move Number holds (its paint's index) and where the finger has it, normalized.
+    /// The number Move Number holds (its paint's index), the one the edit will move
+    /// (`TemplateEditor.labelNear`), and where the finger has it, normalized.
     private var heldNumber: (paint: Int, at: SIMD2<Float>)? {
         guard tool == .moveNumber, let trace, trace.count == 2, let template = base?.template,
-              let region = template.region(at: canvasPoint(trace[0]))
+              let held = TemplateEditor.labelNear(on: template, at: canvasPoint(trace[0]), reach: fingerReach)
         else { return nil }
-        let start = canvasPoint(trace[0])
-        let near = template.labels(ofRegion: region).min { simd_distance($0.position, start) < simd_distance($1.position, start) }
-        guard let near, simd_distance(near.position, start) <= near.radius + TemplateEditor.tapReach else { return nil }
-        return (Int(template.regions[region].colorIndex), trace[1])
+        return (Int(template.regions[held.region].colorIndex), trace[1])
     }
 
     /// The Paint Brush's stroke as an edit, in the current paint at the brush's Size
@@ -1957,7 +1995,7 @@ extension RefineView {
         FeedbackEngine.shared.selectionChanged()
         Task {
             _ = await RenderContext.ready()
-            trial = RefineTrial(session: PaintingSession(template: template))
+            trial = RefineTrial(session: PaintingSession(template: template, nicknameVersion: ColorNickname.currentVersion))
         }
     }
 }

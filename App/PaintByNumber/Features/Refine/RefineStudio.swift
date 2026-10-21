@@ -5,7 +5,8 @@ import SwiftUI
 /// The Refine Toolbox's groups of tools (SideStore and Debug builds, `#if UNRELEASED`; the design:
 /// claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH, Paul, October 21, 2026: "a drawing app with the
 /// tools to make a paint by number"). Ink is the lines the painter sees, Cells the shapes of the
-/// color areas, Paint what color each is, and See what shows: each tool does one visible thing.
+/// color areas, Paint what color each is, Numbers where they sit, and See what shows: each tool
+/// does one visible thing.
 /// On iPad every tool stands in a rail, a section per group; on iPhone the groups are tabs over a
 /// row of the group's tools (at most five, so a phone's width holds them).
 nonisolated enum RefineGroup: Hashable, CaseIterable {

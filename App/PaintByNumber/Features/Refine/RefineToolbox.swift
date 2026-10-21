@@ -122,16 +122,20 @@ struct RefinePaletteBar: View {
         }
     }
 
+    /// What a swatch's drag carries before its paint's index.
+    static let dragPrefix = "refine-paint:"
+
     /// A swatch Edit Paint can drag onto another, and drop another onto.
     @ViewBuilder
     private func mergeable(_ swatch: some View, _ index: Int, current: Int?) -> some View {
         if let merge {
             swatch
-                .draggable(String(index))
+                .draggable(Self.dragPrefix + String(index))
                 .dropDestination(for: String.self) { items, _ in
-                    guard let from = items.first.flatMap({ Int($0) }), from != index, template.palette.indices.contains(from) else {
-                        return false
-                    }
+                    // Only a swatch's own drag: text from elsewhere that reads as a number isn't one.
+                    guard let item = items.first, item.hasPrefix(Self.dragPrefix),
+                          let from = Int(item.dropFirst(Self.dragPrefix.count)), from != index, template.palette.indices.contains(from)
+                    else { return false }
                     merge(from, index)
                     return true
                 }
@@ -140,7 +144,7 @@ struct RefinePaletteBar: View {
                         Button {
                             merge(index, current)
                         } label: {
-                            Text("Make It the Current Paint")
+                            Text("Merge Into Current Paint")
                         }
                     }
                 }
@@ -346,5 +350,40 @@ struct RefineHeldNumber: View {
             .position(x: rect.minX + CGFloat(at.x) * rect.width, y: rect.minY + CGFloat(at.y) * rect.height)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+    }
+}
+
+/// The areas' numbers over the drawing in `rect` while Numbers is picked, as the painting will
+/// show them (`LabelSizing`), so Move Number has something to take; Refine shows none otherwise.
+struct RefineNumbers: View, Equatable {
+    let base: CreateModel.Preview
+    let rect: CGRect
+
+    nonisolated static func == (a: RefineNumbers, b: RefineNumbers) -> Bool {
+        a.base.id == b.base.id && a.rect == b.rect
+    }
+
+    var body: some View {
+        let template = base.template, rect = rect
+        let size = CGSize(width: template.width, height: template.height)
+        Canvas { context, _ in
+            guard size.width > 0, size.height > 0, rect.width > 0 else { return }
+            let s = max(rect.width / size.width, rect.height / size.height)
+            let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+            for label in template.labels {
+                let region = Int(label.region)
+                guard region < template.regions.count else { continue }
+                let paint = template.regions[region].colorIndex
+                let digits = LabelSizing.digitCount(colorIndex: paint)
+                let points = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, detail: template.isDetailRegion(region))) * s
+                guard points >= 4 else { continue }
+                let text = Text(verbatim: "\(paint + 1)")
+                    .font(.system(size: points, weight: .semibold, design: .serif))
+                    .foregroundStyle(LineArtDrawing.ink.opacity(0.75))
+                context.draw(text, at: CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s))
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

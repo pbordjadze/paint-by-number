@@ -1,7 +1,7 @@
 import XCTest
 
 /// The create flow's optional Refine step, as the Toolbox lays it out in Debug builds (its groups:
-/// Ink, Cells, Paint, See; a rail of every tool on iPad, tabs on iPhone): the pens, the eraser and
+/// Ink, Cells, Paint, Numbers, See; a rail of every tool on iPad, tabs on iPhone): the pens, the eraser and
 /// Fill Shape, no Color Splitter, Writing's text marks, Select, Cell Edge and the Bucket, an area's
 /// card, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {

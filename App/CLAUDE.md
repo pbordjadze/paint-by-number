@@ -617,7 +617,7 @@ Conventions).
     with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
     grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
-    (`RefineGroup`: Ink, Cells, Paint, See): on iPad a rail along the leading edge holds every tool
+    (`RefineGroup`: Ink, Cells, Paint, Numbers, See): on iPad a rail along the leading edge holds every tool
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
