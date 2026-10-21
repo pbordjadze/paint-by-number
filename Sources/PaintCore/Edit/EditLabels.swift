@@ -83,6 +83,47 @@ extension EditWork {
         return LabelPlan(labels: labels, needsDetail: needsDetail)
     }
 
+    /// Refine's Move Number (`TemplateEditor.Edit.moveLabel`): the number nearest `from`, within
+    /// its radius and `TemplateEditor.tapReach`, goes to `to` when that lies inside its own region
+    /// and a number of its digits fits there (a detail area's by its own floor), kept off the
+    /// strokes drawn in the region as numbers are (`LabelKeepOut`). Its radius is the room there,
+    /// never more than the region's roomiest spot gives (`PolyLabel`). The region's other numbers,
+    /// its outline and fill stay as they were. A later edit that plans the region's numbers again
+    /// (a cut, a join, a repaint, a reshape of its outline) keeps it there while it keeps most of
+    /// the room, as it keeps any number (`labelPlan`), and may move it otherwise.
+    mutating func moveLabel(from: SIMD2<Float>, to: LatticePoint) throws {
+        var nearest: (region: Int, index: Int, distance: Float)?
+        for r in t.regions.indices where regionAlive[r] {
+            for (k, label) in (labels[r] ?? Array(t.labels(ofRegion: r))).enumerated() {
+                let d = simdLength(label.position - from)
+                if d <= label.radius + TemplateEditor.tapReach, nearest == nil || d < nearest!.distance { nearest = (r, k, d) }
+            }
+        }
+        guard let nearest else { throw EditFailure.invalid("no number is near enough to move") }
+        let r = nearest.region
+        var own = labels[r] ?? Array(t.labels(ofRegion: r))
+        let position = Lattice.position(to)
+        guard own[nearest.index].position != position else { return }
+        guard contains(r, to) == .inside else { throw EditFailure.invalid("there is no room for the number there") }
+        let poly = Self.flatPolygon(polygons(of: r))
+        let inked = strokes.filter { $0.alive && $0.region == r && $0.layer != LineLayer.color.rawValue }
+        let keepOut = LabelKeepOut(rects: [], lines: inked.map { LabelKeepOut.Line($0.points) })
+        let p = Lattice.double(to)
+        var best = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: p, keepOut: keepOut)
+        if best.distance < Double(Vectorizer.smallRegionRadius) {
+            best = PolyLabel.find(poly, precision: Vectorizer.smallRegionLabelPrecision, seed: p, keepOut: keepOut)
+        }
+        let room = min(poly.signedDistance(p.x, p.y), keepOut.distance(p.x, p.y), best.distance)
+        let digits = LabelSizing.digitCount(colorIndex: t.regions[r].colorIndex)
+        guard room >= Double(LabelSizing.minimumRadius(digits: digits, detail: regionDetail[r])) else {
+            throw EditFailure.invalid("there is no room for the number there")
+        }
+        own[nearest.index] = Label(position: position, radius: Float(room), region: UInt32(r))
+        labels[r] = own
+        summary.labelsMoved += 1
+        summary.touched.insert(r)
+    }
+
     /// Hints for a region taking over from `regions`: their labels, the largest region's first.
     func hints(from regions: [Int]) -> [Label] {
         regions.sorted { area(of: $0) != area(of: $1) ? area(of: $0) > area(of: $1) : $0 < $1 }.flatMap { r -> [Label] in

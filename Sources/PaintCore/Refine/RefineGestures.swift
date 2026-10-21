@@ -179,6 +179,15 @@ public enum RefineGestures {
         return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: Float(reach))
     }
 
+    /// A drag of Move Number as an edit: the number under where it started (within its radius and
+    /// `TemplateEditor.tapReach`) moved to where it ended, canvas units. Nil for a drag under a
+    /// point on screen.
+    public static func moveLabel(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
+        guard screen.picture.width > 0, screen.canvas.width > 0, screen.canvas.height > 0, screen.onScreenLength(b - a) >= 1
+        else { return nil }
+        return .moveLabel(from: screen.canvasPoint(a), to: screen.canvasPoint(b))
+    }
+
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
     /// moves; for a curve whose ends are down (`curve`), the curve bent through `b`. Nil while it
     /// is too small to draw.
@@ -265,7 +274,7 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .reshape, .look, .repaint:
+            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .reshape, .moveLabel, .look, .repaint:
                 // The lines a merge takes out, or a reshape moves, go when the template shows it.
                 break
             }

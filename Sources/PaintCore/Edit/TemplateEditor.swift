@@ -66,6 +66,11 @@ import Foundation
 ///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
 ///   while they have room. Declined when the line would cross itself or another, leave the
 ///   canvas, carry an island or a stroke across, or leave an area too little room for its number.
+/// - **Move number.** Refine's Move Number: the number nearest a point goes to another inside its
+///   own region, where a number of its digits fits (a detail area's by its own floor), off the
+///   strokes in the region; its size is the room there, never more than the region's roomiest
+///   spot gives. Nothing else changes. An edit that plans the region's numbers again later keeps
+///   it there while it keeps most of the room, and may move it otherwise.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -108,6 +113,8 @@ public enum TemplateEditor {
         /// Refine's Bend Line and Move Edge: the line nearest `from` within `reach`, its chain from
         /// junction to junction, bent so that its point nearest `from` goes to `to`.
         case reshape(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
+        /// Refine's Move Number: the number nearest `from` moved to `to`, inside its region.
+        case moveLabel(from: SIMD2<Float>, to: SIMD2<Float>)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -177,6 +184,8 @@ public enum TemplateEditor {
         public var paintsMerged = 0
         /// Lines a reshape moved: its chain, and the strokes whose ends it carried.
         public var reshaped = 0
+        /// Numbers Move Number moved.
+        public var labelsMoved = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
         /// centre.
         public var tooSmall: [SIMD2<Float>] = []
@@ -280,6 +289,9 @@ public enum TemplateEditor {
         case .reshape(let from, let to, let reach):
             guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
             try work.reshape(from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach))
+        case .moveLabel(let from, let to):
+            guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
+            try work.moveLabel(from: Lattice.position(Lattice.clampedPoint(from)), to: Lattice.clampedPoint(to))
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
@@ -300,7 +312,7 @@ public enum TemplateEditor {
         }
         let s = work.summary
         guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0
-            || s.regionsMerged > 0 || s.reshaped > 0
+            || s.regionsMerged > 0 || s.reshaped > 0 || s.labelsMoved > 0
         else {
             return (template, unchanged(template))
         }
@@ -327,6 +339,7 @@ public enum TemplateEditor {
         outcome.paintsChanged = s.paintsChanged
         outcome.paintsMerged = s.paintsMerged
         outcome.reshaped = s.reshaped
+        outcome.labelsMoved = s.labelsMoved
         outcome.pieces = mapping.pieces
         outcome.tooSmall = s.declined
         outcome.touchedRegions = mapping.touched

@@ -496,6 +496,18 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   falloff spans the whole chain, so a long outline grabbed far from its junctions moves along
   most of its length: of five drags of 25 to 45 units on that book's outlines, four were declined
   for meeting the details beside the outline near its far ends.
+- **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
+  cell. The number nearest the drag's start, within its radius and `TemplateEditor.tapReach`,
+  goes where the finger lifts when that is inside its own region (not on its outline) and a
+  number of its digits fits there: the room there, measured to the outline and to the strokes
+  in the region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor
+  or, in a detail area, a detail area's. Its radius is that room, never more than the region's
+  roomiest spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged
+  into open space doesn't grow huge. The region's other numbers, its outline, fill and pixels
+  stay as they were; nothing is declined but the move itself. A later edit that plans the
+  region's numbers again (a cut, a join, a repaint, a reshape of its outline) keeps the number
+  where it was put while that spot keeps most of the room, as it keeps any number (`labelPlan`),
+  and may move it otherwise.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

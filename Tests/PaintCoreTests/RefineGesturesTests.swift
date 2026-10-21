@@ -118,6 +118,19 @@ struct RefineGesturesTests {
         #expect(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104.1, 74), on: Self.screen) == nil)
     }
 
+    /// A drag of Move Number moves the number under its start to where it ended, in canvas units.
+    @Test func aMoveNumberDragMovesTheNumber() throws {
+        let sky = try #require(Self.scene.region(at: SIMD2(104, 30)))
+        let label = try #require(Self.scene.labels(ofRegion: sky).first)
+        let start = SIMD2(label.position.x / 192, label.position.y / 144)
+        let edit = try #require(RefineGestures.moveLabel(from: start, to: Self.p(30, 30), on: Self.screen))
+        guard case .moveLabel(let from, let to) = edit else { Issue.record("\(edit)"); return }
+        #expect(simdLength(from - label.position) < 1e-3 && simdLength(to - SIMD2(30, 30)) < 1e-3)
+        let laid = try TemplateEditor.apply(edit, to: Self.scene)
+        #expect(laid.outcome.labelsMoved == 1 && laid.outcome.declined == nil)
+        #expect(RefineGestures.moveLabel(from: start, to: start + SIMD2(0.0001, 0), on: Self.screen) == nil)
+    }
+
     /// The lines a pen may meet follow the edits sent: a line drawn is one, an erased stretch is
     /// none.
     @Test func snapLinesFollowThePendingEdits() {
