@@ -508,6 +508,13 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   region's numbers again (a cut, a join, a repaint, a reshape of its outline) keeps the number
   where it was put while that spot keeps most of the room, as it keeps any number (`labelPlan`),
   and may move it otherwise.
+- **Shapes** (`RefineShape`, `ShapePath`; drawn lines, laid as the Pen's are). A drag draws a
+  straight line, a rectangle across it, an oval filling the box it spans, or a curve (a second
+  drag bends it); a hexagon and a five-pointed star fill the box too: a regular hexagon, flat on
+  top and bottom with its side corners on the box's sides, and a star with a point up and its
+  inner corners 0.4 of the way out, each stretched to the box as the oval is a circle stretched
+  to it. The closed ones are sent as closed lines, their start once; new shapes go last in
+  `RefineShape`, whose order the app lists them in.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

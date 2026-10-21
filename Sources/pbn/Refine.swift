@@ -9,7 +9,7 @@ import PaintCore
 ///        {"tool": "pen", "points": [[x, y], ...]},                  a finger's samples
 ///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "cellEdge", "points": [[x, y], ...]},             the Cell Edge's
-///        {"tool": "shape", "shape": "line" | "rectangle" | "oval", "from": [x, y], "to": [x, y]},
+///        {"tool": "shape", "shape": "line" | "rectangle" | "oval" | "polygon" | "star", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
 ///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
@@ -193,7 +193,9 @@ func runRefine(_ options: Options) throws {
             case "line": edit = RefineGestures.shape(.line, from: a, to: b, on: screen, snapping: lines)
             case "rectangle": edit = RefineGestures.shape(.rectangle, from: a, to: b, on: screen, snapping: lines)
             case "oval": edit = RefineGestures.shape(.oval, from: a, to: b, on: screen, snapping: lines)
-            default: fail("gesture \(k + 1): a shape is line, rectangle, oval or curve")
+            case "polygon": edit = RefineGestures.shape(.polygon, from: a, to: b, on: screen, snapping: lines)
+            case "star": edit = RefineGestures.shape(.star, from: a, to: b, on: screen, snapping: lines)
+            default: fail("gesture \(k + 1): a shape is line, rectangle, oval, polygon, star or curve")
             }
         case "smartEraser":
             let at = point(g.at, "at", k)

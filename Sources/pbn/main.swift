@@ -74,7 +74,7 @@
 //   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm [--lines drawing.pgm]]
 //       [generate options]
 //       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
-//       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes, the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Smart
+//       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Smart
 //       Eraser's line from junction to junction, Fill with the photo's color there, Undo, Redo)
 //       on the coloring book of the photo (generated as the app does, the coloring book at its
 //       defaults unless --line-style says otherwise, or --template), each edit laid as the app lays

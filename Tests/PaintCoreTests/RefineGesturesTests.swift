@@ -89,6 +89,19 @@ struct RefineGesturesTests {
         #expect(RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) == .draw(points: [SIMD2(80, 20), SIMD2(120, 20)]))
     }
 
+    /// A polygon and a star are drawn as closed lines across the drag's box; too small, none.
+    @Test func polygonsAndStarsAreClosedLines() throws {
+        for shape in [RefineShape.polygon, .star] {
+            let edit = try #require(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
+            guard case .draw(let ring, true, nil) = edit else { Issue.record("\(edit)"); return }
+            #expect(ring.count == (shape == .polygon ? 6 : 10) && ring.first != ring.last)
+            #expect(abs(ring.map(\.x).min()! - 90) < 1e-3 && abs(ring.map(\.y).max()! - 28) < 1e-3)
+            let laid = try TemplateEditor.apply(edit, to: Self.scene)
+            #expect(laid.outcome.declined == nil && laid.outcome.regionsSplit == 1)
+            #expect(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(95, 30), on: Self.screen, snapping: nil) == nil)
+        }
+    }
+
     /// The eraser reaches a thirtieth of the view's short side, between 10 and 20 points.
     @Test func theEraserReachesItsSizeOnScreen() throws {
         #expect(abs(Self.screen.eraserRadius - 20 / 960) < 1e-6)

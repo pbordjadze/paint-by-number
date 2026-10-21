@@ -4,13 +4,19 @@ import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it 
 import Foundation
 
 /// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
-/// to where it ends, a rectangle or an oval across it, and a curve: a drag for its ends, then a
-/// second drag bends it through the finger (a tap leaves it straight).
+/// to where it ends, a rectangle, an oval, a hexagon or a five-pointed star across it, and a
+/// curve: a drag for its ends, then a second drag bends it through the finger (a tap leaves it
+/// straight). New shapes go last: the app lists them in this order.
 public enum RefineShape: CaseIterable, Hashable, Sendable {
-    case line, rectangle, oval, curve
+    case line, rectangle, oval, curve, polygon, star
 
     /// The figure ends where it starts.
-    public var isClosed: Bool { self == .rectangle || self == .oval }
+    public var isClosed: Bool {
+        switch self {
+        case .rectangle, .oval, .polygon, .star: true
+        case .line, .curve: false
+        }
+    }
 }
 
 /// The fills a tap of the Fill tool takes out.
@@ -212,6 +218,9 @@ public enum RefineGestures {
         case .oval:
             guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
             return ShapePath.oval(from: p, to: q, spacing: 2)
+        case .polygon, .star:
+            guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
+            return shape == .polygon ? ShapePath.polygon(from: p, to: q) : ShapePath.star(from: p, to: q)
         }
     }
 
