@@ -367,7 +367,9 @@ Saved paintings must open in every later build. The format history is documented
   `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
   Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
   the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
-  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
+  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`. So is
+  Refine (October 21, until a good one is ready): its button, tip and the gallery's draft row
+  under `#if UNRELEASED`, its screen's files left out the same way (App/CLAUDE.md › Create flow).
   `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
   what the release (TestFlight, App Store, the Release check) leaves out. It gates only

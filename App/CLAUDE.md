@@ -581,6 +581,15 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
+- Refine is in SideStore and Debug builds only for now (`#if UNRELEASED`; Paul, October 21: "Let’s
+  just take refine out of the release for now—there will be a good one soon"): the release has no
+  Refine button or tip on the preview, no Refine note over it and no draft row (`Drafts` reads
+  no draft there, leaving the one on disk for a build with Refine), and Release's
+  `EXCLUDED_SOURCE_FILE_NAMES` leaves out every `Refine*.swift` and `DraftRow.swift`, which
+  `ci/check_release.sh` checks: a new file of Refine's screen named so is left out too, and
+  anything outside them that names its types needs `#if UNRELEASED`. `RefineEdits.swift` (the
+  edits' model, back in by `INCLUDED_SOURCE_FILE_NAMES`) and `CreateModel`'s refining stay, so
+  paintings refined before regenerate as they were.
 - Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
   which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
   the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
@@ -658,8 +667,8 @@ Conventions).
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
     each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
-    `create-refine-select` (with `-dark`) selects it. The release keeps the one row of buttons
-    described above.
+    `create-refine-select` (with `-dark`) selects it. Without `UNRELEASED` the screen keeps the
+    one row of buttons described above (the release has no Refine at all).
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser

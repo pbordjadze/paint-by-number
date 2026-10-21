@@ -39,6 +39,7 @@ struct GalleryView: View {
                         GentleTipView(id: tip)
                             .transition(.opacity)
                     }
+                    #if UNRELEASED
                     if let draft = shownDraft {
                         DraftRow(
                             draft: draft, photo: library.drafts.store.url(.source), isCompact: width < 560,
@@ -46,6 +47,7 @@ struct GalleryView: View {
                         )
                         .transition(.opacity)
                     }
+                    #endif
                     // A painting nobody has painted on is ready to paint, not in progress.
                     let active = library.inProgress(matching: query)
                     if !active.isEmpty {
