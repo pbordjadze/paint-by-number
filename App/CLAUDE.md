@@ -55,6 +55,8 @@ synchronized folder would bundle it into the app.
   `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
   donations are capped per event and launch (`PaintTips.donate`).
+- The tip modifiers hold their ids as a `TipSet` (bits, plain data), never an array: SwiftUI then
+  compares them bit for bit and skips their bodies when their screen renders again unchanged.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
@@ -360,9 +362,11 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `TipDesk.pageTip`,
-  a card on the page, for Zoom, Drag and Pencil; `.barTips(…)`, a card with no arrow at the top of
-  the screen, under the bar, for the three about its buttons, the gear, + and Refine (a popover
-  from the button covered it on iOS 26; Paul, October 18: a card, as on the page), and
+  a card on the page, for Zoom, Drag and Pencil; a card with no arrow for the three about the
+  bar's buttons (a popover from the button covered it on iOS 26; Paul, October 18: a card, as on
+  the page): Refine's at the top of the preview, under the bar (`.barTips(…)`), the gear's and
+  the +'s atop the gallery's pages, which make room (`GentleTipView`, anchored by
+  `.barTipsInline(…)`: laid over the pages, the card hid the first section's title); and
   `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
   tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
   these, the bar's and the page's have no

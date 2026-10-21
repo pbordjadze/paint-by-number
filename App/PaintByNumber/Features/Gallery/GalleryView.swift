@@ -33,6 +33,12 @@ struct GalleryView: View {
         ScrollView {
             if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
+                    // The tips about the bar's gear and + (`AppShellView`), atop the pages, which
+                    // make room: a card laid over them hid the first section's title.
+                    if let tip = PaintTips.desk.turn, tip.place == .shelf, tip.liesUnderTheBar {
+                        GentleTipView(id: tip)
+                            .transition(.opacity)
+                    }
                     if let draft = shownDraft {
                         DraftRow(
                             draft: draft, photo: library.drafts.store.url(.source), isCompact: width < 560,
@@ -65,6 +71,7 @@ struct GalleryView: View {
                 .padding(.horizontal, horizontalPadding)
                 .padding(.top, 6)
                 .padding(.bottom, 56)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
             }
         }
         .scrollDisabled(isBare)

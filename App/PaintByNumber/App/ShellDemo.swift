@@ -54,8 +54,8 @@ import PaintCore
 /// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
 ///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
 ///   `paint-tip` (`PaintTips.configure`).
-/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips as a card under
-///   the bar. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
+/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips as a card atop
+///   the pages. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
 /// - `create-tip`: the photograph starter's preview with Already Chosen for You at the
 ///   "Suggested for this photo" chip (the divider's tip is closed already).
 /// - `settings`: the settings sheet over the gallery.

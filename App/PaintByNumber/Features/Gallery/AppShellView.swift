@@ -95,10 +95,11 @@ struct AppShellView: View {
                 .navigationTitle("Paint by Moonlight")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
-                // The gear's tip (where tips can be turned off), under the bar.
-                .barTips(.shelfSettings)
+                // The gear's tip (where tips can be turned off) and the +'s, which the gallery lays
+                // atop its pages.
+                .barTipsInline(.shelfSettings)
                 // An empty gallery has no + in its bar: the tip waits for one.
-                .barTips(.shelfNewPainting, active: !library.isBare)
+                .barTipsInline(.shelfNewPainting, active: !library.isBare)
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
                     // The zoom is for pushes from a card and for the way back to it; the painting
