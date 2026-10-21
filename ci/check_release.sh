@@ -47,6 +47,9 @@ done
 for file in marginarium.json pet-metrics.json; do
   [[ ! -e "$APP/$file" ]] || fail "the Release app bundles $file"
 done
+# The launch screen is the gallery's paper (light or dark), not a white flash before it.
+[[ "$(/usr/libexec/PlistBuddy -c "Print UILaunchScreen:UIColorName" "$APP/Info.plist" 2>/dev/null)" == "Paper" ]] \
+  || fail "the launch screen isn't the Paper color (UILaunchScreen:UIColorName)"
 # The making-of ships behind Settings' The Making-of: its spec is bundled, or the switch would do nothing.
 [[ -s "$APP/making-of.json" ]] || fail "the Release app doesn't bundle making-of.json, so The Making-of would do nothing"
 if compgen -G "$APP/pet-*.webp" > /dev/null; then fail "the Release app bundles the Marginarium's pet sheets"; fi
@@ -55,5 +58,5 @@ if xcrun --find assetutil > /dev/null 2>&1; then
     fail "the Release asset catalog holds Pip's or Colophon's frames"
   fi
 fi
-[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, making-of spec bundled, no Debug-only code, no Marginarium, no Refine"
+[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, no Debug-only code, no Marginarium, no Refine"
 exit $failed

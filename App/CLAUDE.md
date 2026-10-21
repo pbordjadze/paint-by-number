@@ -198,7 +198,8 @@ synchronized folder would bundle it into the app.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
-  scene manifest, ProMotion on iPhone.
+  scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
+  flashed before the gallery's paper; `ci/check_release.sh` checks it).
 
 ## Tests and demos
 
