@@ -552,8 +552,8 @@ extension View {
     }
 
     /// Lets `ids`, the tips about buttons of this screen's navigation bar, have the turn while
-    /// `active` (the button is there), for a screen that lays their card among its own content
-    /// (`GentleTipView`) instead, as the gallery does atop its pages.
+    /// `active`, for a screen that lays their card among its own content (`GentleTipView`) instead:
+    /// the gallery, atop its pages, while its button is in the bar and that top is in view.
     func barTipsInline(_ ids: TipID..., active: Bool = true) -> some View {
         modifier(TipAnchor(ids: TipSet(ids), isPresent: active))
     }
@@ -567,8 +567,8 @@ extension View {
     }
 }
 
-/// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf). The caller
-/// shows it only while it is the tip's turn.
+/// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf, and the
+/// gear's and the +'s atop it). The caller shows it only while it is the tip's turn.
 struct GentleTipView: View {
     let id: TipID
 

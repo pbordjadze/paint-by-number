@@ -55,8 +55,9 @@ synchronized folder would bundle it into the app.
   `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
   donations are capped per event and launch (`PaintTips.donate`).
-- The tip modifiers hold their ids as a `TipSet` (bits, plain data), never an array: SwiftUI then
-  compares them bit for bit and skips their bodies when their screen renders again unchanged.
+- The modifiers that point a tip (`.gentleTip`, `.barTips`, `.cardTip`'s popover) hold their ids
+  as a `TipSet` (bits), never an array: they are plain data, which SwiftUI compares bit for bit,
+  skipping their bodies when their screen renders again unchanged.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
@@ -366,7 +367,8 @@ where they live.
   bar's buttons (a popover from the button covered it on iOS 26; Paul, October 18: a card, as on
   the page): Refine's at the top of the preview, under the bar (`.barTips(…)`), the gear's and
   the +'s atop the gallery's pages, which make room (`GentleTipView`, anchored by
-  `.barTipsInline(…)`: laid over the pages, the card hid the first section's title); and
+  `.barTipsInline(…)` while that top is in view: laid over the pages, the card hid the first
+  section's title); and
   `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
   tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
   these, the bar's and the page's have no
@@ -396,7 +398,7 @@ where they live.
   scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
   `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
   tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (the tip about a navigation
-  bar button, under the bar), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  bar button, atop the pages), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
   them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
   (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
