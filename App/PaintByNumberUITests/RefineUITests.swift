@@ -192,7 +192,8 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-bucket")
 
         pickTool("merge", in: "Cells", of: app)
-        drag(on: canvas, from: onPicture(canvas, 0.6, 0.06), to: onPicture(canvas, 0.67, 0.06))
+        // From the area the Bucket painted out into the cloud beside it.
+        drag(on: canvas, from: onPicture(canvas, 0.6, 0.06), to: onPicture(canvas, 0.85, 0.25))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The merge didn't count: \(canvas.value ?? "")")
 
         pickTool("brush", in: "Paint", of: app)
