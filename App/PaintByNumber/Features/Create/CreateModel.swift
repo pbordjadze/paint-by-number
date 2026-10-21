@@ -304,8 +304,12 @@ final class CreateModel {
     var foundText: [[SIMD2<Float>]] { lineArtInput?.writing ?? [] }
 
     /// Whether the template draws from the line-art inputs, where lines can be drawn and erased
-    /// and the text corrections apply.
-    var hasLineArtInput: Bool { lineArtInput != nil }
+    /// and the text corrections apply; or it is the Tool Guide's practice picture, which is drawn
+    /// on alike and has no text.
+    var hasLineArtInput: Bool { lineArtInput != nil || isPractice }
+
+    /// The flow is a Tool Guide page's practice (`practice(_:scene:)`).
+    private(set) var isPractice = false
 
     /// Takes refinements as they are: a change to the generator's inputs makes the template again
     /// at full resolution (Refine shows what the painter did over the last full template until the
@@ -383,6 +387,51 @@ final class CreateModel {
         }
     }
 
+    #if UNRELEASED
+    /// Refine's Tool Guide: the practice picture (PaintCore's `RefinePractice`) as the photo, and
+    /// its template of `scene` as the base, ready to refine at once. Nothing is generated: a
+    /// practice page offers neither Start From nor the text corrections, and has no sliders, so
+    /// the base is never made again. Nothing is saved: the flow is the page's own, no draft's.
+    func practice(_ picture: RefinePracticePicture, scene: RefinePractice.Scene) {
+        cancelAll()
+        isPractice = true
+        defaultTitle = ""
+        title = ""
+        source = Source(image: picture.photo, preview: picture.preview, sampleName: nil)
+        preview = nil
+        stats = nil
+        importance = nil
+        lineArtInput = nil
+        draftImage = nil
+        decision = nil
+        settingsOrigin = nil
+        refinements = TemplateRefinements()
+        made = []
+        loadID += 1
+        forgetEdits()
+        progress = 0
+        phase = .loading
+        let load = loadID
+        let settings = self.settings, inputs = refinements, style = previewStyle
+        let base = picture.template(scene)
+        loadTask = Task {
+            do {
+                let shown = try await Self.laid(base, settings: settings, refinements: inputs, style: style)
+                guard load == loadID else { return }
+                remember(base, settings: settings, refinements: inputs.generatorInputs)
+                show(shown)
+                trailKey = BaseKey(settings: settings, inputs: inputs.generatorInputs)
+                phase = .ready
+            } catch is CancellationError {
+            } catch {
+                guard load == loadID else { return }
+                Log.create.error("The practice picture failed: \(String(describing: error), privacy: .public)")
+                phase = .failed(CreateError.renderFailed.localizedDescription)
+            }
+        }
+    }
+    #endif
+
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
     /// preview.
     func fail(_ error: CreateError) {
@@ -405,6 +454,7 @@ final class CreateModel {
         decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
+        isPractice = false
         // A new photo gets a new default name, and anything typed for the last one goes.
         self.defaultTitle = defaultTitle
         title = saved?.title ?? ""

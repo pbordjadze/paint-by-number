@@ -214,6 +214,43 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(refine, toMatch: changes("4 changes")), "Done didn't keep the changes")
     }
 
+    /// The Tool Guide opens on the tool in hand (Merge): its practice canvas merges the moon into
+    /// the sky (a change on the practice picture, none on the painting), Reset puts it back, Goes
+    /// Well With opens Cell Edge's page on its own canvas, and Done goes back to Refine as it was.
+    @MainActor
+    func testToolGuidePracticesAndResets() throws {
+        let app = launchPreview()
+        app.buttons["refine"].tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+        pickTool("merge", in: "Cells", of: app)
+        app.buttons["refine-guide"].tap()
+
+        let practice = app.descendants(matching: .any)["refine-practice"]
+        XCTAssertTrue(practice.waitForExistence(timeout: 60), "The guide didn't open on a practice canvas")
+        let pad = practice.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(pad.waitForExistence(timeout: 60), "The practice canvas didn't show")
+        // The palette shows once the practice picture's template is on the canvas.
+        XCTAssertTrue(practice.buttons["refine-paint-1"].waitForExistence(timeout: 60), "The practice picture didn't load")
+        XCTAssertTrue(app.descendants(matching: .any)["refine-guide-try"].exists, "Merge's page has no Try This")
+        attachScreenshot(of: app, named: "refine-guide")
+
+        // The practice picture is 4 × 3: from the sky into the moon.
+        drag(on: pad, from: onPicture(pad, 0.45, 0.2, aspect: 4 / 3), to: onPicture(pad, 0.78, 0.2, aspect: 4 / 3))
+        XCTAssertTrue(waitFor(pad, toMatch: changes("1 change")), "The practice merge didn't count: \(pad.value ?? "")")
+        let reset = practice.buttons["refine-practice-reset"]
+        reset.tap()
+        XCTAssertTrue(waitFor(pad, toMatch: changes("No changes")), "Reset didn't put the picture back: \(pad.value ?? "")")
+
+        let related = app.buttons["refine-guide-related-cellEdge"]
+        XCTAssertTrue(related.waitForExistence(timeout: 5), "Merge's page doesn't link Cell Edge")
+        related.tap()
+        XCTAssertTrue(app.switches["refine-snap"].waitForExistence(timeout: 60), "Cell Edge's practice has no Snap")
+
+        app.buttons["refine-guide-done"].firstMatch.tap()
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("No changes")), "The practice changed the painting: \(canvas.value ?? "")")
+    }
+
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).
@@ -278,11 +315,11 @@ final class RefineUITests: XCTestCase {
     private func changes(_ value: String) -> NSPredicate { NSPredicate(format: "value == %@", value) }
 
     /// A point of the picture (fractions of its width and height) as an offset in the canvas,
-    /// the whole surface, where the picture is fitted in the middle: The Great Wave (2048 × 1375),
-    /// `create-preview`'s picture.
+    /// the whole surface, where the picture is fitted in the middle: by default The Great Wave
+    /// (2048 × 1375), `create-preview`'s picture.
     @MainActor
-    private func onPicture(_ canvas: XCUIElement, _ x: CGFloat, _ y: CGFloat) -> CGVector {
-        let size = canvas.frame.size, aspect: CGFloat = 2048 / 1375
+    private func onPicture(_ canvas: XCUIElement, _ x: CGFloat, _ y: CGFloat, aspect: CGFloat = 2048 / 1375) -> CGVector {
+        let size = canvas.frame.size
         let width = min(size.width, size.height * aspect), height = width / aspect
         return CGVector(
             dx: ((size.width - width) / 2 + x * width) / size.width,

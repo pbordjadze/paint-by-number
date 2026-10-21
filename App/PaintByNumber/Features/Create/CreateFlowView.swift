@@ -123,7 +123,9 @@ struct CreateFlowView: View {
                 return
             }
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
-            if (openingSample != nil && ShellDemo.current != .createTip) || ShellDemo.current == .createFromFile {
+            // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).
+            if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil)
+                || ShellDemo.current == .createFromFile {
                 DemoMode.markReady()
             }
         }

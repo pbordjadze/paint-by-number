@@ -223,18 +223,46 @@ struct RefineView: View {
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
+    /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
+    /// practice picture, with Undo, Redo, the views and Reset above it in place of the screen's
+    /// bars, and none of the other tools.
+    private let practice: RefinePracticeSetup?
+    /// Reset on a practice canvas: the page makes the canvas again, from the picture.
+    private let onReset: (() -> Void)?
+    /// The Tool Guide, open at a page.
+    @State private var guide: RefineGuideTopic?
     #endif
 
     init(model: CreateModel) {
+        #if UNRELEASED
+        self.init(model: model, practice: nil)
+        #else
         self.model = model
         // Never a draft: its canvas is smaller than the one the edits will be laid on.
         _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
         _tool = State(initialValue: .pen)
-        #if UNRELEASED
+        #endif
+    }
+
+    #if UNRELEASED
+    /// Refine, or with `practice` a Tool Guide page's practice canvas on `model`'s practice picture
+    /// (`CreateModel.practice(_:scene:)`).
+    init(model: CreateModel, practice: RefinePracticeSetup?, onReset: (() -> Void)? = nil) {
+        self.model = model
+        self.practice = practice
+        self.onReset = onReset
+        // Never a draft: its canvas is smaller than the one the edits will be laid on.
+        _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
+        _tool = State(initialValue: .pen)
         // The Studio opens on the painting in its paints (the Lamplit Table, 6 to 0).
         _backdrop = State(initialValue: .painting)
-        #endif
-        #if UNRELEASED
+        if let practice {
+            _tool = State(initialValue: practice.tool)
+            _group = State(initialValue: RefineGroup.of(practice.tool))
+            _backdrop = State(initialValue: practice.backdrop)
+            if let shape = practice.shape { _shape = State(initialValue: shape) }
+            return
+        }
         #if DEBUG
         if let demo = ShellDemo.current {
             let opens: RefineTool? = demo.picksColorPaint ? .editPaint : demo.opensColors ? .looks : demo.selectsCell ? .select : nil
@@ -242,12 +270,64 @@ struct RefineView: View {
                 _tool = State(initialValue: opens)
                 _group = State(initialValue: RefineGroup.of(opens))
             }
+            if let topic = demo.opensGuide { _guide = State(initialValue: topic) }
         }
         #endif
+    }
+    #endif
+
+    var body: some View {
+        screen
+        .onAppear {
+            if !isPractice { PaintTips.desk.enter(.refine) }
+            // Once: Try Painting's cover makes it disappear and appear again, and the history and
+            // what Cancel puts back are the screen's, not the cover's.
+            guard !opened else { return }
+            opened = true
+            model.beginRefining()
+            // A draft refined before (Continue Refining) has found how to draw already.
+            if model.refinements.isEmpty, !isPractice { PaintTips.refineShown() }
+        }
+        .onDisappear {
+            model.dismissNote()
+            if !isPractice { PaintTips.desk.leave(.refine) }
+        }
+        #if UNRELEASED
+        .onChange(of: model.closedShape) { _, shape in
+            if let shape { closed(shape) }
+        }
+        .fullScreenCover(item: $trial) { trial in
+            PaintView(session: trial.session, title: String(localized: "Try Painting"), onClose: { self.trial = nil })
+        }
+        #endif
+        .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: showsPainting)) {
+            await land()
+        }
+    }
+
+    /// Whether this is a Tool Guide page's practice canvas.
+    private var isPractice: Bool {
+        #if UNRELEASED
+        practice != nil
+        #else
+        false
         #endif
     }
 
-    var body: some View {
+    @ViewBuilder
+    private var screen: some View {
+        #if UNRELEASED
+        if practice != nil {
+            practiceScreen
+        } else {
+            refineScreen
+        }
+        #else
+        refineScreen
+        #endif
+    }
+
+    private var refineScreen: some View {
         NavigationStack {
             canvas
                 .safeAreaInset(edge: .bottom, spacing: 0) { tools }
@@ -261,31 +341,9 @@ struct RefineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
         }
-        .onAppear {
-            PaintTips.desk.enter(.refine)
-            // Once: Try Painting's cover makes it disappear and appear again, and the history and
-            // what Cancel puts back are the screen's, not the cover's.
-            guard !opened else { return }
-            opened = true
-            model.beginRefining()
-            // A draft refined before (Continue Refining) has found how to draw already.
-            if model.refinements.isEmpty { PaintTips.refineShown() }
-        }
-        .onDisappear {
-            model.dismissNote()
-            PaintTips.desk.leave(.refine)
-        }
         #if UNRELEASED
-        .onChange(of: model.closedShape) { _, shape in
-            if let shape { closed(shape) }
-        }
-        .fullScreenCover(item: $trial) { trial in
-            PaintView(session: trial.session, title: String(localized: "Try Painting"), onClose: { self.trial = nil })
-        }
+        .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
         #endif
-        .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: showsPainting)) {
-            await land()
-        }
     }
 
     /// An edit sent to the model, which draws it until the template on screen has it.
@@ -428,7 +486,9 @@ struct RefineView: View {
         #if UNRELEASED
         // After the picture's own accessibility, which ignores its children: Start From and the
         // badge are controls of their own.
-        .overlay(alignment: .top) { topControls.padding(12) }
+        .overlay(alignment: .top) {
+            if !isPractice { topControls.padding(12) }
+        }
         .popover(item: $card, attachmentAnchor: .rect(.rect(cardAnchor))) { pick in areaCard(pick) }
         #endif
     }
@@ -821,8 +881,12 @@ struct RefineView: View {
             currentPaint = RefinePalette.following(currentPaint, from: before, to: preview.template.palette)
             if cellEdges?.id != preview.id { cellEdges = (preview.id, RefineCellEdges.path(of: preview.template)) }
             #if DEBUG
+            if isPractice, !didPickDemoPaint, ShellDemo.current?.opensGuide != nil {
+                didPickDemoPaint = true
+                DemoMode.markReady()
+            }
             // Pick from the refined template once its edits have landed, as a painter would.
-            if !didPickDemoPaint, preview.refinements == model.refinements, let demo = ShellDemo.current {
+            if !isPractice, !didPickDemoPaint, preview.refinements == model.refinements, let demo = ShellDemo.current {
                 let template = preview.template
                 let largest = template.regions.indices.max(by: { template.regions[$0].area < template.regions[$1].area })
                 let at = largest.flatMap { template.labels(ofRegion: $0).max(by: { $0.radius < $1.radius })?.position }
@@ -987,6 +1051,18 @@ struct RefineView: View {
             Button("Cancel", systemImage: "xmark", action: cancel)
                 .accessibilityIdentifier("refine-cancel")
         }
+        #if UNRELEASED
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Tool Guide", systemImage: "questionmark.circle") {
+                FeedbackEngine.shared.selectionChanged()
+                guide = RefineGuideTopic.opening(at: tool)
+            }
+            .accessibilityHint(Text(String(
+                localized: "refine.guide.open.hint", defaultValue: "What each tool does, with a picture to try it on.",
+                comment: "Refine screen: VoiceOver hint of the Tool Guide button, which opens a page per tool with a description and a practice canvas")))
+            .accessibilityIdentifier("refine-guide")
+        }
+        #endif
         ToolbarItemGroup(placement: .primaryAction) {
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
                 .disabled(!model.canUndo)
@@ -1442,10 +1518,17 @@ extension RefineView {
             RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
                 .disabled(!model.hasLineArtInput)
         }
-        if !usesRail {
+        if practice?.teaches == .tryPainting {
+            Button("Try Painting", systemImage: "paintbrush", action: tryPainting)
+                .buttonStyle(.glassProminent)
+                .tint(Theme.signature)
+                .disabled(base == nil)
+                .accessibilityIdentifier("refine-practice-try")
+        }
+        if !usesRail, practice == nil {
             Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
                 ForEach(RefineGroup.allCases, id: \.self) { kind in
-                    groupName(kind).tag(kind)
+                    Self.groupName(kind).tag(kind)
                 }
             }
             .pickerStyle(.segmented)
@@ -1494,7 +1577,7 @@ extension RefineView {
     private var railTools: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(RefineGroup.allCases, id: \.self) { kind in
-                groupName(kind)
+                Self.groupName(kind)
                     .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
                     .foregroundStyle(.secondary)
@@ -1518,7 +1601,7 @@ extension RefineView {
                 Image(systemName: symbol(kind))
                     .font(.body.weight(.semibold))
                     .frame(width: 24)
-                toolName(kind)
+                Self.toolName(kind)
                     .font(.subheadline.weight(selected ? .semibold : .regular))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -1533,11 +1616,11 @@ extension RefineView {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(toolName(kind))
+        .accessibilityLabel(Self.toolName(kind))
         .accessibilityHint(Text(hint(for: kind)))
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("refine-tool-\(toolID(kind))")
-        .accessibilityShowsLargeContentViewer { Label { toolName(kind) } icon: { Image(systemName: symbol(kind)) } }
+        .accessibilityIdentifier("refine-tool-\(Self.toolID(kind))")
+        .accessibilityShowsLargeContentViewer { Label { Self.toolName(kind) } icon: { Image(systemName: symbol(kind)) } }
         switch kind {
         case .pen: row.gentleTip(.refineDraw, arrowEdge: .leading)
         case .fill: row.gentleTip(.refineFill, arrowEdge: .leading)
@@ -1549,7 +1632,7 @@ extension RefineView {
     /// A tool's round button (iPhone's row).
     @ViewBuilder
     private func studioButton(_ kind: RefineTool) -> some View {
-        let button = toolButton(kind, systemImage: symbol(kind), label: toolName(kind), id: toolID(kind))
+        let button = toolButton(kind, systemImage: symbol(kind), label: Self.toolName(kind), id: Self.toolID(kind))
         switch kind {
         case .pen: button.gentleTip(.refineDraw, arrowEdge: .bottom)
         case .fill: button.gentleTip(.refineFill, arrowEdge: .bottom)
@@ -1558,7 +1641,7 @@ extension RefineView {
         }
     }
 
-    private func groupName(_ kind: RefineGroup) -> Text {
+    static func groupName(_ kind: RefineGroup) -> Text {
         switch kind {
         case .ink: Text("Ink")
         case .cells: Text("Cells")
@@ -1568,7 +1651,7 @@ extension RefineView {
         }
     }
 
-    private func toolName(_ kind: RefineTool) -> Text {
+    static func toolName(_ kind: RefineTool) -> Text {
         switch kind {
         case .pen: Text("Pen")
         case .shape: Text("Shapes")
@@ -1592,7 +1675,10 @@ extension RefineView {
         }
     }
 
-    private func symbol(_ kind: RefineTool) -> String {
+    private func symbol(_ kind: RefineTool) -> String { Self.symbol(kind, shape: shape) }
+
+    /// A tool's symbol; Shapes' is its figure's.
+    static func symbol(_ kind: RefineTool, shape: RefineShape) -> String {
         switch kind {
         case .pen: "pencil.tip"
         case .shape: shape.systemImage
@@ -1617,7 +1703,7 @@ extension RefineView {
     }
 
     /// The tool's accessibility identifier, after `refine-tool-` (the UI tests' names).
-    private func toolID(_ kind: RefineTool) -> String {
+    nonisolated static func toolID(_ kind: RefineTool) -> String {
         switch kind {
         case .shape: "shapes"
         default: "\(kind)"
@@ -1731,18 +1817,21 @@ extension RefineView {
     /// menu; Photo Behind adds its slider.
     @ViewBuilder
     private var backdropPicker: some View {
-        let picker = Picker("Show", selection: $backdrop) {
+        if sizeClass == .regular {
+            backdropChoice.pickerStyle(.segmented).fixedSize()
+        } else {
+            backdropChoice.pickerStyle(.menu)
+        }
+    }
+
+    private var backdropChoice: some View {
+        Picker("Show", selection: $backdrop) {
             Text("Painting").tag(RefineBackdrop.painting)
             Text("Paper").tag(RefineBackdrop.paper)
             Text("Photo").tag(RefineBackdrop.photo)
             Text("Photo Behind").tag(RefineBackdrop.photoBehind)
         }
         .accessibilityIdentifier("refine-backdrop")
-        if sizeClass == .regular {
-            picker.pickerStyle(.segmented).fixedSize()
-        } else {
-            picker.pickerStyle(.menu)
-        }
     }
 
     /// Photo Behind's slider: how plainly the photo shows through the painting.
@@ -1985,6 +2074,69 @@ extension RefineView {
         guard !reduceMotion, size.width > 0, size.height > 0 else { return }
         let point = onScreen(SIMD2(shape.at.x / Float(size.width), shape.at.y / Float(size.height)))
         sparkles = (shape.serial, point, CGFloat(shape.extent) * picture.width / size.width)
+    }
+}
+
+// MARK: Practice
+
+extension RefineView {
+    /// A Tool Guide page's practice canvas: the canvas, the tool's options (and the palette, in
+    /// Cells and Paint) below it, and above it Undo, Redo, the views and Reset.
+    fileprivate var practiceScreen: some View {
+        canvas
+            .safeAreaInset(edge: .top, spacing: 0) { practiceBar }
+            .safeAreaInset(edge: .bottom, spacing: 0) { tools }
+            .background(Theme.paper)
+    }
+
+    /// Undo and Redo, the views (a segmented control where it fits, else a menu) and Reset.
+    private var practiceBar: some View {
+        ViewThatFits(in: .horizontal) {
+            practiceBarRow { backdropChoice.pickerStyle(.segmented).fixedSize() }
+            practiceBarRow { backdropChoice.pickerStyle(.menu) }
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 10)
+        .padding(.bottom, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    private func practiceBarRow<Views: View>(@ViewBuilder views: () -> Views) -> some View {
+        HStack(spacing: 10) {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
+                        .disabled(!model.canUndo)
+                        .keyboardShortcut("z")
+                        .accessibilityIdentifier("refine-undo")
+                    Button("Redo", systemImage: "arrow.uturn.forward", action: model.redo)
+                        .disabled(!model.canRedo)
+                        .keyboardShortcut("z", modifiers: [.command, .shift])
+                        .accessibilityIdentifier("refine-redo")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+            }
+            Spacer(minLength: 0)
+            views()
+            Spacer(minLength: 0)
+            Button("Reset", systemImage: "arrow.counterclockwise", action: resetPractice)
+                .buttonStyle(.glass)
+                .disabled(!model.canUndo && model.refinements.edits.isEmpty)
+                .accessibilityHint(Text(String(
+                    localized: "refine.practice.reset.hint", defaultValue: "Puts the practice picture back as it was.",
+                    comment: "Tool Guide: VoiceOver hint of Reset above a tool's practice canvas, which undoes everything tried on it")))
+                .accessibilityIdentifier("refine-practice-reset")
+        }
+    }
+
+    /// Reset: the practice picture as the page opened it, with the canvas made again (its tool's
+    /// options and current paint too).
+    private func resetPractice() {
+        FeedbackEngine.shared.selectionChanged()
+        model.cancelRefining()
+        onReset?()
     }
 }
 
