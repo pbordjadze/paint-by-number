@@ -112,6 +112,9 @@ struct PaintView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("PaintView", "")
+        #endif
         GeometryReader { geo in
             if canvasUnavailable {
                 CanvasUnavailableView(onClose: onClose)

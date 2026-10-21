@@ -32,6 +32,9 @@ struct GalleryView: View {
     @State private var showsTop = true
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("GalleryView", String(describing: (showsTop, PaintTips.desk.turn)))
+        #endif
         ScrollView {
             if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
@@ -81,6 +84,9 @@ struct GalleryView: View {
         .scrollDisabled(isBare)
         .onScrollGeometryChange(for: Bool.self, of: { $0.contentOffset.y + $0.contentInsets.top < Self.topSlack }) { _, atTop in
             showsTop = atTop
+            #if DEBUG
+            RenderMeter.note(String(describing: (RenderMeter.galleryTop, atTop)))
+            #endif
         }
         // The gear's tip (where tips can be turned off) and the +'s may have the turn only while
         // the top of the pages is in view: scrolled away, one would come and go unseen above it.

@@ -72,6 +72,9 @@ struct MakingOfView: View {
     #endif
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("MakingOfView", "")
+        #endif
         GeometryReader { geometry in
             let layout = MakingOfLayout(
                 size: geometry.size, picture: pictureSize, band: min(band, geometry.size.height * 0.4), top: Self.top)

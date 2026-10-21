@@ -36,6 +36,9 @@ struct TemplatePreviewView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("TemplatePreviewView", String(describing: (isStarting, isTuning)))
+        #endif
         Group {
             if isSideBySide {
                 HStack(spacing: 24) {

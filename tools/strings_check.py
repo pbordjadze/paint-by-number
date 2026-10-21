@@ -127,6 +127,7 @@ ALLOWED_LITERALS = {
 # Marginarium's speaker table, whose strings are the signatures `marginarium.json` records,
 # matched and never shown. Their localizable sentences still go through the forms.
 VERBATIM_FILES = {
+    "App/RenderMeter.swift",
     "Features/Settings/License.swift", "Features/Settings/Acknowledgements.swift", "Features/Feedback/FeedbackReport.swift",
     "Features/Feedback/FeedbackUploader.swift", "Features/Marginarium/MarginariumSpeakers.swift",
 }

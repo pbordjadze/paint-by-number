@@ -425,6 +425,9 @@ private struct GentleTipModifier: ViewModifier {
     var arrowEdge: Edge?
 
     func body(content: Content) -> some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("GentleTipModifier")
+        #endif
         // `isPresented: nil` leaves it to TipKit to show and dismiss the popover by the tip's status
         // (and picks the one overload of `popoverTip` that takes an arrow edge that may be nil).
         content.popoverTip(active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge)
@@ -475,6 +478,9 @@ private struct TipAnchor: ViewModifier {
     @State private var anchored = TipSet([])
 
     func body(content: Content) -> some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("TipAnchor")
+        #endif
         content
             .onAppear {
                 isOnScreen = true
@@ -520,6 +526,9 @@ private struct BarTipModifier: ViewModifier {
     var active: Bool
 
     func body(content: Content) -> some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("BarTipModifier")
+        #endif
         let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
         content.overlay(alignment: .top) {
             ZStack {

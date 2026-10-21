@@ -71,6 +71,9 @@ struct AppShellView: View {
     #endif
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("AppShellView", String(describing: (path.count, isCreating)))
+        #endif
         // Read here, not only in the cover's content: a presentation runs its content with the
         // state the last body pass read, and a body that never reads these isn't run again when
         // they change with `isCreating`, so the flow would open without the photo (or keep its

@@ -75,6 +75,9 @@ struct ArtworkPaintingView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("ArtworkPaintingView", "")
+        #endif
         ZStack {
             Theme.paper.ignoresSafeArea()
             if let autosaver, hasLanded {

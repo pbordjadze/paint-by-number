@@ -54,6 +54,9 @@ struct CreateFlowView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        let _ = RenderMeter.tick("CreateFlowView", "")
+        #endif
         flow
             .background(Theme.paper.ignoresSafeArea())
             .opacity(flowOpacity)
