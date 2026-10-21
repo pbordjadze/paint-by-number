@@ -1,0 +1,173 @@
+Application, 0x11497b700, pid: 88280, label: 'Paint by Moonlight' <App element pid: 88280>
+  Window (Main), 0x11497aa80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4373956608.3>
+    Other, 0x11497b5c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389078016.4>
+      Other, 0x11497b980, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389945344.6>
+        Other, 0x11497ad00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389063744.8>
+          Other, 0x11497ae40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4373955584.10>
+            Other, 0x11497bd40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388725504.12>
+              Other, 0x11497be80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389066880.16>
+                NavigationBar, 0x11497af80, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight' <AX element pid: 88280, elementOrHash.elementID: 4390567936.22>
+                  Button, 0x114978b40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings' <AX element pid: 88280, elementOrHash.elementID: 4647638656.27>
+                  SearchField, 0x114979400, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings' <AX element pid: 88280, elementOrHash.elementID: 4373943296.28>
+                    Image, 0x114979540, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search' <AX element pid: 88280, elementOrHash.elementID: 4647665664.34>
+                  StaticText, 0x114978500, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight' <AX element pid: 88280, elementOrHash.elementID: 4373922688.29>
+                Other, 0x114979f40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389067776.23>
+                  Other, 0x11497a080, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388224320.30>
+                    Other, 0x114979e00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4373921792.35>
+                      Other, 0x114979cc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388740544.60>
+                        ScrollView, 0x114979b80, {{516.0, 0.0}, {0.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4390240256.67>
+                          Other, 0x114979a40, {{516.0, 138.0}, {0.0, 0.0}} <AX element pid: 88280, elementOrHash.elementID: 4389084160.74>
+                        Other, 0x114979900, {{381.0, 504.0}, {270.0, 198.0}} <AX element pid: 88280, elementOrHash.elementID: 4388737408.68>
+                        StaticText, 0x1149797c0, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo' <AX element pid: 88280, elementOrHash.elementID: 4388738304.69>
+                        StaticText, 0x114979680, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.' <AX element pid: 88280, elementOrHash.elementID: 4388738752.70>
+                        Button, 0x1149783c0, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 88280, elementOrHash.elementID: 4388740096.71>
+                          Image, 0x114978280, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add' <AX element pid: 88280, elementOrHash.elementID: 4388739200.75>
+                          StaticText, 0x114978000, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 88280, elementOrHash.elementID: 4388739648.76>
+                Other, 0x114978140, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389081088.24>
+                  Other, 0x11497abc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389083136.31>
+    Other, 0x11497b840, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4389089792.5>
+      Other, 0x11497bac0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4373960704.7>
+        Other, 0x11497a1c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388718784.9>
+          Other, 0x11497a300, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388530688.11>
+            NavigationBar, 0x11497a440, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting' <AX element pid: 88280, elementOrHash.elementID: 4649418752.13>
+              Button, 0x11497a580, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close' <AX element pid: 88280, elementOrHash.elementID: 4664313088.17>
+              StaticText, 0x11497a6c0, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting' <AX element pid: 88280, elementOrHash.elementID: 4373936128.18>
+              Other, 0x11497a800, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes <AX element pid: 88280, elementOrHash.elementID: 4373949696.19>
+                Other, 0x11497b200, {{946.0, 36.0}, {72.0, 36.0}} <AX element pid: 88280, elementOrHash.elementID: 4388588160.25>
+                  Button, 0x11497b340, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes <AX element pid: 88280, elementOrHash.elementID: 4388784320.133>
+            Other, 0x11497b480, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388531584.14>
+              Other, 0x11497bc00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388542592.20>
+                Other, 0x106468640, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4373924480.26>
+                  Other, 0x106468140, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388736064.33>
+                    Other, 0x114963e80, {{516.0, 721.0}, {0.0, 0.0}} <AX element pid: 88280, elementOrHash.elementID: 4388218944.36>
+                    Other, 0x11479e580, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and painting', value: 50 percent photo <AX element pid: 88280, elementOrHash.elementID: 4388729536.37>
+                      Image, 0x11479d180, {{32.0, 122.5}, {968.0, 650.5}} <AX element pid: 88280, elementOrHash.elementID: 4388789248.169>
+                      Image, 0x11479d400, {{32.0, 123.0}, {968.0, 649.5}} <AX element pid: 88280, elementOrHash.elementID: 4388721920.61>
+                      Other, 0x11479c780, {{494.0, 426.0}, {44.0, 44.0}} <AX element pid: 88280, elementOrHash.elementID: 4388748608.80>
+                      Image, 0x11479d900, {{508.5, 443.5}, {15.0, 9.5}}, identifier: 'arrow.left.and.right', label: 'arrow.left.and.right' <AX element pid: 88280, elementOrHash.elementID: 4388727744.81>
+                      StaticText, 0x11479d040, {{32.0, 123.0}, {968.0, 649.5}}, label: 'Photo' <AX element pid: 88280, elementOrHash.elementID: 4388726848.62>
+                      StaticText, 0x11479fac0, {{933.5, 137.8}, {48.5, 14.5}}, label: 'Painting' <AX element pid: 88280, elementOrHash.elementID: 4388729088.63>
+                    Image, 0x11479c500, {{274.0, 859.0}, {13.5, 13.5}}, identifier: 'pencil', label: 'Edit' <AX element pid: 88280, elementOrHash.elementID: 4388732224.40>
+                    TextField, 0x11479df40, {{299.5, 853.5}, {460.5, 24.0}}, identifier: 'painting-title', placeholderValue: 'The Great Wave' <AX element pid: 88280, elementOrHash.elementID: 4373945856.41>
+                    Other, 0x11479c280, {{258.0, 905.5}, {235.0, 44.0}} <AX element pid: 88280, elementOrHash.elementID: 4388836608.93>
+                    Other, 0x11479c8c0, {{258.0, 905.5}, {235.0, 44.0}} <AX element pid: 88280, elementOrHash.elementID: 4388837504.94>
+                    Button, 0x11479d2c0, {{258.0, 905.5}, {235.0, 44.0}}, identifier: 'settings-origin', label: 'Reset to Suggested', value: Custom <AX element pid: 88280, elementOrHash.elementID: 4388841984.95>
+                      StaticText, 0x11479ca00, {{270.0, 919.5}, {49.0, 16.0}}, label: 'Custom' <AX element pid: 88280, elementOrHash.elementID: 4388839744.97>
+                      StaticText, 0x11479e1c0, {{325.0, 919.5}, {4.5, 16.0}}, label: '·' <AX element pid: 88280, elementOrHash.elementID: 4388840192.98>
+                      Image, 0x11479d680, {{336.5, 920.0}, {11.5, 14.0}}, identifier: 'arrow.counterclockwise', label: 'arrow.counterclockwise' <AX element pid: 88280, elementOrHash.elementID: 4388840640.99>
+                      StaticText, 0x1066c9040, {{336.5, 920.0}, {144.5, 16.0}}, label: 'Reset to Suggested' <AX element pid: 88280, elementOrHash.elementID: 4388841088.100>
+                    Other, 0x1066cbac0, {{258.0, 967.5}, {516.0, 53.0}} <AX element pid: 88280, elementOrHash.elementID: 4388544832.45>
+                    StaticText, 0x1066c8c80, {{258.0, 967.5}, {46.5, 18.0}}, label: 'Colors' <AX element pid: 88280, elementOrHash.elementID: 4388674112.46>
+                    StaticText, 0x1066c8f00, {{755.5, 967.5}, {18.5, 18.0}}, label: '22' <AX element pid: 88280, elementOrHash.elementID: 4388674560.47>
+                    Slider, 0x1066c83c0, {{258.0, 989.5}, {516.0, 31.0}}, label: 'Colors', value: 22 <AX element pid: 88280, elementOrHash.elementID: 4664438784.48>
+                    StaticText, 0x11479abc0, {{258.0, 1038.5}, {41.5, 18.0}}, label: 'Detail' <AX element pid: 88280, elementOrHash.elementID: 4388677248.49>
+                    StaticText, 0x114798a00, {{717.0, 1038.5}, {57.0, 18.0}}, label: 'Detailed' <AX element pid: 88280, elementOrHash.elementID: 4388679936.50>
+                    Slider, 0x11479a1c0, {{258.0, 1060.5}, {516.0, 31.0}}, label: 'Detail', value: Detailed <AX element pid: 88280, elementOrHash.elementID: 4664440320.51>
+                    StaticText, 0x102e79cc0, {{258.0, 1109.5}, {89.5, 18.0}}, label: 'Smoothness' <AX element pid: 88280, elementOrHash.elementID: 4388681728.52>
+                    StaticText, 0x113dc5e00, {{735.0, 1109.5}, {39.0, 18.0}}, label: 'Clean' <AX element pid: 88280, elementOrHash.elementID: 4388683072.53>
+                    Slider, 0x113dc52c0, {{258.0, 1131.5}, {516.0, 31.0}}, label: 'Smoothness', value: Clean <AX element pid: 88280, elementOrHash.elementID: 4664441856.54>
+                    StaticText, 0x113dc5180, {{258.0, 1180.5}, {38.0, 18.0}}, label: 'Lines' <AX element pid: 88280, elementOrHash.elementID: 4388733824.55>
+                    StaticText, 0x1147a7340, {{738.5, 1180.5}, {35.5, 18.0}}, label: 'More' <AX element pid: 88280, elementOrHash.elementID: 4388734272.56>
+                    Slider, 0x1147a6800, {{258.0, 1202.5}, {516.0, 31.0}}, label: 'Lines', value: More <AX element pid: 88280, elementOrHash.elementID: 4647667712.57>
+                    StaticText, 0x1147a4500, {{419.2, 1251.5}, {193.5, 16.0}}, label: '22 colors · 518 areas · ~25 min' <AX element pid: 88280, elementOrHash.elementID: 4388735168.58>
+                    Button, 0x1147a7d40, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting' <AX element pid: 88280, elementOrHash.elementID: 4388735616.59>
+            Other, 0x1147a7840, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4648886784.15>
+              Other, 0x1147a7200, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4648888832.21>
+    Other, 0x1147a5400, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 5137142784.116>
+      Other, 0x1147a4280, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4667427840.117>
+        Other, 0x1147a6a80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 5239892032.118>
+          Other, 0x1147a6440, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388943872.119>
+            NavigationBar, 0x1147a6580, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'Refine' <AX element pid: 88280, elementOrHash.elementID: 4649429504.120>
+              Button, 0x1147a70c0, {{14.0, 36.0}, {40.0, 36.0}}, identifier: 'refine-guide', label: 'Tool Guide' <AX element pid: 88280, elementOrHash.elementID: 5100387328.123>
+              Button, 0x1147a6300, {{70.0, 36.0}, {36.5, 36.0}}, identifier: 'refine-cancel', label: 'Cancel' <AX element pid: 88280, elementOrHash.elementID: 4664322048.124>
+              StaticText, 0x1147a4f00, {{296.0, 30.5}, {440.0, 47.0}}, label: 'Refine' <AX element pid: 88280, elementOrHash.elementID: 5145270528.125>
+                Other, 0x1147a6940, {{296.0, 30.5}, {440.0, 47.0}} <AX element pid: 88280, elementOrHash.elementID: 5239892928.131>
+                  SegmentedControl, 0x113e9d7c0, {{296.0, 30.5}, {440.0, 47.0}}, identifier: 'refine-backdrop' <AX element pid: 88280, elementOrHash.elementID: 4666125568.134>
+                    Button, 0x113e9ebc0, {{296.0, 30.5}, {110.0, 48.0}}, label: 'Painting', Selected <AX element pid: 88280, elementOrHash.elementID: 4666126336.136>
+                    Button, 0x113e9c780, {{406.0, 30.5}, {110.0, 48.0}}, label: 'Paper' <AX element pid: 88280, elementOrHash.elementID: 4666120960.137>
+                    Button, 0x113e9fac0, {{516.0, 30.5}, {110.0, 48.0}}, label: 'Photo' <AX element pid: 88280, elementOrHash.elementID: 4668129280.138>
+                    Button, 0x113e9e6c0, {{626.0, 30.5}, {110.0, 48.0}}, label: 'Photo Behind' <AX element pid: 88280, elementOrHash.elementID: 4668130048.139>
+              Button, 0x113e9fe80, {{867.0, 36.0}, {39.5, 36.0}}, identifier: 'refine-undo', label: 'Undo', Disabled <AX element pid: 88280, elementOrHash.elementID: 4664325888.126>
+              Button, 0x113e9cdc0, {{922.5, 36.0}, {39.5, 36.0}}, identifier: 'refine-redo', label: 'Redo', Disabled <AX element pid: 88280, elementOrHash.elementID: 5239209984.127>
+              Button, 0x113e9d040, {{982.0, 36.0}, {36.0, 36.0}}, identifier: 'refine-done', label: 'Done' <AX element pid: 88280, elementOrHash.elementID: 5239210624.128>
+            Other, 0x113e9e800, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388944320.121>
+              Other, 0x113e9c3c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388952640.129>
+                Other, 0x113e9c140, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4666491776.132>
+                  Other, 0x113e9fc00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 4388878784.135>
+                    Other, 0x113e9d540, {{196.0, 86.0}, {836.0, 1210.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes <AX element pid: 88280, elementOrHash.elementID: 5239894272.140>
+                      Image, 0x113e9c8c0, {{208.0, 418.5}, {812.0, 545.0}} <AX element pid: 88280, elementOrHash.elementID: 5239893376.170>
+                      Other, 0x106640000, {{196.0, 86.0}, {836.0, 1210.0}} <AX element pid: 88280, elementOrHash.elementID: 5100377728.171>
+                        ScrollView, 0x106640140, {{196.0, 86.0}, {836.0, 1210.0}} <AX element pid: 88280, elementOrHash.elementID: 4373528576.216>
+                          Other, 0x106640280, {{208.0, 418.5}, {812.0, 545.2}} <AX element pid: 88280, elementOrHash.elementID: 4388791040.220>
+                    SegmentedControl, 0x1066403c0, {{214.0, 104.0}, {168.0, 31.0}}, identifier: 'refine-start' <AX element pid: 88280, elementOrHash.elementID: 4668136192.221>
+                      Button, 0x106640500, {{214.0, 104.0}, {84.0, 32.0}}, label: 'Generated', Selected <AX element pid: 88280, elementOrHash.elementID: 4668136960.222>
+                      Button, 0x106640640, {{298.0, 104.0}, {84.0, 32.0}}, label: 'Blank' <AX element pid: 88280, elementOrHash.elementID: 4668137728.223>
+                    Switch, 0x106640780, {{470.0, 1314.0}, {100.0, 28.0}}, identifier: 'refine-snap', label: 'Snap', value: 1 <AX element pid: 88280, elementOrHash.elementID: 5239896064.142>
+                      StaticText, 0x1066408c0, {{470.0, 1320.0}, {31.0, 16.0}}, label: 'Snap' <AX element pid: 88280, elementOrHash.elementID: 5239895168.174>
+                      Switch, 0x106640a00, {{509.0, 1314.0}, {63.0, 28.0}}, value: 1 <AX element pid: 88280, elementOrHash.elementID: 5100379008.175>
+                    Switch, 0x106640b40, {{586.0, 1314.0}, {172.5, 28.0}}, identifier: 'refine-pen-colors', label: 'Color from Photo', value: 0 <AX element pid: 88280, elementOrHash.elementID: 5239897408.143>
+                      StaticText, 0x106640c80, {{586.0, 1320.0}, {103.5, 16.0}}, label: 'Color from Photo' <AX element pid: 88280, elementOrHash.elementID: 5239896512.176>
+                      Switch, 0x106640dc0, {{697.5, 1314.0}, {63.0, 28.0}}, value: 0 <AX element pid: 88280, elementOrHash.elementID: 5100382208.177>
+                    StaticText, 0x106640f00, {{32.0, 110.0}, {21.0, 14.5}}, label: 'INK' <AX element pid: 88280, elementOrHash.elementID: 4388794176.144>
+                    Other, 0x106641040, {{20.0, 128.5}, {168.0, 37.0}} <AX element pid: 88280, elementOrHash.elementID: 4388938944.145>
+                    Button, 0x106641180, {{20.0, 128.5}, {168.0, 37.0}}, identifier: 'refine-tool-pen', label: 'Pen', Selected <AX element pid: 88280, elementOrHash.elementID: 4388796416.146>
+                      Image, 0x1066412c0, {{38.5, 139.0}, {11.5, 16.0}}, identifier: 'pencil.tip', label: 'pencil.tip' <AX element pid: 88280, elementOrHash.elementID: 4388793280.178>
+                      StaticText, 0x106641400, {{66.0, 138.0}, {27.0, 18.0}}, label: 'Pen' <AX element pid: 88280, elementOrHash.elementID: 4388795072.179>
+                    Button, 0x106641540, {{20.0, 167.5}, {168.0, 36.0}}, identifier: 'refine-tool-shapes', label: 'Shapes', value: Line <AX element pid: 88280, elementOrHash.elementID: 4388784768.147>
+                      Image, 0x106641680, {{37.0, 178.5}, {14.0, 14.0}}, identifier: 'line.diagonal', label: 'line.diagonal' <AX element pid: 88280, elementOrHash.elementID: 4388795968.180>
+                      StaticText, 0x1066417c0, {{66.0, 176.5}, {51.0, 18.0}}, label: 'Shapes' <AX element pid: 88280, elementOrHash.elementID: 4388797760.181>
+                    Button, 0x106641900, {{20.0, 205.5}, {168.0, 38.5}}, identifier: 'refine-tool-bendLine', label: 'Bend Line' <AX element pid: 88280, elementOrHash.elementID: 4388633024.148>
+                      Image, 0x106641a40, {{35.0, 216.0}, {18.0, 17.5}}, identifier: 'scribble', label: 'Draw' <AX element pid: 88280, elementOrHash.elementID: 4388785216.182>
+                      StaticText, 0x106641b80, {{66.0, 215.8}, {68.5, 18.0}}, label: 'Bend Line' <AX element pid: 88280, elementOrHash.elementID: 4388633472.183>
+                    Button, 0x106641cc0, {{20.0, 246.0}, {168.0, 39.5}}, identifier: 'refine-tool-eraser', label: 'Eraser' <AX element pid: 88280, elementOrHash.elementID: 4389073600.149>
+                      Image, 0x106641e00, {{35.0, 256.5}, {18.5, 18.5}}, identifier: 'eraser', label: 'eraser' <AX element pid: 88280, elementOrHash.elementID: 4388621824.184>
+                      StaticText, 0x106641f40, {{66.0, 256.8}, {44.0, 18.0}}, label: 'Eraser' <AX element pid: 88280, elementOrHash.elementID: 4389063296.185>
+                    Button, 0x106642080, {{20.0, 287.5}, {168.0, 42.0}}, identifier: 'refine-tool-smartEraser', label: 'Line Eraser' <AX element pid: 88280, elementOrHash.elementID: 4388524864.150>
+                      Image, 0x1066421c0, {{31.5, 298.0}, {23.0, 21.0}}, identifier: 'eraser.line.dashed', label: 'eraser.line.dashed' <AX element pid: 88280, elementOrHash.elementID: 4389074496.186>
+                      StaticText, 0x106642300, {{66.0, 299.5}, {76.5, 18.0}}, label: 'Line Eraser' <AX element pid: 88280, elementOrHash.elementID: 4388529344.187>
+                    StaticText, 0x106642440, {{32.0, 345.5}, {38.5, 14.5}}, label: 'CELLS' <AX element pid: 88280, elementOrHash.elementID: 4388214464.151>
+                    Button, 0x106642580, {{20.0, 364.0}, {168.0, 39.0}}, identifier: 'refine-tool-select', label: 'Select' <AX element pid: 88280, elementOrHash.elementID: 4388846016.152>
+                      Image, 0x1066426c0, {{39.0, 374.5}, {10.5, 18.0}}, identifier: 'cursorarrow', label: 'cursorarrow' <AX element pid: 88280, elementOrHash.elementID: 4388832576.188>
+                      StaticText, 0x106642800, {{66.0, 374.5}, {43.5, 18.0}}, label: 'Select' <AX element pid: 88280, elementOrHash.elementID: 4388843328.189>
+                    Button, 0x106642940, {{20.0, 405.0}, {168.0, 37.0}}, identifier: 'refine-tool-cellEdge', label: 'Cell Edge' <AX element pid: 88280, elementOrHash.elementID: 4388833472.153>
+                      Image, 0x106642a80, {{36.0, 415.5}, {16.0, 16.0}}, identifier: 'square.split.diagonal', label: 'square.split.diagonal' <AX element pid: 88280, elementOrHash.elementID: 4388833024.190>
+                      StaticText, 0x106642bc0, {{66.0, 414.5}, {65.0, 18.0}}, label: 'Cell Edge' <AX element pid: 88280, elementOrHash.elementID: 4388836160.191>
+                    Button, 0x106642d00, {{20.0, 444.0}, {168.0, 38.5}}, identifier: 'refine-tool-merge', label: 'Merge' <AX element pid: 88280, elementOrHash.elementID: 4388835264.154>
+                      Image, 0x106642e40, {{39.0, 454.5}, {10.5, 17.5}}, identifier: 'arrow.triangle.merge', label: 'Merge' <AX element pid: 88280, elementOrHash.elementID: 4388832128.192>
+                      StaticText, 0x106642f80, {{66.0, 454.2}, {44.0, 18.0}}, label: 'Merge' <AX element pid: 88280, elementOrHash.elementID: 4388834816.193>
+                    Button, 0x1066430c0, {{20.0, 484.5}, {168.0, 37.0}}, identifier: 'refine-tool-moveEdge', label: 'Move Edge' <AX element pid: 88280, elementOrHash.elementID: 4388842880.155>
+                      Image, 0x106643200, {{36.0, 495.0}, {16.0, 16.0}}, identifier: 'arrow.left.and.right.square', label: 'arrow.left.and.right.square' <AX element pid: 88280, elementOrHash.elementID: 4388844672.194>
+                      StaticText, 0x106643340, {{66.0, 494.0}, {76.5, 18.0}}, label: 'Move Edge' <AX element pid: 88280, elementOrHash.elementID: 4388846912.195>
+                    Other, 0x106643480, {{20.0, 523.5}, {168.0, 38.5}} <AX element pid: 88280, elementOrHash.elementID: 4388939392.156>
+                    Button, 0x1066435c0, {{20.0, 523.5}, {168.0, 38.5}}, identifier: 'refine-tool-fill', label: 'Fill Shape' <AX element pid: 88280, elementOrHash.elementID: 4388843776.157>
+                      Image, 0x106643700, {{35.5, 534.0}, {17.5, 17.5}}, identifier: 'circle.inset.filled', label: 'circle.inset.filled' <AX element pid: 88280, elementOrHash.elementID: 4388831232.196>
+                      StaticText, 0x106643840, {{66.0, 533.8}, {66.5, 18.0}}, label: 'Fill Shape' <AX element pid: 88280, elementOrHash.elementID: 4388833920.197>
+                    StaticText, 0x106643980, {{32.0, 578.0}, {36.5, 14.5}}, label: 'PAINT' <AX element pid: 88280, elementOrHash.elementID: 4388845568.158>
+                    Button, 0x106643ac0, {{20.0, 596.5}, {168.0, 38.5}}, identifier: 'refine-tool-bucket', label: 'Bucket' <AX element pid: 88280, elementOrHash.elementID: 4388587712.159>
+                      Image, 0x106643c00, {{38.0, 607.0}, {12.5, 17.5}}, identifier: 'drop.fill', label: 'Water Drop' <AX element pid: 88280, elementOrHash.elementID: 4388845120.198>
+                      StaticText, 0x106643d40, {{66.0, 606.8}, {47.5, 18.0}}, label: 'Bucket' <AX element pid: 88280, elementOrHash.elementID: 4388846464.199>
+                    Button, 0x106643e80, {{20.0, 637.0}, {168.0, 40.5}}, identifier: 'refine-tool-brush', label: 'Paint Brush' <AX element pid: 88280, elementOrHash.elementID: 4388867584.160>
+                      Image, 0x1147b4000, {{34.0, 647.5}, {20.5, 19.5}}, identifier: 'paintbrush.pointed', label: 'paintbrush.pointed' <AX element pid: 88280, elementOrHash.elementID: 4388590848.200>
+                      StaticText, 0x1147b4140, {{66.0, 648.2}, {78.5, 18.0}}, label: 'Paint Brush' <AX element pid: 88280, elementOrHash.elementID: 4388867136.201>
+                    Button, 0x1147b4280, {{20.0, 679.5}, {168.0, 40.0}}, identifier: 'refine-tool-eyedropper', label: 'Eyedropper' <AX element pid: 88280, elementOrHash.elementID: 4388868032.161>
+                      Image, 0x1147b43c0, {{35.0, 690.0}, {19.0, 19.0}}, identifier: 'eyedropper', label: 'Pick Color Empty' <AX element pid: 88280, elementOrHash.elementID: 4388873856.202>
+                      StaticText, 0x1147b4500, {{66.0, 690.5}, {79.5, 18.0}}, label: 'Eyedropper' <AX element pid: 88280, elementOrHash.elementID: 4388874304.203>
+                    Button, 0x1147b4640, {{20.0, 721.5}, {168.0, 41.0}}, identifier: 'refine-tool-editPaint', label: 'Edit Paint' <AX element pid: 88280, elementOrHash.elementID: 4388866688.162>
+                      Image, 0x1147b4780, {{34.0, 732.0}, {20.0, 20.0}}, identifier: 'swatchpalette', label: 'swatchpalette' <AX element pid: 88280, elementOrHash.elementID: 4388871168.204>
+                      StaticText, 0x1147b48c0, {{66.0, 733.0}, {65.0, 18.0}}, label: 'Edit Paint' <AX element pid: 88280, elementOrHash.elementID: 4388872064.205>
+                    Button, 0x1147b4a00, {{20.0, 764.5}, {168.0, 39.0}}, identifier: 'refine-tool-looks', label: 'Looks' <AX element pid: 88280, elementOrHash.elementID: 4388869824.163>
+                      Image, 0x1147b4b40, {{34.5, 775.0}, {19.0, 18.0}}, identifier: 'camera.filters', label: 'Filters' <AX element pid: 88280, elementOrHash.elementID: 4388866240.206>
+                      StaticText, 0x1147b4c80, {{66.0, 775.0}, {40.5, 18.0}}, label: 'Looks' <AX element pid: 88280, elementOrHash.elementID: 4388868480.207>
+                    StaticText, 0x1147b4dc0, {{32.0, 819.5}, {60.5, 14.5}}, label: 'NUMBERS' <AX element pid: 88280, elementOrHash.elementID: 4388870272.164>
+                    Button, 0x1147b4f00, {{20.0, 838.0}, {168.0, 38.5}}, identifier: 'refine-tool-moveNumber', label: 'Move Number' <AX element pid: 88280, elementOrHash.elementID: 4388869376.165>
+                      Image, 0x1147b5040, {{35.5, 848.5}, {17.5, 17.5}}, identifier: 'number.circle', label: 'number.circle' <AX element pid: 88280, elementOrHash.elementID: 4388870720.208>
+                      StaticText, 0x1147b5180, {{66.0, 848.2}, {96.5, 18.0}}, label: 'Move Number' <AX element pid: 88280, elementOrHash.elementID: 4388868928.209>
+                    StaticText, 0x1147b52c0, {{32.0, 892.5}, {23.0, 14.5}}, label: 'SEE' <AX element pid: 88280, elementOrHash.elementID: 4388871616.166>
+                    Button, 0x1147b5400, {{20.0, 911.0}, {168.0, 38.0}}, identifier: 'refine-tool-text', label: 'Writing' <AX element pid: 88280, elementOrHash.elementID: 4388872512.167>
+                      Image, 0x1147b5540, {{35.5, 921.5}, {17.0, 17.0}}, identifier: 'text.viewfinder', label: 'text.viewfinder' <AX element pid: 88280, elementOrHash.elementID: 4388874752.210>
+                      StaticText, 0x1147b5680, {{66.0, 921.0}, {49.0, 18.0}}, label: 'Writing' <AX element pid: 88280, elementOrHash.elementID: 4388879680.211>
+                    Button, 0x1147b57c0, {{20.0, 951.0}, {168.0, 42.5}}, identifier: 'refine-tool-tryPainting', label: 'Try Painting' <AX element pid: 88280, elementOrHash.elementID: 4388877888.168>
+                      Image, 0x1147b5900, {{34.5, 961.5}, {19.0, 21.5}}, identifier: 'paintbrush', label: 'Format' <AX element pid: 88280, elementOrHash.elementID: 4388875200.212>
+                      StaticText, 0x1147b5a40, {{66.0, 963.2}, {81.0, 18.0}}, label: 'Try Painting' <AX element pid: 88280, elementOrHash.elementID: 4388877440.213>
+            Other, 0x1147b5b80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 5143356928.122>
+              Other, 0x1147b5cc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 88280, elementOrHash.elementID: 5143358976.130>

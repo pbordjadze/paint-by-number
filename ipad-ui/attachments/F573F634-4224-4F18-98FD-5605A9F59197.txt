@@ -1,0 +1,32 @@
+Attributes: Button, 0x1147a7340, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Element subtree:
+ →Button, 0x1147a7340, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Path to element:
+ →Application, 0x113e9e6c0, pid: 88280, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x113e9fe80, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x113e9cdc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x113e9d040, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x113e9e800, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x113e9c3c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x113e9c140, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x113e9fc00, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x113e9d540, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x113e9c8c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Button, 0x1147a7340, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting', Disabled
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x106640280, pid: 88280, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x1147b4b40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+      Button, 0x11496ee40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x1147b5040, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Button, 0x1147b7e80, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      Button, 0x11496fe80, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate '"Start Painting" IN identifiers'
+      Output: {
+        Button, 0x11496df40, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      }
