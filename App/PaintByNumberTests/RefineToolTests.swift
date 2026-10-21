@@ -14,12 +14,13 @@ struct RefineToolTests {
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
         #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
-        for tool in [RefineTool.select, .cellEdge, .bucket, .eyedropper, .editPaint, .looks] {
+        for tool in [RefineTool.select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks] {
             #expect(tool.pencilPartner == nil && !tool.erases, "\(tool)")
         }
         // The tools that change paint alone show the painting beneath them; the Eyedropper may
         // read the photo.
-        #expect(RefineTool.bucket.paints && RefineTool.cellEdge.paints && RefineTool.looks.paints)
+        #expect(RefineTool.bucket.paints && RefineTool.brush.paints && RefineTool.cellEdge.paints && RefineTool.looks.paints)
+        #expect(!RefineTool.merge.paints)
         #expect(!RefineTool.eyedropper.paints && !RefineTool.pen.paints && !RefineTool.select.paints)
     }
 
@@ -74,13 +75,15 @@ struct RefineToolTests {
         #expect(RefineGroup.allCases.allSatisfy { !$0.tools.isEmpty && $0.tools.count <= 5 })
         #expect(RefineGroup.ink.tools.first == .pen)
         let tools: [RefineTool] = [
-            .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .fill, .bucket, .eyedropper, .editPaint, .looks,
+            .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .merge, .fill, .bucket, .brush, .eyedropper, .editPaint,
+            .looks,
         ]
         for tool in tools {
             #expect(all.contains(tool), "\(tool) is in no group")
         }
         #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
         #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
+        #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
         #expect(all.contains(.splitter) == RefineView.offersSplitter)
     }
 

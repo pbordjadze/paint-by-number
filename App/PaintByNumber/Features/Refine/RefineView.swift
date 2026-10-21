@@ -28,6 +28,12 @@ nonisolated enum RefineTool: Hashable {
     /// The Toolbox's Cell Edge: a stroke divides a cell where it goes and draws no line, both
     /// sides keeping the paint (`TemplateEditor.Edit.cellEdge`).
     case cellEdge
+    /// The Toolbox's Merge: a drag across cells joins them into the first, boundaries and all
+    /// (`TemplateEditor.Edit.merge`).
+    case merge
+    /// The Toolbox's Paint Brush: the stroke's footprint takes the current paint, joining the
+    /// cells of that paint it meets (`TemplateEditor.Edit.brush`); a tap is a dab.
+    case brush
     /// The Toolbox's Bucket: a tap gives the cell under it the current paint
     /// (`TemplateEditor.Edit.paintArea`).
     case bucket
@@ -45,13 +51,15 @@ nonisolated enum RefineTool: Hashable {
         switch self {
         case .pen, .shape: .eraser
         case .eraser, .smartEraser: .pen
-        case .fill, .splitter, .text, .select, .cellEdge, .bucket, .eyedropper, .editPaint, .looks: nil
+        case .fill, .splitter, .text, .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks: nil
         }
     }
 
     /// What the tool does shows in the painting (paints, and a cell edge, which draws no line), so
     /// the painting shows beneath it.
-    var paints: Bool { self == .splitter || self == .cellEdge || self == .bucket || self == .editPaint || self == .looks }
+    var paints: Bool {
+        self == .splitter || self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
+    }
 
     var erases: Bool { self == .eraser || self == .smartEraser }
 }
@@ -117,8 +125,8 @@ nonisolated enum RefineBackdrop: Hashable {
 ///
 /// SideStore and Debug builds (`#if UNRELEASED`) lay the tools out as the Toolbox, a drawing app's:
 /// Ink, Cells, Paint and See, every tool in a rail on iPad and in group tabs on iPhone; a Pen of ink
-/// alone with Snap and Color from Photo, Select, Cell Edge, a palette with a current paint, the
-/// Bucket, the Eyedropper, Edit Paint and Looks; an area's card on a long press, sparkles where a
+/// alone with Snap and Color from Photo, Select, Cell Edge, Merge, a palette with a current paint,
+/// the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks; an area's card on a long press, sparkles where a
 /// line closes off an area and a badge for numbers near their floor (`RefineStudio.swift`,
 /// `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The Toolbox).
 struct RefineView: View {
@@ -171,6 +179,8 @@ struct RefineView: View {
     /// Whether a drawn line gives the pieces it cuts the photo's colors (`TemplateEditor.painted`):
     /// the Toolbox's Color from Photo, off, so the Pen draws ink alone.
     @AppStorage(SettingsKey.refinePenColors) private var penColors = false
+    /// The Paint Brush's Size: its radius on screen, in points.
+    @AppStorage(SettingsKey.refineBrushSize) private var brushSize = Double(RefineGestures.brushSize)
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
@@ -320,8 +330,8 @@ struct RefineView: View {
                     #endif
                     let figure = shapeTrace
                     RefineInkLayer(
-                        lines: pending, trace: tool == .shape ? figure : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
-                        dashed: tool == .splitter || tool == .cellEdge,
+                        lines: pending, trace: tool == .shape ? figure : tool == .brush ? nil : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
+                        dashed: tool == .splitter || tool == .cellEdge, merging: tool == .merge, brushes: brushes,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
                         beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     if let tapped {
@@ -403,8 +413,9 @@ struct RefineView: View {
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
             case .eraseLine:
                 if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
-            case .fill, .split, .cellEdge, .look, .repaint, .paintArea:
-                // `RefineFillLayer` shows fills; a split, a cell edge and paint draw nothing.
+            case .fill, .split, .cellEdge, .merge, .brush, .look, .repaint, .paintArea:
+                // `RefineFillLayer` shows fills, `brushes` the brush's strokes; a split, a cell
+                // edge, a merge and paint draw nothing.
                 break
             }
         }
@@ -469,7 +480,7 @@ struct RefineView: View {
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch tool {
-        case .pen, .splitter, .cellEdge, .eraser, .smartEraser: follow(touch, at: point)
+        case .pen, .splitter, .cellEdge, .merge, .brush, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
         case .text: mark(touch, at: point)
         // A fill is a tap, and so are selecting, painting a cell and picking a paint: a drag
@@ -484,7 +495,7 @@ struct RefineView: View {
         switch touch {
         case .began:
             trace = [point]
-            snapLines = tool.erases || !snapsOn ? nil : currentSnapLines()
+            snapLines = tool.erases || tool == .merge || tool == .brush || !snapsOn ? nil : currentSnapLines()
         case .moved:
             // Samples closer than a point add nothing the line shows.
             guard var current = trace, let last = current.last, screen.onScreenLength(point - last) >= 1 else { return }
@@ -496,6 +507,8 @@ struct RefineView: View {
             let edit = tool.erases ? eraserEdit(current)
                 : tool == .splitter ? splitterEdit(current)
                 : tool == .cellEdge ? RefineGestures.cellEdge(current, on: screen, snapping: snapLines)
+                : tool == .merge ? RefineGestures.merge(current, on: screen)
+                : tool == .brush ? brushEdit(current)
                 : penEdit(current)
             endStroke()
             if let edit { submit(edit) }
@@ -559,6 +572,37 @@ struct RefineView: View {
     /// The eraser's pass as an edit (`RefineGestures.eraser`).
     private func eraserEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
         RefineGestures.eraser(points, on: screen)
+    }
+
+    /// The Paint Brush's stroke as an edit, in the current paint at the brush's Size
+    /// (`RefineGestures.brush`).
+    private func brushEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
+        #if UNRELEASED
+        guard let color = currentPaint else { return nil }
+        return RefineGestures.brush(points, on: screen, color: color, radius: CGFloat(brushSize))
+        #else
+        return nil
+        #endif
+    }
+
+    /// The brush's strokes sent that the template on screen doesn't show yet, and the one under
+    /// the finger, as `RefineInkLayer` lays them.
+    private var brushes: [RefineInkLayer.Brush] {
+        let size = templateSize
+        guard size.width > 0, size.height > 0, let space = base?.template.colorSpace else { return [] }
+        let long = Float(max(size.width, size.height))
+        var strokes: [RefineInkLayer.Brush] = submitted.compactMap { item in
+            guard case .brush(let path, let radius, let color) = item.edit else { return nil }
+            return .init(
+                points: path.map { SIMD2($0.x / Float(size.width), $0.y / Float(size.height)) }, radius: radius / long,
+                color: RefinePalette.color(color, space: space))
+        }
+        #if UNRELEASED
+        if tool == .brush, let trace, let color = currentPaint {
+            strokes.append(.init(points: trace, radius: screen.brushRadius(size: CGFloat(brushSize)), color: RefinePalette.color(color, space: space)))
+        }
+        #endif
+        return strokes
     }
 
     // MARK: Shapes
@@ -702,8 +746,11 @@ struct RefineView: View {
 
     private func tap(at point: SIMD2<Float>) {
         switch tool {
-        case .pen, .splitter, .cellEdge, .looks:
+        case .pen, .splitter, .cellEdge, .merge, .looks:
             break
+        case .brush:
+            // A dab, of the brush's own reach.
+            if let edit = brushEdit([point]) { submit(edit) }
         case .shape:
             finishCurve()
         case .eraser:
@@ -1003,6 +1050,14 @@ struct RefineView: View {
             String(localized: "refine.hint.cellEdge",
                    defaultValue: "Draw across an area to divide it in two with no line. Both parts keep the paint.",
                    comment: "Refine screen: how Cell Edge works (a stroke divides an area where it goes, drawing no line; both parts keep their paint until painted), read by VoiceOver as the hint of its button")
+        case .merge:
+            String(localized: "refine.hint.merge",
+                   defaultValue: "Drag across areas to join them into one, in the first one’s paint.",
+                   comment: "Refine screen: how Merge works (a drag across areas joins them into one, taking the paint of the area the drag began in; the lines between them go), read by VoiceOver as the hint of its button")
+        case .brush:
+            String(localized: "refine.hint.brush",
+                   defaultValue: "Paint the current paint where you brush, or tap to paint a spot. It joins the areas of that paint it touches.",
+                   comment: "Refine screen: how the Paint Brush works (where it is dragged becomes the paint picked in the palette, joining areas of that paint it meets; a tap paints a spot), read by VoiceOver as the hint of its button")
         case .bucket:
             String(localized: "refine.hint.bucket",
                    defaultValue: "Tap an area to give it the current paint.",
@@ -1367,8 +1422,10 @@ extension RefineView {
         case .text: Text("Writing")
         case .select: Text("Select")
         case .cellEdge: Text("Cell Edge")
+        case .merge: Text("Merge")
         case .fill: Text("Fill Shape")
         case .splitter: Text("Color Splitter")
+        case .brush: Text("Paint Brush")
         case .bucket: Text("Bucket")
         case .eyedropper: Text("Eyedropper")
         case .editPaint: Text("Edit Paint")
@@ -1385,8 +1442,10 @@ extension RefineView {
         case .text: "text.viewfinder"
         case .select: "cursorarrow"
         case .cellEdge: "square.split.diagonal"
+        case .merge: "arrow.triangle.merge"
         case .fill: "circle.inset.filled"
         case .splitter: "scissors"
+        case .brush: "paintbrush.pointed"
         case .bucket: "drop.fill"
         case .eyedropper: "eyedropper"
         case .editPaint: "swatchpalette"
@@ -1427,6 +1486,17 @@ extension RefineView {
             }
         case .cellEdge:
             optionBar { snapToggle }
+        case .brush:
+            optionBar {
+                Text("Size")
+                Slider(value: $brushSize, in: 4...48)
+                    .frame(width: 160)
+                    .accessibilityLabel(Text("Size"))
+                    .accessibilityValue(Text(String(
+                        localized: "refine.brush.size", defaultValue: "\(Int(brushSize.rounded())) points",
+                        comment: "Refine screen, the Paint Brush's options: VoiceOver value of its Size slider, the brush's radius on screen in points; the argument is the number")))
+                    .accessibilityIdentifier("refine-brush-size")
+            }
         case .looks, .editPaint:
             if let base {
                 RefineColorsPanel(

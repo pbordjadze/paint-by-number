@@ -154,8 +154,9 @@ final class RefineUITests: XCTestCase {
     }
 
     /// Select picks the open sky and shows its paint; Cell Edge divides the sky with no line (a
-    /// change); the Bucket gives one side another paint from the palette (a second); Photo Behind
-    /// shows its slider; Done keeps both changes.
+    /// change); the Bucket gives one side another paint from the palette (a second); Merge joins
+    /// the two again (a third); the Paint Brush paints a stroke of the sky (a fourth); Photo
+    /// Behind shows its slider; Done keeps the four changes.
     @MainActor
     func testToolboxSelectsDividesAndPaints() throws {
         let app = launchPreview()
@@ -190,12 +191,22 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "The bucket didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-bucket")
 
+        pickTool("merge", in: "Cells", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.6, 0.06), to: onPicture(canvas, 0.67, 0.06))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The merge didn't count: \(canvas.value ?? "")")
+
+        pickTool("brush", in: "Paint", of: app)
+        XCTAssertTrue(app.sliders["refine-brush-size"].waitForExistence(timeout: 5), "The brush has no Size")
+        drag(on: canvas, from: onPicture(canvas, 0.3, 0.08), to: onPicture(canvas, 0.45, 0.1))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The brush didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-brush")
+
         show("Photo Behind", in: app)
         XCTAssertTrue(app.sliders["refine-photo-behind"].waitForExistence(timeout: 5), "Photo Behind has no slider")
         attachScreenshot(of: app, named: "refine-photo-behind")
 
         app.buttons["refine-done"].tap()
-        XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")
+        XCTAssertTrue(waitFor(refine, toMatch: changes("4 changes")), "Done didn't keep the changes")
     }
 
     // MARK: - Helpers

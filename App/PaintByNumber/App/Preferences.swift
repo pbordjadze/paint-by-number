@@ -34,6 +34,8 @@ enum SettingsKey {
     static let refineSnaps = "refineSnaps"
     /// Refine's Color from Photo: a drawn line gives the areas it divides the photo's colors (off).
     static let refinePenColors = "refinePenColors"
+    /// Refine's Paint Brush's Size: its radius on screen, in points (`RefineGestures.brushSize` unless set).
+    static let refineBrushSize = "refineBrushSize"
 }
 
 /// The preferences that code outside views reads (the create flow, a painting's session), with

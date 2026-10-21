@@ -103,6 +103,10 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notSplit
         /// A Cell Edge stroke that could not divide an area (it closed none off).
         case notDivided
+        /// A Merge drag that joined no areas.
+        case notMerged
+        /// A Paint Brush stroke with no room for a number where it went.
+        case notPainted
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -119,6 +123,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             case .draw: self = .notDrawn
             case .split: self = .notSplit
             case .cellEdge: self = .notDivided
+            case .merge: self = .notMerged
+            case .brush: self = .notPainted
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             case .look, .repaint, .paintArea: self = .notRecolored
@@ -146,6 +152,12 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notDivided:
             String(localized: "refine.note.notDivided", defaultValue: "That area couldn’t be divided there.",
                    comment: "Refine screen toast: a Cell Edge stroke could not divide an area (it closed off no part of one); nothing changed")
+        case .notMerged:
+            String(localized: "refine.note.notMerged", defaultValue: "Those areas couldn’t be joined.",
+                   comment: "Refine screen toast: a Merge drag joined no areas (it crossed only one, or none that touch); nothing changed")
+        case .notPainted:
+            String(localized: "refine.note.notPainted", defaultValue: "That couldn’t be painted there.",
+                   comment: "Refine screen toast: a Paint Brush stroke left no room for a number where it went; nothing changed")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -165,7 +177,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         switch kind {
         case .tooSmall: "circle.dotted"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notRecolored, .left: "exclamationmark.circle"
+        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted, .notRecolored, .left:
+            "exclamationmark.circle"
         }
     }
 }

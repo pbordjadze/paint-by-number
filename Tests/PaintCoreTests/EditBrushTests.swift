@@ -200,5 +200,10 @@ struct EditBrushTests {
         #expect(path.count == 2 && simdLength(path[0] - SIMD2(100, 100)) < 1e-3 && simdLength(path[1] - SIMD2(140, 100)) < 1e-3)
         #expect(abs(radius - 2.4) < 1e-4 && color == Self.magenta)
         #expect(RefineGestures.brush([], on: screen, color: Self.magenta) == nil)
+        // The app's Size: twice the radius on screen, twice the reach.
+        guard case .brush(_, let wide, _)? = RefineGestures.brush(samples, on: screen, color: Self.magenta, radius: 24),
+              case .brush(_, let standard, _) = edit
+        else { Issue.record("not a brush"); return }
+        #expect(abs(wide - 2 * standard) < 1e-3)
     }
 }

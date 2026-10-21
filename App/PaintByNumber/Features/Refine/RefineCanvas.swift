@@ -9,14 +9,27 @@ import UIKit
 /// shape or the eraser's pass still under the finger; while the eraser is down a ring shows its
 /// reach.
 struct RefineInkLayer: View {
+    /// A Paint Brush stroke: its path (normalized to the picture), its reach either side (a
+    /// fraction of the picture's long side) and its paint.
+    nonisolated struct Brush: Equatable {
+        var points: [SIMD2<Float>]
+        var radius: Float
+        var color: Color
+    }
+
     let lines: [TemplateRefinements.Line]
     let trace: [SIMD2<Float>]?
     /// The trace is the line as it will be drawn (a shape), not the finger's samples.
     let traceIsDrawn: Bool
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
-    /// The trace is the Color Splitter's, a line that won't be drawn: dashed.
+    /// The trace is the Color Splitter's or a Cell Edge's, a line that won't be drawn: dashed.
     var dashed = false
+    /// The trace is Merge's, a path that draws nothing: in the signature color.
+    var merging = false
+    /// The Paint Brush's strokes the template doesn't show yet, and the one under the finger (the
+    /// trace's, when it is the brush's), laid in their paint under the ink.
+    var brushes: [Brush] = []
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
     let eraserRadius: Float
     let rect: CGRect
@@ -30,6 +43,7 @@ struct RefineInkLayer: View {
     var body: some View {
         let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
         let lineWidth = lineWidth, beneath = beneath, halo = halo, traceIsDrawn = traceIsDrawn, dashed = dashed
+        let merging = merging, brushes = brushes, signature = Theme.signature
         Canvas { context, _ in
             guard rect.width > 0, rect.height > 0 else { return }
             let long = max(rect.width, rect.height)
@@ -63,6 +77,10 @@ struct RefineInkLayer: View {
             func erase(_ path: Path, radius: Float) {
                 uncover(path.strokedPath(Self.style(2 * CGFloat(radius) * long)))
             }
+            for brush in brushes where !brush.points.isEmpty {
+                let path = polyline(brush.points.map(point))
+                canvas.stroke(path, with: .color(brush.color.opacity(0.85)), style: Self.style(2 * CGFloat(brush.radius) * long))
+            }
             for line in lines where !line.points.isEmpty {
                 let path = polyline(line.points.map(point))
                 switch line.kind {
@@ -87,6 +105,8 @@ struct RefineInkLayer: View {
                     let ring = Path(ellipseIn: CGRect(x: point(last).x - r, y: point(last).y - r, width: 2 * r, height: 2 * r))
                     canvas.fill(ring, with: .color(.white.opacity(0.25)))
                     canvas.stroke(ring, with: .color(LineArtDrawing.ink.opacity(0.45)), lineWidth: 1)
+                } else if merging {
+                    canvas.stroke(polyline(points), with: .color(signature), style: Self.style(max(lineWidth, 2.5)))
                 } else if dashed {
                     var style = Self.style(lineWidth)
                     style.dash = [lineWidth * 2.5, lineWidth * 2.5]

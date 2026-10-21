@@ -15,8 +15,9 @@ nonisolated enum RefineGroup: Hashable, CaseIterable {
     var tools: [RefineTool] {
         switch self {
         case .ink: [.pen, .shape, .eraser, .smartEraser]
-        case .cells: RefineView.offersSplitter ? [.select, .cellEdge, .fill, .splitter] : [.select, .cellEdge, .fill]
-        case .paint: [.bucket, .eyedropper, .editPaint, .looks]
+        case .cells:
+            RefineView.offersSplitter ? [.select, .cellEdge, .merge, .fill, .splitter] : [.select, .cellEdge, .merge, .fill]
+        case .paint: [.bucket, .brush, .eyedropper, .editPaint, .looks]
         case .see: [.text]
         }
     }

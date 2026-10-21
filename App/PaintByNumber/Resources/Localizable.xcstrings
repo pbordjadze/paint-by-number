@@ -77,6 +77,10 @@
       "comment" : "Refine screen: the tool that rubs lines out, or takes a whole line out with a tap; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "Merge" : {
+      "comment" : "Refine screen: the tool that joins the areas a drag crosses into one; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
     "New Paint" : {
       "comment" : "Refine screen, the palette: VoiceOver label of the color picker at its end, which picks any color as the current paint, and of the swatch of a current color no paint has yet",
       "extractionState" : "manual"
@@ -87,6 +91,10 @@
     },
     "Or Use a Paint" : {
       "comment" : "Refine screen, an area's card: the caption over a row of the painting's paints, one of which the pressed area can take instead",
+      "extractionState" : "manual"
+    },
+    "Paint Brush" : {
+      "comment" : "Refine screen: the tool that paints the current paint where it is dragged, making or growing areas; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
     "Photo Behind" : {
@@ -105,6 +113,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New area"
+          }
+        }
+      }
+    },
+    "refine.brush.size" : {
+      "comment" : "Refine screen, the Paint Brush's options: VoiceOver value of its Size slider, the brush's radius on screen in points; the argument is the number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld point"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld points"
+                }
+              }
+            }
           }
         }
       }
@@ -169,6 +201,18 @@
         }
       }
     },
+    "refine.hint.brush" : {
+      "comment" : "Refine screen: how the Paint Brush works (where it is dragged becomes the paint picked in the palette, joining areas of that paint it meets; a tap paints a spot), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint the current paint where you brush, or tap to paint a spot. It joins the areas of that paint it touches."
+          }
+        }
+      }
+    },
     "refine.hint.bucket" : {
       "comment" : "Refine screen: how the Bucket works (a tap gives the area under it the paint picked in the palette), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
@@ -229,6 +273,18 @@
         }
       }
     },
+    "refine.hint.merge" : {
+      "comment" : "Refine screen: how Merge works (a drag across areas joins them into one, taking the paint of the area the drag began in; the lines between them go), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag across areas to join them into one, in the first one’s paint."
+          }
+        }
+      }
+    },
     "refine.hint.select" : {
       "comment" : "Refine screen: how Select works (a tap selects the area under it, outlined, with its paint shown in a bar), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
@@ -249,6 +305,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That area couldn’t be divided there."
+          }
+        }
+      }
+    },
+    "refine.note.notMerged" : {
+      "comment" : "Refine screen toast: a Merge drag joined no areas (it crossed only one, or none that touch); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Those areas couldn’t be joined."
+          }
+        }
+      }
+    },
+    "refine.note.notPainted" : {
+      "comment" : "Refine screen toast: a Paint Brush stroke left no room for a number where it went; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That couldn’t be painted there."
           }
         }
       }
@@ -2479,6 +2559,10 @@
     },
     "Similar colors too" : {
       "comment" : "Refine screen, Colors: a switch; on, the paints of about the same hue as the paint picked take its new color along with it",
+      "extractionState" : "manual"
+    },
+    "Size" : {
+      "comment" : "Refine screen, the Paint Brush's options: the label of the slider that sets how wide the brush paints",
       "extractionState" : "manual"
     },
     "Skip" : {

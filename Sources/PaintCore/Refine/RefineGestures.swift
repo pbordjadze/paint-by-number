@@ -66,9 +66,12 @@ public struct RefineScreen: Sendable, Equatable {
 
     /// The Paint Brush's reach, a fraction of the picture's long side: `RefineGestures.brushSize`
     /// on screen at any zoom, so zoomed in it paints finer, as the eraser erases.
-    public var brushRadius: Float {
+    public var brushRadius: Float { brushRadius(size: RefineGestures.brushSize) }
+
+    /// A brush of radius `size` points on screen as a fraction of the picture's long side.
+    public func brushRadius(size: CGFloat) -> Float {
         let long = max(picture.width, picture.height)
-        return long > 0 ? Float(RefineGestures.brushSize / long) : 0.02
+        return long > 0 ? Float(size / long) : 0.02
     }
 
     /// A picture point on screen, in points from the picture's corner.
@@ -160,13 +163,16 @@ public enum RefineGestures {
     }
 
     /// The Paint Brush's stroke as an edit: its path in canvas units, thinned as the eraser's is,
-    /// its reach there the brush's on screen (`brushRadius`), painting `color` (OKLab, a color of
-    /// the template on screen). A dab is one point; nil for no touch.
-    public static func brush(_ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>) -> TemplateEditor.Edit? {
+    /// its reach there the brush's on screen (`brushRadius(size:)`, `radius` points; the app's
+    /// Size), painting `color` (OKLab, a color of the template on screen). A dab is one point; nil
+    /// for no touch.
+    public static func brush(
+        _ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>, radius: CGFloat = brushSize
+    ) -> TemplateEditor.Edit? {
         let size = screen.canvas
         guard !points.isEmpty, size.width > 0, size.height > 0 else { return nil }
         let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
-        return .brush(path: path, radius: screen.brushRadius * Float(max(size.width, size.height)), color: color)
+        return .brush(path: path, radius: screen.brushRadius(size: radius) * Float(max(size.width, size.height)), color: color)
     }
 
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger

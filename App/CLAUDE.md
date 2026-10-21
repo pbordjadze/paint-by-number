@@ -624,11 +624,14 @@ Conventions).
     `SettingsKey.refineSnaps`/`refinePenColors`), Shapes (its figures and Snap above the tools), the
     Eraser, the Line Eraser. Cells: Select (a tap selects a cell, outlined, its paint, area count and
     share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
-    (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Fill Shape; while
+    (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
+    drag joins the cells it crosses into the first, boundaries and ink between them gone), Fill Shape; while
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
-    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint),
+    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint), the
+    Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
+    it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
     the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
     (`RefineColorsPanel`'s two modes). See: Writing (the Text tool). The views (Painting, Paper,
     Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
