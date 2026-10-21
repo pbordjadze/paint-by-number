@@ -277,7 +277,7 @@ struct RefineView: View {
     #endif
 
     var body: some View {
-        screen
+        stage
         .onAppear {
             if !isPractice { PaintTips.desk.enter(.refine) }
             // Once: Try Painting's cover makes it disappear and appear again, and the history and
@@ -314,8 +314,9 @@ struct RefineView: View {
         #endif
     }
 
+    /// Refine's screen, or a practice canvas.
     @ViewBuilder
-    private var screen: some View {
+    private var stage: some View {
         #if UNRELEASED
         if practice != nil {
             practiceScreen

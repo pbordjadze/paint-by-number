@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import os
 import PaintCore
 import SwiftUI
 
