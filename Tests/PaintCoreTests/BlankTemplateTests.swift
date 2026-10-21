@@ -84,6 +84,8 @@ struct BlankTemplateTests {
         #expect(left != right && u.regions[left].colorIndex != u.regions[right].colorIndex)
         #expect(ColorScience.distance(Self.paint(of: left, in: u), Self.lab(Self.red)) <= SegmentationParameters.jnd)
         #expect(ColorScience.distance(Self.paint(of: right, in: u), Self.lab(Self.blue)) <= SegmentationParameters.jnd)
+        // The photo's one paint, which neither side kept, leaves the palette: every number paints.
+        #expect(u.palette.count == 2 && Set(u.regions.map(\.colorIndex)) == [0, 1])
         for y in 0..<Self.height {
             for x in 0..<Self.width { #expect(Int(u.regionMap[x, y]) == (x < 80 ? left : right), "pixel \(x), \(y)") }
         }

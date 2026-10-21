@@ -38,9 +38,13 @@ extension EditWork {
     /// (Paul, October 18: "colors should get recalculated when a new line is drawn"). A split's
     /// pieces (`splitting`) part whatever the photo: the smaller side takes the shade, the painter
     /// having asked for the area to be told apart.
+    /// A paint the pieces had that no area has now leaves the palette, the numbers after it closing
+    /// up, as Merge's do (`dropPaints`): a Blank start's first line repaints both its sides, which
+    /// left the photo's one paint in the palette with nothing to paint.
     mutating func paint(_ paints: [TemplateEditor.Paint]) throws {
         if splitting { for r in summary.pieces where regionAlive[r] { refreshColorWeights(around: r) } }
         guard !paints.isEmpty, !summary.pieces.isEmpty else { return }
+        let used = Set(summary.pieces.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex })
         let tolerance = TemplateEditor.paintTolerance(t.palette)
         var colors: [Int: SIMD3<Float>] = [:]
         for paint in paints {
@@ -84,6 +88,7 @@ extension EditWork {
                 if let color = colors[r], shadeSplit(r, toward: color) { break }
             }
         }
+        try dropPaints(emptiedFrom: used)
     }
 
     /// Paints `r`, one side of a split or a drawn line whose other side has its paint, a shade of
