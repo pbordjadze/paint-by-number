@@ -53,6 +53,9 @@ repeat it, vary it, check the log, before deciding what it is.
   (feedback in this build never leaves the device). Back returns to the gallery. Progress is
   saved by itself (within seconds while painting, and on leaving), so leaving and returning, and
   quitting and relaunching, must keep every painted area and the progress shown.
+- The canvas offers VoiceOver up to 40 unpainted areas of the selected color in view, as
+  elements with ids `canvas-area-<n>`; a tap at one's centre should paint it. Everything else on
+  the canvas you reach by coordinates, from what the screenshot shows.
 - Two-finger pan and pinch are not available through Maestro; zoom with double taps, Hint and
   Fit to Screen, and note what you couldn't try.
 
