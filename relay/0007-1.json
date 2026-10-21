@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: \"30.7%,39.8%\"\n- waitForAnimationToEnd:\n    timeout: 4000\n"
+ },
+ "seconds": 0.0,
+ "isError": true,
+ "text": [
+  "Failed to run flow: For input string: \"30.7\""
+ ],
+ "images": []
+}

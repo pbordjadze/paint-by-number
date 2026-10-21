@@ -1,0 +1,34 @@
+{
+ "n": 7,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: \"30.7%,39.8%\"\n- waitForAnimationToEnd:\n    timeout: 4000\n"
+   },
+   "seconds": 0.0,
+   "isError": true,
+   "text": [
+    "Failed to run flow: For input string: \"30.7\""
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": null,
+   "seconds": 0.8,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0007-2-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 294830,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
