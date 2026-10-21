@@ -46,14 +46,15 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   - This simulator has no hardware keyboard, and a menu (the painting's More) can bring up the
     software keyboard with nothing to type in: the simulator's doing, not the app's (devices
     don't). List it under Automation problems, not as an app bug.
-  - `tapOn` waits for the screen to stop changing before it returns, so a short animation (a
-    Replay, a swatch's shake, a fill's shine) can be over by your next screenshot: a Replay
-    looked as if it hadn't played. To watch one, give the tap `waitToSettleTimeoutMs: 300` and
-    take the screenshot in the same `run`, right after it.
-  - A tap that changes nothing in the hierarchy at once may be tapped again
-    (`retryTapIfNoChange`): on the New Painting preview that made a double tap, which zoomed the
-    comparison in. Give taps that open, close, toggle or zoom something
-    `retryTapIfNoChange: false`.
+  - A `tapOn` returns only once the screen has been still (it waits up to about 3 s for that)
+    and the hierarchy has settled: often 5 to 8 s after the tap, whatever its options. Anything
+    shorter is over by your next screenshot: a swatch's shake, a fill's shine, a small
+    painting's Replay (about 5 s; its button shows Stop while it plays). An earlier session took
+    a Replay that had played for one that hadn't. Judge such motions by what they leave behind
+    and by `app.log`, or list them under Not tested; never report one as missing for that alone.
+  - Taps are not retried. Two taps on one spot of the canvas or the New Painting preview within
+    a moment make a double tap, which zooms in: look (`inspect_screen`, a screenshot) before
+    tapping the same spot again.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -102,11 +103,18 @@ Report these only if they look wrong in another way:
   palette scrolling it into view if it was out of it, and the tapped number grows for a moment,
   unless an unpainted area of the selected color lies within about 14 points, which the tap
   paints instead. Colors are picked from the palette.
-- A painting opens on the palette's first swatch, not the color last used.
+- A painting opens on the palette's first swatch, not the color last used. Finishing the
+  selected color selects the next color along the palette with areas left, coming round past
+  its end.
+- The New Painting preview is one picture split at its handle: the photo to the left, the
+  painting or its line art to the right, at the same scale and fitted whole (a pinch or a double
+  tap zooms both). A subject in the right half shows there only as the painting or its lines; an
+  earlier session took that for a tighter crop than the painting's.
 - Every painting the app makes is a coloring book: its lines are the drawing's, so where two
   paints meet without a drawn line there is no outline; the numbers (and the selected paint's
   hatch) mark those areas.
-- Progress counts areas, not surface: a large area moves it as much as a small one.
+- Progress counts areas, not surface: a large area moves it as much as a small one. It shows
+  whole percents, rounded down, but 1% from the first area and 100% only at the last.
 - On the New Painting preview, the Colors slider sets the most paints; the line under the preview
   counts the paints the painting ended with, often fewer (paints left unused or too alike are
   dropped). In the debug build, Refine's edits can add paints.
