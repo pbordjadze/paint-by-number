@@ -56,6 +56,16 @@ import Foundation
 ///   grows the cell. A paint left with no area leaves the palette. A stroke that paints nothing a
 ///   new paint changes nothing; one with no area inside it is declined. Its color is one of the
 ///   template on screen, as Only This Area's is.
+/// - **Reshape.** Refine's Bend Line and Move Edge: the line nearest a point (an edge, drawn or
+///   undrawn but not the canvas's frame, from junction to junction as the line eraser finds it;
+///   or a drawn stroke) is dragged, its point nearest the touch going where the finger lifts and
+///   the rest following less the farther along the line, none at its ends, which stay on their
+///   junctions (a stroke's free end moves whole; a loop through no junction is held half its
+///   length round). Points are added along the stretch that moves, so a big bend is smooth, and
+///   strokes ending on the line are carried with it. The line keeps its ink or its lack of it;
+///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
+///   while they have room. Declined when the line would cross itself or another, leave the
+///   canvas, carry an island or a stroke across, or leave an area too little room for its number.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -95,6 +105,9 @@ public enum TemplateEditor {
         /// Refine's Paint Brush: what lies within `radius` of `path` painted `color` (OKLab, a color
         /// of the template on screen, as `paintArea`'s).
         case brush(path: [SIMD2<Float>], radius: Float, color: SIMD3<Float>)
+        /// Refine's Bend Line and Move Edge: the line nearest `from` within `reach`, its chain from
+        /// junction to junction, bent so that its point nearest `from` goes to `to`.
+        case reshape(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -162,6 +175,8 @@ public enum TemplateEditor {
         /// one with another, or left with no area by an area painted alone.
         public var paintsChanged = 0
         public var paintsMerged = 0
+        /// Lines a reshape moved: its chain, and the strokes whose ends it carried.
+        public var reshaped = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
         /// centre.
         public var tooSmall: [SIMD2<Float>] = []
@@ -262,13 +277,15 @@ public enum TemplateEditor {
             let widest = Float(max(template.width, template.height))
             let reach = min(max(radius.isFinite ? radius : 0, 0), widest)
             try work.brush(path: lattice, radius: Int64((reach * Float(Lattice.unit)).rounded()), color: clampedLab(color))
+        case .reshape(let from, let to, let reach):
+            guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
+            try work.reshape(from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach))
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
         case .eraseLine(let point, let reach):
             guard point.x.isFinite, point.y.isFinite else { break }
-            try work.eraseLine(
-                near: Lattice.clampedPoint(point), reach: Int64((min(max(reach.isFinite ? reach : 0, 0), 1024) * Float(Lattice.unit)).rounded()))
+            try work.eraseLine(near: Lattice.clampedPoint(point), reach: latticeReach(reach))
         case .fill(let point, let color), .paintArea(let point, let color):
             guard point.x.isFinite, point.y.isFinite, color.x.isFinite, color.y.isFinite, color.z.isFinite else { break }
             // A color OKLab can hold: lightness 0 to 1, chroma axes within the gamuts' reach.
@@ -283,7 +300,7 @@ public enum TemplateEditor {
         }
         let s = work.summary
         guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0
-            || s.regionsMerged > 0
+            || s.regionsMerged > 0 || s.reshaped > 0
         else {
             return (template, unchanged(template))
         }
@@ -309,6 +326,7 @@ public enum TemplateEditor {
         outcome.recolored = s.recolored
         outcome.paintsChanged = s.paintsChanged
         outcome.paintsMerged = s.paintsMerged
+        outcome.reshaped = s.reshaped
         outcome.pieces = mapping.pieces
         outcome.tooSmall = s.declined
         outcome.touchedRegions = mapping.touched

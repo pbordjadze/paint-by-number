@@ -72,7 +72,7 @@ struct EditWork {
     /// What the edit did, counted.
     struct Tally {
         var lines = 0, joins = 0, regionsSplit = 0, regionsMerged = 0, detailAreas = 0, strokes = 0, erased = 0
-        var fills = 0, paintsAdded = 0, recolored = 0, paintsChanged = 0, paintsMerged = 0
+        var fills = 0, paintsAdded = 0, recolored = 0, paintsChanged = 0, paintsMerged = 0, reshaped = 0, labelsMoved = 0
         var declined: [SIMD2<Float>] = []
         var touched = Set<Int>()
         /// The pieces drawn lines cut regions into (`splitRegion`).

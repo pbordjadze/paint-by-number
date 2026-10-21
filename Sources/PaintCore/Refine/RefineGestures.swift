@@ -169,6 +169,16 @@ public enum RefineGestures {
         return .brush(path: path, radius: screen.brushRadius * Float(max(size.width, size.height)), color: color)
     }
 
+    /// A drag of Bend Line or Move Edge as an edit: the line within a finger's reach (`fingerReach`
+    /// on screen) of where it started, moved so its point there goes where the finger lifts.
+    /// Nil for a drag under a point on screen.
+    public static func reshape(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
+        let size = screen.canvas
+        guard screen.picture.width > 0, size.width > 0, size.height > 0, screen.onScreenLength(b - a) >= 1 else { return nil }
+        let reach = fingerReach * size.width / screen.picture.width
+        return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: Float(reach))
+    }
+
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
     /// moves; for a curve whose ends are down (`curve`), the curve bent through `b`. Nil while it
     /// is too small to draw.
@@ -255,8 +265,8 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .look, .repaint:
-                // The lines a merge takes out go when the template shows it.
+            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .reshape, .look, .repaint:
+                // The lines a merge takes out, or a reshape moves, go when the template shows it.
                 break
             }
         }

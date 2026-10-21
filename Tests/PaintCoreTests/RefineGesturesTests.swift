@@ -107,6 +107,17 @@ struct RefineGesturesTests {
         #expect(RefineGestures.lineEraser(at: Self.p(100, 30), on: Self.screen, chains: chains) == nil)
     }
 
+    /// A drag of Bend Line or Move Edge moves the line within a finger's reach (16 points, 3.2
+    /// units) of where it started to where it ended; a drag under a point on screen is none.
+    @Test func aReshapeDragMovesTheLineUnderIt() throws {
+        let edit = try #require(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104, 62), on: Self.screen))
+        guard case .reshape(let from, let to, let reach) = edit else { Issue.record("\(edit)"); return }
+        #expect(abs(from.y - 74) < 1e-3 && abs(to.y - 62) < 1e-3 && abs(reach - 3.2) < 1e-4)
+        let laid = try TemplateEditor.apply(edit, to: Self.scene)
+        #expect(laid.outcome.reshaped == 1 && laid.outcome.declined == nil)
+        #expect(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104.1, 74), on: Self.screen) == nil)
+    }
+
     /// The lines a pen may meet follow the edits sent: a line drawn is one, an erased stretch is
     /// none.
     @Test func snapLinesFollowThePendingEdits() {
