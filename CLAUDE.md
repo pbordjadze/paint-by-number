@@ -122,7 +122,10 @@ before planning app work).
   on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
-  `feedback-relay/` (see below).
+  `feedback-relay/` (see below); `.github/workflows/qa-explore.yml`, exploratory QA on request: an
+  agent uses the app in a simulator through Maestro's MCP server and reports what it finds
+  (`ci/qa/`: `explore.md` its brief, `qa.py` the probe, relay and report tools; the workflow's
+  header is the manual).
 - `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
   contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
   CI's `core` job too). It files each report in the developers' private GitHub repository. Its
