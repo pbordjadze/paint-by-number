@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: \"77%,47%\"\n- waitForAnimationToEnd:\n    timeout: 4000\n- tapOn:\n    id: \"canvas-area-2\"\n- waitForAnimationToEnd:\n    timeout: 4000\n"
+ },
+ "seconds": 22.3,
+ "isError": true,
+ "text": [
+  "Failed to run flow: Element not found: Id matching regex: canvas-area-2"
+ ],
+ "images": []
+}

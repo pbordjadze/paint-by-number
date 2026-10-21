@@ -1,0 +1,46 @@
+{
+ "n": 3,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: \"77%,47%\"\n- waitForAnimationToEnd:\n    timeout: 4000\n- tapOn:\n    id: \"canvas-area-2\"\n- waitForAnimationToEnd:\n    timeout: 4000\n"
+   },
+   "seconds": 22.3,
+   "isError": true,
+   "text": [
+    "Failed to run flow: Element not found: Id matching regex: canvas-area-2"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": null,
+   "seconds": 0.7,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0003-2-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 391777,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  },
+  {
+   "tool": "_log",
+   "arguments": {
+    "lines": 25
+   },
+   "seconds": 0.0,
+   "isError": false,
+   "text": [
+    "getpwuid_r did not find a match for uid 501\nFiltering the log data using \"subsystem == \"com.pbordjadze.paintbynumber\"\"\nTimestamp               Ty Process[PID:TID]\n2026-10-21 05:24:29.425 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted\n2026-10-21 05:24:31.470 Df PaintByNumber[20763:f5ad] [com.pbordjadze.paintbynumber:canvas] Making the render context took 2.046939708 seconds\n2026-10-21 05:25:25.271 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 55.336117333000004 seconds\n2026-10-21 05:25:25.718 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted\n2026-10-21 05:26:21.945 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 56.672582 seconds\n2026-10-21 05:26:29.708 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter\n2026-10-21 05:26:32.817 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] nothing was eligible in time: shelfStarter pending\n2026-10-21 05:27:25.873 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:library] Opened 08F984C4-E911-4BCC-A3B4-2C36F9919FFC: 333 regions\n2026-10-21 05:27:26.734 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)\n2026-10-21 05:27:27.447 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap\n2026-10-21 05:27:27.664 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer\n2026-10-21 05:27:28.074 Df PaintByNumber[20763:15333] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.630716917 seconds\n2026-10-21 05:27:28.303 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] turn: benchTap\n2026-10-21 05:28:12.307 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] turn over: benchTap\n2026-10-21 05:28:35.776 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted\n2026-10-21 05:28:53.648 Df PaintByNumber[20763:f590] [com.pbordjadze.paintbynumber:canvas] Waited 0.359311291 seconds for a drawable"
+   ],
+   "images": []
+  }
+ ],
+ "ended": false
+}
