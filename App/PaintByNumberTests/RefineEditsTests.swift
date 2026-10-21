@@ -62,11 +62,12 @@ struct RefineEditsTests {
         #expect(RefineNote.Kind(declined: .moveLabel(from: .zero, to: .one)) == .notMoved)
         #expect(RefineNote.Kind(declined: .paintArea(at: .zero, color: .zero)) == .notRecolored)
         let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted,
-                                        .notReshaped, .notMoved, .tooSmall,
+                                        .notReshaped, .notMoved, .tooSmall, .grabNumber, .grabLine, .grabEdge,
                                         .left(1), .left(3)]
         let texts = kinds.map { RefineNote(kind: $0).text }
         #expect(texts.allSatisfy { !$0.isEmpty } && Set(texts).count == kinds.count)
         #expect(RefineNote(kind: .tooSmall).text == "That shape is too small for a number.")
+        #expect(RefineNote(kind: .grabNumber).text == "Start the drag on a number.")
         #expect(RefineNote(kind: .left(1)).text.hasPrefix("1 edit no longer fits"))
         #expect(RefineNote(kind: .left(3)).text.hasPrefix("3 edits no longer fit"))
         #expect(RefineNote(kind: .tooSmall) != RefineNote(kind: .tooSmall), "Two notes are one note")

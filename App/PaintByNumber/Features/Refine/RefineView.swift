@@ -181,6 +181,11 @@ struct RefineView: View {
     @State private var picture: CGRect = .zero
     @State private var zoom: CGFloat = 1
     @State private var canvasSize: CGSize = .zero
+    /// The tallest the tools along the bottom have been, the least room they keep: picking a tool
+    /// with a shorter bar no longer grows the canvas, nor a taller one (once seen) shrinks it, so
+    /// the picture neither moves under the finger nor loses its zoom (the exploratory QA of
+    /// October 21 tapped where it had been).
+    @State private var toolsHeight: CGFloat = 0
     /// Edit Paint's family follows the current paint while it is on.
     @State private var colorFamily = true
     /// A part of the picture the touch surface is to bring up close.
@@ -337,7 +342,7 @@ struct RefineView: View {
     private var refineScreen: some View {
         NavigationStack {
             canvas
-                .safeAreaInset(edge: .bottom, spacing: 0) { tools }
+                .safeAreaInset(edge: .bottom, spacing: 0) { reservedTools }
                 #if UNRELEASED
                 .safeAreaInset(edge: .leading, alignment: .top, spacing: 0) {
                     if usesRail { toolRail }
@@ -716,7 +721,15 @@ struct RefineView: View {
             trace = [start, point]
             // Bend Line's line shows where it goes until the template has it; a cell edge has no ink.
             let shown = tool == .bendLine ? bend.map { (normalized($0.original), normalized($0.moved)) } : nil
+            // What the drag holds, by the edit's own rule: one that holds nothing says where to start.
+            let holds = tool == .moveNumber ? heldNumber != nil : bend != nil
             trace = nil
+            guard holds else {
+                if screen.onScreenLength(point - start) >= 4 {
+                    model.tell(tool == .moveNumber ? .grabNumber : tool == .bendLine ? .grabLine : .grabEdge)
+                }
+                return
+            }
             let edit = tool == .moveNumber
                 ? RefineGestures.moveLabel(from: start, to: point, on: screen)
                 : RefineGestures.reshape(from: start, to: point, on: screen, target: tool == .bendLine ? .ink : .edge)
@@ -1092,6 +1105,15 @@ struct RefineView: View {
                 .tint(Theme.signature)
                 .accessibilityIdentifier("refine-done")
         }
+    }
+
+    /// The tools, keeping the room of the tallest they have been (`toolsHeight`).
+    private var reservedTools: some View {
+        tools
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                if height > toolsHeight { toolsHeight = height }
+            }
+            .frame(minHeight: toolsHeight, alignment: .bottom)
     }
 
     /// What the finger does, along the bottom: the pens, the erasers and what shows beneath, and
@@ -2100,7 +2122,7 @@ extension RefineView {
     fileprivate var practiceScreen: some View {
         canvas
             .safeAreaInset(edge: .top, spacing: 0) { practiceBar }
-            .safeAreaInset(edge: .bottom, spacing: 0) { tools }
+            .safeAreaInset(edge: .bottom, spacing: 0) { reservedTools }
             .background(Theme.paper)
     }
 
