@@ -667,7 +667,9 @@ Conventions).
     other pages); `RefineGuideTests` checks every listed tool has one. Beside the words (above them
     on narrow widths) is the practice canvas: `RefineView` in practice mode
     (`RefinePracticeSetup`: the tool alone, its options and palette, Undo, Redo, the views and
-    Reset; no rail, no Start From, no tips, nothing saved) on a `CreateModel` of its own
+    Reset; no rail, no Start From, no tips, nothing saved; the tool stays the page's, and Snap,
+    Color from Photo and Size live in `RefinePracticeSetup.settings`, seeded from the painter's as
+    the guide opens, so a page leaves Refine's as they were) on a `CreateModel` of its own
     (`CreateModel.practice(_:scene:)`: the photo and base given, final at once, never generated, so
     no text corrections or sliders are offered). The picture is PaintCore's `RefinePractice`, a
     drawn moonlit evening made a template by the editor's own draws (`painted`: every shape in the

@@ -257,6 +257,12 @@ struct RefineView: View {
         // The Studio opens on the painting in its paints (the Lamplit Table, 6 to 0).
         _backdrop = State(initialValue: .painting)
         if let practice {
+            // A practice's switches are its own, from the painter's: the Pen's page turning Color
+            // from Photo on leaves Refine's Pen as it was.
+            let store = RefinePracticeSetup.settings
+            _snaps = AppStorage(wrappedValue: true, SettingsKey.refineSnaps, store: store)
+            _penColors = AppStorage(wrappedValue: false, SettingsKey.refinePenColors, store: store)
+            _brushSize = AppStorage(wrappedValue: Double(RefineGestures.brushSize), SettingsKey.refineBrushSize, store: store)
             _tool = State(initialValue: practice.tool)
             _group = State(initialValue: RefineGroup.of(practice.tool))
             _backdrop = State(initialValue: practice.backdrop)
@@ -642,8 +648,10 @@ struct RefineView: View {
     ) {
         let edit = inked(edit)
         submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain, bent: bent))
-        PaintTips.refineEdited()
-        if case .draw = edit { PaintTips.refineLineDrawn() }
+        if !isPractice {
+            PaintTips.refineEdited()
+            if case .draw = edit { PaintTips.refineLineDrawn() }
+        }
     }
 
     private func endStroke() {
@@ -980,18 +988,20 @@ struct RefineView: View {
         let clears = base.map { !EditFills.cleared(by: at, edits: $0.refinements.edits, on: $0.template).isEmpty } ?? false
         submitted.append(Submitted(id: model.fill(at: at, color: color), edit: .fill(at: at, color: color), showsSwatch: !clears))
         FeedbackEngine.shared.selectionChanged()
-        PaintTips.refineEdited()
-        PaintTips.refineFilled()
+        if !isPractice {
+            PaintTips.refineEdited()
+            PaintTips.refineFilled()
+        }
     }
 
     /// A marked line is unmarked; a found line is turned off, or on again.
     private func toggleText(at point: SIMD2<Float>) {
         if let marked = model.refinements.addedText.last(where: { Self.line($0, contains: point) }) {
             model.change(.unmarkText(marked))
-            PaintTips.refineEdited()
+            if !isPractice { PaintTips.refineEdited() }
         } else if let line = model.foundText.first(where: { Self.line($0, contains: point) }) {
             model.change(.toggleFound(line))
-            PaintTips.refineEdited()
+            if !isPractice { PaintTips.refineEdited() }
         }
     }
 
@@ -999,7 +1009,7 @@ struct RefineView: View {
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
         guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
         model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
-        PaintTips.refineEdited()
+        if !isPractice { PaintTips.refineEdited() }
     }
 
     /// Whether a tap at `point` falls on `line`, give or take a little for the finger.
@@ -1451,6 +1461,10 @@ struct RefineView: View {
 
     private func pick(_ tool: RefineTool) {
         guard tool != self.tool else { return }
+        #if UNRELEASED
+        // A practice canvas keeps the tool its page teaches (the card's link, the Pencil's double tap).
+        if let practice, tool != practice.tool { return }
+        #endif
         FeedbackEngine.shared.selectionChanged()
         // A stroke under way was the other tool's, and a curve waiting to be bent stays straight.
         endStroke()
@@ -1923,7 +1937,7 @@ extension RefineView {
             guard region != nil, let color = currentPaint else { return }
             FeedbackEngine.shared.selectionChanged()
             submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
-            PaintTips.refineEdited()
+            if !isPractice { PaintTips.refineEdited() }
         case .eyedropper:
             // The photo where it is what shows: on its own, or more than the painting over it.
             if backdrop == .photo || (backdrop == .photoBehind && photoShows > 0.5), let photo = model.source?.image {

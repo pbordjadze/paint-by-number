@@ -163,7 +163,7 @@ final class CreateModel {
     /// What `Drafts` keeps of this flow: nil until the photo has refinements, and while its
     /// settings are being chosen (the sliders don't hold them yet).
     var draft: CreateDraft? {
-        guard let source, !isChoosingSettings, !refinements.isEmpty else { return nil }
+        guard let source, !isChoosingSettings, !refinements.isEmpty, !isPractice else { return nil }
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
             sampleName: source.sampleName, refinements: refinements)

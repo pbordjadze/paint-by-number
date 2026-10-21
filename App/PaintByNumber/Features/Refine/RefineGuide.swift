@@ -55,6 +55,20 @@ nonisolated struct RefinePracticeSetup: Hashable {
     var teaches: RefineTool?
 }
 
+extension RefinePracticeSetup {
+    /// Where a practice canvas keeps Snap, Color from Photo and the brush's Size: its own, seeded
+    /// from the painter's as the guide opens (`seedSettings`), so trying a switch on a page
+    /// leaves Refine's as it was.
+    @MainActor static let settings = UserDefaults(suiteName: "RefinePractice") ?? UserDefaults()
+
+    /// The painter's Snap, Color from Photo and Size, as the practice canvases' start.
+    @MainActor static func seedSettings() {
+        for key in [SettingsKey.refineSnaps, SettingsKey.refinePenColors, SettingsKey.refineBrushSize] {
+            settings.set(UserDefaults.standard.object(forKey: key), forKey: key)
+        }
+    }
+}
+
 /// A Tool Guide page's words and practice: what the tool does, how to use it, something to try on
 /// the practice picture, what is good to know, and the tools that go with it. A tool's words live
 /// here, in one switch, so a new tool can't reach the Toolbox without its page, and a tool that
@@ -126,10 +140,10 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Views: a step of How to Use It"),
                 ],
                 tryThis: String(localized: "refine.guide.views.try",
-                                defaultValue: "In Photo Behind, slide toward the photo until the moon shows, then trace a star with the Pen.",
-                                comment: "Tool Guide, Views: Try This, something to do on the practice picture (its stars are in the photo only)"),
+                                defaultValue: "In Photo Behind, slide toward the photo, then trace the peach glow above the far hills with the Pen.",
+                                comment: "Tool Guide, Views: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)"),
                 notes: [
-                    String(localized: "refine.guide.views.note1", defaultValue: "On iPhone, the views are in the Show menu at the top.",
+                    String(localized: "refine.guide.views.note1", defaultValue: "On iPhone, the views are in the menu at the top, which names the one showing.",
                            comment: "Tool Guide, Views: a note under Good to Know"),
                 ],
                 related: [.pen, .eyedropper],
@@ -309,7 +323,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.cellEdge.summary", defaultValue: "Divides a cell without drawing a line.",
                                 comment: "Tool Guide, Cell Edge: one line under its name in the guide's list and atop its page"),
                 about: String(localized: "refine.guide.cellEdge.about",
-                              defaultValue: "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each gets its own number, so you can paint them apart.",
+                              defaultValue: "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each is a cell of its own, which you can give another paint.",
                               comment: "Tool Guide, Cell Edge: the paragraph about what it does"),
                 steps: [
                     String(localized: "refine.guide.cellEdge.step1",
@@ -320,7 +334,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Cell Edge: a step of How to Use It"),
                 ],
                 tryThis: String(localized: "refine.guide.cellEdge.try",
-                                defaultValue: "Draw an edge across the near hill, then switch to the Bucket and pour a darker green into one side.",
+                                defaultValue: "Draw an edge across the near hill. Its two halves keep one paint, each with a number of its own.",
                                 comment: "Tool Guide, Cell Edge: Try This, something to do on the practice picture"),
                 notes: [
                     String(localized: "refine.guide.cellEdge.note1", defaultValue: "Edges without ink show dashed while a Cells tool is picked.",
@@ -366,7 +380,7 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.moveEdge.step2", defaultValue: "Lift your finger where the border should be.",
                            comment: "Tool Guide, Move Edge: a step of How to Use It"),
                 ],
-                tryThis: String(localized: "refine.guide.moveEdge.try", defaultValue: "Drag the border between the two hills down, so the far hills grow taller.",
+                tryThis: String(localized: "refine.guide.moveEdge.try", defaultValue: "Drag the border between the two hills down a little, between the tree and the cottage, so the far hills grow taller.",
                                 comment: "Tool Guide, Move Edge: Try This, something to do on the practice picture"),
                 notes: [
                     String(localized: "refine.guide.moveEdge.note1",
@@ -431,7 +445,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, the Bucket: a step of How to Use It"),
                 ],
                 tryThis: String(localized: "refine.guide.bucket.try",
-                                defaultValue: "Pour the hill’s green into the cottage’s roof. Then choose a pale yellow from the color wheel and pour it into the moon.",
+                                defaultValue: "Choose a brick red from the color wheel and pour it into the cottage’s roof. Then pick the sky’s paint and pour it into the far hills.",
                                 comment: "Tool Guide, the Bucket: Try This, something to do on the practice picture (on it the roof and the moon are outlined only, in the paint around them)"),
                 notes: [
                     String(localized: "refine.guide.bucket.note1",
@@ -706,6 +720,7 @@ struct RefineGuideView: View {
             }
         }
         .tint(Theme.signature)
+        .onAppear(perform: RefinePracticeSetup.seedSettings)
         .task {
             do {
                 picture = try await RefinePracticePicture.shared()
@@ -755,6 +770,7 @@ struct RefineGuidePageView: View {
     @State private var model: CreateModel?
     /// Reset's count: the canvas is made again each time.
     @State private var resets = 0
+    @ScaledMetric(relativeTo: .subheadline) private var stepSize: CGFloat = 26
 
     private var page: RefineGuidePage { .of(topic) }
 
@@ -771,7 +787,7 @@ struct RefineGuidePageView: View {
                 } else {
                     VStack(spacing: 0) {
                         pad(practice)
-                            .frame(height: max(360, proxy.size.height * 0.58))
+                            .frame(height: min(max(360, proxy.size.height * 0.58), proxy.size.height * 0.85))
                             .padding(.horizontal, 12)
                             .padding(.top, 8)
                         ScrollView { words }
@@ -786,6 +802,7 @@ struct RefineGuidePageView: View {
             }
         }
         .background(Theme.paper)
+        .navigationTitle(Self.title(topic))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: picture != nil) {
             guard let picture, let practice = page.practice, model == nil else { return }
@@ -800,7 +817,8 @@ struct RefineGuidePageView: View {
     @ViewBuilder
     private func pad(_ practice: RefinePracticeSetup) -> some View {
         Group {
-            if let model {
+            // Once the picture is on it: a stroke before would have nothing to lay on.
+            if let model, model.phase == .ready {
                 RefineView(model: model, practice: practice) { resets += 1 }
                     .id(resets)
             } else if failed {
@@ -838,7 +856,7 @@ struct RefineGuidePageView: View {
                                 .font(.display(.subheadline, weight: .semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(Theme.signature)
-                                .frame(width: 26, height: 26)
+                                .frame(width: stepSize, height: stepSize)
                                 .background(Circle().strokeBorder(Theme.signature.opacity(0.5), lineWidth: 1.5))
                                 .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
                             Text(step)

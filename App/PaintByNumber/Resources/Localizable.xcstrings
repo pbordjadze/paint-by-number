@@ -628,7 +628,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour the hill’s green into the cottage’s roof. Then choose a pale yellow from the color wheel and pour it into the moon."
+            "value" : "Choose a brick red from the color wheel and pour it into the cottage’s roof. Then pick the sky’s paint and pour it into the far hills."
           }
         }
       }
@@ -640,7 +640,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each gets its own number, so you can paint them apart."
+            "value" : "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each is a cell of its own, which you can give another paint."
           }
         }
       }
@@ -712,7 +712,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw an edge across the near hill, then switch to the Bucket and pour a darker green into one side."
+            "value" : "Draw an edge across the near hill. Its two halves keep one paint, each with a number of its own."
           }
         }
       }
@@ -1336,7 +1336,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag the border between the two hills down, so the far hills grow taller."
+            "value" : "Drag the border between the two hills down a little, between the tree and the cottage, so the far hills grow taller."
           }
         }
       }
@@ -2020,7 +2020,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On iPhone, the views are in the Show menu at the top."
+            "value" : "On iPhone, the views are in the menu at the top, which names the one showing."
           }
         }
       }
@@ -2086,13 +2086,13 @@
       }
     },
     "refine.guide.views.try" : {
-      "comment" : "Tool Guide, Views: Try This, something to do on the practice picture (its stars are in the photo only)",
+      "comment" : "Tool Guide, Views: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In Photo Behind, slide toward the photo until the moon shows, then trace a star with the Pen."
+            "value" : "In Photo Behind, slide toward the photo, then trace the peach glow above the far hills with the Pen."
           }
         }
       }

@@ -29,6 +29,18 @@ struct RefineGuideTests {
         #expect(RefineGuidePage.of(.tool(.tryPainting)).practice?.teaches == .tryPainting)
     }
 
+    /// A practice canvas's switches are its own: the painter's are their start, and a change on a
+    /// page leaves them.
+    @Test func thePracticeKeepsItsOwnSwitches() {
+        let key = SettingsKey.refinePenColors, painter = UserDefaults.standard.object(forKey: key)
+        defer { UserDefaults.standard.set(painter, forKey: key) }
+        UserDefaults.standard.set(false, forKey: key)
+        RefinePracticeSetup.seedSettings()
+        #expect(RefinePracticeSetup.settings.bool(forKey: key) == false)
+        RefinePracticeSetup.settings.set(true, forKey: key)
+        #expect(UserDefaults.standard.bool(forKey: key) == false)
+    }
+
     /// The guide opens on the tool in hand, or on The Basics for one it doesn't list.
     @Test func theGuideOpensOnTheToolInHand() {
         #expect(RefineGuideTopic.opening(at: .merge) == .tool(.merge))
@@ -50,9 +62,11 @@ struct RefineGuideTests {
         model.edit(.merge(points: [SIMD2(0.6, 0.2) * height, SIMD2(1.04, 0.2) * height]))
         try await waitUntil { model.settledEdits == 1 }
         #expect(model.refinements.edits.count == 1 && model.preview?.template.regions.count == 12)
+        // Nothing generates and nothing is kept as a draft.
+        #expect(model.phase == .ready && model.draft == nil)
         model.cancelRefining()
         try await waitUntil { model.refinements.edits.isEmpty }
         try await waitUntil { model.preview?.template == picture.painted }
-        #expect(!model.canUndo)
+        #expect(!model.canUndo && model.phase == .ready)
     }
 }
