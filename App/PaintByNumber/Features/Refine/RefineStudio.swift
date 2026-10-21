@@ -2,26 +2,28 @@ import Foundation
 import PaintCore
 import SwiftUI
 
-/// The Refine Studio's groups of tools (SideStore and Debug builds, `#if UNRELEASED`; the design:
-/// claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, which Paul approved on October 20, 2026). The
-/// groups sit in one row and the picked group's tools in the row beneath, on iPad and iPhone
-/// alike, so no more than five tools are on screen at once; Paints shows the colors panel in
-/// place of a row of tools.
+/// The Refine Toolbox's groups of tools (SideStore and Debug builds, `#if UNRELEASED`; the design:
+/// claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH, Paul, October 21, 2026: "a drawing app with the
+/// tools to make a paint by number"). Ink is the lines the painter sees, Cells the shapes of the
+/// color areas, Paint what color each is, and See what shows: each tool does one visible thing.
+/// On iPad every tool stands in a rail, a section per group; on iPhone the groups are tabs over a
+/// row of the group's tools (at most five, so a phone's width holds them).
 nonisolated enum RefineGroup: Hashable, CaseIterable {
-    case lines, areas, paints
+    case ink, cells, paint, see
 
     /// The group's tools, in their order on screen.
     var tools: [RefineTool] {
         switch self {
-        case .lines: [.pen, .shape, .eraser, .smartEraser, .text]
-        case .areas: RefineView.offersSplitter ? [.fill, .splitter] : [.fill]
-        case .paints: [.colors]
+        case .ink: [.pen, .shape, .eraser, .smartEraser]
+        case .cells: RefineView.offersSplitter ? [.select, .cellEdge, .fill, .splitter] : [.select, .cellEdge, .fill]
+        case .paint: [.bucket, .eyedropper, .editPaint, .looks]
+        case .see: [.text]
         }
     }
 
     /// The group `tool` is in.
     static func of(_ tool: RefineTool) -> RefineGroup {
-        allCases.first { $0.tools.contains(tool) } ?? .lines
+        allCases.first { $0.tools.contains(tool) } ?? .ink
     }
 }
 

@@ -195,18 +195,20 @@ struct RefineFillLayer: View, Equatable {
     }
 }
 
-/// Every area using Colors' picked paint, outlined in screen points even while zooming.
-/// Each area's closed rings include its holes, just as `RefineFillLayer`'s even-odd paths do.
+/// Areas outlined in the signature color, in screen points even while zooming: every area of the
+/// paint Edit Paint or a card picked, or the cell Select picked. Each area's closed rings include
+/// its holes, just as `RefineFillLayer`'s even-odd paths do.
 struct RefinePaintGlow: View, Equatable {
     let base: CreateModel.Preview?
-    let paint: Int?
+    /// The regions of `base`'s template that glow.
+    let areas: [Int]
     let rect: CGRect
     let reduceMotion: Bool
 
     @State private var haloOpacity = 0.22
 
     nonisolated static func == (a: RefinePaintGlow, b: RefinePaintGlow) -> Bool {
-        a.base?.id == b.base?.id && a.paint == b.paint && a.rect == b.rect && a.reduceMotion == b.reduceMotion
+        a.base?.id == b.base?.id && a.areas == b.areas && a.rect == b.rect && a.reduceMotion == b.reduceMotion
     }
 
     nonisolated static func areas(of paint: Int, in template: Template) -> [Int] {
@@ -222,9 +224,9 @@ struct RefinePaintGlow: View, Equatable {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .task(id: paint) {
+        .task(id: areas) {
             haloOpacity = 0.22
-            guard paint != nil, !reduceMotion else { return }
+            guard !areas.isEmpty, !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.42 }
             do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
             guard !Task.isCancelled, !reduceMotion else { return }
@@ -234,8 +236,8 @@ struct RefinePaintGlow: View, Equatable {
     }
 
     private func outlines(width: CGFloat) -> some View {
-        let rings = base.flatMap { base in
-            paint.map { Self.areas(of: $0, in: base.template).map { base.template.polygons(ofRegion: $0) } }
+        let rings = base.map { base in
+            areas.filter { $0 < base.template.regions.count }.map { base.template.polygons(ofRegion: $0) }
         } ?? []
         let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
         let rect = rect, color = Theme.signature

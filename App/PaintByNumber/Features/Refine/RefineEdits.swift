@@ -101,6 +101,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// A Color Splitter stroke that could not split an area (it closed none off, or its sides
         /// would keep one paint).
         case notSplit
+        /// A Cell Edge stroke that could not divide an area (it closed none off).
+        case notDivided
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -116,6 +118,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             switch edit {
             case .draw: self = .notDrawn
             case .split: self = .notSplit
+            case .cellEdge: self = .notDivided
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             case .look, .repaint, .paintArea: self = .notRecolored
@@ -140,6 +143,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notSplit:
             String(localized: "refine.note.notSplit", defaultValue: "That area couldn’t be split there.",
                    comment: "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed")
+        case .notDivided:
+            String(localized: "refine.note.notDivided", defaultValue: "That area couldn’t be divided there.",
+                   comment: "Refine screen toast: a Cell Edge stroke could not divide an area (it closed off no part of one); nothing changed")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -159,7 +165,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         switch kind {
         case .tooSmall: "circle.dotted"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notRecolored, .left: "exclamationmark.circle"
+        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notRecolored, .left: "exclamationmark.circle"
         }
     }
 }

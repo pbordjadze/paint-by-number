@@ -1,10 +1,11 @@
 import PaintCore
 import SwiftUI
 
-/// Refine's Colors (`RefineTool.colors`): the looks, in a row, and the painting's paints. A look
-/// lays itself on every paint, and a Strength slider softens it once one is chosen; a paint picked
-/// (here, or by a tap on its area) takes a new color from the system color picker, its family
-/// moving with it while Similar Colors Too is on. Shapes, lines and numbers never change.
+/// Refine's Looks (`RefineTool.looks`): the looks, in a row; a look lays itself on every paint,
+/// and a Strength slider softens it once one is chosen. And Edit Paint (`RefineTool.editPaint`):
+/// the current paint (picked in the palette, `RefinePaletteBar`, or by a tap on its area) takes a
+/// new color from the system color picker, its family moving with it while Similar Colors Too is
+/// on. Shapes, lines and numbers never change.
 /// The Lamplit Table decided the details (October 18, 2026: `factory/pieces/recolor` on
 /// `claude/vibe-factory`): the row always shown, Moonlit first and the row turning from night to
 /// day, the slider, the family on, the painters' names; then Paul (October 18): five looks, not
@@ -15,12 +16,16 @@ struct RefineColorsPanel: View {
     /// them later"); adding one here brings it back.
     static let offered: [TemplateEditor.Look] = [.moonlit, .goldenHour, .pastel, .garden, .starryNight]
 
+    /// What the panel shows.
+    enum Mode { case looks, paint }
+
     /// The template on screen.
     let template: Template
     /// The paints before any edit, which the looks' chips show themselves on.
     let paintsBefore: [PaletteColor]
     /// The edits the template on screen has: the look it shows, and whether any color changed.
     let edits: [TemplateEditor.Edit]
+    let mode: Mode
     /// The paint picked (an index of `template.palette`).
     @Binding var paint: Int?
     @Binding var family: Bool
@@ -41,55 +46,7 @@ struct RefineColorsPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ScrollView(.horizontal) {
-                HStack(alignment: .top, spacing: 12) {
-                    chip(nil)
-                    ForEach(Self.offered, id: \.self) { chip($0) }
-                }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 4)
-            }
-            .scrollIndicators(.hidden)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(Text("Looks"))
-            if look != nil {
-                HStack(spacing: 12) {
-                    Text("Strength")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Slider(value: $strength, in: 0...1, onEditingChanged: { editing in
-                        if !editing, let look { change(.look(look.look, strength: strength)) }
-                    })
-                    .tint(Theme.signature)
-                    .accessibilityLabel(Text("Strength"))
-                    .accessibilityValue(Text(Double(strength).formatted(.percent.precision(.fractionLength(0)))))
-                    .accessibilityIdentifier("refine-colors-strength")
-                }
-            }
-            Divider()
-            ScrollView(.horizontal) {
-                HStack(spacing: 6) {
-                    ForEach(template.palette.indices, id: \.self) { swatch($0) }
-                }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 4)
-            }
-            .scrollIndicators(.hidden)
-            if let paint, paint < template.palette.count {
-                HStack(spacing: 12) {
-                    Text(Self.paintTitle(paint))
-                        .font(.footnote.weight(.semibold))
-                    ColorPicker(selection: color(of: paint), supportsOpacity: false) { Text("Color") }
-                        .labelsHidden()
-                        .accessibilityIdentifier("refine-colors-picker")
-                    Spacer(minLength: 8)
-                    Toggle(isOn: $family) { Text("Similar colors too") }
-                        .font(.footnote)
-                        .fixedSize()
-                        .tint(Theme.signature)
-                        .accessibilityIdentifier("refine-colors-family")
-                }
-            }
+            if mode == .looks { looks } else { picker }
         }
         .padding(14)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
@@ -100,7 +57,6 @@ struct RefineColorsPanel: View {
         }
         .onChange(of: look?.strength) { _, new in strength = new ?? 1 }
         .onChange(of: paint) { _, new in pick(new) }
-        .onChange(of: template.palette.count) { _, _ in paint = nil }
         // A look or Photo changed the paints: the next repaint starts from the color shown. Only
         // this picker's own repaint, still moving, keeps the color it started from.
         .onChange(of: template.palette) { _, _ in
@@ -110,6 +66,59 @@ struct RefineColorsPanel: View {
         .onDisappear { pending?.cancel() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-colors")
+    }
+
+    @ViewBuilder
+    private var looks: some View {
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: 12) {
+                chip(nil)
+                ForEach(Self.offered, id: \.self) { chip($0) }
+            }
+            .padding(.horizontal, 2)
+            .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Looks"))
+        if look != nil {
+            HStack(spacing: 12) {
+                Text("Strength")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Slider(value: $strength, in: 0...1, onEditingChanged: { editing in
+                    if !editing, let look { change(.look(look.look, strength: strength)) }
+                })
+                .tint(Theme.signature)
+                .accessibilityLabel(Text("Strength"))
+                .accessibilityValue(Text(Double(strength).formatted(.percent.precision(.fractionLength(0)))))
+                .accessibilityIdentifier("refine-colors-strength")
+            }
+        }
+    }
+
+    /// The current paint's color, and its family's.
+    @ViewBuilder
+    private var picker: some View {
+        if let paint, paint < template.palette.count {
+            HStack(spacing: 12) {
+                Text(Self.paintTitle(paint))
+                    .font(.footnote.weight(.semibold))
+                ColorPicker(selection: color(of: paint), supportsOpacity: false) { Text("Color") }
+                    .labelsHidden()
+                    .accessibilityIdentifier("refine-colors-picker")
+                Spacer(minLength: 8)
+                Toggle(isOn: $family) { Text("Similar colors too") }
+                    .font(.footnote)
+                    .fixedSize()
+                    .tint(Theme.signature)
+                    .accessibilityIdentifier("refine-colors-family")
+            }
+        } else {
+            Text("Pick a paint in the palette, or tap an area.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: Looks
@@ -191,32 +200,6 @@ struct RefineColorsPanel: View {
     }
 
     // MARK: Paints
-
-    private func swatch(_ index: Int) -> some View {
-        let selected = paint == index
-        return Button {
-            FeedbackEngine.shared.selectionChanged()
-            paint = selected ? nil : index
-        } label: {
-            Text(verbatim: "\(index + 1)")
-                .font(.system(size: 12, weight: .bold, design: .serif))
-                .monospacedDigit()
-                .foregroundStyle(PaletteBar.numeralInk(template, index))
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(PaletteBar.paint(template, index)))
-                .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
-                .padding(3)
-                .overlay { Circle().stroke(selected ? Theme.signature : .clear, lineWidth: 2.5) }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(ColorNameText.numbered(
-            number: index + 1, name: template.palette[index].colorName)))
-        .accessibilityHint(Text(String(
-            localized: "refine.colors.paint.hint", defaultValue: "Picks this paint to give it a new color.",
-            comment: "Refine screen, Colors: VoiceOver hint of a paint's swatch; once picked, a color picker changes its color")))
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("refine-paint-\(index + 1)")
-    }
 
     static func paintTitle(_ index: Int) -> String {
         String(localized: "refine.colors.paint", defaultValue: "Paint \(index + 1)",

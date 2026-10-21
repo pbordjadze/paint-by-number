@@ -1077,10 +1077,11 @@ final class CreateModel {
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
                 if tooSmall { say(.tooSmall) }
-                // A line that cut a piece off made an area: drawing adds areas and never joins them.
-                if case .draw(let points, let isClosed, _) = laid.edit, let end = isClosed ? points.first : points.last,
+                // A line or a cell edge that cut a piece off made an area: they add areas and never
+                // join them.
+                if let line = Self.dividing(laid.edit), let end = line.closed ? line.points.first : line.points.last,
                    laid.trail.template.regions.count > current.template.regions.count {
-                    closedShape = ClosedShape(serial: serial, at: end, extent: Self.extent(of: points))
+                    closedShape = ClosedShape(serial: serial, at: end, extent: Self.extent(of: line.points))
                 }
             case .nothing:
                 handled(serial)
@@ -1094,6 +1095,14 @@ final class CreateModel {
                 Log.create.error("Laying an edit failed: \(String(describing: error), privacy: .public)")
             }
             handled(serial)
+        }
+    }
+
+    /// The points of a drawn line or a cell edge, and whether it closes into a loop.
+    nonisolated static func dividing(_ edit: TemplateEditor.Edit) -> (points: [SIMD2<Float>], closed: Bool)? {
+        switch edit {
+        case .draw(let points, let closed, _), .cellEdge(let points, let closed): (points, closed)
+        default: nil
         }
     }
 
