@@ -10,8 +10,8 @@ import Foundation
 ///     {"kind": "cellEdge",  "points": [[x, y], ...], "closed": false}
 ///     {"kind": "merge",     "points": [[x, y], ...]}
 ///     {"kind": "brush",     "points": [[x, y], ...], "radius": 6, "color": [L, a, b]}
-///     {"kind": "reshape",   "points": [from, to],    "reach": 8}
-///     {"kind": "moveLabel", "points": [from, to]}
+///     {"kind": "reshape",   "points": [from, to],    "reach": 8, "target": "ink"}
+///     {"kind": "moveLabel", "points": [from, to],    "reach": 8}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -37,10 +37,14 @@ import Foundation
 /// apart, and a `brush`, whose paint the painting then lacks. A brush needs its `radius` and
 /// `color`. A `reshape` needs its two points, where the line was grabbed and where it went; an
 /// older reader leaves it out, and the line stays where it was; a `moveLabel` too (its two points,
-/// the number's place and where it went), and the number stays where it was.
+/// the number's place and where it went), and the number stays where it was. A reshape's `target`
+/// (a `TemplateEditor.ReshapeTarget` name, `ink` or `edge`) is written only when it grabs one
+/// kind of line alone; a missing one is `any`, what every reshape grabbed before, and one this
+/// build does not know fails the edit as an unknown look does. A missing `reach` of a
+/// `moveLabel` is the editor's own, as a reshape's.
 extension TemplateEditor.Edit: Codable {
     private enum CodingKeys: String, CodingKey {
-        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
+        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family, target
     }
     private enum PaintKeys: String, CodingKey { case at, color }
 
@@ -96,13 +100,22 @@ extension TemplateEditor.Edit: Codable {
             guard points.count == 2 else {
                 throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a reshape is [from, to]")
             }
+            var target = TemplateEditor.ReshapeTarget.any
+            if let name = try c.decodeIfPresent(String.self, forKey: .target) {
+                guard let known = TemplateEditor.ReshapeTarget(rawValue: name) else {
+                    throw DecodingError.dataCorruptedError(forKey: .target, in: c, debugDescription: "unknown reshape target: \(name)")
+                }
+                target = known
+            }
             self = .reshape(
-                from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
+                from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach,
+                target: target)
         case "moveLabel":
             guard points.count == 2 else {
                 throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a moveLabel is [from, to]")
             }
-            self = .moveLabel(from: points[0], to: points[1])
+            self = .moveLabel(
+                from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -152,13 +165,15 @@ extension TemplateEditor.Edit: Codable {
             try c.encode(path, forKey: .points)
             try c.encode(radius, forKey: .radius)
             try c.encode([color.x, color.y, color.z], forKey: .color)
-        case .reshape(let from, let to, let reach):
+        case .reshape(let from, let to, let reach, let target):
             try c.encode("reshape", forKey: .kind)
             try c.encode([from, to], forKey: .points)
             try c.encode(reach, forKey: .reach)
-        case .moveLabel(let from, let to):
+            if target != .any { try c.encode(target.rawValue, forKey: .target) }
+        case .moveLabel(let from, let to, let reach):
             try c.encode("moveLabel", forKey: .kind)
             try c.encode([from, to], forKey: .points)
+            try c.encode(reach, forKey: .reach)
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)

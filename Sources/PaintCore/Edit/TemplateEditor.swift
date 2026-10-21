@@ -58,7 +58,8 @@ import Foundation
 ///   template on screen, as Only This Area's is.
 /// - **Reshape.** Refine's Bend Line and Move Edge: the line nearest a point (an edge, drawn or
 ///   undrawn but not the canvas's frame, from junction to junction as the line eraser finds it;
-///   or a drawn stroke) is dragged, its point nearest the touch going where the finger lifts and
+///   or a drawn stroke) is dragged, of the lines its target grabs (`ReshapeTarget`: Bend Line's
+///   drawn lines alone, Move Edge's boundaries between cells alone, or any), its point nearest the touch going where the finger lifts and
 ///   the rest following less the farther along the line, none past three times the drag (at
 ///   least 24 units) or at its ends, which stay on their junctions (a stroke's free end within
 ///   that moves whole). Points are added along the stretch that moves, so a big bend is smooth, and
@@ -66,10 +67,11 @@ import Foundation
 ///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
 ///   while they have room. Declined when the line would cross itself or another, leave the
 ///   canvas, carry an island or a stroke across, or leave an area too little room for its number.
-/// - **Move number.** Refine's Move Number: the number nearest a point goes to another inside its
-///   own region, where a number of its digits fits (a detail area's by its own floor), off the
-///   strokes in the region; its size is the room there, never more than the region's roomiest
-///   spot gives. Nothing else changes. An edit that plans the region's numbers again later keeps
+/// - **Move number.** Refine's Move Number: the number nearest a point, within its radius and the
+///   edit's reach (`labelNear`), goes to another inside its own region, where a number of its
+///   digits fits (a detail area's by its own floor), off the strokes in the region and clear of
+///   its other numbers; its size is the room there, never more than the region's roomiest spot
+///   gives. Nothing else changes. An edit that plans the region's numbers again later keeps
 ///   it there while it keeps most of the room, and may move it otherwise.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
@@ -110,11 +112,13 @@ public enum TemplateEditor {
         /// Refine's Paint Brush: what lies within `radius` of `path` painted `color` (OKLab, a color
         /// of the template on screen, as `paintArea`'s).
         case brush(path: [SIMD2<Float>], radius: Float, color: SIMD3<Float>)
-        /// Refine's Bend Line and Move Edge: the line nearest `from` within `reach`, its chain from
-        /// junction to junction, bent so that its point nearest `from` goes to `to`.
-        case reshape(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
-        /// Refine's Move Number: the number nearest `from` moved to `to`, inside its region.
-        case moveLabel(from: SIMD2<Float>, to: SIMD2<Float>)
+        /// Refine's Bend Line and Move Edge: the line nearest `from` within `reach` of the kind
+        /// `target` grabs, its chain from junction to junction, bent so that its point nearest
+        /// `from` goes to `to`.
+        case reshape(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach, target: ReshapeTarget = .any)
+        /// Refine's Move Number: the number nearest `from` within its radius and `reach`
+        /// (`labelNear`) moved to `to`, inside its region.
+        case moveLabel(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -130,6 +134,17 @@ public enum TemplateEditor {
         /// The paint of color `from` made `to` (OKLab); with `family`, the paints of about its
         /// hue (or near it, for a gray) move along with it.
         case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
+    }
+
+    /// The lines a reshape (`Edit.reshape`) may grab: Bend Line (an Ink tool) grabs only what is
+    /// drawn, Move Edge (a Cells tool) only the boundaries between cells, drawn or not.
+    public enum ReshapeTarget: String, Sendable {
+        /// Any line: an edge, drawn or undrawn, or a drawn stroke (every reshape before targets).
+        case any
+        /// Drawn lines only: edges of a drawn layer (`LineLayer.isDrawn`) and drawn strokes.
+        case ink
+        /// Boundary edges between two regions only, of any layer; never a stroke.
+        case edge
     }
 
     /// The photo's color of a piece a drawn line cuts: `at`, a point inside the piece (its number's
@@ -286,12 +301,12 @@ public enum TemplateEditor {
             let widest = Float(max(template.width, template.height))
             let reach = min(max(radius.isFinite ? radius : 0, 0), widest)
             try work.brush(path: lattice, radius: Int64((reach * Float(Lattice.unit)).rounded()), color: clampedLab(color))
-        case .reshape(let from, let to, let reach):
+        case .reshape(let from, let to, let reach, let target):
             guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
-            try work.reshape(from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach))
-        case .moveLabel(let from, let to):
+            try work.reshape(from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target)
+        case .moveLabel(let from, let to, let reach):
             guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
-            try work.moveLabel(from: Lattice.position(Lattice.clampedPoint(from)), to: Lattice.clampedPoint(to))
+            try work.moveLabel(from: Lattice.position(Lattice.clampedPoint(from)), to: Lattice.clampedPoint(to), reach: labelReach(reach))
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))

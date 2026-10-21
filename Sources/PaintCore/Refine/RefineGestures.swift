@@ -181,23 +181,31 @@ public enum RefineGestures {
         return .brush(path: path, radius: screen.brushRadius(size: size) * Float(max(canvas.width, canvas.height)), color: color)
     }
 
-    /// A drag of Bend Line or Move Edge as an edit: the line within a finger's reach (`fingerReach`
-    /// on screen) of where it started, moved so its point there goes where the finger lifts.
-    /// Nil for a drag under a point on screen.
-    public static func reshape(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
-        let size = screen.canvas
-        guard screen.picture.width > 0, size.width > 0, size.height > 0, screen.onScreenLength(b - a) >= 1 else { return nil }
-        let reach = fingerReach * size.width / screen.picture.width
-        return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: Float(reach))
+    /// A drag of Bend Line or Move Edge as an edit: the line `target` grabs (Bend Line's `.ink`,
+    /// Move Edge's `.edge`) within a finger's reach (`fingerReach` on screen) of where it started,
+    /// moved so its point there goes where the finger lifts. Nil for a drag under a point on
+    /// screen.
+    public static func reshape(
+        from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen, target: TemplateEditor.ReshapeTarget = .any
+    ) -> TemplateEditor.Edit? {
+        guard let reach = fingerReachOnCanvas(screen), screen.onScreenLength(b - a) >= 1 else { return nil }
+        return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: reach, target: target)
     }
 
     /// A drag of Move Number as an edit: the number under where it started (within its radius and
-    /// `TemplateEditor.tapReach`) moved to where it ended, canvas units. Nil for a drag under a
-    /// point on screen.
+    /// a finger's reach, `fingerReach` on screen: `TemplateEditor.labelNear`) moved to where it
+    /// ended, canvas units. Nil for a drag under a point on screen.
     public static func moveLabel(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
-        guard screen.picture.width > 0, screen.canvas.width > 0, screen.canvas.height > 0, screen.onScreenLength(b - a) >= 1
-        else { return nil }
-        return .moveLabel(from: screen.canvasPoint(a), to: screen.canvasPoint(b))
+        guard let reach = fingerReachOnCanvas(screen), screen.onScreenLength(b - a) >= 1 else { return nil }
+        return .moveLabel(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: reach)
+    }
+
+    /// A finger's reach (`fingerReach` points on screen) in canvas units; nil for a screen with no
+    /// picture or canvas.
+    public static func fingerReachOnCanvas(_ screen: RefineScreen) -> Float? {
+        let size = screen.canvas
+        guard screen.picture.width > 0, size.width > 0, size.height > 0 else { return nil }
+        return Float(fingerReach * size.width / screen.picture.width)
     }
 
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger

@@ -38,8 +38,8 @@
 //       "points": [[x, y]], "color": [L, a, b] | "paint": n}, {"kind": "paintArea", as "fill"},
 //       {"kind": "split", as "draw"}, {"kind": "cellEdge", "points": [...], "closed": false},
 //       {"kind": "merge", "points": [...]}, {"kind": "brush", "points": [...], "radius": r,
-//       "color": [L, a, b] | "paint": n}, {"kind": "reshape", "points": [from, to], "reach": r},
-//       {"kind": "moveLabel", "points": [from, to]},
+//       "color": [L, a, b] | "paint": n}, {"kind": "reshape", "points": [from, to], "reach": r,
+//       "target": "ink" | "edge"}, {"kind": "moveLabel", "points": [from, to], "reach": r},
 //       {"kind": "look", "look": "moonlit", "strength": 1}, {"kind": "repaint", "from": [L, a,
 //       b], "color": [L, a, b], "family": true}], all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
@@ -57,9 +57,12 @@
 //       them go, ink and all, and a paint left with no area leaves the palette), the Paint Brush (what
 //       lies within the radius of the stroke takes the paint, the outline laid as a cell edge,
 //       ink untouched, areas of that paint across an undrawn boundary joining), Bend Line and Move
-//       Edge (the line nearest `from`, from junction to junction, bent so its point there goes to
-//       `to`, its ends held, the areas on its sides following), Move Number (the number nearest
-//       `from` moved to `to` in its own region, sized for the room there), Refine's Colors (a look over every
+//       Edge (the line nearest `from` within "reach", from junction to junction, bent so its
+//       point there goes to `to`, its ends held, the areas on its sides following; "target"
+//       "ink", Bend Line's, grabs drawn lines only, "edge", Move Edge's, the boundaries between
+//       cells only), Move Number (the number nearest `from` within its radius and "reach" moved
+//       to `to` in its own region, sized for the room there, clear of the region's other
+//       numbers), Refine's Colors (a look over every
 //       paint, its lightness read from the template when the file gives none, or one paint
 //       repainted with or without its family; later edits bring their colors through them, as
 //       the app's trail does, but for an area's, a color of the template as it is then); a kind
