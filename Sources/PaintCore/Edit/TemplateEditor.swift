@@ -37,6 +37,42 @@ import Foundation
 ///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
 ///   else a new paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
 ///   is declined.
+/// - **Cell edge.** Refine's Cell Edge: a split that takes no paints, so one cell becomes two of
+///   the paint it had, for the painter to paint one of them. A cell edge that divides no area is
+///   declined; one that leaves the same paint on both sides is what it is for.
+/// - **Merge.** Refine's Merge: a drag across cells joins them into one. The regions under the
+///   path, in the order it first enters them, from the one under its first point: each next one
+///   joins if it shares an edge with those joined so far, else it is passed over. Every edge
+///   between them goes, ink and all, leaving no stroke (the strokes inside them stay); the joined
+///   area has the first region's paint and number, and is a detail area only if the first was.
+///   A paint left with no area leaves the palette as Only This Area's does. A merge that joins
+///   fewer than two areas is declined.
+/// - **Paint brush.** Refine's Paint Brush: everything within `radius` of the stroke (a disc for a
+///   dab) becomes the paint a fill would take. The footprint's outline is laid as a closed cell
+///   edge is, undrawn and clipped to the canvas, a piece with no room for a number not cut off;
+///   every area inside it then takes the paint, ink untouched, so the areas either side of a
+///   drawn line stay two cells. Areas of that paint meeting across an undrawn boundary, one of
+///   them inside or the boundary the outline itself, become one, so a stroke along a cell's edge
+///   grows the cell. A paint left with no area leaves the palette. A stroke whose areas all
+///   have its paint already changes nothing; one with no area inside it is declined. Its color is one of the
+///   template on screen, as Only This Area's is.
+/// - **Reshape.** Refine's Bend Line and Move Edge: the line nearest a point (an edge, drawn or
+///   undrawn but not the canvas's frame, from junction to junction as the line eraser finds it;
+///   or a drawn stroke) is dragged, of the lines its target grabs (`ReshapeTarget`: Bend Line's
+///   drawn lines alone, Move Edge's boundaries between cells alone, or any), its point nearest the touch going where the finger lifts and
+///   the rest following less the farther along the line, none past three times the drag (at
+///   least 24 units) or at its ends, which stay on their junctions (a stroke's free end within
+///   that moves whole). Points are added along the stretch that moves, so a big bend is smooth, and
+///   strokes ending on the line are carried with it. The line keeps its ink or its lack of it;
+///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
+///   while they have room. Declined when the line would cross itself or another, leave the
+///   canvas, carry an island or a stroke across, or leave an area too little room for its number.
+/// - **Move number.** Refine's Move Number: the number nearest a point, within its radius and the
+///   edit's reach (`labelNear`), goes to another inside its own region, where a number of its
+///   digits fits (a detail area's by its own floor), off the strokes in the region and clear of
+///   its other numbers; its size is the room there, never more than the region's roomiest spot
+///   gives. Nothing else changes. An edit that plans the region's numbers again later keeps
+///   it there while it keeps most of the room, and may move it otherwise.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -68,6 +104,21 @@ public enum TemplateEditor {
         /// The Color Splitter's line: `points` divide the paint along an undrawn boundary, and the
         /// pieces take `paints`.
         case split(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint] = [])
+        /// Refine's Cell Edge: `points` divide a cell along an undrawn boundary, both pieces keeping
+        /// its paint.
+        case cellEdge(points: [SIMD2<Float>], closed: Bool = false)
+        /// Refine's Merge: the regions `points` cross, joined into the first.
+        case merge(points: [SIMD2<Float>])
+        /// Refine's Paint Brush: what lies within `radius` of `path` painted `color` (OKLab, a color
+        /// of the template on screen, as `paintArea`'s).
+        case brush(path: [SIMD2<Float>], radius: Float, color: SIMD3<Float>)
+        /// Refine's Bend Line and Move Edge: the line nearest `from` within `reach` of the kind
+        /// `target` grabs, its chain from junction to junction, bent so that its point nearest
+        /// `from` goes to `to`.
+        case reshape(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach, target: ReshapeTarget = .any)
+        /// Refine's Move Number: the number nearest `from` within its radius and `reach`
+        /// (`labelNear`) moved to `to`, inside its region.
+        case moveLabel(from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = TemplateEditor.tapReach)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -83,6 +134,17 @@ public enum TemplateEditor {
         /// The paint of color `from` made `to` (OKLab); with `family`, the paints of about its
         /// hue (or near it, for a gray) move along with it.
         case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
+    }
+
+    /// The lines a reshape (`Edit.reshape`) may grab: Bend Line (an Ink tool) grabs only what is
+    /// drawn, Move Edge (a Cells tool) only the boundaries between cells, drawn or not.
+    public enum ReshapeTarget: String, Sendable {
+        /// Any line: an edge, drawn or undrawn, or a drawn stroke (every reshape before targets).
+        case any
+        /// Drawn lines only: edges of a drawn layer (`LineLayer.isDrawn`) and drawn strokes.
+        case ink
+        /// Boundary edges between two regions only, of any layer; never a stroke.
+        case edge
     }
 
     /// The photo's color of a piece a drawn line cuts: `at`, a point inside the piece (its number's
@@ -135,6 +197,10 @@ public enum TemplateEditor {
         /// one with another, or left with no area by an area painted alone.
         public var paintsChanged = 0
         public var paintsMerged = 0
+        /// Lines a reshape moved: its chain, and the strokes whose ends it carried.
+        public var reshaped = 0
+        /// Numbers Move Number moved.
+        public var labelsMoved = 0
         /// Where a cut was not made because the piece had no room for a number: the piece's
         /// centre.
         public var tooSmall: [SIMD2<Float>] = []
@@ -220,13 +286,33 @@ public enum TemplateEditor {
             guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the split divides no area") }
             try work.paint(Array(paints.prefix(maximumPoints)))
             if !reading { try work.checkSplitPaints() }
+        case .cellEdge(let points, let closed):
+            work.splitting = true
+            try work.draw(points, closed: closed, nudging: true)
+            guard work.summary.regionsSplit > 0 else { throw EditFailure.invalid("the cell edge divides no area") }
+            try work.paint([])
+        case .merge(let points):
+            let lattice = points.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
+            try work.merge(along: lattice)
+        case .brush(let path, let radius, let color):
+            guard color.x.isFinite, color.y.isFinite, color.z.isFinite else { break }
+            let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
+            // No brush is wider than the canvas.
+            let widest = Float(max(template.width, template.height))
+            let reach = min(max(radius.isFinite ? radius : 0, 0), widest)
+            try work.brush(path: lattice, radius: Int64((reach * Float(Lattice.unit)).rounded()), color: clampedLab(color))
+        case .reshape(let from, let to, let reach, let target):
+            guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
+            try work.reshape(from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target)
+        case .moveLabel(let from, let to, let reach):
+            guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite else { break }
+            try work.moveLabel(from: Lattice.position(Lattice.clampedPoint(from)), to: Lattice.clampedPoint(to), reach: labelReach(reach))
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))
         case .eraseLine(let point, let reach):
             guard point.x.isFinite, point.y.isFinite else { break }
-            try work.eraseLine(
-                near: Lattice.clampedPoint(point), reach: Int64((min(max(reach.isFinite ? reach : 0, 0), 1024) * Float(Lattice.unit)).rounded()))
+            try work.eraseLine(near: Lattice.clampedPoint(point), reach: latticeReach(reach))
         case .fill(let point, let color), .paintArea(let point, let color):
             guard point.x.isFinite, point.y.isFinite, color.x.isFinite, color.y.isFinite, color.z.isFinite else { break }
             // A color OKLab can hold: lightness 0 to 1, chroma axes within the gamuts' reach.
@@ -240,7 +326,9 @@ public enum TemplateEditor {
             try work.recolor(edit)
         }
         let s = work.summary
-        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0 else {
+        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0
+            || s.regionsMerged > 0 || s.reshaped > 0 || s.labelsMoved > 0
+        else {
             return (template, unchanged(template))
         }
         let (result, mapping) = try work.finish()
@@ -265,6 +353,8 @@ public enum TemplateEditor {
         outcome.recolored = s.recolored
         outcome.paintsChanged = s.paintsChanged
         outcome.paintsMerged = s.paintsMerged
+        outcome.reshaped = s.reshaped
+        outcome.labelsMoved = s.labelsMoved
         outcome.pieces = mapping.pieces
         outcome.tooSmall = s.declined
         outcome.touchedRegions = mapping.touched

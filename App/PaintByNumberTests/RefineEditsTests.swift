@@ -55,7 +55,15 @@ struct RefineEditsTests {
         #expect(RefineNote.Kind(declined: .eraseLine(at: .zero)) == .notErased)
         #expect(RefineNote.Kind(declined: .fill(at: .zero, color: .zero)) == .notFilled)
         #expect(RefineNote.Kind(declined: .split(points: [])) == .notSplit)
-        let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .tooSmall, .left(1), .left(3)]
+        #expect(RefineNote.Kind(declined: .cellEdge(points: [])) == .notDivided)
+        #expect(RefineNote.Kind(declined: .merge(points: [])) == .notMerged)
+        #expect(RefineNote.Kind(declined: .brush(path: [], radius: 4, color: .zero)) == .notPainted)
+        #expect(RefineNote.Kind(declined: .reshape(from: .zero, to: .one)) == .notReshaped)
+        #expect(RefineNote.Kind(declined: .moveLabel(from: .zero, to: .one)) == .notMoved)
+        #expect(RefineNote.Kind(declined: .paintArea(at: .zero, color: .zero)) == .notRecolored)
+        let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted,
+                                        .notReshaped, .notMoved, .tooSmall,
+                                        .left(1), .left(3)]
         let texts = kinds.map { RefineNote(kind: $0).text }
         #expect(texts.allSatisfy { !$0.isEmpty } && Set(texts).count == kinds.count)
         #expect(RefineNote(kind: .tooSmall).text == "That shape is too small for a number.")

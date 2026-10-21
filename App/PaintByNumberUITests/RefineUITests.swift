@@ -1,8 +1,9 @@
 import XCTest
 
-/// The create flow's optional Refine step, as the Studio lays it out in Debug builds (its groups:
-/// Lines, Areas, Paints): the pens, the eraser and Fill, no Color Splitter, the text marks, an
-/// area's card, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
+/// The create flow's optional Refine step, as the Toolbox lays it out in Debug builds (its groups:
+/// Ink, Cells, Paint, Numbers, See; a rail of every tool on iPad, tabs on iPhone): the pens, the eraser and
+/// Fill Shape, no Color Splitter, Writing's text marks, Select, Cell Edge and the Bucket, an area's
+/// card, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
@@ -22,7 +23,6 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertTrue(app.buttons["refine-tool-pen"].isSelected, "Refine doesn't start on the pen")
-        XCTAssertTrue(app.buttons["refine-tool-text"].exists, "Refine has no Text tool")
         let undo = app.buttons["refine-undo"], redo = app.buttons["refine-redo"]
         XCTAssertFalse(undo.isEnabled, "Undo is offered before any change")
 
@@ -42,7 +42,7 @@ final class RefineUITests: XCTestCase {
         redo.tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Redo didn't put the line back again")
 
-        // The Eraser and the Smart Eraser are tools of the Lines group, beside the Pen.
+        // The Eraser and the Line Eraser are tools of the Ink group, beside the Pen.
         XCTAssertTrue(app.buttons["refine-tool-smartEraser"].exists, "Refine has no Smart Eraser")
         let eraser = app.buttons["refine-tool-eraser"]
         XCTAssertTrue(eraser.exists, "Refine has no eraser")
@@ -55,11 +55,8 @@ final class RefineUITests: XCTestCase {
             waitFor(canvas, toMatch: changes("2 changes")), "Rubbing out didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-erased")
 
-        // Fill is in the Areas group, which picks it.
-        app.buttons["Areas"].tap()
-        let fill = app.buttons["refine-tool-fill"]
-        XCTAssertTrue(fill.waitForExistence(timeout: 5), "Refine has no Fill")
-        XCTAssertTrue(waitFor(fill, toMatch: NSPredicate(format: "isSelected == true")), "Fill didn't become the tool")
+        // Fill Shape is in the Cells group.
+        pickTool("fill", in: "Cells", of: app)
         canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-filled")
@@ -120,10 +117,7 @@ final class RefineUITests: XCTestCase {
             waitFor(canvas, toMatch: changes("1 change")), "The line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-pen-split")
 
-        let text = app.buttons["refine-tool-text"]
-        XCTAssertTrue(text.exists, "Refine has no Text tool")
-        text.tap()
-        XCTAssertTrue(waitFor(text, toMatch: NSPredicate(format: "isSelected == true")), "Text didn't become the tool")
+        pickTool("text", in: "See", of: app)
         drag(on: canvas, from: CGVector(dx: 0.2, dy: 0.55), to: CGVector(dx: 0.55, dy: 0.6))
         XCTAssertTrue(
             waitFor(canvas, toMatch: changes("2 changes")), "Dragging with Text didn't mark a line: \(canvas.value ?? "")")
@@ -159,7 +153,86 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(refine, toMatch: changes("1 change")), "Done didn't keep the change")
     }
 
+    /// Select picks the open sky and shows its paint; Cell Edge divides the sky with no line (a
+    /// change); the Bucket gives one side another paint from the palette (a second); Merge joins
+    /// the two again (a third); the Paint Brush paints a stroke of the sky (a fourth); Photo
+    /// Behind shows its slider; Done keeps the four changes.
+    @MainActor
+    func testToolboxSelectsDividesAndPaints() throws {
+        let app = launchPreview()
+        let refine = app.buttons["refine"]
+        refine.tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
+        let selection = app.descendants(matching: .any)["refine-selection"]
+        XCTAssertTrue(selection.waitForExistence(timeout: 10), "Select didn't show the area")
+        let info = selection.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "of the picture")).firstMatch
+        XCTAssertTrue(info.waitForExistence(timeout: 5), "Select's bar doesn't say the area's paint")
+        let sky = paintNumber(in: info.label)
+        XCTAssertNotNil(sky, "Select's bar names no paint: \(info.label)")
+        XCTAssertEqual(canvas.value as? String, "No changes", "Selecting changed something")
+        attachScreenshot(of: app, named: "refine-select")
+
+        // Down the open sky, from above the wave's outline to inside little Fuji.
+        pickTool("cellEdge", in: "Cells", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.637, 0.675))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The cell edge didn't count: \(canvas.value ?? "")")
+
+        pickTool("bucket", in: "Paint", of: app)
+        let other = app.buttons["refine-paint-\(sky == 1 ? 2 : 1)"]
+        XCTAssertTrue(other.waitForExistence(timeout: 5), "The palette has no other paint")
+        other.tap()
+        XCTAssertTrue(waitFor(other, toMatch: NSPredicate(format: "isSelected == true")), "The paint didn't become current")
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.6, 0.06)).tap()
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "The bucket didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-bucket")
+
+        pickTool("merge", in: "Cells", of: app)
+        // From the area the Bucket painted out into the cloud beside it.
+        drag(on: canvas, from: onPicture(canvas, 0.6, 0.06), to: onPicture(canvas, 0.85, 0.25))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The merge didn't count: \(canvas.value ?? "")")
+
+        pickTool("brush", in: "Paint", of: app)
+        XCTAssertTrue(app.sliders["refine-brush-size"].waitForExistence(timeout: 5), "The brush has no Size")
+        // Another paint than the merged sky's, so the stroke changes something.
+        let fresh = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND isSelected == false", "refine-paint-")).firstMatch
+        XCTAssertTrue(fresh.waitForExistence(timeout: 5), "The palette has no other paint")
+        fresh.tap()
+        drag(on: canvas, from: onPicture(canvas, 0.3, 0.08), to: onPicture(canvas, 0.45, 0.1))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The brush didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-brush")
+
+        show("Photo Behind", in: app)
+        XCTAssertTrue(app.sliders["refine-photo-behind"].waitForExistence(timeout: 5), "Photo Behind has no slider")
+        attachScreenshot(of: app, named: "refine-photo-behind")
+
+        app.buttons["refine-done"].tap()
+        XCTAssertTrue(waitFor(refine, toMatch: changes("4 changes")), "Done didn't keep the changes")
+    }
+
     // MARK: - Helpers
+
+    /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).
+    @MainActor
+    @discardableResult
+    private func pickTool(_ id: String, in group: String, of app: XCUIApplication) -> XCUIElement {
+        let button = app.buttons["refine-tool-\(id)"]
+        if !button.exists { app.buttons[group].tap() }
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "Refine has no \(id)")
+        button.tap()
+        XCTAssertTrue(waitFor(button, toMatch: NSPredicate(format: "isSelected == true")), "\(id) didn't become the tool")
+        return button
+    }
+
+    /// The paint's number in "…Paint 3 · 2 areas · 40% of the picture".
+    private func paintNumber(in label: String) -> Int? {
+        guard let range = label.range(of: #"Paint (\d+)"#, options: .regularExpression) else { return nil }
+        return Int(label[range].dropFirst("Paint ".count))
+    }
 
     /// Picks what shows beneath the drawing: a segment in the bar where there is room, else the
     /// bar's menu.

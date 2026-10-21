@@ -7,10 +7,21 @@ import PaintCore
 /// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill or a
 /// `"paintArea"` (the area under the point alone), and `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
 /// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
-/// `"paints"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
+/// `"paints"`), a `"cellEdge"` (Refine's Cell Edge: `"points"`, `"closed"`), a `"merge"` (Refine's
+/// Merge: `"points"`, the drag), a `"brush"` (Refine's Paint Brush: `"points"`, the stroke, `"radius"`
+/// and `"color"` or `"paint"` as a paintArea's), a `"reshape"` (Bend Line and Move Edge: `"points"`,
+/// [from, to], `"reach"`, and `"target"`, `"ink"` for Bend Line or `"edge"` for Move Edge, any line
+/// without it), a `"moveLabel"` (Move Number: `"points"`, [from, to], and `"reach"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
 /// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
 /// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
 /// know is left out with a warning.
+/// A reshape's `"target"`: any line without one; `what` names it in the failure for another name.
+func reshapeTarget(_ name: String?, _ what: String) -> TemplateEditor.ReshapeTarget {
+    guard let name else { return .any }
+    guard let target = TemplateEditor.ReshapeTarget(rawValue: name) else { fail("\(what) \"target\" is any, ink or edge") }
+    return target
+}
+
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
     struct EntryPaint: Decodable {
         var at: [Float]
@@ -30,6 +41,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
         var lightness: [Float]?
         var from: [Float]?
         var family: Bool?
+        var target: String?
     }
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
     let entries: [Entry]
@@ -48,6 +60,24 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             return .draw(points: points, closed: entry.closed ?? false, paints: paints)
         case "split":
             return .split(points: points, closed: entry.closed ?? false, paints: paints ?? [])
+        case "cellEdge":
+            return .cellEdge(points: points, closed: entry.closed ?? false)
+        case "merge":
+            return .merge(points: points)
+        case "brush":
+            if let c = entry.color, c.count == 3 { return .brush(path: points, radius: entry.radius ?? 4, color: SIMD3(c[0], c[1], c[2])) }
+            if let n = entry.paint, (1...palette.count).contains(n) {
+                return .brush(path: points, radius: entry.radius ?? 4, color: palette[n - 1].oklab)
+            }
+            fail("\(path): a brush needs \"color\": [L, a, b] or \"paint\": a number of the palette")
+        case "reshape":
+            guard points.count == 2 else { fail("\(path): a reshape's points are [from, to]") }
+            return .reshape(
+                from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach,
+                target: reshapeTarget(entry.target, "\(path): a reshape's"))
+        case "moveLabel":
+            guard points.count == 2 else { fail("\(path): a moveLabel's points are [from, to]") }
+            return .moveLabel(from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach)
         case "erase":
             return .erase(path: points, radius: entry.radius ?? 4)
         case "eraseLine":
@@ -75,7 +105,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             return .repaint(from: SIMD3(f[0], f[1], f[2]), to: SIMD3(c[0], c[1], c[2]), family: entry.family ?? false)
         default:
             FileHandle.standardError.write(Data(
-                "\(path): skipping an edit of kind \(entry.kind) (draw, split, erase, eraseLine, fill, paintArea, look or repaint)\n"
+                "\(path): skipping an edit of kind \(entry.kind) (draw, split, cellEdge, merge, brush, reshape, moveLabel, erase, eraseLine, fill, paintArea, look or repaint)\n"
                     .utf8))
             return nil
         }
@@ -112,6 +142,10 @@ struct EditReport: Codable {
         var unexpectedChanges: Int
         /// Time of the edit itself, with its check of the result.
         var milliseconds: Double
+        /// Lines a reshape moved (its chain and the strokes it carried).
+        var reshaped = 0
+        /// Numbers a moveLabel moved.
+        var labelsMoved = 0
     }
     var width: Int
     var height: Int
@@ -283,6 +317,11 @@ func runEdit(_ options: Options) throws {
                 step.maxEndShift = d.ends
             }
         case .split: step.kind = "split"
+        case .cellEdge: step.kind = "cellEdge"
+        case .merge: step.kind = "merge"
+        case .brush: step.kind = "brush"
+        case .reshape: step.kind = "reshape"
+        case .moveLabel: step.kind = "moveLabel"
         case .erase: step.kind = "erase"
         case .eraseLine: step.kind = "eraseLine"
         case .fill: step.kind = "fill"
@@ -290,6 +329,8 @@ func runEdit(_ options: Options) throws {
         case .look: step.kind = "look"
         case .repaint: step.kind = "repaint"
         }
+        step.reshaped = result.outcome.reshaped
+        step.labelsMoved = result.outcome.labelsMoved
         steps.append(step)
         continued = continued.map { $0 < result.outcome.continued.count ? result.outcome.continued[$0] : $0 }
         t = result.template

@@ -4,13 +4,19 @@ import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it 
 import Foundation
 
 /// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
-/// to where it ends, a rectangle or an oval across it, and a curve: a drag for its ends, then a
-/// second drag bends it through the finger (a tap leaves it straight).
+/// to where it ends, a rectangle, an oval, a hexagon or a five-pointed star across it, and a
+/// curve: a drag for its ends, then a second drag bends it through the finger (a tap leaves it
+/// straight). New shapes go last: the app lists them in this order.
 public enum RefineShape: CaseIterable, Hashable, Sendable {
-    case line, rectangle, oval, curve
+    case line, rectangle, oval, curve, polygon, star
 
     /// The figure ends where it starts.
-    public var isClosed: Bool { self == .rectangle || self == .oval }
+    public var isClosed: Bool {
+        switch self {
+        case .rectangle, .oval, .polygon, .star: true
+        case .line, .curve: false
+        }
+    }
 }
 
 /// The fills a tap of the Fill tool takes out.
@@ -64,6 +70,16 @@ public struct RefineScreen: Sendable, Equatable {
         return long > 0 ? Float(points / long) : 0.02
     }
 
+    /// The Paint Brush's reach, a fraction of the picture's long side: `RefineGestures.brushSize`
+    /// on screen at any zoom, so zoomed in it paints finer, as the eraser erases.
+    public var brushRadius: Float { brushRadius(size: RefineGestures.brushSize) }
+
+    /// A brush of radius `size` points on screen as a fraction of the picture's long side.
+    public func brushRadius(size: CGFloat) -> Float {
+        let long = max(picture.width, picture.height)
+        return long > 0 ? Float(size / long) : 0.02
+    }
+
     /// A picture point on screen, in points from the picture's corner.
     public func onScreen(_ p: SIMD2<Float>) -> CGPoint {
         CGPoint(x: CGFloat(p.x) * picture.width, y: CGFloat(p.y) * picture.height)
@@ -98,6 +114,9 @@ public enum RefineGestures {
     public static let touchFloor: CGFloat = 2
     /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
     public static let fingerReach: CGFloat = 16
+    /// The Paint Brush's radius on screen, in points: about half a fingertip, so the paint is the
+    /// width of the finger that lays it, at any zoom.
+    public static let brushSize: CGFloat = 12
 
     /// A finger's samples as the screen keeps them while it moves: a sample closer than a point
     /// to the last kept adds nothing the line shows; the last, where the finger lifts, is kept.
@@ -126,6 +145,13 @@ public enum RefineGestures {
         return .split(points: line, closed: closed)
     }
 
+    /// The Cell Edge's stroke: the Pen's line (`pen`), as a cell edge, which divides a cell and
+    /// draws nothing, both pieces keeping its paint.
+    public static func cellEdge(_ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?) -> TemplateEditor.Edit? {
+        guard case .draw(let line, let closed, _)? = pen(points, on: screen, snapping: lines) else { return nil }
+        return .cellEdge(points: line, closed: closed)
+    }
+
     /// The eraser's pass as an edit: its path in canvas units, and its reach there, the radius it
     /// has on screen. A dab is one point.
     public static func eraser(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
@@ -133,6 +159,53 @@ public enum RefineGestures {
         guard size.width > 0, size.height > 0 else { return nil }
         let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
         return .erase(path: path, radius: screen.eraserRadius * Float(max(size.width, size.height)))
+    }
+
+    /// The Merge's drag as an edit: its path in canvas units, thinned as the eraser's is. Nil for
+    /// no touch.
+    public static func merge(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
+        guard !points.isEmpty, screen.canvas.width > 0, screen.canvas.height > 0 else { return nil }
+        return .merge(points: simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint))
+    }
+
+    /// The Paint Brush's stroke as an edit: its path in canvas units, thinned as the eraser's is,
+    /// its reach there the brush's on screen (`brushRadius(size:)`, `size` points; the app's Size),
+    /// painting `color` (OKLab, a color of the template on screen). A dab is one point; nil for no
+    /// touch.
+    public static func brush(
+        _ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>, size: CGFloat = brushSize
+    ) -> TemplateEditor.Edit? {
+        let canvas = screen.canvas
+        guard !points.isEmpty, canvas.width > 0, canvas.height > 0 else { return nil }
+        let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
+        return .brush(path: path, radius: screen.brushRadius(size: size) * Float(max(canvas.width, canvas.height)), color: color)
+    }
+
+    /// A drag of Bend Line or Move Edge as an edit: the line `target` grabs (Bend Line's `.ink`,
+    /// Move Edge's `.edge`) within a finger's reach (`fingerReach` on screen) of where it started,
+    /// moved so its point there goes where the finger lifts. Nil for a drag under a point on
+    /// screen.
+    public static func reshape(
+        from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen, target: TemplateEditor.ReshapeTarget = .any
+    ) -> TemplateEditor.Edit? {
+        guard let reach = fingerReachOnCanvas(screen), screen.onScreenLength(b - a) >= 1 else { return nil }
+        return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: reach, target: target)
+    }
+
+    /// A drag of Move Number as an edit: the number under where it started (within its radius and
+    /// a finger's reach, `fingerReach` on screen: `TemplateEditor.labelNear`) moved to where it
+    /// ended, canvas units. Nil for a drag under a point on screen.
+    public static func moveLabel(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
+        guard let reach = fingerReachOnCanvas(screen), screen.onScreenLength(b - a) >= 1 else { return nil }
+        return .moveLabel(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: reach)
+    }
+
+    /// A finger's reach (`fingerReach` points on screen) in canvas units; nil for a screen with no
+    /// picture or canvas.
+    public static func fingerReachOnCanvas(_ screen: RefineScreen) -> Float? {
+        let size = screen.canvas
+        guard screen.picture.width > 0, size.width > 0, size.height > 0 else { return nil }
+        return Float(fingerReach * size.width / screen.picture.width)
     }
 
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
@@ -159,6 +232,9 @@ public enum RefineGestures {
         case .oval:
             guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
             return ShapePath.oval(from: p, to: q, spacing: 2)
+        case .polygon, .star:
+            guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
+            return shape == .polygon ? ShapePath.polygon(from: p, to: q) : ShapePath.star(from: p, to: q)
         }
     }
 
@@ -221,7 +297,8 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .look, .repaint:
+            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .reshape, .moveLabel, .look, .repaint:
+                // The lines a merge takes out, or a reshape moves, go when the template shows it.
                 break
             }
         }

@@ -9,14 +9,27 @@ import UIKit
 /// shape or the eraser's pass still under the finger; while the eraser is down a ring shows its
 /// reach.
 struct RefineInkLayer: View {
+    /// A Paint Brush stroke: its path (normalized to the picture), its reach either side (a
+    /// fraction of the picture's long side) and its paint.
+    nonisolated struct Brush: Equatable {
+        var points: [SIMD2<Float>]
+        var radius: Float
+        var color: Color
+    }
+
     let lines: [TemplateRefinements.Line]
     let trace: [SIMD2<Float>]?
     /// The trace is the line as it will be drawn (a shape), not the finger's samples.
     let traceIsDrawn: Bool
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
-    /// The trace is the Color Splitter's, a line that won't be drawn: dashed.
+    /// The trace is the Color Splitter's or a Cell Edge's, a line that won't be drawn: dashed.
     var dashed = false
+    /// The trace is Merge's, a path that draws nothing: in the signature color.
+    var merging = false
+    /// The Paint Brush's strokes the template doesn't show yet, and the one under the finger, laid
+    /// in their paint (Refine gives them a layer of their own, under the drawing).
+    var brushes: [Brush] = []
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
     let eraserRadius: Float
     let rect: CGRect
@@ -30,6 +43,7 @@ struct RefineInkLayer: View {
     var body: some View {
         let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
         let lineWidth = lineWidth, beneath = beneath, halo = halo, traceIsDrawn = traceIsDrawn, dashed = dashed
+        let merging = merging, brushes = brushes, signature = Theme.signature
         Canvas { context, _ in
             guard rect.width > 0, rect.height > 0 else { return }
             let long = max(rect.width, rect.height)
@@ -63,6 +77,10 @@ struct RefineInkLayer: View {
             func erase(_ path: Path, radius: Float) {
                 uncover(path.strokedPath(Self.style(2 * CGFloat(radius) * long)))
             }
+            for brush in brushes where !brush.points.isEmpty {
+                let path = polyline(brush.points.map(point))
+                canvas.stroke(path, with: .color(brush.color.opacity(0.85)), style: Self.style(2 * CGFloat(brush.radius) * long))
+            }
             for line in lines where !line.points.isEmpty {
                 let path = polyline(line.points.map(point))
                 switch line.kind {
@@ -87,6 +105,8 @@ struct RefineInkLayer: View {
                     let ring = Path(ellipseIn: CGRect(x: point(last).x - r, y: point(last).y - r, width: 2 * r, height: 2 * r))
                     canvas.fill(ring, with: .color(.white.opacity(0.25)))
                     canvas.stroke(ring, with: .color(LineArtDrawing.ink.opacity(0.45)), lineWidth: 1)
+                } else if merging {
+                    canvas.stroke(polyline(points), with: .color(signature), style: Self.style(max(lineWidth, 2.5)))
                 } else if dashed {
                     var style = Self.style(lineWidth)
                     style.dash = [lineWidth * 2.5, lineWidth * 2.5]
@@ -195,18 +215,20 @@ struct RefineFillLayer: View, Equatable {
     }
 }
 
-/// Every area using Colors' picked paint, outlined in screen points even while zooming.
-/// Each area's closed rings include its holes, just as `RefineFillLayer`'s even-odd paths do.
+/// Areas outlined in the signature color, in screen points even while zooming: every area of the
+/// paint Edit Paint or a card picked, or the cell Select picked. Each area's closed rings include
+/// its holes, just as `RefineFillLayer`'s even-odd paths do.
 struct RefinePaintGlow: View, Equatable {
     let base: CreateModel.Preview?
-    let paint: Int?
+    /// The regions of `base`'s template that glow.
+    let areas: [Int]
     let rect: CGRect
     let reduceMotion: Bool
 
     @State private var haloOpacity = 0.22
 
     nonisolated static func == (a: RefinePaintGlow, b: RefinePaintGlow) -> Bool {
-        a.base?.id == b.base?.id && a.paint == b.paint && a.rect == b.rect && a.reduceMotion == b.reduceMotion
+        a.base?.id == b.base?.id && a.areas == b.areas && a.rect == b.rect && a.reduceMotion == b.reduceMotion
     }
 
     nonisolated static func areas(of paint: Int, in template: Template) -> [Int] {
@@ -222,9 +244,9 @@ struct RefinePaintGlow: View, Equatable {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .task(id: paint) {
+        .task(id: areas) {
             haloOpacity = 0.22
-            guard paint != nil, !reduceMotion else { return }
+            guard !areas.isEmpty, !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 0.3)) { haloOpacity = 0.42 }
             do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
             guard !Task.isCancelled, !reduceMotion else { return }
@@ -234,8 +256,8 @@ struct RefinePaintGlow: View, Equatable {
     }
 
     private func outlines(width: CGFloat) -> some View {
-        let rings = base.flatMap { base in
-            paint.map { Self.areas(of: $0, in: base.template).map { base.template.polygons(ofRegion: $0) } }
+        let rings = base.map { base in
+            areas.filter { $0 < base.template.regions.count }.map { base.template.polygons(ofRegion: $0) }
         } ?? []
         let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
         let rect = rect, color = Theme.signature

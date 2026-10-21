@@ -185,8 +185,8 @@ public enum PenAssist {
 }
 
 /// The Shapes tool's figures (`RefineShape`), in any one space: a rectangle across two corners,
-/// an oval filling the box they span, a curve bent through a point. A closed figure ends where
-/// it starts (`RefineView` sends it as a closed line, its start once).
+/// an oval, a hexagon or a star filling the box they span, a curve bent through a point. A closed
+/// figure ends where it starts (`RefineView` sends it as a closed line, its start once).
 public enum ShapePath {
     public static func rectangle(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
         [a, CGPoint(x: b.x, y: a.y), b, CGPoint(x: a.x, y: b.y), a]
@@ -202,6 +202,39 @@ public enum ShapePath {
             return CGPoint(x: centre.x + rx * cos(angle), y: centre.y + ry * sin(angle))
         }
         return points + [points[0]]
+    }
+
+    /// A regular hexagon stretched to the box from `a` to `b`, as the oval is a circle stretched
+    /// to it: flat on top and bottom, its side corners on the box's sides, starting at the right
+    /// one.
+    public static func polygon(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
+        let corners = (0..<6).map { k -> CGPoint in
+            let angle = CGFloat.pi / 3 * CGFloat(k)
+            return CGPoint(x: cos(angle), y: sin(angle))
+        }
+        return fitted(corners, from: a, to: b)
+    }
+
+    /// A five-pointed star in the box from `a` to `b`, a point up and its inner corners 0.4 of the
+    /// way out (a regular star stretched to the box, as the oval is a circle), starting at the
+    /// top point.
+    public static func star(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
+        let corners = (0..<10).map { k -> CGPoint in
+            let angle = -CGFloat.pi / 2 + CGFloat.pi / 5 * CGFloat(k), radius: CGFloat = k % 2 == 0 ? 1 : 0.4
+            return CGPoint(x: radius * cos(angle), y: radius * sin(angle))
+        }
+        return fitted(corners, from: a, to: b)
+    }
+
+    /// `points` scaled and moved so that their bounds are the box from `a` to `b`, closed.
+    static func fitted(_ points: [CGPoint], from a: CGPoint, to b: CGPoint) -> [CGPoint] {
+        let xs = points.map(\.x), ys = points.map(\.y)
+        let x0 = xs.min()!, x1 = xs.max()!, y0 = ys.min()!, y1 = ys.max()!
+        let lo = CGPoint(x: min(a.x, b.x), y: min(a.y, b.y)), size = CGSize(width: abs(b.x - a.x), height: abs(b.y - a.y))
+        let out = points.map { p in
+            CGPoint(x: lo.x + (p.x - x0) / (x1 - x0) * size.width, y: lo.y + (p.y - y0) / (y1 - y0) * size.height)
+        }
+        return out + [out[0]]
     }
 
     /// The curve from `a` to `b` through `bend` (a quadratic passing through it halfway), its

@@ -414,6 +414,128 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   a short one in even red) were all made, adding 11 paints (24 to 35): a split asks for areas
   told apart, which the palette often has no paint for. Without a reachable line nothing shows
   where a split was, so Undo is the way back.
+- **Cell edge** (`cellEdge`, Refine's Cell Edge). Refine as a drawing app (Paul, October 21,
+  the Refine Toolbox: ink, cells and paint are separate layers, and each tool does one visible
+  thing): the Cell Edge draws a boundary between cells with no ink and changes no paint, so the
+  Bucket can then paint one side. It lays the Pen's line as a split does, an undrawn boundary
+  whose ends meet any edge and whose stretches that close nothing leave nothing, a piece with no
+  room for a number not cut off, but it takes no paints: both pieces keep the paint the cell had,
+  which is what it is for, not a reason to decline. One that divides no area is declined. Areas
+  of one paint across an undrawn edge stay two until one is painted; painted back to that paint
+  (`paintArea`), the two become one area again, as Only This Area joins them. A build from
+  before it leaves a cell edge out of the edits it lays (an unknown kind), so a `paintArea` after
+  one lands there on the whole undivided cell; only SideStore and Debug builds make them.
+- **Merge** (`merge`, Refine's Merge). The Refine Toolbox's way to change a cell's shape by
+  joining (Paul, October 21: "it should be possible to do ANYTHING with them"): a drag across
+  cells joins them into one. The regions under the path (walked in steps of half a unit, a point
+  off the canvas or in no region left out), in the order it first enters them, from the one under
+  its first point: each next one joins if it shares an edge with those joined so far, else it is
+  passed over, so a drag that slips through a junction into a cell touching the others only at a
+  point leaves that cell out. Every edge between them goes, ink and all: unlike the eraser's
+  join, which keeps the rest of a boundary's ink as strokes, a merged boundary leaves no stroke,
+  since the painter asked for one cell where the line was (the strokes inside the cells stay).
+  The joined area keeps the first region's index, paint and number (`EditWork.merge`, its rings
+  traced again, so a cell joined with the one round it fills its hole), and is a detail area only
+  if the first was: the painter dragged from it, so the area is it, grown. A paint left with no
+  area leaves the palette and the numbers after it close up, as Only This Area's does
+  (`dropPaints`). A merge that joins fewer than two areas is declined.
+- **Paint brush** (`brush`, Refine's Paint Brush). The Toolbox's way to paint a cell's shape: what
+  lies within the radius of the stroke (a disc for a dab; the app's Size, 4 to 48 points on
+  screen at any zoom, `RefineGestures.brushSize`'s 12 by default) takes the paint a fill would (a color of the template on screen, as Only
+  This Area's: the paint within a just-noticeable difference, else a new one added last). The
+  footprint's outline (`BrushFootprint`) is traced on a grid of a quarter of the radius (coarser
+  only past a million cells): each grid vertex is in or out exactly, in 128-bit integer
+  arithmetic; where a grid edge goes from in to out, the outline crosses it where the eraser's
+  reach (`Rub`, the same union of stadiums) ends along it, rounded to the lattice and kept off
+  the edge's ends; marching squares join each cell's crossings (two diagonal corners in are
+  joined). The crossings lie inside distinct grid edges and each segment inside one cell, so the
+  rings are simple and apart; thinned within a fortieth of the radius, they are kept thinned
+  only where they stay so. A self-overlapping stroke is one footprint, a loop's enclosed area a
+  hole in it. The rings are laid as a closed cell edge is, undrawn, clipped to the canvas (each
+  ring clipped from a vertex off it, so every run ends on the frame; no vertex lies on the
+  frame's lines), a piece with no room for a number not cut off. An area is inside when it lies
+  on the outline's left (the footprint's side) and on no boundary of it on the right; one that
+  touches none of the outline, or both its sides, when the footprint covers it whole (each of
+  its vertices), so a cell the stroke covers is painted whole and a stroke too thin to cut a piece
+  off, crossing a cell's number, paints nothing there. Each area inside takes the paint, ink
+  untouched: the areas either side of a drawn line stay two cells. Then areas of the paint
+  that meet across an undrawn boundary, one of them inside or the boundary the outline itself,
+  become one area (`mergeGroups`), so a stroke along a cell's edge in the cell's own paint grows
+  the cell instead of adding a sliver, and the cell it cut is whole again. An area with no room
+  for the paint's number, even a detail area's, keeps its paint and is one again with the rest of
+  its cell (`Outcome.tooSmall`); a paint left with no area leaves the palette (`dropPaints`). A
+  stroke that changes no area's paint changes nothing; one with no area inside it, not even a
+  whole cell, is declined, as is one whose areas all lack room for the paint's number. On the
+  parrots book (1152 × 768, 201 regions) through `pbn edit`, with the check of the result: a
+  30-point stroke of radius 18 across the macaw's chest, the blue and the green, 61 ms (16 pieces
+  cut, 6 joined); 30 points across the whole canvas, 250 ms at radius 14.4 (the app's brush on a
+  13" iPad), 290 ms at 40 and 370 ms at 4. A merge's drag, about 35 ms.
+- **Reshape** (`reshape`, Refine's Bend Line and Move Edge). One edit behind two tools: drag an
+  inked line to bend it, or a cell's boundary, inked or not, to reshape the cell, its neighbour
+  giving or taking the difference. The edit's `target` (`TemplateEditor.ReshapeTarget`) keeps
+  each tool to its own lines: Bend Line's (`ink`) grabs only what is drawn (an edge of a drawn
+  layer, `LineLayer.isDrawn`, or a drawn stroke), so an undrawn cell edge beside the line it
+  meant is passed over; Move Edge's (`edge`) only boundaries between two cells, drawn or not,
+  never a stroke inside one; `any`, what a reshape saved without a target means, grabs either.
+  The line nearest the drag's start within a finger's reach (an edge, not the canvas's frame, or
+  a drawn stroke) that the target grabs is taken with the chain it continues into:
+  through every vertex where it and just one other edge alike (both inked, or both undrawn) end,
+  from junction to junction, as the Smart Eraser finds its line (`EditWork.reshapePlan`). Its
+  point nearest the drag's start goes where the finger lifts, and every other point by the drag
+  times a weight along the chain's length: 1 at the grabbed point, 0 a spread away, a smoothstep
+  between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on every
+  device). The spread is three times the drag, at least 24 units (`reshapeSpread`), on each side
+  of the grabbed point, and at most to the chain's end there (a loop's far point, half its length
+  round); where it ends the chain gets a vertex, and beyond it keeps its points exactly. So the
+  bend is local, and the chain's ends stay on their junctions and the drawing connected; a
+  junction grabbed is held, so nothing moves. A stroke's end that touches no line is free: within
+  the spread, the stretch from the grabbed point to it moves whole (a short stroke free at both
+  ends moves as it is); beyond it, the end stays. Strokes ending on the chain are carried, their
+  end moving with the point of the chain they meet. A step whose ends move at least half a unit
+  apart is bent: points are added along it so that, moved, they lie at most 3 units apart (the
+  smoothstep is at its steepest 1.5 times its mean slope, which bounds a moved step's length), so
+  a big bend is a smooth curve. The chain keeps its layer and weight; the regions on its sides
+  keep their paints, their fills are made again, their numbers stay while they keep the room
+  (`labelPlan`, off the strokes it moved), and the pixels between the old outline and the new go
+  to the region whose outline now holds them (`reclaim`). Declined when the moved chain would
+  cross itself or another line or touch one anywhere but its held ends and the strokes it
+  carries, leave the canvas, turn an area inside out, carry an island or a stroke into the region
+  across, or leave an area no room for its number. On the parrots book, laying a bend with the
+  check of the result takes about 25 ms; the preview the app draws while the finger moves
+  (`TemplateEditor.reshapedChain`, the same moved points without laying them) 0.4 ms. With the
+  falloff spanning the whole chain, four of five drags of 25 to 45 units on that book's outlines
+  were declined, a long outline moving along most of its length into the details beside it near
+  its far ends. Bending within a spread of the grab (max(3 × the drag, 24 units) a side), three
+  of the five were made; the two declined would have met a line beside them, which a bend that
+  far must.
+- **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
+  cell. The number nearest the drag's start, within its radius and the edit's reach (a finger's
+  on screen, `RefineGestures.fingerReach`; `TemplateEditor.tapReach` in a file without one), goes
+  where the finger lifts when that is inside its own region (not on its outline) and a number of
+  its digits fits there: the room there, measured to the outline and to the strokes in the
+  region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor or, in
+  a detail area, a detail area's. Its radius is that room, never more than the region's roomiest
+  spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged into open
+  space doesn't grow huge. It must keep clear of the region's other numbers: a move whose circle
+  there overlaps another's is declined, each circle the disc its digits are drawn in: its room,
+  but no more than a number at the largest size a renderer draws fills (`largestNumberFraction`,
+  the canvas's cap, 4.5% of the shorter side). A circle as large as the room alone would decline
+  nearly every move in a large area, whose numbers' rooms reach past each other while the
+  numbers themselves lie far apart: on the editor's test scene, the sky's number dragged 18.5
+  units from another of the sky's, both drawn about 7 units across, though their rooms are 25
+  and 18.5. `TemplateEditor.labelNear` is the grab's rule on its own,
+  from which the app draws the number held. The region's other numbers, its outline, fill and
+  pixels stay as they were; nothing is declined but the move itself. A later edit that plans the
+  region's numbers again (a cut, a join, a repaint, a reshape of its outline) keeps the number
+  where it was put while that spot keeps most of the room, as it keeps any number (`labelPlan`),
+  and may move it otherwise.
+- **Shapes** (`RefineShape`, `ShapePath`; drawn lines, laid as the Pen's are). A drag draws a
+  straight line, a rectangle across it, an oval filling the box it spans, or a curve (a second
+  drag bends it); a hexagon and a five-pointed star fill the box too: a regular hexagon, flat on
+  top and bottom with its side corners on the box's sides, and a star with a point up and its
+  inner corners 0.4 of the way out, each stretched to the box as the oval is a circle stretched
+  to it. The closed ones are sent as closed lines, their start once; new shapes go last in
+  `RefineShape`, whose order the app lists them in.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

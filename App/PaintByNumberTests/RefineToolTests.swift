@@ -7,14 +7,24 @@ import Testing
 /// Refine's tools: the Pencil's double tap, and what a tap of Fill does. Its geometry and
 /// gestures are PaintCore's (`RefineGeometryTests`, `RefineGesturesTests`).
 struct RefineToolTests {
-    /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; Fill,
-    /// the Color Splitter, Text and Colors have no partner.
+    /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; the
+    /// cell and paint tools and Text have no partner.
     @Test func thePencilSwitchesPenAndEraser() {
         #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
         #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
-        #expect(RefineTool.colors.pencilPartner == nil && !RefineTool.colors.erases)
+        let tools: [RefineTool] = [
+            .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
+        ]
+        for tool in tools {
+            #expect(tool.pencilPartner == nil && !tool.erases, "\(tool)")
+        }
+        // The tools that change paint alone show the painting beneath them; the Eyedropper may
+        // read the photo.
+        #expect(RefineTool.bucket.paints && RefineTool.brush.paints && RefineTool.cellEdge.paints && RefineTool.looks.paints)
+        #expect(!RefineTool.merge.paints)
+        #expect(!RefineTool.eyedropper.paints && !RefineTool.pen.paints && !RefineTool.select.paints)
     }
 
     /// Colors' changes to the edits: a look and the photo's colors start from the edits without
@@ -60,18 +70,99 @@ struct RefineToolTests {
         #expect(RefinePaintGlow.areas(of: 0, in: template).isEmpty)
     }
 
-    /// The Studio's groups hold every tool once, at most five on screen, the Pen first; Colors is
-    /// Paints', Fill is Areas'.
-    @Test func theStudioGroupsHoldEveryToolOnce() {
+    /// The Toolbox's groups hold every tool once, at most five on a phone's row, the Pen first;
+    /// ink, cells, paint and what shows apart.
+    @Test func theToolboxGroupsHoldEveryToolOnce() {
         let all = RefineGroup.allCases.flatMap(\.tools)
         #expect(Set(all).count == all.count)
         #expect(RefineGroup.allCases.allSatisfy { !$0.tools.isEmpty && $0.tools.count <= 5 })
-        #expect(RefineGroup.lines.tools.first == .pen)
-        for tool in [RefineTool.pen, .shape, .eraser, .smartEraser, .text, .fill, .colors] {
+        #expect(RefineGroup.ink.tools.first == .pen)
+        let tools: [RefineTool] = [
+            .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .merge, .fill, .bucket, .brush, .eyedropper, .editPaint,
+            .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
+        ]
+        for tool in tools {
             #expect(all.contains(tool), "\(tool) is in no group")
         }
-        #expect(RefineGroup.of(.colors) == .paints && RefineGroup.of(.fill) == .areas && RefineGroup.of(.text) == .lines)
+        #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
+        #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
+        #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
+        #expect(RefineGroup.of(.bendLine) == .ink && RefineGroup.of(.moveEdge) == .cells && RefineGroup.of(.moveNumber) == .numbers)
+        #expect(RefineGroup.of(.tryPainting) == .see)
         #expect(all.contains(.splitter) == RefineView.offersSplitter)
+    }
+
+    /// The current paint is a color: a paint's exactly, a new one's, or within a just-noticeable
+    /// difference of a paint, that paint's. It follows its paint through a look (same count, new
+    /// colors) and through paints made one, stays when a paint is added, and with none is the
+    /// first paint.
+    @Test func theCurrentPaintFollowsItsPaint() {
+        let palette = [
+            PaletteColor(oklab: SIMD3(0.3, 0.1, 0), space: .sRGB), PaletteColor(oklab: SIMD3(0.7, -0.1, 0.05), space: .sRGB),
+        ]
+        let second = palette[1].oklab
+        #expect(RefinePalette.index(of: second, in: palette) == 1)
+        #expect(RefinePalette.index(of: second + SIMD3(0.001, 0, 0), in: palette) == nil)
+        #expect(RefinePalette.index(of: nil, in: palette) == nil)
+        #expect(RefinePalette.snapped(second + SIMD3(0.01, 0, 0), to: palette) == second)
+        let new = SIMD3<Float>(0.5, 0.2, 0.2)
+        #expect(RefinePalette.snapped(new, to: palette) == new)
+
+        var looked = palette
+        looked[0].oklab = SIMD3(0.25, 0.05, 0.02)
+        looked[1].oklab = SIMD3(0.75, -0.05, 0.1)
+        #expect(RefinePalette.following(second, from: palette, to: looked) == looked[1].oklab)
+        #expect(RefinePalette.following(second, from: palette, to: palette + [PaletteColor(oklab: new, space: .sRGB)]) == second)
+        #expect(RefinePalette.following(new, from: palette, to: palette + [PaletteColor(oklab: new, space: .sRGB)]) == new)
+        #expect(RefinePalette.following(new, from: palette, to: looked) == new)
+        // Two paints made one (a look that made them alike): the paint nearest it, never a new one.
+        let merged = [PaletteColor(oklab: SIMD3(0.68, -0.08, 0.04), space: .sRGB)]
+        #expect(RefinePalette.following(second, from: palette, to: merged) == merged[0].oklab)
+        #expect(RefinePalette.following(nil, from: nil, to: palette) == palette[0].oklab)
+        #expect(RefinePalette.following(nil, from: nil, to: []) == nil)
+    }
+
+    /// The Studio's Pen draws ink alone: its line goes as a draw with no paints to give (laid
+    /// nudged, no area recolored), unless Color from Photo is on, when the model reads the
+    /// photo's colors for it. Other edits pass as they are.
+    @Test func thePenDrawsInkAlone() {
+        let line = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(9, 9)], closed: true)
+        #expect(RefineView.inked(line, colorsFromPhoto: false) == .draw(points: [SIMD2(1, 1), SIMD2(9, 9)], closed: true, paints: []))
+        #expect(RefineView.inked(line, colorsFromPhoto: true) == line)
+        let erase = TemplateEditor.Edit.erase(path: [SIMD2(1, 1)], radius: 2)
+        #expect(RefineView.inked(erase, colorsFromPhoto: false) == erase)
+        let painted = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(9, 9)], paints: [.init(at: SIMD2(2, 2), color: SIMD3(0.5, 0, 0))])
+        #expect(RefineView.inked(painted, colorsFromPhoto: false) == painted)
+    }
+
+    /// Shapes offers the hexagon and the star in SideStore and Debug builds, after the release's
+    /// four.
+    @Test func shapesOffersTheToolboxsFigures() {
+        #expect(RefineShape.offered.prefix(4) == [.line, .rectangle, .oval, .curve])
+        #expect(RefineShape.offered.contains(.polygon) && RefineShape.offered.contains(.star))
+        #expect(RefineShape.polygon.isClosed && RefineShape.star.isClosed)
+    }
+
+    /// Select's bar names the area's paint, how many areas share it and its share of the picture.
+    @Test func theSelectionBarSaysHowMuchOfThePicture() {
+        var template = Fixtures.stripes(count: 4)
+        template.regions[3].colorIndex = 1
+        #expect(RefineSelectionBar.subtitle(region: 1, in: template) == "Paint 2 · 2 areas · 25% of the picture")
+    }
+
+    /// Only a coloring book's undrawn edges between cells show as cell edges: none for a classic
+    /// template, whose every edge is drawn, and none along the frame.
+    @Test func cellEdgesAreTheUndrawnOnes() {
+        var template = Fixtures.stripes(count: 3)
+        #expect(RefineCellEdges.edges(of: template).isEmpty)
+        let layers = template.edges.indices.map { e -> UInt8 in
+            template.edges[e].right == BoundaryEdge.outside || e % 2 == 0 ? LineLayer.outline.rawValue : LineLayer.color.rawValue
+        }
+        template.lineArt = TemplateLineArt(
+            edgeLayers: layers, edgeWeights: Array(repeating: 255, count: layers.count), style: .coloringBook)
+        let undrawn = template.edges.indices.filter { layers[$0] == LineLayer.color.rawValue }
+        #expect(!undrawn.isEmpty)
+        #expect(RefineCellEdges.edges(of: template) == undrawn.map { Array(template.points(of: template.edges[$0])) })
     }
 
     /// A card counts the areas of its paint, separate ones too, as the glow finds them.

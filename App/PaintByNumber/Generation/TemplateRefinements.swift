@@ -15,6 +15,13 @@ import PaintCore
 ///   a painting's `refinements.json` lets regeneration make it again the same way;
 /// - the rest change what the generator reads, never a template, so they hold through every
 ///   draft and slider:
+///   - `start`, what the base starts from (Refine's Start From, offered until the first edit):
+///     the generator's template of the photo, or for `.blank` the photo as one area on the canvas
+///     the generator would make of it (`ArtworkFactory.blank`, PaintCore's `TemplateEditor.blank`),
+///     which the painter's lines then cut into cells of its one paint (the Toolbox's Pen draws ink
+///     alone; the Bucket, the Paint Brush and the Eyedropper over the photo paint them, and Color
+///     from Photo gives a line's pieces the photo's colors). A file without
+///     it, or with one this app doesn't know, starts from the generator's;
 ///   - `lines`, the lines drawn and erased and the shapes filled by builds that refined through
 ///     the generator, join the line art's input as the painter's edits (`LineArtInput.edits`, in
 ///     order), which PaintCore lays out with its own lines (`LineEdits`); so do the shapes filled,
@@ -74,6 +81,16 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var points: [SIMD2<Float>]
     }
 
+    /// What the base starts from.
+    nonisolated enum Start: String, Codable, Sendable {
+        /// The template the generator makes of the photo (every painting before Start From).
+        case generated
+        /// The photo as one area.
+        case blank
+    }
+
+    /// What the base starts from (see above): a generator input, so a change makes the base again.
+    var start: Start = .generated
     /// The lines drawn and erased and the shapes filled by builds that refined through the
     /// generator, in the order they were (the generator's input; see above).
     var lines: [Line] = []
@@ -90,10 +107,14 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     init() {}
 
-    var isEmpty: Bool { lines.isEmpty && edits.isEmpty && strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty }
+    /// Nothing refined: a blank start is a refinement, kept like the others (a draft, the
+    /// painting's `refinements.json`).
+    var isEmpty: Bool {
+        start == .generated && lines.isEmpty && edits.isEmpty && strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty
+    }
 
     /// How many things the painter changed: lines drawn and erased, shapes filled, strokes, and
-    /// lines of text turned off or marked.
+    /// lines of text turned off or marked. The start is not counted: it is where they began.
     var changeCount: Int { lines.count + edits.count + strokes.count + hiddenText.count + addedText.count }
 
     /// What the generator reads: these refinements without the edits, which are laid on the
@@ -310,13 +331,15 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Coding
 
-    private enum CodingKeys: String, CodingKey { case lines, edits, strokes, hiddenText, addedText }
+    private enum CodingKeys: String, CodingKey { case start, lines, edits, strokes, hiddenText, addedText }
 
     /// Tolerant: a field, line, edit or stroke it can't read (a kind from a newer app) is left out
-    /// rather than costing the rest, and a file without `edits` (a painting refined before they
-    /// were made by hand) is the refinements it was.
+    /// rather than costing the rest, a file without `edits` (a painting refined before they
+    /// were made by hand) is the refinements it was, and one without `start`, or with a start it
+    /// doesn't know, starts from the generator's template.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        start = (try? c.decodeIfPresent(Start.self, forKey: .start)) ?? .generated
         lines = ((try? c.decodeIfPresent([Lossy<Line>].self, forKey: .lines)) ?? []).compactMap(\.value)
         edits = Array(
             ((try? c.decodeIfPresent([Lossy<TemplateEditor.Edit>].self, forKey: .edits)) ?? []).compactMap(\.value)
@@ -324,6 +347,18 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         strokes = ((try? c.decodeIfPresent([Lossy<Stroke>].self, forKey: .strokes)) ?? []).compactMap(\.value)
         hiddenText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .hiddenText)) ?? []
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []
+    }
+
+    /// The fields in their order; `start` only for a blank start, so a file that starts from the
+    /// generator's template is byte for byte what it was before there were starts.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        if start == .blank { try c.encode(start, forKey: .start) }
+        try c.encode(lines, forKey: .lines)
+        try c.encode(edits, forKey: .edits)
+        try c.encode(strokes, forKey: .strokes)
+        try c.encode(hiddenText, forKey: .hiddenText)
+        try c.encode(addedText, forKey: .addedText)
     }
 
     private struct Lossy<Value: Decodable>: Decodable {

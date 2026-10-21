@@ -87,7 +87,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`, the Toolbox's `RefineStudio` and `RefineToolbox`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
   the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `EmptyGalleryView` (its sketch paints
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
@@ -613,21 +613,49 @@ Conventions).
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.
-  - **The Studio** (SideStore and Debug builds, `#if UNRELEASED`; Paul's go, October 20, on the
-    design claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, its mock-ups put to the Lamplit Table,
-    `factory/pieces/refine-studio`): the tools in groups (`RefineGroup`: Lines, Areas, Paints) in
-    one segmented row, the group's tools in the row beneath (at most five; Paints shows the
-    colors panel instead; captions under them on iPad), Shapes' figures in a bar above, open the
-    first time Shapes is picked and then on a second tap; Painting, Paper and Photo in the
-    navigation bar (a menu on compact widths), opening on the painting. A long press (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
+  - **The Toolbox** (SideStore and Debug builds, `#if UNRELEASED`; Paul, October 21: "a drawing app
+    with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
+    grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
+    each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
+    (`RefineGroup`: Ink, Cells, Paint, Numbers, See): on iPad a rail along the leading edge holds every tool
+    in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
+    group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
+    options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
+    `SettingsKey.refineSnaps`/`refinePenColors`), Shapes (its figures and Snap above the tools), the
+    Eraser, the Line Eraser, Bend Line (`.reshape`: a drag moves the line under it, bending it near
+    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Shapes
+    adds a hexagon and a star in these builds (`RefineShape.offered`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
+    share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
+    (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
+    drag joins the cells it crosses into the first, boundaries and ink between them gone), Move Edge
+    (`.reshape` on a cell's boundary, inked or not), Fill Shape; while
+    a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
+    (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
+    screen, following its paint through edits; the system color picker at its end picks any color,
+    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint), the
+    Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
+    it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
+    the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
+    (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
+    repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
+    the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
+    screen on the template as it stands, `RefineTrial`, saving nothing). The views (Painting, Paper,
+    Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
+    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
+    Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
+    `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
+    canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
+    `refinements.json`, a step of the history, and no making-of show). A long press
+    (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
     (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
     `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
-    Paints. A line that cuts off an area pops two gold sparkles where its ends met
-    (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
+    Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends
+    met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
-    each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card.
-    The release keeps the one row of buttons described above.
+    each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
+    `create-refine-select` (with `-dark`) selects it. The release keeps the one row of buttons
+    described above.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser

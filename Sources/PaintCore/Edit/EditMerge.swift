@@ -6,9 +6,11 @@ extension EditWork {
     /// stretches of an edge that remain, whole when it is not there), an undrawn one is nothing
     /// more than the join of two cells. The edges round the members are the merged region's,
     /// which gets its rings traced again (the neighbours' rings and fills do not change: they
-    /// refer to the same edges); its numbers stay where they were while their room does.
+    /// refer to the same edges); its numbers stay where they were while their room does. It is a
+    /// detail area when `detail` says so, or, `inheritingDetail`, when any member was one.
     mutating func merge(
-        _ members: [Int], keep: Int, color: UInt32, detail: Bool, surviving: [Int: [[LatticePoint]]] = [:]
+        _ members: [Int], keep: Int, color: UInt32, detail: Bool, inheritingDetail: Bool = true,
+        surviving: [Int: [[LatticePoint]]] = [:]
     ) throws {
         let inside = Set(members)
         var edgeSet = Set<Int>()
@@ -47,7 +49,7 @@ extension EditWork {
             WorkRing(refs: cycle.map { EdgeRef(edge: UInt32($0.edge), reversed: $0.reversed) }, isHole: i > 0)
         }
 
-        let wasDetail = members.contains { regionDetail[$0] }
+        let wasDetail = inheritingDetail && members.contains { regionDetail[$0] }
         guard let plan = labelPlan(
             rings: ordered.map(polygon), color: color, detail: detail || wasDetail, hints: hints(from: members), region: keep,
             keepOut: freshInk[keep] ?? [])
@@ -80,6 +82,86 @@ extension EditWork {
         refreshColorWeights(around: keep)
         summary.regionsMerged += members.count - 1
         summary.touched.insert(keep)
+    }
+
+    /// Refine's Merge: the regions under `path` (lattice points, canvas units on the quantum
+    /// grid), in the order the path first enters them, walked in steps of half a unit, a point
+    /// off the canvas or in no region left out. The first region is joined by each next one that
+    /// shares an edge with those joined so far; one that doesn't is passed over. The edges
+    /// between them go, ink and all, with no stroke left of an inked one (unlike the eraser's
+    /// join); the strokes inside them stay. The joined area keeps the first region's index,
+    /// paint and number, and is a detail area only if the first was (a detail area is what a
+    /// fill or a cramped cut made: the painter dragged from it, so the area is it, grown). A
+    /// paint left with no area leaves the palette, the numbers after it closing up, as Only
+    /// This Area's does.
+    mutating func merge(along path: [LatticePoint]) throws {
+        let width = Int64(t.width) * Lattice.unit, height = Int64(t.height) * Lattice.unit
+        var order: [Int] = []
+        var seen = Set<Int>()
+        var current: (region: Int, rings: [[LatticePoint]])?
+        func visit(_ p: LatticePoint) {
+            guard p.x >= 0, p.y >= 0, p.x <= width, p.y <= height else { return }
+            if let c = current, Lattice.contains(c.rings, p) == .inside { return }
+            guard let r = locate(p) else { return }
+            current = (r, polygons(of: r))
+            if seen.insert(r).inserted { order.append(r) }
+        }
+        let step = Lattice.unit / 2
+        let lo = LatticePoint(0, 0), hi = LatticePoint(width, height)
+        for (k, p) in path.enumerated() {
+            visit(p)
+            guard k + 1 < path.count else { break }
+            // Stepped only where it crosses the canvas: off it nothing is visited anyway.
+            guard let (a, b) = Self.clip(p, path[k + 1], lo, hi) else { continue }
+            visit(a)
+            let d = b &- a
+            let n = max(abs(d.x), abs(d.y)) / step + 1
+            for i in 1..<n { visit(LatticePoint(a.x + Lattice.mulDiv(d.x, i, n), a.y + Lattice.mulDiv(d.y, i, n))) }
+            visit(b)
+        }
+        guard let first = order.first else { throw EditFailure.invalid("the merge joins no areas") }
+        var members = [first]
+        var joined: Set<Int> = [first]
+        for r in order.dropFirst() {
+            let borders = ringsOf(r).contains { ring in
+                ring.refs.contains { ref in
+                    let e = Int(ref.edge)
+                    guard !edgeDead[e], let other = right(e) else { return false }
+                    return joined.contains(left(e) == r ? other : left(e))
+                }
+            }
+            if borders {
+                members.append(r)
+                joined.insert(r)
+            }
+        }
+        guard members.count >= 2 else { throw EditFailure.invalid("the merge joins no areas") }
+        var between: [Int: [[LatticePoint]]] = [:]
+        for m in members {
+            for ring in ringsOf(m) {
+                for ref in ring.refs {
+                    let e = Int(ref.edge)
+                    if let other = right(e), joined.contains(left(e)), joined.contains(other) { between[e] = [] }
+                }
+            }
+        }
+        let used = Set(t.regions.indices.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex })
+        try merge(
+            members, keep: first, color: t.regions[first].colorIndex, detail: regionDetail[first], inheritingDetail: false,
+            surviving: between)
+        try dropPaints(emptiedFrom: used)
+    }
+
+    /// Paints of `used` that no area has now leave the palette, the numbers after them closing
+    /// up (`renumberPaints`: a number only loses digits).
+    mutating func dropPaints(emptiedFrom used: Set<UInt32>) throws {
+        let now = Set(t.regions.indices.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex })
+        let emptied = used.subtracting(now)
+        guard !emptied.isEmpty, let survivor = now.min() else { return }
+        var target = Array(t.palette.indices)
+        for k in emptied { target[Int(k)] = Int(survivor) }
+        try renumberPaints(into: target, colors: t.palette.map(\.oklab))
+        summary.paintsMerged += emptied.count
     }
 
     /// The weight of an undrawn edge between regions of these paints: their difference

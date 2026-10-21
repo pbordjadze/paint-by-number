@@ -101,6 +101,16 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// A Color Splitter stroke that could not split an area (it closed none off, or its sides
         /// would keep one paint).
         case notSplit
+        /// A Cell Edge stroke that could not divide an area (it closed none off).
+        case notDivided
+        /// A Merge drag that joined no areas.
+        case notMerged
+        /// A Paint Brush stroke with no room for a number where it went.
+        case notPainted
+        /// A Bend Line or Move Edge drag that would have crossed a line or squeezed a number.
+        case notReshaped
+        /// A number dragged where it has no room, or out of its cell.
+        case notMoved
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -116,6 +126,11 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             switch edit {
             case .draw: self = .notDrawn
             case .split: self = .notSplit
+            case .cellEdge: self = .notDivided
+            case .merge: self = .notMerged
+            case .brush: self = .notPainted
+            case .reshape: self = .notReshaped
+            case .moveLabel: self = .notMoved
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             case .look, .repaint, .paintArea: self = .notRecolored
@@ -140,6 +155,21 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notSplit:
             String(localized: "refine.note.notSplit", defaultValue: "That area couldn’t be split there.",
                    comment: "Refine screen toast: a Color Splitter stroke could not divide an area's color (it closed off no area, or both sides would have kept the same paint); nothing changed")
+        case .notDivided:
+            String(localized: "refine.note.notDivided", defaultValue: "That area couldn’t be divided there.",
+                   comment: "Refine screen toast: a Cell Edge stroke could not divide an area (it closed off no part of one); nothing changed")
+        case .notMerged:
+            String(localized: "refine.note.notMerged", defaultValue: "Those areas couldn’t be joined.",
+                   comment: "Refine screen toast: a Merge drag joined no areas (it crossed only one, or none that touch); nothing changed")
+        case .notPainted:
+            String(localized: "refine.note.notPainted", defaultValue: "That couldn’t be painted there.",
+                   comment: "Refine screen toast: a Paint Brush stroke left no room for a number where it went; nothing changed")
+        case .notReshaped:
+            String(localized: "refine.note.notReshaped", defaultValue: "That line couldn’t be moved there.",
+                   comment: "Refine screen toast: a Bend Line or Move Edge drag would have made the line cross another or left a number without room; nothing changed")
+        case .notMoved:
+            String(localized: "refine.note.notMoved", defaultValue: "There’s no room for that number there.",
+                   comment: "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -159,7 +189,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         switch kind {
         case .tooSmall: "circle.dotted"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notRecolored, .left: "exclamationmark.circle"
+        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted, .notReshaped, .notMoved, .notRecolored,
+             .left:
+            "exclamationmark.circle"
         }
     }
 }
