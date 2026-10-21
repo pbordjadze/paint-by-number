@@ -309,6 +309,11 @@ struct RefineView: View {
                             .id(painting?.preview)
                             .transition(.opacity)
                     }
+                    // The brush's strokes until they land, in their paint under the drawing's ink,
+                    // which a brush never covers.
+                    RefineInkLayer(
+                        lines: [], trace: nil, traceIsDrawn: false, erasing: false, brushes: brushes,
+                        eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth, beneath: nil, halo: false)
                     if let base {
                         LineArtLayer(
                             drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto,
@@ -332,7 +337,7 @@ struct RefineView: View {
                     let figure = shapeTrace
                     RefineInkLayer(
                         lines: pending, trace: tool == .shape ? figure : tool == .brush ? nil : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
-                        dashed: tool == .splitter || tool == .cellEdge, merging: tool == .merge, brushes: brushes,
+                        dashed: tool == .splitter || tool == .cellEdge, merging: tool == .merge,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
                         beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     if let tapped {
@@ -367,9 +372,6 @@ struct RefineView: View {
         .clipped()
         .overlay(alignment: .bottom) { status.padding(12) }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
-        #if UNRELEASED
-        .overlay(alignment: .top) { topControls.padding(12) }
-        #endif
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
@@ -380,6 +382,9 @@ struct RefineView: View {
         .accessibilityValue(Self.changes(model.refinements.changeCount))
         .accessibilityIdentifier("refine-canvas")
         #if UNRELEASED
+        // After the picture's own accessibility, which ignores its children: Start From and the
+        // badge are controls of their own.
+        .overlay(alignment: .top) { topControls.padding(12) }
         .popover(item: $card, attachmentAnchor: .rect(.rect(cardAnchor))) { pick in areaCard(pick) }
         #endif
     }
@@ -580,7 +585,7 @@ struct RefineView: View {
     private func brushEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
         #if UNRELEASED
         guard let color = currentPaint else { return nil }
-        return RefineGestures.brush(points, on: screen, color: color, radius: CGFloat(brushSize))
+        return RefineGestures.brush(points, on: screen, color: color, size: CGFloat(brushSize))
         #else
         return nil
         #endif

@@ -197,6 +197,10 @@ final class RefineUITests: XCTestCase {
 
         pickTool("brush", in: "Paint", of: app)
         XCTAssertTrue(app.sliders["refine-brush-size"].waitForExistence(timeout: 5), "The brush has no Size")
+        // Another paint than the merged sky's, so the stroke changes something.
+        let fresh = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND isSelected == false", "refine-paint-")).firstMatch
+        XCTAssertTrue(fresh.waitForExistence(timeout: 5), "The palette has no other paint")
+        fresh.tap()
         drag(on: canvas, from: onPicture(canvas, 0.3, 0.08), to: onPicture(canvas, 0.45, 0.1))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The brush didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-brush")

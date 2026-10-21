@@ -142,6 +142,11 @@ struct EditBrushTests {
             Issue.record("not declined")
         }
         #expect(trail.edits.isEmpty)
+        // A stroke too fine to cut a piece, over a cell's number, doesn't paint that cell whole.
+        let groundRegion = try #require(t.region(at: Self.ground))
+        let number = try #require(t.labels(ofRegion: groundRegion).first).position
+        let (crossing, overNumber) = try TemplateEditor.apply(.brush(path: [number], radius: 0.5, color: Self.magenta), to: t)
+        #expect(overNumber.declined != nil && crossing == t)
     }
 
     /// A long stroke over many cells of the crowded book gives a template that validates, the
@@ -201,7 +206,7 @@ struct EditBrushTests {
         #expect(abs(radius - 2.4) < 1e-4 && color == Self.magenta)
         #expect(RefineGestures.brush([], on: screen, color: Self.magenta) == nil)
         // The app's Size: twice the radius on screen, twice the reach.
-        guard case .brush(_, let wide, _)? = RefineGestures.brush(samples, on: screen, color: Self.magenta, radius: 24),
+        guard case .brush(_, let wide, _)? = RefineGestures.brush(samples, on: screen, color: Self.magenta, size: 24),
               case .brush(_, let standard, _) = edit
         else { Issue.record("not a brush"); return }
         #expect(abs(wide - 2 * standard) < 1e-3)

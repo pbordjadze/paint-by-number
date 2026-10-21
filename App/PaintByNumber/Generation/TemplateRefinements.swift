@@ -18,7 +18,9 @@ import PaintCore
 ///   - `start`, what the base starts from (Refine's Start From, offered until the first edit):
 ///     the generator's template of the photo, or for `.blank` the photo as one area on the canvas
 ///     the generator would make of it (`ArtworkFactory.blank`, PaintCore's `TemplateEditor.blank`),
-///     which the painter's lines then cut, each piece in the photo's color there. A file without
+///     which the painter's lines then cut into cells of its one paint (the Toolbox's Pen draws ink
+///     alone; the Bucket, the Paint Brush and the Eyedropper over the photo paint them, and Color
+///     from Photo gives a line's pieces the photo's colors). A file without
 ///     it, or with one this app doesn't know, starts from the generator's;
 ///   - `lines`, the lines drawn and erased and the shapes filled by builds that refined through
 ///     the generator, join the line art's input as the painter's edits (`LineArtInput.edits`, in

@@ -27,8 +27,8 @@ struct RefineInkLayer: View {
     var dashed = false
     /// The trace is Merge's, a path that draws nothing: in the signature color.
     var merging = false
-    /// The Paint Brush's strokes the template doesn't show yet, and the one under the finger (the
-    /// trace's, when it is the brush's), laid in their paint under the ink.
+    /// The Paint Brush's strokes the template doesn't show yet, and the one under the finger, laid
+    /// in their paint (Refine gives them a layer of their own, under the drawing).
     var brushes: [Brush] = []
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
     let eraserRadius: Float

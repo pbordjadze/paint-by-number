@@ -53,8 +53,8 @@ import Foundation
 ///   every area inside it then takes the paint, ink untouched, so the areas either side of a
 ///   drawn line stay two cells. Areas of that paint meeting across an undrawn boundary, one of
 ///   them inside or the boundary the outline itself, become one, so a stroke along a cell's edge
-///   grows the cell. A paint left with no area leaves the palette. A stroke that paints nothing a
-///   new paint changes nothing; one with no area inside it is declined. Its color is one of the
+///   grows the cell. A paint left with no area leaves the palette. A stroke whose areas all
+///   have its paint already changes nothing; one with no area inside it is declined. Its color is one of the
 ///   template on screen, as Only This Area's is.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the

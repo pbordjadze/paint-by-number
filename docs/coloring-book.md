@@ -440,8 +440,8 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   area leaves the palette and the numbers after it close up, as Only This Area's does
   (`dropPaints`). A merge that joins fewer than two areas is declined.
 - **Paint brush** (`brush`, Refine's Paint Brush). The Toolbox's way to paint a cell's shape: what
-  lies within the radius of the stroke (a disc for a dab; `RefineGestures.brushSize`, 12 points
-  on screen at any zoom) takes the paint a fill would (a color of the template on screen, as Only
+  lies within the radius of the stroke (a disc for a dab; the app's Size, 4 to 48 points on
+  screen at any zoom, `RefineGestures.brushSize`'s 12 by default) takes the paint a fill would (a color of the template on screen, as Only
   This Area's: the paint within a just-noticeable difference, else a new one added last). The
   footprint's outline (`BrushFootprint`) is traced on a grid of a quarter of the radius (coarser
   only past a million cells): each grid vertex is in or out exactly, in 128-bit integer
@@ -455,8 +455,9 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   ring clipped from a vertex off it, so every run ends on the frame; no vertex lies on the
   frame's lines), a piece with no room for a number not cut off. An area is inside when it lies
   on the outline's left (the footprint's side) and on no boundary of it on the right; one that
-  touches none of the outline, or both its sides, when its number's spot is in the footprint, so
-  a cell the stroke covers whole is painted whole. Each area inside takes the paint, ink
+  touches none of the outline, or both its sides, when the footprint covers it whole (each of
+  its vertices), so a cell the stroke covers is painted whole and a stroke too thin to cut a piece
+  off, crossing a cell's number, paints nothing there. Each area inside takes the paint, ink
   untouched: the areas either side of a drawn line stay two cells. Then areas of the paint
   that meet across an undrawn boundary, one of them inside or the boundary the outline itself,
   become one area (`mergeGroups`), so a stroke along a cell's edge in the cell's own paint grows

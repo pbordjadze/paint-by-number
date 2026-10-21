@@ -163,16 +163,16 @@ public enum RefineGestures {
     }
 
     /// The Paint Brush's stroke as an edit: its path in canvas units, thinned as the eraser's is,
-    /// its reach there the brush's on screen (`brushRadius(size:)`, `radius` points; the app's
-    /// Size), painting `color` (OKLab, a color of the template on screen). A dab is one point; nil
-    /// for no touch.
+    /// its reach there the brush's on screen (`brushRadius(size:)`, `size` points; the app's Size),
+    /// painting `color` (OKLab, a color of the template on screen). A dab is one point; nil for no
+    /// touch.
     public static func brush(
-        _ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>, radius: CGFloat = brushSize
+        _ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>, size: CGFloat = brushSize
     ) -> TemplateEditor.Edit? {
-        let size = screen.canvas
-        guard !points.isEmpty, size.width > 0, size.height > 0 else { return nil }
+        let canvas = screen.canvas
+        guard !points.isEmpty, canvas.width > 0, canvas.height > 0 else { return nil }
         let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
-        return .brush(path: path, radius: screen.brushRadius(size: radius) * Float(max(size.width, size.height)), color: color)
+        return .brush(path: path, radius: screen.brushRadius(size: size) * Float(max(canvas.width, canvas.height)), color: color)
     }
 
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger

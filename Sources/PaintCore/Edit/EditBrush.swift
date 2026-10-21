@@ -90,8 +90,25 @@ struct BrushFootprint {
             let i0 = max(Int(Lattice.floorDiv(lo.x - gx + h - 1, h)), 1), i1 = min(Int(Lattice.floorDiv(hi.x - gx, h)), nx - 1)
             let j0 = max(Int(Lattice.floorDiv(lo.y - gy + h - 1, h)), 1), j1 = min(Int(Lattice.floorDiv(hi.y - gy, h)), ny - 1)
             guard i0 <= i1, j0 <= j1 else { continue }
+            // Each row only where the capsule can reach it (a long diagonal's box is mostly
+            // empty): the segment's stretch within the radius of the row, widened by the radius
+            // and a cell. The test itself stays exact; this bounds only which vertices it sees.
+            let ax = Double(a.x), ay = Double(a.y), dx = Double(b.x - a.x), dy = Double(b.y - a.y)
+            let reach = Double(radius), cell = Double(h)
             for j in j0...j1 {
-                for i in i0...i1 where !inside[j * columns + i] && Self.within(vertex(i, j), a, b, r2) {
+                let y = Double(gy + Int64(j) * h)
+                var low = min(ax, ax + dx), high = max(ax, ax + dx)
+                if dy != 0 {
+                    let t0 = (y - reach - ay) / dy, t1 = (y + reach - ay) / dy
+                    let tl = max(0, min(t0, t1)), th = min(1, max(t0, t1))
+                    guard tl <= th else { continue }
+                    low = min(ax + dx * tl, ax + dx * th)
+                    high = max(ax + dx * tl, ax + dx * th)
+                }
+                let ri0 = max(i0, Int(((low - reach - Double(gx)) / cell).rounded(.down)) - 1)
+                let ri1 = min(i1, Int(((high + reach - Double(gx)) / cell).rounded(.up)) + 1)
+                guard ri0 <= ri1 else { continue }
+                for i in ri0...ri1 where !inside[j * columns + i] && Self.within(vertex(i, j), a, b, r2) {
                     inside[j * columns + i] = true
                 }
             }
@@ -239,7 +256,7 @@ extension EditWork {
     /// inside it then takes the paint, ink between areas untouched, so pieces either side of a
     /// drawn line stay two cells. An area is inside when it lies on the footprint's side of the
     /// boundaries laid (the outline runs with the footprint on its left), or, touching none of
-    /// them or both sides, when its number's spot is in the footprint. Areas of the brush's paint
+    /// them or both sides, when the footprint covers it whole. Areas of the brush's paint
     /// then meet across undrawn boundaries as one area (`mergeGroups`, the largest keeping its
     /// index), wherever one of them is inside or the boundary is the outline itself, so a stroke
     /// along a cell's edge grows the cell. A paint left with no area leaves the palette
@@ -275,9 +292,10 @@ extension EditWork {
             case (true, false): inside.append(r)
             case (false, true): continue
             default:
-                if let spot = labels[r]?.first ?? t.labels(ofRegion: r).first, footprint.contains(Lattice.point(spot.position)) {
-                    inside.append(r)
-                }
+                // Cut by no outline edge it lies wholly in: inside only when the footprint covers
+                // it. A stroke too thin to cut a piece off, crossing a cell's number, paints
+                // nothing there, not the whole cell.
+                if polygons(of: r).allSatisfy({ $0.allSatisfy(footprint.contains) }) { inside.append(r) }
             }
         }
         guard !inside.isEmpty else { throw EditFailure.invalid("the brush's stroke has no room for a number there") }

@@ -107,12 +107,17 @@ extension EditWork {
             if seen.insert(r).inserted { order.append(r) }
         }
         let step = Lattice.unit / 2
+        let lo = LatticePoint(0, 0), hi = LatticePoint(width, height)
         for (k, p) in path.enumerated() {
             visit(p)
             guard k + 1 < path.count else { break }
-            let d = path[k + 1] &- p
+            // Stepped only where it crosses the canvas: off it nothing is visited anyway.
+            guard let (a, b) = Self.clip(p, path[k + 1], lo, hi) else { continue }
+            visit(a)
+            let d = b &- a
             let n = max(abs(d.x), abs(d.y)) / step + 1
-            for i in 1..<n { visit(LatticePoint(p.x + Lattice.mulDiv(d.x, i, n), p.y + Lattice.mulDiv(d.y, i, n))) }
+            for i in 1..<n { visit(LatticePoint(a.x + Lattice.mulDiv(d.x, i, n), a.y + Lattice.mulDiv(d.y, i, n))) }
+            visit(b)
         }
         guard let first = order.first else { throw EditFailure.invalid("the merge joins no areas") }
         var members = [first]

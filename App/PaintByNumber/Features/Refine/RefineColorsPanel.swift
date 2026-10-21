@@ -14,7 +14,7 @@ struct RefineColorsPanel: View {
     /// The looks the row offers, after Photo: night to day, then a painter's. Sepia, Water Lilies
     /// and Great Wave stay in PaintCore, kept for later (Paul: "save the other 3 in case we want
     /// them later"); adding one here brings it back.
-    static let offered: [TemplateEditor.Look] = [.moonlit, .goldenHour, .pastel, .garden, .starryNight]
+    nonisolated static let offered: [TemplateEditor.Look] = [.moonlit, .goldenHour, .pastel, .garden, .starryNight]
 
     /// What the panel shows.
     enum Mode { case looks, paint }
