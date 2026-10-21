@@ -290,9 +290,11 @@ synchronized folder would bundle it into the app.
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
-  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch, finishing the
-  selected color selects the first color left (`firstIncompleteColor`; the finished swatch
-  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it. A tap on an
+  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch
+  (`firstIncompleteColor`), finishing the selected color selects the next color left after it
+  (`nextIncompleteColor`, coming round; the finished swatch leaves, and the first swatch left
+  sent a painter in the middle of a long palette back to 1), and the Pencil's double tap and the
+  Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
   view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused

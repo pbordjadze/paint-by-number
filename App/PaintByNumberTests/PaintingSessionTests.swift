@@ -293,25 +293,41 @@ struct PaintingSessionTests {
         #expect(allAnimated)
     }
 
-    /// Finishing the selected color selects the palette's first color left, not the one after
-    /// it: the finished swatch leaves, and picking from the middle of the palette jumped about.
-    @Test func completingAColorSelectsThePalettesFirstColorLeft() {
+    /// Finishing the selected color selects the next color left after it, so the painter carries
+    /// on where they were (QA, October 21: finishing 16 of 22 sent them back to 1); finished
+    /// colors are passed over.
+    @Test func completingAColorSelectsTheNextColorLeft() throws {
         let session = PaintingSession(template: template)
+        let last = session.paletteCount - 1
+        try #require(last >= 4)
         session.select(color: 2)
         let events = recordEvents(session)
         session.paint(regions(ofColor: 2), from: .zero, animated: false)
         #expect(session.isColorComplete(2))
         #expect(events().contains(.colorCompleted(2)))
-        #expect(session.selectedColor == 0)
-        // In the palette's order on screen: here backwards, so the last number leads.
+        #expect(session.selectedColor == 3)
+        // Another color finished meanwhile leaves the selection alone, and is passed over.
+        session.paint(regions(ofColor: 4), from: .zero, animated: false)
+        #expect(session.selectedColor == 3)
+        session.paint(regions(ofColor: 3), from: .zero, animated: false)
+        #expect(session.selectedColor == (last >= 5 ? 5 : 0))
+    }
+
+    /// The next color goes by the palette's order on screen and comes round past its end; a
+    /// painting opens on its first swatch.
+    @Test func theNextColorFollowsThePalettesOrder() throws {
+        let session = PaintingSession(template: template)
         let last = session.paletteCount - 1
-        session.colorOrder = Array((0..<session.paletteCount).reversed())
+        try #require(last >= 3)
+        // In the palette's order on screen: here backwards, so the last number leads.
+        session.colorOrder = Array((0...last).reversed())
         #expect(session.selectedColor == last, "The palette's first swatch wasn't selected as it showed")
-        session.select(color: 1)
-        session.paint(regions(ofColor: 1), from: .zero, animated: false)
+        session.select(color: 2)
+        session.paint(regions(ofColor: 2), from: .zero, animated: false)
+        #expect(session.selectedColor == 1)
+        session.select(color: 0)
+        session.paint(regions(ofColor: 0), from: .zero, animated: false)
         #expect(session.selectedColor == last)
-        session.paint(regions(ofColor: last), from: .zero, animated: false)
-        #expect(session.selectedColor == last - 1)
     }
 
     @Test func paintingEverythingCompletesTheArtwork() {

@@ -4522,7 +4522,7 @@
       }
     },
     "send.explanation.noPhoto" : {
-      "comment" : "Send Template's note when the painting has no photo to send",
+      "comment" : "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4534,7 +4534,7 @@
       }
     },
     "send.explanation.noPhoto.release" : {
-      "comment" : "Send Template's note when the painting has no photo to send, in the release (which has no Refine, so no changes to the drawing to mention)",
+      "comment" : "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4565,6 +4565,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "They get a blank copy of this page to paint, and your photo to peek at."
+          }
+        }
+      }
+    },
+    "send.explanation.picture" : {
+      "comment" : "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, your changes to the drawing included, and the picture to peek at."
+          }
+        }
+      }
+    },
+    "send.explanation.picture.release" : {
+      "comment" : "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They get a blank copy of this page to paint, and the picture to peek at."
           }
         }
       }
@@ -7086,7 +7110,7 @@
       }
     },
     "settings.sky.footer" : {
-      "comment" : "Footer of Settings › Sound, under its Music row (Sun, Moon or Auto). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
+      "comment" : "Footer of Settings › Sound, under its Music row while it is set to Auto (the other choices are Sun and Moon). The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -7105,8 +7129,8 @@
       "comment" : "Title of the confirmation dialog for restarting a painting from the gallery",
       "extractionState" : "manual"
     },
-    "Suggested for this photo" : {
-      "comment" : "Create flow chip above the sliders: the settings were chosen for this photo automatically; also the chip's VoiceOver value",
+    "Suggested for this picture" : {
+      "comment" : "Create flow chip above the sliders: the settings were chosen for this picture (a photo or a library painting) automatically; also the chip's VoiceOver value",
       "extractionState" : "manual"
     },
     "Take Photo" : {

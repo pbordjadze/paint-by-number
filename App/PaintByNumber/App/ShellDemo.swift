@@ -47,7 +47,7 @@ import PaintCore
 ///   page: the practice picture on its canvas, the words beside it (`RefineGuideView`); ready once
 ///   the canvas shows.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
-///   photo" chip).
+///   picture" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
 ///   suggestion (the chip offers Reset to Suggested); the second with every localized string
 ///   twice as long.
@@ -60,7 +60,7 @@ import PaintCore
 /// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips as a card atop
 ///   the pages. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
 /// - `create-tip`: the photograph starter's preview with Already Chosen for You at the
-///   "Suggested for this photo" chip (the divider's tip is closed already).
+///   "Suggested for this picture" chip (the divider's tip is closed already).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-tips`: the same with tips on, for its Tips section; `settings-tip` waits for Worth a
 ///   Look Here at Painting Length.

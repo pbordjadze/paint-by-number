@@ -47,7 +47,8 @@ struct SendTemplateSheet: View {
                     .accessibilityIdentifier("send-photo")
                     .disabled(isPreparing)
                 }
-                Text(explanation)
+                Text(Self.explanation(canIncludePhoto: canIncludePhoto, includesPhoto: includesPhoto,
+                                      isPicture: artwork.sampleName != nil))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -124,12 +125,18 @@ struct SendTemplateSheet: View {
         return Color(.sRGB, red: Double(tone.x), green: Double(tone.y), blue: Double(tone.z))
     }
 
-    private var explanation: String {
+    /// The note under the switch. A library picture (`isPicture`) is no one's own photo: sent, it
+    /// is "the picture", and kept back there is nothing private to mention.
+    static func explanation(canIncludePhoto: Bool, includesPhoto: Bool, isPicture: Bool) -> String {
         #if UNRELEASED
-        if !canIncludePhoto {
+        if !canIncludePhoto || (isPicture && !includesPhoto) {
             String(localized: "send.explanation.noPhoto",
                    defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included.",
-                   comment: "Send Template's note when the painting has no photo to send")
+                   comment: "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off")
+        } else if isPicture {
+            String(localized: "send.explanation.picture",
+                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and the picture to peek at.",
+                   comment: "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on")
         } else if includesPhoto {
             String(localized: "send.explanation.photo",
                    defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and your photo to peek at.",
@@ -141,10 +148,14 @@ struct SendTemplateSheet: View {
         }
         #else
         // The release has no Refine: there are no changes to the drawing to mention.
-        if !canIncludePhoto {
+        if !canIncludePhoto || (isPicture && !includesPhoto) {
             String(localized: "send.explanation.noPhoto.release",
                    defaultValue: "They get a blank copy of this page to paint.",
-                   comment: "Send Template's note when the painting has no photo to send, in the release (which has no Refine, so no changes to the drawing to mention)")
+                   comment: "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)")
+        } else if isPicture {
+            String(localized: "send.explanation.picture.release",
+                   defaultValue: "They get a blank copy of this page to paint, and the picture to peek at.",
+                   comment: "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)")
         } else if includesPhoto {
             String(localized: "send.explanation.photo.release",
                    defaultValue: "They get a blank copy of this page to paint, and your photo to peek at.",

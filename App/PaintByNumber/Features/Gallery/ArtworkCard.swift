@@ -177,8 +177,7 @@ struct ProgressCaption: View {
     }
 
     static func percent(_ artwork: Artwork) -> Int {
-        // Never round up to 100% before the last region is painted.
-        min(99, Int((artwork.fractionComplete * 100).rounded(.down)))
+        PaintSpeech.percent(painted: artwork.paintedCount, total: artwork.regionCount)
     }
 
     /// "42%": `percent` as the locale writes it.

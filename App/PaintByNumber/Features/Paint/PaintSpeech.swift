@@ -17,12 +17,14 @@ nonisolated enum PaintSpeech {
                       comment: "VoiceOver label of a palette color that has a playful nickname: its number, the nickname, then its plain color name (e.g. “12, Harbor Fog, dark grayish blue”)")
     }
 
-    /// Whole percent painted; 0 only when nothing is painted and 100 only when everything is,
-    /// so a single fill always changes what VoiceOver reports at the ends.
+    /// Whole percent painted, rounded down; 0 only when nothing is painted and 100 only when
+    /// everything is, so the first fill and the last always change it. The one rule for every
+    /// percentage of a painting shown or spoken (the badge, the gallery, VoiceOver): rounded
+    /// down alone, the first fills of a large painting showed 0%.
     static func percent(painted: Int, total: Int) -> Int {
         guard total > 0, painted > 0 else { return 0 }
         guard painted < total else { return 100 }
-        return min(max(Int((Double(painted) * 100 / Double(total)).rounded()), 1), 99)
+        return min(max(painted * 100 / total, 1), 99)
     }
 
     /// "finished" or "30 percent painted".

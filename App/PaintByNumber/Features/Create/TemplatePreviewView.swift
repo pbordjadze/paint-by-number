@@ -533,14 +533,14 @@ struct TemplatePreviewView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles")
                         .foregroundStyle(Theme.accent)
-                    Text("Suggested for this photo")
+                    Text("Suggested for this picture")
                 }
                 .chipBackground(Theme.accent.opacity(0.14))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(String(
                     localized: "create.settingsOrigin.label", defaultValue: "Settings",
                     comment: "VoiceOver label of the chip above the create sliders; its value says whether they are suggested for the photo or custom")))
-                .accessibilityValue("Suggested for this photo")
+                .accessibilityValue("Suggested for this picture")
             }
         }
         .accessibilityIdentifier("settings-origin")

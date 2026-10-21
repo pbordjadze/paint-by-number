@@ -81,7 +81,7 @@ final class SettingsTests: XCTestCase {
     }
 
     /// Settings › Music offers Sun, Moon and Auto in one row, starts on Auto, keeps the choice and
-    /// says when Auto brings the Sun and the Moon, by the painter's clock.
+    /// says when Auto brings the Sun and the Moon, by the painter's clock, only while it is on Auto.
     @MainActor
     func testMusicPickerChangesTheChoice() throws {
         let app = openSettings()
@@ -98,12 +98,14 @@ final class SettingsTests: XCTestCase {
         }
         app.buttons["Moon"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Moon"), "Choosing Moon didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(footer.waitForNonExistence(timeout: 5), "Auto's hours stayed under Moon")
         attachScreenshot(of: app, named: "settings-music-moon")
         // The choice is stored in the simulator's defaults: back to Auto for the other tests.
         picker.tap()
         XCTAssertTrue(app.buttons["Auto"].waitForExistence(timeout: 5))
         app.buttons["Auto"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Auto"), "Choosing Auto didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(footer.waitForExistence(timeout: 5), "Auto's hours didn't come back with Auto")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps

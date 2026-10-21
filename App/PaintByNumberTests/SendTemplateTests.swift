@@ -13,6 +13,19 @@ struct SendTemplateTests {
 
     private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root)) }
 
+    /// The sheet's note calls a library picture "the picture", never the painter's photo, and
+    /// mentions a photo staying behind only for the painter's own.
+    @Test func theNoteNamesWhatGoes() {
+        let own = SendTemplateSheet.explanation(canIncludePhoto: true, includesPhoto: true, isPicture: false)
+        let kept = SendTemplateSheet.explanation(canIncludePhoto: true, includesPhoto: false, isPicture: false)
+        let picture = SendTemplateSheet.explanation(canIncludePhoto: true, includesPhoto: true, isPicture: true)
+        let pictureKept = SendTemplateSheet.explanation(canIncludePhoto: true, includesPhoto: false, isPicture: true)
+        let none = SendTemplateSheet.explanation(canIncludePhoto: false, includesPhoto: true, isPicture: false)
+        #expect(own.contains("your photo") && kept.contains("Your photo stays"))
+        #expect(picture.contains("the picture") && !picture.localizedCaseInsensitiveContains("your photo"))
+        #expect(pictureKept == none && !pictureKept.localizedCaseInsensitiveContains("photo"))
+    }
+
     /// A refined, half-painted painting with a photo, made from a library picture: what is sent is
     /// its template, with its photo and picture only when asked for.
     private func sender(_ library: Library) async throws -> Artwork {

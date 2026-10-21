@@ -50,15 +50,32 @@ struct PaintSpeechTests {
                 == "No areas of 12, Fern Shadow, dark green in view")
     }
 
+    /// Rounded down, but a fill always shows: QA's first two fills of 248 areas read 0%.
     @Test func percentOnlyReachesTheEndsWhenTrue() {
         #expect(PaintSpeech.percent(painted: 0, total: 300) == 0)
         #expect(PaintSpeech.percent(painted: 1, total: 300) == 1)
+        #expect(PaintSpeech.percent(painted: 2, total: 248) == 1)
+        #expect(PaintSpeech.percent(painted: 50, total: 300) == 16)
+        #expect(PaintSpeech.percent(painted: 29, total: 100) == 29)
         #expect(PaintSpeech.percent(painted: 299, total: 300) == 99)
         #expect(PaintSpeech.percent(painted: 300, total: 300) == 100)
         #expect(PaintSpeech.percent(painted: 3, total: 10) == 30)
         #expect(PaintSpeech.percent(painted: 0, total: 0) == 0)
         #expect(PaintSpeech.colorProgress(painted: 10, total: 10) == "finished")
         #expect(PaintSpeech.colorProgress(painted: 3, total: 10) == "30 percent painted")
+    }
+
+    /// A gallery card says what the painting's badge says, by the same rule.
+    @MainActor
+    @Test func galleryCardsShowTheBadgesPercent() {
+        let template = Fixtures.mosaic
+        let total = template.regions.count
+        var progress = PaintProgress(regionCount: total)
+        for region in 0..<total {
+            let artwork = Artwork(title: "Mosaic", template: template, settings: GenerationSettings(), progress: progress)
+            #expect(ArtworkCard.percent(artwork) == PaintSpeech.percent(painted: region, total: total))
+            progress.paint(region)
+        }
     }
 
     @Test func labelsNameNumberAndColor() {
