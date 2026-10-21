@@ -1098,6 +1098,7 @@ struct RefineView: View {
         case .paper: Text("Paper")
         case .photo: Text("Photo")
         case .painting: Text("Painting")
+        case .photoBehind: Text("Photo Behind")
         }
     }
 
