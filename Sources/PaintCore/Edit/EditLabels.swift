@@ -1,5 +1,39 @@
 import Foundation
 
+extension TemplateEditor {
+    /// The number Move Number (`Edit.moveLabel`) grabs at `point` (canvas units): the label
+    /// nearest it, over every region, whose circle grown by `reach` holds it; of labels as near,
+    /// the first in region and label order. Nil when none does. The app draws the held number
+    /// from it, so it is the edit's own rule: `point` quantized and `reach` held as the edit's are.
+    public static func labelNear(on template: Template, at point: SIMD2<Float>, reach: Float) -> (region: Int, label: Label)? {
+        guard point.x.isFinite, point.y.isFinite,
+              let hit = nearestLabel(
+                in: template.regions.indices, labels: { Array(template.labels(ofRegion: $0)) },
+                at: Lattice.position(Lattice.clampedPoint(point)), reach: labelReach(reach))
+        else { return nil }
+        return (hit.region, Array(template.labels(ofRegion: hit.region))[hit.index])
+    }
+
+    /// The label nearest `point` among `regions`' (`labels` gives each one's), within its radius
+    /// and `reach`: its region and its index among the region's labels.
+    static func nearestLabel(
+        in regions: some Sequence<Int>, labels: (Int) -> [Label], at point: SIMD2<Float>, reach: Float
+    ) -> (region: Int, index: Int)? {
+        var nearest: (region: Int, index: Int, distance: Float)?
+        for r in regions {
+            for (k, label) in labels(r).enumerated() {
+                let d = simdLength(label.position - point)
+                if d <= label.radius + reach, nearest == nil || d < nearest!.distance { nearest = (r, k, d) }
+            }
+        }
+        return nearest.map { ($0.region, $0.index) }
+    }
+
+    /// Move Number's reach, canvas units: held between 0 and 1024 and to the lattice, as a
+    /// reshape's is (`latticeReach`).
+    static func labelReach(_ reach: Float) -> Float { Float(latticeReach(reach)) / Float(Lattice.unit) }
+}
+
 extension EditWork {
     /// The numbers of a region of a given outline and paint.
     struct LabelPlan {
@@ -83,23 +117,27 @@ extension EditWork {
         return LabelPlan(labels: labels, needsDetail: needsDetail)
     }
 
+    /// The largest a number is drawn, its font size as a share of the canvas's shorter side: the
+    /// Metal canvas's cap (the app's `CanvasScene`), the largest of the renderers' (print and
+    /// thumbnails cap lower). Move Number keeps a number's drawn disc off another's by it.
+    static let largestNumberFraction: Float = 0.045
+
     /// Refine's Move Number (`TemplateEditor.Edit.moveLabel`): the number nearest `from`, within
-    /// its radius and `TemplateEditor.tapReach`, goes to `to` when that lies inside its own region
-    /// and a number of its digits fits there (a detail area's by its own floor), kept off the
-    /// strokes drawn in the region as numbers are (`LabelKeepOut`). Its radius is the room there,
-    /// never more than the region's roomiest spot gives (`PolyLabel`). The region's other numbers,
-    /// its outline and fill stay as they were. A later edit that plans the region's numbers again
-    /// (a cut, a join, a repaint, a reshape of its outline) keeps it there while it keeps most of
-    /// the room, as it keeps any number (`labelPlan`), and may move it otherwise.
-    mutating func moveLabel(from: SIMD2<Float>, to: LatticePoint) throws {
-        var nearest: (region: Int, index: Int, distance: Float)?
-        for r in t.regions.indices where regionAlive[r] {
-            for (k, label) in (labels[r] ?? Array(t.labels(ofRegion: r))).enumerated() {
-                let d = simdLength(label.position - from)
-                if d <= label.radius + TemplateEditor.tapReach, nearest == nil || d < nearest!.distance { nearest = (r, k, d) }
-            }
-        }
-        guard let nearest else { throw EditFailure.invalid("no number is near enough to move") }
+    /// its radius and `reach` (`TemplateEditor.nearestLabel`), goes to `to` when that lies inside
+    /// its own region and a number of its digits fits there (a detail area's by its own floor),
+    /// kept off the strokes drawn in the region as numbers are (`LabelKeepOut`) and clear of the
+    /// region's other numbers: no two of their circles overlap, each circle its radius but at
+    /// most what a number drawn at the largest size (`largestNumberFraction`) fills. Its radius
+    /// is the room there, never
+    /// more than the region's roomiest spot gives (`PolyLabel`). The region's other numbers, its
+    /// outline and fill stay as they were. A later edit that plans the region's numbers again (a
+    /// cut, a join, a repaint, a reshape of its outline) keeps it there while it keeps most of the
+    /// room, as it keeps any number (`labelPlan`), and may move it otherwise.
+    mutating func moveLabel(from: SIMD2<Float>, to: LatticePoint, reach: Float) throws {
+        let alive = t.regions.indices.filter { regionAlive[$0] }
+        guard let nearest = TemplateEditor.nearestLabel(
+            in: alive, labels: { labels[$0] ?? Array(t.labels(ofRegion: $0)) }, at: from, reach: reach)
+        else { throw EditFailure.invalid("no number is near enough to move") }
         let r = nearest.region
         var own = labels[r] ?? Array(t.labels(ofRegion: r))
         let position = Lattice.position(to)
@@ -117,6 +155,17 @@ extension EditWork {
         let digits = LabelSizing.digitCount(colorIndex: t.regions[r].colorIndex)
         guard room >= Double(LabelSizing.minimumRadius(digits: digits, detail: regionDetail[r])) else {
             throw EditFailure.invalid("there is no room for the number there")
+        }
+        // Each number's circle is the disc its digits are drawn in: its room, but no more than the
+        // largest a renderer draws a number fills. A large area's rooms reach past each other while
+        // its numbers, drawn far smaller, lie well apart.
+        let cap = Self.largestNumberFraction * Float(min(t.width, t.height)) * LabelSizing.runDiagonal(digits: digits)
+            / (2 * LabelSizing.fill)
+        for (k, other) in own.enumerated() where k != nearest.index {
+            let apart = simdLength(SIMD2<Double>(other.position) - p)
+            guard apart >= min(room, Double(cap)) + Double(min(other.radius, cap)) else {
+                throw EditFailure.invalid("the number would lie on another")
+            }
         }
         own[nearest.index] = Label(position: position, radius: Float(room), region: UInt32(r))
         labels[r] = own

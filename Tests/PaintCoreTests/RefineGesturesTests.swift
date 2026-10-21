@@ -124,21 +124,38 @@ struct RefineGesturesTests {
     /// units) of where it started to where it ended; a drag under a point on screen is none.
     @Test func aReshapeDragMovesTheLineUnderIt() throws {
         let edit = try #require(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104, 62), on: Self.screen))
-        guard case .reshape(let from, let to, let reach) = edit else { Issue.record("\(edit)"); return }
-        #expect(abs(from.y - 74) < 1e-3 && abs(to.y - 62) < 1e-3 && abs(reach - 3.2) < 1e-4)
+        guard case .reshape(let from, let to, let reach, let target) = edit else { Issue.record("\(edit)"); return }
+        #expect(abs(from.y - 74) < 1e-3 && abs(to.y - 62) < 1e-3 && abs(reach - 3.2) < 1e-4 && target == .any)
         let laid = try TemplateEditor.apply(edit, to: Self.scene)
         #expect(laid.outcome.reshaped == 1 && laid.outcome.declined == nil)
         #expect(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104.1, 74), on: Self.screen) == nil)
     }
 
-    /// A drag of Move Number moves the number under its start to where it ended, in canvas units.
+    /// Bend Line's drag grabs ink alone and Move Edge's boundaries alone: the target goes into the
+    /// edit as given, and the ground's detail stroke under the drag is nothing to Move Edge.
+    @Test func aReshapeDragCarriesItsTarget() throws {
+        for target in [TemplateEditor.ReshapeTarget.ink, .edge] {
+            let edit = try #require(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104, 62), on: Self.screen, target: target))
+            guard case .reshape(_, _, let reach, let sent) = edit else { Issue.record("\(edit)"); return }
+            #expect(sent == target && abs(reach - 3.2) < 1e-4)
+            #expect(try TemplateEditor.apply(edit, to: Self.scene).outcome.reshaped == 1, "the horizon is inked and a boundary")
+        }
+        let onStroke = try #require(RefineGestures.reshape(from: Self.p(96, 120.3), to: Self.p(96, 126), on: Self.screen, target: .edge))
+        #expect(try TemplateEditor.apply(onStroke, to: Self.scene).outcome.declined != nil)
+        let inked = try #require(RefineGestures.reshape(from: Self.p(96, 120.3), to: Self.p(96, 126), on: Self.screen, target: .ink))
+        #expect(try TemplateEditor.apply(inked, to: Self.scene).outcome.reshaped == 1)
+    }
+
+    /// A drag of Move Number moves the number under its start to where it ended, in canvas units,
+    /// grabbing it within a finger's reach on screen.
     @Test func aMoveNumberDragMovesTheNumber() throws {
         let sky = try #require(Self.scene.region(at: SIMD2(104, 30)))
         let label = try #require(Self.scene.labels(ofRegion: sky).first)
         let start = SIMD2(label.position.x / 192, label.position.y / 144)
         let edit = try #require(RefineGestures.moveLabel(from: start, to: Self.p(30, 30), on: Self.screen))
-        guard case .moveLabel(let from, let to) = edit else { Issue.record("\(edit)"); return }
+        guard case .moveLabel(let from, let to, let reach) = edit else { Issue.record("\(edit)"); return }
         #expect(simdLength(from - label.position) < 1e-3 && simdLength(to - SIMD2(30, 30)) < 1e-3)
+        #expect(abs(reach - 3.2) < 1e-4, "a finger's reach, 16 points at 5 to a unit")
         let laid = try TemplateEditor.apply(edit, to: Self.scene)
         #expect(laid.outcome.labelsMoved == 1 && laid.outcome.declined == nil)
         #expect(RefineGestures.moveLabel(from: start, to: start + SIMD2(0.0001, 0), on: Self.screen) == nil)

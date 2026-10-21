@@ -472,8 +472,13 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   13" iPad), 290 ms at 40 and 370 ms at 4. A merge's drag, about 35 ms.
 - **Reshape** (`reshape`, Refine's Bend Line and Move Edge). One edit behind two tools: drag an
   inked line to bend it, or a cell's boundary, inked or not, to reshape the cell, its neighbour
-  giving or taking the difference. The line nearest the drag's start within a finger's reach (an
-  edge, not the canvas's frame, or a drawn stroke) is taken with the chain it continues into:
+  giving or taking the difference. The edit's `target` (`TemplateEditor.ReshapeTarget`) keeps
+  each tool to its own lines: Bend Line's (`ink`) grabs only what is drawn (an edge of a drawn
+  layer, `LineLayer.isDrawn`, or a drawn stroke), so an undrawn cell edge beside the line it
+  meant is passed over; Move Edge's (`edge`) only boundaries between two cells, drawn or not,
+  never a stroke inside one; `any`, what a reshape saved without a target means, grabs either.
+  The line nearest the drag's start within a finger's reach (an edge, not the canvas's frame, or
+  a drawn stroke) that the target grabs is taken with the chain it continues into:
   through every vertex where it and just one other edge alike (both inked, or both undrawn) end,
   from junction to junction, as the Smart Eraser finds its line (`EditWork.reshapePlan`). Its
   point nearest the drag's start goes where the finger lifts, and every other point by the drag
@@ -504,14 +509,23 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   of the five were made; the two declined would have met a line beside them, which a bend that
   far must.
 - **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
-  cell. The number nearest the drag's start, within its radius and `TemplateEditor.tapReach`,
-  goes where the finger lifts when that is inside its own region (not on its outline) and a
-  number of its digits fits there: the room there, measured to the outline and to the strokes
-  in the region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor
-  or, in a detail area, a detail area's. Its radius is that room, never more than the region's
-  roomiest spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged
-  into open space doesn't grow huge. The region's other numbers, its outline, fill and pixels
-  stay as they were; nothing is declined but the move itself. A later edit that plans the
+  cell. The number nearest the drag's start, within its radius and the edit's reach (a finger's
+  on screen, `RefineGestures.fingerReach`; `TemplateEditor.tapReach` in a file without one), goes
+  where the finger lifts when that is inside its own region (not on its outline) and a number of
+  its digits fits there: the room there, measured to the outline and to the strokes in the
+  region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor or, in
+  a detail area, a detail area's. Its radius is that room, never more than the region's roomiest
+  spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged into open
+  space doesn't grow huge. It must keep clear of the region's other numbers: a move whose circle
+  there overlaps another's is declined, each circle the disc its digits are drawn in: its room,
+  but no more than a number at the largest size a renderer draws fills (`largestNumberFraction`,
+  the canvas's cap, 4.5% of the shorter side). A circle as large as the room alone would decline
+  nearly every move in a large area, whose numbers' rooms reach past each other while the
+  numbers themselves lie far apart: on the editor's test scene, the sky's number dragged 18.5
+  units from another of the sky's, both drawn about 7 units across, though their rooms are 25
+  and 18.5. `TemplateEditor.labelNear` is the grab's rule on its own,
+  from which the app draws the number held. The region's other numbers, its outline, fill and
+  pixels stay as they were; nothing is declined but the move itself. A later edit that plans the
   region's numbers again (a cut, a join, a repaint, a reshape of its outline) keeps the number
   where it was put while that spot keeps most of the room, as it keeps any number (`labelPlan`),
   and may move it otherwise.

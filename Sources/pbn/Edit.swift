@@ -10,10 +10,18 @@ import PaintCore
 /// `"paints"`), a `"cellEdge"` (Refine's Cell Edge: `"points"`, `"closed"`), a `"merge"` (Refine's
 /// Merge: `"points"`, the drag), a `"brush"` (Refine's Paint Brush: `"points"`, the stroke, `"radius"`
 /// and `"color"` or `"paint"` as a paintArea's), a `"reshape"` (Bend Line and Move Edge: `"points"`,
-/// [from, to], and `"reach"`), a `"moveLabel"` (Move Number: `"points"`, [from, to]), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
+/// [from, to], `"reach"`, and `"target"`, `"ink"` for Bend Line or `"edge"` for Move Edge, any line
+/// without it), a `"moveLabel"` (Move Number: `"points"`, [from, to], and `"reach"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
 /// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
 /// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
 /// know is left out with a warning.
+/// A reshape's `"target"`: any line without one; `what` names it in the failure for another name.
+func reshapeTarget(_ name: String?, _ what: String) -> TemplateEditor.ReshapeTarget {
+    guard let name else { return .any }
+    guard let target = TemplateEditor.ReshapeTarget(rawValue: name) else { fail("\(what) \"target\" is any, ink or edge") }
+    return target
+}
+
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
     struct EntryPaint: Decodable {
         var at: [Float]
@@ -33,6 +41,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
         var lightness: [Float]?
         var from: [Float]?
         var family: Bool?
+        var target: String?
     }
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
     let entries: [Entry]
@@ -63,10 +72,12 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             fail("\(path): a brush needs \"color\": [L, a, b] or \"paint\": a number of the palette")
         case "reshape":
             guard points.count == 2 else { fail("\(path): a reshape's points are [from, to]") }
-            return .reshape(from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach)
+            return .reshape(
+                from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach,
+                target: reshapeTarget(entry.target, "\(path): a reshape's"))
         case "moveLabel":
             guard points.count == 2 else { fail("\(path): a moveLabel's points are [from, to]") }
-            return .moveLabel(from: points[0], to: points[1])
+            return .moveLabel(from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach)
         case "erase":
             return .erase(path: points, radius: entry.radius ?? 4)
         case "eraseLine":

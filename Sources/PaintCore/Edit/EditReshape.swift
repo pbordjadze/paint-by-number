@@ -4,15 +4,16 @@ extension TemplateEditor {
     /// What a reshape (`Edit.reshape`) grabbed at `from` would lay with its grabbed point at
     /// `to`, canvas units: the line as it lies (`original`, from one end of its chain to the
     /// other) and the points that would replace it (`moved`), for the app to show while the
-    /// finger moves. Nil when no line lies within `reach` of `from`, or it is held there (a
-    /// junction grabbed). The points are the edit's own; whether it can be laid (it may cross
+    /// finger moves. Nil when no line `target` grabs lies within `reach` of `from`, or it is
+    /// held there (a junction grabbed). The points are the edit's own; whether it can be laid (it may cross
     /// a line, leave the canvas, or leave an area no room for its number) only the edit says.
     public static func reshapedChain(
-        on template: Template, from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = tapReach
+        on template: Template, from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = tapReach, target: ReshapeTarget = .any
     ) -> (original: [SIMD2<Float>], moved: [SIMD2<Float>])? {
         guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite, var work = try? EditWork(template),
               let plan = try? work.reshapePlan(
-                from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), checking: false)
+                from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target,
+                checking: false)
         else { return nil }
         return (plan.original.map(Lattice.position), plan.path.map(Lattice.position))
     }
@@ -63,15 +64,15 @@ extension EditWork {
     }
 
     /// Refine's Bend Line and Move Edge (`TemplateEditor.Edit.reshape`): the line nearest `from`
-    /// within `reach` and the chain it continues into is moved, its point nearest `from` to `to`
+    /// within `reach` of those `target` grabs and the chain it continues into is moved, its point nearest `from` to `to`
     /// (`reshapePlan`). The regions on its sides keep their paints; their outlines follow the
     /// edges, their fills are made again and their numbers stay while they have the room
     /// (`labelPlan`), the pixels between the old outline and the new go to the region whose
     /// outline now holds them. Declined when it would cross a line or itself, leave the canvas,
     /// turn an area inside out, carry an island or a stroke into the region across, or leave an
     /// area too little room for its number.
-    mutating func reshape(from: LatticePoint, to: LatticePoint, reach: Int64) throws {
-        let plan = try reshapePlan(from: from, to: to, reach: reach, checking: true)
+    mutating func reshape(from: LatticePoint, to: LatticePoint, reach: Int64, target: TemplateEditor.ReshapeTarget) throws {
+        let plan = try reshapePlan(from: from, to: to, reach: reach, target: target, checking: true)
         guard to != plan.grabbed else { return }
         var areas = Set<Int>()
         if let i = plan.stroke {
@@ -134,8 +135,9 @@ extension EditWork {
         summary.reshaped += 1 + plan.carried.count
     }
 
-    /// The chain a reshape grabs and where it goes. The line nearest `from` within `reach`: an
-    /// edge (not the canvas's frame), drawn or undrawn, continued through every vertex where it
+    /// The chain a reshape grabs and where it goes. The line nearest `from` within `reach` of
+    /// those `target` grabs (any; drawn edges and strokes; or edges alone): an edge (not the
+    /// canvas's frame), drawn or undrawn, continued through every vertex where it
     /// and one other edge alike (both drawn, or both undrawn) end, as the Smart Eraser's line
     /// runs from junction to junction; or a drawn stroke. Its point nearest `from` goes to `to`
     /// and the rest follows, each point by the drag times its weight (`falloff`) along the
@@ -150,10 +152,27 @@ extension EditWork {
     /// that, moved, they are `reshapeStep` or less apart (a stretch moved whole stays as it
     /// was). With `checking`, the moved chain must lie on the canvas, be simple, and meet the
     /// drawing only where it met it: at its held ends and the strokes it carries.
-    mutating func reshapePlan(from: LatticePoint, to: LatticePoint, reach: Int64, checking: Bool) throws -> Reshape {
+    mutating func reshapePlan(
+        from: LatticePoint, to: LatticePoint, reach: Int64, target: TemplateEditor.ReshapeTarget, checking: Bool
+    ) throws -> Reshape {
         let r2 = reach * reach
         var grab: (edge: Int?, stroke: Int?, segment: Int, point: LatticePoint, d2: Int64)?
-        for e in t.edges.indices where !edgeDead[e] && !isFrame(e) {
+        /// Whether the target grabs edge `e` (not the frame), and a stroke of layer `layer`.
+        func grabs(edge e: Int) -> Bool {
+            switch target {
+            case .any: true
+            case .ink: LineLayer.isDrawn(layers[e])
+            case .edge: left(e) != right(e)
+            }
+        }
+        func grabs(strokeOf layer: UInt8) -> Bool {
+            switch target {
+            case .any: true
+            case .ink: LineLayer.isDrawn(layer)
+            case .edge: false
+            }
+        }
+        for e in t.edges.indices where !edgeDead[e] && !isFrame(e) && grabs(edge: e) {
             let b = box(of: e)
             guard from.x >= b.lo.x - reach, from.x <= b.hi.x + reach, from.y >= b.lo.y - reach, from.y <= b.hi.y + reach else { continue }
             let pts = lattice(of: e)
@@ -167,6 +186,7 @@ extension EditWork {
             let pts = Self.dedupe(s.points.map(Lattice.point))
             guard pts.count >= 2 else { continue }
             lines.append((i, pts))
+            guard grabs(strokeOf: s.layer) else { continue }
             for j in 0..<(pts.count - 1) {
                 let hit = Lattice.nearest(to: from, on: pts[j], pts[j + 1])
                 if hit.distanceSquared <= r2, grab == nil || hit.distanceSquared < grab!.d2 { grab = (nil, i, j, hit.point, hit.distanceSquared) }

@@ -200,15 +200,87 @@ struct EditReshapeTests {
         #expect(!outcome.changed && outcome.declined == nil && same == Self.scene)
     }
 
+    /// Bend Line's target (`.ink`) passes over an undrawn boundary nearer the grab than the drawn
+    /// line it means: on the base, a grab at y = 35 is 5 units from the undrawn split (y = 40) and
+    /// 7 from box A's inked bottom (y = 28); any line takes the split, ink the box.
+    @Test func inkTargetPassesOverAnUndrawnEdge() throws {
+        let t = Self.base
+        let from = SIMD2<Float>(101, 35), to = SIMD2<Float>(101, 33)
+        let any = try #require(TemplateEditor.reshapedChain(on: t, from: from, to: to))
+        #expect(any.original.allSatisfy { $0.y == 40 }, "\(any.original)")
+        let ink = try #require(TemplateEditor.reshapedChain(on: t, from: from, to: to, target: .ink))
+        #expect(ink.original.contains(SIMD2(90, 28)) && ink.original.contains(SIMD2(112, 28)), "\(ink.original)")
+        #expect(ink.moved.contains(SIMD2(101, 33)))
+
+        let box = try Self.region(t, EditPaintAreaTests.inA)
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: from, to: to, target: .ink), to: t)
+        #expect(outcome.reshaped == 1 && u.regions[outcome.continued[box]].area > t.regions[box].area)
+        let upper = try Self.region(t, EditPaintAreaTests.upper), lower = try Self.region(t, EditPaintAreaTests.lower)
+        #expect(Self.between(u, outcome.continued[upper], outcome.continued[lower]).allSatisfy {
+            u.points(of: u.edges[$0]).allSatisfy { $0.y == 40 }
+        }, "the split stays where it was")
+        TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
+
+        // An undrawn boundary alone within reach: nothing for ink to grab.
+        #expect(TemplateEditor.reshapedChain(on: t, from: SIMD2(101, 42), to: SIMD2(101, 44), target: .ink) == nil)
+        #expect(try Self.declined(.reshape(from: SIMD2(101, 42), to: SIMD2(101, 44), target: .ink), on: t)?.contains("no line") == true)
+    }
+
+    /// Move Edge's target (`.edge`) never takes a stroke: the ground's detail stroke, grabbed where
+    /// no boundary is within reach, is nothing to it, while any line bends it; a boundary it
+    /// takes, inked or not.
+    @Test func edgeTargetPassesOverAStroke() throws {
+        let t = Self.scene
+        let from = SIMD2<Float>(96, 120.3), to = SIMD2<Float>(96, 126)
+        #expect(TemplateEditor.reshapedChain(on: t, from: from, to: to) != nil)
+        #expect(TemplateEditor.reshapedChain(on: t, from: from, to: to, target: .edge) == nil)
+        #expect(try Self.declined(.reshape(from: from, to: to, target: .edge), on: t)?.contains("no line") == true)
+        // With a wider reach, a boundary above rather than the stroke nearer below.
+        let far = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(104, 100), to: SIMD2(104, 96), reach: 40, target: .edge))
+        #expect(far.original.allSatisfy { $0.y < 100 }, "\(far.original)")
+        let near = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(104, 100), to: SIMD2(104, 96), reach: 40))
+        #expect(near.original.allSatisfy { $0.y > 100 }, "any line takes the nearer stroke: \(near.original)")
+        let (_, made) = try TemplateEditorTests.apply(.reshape(from: SIMD2(104, 72), to: SIMD2(104, 66), target: .edge), to: t)
+        #expect(made.reshaped == 1)
+        let (_, undrawn) = try TemplateEditorTests.apply(.reshape(from: SIMD2(104, 40), to: SIMD2(104, 44), target: .edge), to: Self.base)
+        #expect(undrawn.reshaped == 1)
+    }
+
     @Test func codingRoundTrips() throws {
         let edit = Edit.reshape(from: SIMD2(104, 72), to: SIMD2(104.5, 60.25), reach: 12)
         let data = try JSONEncoder().encode(edit)
         #expect(try JSONDecoder().decode(Edit.self, from: data) == edit)
         let bare = Data(#"{"kind": "reshape", "points": [[1, 2], [3, 4]]}"#.utf8)
         #expect(try JSONDecoder().decode(Edit.self, from: bare) == .reshape(from: SIMD2(1, 2), to: SIMD2(3, 4)))
+        #expect(try JSONDecoder().decode(Edit.self, from: bare) == .reshape(from: SIMD2(1, 2), to: SIMD2(3, 4), reach: 8, target: .any))
         let one = Data(#"{"kind": "reshape", "points": [[1, 2]]}"#.utf8)
         #expect(throws: DecodingError.self) { try JSONDecoder().decode(Edit.self, from: one) }
         #expect(TemplateEditor.recolored(edit, by: [.look(.moonlit, strength: 1)]) == edit)
+
+        // A reshape grabbing any line is written as before targets: no "target" key.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let written = try String(decoding: encoder.encode(Edit.reshape(from: SIMD2(1, 2), to: SIMD2(3, 4))), as: UTF8.self)
+        #expect(written == #"{"kind":"reshape","points":[[1,2],[3,4]],"reach":8}"#)
+        let before = Data(#"{"kind":"reshape","points":[[1,2],[3,4]],"reach":8}"#.utf8)
+        #expect(try encoder.encode(JSONDecoder().decode(Edit.self, from: before)) == before)
+        for target in [TemplateEditor.ReshapeTarget.ink, .edge] {
+            let targeted = Edit.reshape(from: SIMD2(1, 2), to: SIMD2(3, 4), reach: 5, target: target)
+            let data = try encoder.encode(targeted)
+            #expect(String(decoding: data, as: UTF8.self).contains(#""target":"\#(target.rawValue)""#))
+            #expect(try JSONDecoder().decode(Edit.self, from: data) == targeted)
+        }
+        let named = Data(#"{"kind": "reshape", "points": [[1, 2], [3, 4]], "target": "ink"}"#.utf8)
+        #expect(try JSONDecoder().decode(Edit.self, from: named) == .reshape(from: SIMD2(1, 2), to: SIMD2(3, 4), target: .ink))
+    }
+
+    /// A target this build doesn't know (from a newer app) fails the edit's decoding, so it is
+    /// left out of a list rather than laid grabbing other lines.
+    @Test func anUnknownTargetFailsDecoding() throws {
+        let newer = Data(#"{"kind": "reshape", "points": [[1, 2], [3, 4]], "target": "contour"}"#.utf8)
+        #expect(throws: DecodingError.self) { try JSONDecoder().decode(Edit.self, from: newer) }
+        let wrongType = Data(#"{"kind": "reshape", "points": [[1, 2], [3, 4]], "target": 1}"#.utf8)
+        #expect(throws: DecodingError.self) { try JSONDecoder().decode(Edit.self, from: wrongType) }
     }
 
     /// On the crowded book, bends of lines all over the canvas either are laid, validating with
