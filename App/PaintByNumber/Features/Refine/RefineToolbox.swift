@@ -47,10 +47,13 @@ nonisolated enum RefinePalette {
 
 /// The painting's paints in a row, in Cells and Paint, the current one ringed; a color no paint
 /// has yet shows after them, and the system color picker at the end picks any color as the
-/// current paint.
+/// current paint. With `merge` (Edit Paint), a paint dragged onto another becomes it, and
+/// VoiceOver offers the same on each paint (into the current one).
 struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
+    /// Makes paint `from` the paint `into` (both indices of the palette).
+    var merge: ((_ from: Int, _ into: Int) -> Void)?
 
     @Environment(\.self) private var environment
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -62,7 +65,7 @@ struct RefinePaletteBar: View {
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
                         ForEach(template.palette.indices, id: \.self) { index in
-                            swatch(index, selected: selected == index).id(index)
+                            mergeable(swatch(index, selected: selected == index), index, current: selected).id(index)
                         }
                         if selected == nil, let current { newPaint(current) }
                     }
@@ -116,6 +119,33 @@ struct RefinePaletteBar: View {
         .accessibilityIdentifier("refine-paint-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName))
+        }
+    }
+
+    /// A swatch Edit Paint can drag onto another, and drop another onto.
+    @ViewBuilder
+    private func mergeable(_ swatch: some View, _ index: Int, current: Int?) -> some View {
+        if let merge {
+            swatch
+                .draggable(String(index))
+                .dropDestination(for: String.self) { items, _ in
+                    guard let from = items.first.flatMap({ Int($0) }), from != index, template.palette.indices.contains(from) else {
+                        return false
+                    }
+                    merge(from, index)
+                    return true
+                }
+                .accessibilityActions {
+                    if let current, current != index {
+                        Button {
+                            merge(index, current)
+                        } label: {
+                            Text("Make It the Current Paint")
+                        }
+                    }
+                }
+        } else {
+            swatch
         }
     }
 
@@ -258,5 +288,63 @@ struct RefineCellEdges: View, Equatable {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The line Bend Line or Move Edge holds, while the finger moves: where it was, faint, and where
+/// it goes, in the signature color, as it will be laid (`TemplateEditor.reshapedChain`).
+struct RefineBendPreview: View {
+    /// The chain, as it was and moved, in canvas units.
+    let original: [SIMD2<Float>]
+    let moved: [SIMD2<Float>]
+    /// The template's canvas, canvas units.
+    let size: CGSize
+    let rect: CGRect
+    let lineWidth: CGFloat
+
+    var body: some View {
+        let original = original, moved = moved, size = size, rect = rect, lineWidth = lineWidth
+        let color = Theme.signature, paper = LineArtDrawing.paper
+        Canvas { context, _ in
+            guard size.width > 0, size.height > 0, rect.width > 0 else { return }
+            func path(_ points: [SIMD2<Float>]) -> Path {
+                var path = Path()
+                path.addLines(points.map {
+                    CGPoint(x: rect.minX + CGFloat($0.x) / size.width * rect.width, y: rect.minY + CGFloat($0.y) / size.height * rect.height)
+                })
+                return path
+            }
+            var canvas = context
+            canvas.clip(to: Path(rect))
+            // The line as it was, washed out, so the moved one reads as the one that will be.
+            canvas.stroke(path(original), with: .color(paper.opacity(0.7)), style: RefineInkLayer.style(lineWidth + 2))
+            canvas.stroke(path(moved), with: .color(color), style: RefineInkLayer.style(max(lineWidth, 2.5)))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The number Move Number holds, under the finger: its paint's number on a disc of the paint,
+/// ringed in the signature color.
+struct RefineHeldNumber: View {
+    let template: Template
+    let paint: Int
+    /// Where the finger has it, normalized to the picture.
+    let at: SIMD2<Float>
+    let rect: CGRect
+
+    var body: some View {
+        Text(verbatim: "\(paint + 1)")
+            .font(.system(size: 13, weight: .bold, design: .serif))
+            .monospacedDigit()
+            .foregroundStyle(PaletteBar.numeralInk(template, paint))
+            .frame(width: 30, height: 30)
+            .background(Circle().fill(PaletteBar.paint(template, paint)))
+            .overlay { Circle().stroke(Theme.signature, lineWidth: 2.5) }
+            .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+            .position(x: rect.minX + CGFloat(at.x) * rect.width, y: rect.minY + CGFloat(at.y) * rect.height)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }

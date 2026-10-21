@@ -622,10 +622,13 @@ Conventions).
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
     `SettingsKey.refineSnaps`/`refinePenColors`), Shapes (its figures and Snap above the tools), the
-    Eraser, the Line Eraser. Cells: Select (a tap selects a cell, outlined, its paint, area count and
+    Eraser, the Line Eraser, Bend Line (`.reshape`: a drag moves the line under it, bending it near
+    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Shapes
+    adds a hexagon and a star in these builds (`RefineShape.offered`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
     share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
-    drag joins the cells it crosses into the first, boundaries and ink between them gone), Fill Shape; while
+    drag joins the cells it crosses into the first, boundaries and ink between them gone), Move Edge
+    (`.reshape` on a cell's boundary, inked or not), Fill Shape; while
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
@@ -633,7 +636,10 @@ Conventions).
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
     the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
-    (`RefineColorsPanel`'s two modes). See: Writing (the Text tool). The views (Painting, Paper,
+    (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
+    repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
+    the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
+    screen on the template as it stands, `RefineTrial`, saving nothing). The views (Painting, Paper,
     Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
     navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
     Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,

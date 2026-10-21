@@ -17,6 +17,10 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Bend Line" : {
+      "comment" : "Refine screen: the tool that moves a drawn line by dragging it, bending it near where it is held; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
     "Blank" : {
       "comment" : "Refine screen, Start From: a blank start, the photo as one area of one paint, which the painter's lines then divide and the paint tools color",
       "extractionState" : "manual"
@@ -77,6 +81,10 @@
       "comment" : "Refine screen, Start From: the template the app made from the photo (the default)",
       "extractionState" : "manual"
     },
+    "Hexagon" : {
+      "comment" : "Refine screen, Shapes: the figure a drag draws as a six-sided shape",
+      "extractionState" : "manual"
+    },
     "Ink" : {
       "comment" : "Refine screen: the group of tools that draw and erase the lines the painter sees (Pen, Shapes, Eraser, Line Eraser); a section of the tool rail on iPad, a tab above the tools on iPhone",
       "extractionState" : "manual"
@@ -85,12 +93,28 @@
       "comment" : "Refine screen: the tool that rubs lines out, or takes a whole line out with a tap; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "Make It the Current Paint" : {
+      "comment" : "Refine screen, Edit Paint: VoiceOver action on a paint's swatch that makes that paint one with the current paint (its areas take the current paint)",
+      "extractionState" : "manual"
+    },
     "Merge" : {
       "comment" : "Refine screen: the tool that joins the areas a drag crosses into one; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "Move Edge" : {
+      "comment" : "Refine screen: the tool that drags the boundary between two areas to change their shapes; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Move Number" : {
+      "comment" : "Refine screen: the tool that drags an area's number to another spot in the area; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
     "New Paint" : {
       "comment" : "Refine screen, the palette: VoiceOver label of the color picker at its end, which picks any color as the current paint, and of the swatch of a current color no paint has yet",
+      "extractionState" : "manual"
+    },
+    "Numbers" : {
+      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number); a section of the tool rail on iPad, a tab above the tools on iPhone",
       "extractionState" : "manual"
     },
     "Only This Area" : {
@@ -209,6 +233,18 @@
         }
       }
     },
+    "refine.hint.bendLine" : {
+      "comment" : "Refine screen: how Bend Line works (a drag on a drawn line moves the part of it near the finger, the rest bending smoothly into place), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag a line to move it. It bends near where you hold it."
+          }
+        }
+      }
+    },
     "refine.hint.brush" : {
       "comment" : "Refine screen: how the Paint Brush works (where it is dragged becomes the paint picked in the palette, joining areas of that paint it meets; a tap paints a spot), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
@@ -293,6 +329,42 @@
         }
       }
     },
+    "refine.hint.moveEdge" : {
+      "comment" : "Refine screen: how Move Edge works (a drag on the boundary between two areas moves it, one area growing as the other shrinks), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag the edge between two areas to change their shapes."
+          }
+        }
+      }
+    },
+    "refine.hint.moveNumber" : {
+      "comment" : "Refine screen: how Move Number works (a drag moves an area's number to another spot inside the same area, where it fits), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag a number to where you want it in its area."
+          }
+        }
+      }
+    },
+    "refine.hint.polygon" : {
+      "comment" : "Refine screen: how the Shapes tool's Hexagon works (a drag spans the box the hexagon fills), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag across to draw a hexagon. Two fingers zoom and move."
+          }
+        }
+      }
+    },
     "refine.hint.select" : {
       "comment" : "Refine screen: how Select works (a tap selects the area under it, outlined, with its paint shown in a bar), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
@@ -301,6 +373,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap an area to select it and see its paint. Tap it again to let it go."
+          }
+        }
+      }
+    },
+    "refine.hint.star" : {
+      "comment" : "Refine screen: how the Shapes tool's Star works (a drag spans the box the five-pointed star fills), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag across to draw a star. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.tryPainting" : {
+      "comment" : "Refine screen: what Try Painting does (opens the painting screen on the template as refined so far; fills made there are not kept), read by VoiceOver as the hint of its button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paints the template as it is now, to try it. Nothing is saved."
           }
         }
       }
@@ -329,6 +425,18 @@
         }
       }
     },
+    "refine.note.notMoved" : {
+      "comment" : "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There’s no room for that number there."
+          }
+        }
+      }
+    },
     "refine.note.notPainted" : {
       "comment" : "Refine screen toast: a Paint Brush stroke left no room for a number where it went; nothing changed",
       "extractionState" : "manual",
@@ -337,6 +445,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That couldn’t be painted there."
+          }
+        }
+      }
+    },
+    "refine.note.notReshaped" : {
+      "comment" : "Refine screen toast: a Bend Line or Move Edge drag would have made the line cross another or left a number without room; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That line couldn’t be moved there."
           }
         }
       }
@@ -2581,6 +2701,10 @@
       "comment" : "Refine screen, a drawing tool's options: a switch; when on, a drawn line's end moves onto a line its ink touches",
       "extractionState" : "manual"
     },
+    "Star" : {
+      "comment" : "Refine screen, Shapes: the figure a drag draws as a five-pointed star",
+      "extractionState" : "manual"
+    },
     "Starry Night" : {
       "comment" : "Refine screen, Colors: the name of a look under its chip; a tap lays it on every paint of the painting: the colors of Van Gogh's The Starry Night",
       "extractionState" : "manual"
@@ -2667,6 +2791,10 @@
     },
     "Touch and hold, then drag across areas with this number to fill them in one stroke." : {
       "comment" : "Message of the tip titled Paint Several Areas",
+      "extractionState" : "manual"
+    },
+    "Try Painting" : {
+      "comment" : "Refine screen: the button that opens the painting screen on the template as refined so far, to try painting it without saving; its name in the tool rail, and the painting screen's title then",
       "extractionState" : "manual"
     },
     "Watch It Again" : {

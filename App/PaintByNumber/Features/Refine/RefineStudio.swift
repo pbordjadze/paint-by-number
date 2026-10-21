@@ -9,16 +9,18 @@ import SwiftUI
 /// On iPad every tool stands in a rail, a section per group; on iPhone the groups are tabs over a
 /// row of the group's tools (at most five, so a phone's width holds them).
 nonisolated enum RefineGroup: Hashable, CaseIterable {
-    case ink, cells, paint, see
+    case ink, cells, paint, numbers, see
 
     /// The group's tools, in their order on screen.
     var tools: [RefineTool] {
         switch self {
-        case .ink: [.pen, .shape, .eraser, .smartEraser]
+        case .ink: [.pen, .shape, .bendLine, .eraser, .smartEraser]
         case .cells:
-            RefineView.offersSplitter ? [.select, .cellEdge, .merge, .fill, .splitter] : [.select, .cellEdge, .merge, .fill]
+            RefineView.offersSplitter
+                ? [.select, .cellEdge, .merge, .moveEdge, .fill, .splitter] : [.select, .cellEdge, .merge, .moveEdge, .fill]
         case .paint: [.bucket, .brush, .eyedropper, .editPaint, .looks]
-        case .see: [.text]
+        case .numbers: [.moveNumber]
+        case .see: [.text, .tryPainting]
         }
     }
 

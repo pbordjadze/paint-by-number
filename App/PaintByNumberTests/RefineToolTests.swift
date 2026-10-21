@@ -14,7 +14,10 @@ struct RefineToolTests {
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
         #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
-        for tool in [RefineTool.select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks] {
+        let tools: [RefineTool] = [
+            .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
+        ]
+        for tool in tools {
             #expect(tool.pencilPartner == nil && !tool.erases, "\(tool)")
         }
         // The tools that change paint alone show the painting beneath them; the Eyedropper may
@@ -76,7 +79,7 @@ struct RefineToolTests {
         #expect(RefineGroup.ink.tools.first == .pen)
         let tools: [RefineTool] = [
             .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .merge, .fill, .bucket, .brush, .eyedropper, .editPaint,
-            .looks,
+            .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
         ]
         for tool in tools {
             #expect(all.contains(tool), "\(tool) is in no group")
@@ -84,6 +87,8 @@ struct RefineToolTests {
         #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
         #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
         #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
+        #expect(RefineGroup.of(.bendLine) == .ink && RefineGroup.of(.moveEdge) == .cells && RefineGroup.of(.moveNumber) == .numbers)
+        #expect(RefineGroup.of(.tryPainting) == .see)
         #expect(all.contains(.splitter) == RefineView.offersSplitter)
     }
 
@@ -128,6 +133,14 @@ struct RefineToolTests {
         #expect(RefineView.inked(erase, colorsFromPhoto: false) == erase)
         let painted = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(9, 9)], paints: [.init(at: SIMD2(2, 2), color: SIMD3(0.5, 0, 0))])
         #expect(RefineView.inked(painted, colorsFromPhoto: false) == painted)
+    }
+
+    /// Shapes offers the hexagon and the star in SideStore and Debug builds, after the release's
+    /// four.
+    @Test func shapesOffersTheToolboxsFigures() {
+        #expect(RefineShape.offered.prefix(4) == [.line, .rectangle, .oval, .curve])
+        #expect(RefineShape.offered.contains(.polygon) && RefineShape.offered.contains(.star))
+        #expect(RefineShape.polygon.isClosed && RefineShape.star.isClosed)
     }
 
     /// Select's bar names the area's paint, how many areas share it and its share of the picture.
