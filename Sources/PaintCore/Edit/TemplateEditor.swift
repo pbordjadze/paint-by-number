@@ -59,9 +59,9 @@ import Foundation
 /// - **Reshape.** Refine's Bend Line and Move Edge: the line nearest a point (an edge, drawn or
 ///   undrawn but not the canvas's frame, from junction to junction as the line eraser finds it;
 ///   or a drawn stroke) is dragged, its point nearest the touch going where the finger lifts and
-///   the rest following less the farther along the line, none at its ends, which stay on their
-///   junctions (a stroke's free end moves whole; a loop through no junction is held half its
-///   length round). Points are added along the stretch that moves, so a big bend is smooth, and
+///   the rest following less the farther along the line, none past three times the drag (at
+///   least 24 units) or at its ends, which stay on their junctions (a stroke's free end within
+///   that moves whole). Points are added along the stretch that moves, so a big bend is smooth, and
 ///   strokes ending on the line are carried with it. The line keeps its ink or its lack of it;
 ///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
 ///   while they have room. Declined when the line would cross itself or another, leave the

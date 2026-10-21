@@ -49,6 +49,11 @@ extension EditWork {
     /// lattice steps: a long straight step bent by a drag becomes a smooth curve.
     static var reshapeStep: Int64 { 3 * Lattice.unit }
 
+    /// How far along a chain, at least, a reshape bends it either side of the grabbed point,
+    /// lattice steps: three times the drag, or this much for a short drag. Past it the chain stays
+    /// as it is, so a long outline bends near the finger rather than along its whole length.
+    static var reshapeSpread: Int64 { 24 * Lattice.unit }
+
     /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to a held
     /// end: 1 at the grabbed point, 0 at the end, with no slope at either (a smoothstep, the
     /// raised cosine's cubic twin, in `+ - *` alone, so it is the same on every device).
@@ -134,10 +139,12 @@ extension EditWork {
     /// and one other edge alike (both drawn, or both undrawn) end, as the Smart Eraser's line
     /// runs from junction to junction; or a drawn stroke. Its point nearest `from` goes to `to`
     /// and the rest follows, each point by the drag times its weight (`falloff`) along the
-    /// chain's length: 1 at the grabbed point, 0 at the chain's ends, which stay on their
-    /// junctions. A loop through no junction is held at its far point, half its length round
-    /// from the grabbed one. A stroke's end that meets no line is free: the stretch from the
-    /// grabbed point to it moves whole, so a stroke free at both ends moves as it is. Strokes
+    /// chain's length: 1 at the grabbed point, 0 a spread away (`reshapeSpread`, or three times
+    /// the drag) or at the chain's end if that is nearer, which stays on its junction; beyond, the
+    /// chain keeps its points, the first of them made a vertex. A loop through no junction is held
+    /// at most at its far point, half its length round. A stroke's end that meets no line is free:
+    /// within the spread, the stretch from the grabbed point to it moves whole (a short stroke free
+    /// at both ends moves as it is); beyond it, it stays. Strokes
     /// ending on the chain are carried, their end moving with the point of it they meet. Where
     /// a step's two ends move at least half a unit apart, it bends: points are added along it so
     /// that, moved, they are `reshapeStep` or less apart (a stretch moved whole stays as it
@@ -270,39 +277,50 @@ extension EditWork {
             for i in 1..<flat.count { along[i] = along[i - 1] + Double(Lattice.distanceSquared(flat[i - 1], flat[i])).squareRoot() }
             return (flat, starts, along)
         }
+        let delta = to &- grab.point
+        let drag = Double(Lattice.distanceSquared(to, grab.point)).squareRoot()
+        let spread = max(3 * drag, Double(Self.reshapeSpread))
         var (flat, pieceStart, s) = flatten()
         var total = s[s.count - 1]
         func grabbedAt() -> Double { s[pieceStart[grabPiece] + pieces[grabPiece].firstIndex(of: grab.point)!] }
         var sg = grabbedAt()
-        if closed, total > 0 {
-            // A loop is held at its far point, which becomes a vertex so that it stays.
-            let far = sg + total / 2 < total ? sg + total / 2 : sg - total / 2
-            if let i = (0..<(flat.count - 1)).first(where: { s[$0] < far && far < s[$0 + 1] }) {
-                let f = (far - s[i]) / (s[i + 1] - s[i]), d = flat[i + 1] &- flat[i]
-                let p = flat[i] &+ LatticePoint(Int64((Double(d.x) * f).rounded()), Int64((Double(d.y) * f).rounded()))
-                let k = pieceStart.lastIndex { $0 <= i }!
-                pieces[k] = Self.inserting([(i - pieceStart[k], p)], into: pieces[k])
-                (flat, pieceStart, s) = flatten()
-                total = s[s.count - 1]
-                sg = grabbedAt()
-            }
-        }
         guard closed || (sg > 0 || startFree) && (sg < total || endFree) else {
             throw EditFailure.invalid("the line is held where it was grabbed")
         }
-        /// The length of the side of the grabbed point a point at `at` is on: from the grabbed
-        /// point to the end (or a loop's far point) where the weight is 0.
-        func side(_ at: Double) -> Double { closed ? total / 2 : at <= sg ? sg : total - sg }
-        func weight(_ at: Double) -> Double {
-            if closed {
-                let d = abs(at - sg)
-                return total > 0 ? Self.falloff(min(d, total - d) / (total / 2)) : 1
-            }
-            if at <= sg { return startFree ? 1 : Self.falloff((sg - at) / sg) }
-            return endFree ? 1 : Self.falloff((at - sg) / (total - sg))
+        // A free end within the bend's spread moves whole with the grabbed point; one beyond it stays.
+        let freeBefore = !closed && startFree && sg <= spread, freeAfter = !closed && endFree && total - sg <= spread
+        /// How far along the chain the bend runs before the grabbed point and after it: the
+        /// spread, at most to the chain's end (a loop's far point).
+        func bend(after: Bool) -> Double { closed ? min(spread, total / 2) : min(spread, after ? total - sg : sg) }
+        /// Makes the point `at` along the chain a vertex, so that the chain beyond it, which
+        /// doesn't move, keeps its points exactly.
+        func hold(_ at: Double) {
+            let at = closed ? (at < 0 ? at + total : at >= total ? at - total : at) : at
+            guard let i = (0..<(flat.count - 1)).first(where: { s[$0] < at && at < s[$0 + 1] }) else { return }
+            let f = (at - s[i]) / (s[i + 1] - s[i]), d = flat[i + 1] &- flat[i]
+            let p = flat[i] &+ LatticePoint(Int64((Double(d.x) * f).rounded()), Int64((Double(d.y) * f).rounded()))
+            let k = pieceStart.lastIndex { $0 <= i }!
+            pieces[k] = Self.inserting([(i - pieceStart[k], p)], into: pieces[k])
+            (flat, pieceStart, s) = flatten()
+            total = s[s.count - 1]
+            sg = grabbedAt()
         }
-        let delta = to &- grab.point
-        let drag = Double(Lattice.distanceSquared(to, grab.point)).squareRoot()
+        if !freeAfter { hold(sg + bend(after: true)) }
+        if !freeBefore { hold(sg - bend(after: false)) }
+        func weight(_ at: Double) -> Double {
+            let d: Double
+            if closed {
+                d = min(abs(at - sg), total - abs(at - sg))
+            } else if at <= sg {
+                if freeBefore { return 1 }
+                d = sg - at
+            } else {
+                if freeAfter { return 1 }
+                d = at - sg
+            }
+            let r = bend(after: at > sg)
+            return r > 0 ? Self.falloff(d / r) : 1
+        }
         func moved(_ p: LatticePoint, _ w: Double) -> LatticePoint {
             p &+ LatticePoint(Int64((w * Double(delta.x)).rounded()), Int64((w * Double(delta.y)).rounded()))
         }
@@ -315,7 +333,7 @@ extension EditWork {
                 if j > 0, abs(w[i] - w[i - 1]) * drag >= Double(Lattice.unit) / 2 {
                     // The falloff is at its steepest 1.5 times its mean slope over the side, so a
                     // moved step is at most this many times as long as it was.
-                    let length = s[i] - s[i - 1], stretch = 1 + 1.5 * drag / side(s[i - 1] + length / 2)
+                    let length = s[i] - s[i - 1], stretch = 1 + 1.5 * drag / bend(after: s[i - 1] + length / 2 > sg)
                     let n = Int64((length * stretch / step).rounded(.up))
                     let a = flat[i - 1], d = flat[i] &- a
                     for q in stride(from: Int64(1), to: n, by: 1) {

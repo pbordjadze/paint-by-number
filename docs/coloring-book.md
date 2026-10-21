@@ -474,13 +474,15 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   through every vertex where it and just one other edge alike (both inked, or both undrawn) end,
   from junction to junction, as the Smart Eraser finds its line (`EditWork.reshapePlan`). Its
   point nearest the drag's start goes where the finger lifts, and every other point by the drag
-  times a weight along the chain's length: 1 at the grabbed point, 0 at the chain's ends, a
-  smoothstep between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on
-  every device), each side of the grabbed point normalized to its own length. The ends stay on
-  their junctions and the drawing stays connected; a junction grabbed is held, so nothing moves.
-  A loop through no junction is held at its far point, half its length round (made a vertex); a
-  stroke's end that touches no line is free, the stretch from the grabbed point to it moving
-  whole (a stroke free at both ends moves as it is). Strokes ending on the chain are carried, their
+  times a weight along the chain's length: 1 at the grabbed point, 0 a spread away, a smoothstep
+  between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on every
+  device). The spread is three times the drag, at least 24 units (`reshapeSpread`), on each side
+  of the grabbed point, and at most to the chain's end there (a loop's far point, half its length
+  round); where it ends the chain gets a vertex, and beyond it keeps its points exactly. So the
+  bend is local, and the chain's ends stay on their junctions and the drawing connected; a
+  junction grabbed is held, so nothing moves. A stroke's end that touches no line is free: within
+  the spread, the stretch from the grabbed point to it moves whole (a short stroke free at both
+  ends moves as it is); beyond it, the end stays. Strokes ending on the chain are carried, their
   end moving with the point of the chain they meet. A step whose ends move at least half a unit
   apart is bent: points are added along it so that, moved, they lie at most 3 units apart (the
   smoothstep is at its steepest 1.5 times its mean slope, which bounds a moved step's length), so
@@ -492,10 +494,10 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   carries, leave the canvas, turn an area inside out, carry an island or a stroke into the region
   across, or leave an area no room for its number. On the parrots book, laying a bend with the
   check of the result takes about 25 ms; the preview the app draws while the finger moves
-  (`TemplateEditor.reshapedChain`, the same moved points without laying them) 0.4 ms. The
-  falloff spans the whole chain, so a long outline grabbed far from its junctions moves along
-  most of its length: of five drags of 25 to 45 units on that book's outlines, four were declined
-  for meeting the details beside the outline near its far ends.
+  (`TemplateEditor.reshapedChain`, the same moved points without laying them) 0.4 ms. With the
+  falloff spanning the whole chain, four of five drags of 25 to 45 units on that book's outlines
+  were declined, a long outline moving along most of its length into the details beside it near
+  its far ends, which the spread was made to stop.
 - **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
   cell. The number nearest the drag's start, within its radius and `TemplateEditor.tapReach`,
   goes where the finger lifts when that is inside its own region (not on its outline) and a

@@ -84,24 +84,62 @@ struct EditReshapeTests {
         TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
     }
 
-    /// The ground's detail stroke touches nothing at either end: dragged, it moves whole, and
-    /// nothing but it (and the ground's numbers, kept off it) changes.
-    @Test func aStrokeFreeAtBothEndsMovesWhole() throws {
-        let t = Self.scene
-        let art = t.lineArt!
-        let stroke = art.strokes[0]
-        let before = Array(art.strokePoints[Int(stroke.pointStart)..<Int(stroke.pointStart + stroke.pointCount)])
-        let from = SIMD2<Float>(96, 120.3)
-        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: from, to: SIMD2(96, 126)), to: t)
+    static func strokePoints(_ t: Template, _ k: Int) -> [SIMD2<Float>] {
+        let s = t.lineArt!.strokes[k]
+        return Array(t.lineArt!.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)])
+    }
+
+    /// A short stroke drawn in the ground touches nothing at either end, both within the bend's
+    /// spread: dragged, it moves whole, and nothing but it (and the ground's numbers, kept off
+    /// it) changes.
+    @Test func aShortStrokeFreeAtBothEndsMovesWhole() throws {
+        let t = try TemplateEditorTests.apply(.draw(points: [SIMD2(60, 108), SIMD2(80, 108)]), to: Self.scene).0
+        let k = try #require(t.lineArt!.strokes.indices.first { Self.strokePoints(t, $0).contains(SIMD2(60, 108)) })
+        let stroke = t.lineArt!.strokes[k], before = Self.strokePoints(t, k)
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(70, 108.5), to: SIMD2(70, 112)), to: t)
         #expect(outcome.reshaped == 1)
-        let moved = u.lineArt!.strokes[0]
-        let after = Array(u.lineArt!.strokePoints[Int(moved.pointStart)..<Int(moved.pointStart + moved.pointCount)])
+        let moved = u.lineArt!.strokes[k], after = Self.strokePoints(u, k)
         #expect(Int(moved.region) == outcome.continued[Int(stroke.region)] && moved.layer == stroke.layer && moved.weight == stroke.weight)
-        #expect(after.contains(SIMD2(96, 126)), "the grabbed point lands under the finger")
-        let shift = after.first! - before.first!
-        #expect(shift.x == 0 && shift.y > 5 && shift.y < 7)
-        #expect(before.allSatisfy { after.contains($0 + shift) }, "\(before) \(after)")
+        #expect(after.contains(SIMD2(70, 112)), "the grabbed point lands under the finger")
+        #expect(before.allSatisfy { after.contains($0 + SIMD2(0, 4)) }, "\(before) \(after)")
         #expect(u.polygons(ofRegion: Int(moved.region)) == t.polygons(ofRegion: Int(stroke.region)), "no outline moves")
+        TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
+    }
+
+    /// The ground's detail stroke runs the canvas's width, free at both ends: grabbed in the
+    /// middle, it bends only within the spread of the grab (24 units for a short drag), its ends
+    /// and everything beyond the spread exactly where they were.
+    @Test func aLongStrokeBendsOnlyNearTheGrab() throws {
+        let t = Self.scene
+        let before = Self.strokePoints(t, 0)
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(96, 120.3), to: SIMD2(96, 126)), to: t)
+        #expect(outcome.reshaped == 1)
+        let after = Self.strokePoints(u, 0)
+        #expect(after.contains(SIMD2(96, 126)))
+        #expect(after.first == before.first && after.last == before.last)
+        let far = after.filter { abs($0.x - 96) > 24.01 }
+        #expect(far.count >= 2 && far.allSatisfy { before.contains($0) }, "beyond the spread the stroke is as it lay")
+        #expect(before.filter { abs($0.x - 96) > 24.01 }.allSatisfy { after.contains($0) })
+        TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
+    }
+
+    /// The undrawn split runs 192 units from frame to frame: grabbed in the middle and dragged 4
+    /// units, it bends between x = 80 and 128, made vertices, and is as it lay beyond them; the
+    /// preview says the same.
+    @Test func aLongChainBendsOnlyNearTheGrab() throws {
+        let t = Self.base
+        let edit = Edit.reshape(from: SIMD2(104, 40), to: SIMD2(104, 44))
+        let (u, outcome) = try TemplateEditorTests.apply(edit, to: t)
+        let upper = try Self.region(t, EditPaintAreaTests.upper), lower = try Self.region(t, EditPaintAreaTests.lower)
+        let edges = Self.between(u, outcome.continued[upper], outcome.continued[lower])
+        #expect(edges.count == 1)
+        let pts = Array(u.points(of: u.edges[edges[0]]))
+        #expect(Set([pts.first!, pts.last!]) == Set([SIMD2<Float>(0, 40), SIMD2(192, 40)]))
+        #expect(pts.contains(SIMD2(80, 40)) && pts.contains(SIMD2(128, 40)) && pts.contains(SIMD2(104, 44)))
+        #expect(pts.filter { $0.x <= 80 || $0.x >= 128 }.count == 4, "only the ends and where the bend ends, beyond it")
+        #expect(pts.allSatisfy { $0.x > 80 && $0.x < 128 || $0.y == 40 })
+        let preview = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(104, 40), to: SIMD2(104, 44)))
+        #expect(preview.moved == pts || preview.moved == pts.reversed())
         TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
     }
 
@@ -119,13 +157,16 @@ struct EditReshapeTests {
         TemplateEditorTests.expectOthersUnchanged(drawn, u, outcome)
     }
 
-    /// A box drawn in the sky is a loop through no junction: dragged, it is held at its far side.
-    @Test func aLoopIsHeldAtItsFarSide() throws {
+    /// A box drawn in the sky is a loop through no junction, 76 units round: dragged 6 units at
+    /// its top, it bends within 24 units either side, its bottom where it was.
+    @Test func aLoopBendsNearTheGrab() throws {
         let t = Self.base
         let box = try Self.region(t, EditPaintAreaTests.inA)
         let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(101, 12), to: SIMD2(101, 6)), to: t)
         #expect(try Self.region(u, SIMD2(101, 8)) == outcome.continued[box])
-        #expect(u.polygons(ofRegion: outcome.continued[box])[0].contains(SIMD2(101, 28)), "the far side's middle stays")
+        let ring = u.polygons(ofRegion: outcome.continued[box])[0]
+        #expect(ring.contains(SIMD2(90, 28)) && ring.contains(SIMD2(112, 28)) && ring.contains(SIMD2(90, 25)) && ring.contains(SIMD2(112, 25)),
+            "the bottom stays, the bend ending 24 units from the grab")
         #expect(u.regions[outcome.continued[box]].area > t.regions[box].area)
         TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
     }
