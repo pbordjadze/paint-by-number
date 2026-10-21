@@ -30,10 +30,10 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   `cheat_sheet` lists the commands. Text matchers are full-string regexes: copy texts and labels
   from `inspect_screen`, never from a screenshot. Every local tool needs `device_id`
   `{{UDID}}`. To quit and relaunch as a person does, go home first, which is when the app saves
-  what it keeps on leaving (the gallery's thumbnail of the open painting among it): `- pressKey:
-  Home`, `- waitForAnimationToEnd`, `- stopApp`, then `- launchApp` (no `clearState`). A bare
-  `stopApp` kills the app in the foreground, as a crash would: use it only to test that, and say
-  which you used.
+  what it keeps on leaving (the gallery's thumbnail of the open painting among it): one `run` with
+  `- pressKey: Home`, then a screenshot (the save takes a moment), then a second `run` with
+  `- stopApp` and `- launchApp` (no `clearState`). A bare `stopApp` kills the app in the
+  foreground, as a crash would: use it only to test that, and say which you used.
   What an earlier session learned about this setup:
   - `inspect_screen` bounds are points; the screenshot is scaled (the root element's bounds give
     the screen in points). A `point` is whole percentages (`"52%,38%"`; `"30.7%"` is refused) or
@@ -87,17 +87,24 @@ screenshot a moment later, and in the report say which you trusted.
 
 Report these only if they look wrong in another way:
 
-- A tap on an area of another color paints nothing and doesn't select that color: that color's
-  swatch shakes, wherever it is in the palette (scrolled out of view, the shake can't be seen).
-  Colors are picked from the palette.
+- A tap on an unpainted area of another color doesn't select that color: its swatch shakes
+  (wherever it is in the palette; scrolled out of view, the shake can't be seen) and the tapped
+  number grows for a moment, unless an unpainted area of the selected color lies within about 14
+  points, which the tap paints instead. Colors are picked from the palette.
 - A painting opens on the palette's first swatch, not the color last used.
 - Progress counts areas, not surface: a large area moves it as much as a small one.
 - On the New Painting preview, the Colors slider sets the most paints; the line under the preview
-  counts the paints the painting ended with, after joining ones too alike to tell apart, so it can
-  be fewer.
+  counts the paints the painting ended with, often fewer (paints left unused or too alike are
+  dropped). In the debug build, Refine's edits can add paints.
+- Quit from a painting through Home and relaunch, and the app reopens that painting rather than
+  the gallery. Quit again within about 10 s of such a reopen, and the next launch shows the
+  gallery instead (its log says the reopen "never settled").
 - The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
   took over 2.5 s to draw, usual on this runner; judge the screen.
 - The release build has no Refine (the debug build does): it is left out of the first release.
+- The debug build only (features not yet released): after the first fill the painting's top bar
+  fades to Back, the progress ring and Hint; tap the ring (`quiet-ring`) to bring More and Undo
+  back. A finished painting there grows dark for a few seconds, a moon rising over it.
 
 ## Goals
 
