@@ -719,7 +719,6 @@ struct RefineGuideView: View {
                     }
             }
         }
-        .tint(Theme.signature)
         .onAppear(perform: RefinePracticeSetup.seedSettings)
         .task {
             do {
@@ -733,6 +732,7 @@ struct RefineGuideView: View {
 
     private var doneButton: some View {
         Button("Done", systemImage: "checkmark") { dismiss() }
+            .tint(Theme.signature)
             .accessibilityIdentifier("refine-guide-done")
     }
 }
