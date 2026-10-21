@@ -437,6 +437,36 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   if the first was: the painter dragged from it, so the area is it, grown. A paint left with no
   area leaves the palette and the numbers after it close up, as Only This Area's does
   (`dropPaints`). A merge that joins fewer than two areas is declined.
+- **Paint brush** (`brush`, Refine's Paint Brush). The Toolbox's way to paint a cell's shape: what
+  lies within the radius of the stroke (a disc for a dab; `RefineGestures.brushSize`, 12 points
+  on screen at any zoom) takes the paint a fill would (a color of the template on screen, as Only
+  This Area's: the paint within a just-noticeable difference, else a new one added last). The
+  footprint's outline (`BrushFootprint`) is traced on a grid of a quarter of the radius (coarser
+  only past a million cells): each grid vertex is in or out exactly, in 128-bit integer
+  arithmetic; where a grid edge goes from in to out, the outline crosses it where the eraser's
+  reach (`Rub`, the same union of stadiums) ends along it, rounded to the lattice and kept off
+  the edge's ends; marching squares join each cell's crossings (two diagonal corners in are
+  joined). The crossings lie inside distinct grid edges and each segment inside one cell, so the
+  rings are simple and apart; thinned within a fortieth of the radius, they are kept thinned
+  only where they stay so. A self-overlapping stroke is one footprint, a loop's enclosed area a
+  hole in it. The rings are laid as a closed cell edge is, undrawn, clipped to the canvas (each
+  ring clipped from a vertex off it, so every run ends on the frame; no vertex lies on the
+  frame's lines), a piece with no room for a number not cut off. An area is inside when it lies
+  on the outline's left (the footprint's side) and on no boundary of it on the right; one that
+  touches none of the outline, or both its sides, when its number's spot is in the footprint, so
+  a cell the stroke covers whole is painted whole. Each area inside takes the paint, ink
+  untouched: the areas either side of a drawn line stay two cells. Then areas of the paint
+  that meet across an undrawn boundary, one of them inside or the boundary the outline itself,
+  become one area (`mergeGroups`), so a stroke along a cell's edge in the cell's own paint grows
+  the cell instead of adding a sliver, and the cell it cut is whole again. An area with no room
+  for the paint's number, even a detail area's, keeps its paint and is one again with the rest of
+  its cell (`Outcome.tooSmall`); a paint left with no area leaves the palette (`dropPaints`). A
+  stroke that changes no area's paint changes nothing; one with no area inside it, not even a
+  whole cell, is declined, as is one whose areas all lack room for the paint's number. On the
+  parrots book (1152 × 768, 201 regions) through `pbn edit`, with the check of the result: a
+  30-point stroke of radius 18 across the macaw's chest, the blue and the green, 61 ms (16 pieces
+  cut, 6 joined); 30 points across the whole canvas, 250 ms at radius 14.4 (the app's brush on a
+  13" iPad), 290 ms at 40 and 370 ms at 4. A merge's drag, about 35 ms.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

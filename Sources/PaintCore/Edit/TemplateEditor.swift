@@ -47,6 +47,15 @@ import Foundation
 ///   area has the first region's paint and number, and is a detail area only if the first was.
 ///   A paint left with no area leaves the palette as Only This Area's does. A merge that joins
 ///   fewer than two areas is declined.
+/// - **Paint brush.** Refine's Paint Brush: everything within `radius` of the stroke (a disc for a
+///   dab) becomes the paint a fill would take. The footprint's outline is laid as a closed cell
+///   edge is, undrawn and clipped to the canvas, a piece with no room for a number not cut off;
+///   every area inside it then takes the paint, ink untouched, so the areas either side of a
+///   drawn line stay two cells. Areas of that paint meeting across an undrawn boundary, one of
+///   them inside or the boundary the outline itself, become one, so a stroke along a cell's edge
+///   grows the cell. A paint left with no area leaves the palette. A stroke that paints nothing a
+///   new paint changes nothing; one with no area inside it is declined. Its color is one of the
+///   template on screen, as Only This Area's is.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
@@ -83,6 +92,9 @@ public enum TemplateEditor {
         case cellEdge(points: [SIMD2<Float>], closed: Bool = false)
         /// Refine's Merge: the regions `points` cross, joined into the first.
         case merge(points: [SIMD2<Float>])
+        /// Refine's Paint Brush: what lies within `radius` of `path` painted `color` (OKLab, a color
+        /// of the template on screen, as `paintArea`'s).
+        case brush(path: [SIMD2<Float>], radius: Float, color: SIMD3<Float>)
         /// The eraser dragged along a path, reaching `radius` either side.
         case erase(path: [SIMD2<Float>], radius: Float)
         /// The drawn line nearest `point` within `reach`, from junction to junction.
@@ -243,6 +255,13 @@ public enum TemplateEditor {
         case .merge(let points):
             let lattice = points.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.merge(along: lattice)
+        case .brush(let path, let radius, let color):
+            guard color.x.isFinite, color.y.isFinite, color.z.isFinite else { break }
+            let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
+            // No brush is wider than the canvas.
+            let widest = Float(max(template.width, template.height))
+            let reach = min(max(radius.isFinite ? radius : 0, 0), widest)
+            try work.brush(path: lattice, radius: Int64((reach * Float(Lattice.unit)).rounded()), color: clampedLab(color))
         case .erase(let path, let radius):
             let lattice = path.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
             try work.erase(path: lattice, radius: Double(radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0))

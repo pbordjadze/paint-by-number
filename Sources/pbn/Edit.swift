@@ -8,7 +8,8 @@ import PaintCore
 /// `"paintArea"` (the area under the point alone), and `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
 /// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
 /// `"paints"`), a `"cellEdge"` (Refine's Cell Edge: `"points"`, `"closed"`), a `"merge"` (Refine's
-/// Merge: `"points"`, the drag), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
+/// Merge: `"points"`, the drag), a `"brush"` (Refine's Paint Brush: `"points"`, the stroke, `"radius"`
+/// and `"color"` or `"paint"` as a paintArea's), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
 /// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
 /// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
 /// know is left out with a warning.
@@ -53,6 +54,12 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             return .cellEdge(points: points, closed: entry.closed ?? false)
         case "merge":
             return .merge(points: points)
+        case "brush":
+            if let c = entry.color, c.count == 3 { return .brush(path: points, radius: entry.radius ?? 4, color: SIMD3(c[0], c[1], c[2])) }
+            if let n = entry.paint, (1...palette.count).contains(n) {
+                return .brush(path: points, radius: entry.radius ?? 4, color: palette[n - 1].oklab)
+            }
+            fail("\(path): a brush needs \"color\": [L, a, b] or \"paint\": a number of the palette")
         case "erase":
             return .erase(path: points, radius: entry.radius ?? 4)
         case "eraseLine":
@@ -80,7 +87,7 @@ func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEdit
             return .repaint(from: SIMD3(f[0], f[1], f[2]), to: SIMD3(c[0], c[1], c[2]), family: entry.family ?? false)
         default:
             FileHandle.standardError.write(Data(
-                "\(path): skipping an edit of kind \(entry.kind) (draw, split, cellEdge, merge, erase, eraseLine, fill, paintArea, look or repaint)\n"
+                "\(path): skipping an edit of kind \(entry.kind) (draw, split, cellEdge, merge, brush, erase, eraseLine, fill, paintArea, look or repaint)\n"
                     .utf8))
             return nil
         }
@@ -290,6 +297,7 @@ func runEdit(_ options: Options) throws {
         case .split: step.kind = "split"
         case .cellEdge: step.kind = "cellEdge"
         case .merge: step.kind = "merge"
+        case .brush: step.kind = "brush"
         case .erase: step.kind = "erase"
         case .eraseLine: step.kind = "eraseLine"
         case .fill: step.kind = "fill"

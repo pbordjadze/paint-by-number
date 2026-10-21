@@ -64,6 +64,13 @@ public struct RefineScreen: Sendable, Equatable {
         return long > 0 ? Float(points / long) : 0.02
     }
 
+    /// The Paint Brush's reach, a fraction of the picture's long side: `RefineGestures.brushSize`
+    /// on screen at any zoom, so zoomed in it paints finer, as the eraser erases.
+    public var brushRadius: Float {
+        let long = max(picture.width, picture.height)
+        return long > 0 ? Float(RefineGestures.brushSize / long) : 0.02
+    }
+
     /// A picture point on screen, in points from the picture's corner.
     public func onScreen(_ p: SIMD2<Float>) -> CGPoint {
         CGPoint(x: CGFloat(p.x) * picture.width, y: CGFloat(p.y) * picture.height)
@@ -98,6 +105,9 @@ public enum RefineGestures {
     public static let touchFloor: CGFloat = 2
     /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
     public static let fingerReach: CGFloat = 16
+    /// The Paint Brush's radius on screen, in points: about half a fingertip, so the paint is the
+    /// width of the finger that lays it, at any zoom.
+    public static let brushSize: CGFloat = 12
 
     /// A finger's samples as the screen keeps them while it moves: a sample closer than a point
     /// to the last kept adds nothing the line shows; the last, where the finger lifts, is kept.
@@ -147,6 +157,16 @@ public enum RefineGestures {
     public static func merge(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
         guard !points.isEmpty, screen.canvas.width > 0, screen.canvas.height > 0 else { return nil }
         return .merge(points: simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint))
+    }
+
+    /// The Paint Brush's stroke as an edit: its path in canvas units, thinned as the eraser's is,
+    /// its reach there the brush's on screen (`brushRadius`), painting `color` (OKLab, a color of
+    /// the template on screen). A dab is one point; nil for no touch.
+    public static func brush(_ points: [SIMD2<Float>], on screen: RefineScreen, color: SIMD3<Float>) -> TemplateEditor.Edit? {
+        let size = screen.canvas
+        guard !points.isEmpty, size.width > 0, size.height > 0 else { return nil }
+        let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
+        return .brush(path: path, radius: screen.brushRadius * Float(max(size.width, size.height)), color: color)
     }
 
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
@@ -235,7 +255,7 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .cellEdge, .merge, .look, .repaint:
+            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .look, .repaint:
                 // The lines a merge takes out go when the template shows it.
                 break
             }

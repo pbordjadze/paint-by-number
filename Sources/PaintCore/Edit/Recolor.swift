@@ -178,7 +178,8 @@ extension TemplateEditor {
 
     /// `edit` with the colors it brings (a drawn line's or a split's paints, a fill's color) as
     /// the recoloring edits laid before it make them, in order. A painted area's color
-    /// (`paintArea`) is one of the template on screen, the looks already in it, and stays as sent.
+    /// (`paintArea`) is one of the template on screen, the looks already in it, and stays as sent,
+    /// as a brush stroke's (`brush`) does.
     public static func recolored(_ edit: Edit, by recolors: [Edit]) -> Edit {
         guard !recolors.isEmpty else { return edit }
         func map(_ c: SIMD3<Float>) -> SIMD3<Float> { recolors.reduce(c) { recolor($0, by: $1) } }
