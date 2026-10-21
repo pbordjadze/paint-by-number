@@ -398,8 +398,9 @@
 				COREML_CODEGEN_LANGUAGE = None;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				EXCLUDED_SOURCE_FILE_NAMES = "Marginarium*.swift SpriteAtlas.swift Marginarium.xcassets marginarium.json pet-*.webp pet-metrics.json";
+				EXCLUDED_SOURCE_FILE_NAMES = "Marginarium*.swift SpriteAtlas.swift Marginarium.xcassets marginarium.json pet-*.webp pet-metrics.json Refine*.swift DraftRow.swift";
 				GENERATE_INFOPLIST_FILE = YES;
+				INCLUDED_SOURCE_FILE_NAMES = RefineEdits.swift;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Paint by Moonlight";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";

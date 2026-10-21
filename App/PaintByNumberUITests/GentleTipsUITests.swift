@@ -73,8 +73,8 @@ final class GentleTipsUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Tap to Paint"].exists, "The bench gave a tip with tips off")
     }
 
-    /// A tip about a button in the navigation bar: Settings and Tips, a card under the bar that
-    /// leaves the gear in sight.
+    /// A tip about a button in the navigation bar: Settings and Tips, a card atop the gallery's
+    /// pages that leaves the gear in sight and the first section's title clear, below it.
     @MainActor
     func testSettingsAndTipsLiesUnderTheBar() throws {
         let app = launch("gallery-tip-gear")
@@ -84,8 +84,13 @@ final class GentleTipsUITests: XCTestCase {
         let gear = app.buttons["Settings"].firstMatch
         XCTAssertTrue(gear.exists, "The gear is gone")
         XCTAssertGreaterThanOrEqual(tip.frame.minY, gear.frame.maxY, "The tip covers the gear")
-        XCTAssertTrue(
-            app.staticTexts["The gear holds paper tone, sound and painting length. Tips can be turned off there."].exists,
-            "The tip doesn't say where tips can be turned off")
+        let message = app.staticTexts["The gear holds paper tone, sound and painting length. Tips can be turned off there."]
+        XCTAssertTrue(message.exists, "The tip doesn't say where tips can be turned off")
+        // The shelf's one section, Finished: its title is the topmost text so named.
+        let header = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Finished"))
+            .allElementsBoundByIndex
+            .filter { $0.exists }.min { $0.frame.minY < $1.frame.minY }
+        let title = try XCTUnwrap(header, "The Finished section has no title")
+        XCTAssertGreaterThanOrEqual(title.frame.minY, message.frame.maxY, "The tip covers the section's title")
     }
 }

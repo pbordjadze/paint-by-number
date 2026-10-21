@@ -28,11 +28,20 @@ struct GalleryView: View {
     @State private var deleting: Artwork?
     @State private var restartFailed = false
     @State private var isOpeningDraft = false
+    /// The top of the pages is in view, where the bar's tips lie.
+    @State private var showsTop = true
 
     var body: some View {
         ScrollView {
             if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
+                    // The tips about the bar's gear and +, atop the pages, which make room: a card
+                    // laid over them hid the first section's title.
+                    if let tip = PaintTips.desk.turn, tip.place == .shelf, tip.liesUnderTheBar {
+                        GentleTipView(id: tip)
+                            .transition(.opacity)
+                    }
+                    #if UNRELEASED
                     if let draft = shownDraft {
                         DraftRow(
                             draft: draft, photo: library.drafts.store.url(.source), isCompact: width < 560,
@@ -40,6 +49,7 @@ struct GalleryView: View {
                         )
                         .transition(.opacity)
                     }
+                    #endif
                     // A painting nobody has painted on is ready to paint, not in progress.
                     let active = library.inProgress(matching: query)
                     if !active.isEmpty {
@@ -65,9 +75,18 @@ struct GalleryView: View {
                 .padding(.horizontal, horizontalPadding)
                 .padding(.top, 6)
                 .padding(.bottom, 56)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
             }
         }
         .scrollDisabled(isBare)
+        .onScrollGeometryChange(for: Bool.self, of: { $0.contentOffset.y + $0.contentInsets.top < Self.topSlack }) { _, atTop in
+            showsTop = atTop
+        }
+        // The gear's tip (where tips can be turned off) and the +'s may have the turn only while
+        // the top of the pages is in view: scrolled away, one would come and go unseen above it.
+        .barTipsInline(.shelfSettings, active: showsTop)
+        // An empty gallery has no + in its bar: the tip waits for one.
+        .barTipsInline(.shelfNewPainting, active: showsTop && !isBare)
         // An empty scroll view collapses; keep the paper (and the empty state) full size.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
@@ -170,6 +189,8 @@ struct GalleryView: View {
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
     /// widths, 20 pt on regular ones), so the cards start where they do.
     private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
+    /// How far the pages may be scrolled with their top still counted in view.
+    nonisolated private static let topSlack: CGFloat = 44
     private var spacing: CGFloat { width < 560 ? 16 : 26 }
 
     /// `tip` is a tip inline under the header while it has the turn (a popover would have nothing to

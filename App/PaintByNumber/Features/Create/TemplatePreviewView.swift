@@ -27,7 +27,9 @@ struct TemplatePreviewView: View {
     @State private var isStarting = false
     @State private var startError: String?
     @State private var isTuning = false
+    #if UNRELEASED
     @State private var isRefining = false
+    #endif
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
     @FocusState private var titleFocused: Bool
@@ -101,17 +103,21 @@ struct TemplatePreviewView: View {
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        #if UNRELEASED
         // Refine's button goes while the preview is enlarged, and its tip with it.
         .barTips(.newPaintingRefine, active: !isEnlarged)
+        #endif
         // Shrink Preview is the way back from the enlarged preview. There is none while Start
         // Painting saves: leaving then would open the painting from whichever flow closes next.
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
+        #if UNRELEASED
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         // A tap on Refine made while the painting was updating: it opens once it is made.
         .onChange(of: model.opensRefine) { _, opens in
             if opens { openRefine() }
         }
+        #endif
         // The preview's tips: a template that is final is a moment, a slider let go another.
         .onAppear {
             PaintTips.desk.enter(.preview)
@@ -127,14 +133,16 @@ struct TemplatePreviewView: View {
         .onChange(of: model.settingsOrigin) { old, origin in
             if old == .custom, origin == .suggested { PaintTips.resetUsed() }
         }
+        #if UNRELEASED
         .onChange(of: isRefining) { _, refining in
             if refining { PaintTips.refineOpened() }
         }
+        #endif
         // Start Painting saves the painting, and The Making-of may play: the preview says no more.
         .onChange(of: isStarting) { _, starting in
             if starting { PaintTips.desk.leave(.preview) }
         }
-        #if DEBUG
+        #if DEBUG && UNRELEASED
         // `create-refine` shows the Refine screen once its painting is refined.
         .onChange(of: model.refinements.isEmpty) { _, isEmpty in
             if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
@@ -186,6 +194,7 @@ struct TemplatePreviewView: View {
     private var offersEnlarging: Bool { isCompact && !isSideBySide }
     private var isEnlarged: Bool { isTuning && !isSideBySide }
 
+    #if UNRELEASED
     /// Refine on the final template, or, while it is being made, as soon as it is.
     private func openRefine() {
         titleFocused = false
@@ -197,6 +206,7 @@ struct TemplatePreviewView: View {
             model.askForRefine()
         }
     }
+    #endif
 
     private func setEnlarged(_ enlarged: Bool) {
         titleFocused = false
@@ -218,6 +228,8 @@ struct TemplatePreviewView: View {
                 Button("Shrink Preview", systemImage: "arrow.down.right.and.arrow.up.left") { setEnlarged(false) }
             }
         }
+        #if UNRELEASED
+        // Refine is in SideStore and Debug builds only for now: the release has no Refine step.
         if !isEnlarged {
             // The optional Refine step: a text button, so it reads as a step and not a view.
             ToolbarItem(placement: .primaryAction) {
@@ -242,6 +254,7 @@ struct TemplatePreviewView: View {
                 .accessibilityIdentifier("refine")
             }
         }
+        #endif
         if offersEnlarging && !isEnlarged {
             ToolbarItem(placement: .primaryAction) {
                 Button("Enlarge Preview", systemImage: "arrow.up.left.and.arrow.down.right") { setEnlarged(true) }
@@ -286,7 +299,12 @@ struct TemplatePreviewView: View {
     /// The template is final: the moment of the preview's tips. The suggestion's is only while the
     /// settings are still the suggested ones.
     private func previewFinal() {
-        PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: model.canRefine)
+        #if UNRELEASED
+        let canRefine = model.canRefine
+        #else
+        let canRefine = false
+        #endif
+        PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: canRefine)
     }
 
     // MARK: Canvas
@@ -303,11 +321,13 @@ struct TemplatePreviewView: View {
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
+                    #if UNRELEASED
                     // What Refine had to say once the sliders made the template again.
                     .overlay(alignment: .top) {
                         RefineNoteToast(note: model.note).padding(.top, 8)
                     }
                     .animation(reduceMotion ? nil : .snappy, value: model.note)
+                    #endif
             } else if case .failed(let message) = model.phase {
                 ContentUnavailableView("Couldn’t Open Photo", systemImage: "photo.badge.exclamationmark", description: Text(message))
                     .frame(maxHeight: .infinity)

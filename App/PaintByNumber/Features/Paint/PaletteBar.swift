@@ -121,7 +121,7 @@ struct PaletteBar: View {
         /// Global frames: the scroll view's, and the bar's as the glass clips it.
         var frame = CGRect.null
         var clip = CGRect.null
-        /// A color to bring into view once all three are known (the bar appearing).
+        /// A color to bring into view once both frames are known (the bar appearing).
         var pending: Int?
     }
 
@@ -233,19 +233,25 @@ struct PaletteBar: View {
     /// So the offset is worked out here, from the swatches' places and what the glass shows.
     private func reveal(_ color: Int, animated: Bool) {
         let horizontal = axis == .horizontal
-        guard let geometry = scroll.geometry, !scroll.frame.isNull, !scroll.clip.isNull else {
+        guard !scroll.frame.isNull, !scroll.clip.isNull else {
             scroll.pending = color
             return
         }
         scroll.pending = nil
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
-        let lanes = Self.lanes(colors, lines: max(1, min(lines, colors.count)))
+        let lineCount = max(1, min(lines, colors.count))
+        let lanes = Self.lanes(colors, lines: lineCount)
         guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
+        let frameLength = horizontal ? scroll.frame.width : scroll.frame.height
+        // Before the scroll view first reports its geometry it hasn't scrolled: the content sits at
+        // its start, as long as the swatches lay it out.
+        let geometry = scroll.geometry
         let window = PaletteWindow(
-            offset: horizontal ? geometry.contentOffset.x : geometry.contentOffset.y,
-            viewport: horizontal ? geometry.containerSize.width : geometry.containerSize.height,
-            content: horizontal ? geometry.contentSize.width : geometry.contentSize.height,
+            offset: geometry.map { horizontal ? $0.contentOffset.x : $0.contentOffset.y } ?? 0,
+            viewport: geometry.map { horizontal ? $0.containerSize.width : $0.containerSize.height } ?? frameLength,
+            content: geometry.map { horizontal ? $0.contentSize.width : $0.contentSize.height }
+                ?? metrics.length(count: max(colors.count, 1), lines: lineCount),
             hiddenBefore: horizontal ? scroll.clip.minX - scroll.frame.minX : scroll.clip.minY - scroll.frame.minY,
             shown: horizontal ? scroll.clip.width : scroll.clip.height)
         guard let target = window.offset(revealing: lane, metrics: metrics) else { return }

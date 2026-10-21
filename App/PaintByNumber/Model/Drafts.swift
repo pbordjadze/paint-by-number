@@ -4,7 +4,8 @@ import Observation
 import os
 
 /// Keeps the create flow's draft (`CreateDraft`) on disk: the one unfinished new painting the
-/// painter refined, which the gallery offers to continue. The create flow hands it every
+/// painter refined, which the gallery offers to continue in builds with Refine (not the release,
+/// for now: `init`). The create flow hands it every
 /// change (`keep`), written about a second after the last one and at once when the flow closes
 /// or the scene leaves the foreground (`saveNow`); starting the painting (`drop`) or the
 /// painter's Discard removes it. File work runs off the main actor, one job after another, so
@@ -32,10 +33,13 @@ final class Drafts {
 
     static let delay: Duration = .seconds(1)
 
-    /// Reads the draft on disk, the launch-time scan of the drafts.
+    /// Reads the draft on disk, the launch-time scan of the drafts (builds with Refine).
     init(store: DraftStore) {
         self.store = store
         store.purgeStaging()
+        // A draft is Refine's, which the release leaves out for now (SideStore and Debug builds
+        // have it): the release reads none and leaves the one on disk for a build with Refine.
+        #if UNRELEASED
         do {
             current = try store.read()
         } catch let error as CocoaError where !Library.isDamage(error) {
@@ -46,6 +50,7 @@ final class Drafts {
             Log.create.error("Removing a damaged draft: \(String(describing: error), privacy: .public)")
             store.remove()
         }
+        #endif
     }
 
     /// Takes the flow's latest draft; it is written once the flow has been quiet for `delay`.

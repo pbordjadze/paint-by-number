@@ -86,7 +86,7 @@ final class TipDesk {
     }
 
     /// The tip of the turn, if it is one of `ids`.
-    func tip(among ids: [TipID]) -> (any Tip)? {
+    func tip(among ids: TipSet) -> (any Tip)? {
         guard let turn, ids.contains(turn) else { return nil }
         return turn.tip
     }
@@ -420,7 +420,7 @@ final class TipDesk {
 /// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
 /// at a time.
 private struct GentleTipModifier: ViewModifier {
-    let ids: [TipID]
+    let ids: TipSet
     var active: Bool
     var arrowEdge: Edge?
 
@@ -436,12 +436,8 @@ extension View {
     /// others, like the selected swatch, is active for one). `arrowEdge` is the popover's side of
     /// the view it points at: `.top` hangs it below, `.bottom` above, `.trailing` beside; nil lets
     /// the system choose.
-    func gentleTip(_ ids: [TipID], active: Bool = true, arrowEdge: Edge? = nil) -> some View {
-        modifier(GentleTipModifier(ids: ids, active: active, arrowEdge: arrowEdge))
-    }
-
     func gentleTip(_ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil) -> some View {
-        gentleTip(ids, active: active, arrowEdge: arrowEdge)
+        modifier(GentleTipModifier(ids: TipSet(ids), active: active, arrowEdge: arrowEdge))
     }
 }
 
@@ -450,7 +446,7 @@ extension View {
 /// every other popover tip did), so this is SwiftUI's own popover, which a card does carry, with
 /// the tip's `TipView` inside. A tap outside the popover closes the tip, as it does TipKit's own.
 private struct OwnPopoverTipModifier: ViewModifier {
-    let ids: [TipID]
+    let ids: TipSet
     var arrowEdge: Edge
 
     func body(content: Content) -> some View {
@@ -473,10 +469,10 @@ private struct OwnPopoverTipModifier: ViewModifier {
 /// takes back the ones it gave, not the ones it has now; and a screen pushed over it takes them all
 /// back until it shows again.
 private struct TipAnchor: ViewModifier {
-    let ids: [TipID]
+    let ids: TipSet
     let isPresent: Bool
     @State private var isOnScreen = false
-    @State private var anchored: [TipID] = []
+    @State private var anchored = TipSet([])
 
     func body(content: Content) -> some View {
         content
@@ -493,10 +489,10 @@ private struct TipAnchor: ViewModifier {
     }
 
     private func anchor() {
-        let now = isOnScreen && isPresent ? ids : []
+        let now = isOnScreen && isPresent ? ids : TipSet([])
         guard now != anchored else { return }
-        PaintTips.desk.anchor(anchored, present: false)
-        PaintTips.desk.anchor(now, present: true)
+        PaintTips.desk.anchor(anchored.ids, present: false)
+        PaintTips.desk.anchor(now.ids, present: true)
         anchored = now
     }
 }
@@ -504,7 +500,7 @@ private struct TipAnchor: ViewModifier {
 /// A card's tips anchor while it is mostly in view: the grid builds cards beyond the screen's edge
 /// too, and a tip would point off the screen.
 private struct CardTipAnchor: ViewModifier {
-    let ids: [TipID]
+    let ids: TipSet
     @State private var isVisible = false
 
     func body(content: Content) -> some View {
@@ -520,7 +516,7 @@ private struct CardTipAnchor: ViewModifier {
 /// hang one below it (Paul, October 18: a card on the page, as the painting's Zoom, Drag and
 /// Pencil are).
 private struct BarTipModifier: ViewModifier {
-    let ids: [TipID]
+    let ids: TipSet
     var active: Bool
 
     func body(content: Content) -> some View {
@@ -552,23 +548,31 @@ extension View {
     /// Whichever of `ids` has the turn, as a card at the top of this screen: the tips about a
     /// button of its navigation bar (`TipID.liesUnderTheBar`), while `active` (the button is there).
     func barTips(_ ids: TipID..., active: Bool = true) -> some View {
-        modifier(BarTipModifier(ids: ids, active: active))
+        modifier(BarTipModifier(ids: TipSet(ids), active: active))
+    }
+
+    /// Lets `ids`, the tips about buttons of this screen's navigation bar, have the turn while
+    /// `active`, for a screen that lays their card among its own content (`GentleTipView`) instead:
+    /// the gallery, atop its pages, while its button is in the bar and that top is in view.
+    func barTipsInline(_ ids: TipID..., active: Bool = true) -> some View {
+        modifier(TipAnchor(ids: TipSet(ids), isPresent: active))
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
     /// while it is mostly in view.
     func cardTip(_ ids: [TipID], arrowEdge: Edge = .top) -> some View {
-        modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
+        let ids = TipSet(ids)
+        return modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
             .modifier(CardTipAnchor(ids: ids))
     }
 }
 
-/// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf). The caller
-/// shows it only while it is the tip's turn.
+/// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf, and the
+/// gear's and the +'s atop it). The caller shows it only while it is the tip's turn.
 struct GentleTipView: View {
     let id: TipID
 
     var body: some View {
-        TipView(PaintTips.desk.tip(among: [id]), isPresented: nil, arrowEdge: nil)
+        TipView(PaintTips.desk.tip(among: TipSet([id])), isPresented: nil, arrowEdge: nil)
     }
 }
