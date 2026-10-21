@@ -2,7 +2,7 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the making-of's spec (the screen
-# behind Settings' The Making-of ships), none of the Marginarium, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
+# behind Settings' The Making-of ships), none of the Marginarium or Refine's screen, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
 # template caches of demo and test launches, their main-thread watchdog, the feedback upload stub
 # and its `-feedback-upload` launch argument): those types are compiled out of Release by
 # `#if DEBUG`.
@@ -37,6 +37,13 @@ done
 for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
+# Refine is in SideStore and Debug builds only for now: Release leaves out its screen and the
+# gallery's draft row, which continues it (the target's EXCLUDED_SOURCE_FILE_NAMES, every
+# Refine*.swift; its edits' model, RefineEdits.swift, is back in by INCLUDED_SOURCE_FILE_NAMES, for
+# paintings refined before).
+for symbol in RefineView RefineSurfaceView RefineColorsPanel RefineAreaCard RefinePaletteBar DraftRow; do
+  if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
+done
 for file in marginarium.json pet-metrics.json; do
   [[ ! -e "$APP/$file" ]] || fail "the Release app bundles $file"
 done
@@ -48,5 +55,5 @@ if xcrun --find assetutil > /dev/null 2>&1; then
     fail "the Release asset catalog holds Pip's or Colophon's frames"
   fi
 fi
-[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, making-of spec bundled, no Debug-only code, no Marginarium"
+[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, making-of spec bundled, no Debug-only code, no Marginarium, no Refine"
 exit $failed

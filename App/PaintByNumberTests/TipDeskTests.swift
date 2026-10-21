@@ -195,6 +195,23 @@ struct TipDeskTests {
         let f = try fixture()
         defer { f.cleanup() }
         #expect(f.desk.turn == nil)
-        for id in TipID.allCases { #expect(f.desk.tip(among: [id]) == nil, "\(id)") }
+        for id in TipID.allCases { #expect(f.desk.tip(among: TipSet([id])) == nil, "\(id)") }
+    }
+
+    /// The tip modifiers hold a `TipSet` so that SwiftUI can compare them bit for bit and skip their
+    /// bodies when their screen renders again: it must stay plain data, with a bit for every tip.
+    @Test func aTipSetIsPlainDataWithABitForEveryTip() {
+        #expect(_isPOD(TipSet.self))
+        #expect(MemoryLayout<TipSet>.size == MemoryLayout<UInt32>.size)
+        #expect(TipID.allCases.count <= 32)
+        for id in TipID.allCases {
+            let one = TipSet([id])
+            #expect(one.contains(id) && one.ids == [id], "\(id)")
+            #expect(TipID.allCases.filter(one.contains) == [id], "\(id)")
+        }
+        let two = TipSet([.benchFind, .benchTap])
+        #expect(two.ids == [.benchTap, .benchFind])
+        #expect(two == TipSet([.benchTap, .benchFind, .benchTap]))
+        #expect(TipSet([]).ids.isEmpty)
     }
 }

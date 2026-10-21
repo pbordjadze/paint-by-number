@@ -33,7 +33,7 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case drawerWorthALook
 
     /// The tips about a button in a navigation bar, a card with no arrow at the top of its screen
-    /// (`barTips`).
+    /// (`barTips`), or atop the gallery's pages (`barTipsInline`).
     var liesUnderTheBar: Bool {
         switch self {
         case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
@@ -70,4 +70,25 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
         case .drawerWorthALook: .drawer
         }
     }
+}
+
+/// The tips a view can point, as bits. A modifier holding them is plain data, which SwiftUI
+/// compares bit for bit, so its body is skipped when the screen renders again with the same tips.
+/// An array is new at each render and never compared equal: every tip modifier on a screen ran
+/// with each of the screen's renders, 300 to 600 times a second over the painting screen as it
+/// opened on CI (October 19).
+nonisolated struct TipSet: Hashable, Sendable {
+    private var bits: UInt32 = 0
+
+    init(_ ids: some Sequence<TipID>) {
+        for id in ids { bits |= Self.bit[id, default: 0] }
+    }
+
+    func contains(_ id: TipID) -> Bool { bits & Self.bit[id, default: 0] != 0 }
+
+    /// Its tips, in `TipID`'s order.
+    var ids: [TipID] { TipID.allCases.filter(contains) }
+
+    private static let bit = Dictionary(
+        uniqueKeysWithValues: TipID.allCases.enumerated().map { ($1, UInt32(1) << UInt32($0)) })
 }

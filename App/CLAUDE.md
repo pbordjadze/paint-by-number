@@ -55,6 +55,9 @@ synchronized folder would bundle it into the app.
   `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
   donations are capped per event and launch (`PaintTips.donate`).
+- The modifiers that point a tip (`.gentleTip`, `.barTips`, `.cardTip`'s popover) hold their ids
+  as a `TipSet` (bits), never an array: they are plain data, which SwiftUI compares bit for bit,
+  skipping their bodies when their screen renders again unchanged.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
@@ -360,9 +363,12 @@ where they live.
   close button, which closes just that tip for good.
 - **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
   (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `TipDesk.pageTip`,
-  a card on the page, for Zoom, Drag and Pencil; `.barTips(…)`, a card with no arrow at the top of
-  the screen, under the bar, for the three about its buttons, the gear, + and Refine (a popover
-  from the button covered it on iOS 26; Paul, October 18: a card, as on the page), and
+  a card on the page, for Zoom, Drag and Pencil; a card with no arrow for the three about the
+  bar's buttons (a popover from the button covered it on iOS 26; Paul, October 18: a card, as on
+  the page): Refine's at the top of the preview, under the bar (`.barTips(…)`), the gear's and
+  the +'s atop the gallery's pages, which make room (`GentleTipView`, anchored by
+  `.barTipsInline(…)` while that top is in view: laid over the pages, the card hid the first
+  section's title); and
   `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
   tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
   these, the bar's and the page's have no
@@ -392,7 +398,7 @@ where they live.
   scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
   `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
   tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (the tip about a navigation
-  bar button, under the bar), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  bar button, atop the pages), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
   is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
   them; `GentleTipsUITests` and `PaintingTipsTests` do. Any scenario's name with `--tip-<id>` after it
   (`paint-dark--tip-benchZen`) is that scenario with the tip forced onto its view once its screen
@@ -577,6 +583,15 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
+- Refine is in SideStore and Debug builds only for now (`#if UNRELEASED`; Paul, October 21: "Let’s
+  just take refine out of the release for now—there will be a good one soon"): the release has no
+  Refine button or tip on the preview, no Refine note over it and no draft row (`Drafts` reads
+  no draft there, leaving the one on disk for a build with Refine), and Release's
+  `EXCLUDED_SOURCE_FILE_NAMES` leaves out every `Refine*.swift` and `DraftRow.swift`, which
+  `ci/check_release.sh` checks: a new file of Refine's screen named so is left out too, and
+  anything outside them that names its types needs `#if UNRELEASED`. `RefineEdits.swift` (the
+  edits' model, back in by `INCLUDED_SOURCE_FILE_NAMES`) and `CreateModel`'s refining stay, so
+  paintings refined before regenerate as they were.
 - Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
   which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
   the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
@@ -654,8 +669,8 @@ Conventions).
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
     each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
-    `create-refine-select` (with `-dark`) selects it. The release keeps the one row of buttons
-    described above.
+    `create-refine-select` (with `-dark`) selects it. Without `UNRELEASED` the screen keeps the
+    one row of buttons described above (the release has no Refine at all).
   - **The Tool Guide** (`RefineGuide.swift`, with the Toolbox in `#if UNRELEASED`; Paul, October 21:
     "each tool with a scenario that you can play with and reset easily", built for painters who
     will use Refine seriously, with tweaks, new tools and retired ones to come). Refine's toolbar
