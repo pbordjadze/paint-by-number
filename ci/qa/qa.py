@@ -7,8 +7,8 @@ On the runner:
   qa.py probe <out> --udid <udid>
       Starts `maestro mcp`, lists its tools and calls list_devices, take_screenshot and
       inspect_screen on the simulator, writing what came back to <out> (the screenshot as an
-      agent gets it). Fails unless the device is listed, an image came back and the screen's
-      elements did: the check that runs before any model is used.
+      agent gets it). Fails unless the device is listed, a real screenshot came back and the
+      screen's elements did, in one of two attempts: the check that runs before any model is used.
   qa.py relay <out> --udid <udid> --run <id> --branch <b> --publish <dir> --minutes <m> --log <file>
       Runs the calls an agent elsewhere commits under cmd/<id>/ on branch <b> (`send`), in order,
       writes each result to <out> and publishes <dir> after each to refs/qa-runs/<id>. Ends
@@ -194,35 +194,44 @@ def summary_line(entry):
 
 
 def probe(args):
+    """Up to two attempts: Maestro's driver sometimes starts broken on a busy runner."""
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    try:
-        maestro = Maestro(out / "maestro.log", args.udid)
-    except Exception as error:
-        (out / "summary.md").write_text(f"# Probe\n\nmaestro mcp didn't start: {error}\n")
-        print(f"maestro mcp didn't start: {error}", file=sys.stderr)
-        return 1
-    (out / "server.json").write_text(json.dumps(maestro.server, indent=1))
-    (out / "tools.json").write_text(json.dumps(maestro.tools, indent=1))
-    info = maestro.server.get("serverInfo", {})
-    lines = [f"server: {info.get('name')} {info.get('version')}, protocol {maestro.server.get('protocolVersion')}",
-             "tools: " + ", ".join(t["name"] for t in maestro.tools)]
-    entries = {}
-    for n, tool in enumerate(("list_devices", "take_screenshot", "inspect_screen"), 1):
-        entries[tool] = timed_call(maestro, out, f"{n:03}-{tool}", tool, {})
-        lines.append(summary_line(entries[tool]))
-    maestro.close()
-    checks = {
-        "the simulator is listed": args.udid.lower() in " ".join(entries["list_devices"]["text"]).lower(),
-        "a screenshot came back as an image": not entries["take_screenshot"]["isError"] and bool(entries["take_screenshot"]["images"]),
-        "the screen's elements came back": not entries["inspect_screen"]["isError"] and any(t.strip() for t in entries["inspect_screen"]["text"]),
-    }
-    lines += [f"{'PASS' if ok else 'FAIL'}: {name}" for name, ok in checks.items()]
-    lines.append(f"{round(time.monotonic() - started)} s")
+    lines, passed = [], False
+    for attempt in (1, 2):
+        try:
+            maestro = Maestro(out / "maestro.log", args.udid)
+        except Exception as error:
+            lines.append(f"attempt {attempt}: maestro mcp didn't start: {error}")
+            continue
+        (out / "server.json").write_text(json.dumps(maestro.server, indent=1))
+        (out / "tools.json").write_text(json.dumps(maestro.tools, indent=1))
+        info = maestro.server.get("serverInfo", {})
+        lines += [f"attempt {attempt}: server {info.get('name')} {info.get('version')}, protocol "
+                  f"{maestro.server.get('protocolVersion')}; tools: " + ", ".join(t["name"] for t in maestro.tools)]
+        entries = {}
+        for n, tool in enumerate(("list_devices", "take_screenshot", "inspect_screen"), 1):
+            entries[tool] = timed_call(maestro, out, f"{attempt}-{n}-{tool}", tool, {})
+            lines.append(summary_line(entries[tool]))
+        maestro.close()
+        shot = entries["take_screenshot"]
+        checks = {
+            "the simulator is listed": args.udid.lower() in " ".join(entries["list_devices"]["text"]).lower(),
+            # A 1x1 image is what a driver that never reached the screen returns.
+            "a screenshot came back as an image": not shot["isError"] and any(
+                (i["width"] or 0) >= 100 and (i["height"] or 0) >= 100 for i in shot["images"]),
+            "the screen's elements came back": not entries["inspect_screen"]["isError"]
+                and any(t.strip() for t in entries["inspect_screen"]["text"]),
+        }
+        lines += [f"{'PASS' if ok else 'FAIL'}: {name}" for name, ok in checks.items()]
+        if all(checks.values()):
+            passed = True
+            break
+    lines.append(f"{'passed' if passed else 'failed'} in {round(time.monotonic() - started)} s")
     (out / "summary.md").write_text("# Probe\n\n" + "\n".join(f"- {line}" for line in lines) + "\n")
     print("\n".join(lines))
-    return 0 if all(checks.values()) else 1
+    return 0 if passed else 1
 
 
 def git(*args, check=True, auth=False, cwd=None, data=None):

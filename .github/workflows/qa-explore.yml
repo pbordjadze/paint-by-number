@@ -169,6 +169,19 @@ jobs:
             > "$RUNNER_TEMP/qa-video/record.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/video.pid"
           xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          # The first launch prepares two starter paintings, minutes of CPU on a 3-core runner, and
+          # Maestro's driver started beside that came up broken (run 39551789796): wait, up to 5
+          # minutes, until the app has been quiet for 15 s.
+          quiet=0
+          for _ in $(seq 1 60); do
+            pid=$(pgrep -x PaintByNumber | head -1)
+            if [[ -z "$pid" ]]; then echo "the app isn't running"; break; fi
+            cpu=$(ps -o %cpu= -p "$pid" | tr -d ' ' | cut -d. -f1)
+            if [[ -n "$cpu" && "$cpu" -lt 15 ]]; then quiet=$((quiet + 1)); else quiet=0; fi
+            if [[ $quiet -ge 3 ]]; then break; fi
+            sleep 5
+          done
+          echo "the app's CPU: ${cpu:-?}% after $SECONDS s"
       - name: Probe Maestro's MCP server
         id: probe
         run: python3 -I "$TOOLS/qa.py" probe out/probe --udid "$UDID"
@@ -260,6 +273,8 @@ jobs:
           for _ in $(seq 1 30); do pgrep -f "simctl io .* recordVideo" > /dev/null || break; sleep 0.5; done
           # CI's own collection: crash reports, the app's log of the run, the build's errors.
           [[ -n "${UDID:-}" && -n "${TOOLS:-}" ]] && "$TOOLS/collect.sh" "$UDID"
+          # Maestro's own logs (its driver's too), for automation failures.
+          [[ -d ~/.maestro/tests ]] && mkdir -p out/maestro && cp -R ~/.maestro/tests/ out/maestro/
           if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
             mkdir -p out/session && cp -R "$WORK/" out/session/
             if [[ -s "$WORK/transcript.jsonl" ]]; then python3 -I "$TOOLS/qa.py" transcript "$WORK/transcript.jsonl" out/agent; fi
