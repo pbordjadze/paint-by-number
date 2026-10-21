@@ -721,10 +721,12 @@ struct RefineView: View {
             trace = [start, point]
             // Bend Line's line shows where it goes until the template has it; a cell edge has no ink.
             let shown = tool == .bendLine ? bend.map { (normalized($0.original), normalized($0.moved)) } : nil
-            // What the drag holds, by the edit's own rule: one that holds nothing says where to start.
+            // What the drag holds, by the edit's own rule, on the template on screen: one that holds
+            // nothing says where to start, unless edits are still on their way (it may hold what
+            // they move: the queue lays it on the template they make, and says if it can't).
             let holds = tool == .moveNumber ? heldNumber != nil : bend != nil
             trace = nil
-            guard holds else {
+            guard holds || !submitted.isEmpty else {
                 if screen.onScreenLength(point - start) >= 4 {
                     model.tell(tool == .moveNumber ? .grabNumber : tool == .bendLine ? .grabLine : .grabEdge)
                 }
@@ -1114,6 +1116,8 @@ struct RefineView: View {
                 if height > toolsHeight { toolsHeight = height }
             }
             .frame(minHeight: toolsHeight, alignment: .bottom)
+            // Another width (a rotation, a resized window) lays the tools out anew: measured again.
+            .onChange(of: canvasSize.width) { toolsHeight = 0 }
     }
 
     /// What the finger does, along the bottom: the pens, the erasers and what shows beneath, and

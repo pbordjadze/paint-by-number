@@ -757,21 +757,35 @@ struct ContentSwipeBackOff: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: Controller, context: Context) {}
 
     final class Controller: UIViewController {
-        private weak var disabled: UIGestureRecognizer?
+        /// The screens holding each recognizer off, and whether it was on before the first did:
+        /// a guide page replacing another may appear before the one it replaces goes.
+        private static var holds: [ObjectIdentifier: (count: Int, wasEnabled: Bool)] = [:]
+        private weak var held: UIGestureRecognizer?
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            guard let recognizer = navigationController?.interactiveContentPopGestureRecognizer,
-                  recognizer.isEnabled else { return }
+            guard held == nil, let recognizer = navigationController?.interactiveContentPopGestureRecognizer else { return }
+            let key = ObjectIdentifier(recognizer)
+            let hold = Self.holds[key] ?? (0, recognizer.isEnabled)
+            Self.holds[key] = (hold.count + 1, hold.wasEnabled)
             recognizer.isEnabled = false
-            disabled = recognizer
+            held = recognizer
         }
 
-        // On again as the preview goes; an edge swipe called off halfway appears it again.
+        // On again as the last screen holding it goes; an edge swipe called off halfway appears
+        // it again.
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
-            disabled?.isEnabled = true
-            disabled = nil
+            guard let recognizer = held else { return }
+            held = nil
+            let key = ObjectIdentifier(recognizer)
+            guard let hold = Self.holds[key] else { return }
+            if hold.count > 1 {
+                Self.holds[key] = (hold.count - 1, hold.wasEnabled)
+            } else {
+                Self.holds[key] = nil
+                recognizer.isEnabled = hold.wasEnabled
+            }
         }
     }
 }

@@ -629,9 +629,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
             onDraw?(.moved, normalized(location))
         case .ended:
             holdPicture(false)
+            touchDown = nil
             onDraw?(.ended, normalized(location))
         default:
             holdPicture(false)
+            touchDown = nil
             onDraw?(.cancelled, normalized(location))
         }
     }
@@ -676,7 +678,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// then).
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if touch.type == .pencil { drawWithPencil() }
-        if gestureRecognizer === brush { touchDown = touch.location(in: content) }
+        // Only a touch that can start the stroke: the first, of a kind the brush takes.
+        if gestureRecognizer === brush, brush.numberOfTouches == 0,
+           brush.allowedTouchTypes.contains(NSNumber(value: touch.type.rawValue)) {
+            touchDown = touch.location(in: content)
+        }
         return true
     }
 }
