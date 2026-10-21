@@ -89,6 +89,19 @@ struct RefineGesturesTests {
         #expect(RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) == .draw(points: [SIMD2(80, 20), SIMD2(120, 20)]))
     }
 
+    /// A polygon and a star are drawn as closed lines across the drag's box; too small, none.
+    @Test func polygonsAndStarsAreClosedLines() throws {
+        for shape in [RefineShape.polygon, .star] {
+            let edit = try #require(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
+            guard case .draw(let ring, true, nil) = edit else { Issue.record("\(edit)"); return }
+            #expect(ring.count == (shape == .polygon ? 6 : 10) && ring.first != ring.last)
+            #expect(abs(ring.map(\.x).min()! - 90) < 1e-3 && abs(ring.map(\.y).max()! - 28) < 1e-3)
+            let laid = try TemplateEditor.apply(edit, to: Self.scene)
+            #expect(laid.outcome.declined == nil && laid.outcome.regionsSplit == 1)
+            #expect(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(95, 30), on: Self.screen, snapping: nil) == nil)
+        }
+    }
+
     /// The eraser reaches a thirtieth of the view's short side, between 10 and 20 points.
     @Test func theEraserReachesItsSizeOnScreen() throws {
         #expect(abs(Self.screen.eraserRadius - 20 / 960) < 1e-6)
@@ -105,6 +118,30 @@ struct RefineGesturesTests {
         guard case .eraseLine(let at, let reach) = erased.edit else { Issue.record("\(erased.edit)"); return }
         #expect(at == SIMD2(60, 101) && abs(reach - 3.2) < 1e-4 && erased.chain.count >= 2)
         #expect(RefineGestures.lineEraser(at: Self.p(100, 30), on: Self.screen, chains: chains) == nil)
+    }
+
+    /// A drag of Bend Line or Move Edge moves the line within a finger's reach (16 points, 3.2
+    /// units) of where it started to where it ended; a drag under a point on screen is none.
+    @Test func aReshapeDragMovesTheLineUnderIt() throws {
+        let edit = try #require(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104, 62), on: Self.screen))
+        guard case .reshape(let from, let to, let reach) = edit else { Issue.record("\(edit)"); return }
+        #expect(abs(from.y - 74) < 1e-3 && abs(to.y - 62) < 1e-3 && abs(reach - 3.2) < 1e-4)
+        let laid = try TemplateEditor.apply(edit, to: Self.scene)
+        #expect(laid.outcome.reshaped == 1 && laid.outcome.declined == nil)
+        #expect(RefineGestures.reshape(from: Self.p(104, 74), to: Self.p(104.1, 74), on: Self.screen) == nil)
+    }
+
+    /// A drag of Move Number moves the number under its start to where it ended, in canvas units.
+    @Test func aMoveNumberDragMovesTheNumber() throws {
+        let sky = try #require(Self.scene.region(at: SIMD2(104, 30)))
+        let label = try #require(Self.scene.labels(ofRegion: sky).first)
+        let start = SIMD2(label.position.x / 192, label.position.y / 144)
+        let edit = try #require(RefineGestures.moveLabel(from: start, to: Self.p(30, 30), on: Self.screen))
+        guard case .moveLabel(let from, let to) = edit else { Issue.record("\(edit)"); return }
+        #expect(simdLength(from - label.position) < 1e-3 && simdLength(to - SIMD2(30, 30)) < 1e-3)
+        let laid = try TemplateEditor.apply(edit, to: Self.scene)
+        #expect(laid.outcome.labelsMoved == 1 && laid.outcome.declined == nil)
+        #expect(RefineGestures.moveLabel(from: start, to: start + SIMD2(0.0001, 0), on: Self.screen) == nil)
     }
 
     /// The lines a pen may meet follow the edits sent: a line drawn is one, an erased stretch is

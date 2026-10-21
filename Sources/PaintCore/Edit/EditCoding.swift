@@ -10,6 +10,8 @@ import Foundation
 ///     {"kind": "cellEdge",  "points": [[x, y], ...], "closed": false}
 ///     {"kind": "merge",     "points": [[x, y], ...]}
 ///     {"kind": "brush",     "points": [[x, y], ...], "radius": 6, "color": [L, a, b]}
+///     {"kind": "reshape",   "points": [from, to],    "reach": 8}
+///     {"kind": "moveLabel", "points": [from, to]}
 ///     {"kind": "erase",     "points": [[x, y], ...], "radius": 4.5}
 ///     {"kind": "eraseLine", "points": [[x, y]],      "reach": 8}
 ///     {"kind": "fill",      "points": [[x, y]],      "color": [L, a, b]}
@@ -33,7 +35,9 @@ import Foundation
 /// missing `lightness` is none, a missing `family` false. An older reader leaves a `cellEdge` out
 /// of the list too, and the cells it divided stay one; a `merge` too, and the cells it joined stay
 /// apart, and a `brush`, whose paint the painting then lacks. A brush needs its `radius` and
-/// `color`.
+/// `color`. A `reshape` needs its two points, where the line was grabbed and where it went; an
+/// older reader leaves it out, and the line stays where it was; a `moveLabel` too (its two points,
+/// the number's place and where it went), and the number stays where it was.
 extension TemplateEditor.Edit: Codable {
     private enum CodingKeys: String, CodingKey {
         case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family
@@ -88,6 +92,17 @@ extension TemplateEditor.Edit: Codable {
             self = .merge(points: points)
         case "brush":
             self = .brush(path: points, radius: try c.decode(Float.self, forKey: .radius), color: try lab(.color))
+        case "reshape":
+            guard points.count == 2 else {
+                throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a reshape is [from, to]")
+            }
+            self = .reshape(
+                from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
+        case "moveLabel":
+            guard points.count == 2 else {
+                throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a moveLabel is [from, to]")
+            }
+            self = .moveLabel(from: points[0], to: points[1])
         case "erase":
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
         case "eraseLine":
@@ -137,6 +152,13 @@ extension TemplateEditor.Edit: Codable {
             try c.encode(path, forKey: .points)
             try c.encode(radius, forKey: .radius)
             try c.encode([color.x, color.y, color.z], forKey: .color)
+        case .reshape(let from, let to, let reach):
+            try c.encode("reshape", forKey: .kind)
+            try c.encode([from, to], forKey: .points)
+            try c.encode(reach, forKey: .reach)
+        case .moveLabel(let from, let to):
+            try c.encode("moveLabel", forKey: .kind)
+            try c.encode([from, to], forKey: .points)
         case .erase(let path, let radius):
             try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)

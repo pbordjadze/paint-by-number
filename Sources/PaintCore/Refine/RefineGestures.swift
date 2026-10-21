@@ -4,13 +4,19 @@ import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it 
 import Foundation
 
 /// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
-/// to where it ends, a rectangle or an oval across it, and a curve: a drag for its ends, then a
-/// second drag bends it through the finger (a tap leaves it straight).
+/// to where it ends, a rectangle, an oval, a hexagon or a five-pointed star across it, and a
+/// curve: a drag for its ends, then a second drag bends it through the finger (a tap leaves it
+/// straight). New shapes go last: the app lists them in this order.
 public enum RefineShape: CaseIterable, Hashable, Sendable {
-    case line, rectangle, oval, curve
+    case line, rectangle, oval, curve, polygon, star
 
     /// The figure ends where it starts.
-    public var isClosed: Bool { self == .rectangle || self == .oval }
+    public var isClosed: Bool {
+        switch self {
+        case .rectangle, .oval, .polygon, .star: true
+        case .line, .curve: false
+        }
+    }
 }
 
 /// The fills a tap of the Fill tool takes out.
@@ -175,6 +181,25 @@ public enum RefineGestures {
         return .brush(path: path, radius: screen.brushRadius(size: size) * Float(max(canvas.width, canvas.height)), color: color)
     }
 
+    /// A drag of Bend Line or Move Edge as an edit: the line within a finger's reach (`fingerReach`
+    /// on screen) of where it started, moved so its point there goes where the finger lifts.
+    /// Nil for a drag under a point on screen.
+    public static func reshape(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
+        let size = screen.canvas
+        guard screen.picture.width > 0, size.width > 0, size.height > 0, screen.onScreenLength(b - a) >= 1 else { return nil }
+        let reach = fingerReach * size.width / screen.picture.width
+        return .reshape(from: screen.canvasPoint(a), to: screen.canvasPoint(b), reach: Float(reach))
+    }
+
+    /// A drag of Move Number as an edit: the number under where it started (within its radius and
+    /// `TemplateEditor.tapReach`) moved to where it ended, canvas units. Nil for a drag under a
+    /// point on screen.
+    public static func moveLabel(from a: SIMD2<Float>, to b: SIMD2<Float>, on screen: RefineScreen) -> TemplateEditor.Edit? {
+        guard screen.picture.width > 0, screen.canvas.width > 0, screen.canvas.height > 0, screen.onScreenLength(b - a) >= 1
+        else { return nil }
+        return .moveLabel(from: screen.canvasPoint(a), to: screen.canvasPoint(b))
+    }
+
     /// The shape a drag from `a` to `b` draws (points on screen), as it shows while the finger
     /// moves; for a curve whose ends are down (`curve`), the curve bent through `b`. Nil while it
     /// is too small to draw.
@@ -199,6 +224,9 @@ public enum RefineGestures {
         case .oval:
             guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
             return ShapePath.oval(from: p, to: q, spacing: 2)
+        case .polygon, .star:
+            guard abs(q.x - p.x) >= shortest, abs(q.y - p.y) >= shortest else { return nil }
+            return shape == .polygon ? ShapePath.polygon(from: p, to: q) : ShapePath.star(from: p, to: q)
         }
     }
 
@@ -261,8 +289,8 @@ public enum RefineGestures {
                     let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * canvas.width, y: CGFloat($0.y) * canvas.height) }
                     lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
                 }
-            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .look, .repaint:
-                // The lines a merge takes out go when the template shows it.
+            case .fill, .paintArea, .split, .cellEdge, .merge, .brush, .reshape, .moveLabel, .look, .repaint:
+                // The lines a merge takes out, or a reshape moves, go when the template shows it.
                 break
             }
         }

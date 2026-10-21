@@ -470,6 +470,58 @@ any other, so the Pen's first lines cut it into pieces of the photo's colors.
   30-point stroke of radius 18 across the macaw's chest, the blue and the green, 61 ms (16 pieces
   cut, 6 joined); 30 points across the whole canvas, 250 ms at radius 14.4 (the app's brush on a
   13" iPad), 290 ms at 40 and 370 ms at 4. A merge's drag, about 35 ms.
+- **Reshape** (`reshape`, Refine's Bend Line and Move Edge). One edit behind two tools: drag an
+  inked line to bend it, or a cell's boundary, inked or not, to reshape the cell, its neighbour
+  giving or taking the difference. The line nearest the drag's start within a finger's reach (an
+  edge, not the canvas's frame, or a drawn stroke) is taken with the chain it continues into:
+  through every vertex where it and just one other edge alike (both inked, or both undrawn) end,
+  from junction to junction, as the Smart Eraser finds its line (`EditWork.reshapePlan`). Its
+  point nearest the drag's start goes where the finger lifts, and every other point by the drag
+  times a weight along the chain's length: 1 at the grabbed point, 0 a spread away, a smoothstep
+  between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on every
+  device). The spread is three times the drag, at least 24 units (`reshapeSpread`), on each side
+  of the grabbed point, and at most to the chain's end there (a loop's far point, half its length
+  round); where it ends the chain gets a vertex, and beyond it keeps its points exactly. So the
+  bend is local, and the chain's ends stay on their junctions and the drawing connected; a
+  junction grabbed is held, so nothing moves. A stroke's end that touches no line is free: within
+  the spread, the stretch from the grabbed point to it moves whole (a short stroke free at both
+  ends moves as it is); beyond it, the end stays. Strokes ending on the chain are carried, their
+  end moving with the point of the chain they meet. A step whose ends move at least half a unit
+  apart is bent: points are added along it so that, moved, they lie at most 3 units apart (the
+  smoothstep is at its steepest 1.5 times its mean slope, which bounds a moved step's length), so
+  a big bend is a smooth curve. The chain keeps its layer and weight; the regions on its sides
+  keep their paints, their fills are made again, their numbers stay while they keep the room
+  (`labelPlan`, off the strokes it moved), and the pixels between the old outline and the new go
+  to the region whose outline now holds them (`reclaim`). Declined when the moved chain would
+  cross itself or another line or touch one anywhere but its held ends and the strokes it
+  carries, leave the canvas, turn an area inside out, carry an island or a stroke into the region
+  across, or leave an area no room for its number. On the parrots book, laying a bend with the
+  check of the result takes about 25 ms; the preview the app draws while the finger moves
+  (`TemplateEditor.reshapedChain`, the same moved points without laying them) 0.4 ms. With the
+  falloff spanning the whole chain, four of five drags of 25 to 45 units on that book's outlines
+  were declined, a long outline moving along most of its length into the details beside it near
+  its far ends. Bending within a spread of the grab (max(3 × the drag, 24 units) a side), three
+  of the five were made; the two declined would have met a line beside them, which a bend that
+  far must.
+- **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
+  cell. The number nearest the drag's start, within its radius and `TemplateEditor.tapReach`,
+  goes where the finger lifts when that is inside its own region (not on its outline) and a
+  number of its digits fits there: the room there, measured to the outline and to the strokes
+  in the region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor
+  or, in a detail area, a detail area's. Its radius is that room, never more than the region's
+  roomiest spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged
+  into open space doesn't grow huge. The region's other numbers, its outline, fill and pixels
+  stay as they were; nothing is declined but the move itself. A later edit that plans the
+  region's numbers again (a cut, a join, a repaint, a reshape of its outline) keeps the number
+  where it was put while that spot keeps most of the room, as it keeps any number (`labelPlan`),
+  and may move it otherwise.
+- **Shapes** (`RefineShape`, `ShapePath`; drawn lines, laid as the Pen's are). A drag draws a
+  straight line, a rectangle across it, an oval filling the box it spans, or a curve (a second
+  drag bends it); a hexagon and a five-pointed star fill the box too: a regular hexagon, flat on
+  top and bottom with its side corners on the box's sides, and a star with a point up and its
+  inner corners 0.4 of the way out, each stretched to the box as the oval is a circle stretched
+  to it. The closed ones are sent as closed lines, their start once; new shapes go last in
+  `RefineShape`, whose order the app lists them in.
 - **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
   over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
   or without its family (the paints of about its hue, full within 30° and none past 60°, turning

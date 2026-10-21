@@ -158,4 +158,31 @@ struct RefineGeometryTests {
         #expect(curve.contains { PenPath.distance($0, bend) <= 1 })
         #expect(zip(curve, curve.dropFirst()).allSatisfy { PenPath.distance($0, $1) <= 2 })
     }
+
+
+    /// A polygon is a regular hexagon stretched to the box the drag spans, flat sides on top and
+    /// bottom, its corners on the box's sides; a star five points, the top one up, its inner
+    /// corners 0.4 of the way out, spanning the box. Both close.
+    @Test func polygonsAndStarsSpanTheDrag() {
+        let a = CGPoint(x: 10, y: 20), b = CGPoint(x: 110, y: 70)
+        let hexagon = ShapePath.polygon(from: a, to: b)
+        #expect(hexagon.count == 7 && hexagon.first == hexagon.last)
+        let xs = hexagon.map(\.x), ys = hexagon.map(\.y)
+        #expect(abs(xs.min()! - 10) < 1e-9 && abs(xs.max()! - 110) < 1e-9 && abs(ys.min()! - 20) < 1e-9 && abs(ys.max()! - 70) < 1e-9)
+        #expect(hexagon.contains { PenPath.distance($0, CGPoint(x: 10, y: 45)) < 1e-9 })
+        #expect(hexagon.contains { PenPath.distance($0, CGPoint(x: 110, y: 45)) < 1e-9 })
+        #expect(hexagon.filter { abs($0.y - 20) < 1e-9 }.count == 2, "a flat top")
+
+        let star = ShapePath.star(from: a, to: b)
+        #expect(star.count == 11 && star.first == star.last)
+        let sx = star.map(\.x), sy = star.map(\.y)
+        #expect(abs(sx.min()! - 10) < 1e-9 && abs(sx.max()! - 110) < 1e-9 && abs(sy.min()! - 20) < 1e-9 && abs(sy.max()! - 70) < 1e-9)
+        #expect(abs(star[0].x - 60) < 1e-9 && abs(star[0].y - 20) < 1e-9, "the top point first")
+        // In a box shaped like the star itself, its points are 1 from its centre and its inner corners 0.4.
+        let unit = ShapePath.star(from: CGPoint(x: -sin(0.4 * .pi), y: -1), to: CGPoint(x: sin(0.4 * .pi), y: cos(0.2 * .pi)))
+        for (k, p) in unit.dropLast().enumerated() {
+            #expect(abs(hypot(p.x, p.y) - (k % 2 == 0 ? 1 : 0.4)) < 1e-9, "\(k): \(p)")
+        }
+        #expect(RefineShape.allCases.suffix(2) == [.polygon, .star] && RefineShape.polygon.isClosed && RefineShape.star.isClosed)
+    }
 }

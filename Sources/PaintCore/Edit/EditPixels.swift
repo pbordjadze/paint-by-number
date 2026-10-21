@@ -74,6 +74,33 @@ extension EditWork {
         }
     }
 
+    /// After a reshape moved the outline between `regions` (`reshape`): their pixels within `box`
+    /// (lattice points, the old outline's and the new one's) go to the one of them whose outline
+    /// now holds their centre, a pixel none holds keeping its region. A region left with no
+    /// pixel owns the one its number sits on, as a cut piece does.
+    mutating func reclaim(_ regions: [Int], within box: (lo: LatticePoint, hi: LatticePoint)) {
+        let w = t.width, h = t.height
+        let x0 = max(Int(Lattice.floorDiv(box.lo.x, Lattice.unit)) - 1, 0), x1 = min(Int(Lattice.floorDiv(box.hi.x, Lattice.unit)) + 1, w - 1)
+        let y0 = max(Int(Lattice.floorDiv(box.lo.y, Lattice.unit)) - 1, 0), y1 = min(Int(Lattice.floorDiv(box.hi.y, Lattice.unit)) + 1, h - 1)
+        guard x0 <= x1, y0 <= y1 else { return }
+        let bw = x1 - x0 + 1, bh = y1 - y0 + 1
+        var owner = [Int](repeating: -1, count: bw * bh)
+        for (k, r) in regions.enumerated() {
+            fillCentres(of: polygons(of: r), x0: x0, y0: y0, width: bw, height: bh) { owner[$0] = k }
+        }
+        let ids = regions.map { UInt32($0) }
+        for y in 0..<bh {
+            for x in 0..<bw where owner[y * bw + x] >= 0 && ids.contains(t.regionMap[x0 + x, y0 + y]) {
+                t.regionMap[x0 + x, y0 + y] = ids[owner[y * bw + x]]
+            }
+        }
+        for r in regions where !t.regionMap.storage.contains(UInt32(r)) {
+            guard let pole = labels[r]?.first?.position else { continue }
+            let px = min(max(Int(pole.x.rounded(.down)), 0), w - 1), py = min(max(Int(pole.y.rounded(.down)), 0), h - 1)
+            t.regionMap[px, py] = UInt32(r)
+        }
+    }
+
     /// Calls `body` with the index (in a `width` × `height` box at `x0`, `y0`) of each pixel
     /// whose centre lies inside `rings` (even-odd). The crossing of an outline with a row of
     /// centres is computed from its end points in a fixed order, so two pieces sharing an outline
