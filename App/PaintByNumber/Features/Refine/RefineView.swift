@@ -1452,19 +1452,26 @@ extension RefineView {
             .frame(maxWidth: 420)
             .disabled(!model.hasLineArtInput)
             .accessibilityIdentifier("refine-groups")
-            ScrollView(.horizontal) {
-                GlassEffectContainer(spacing: 10) {
-                    HStack(spacing: 8) {
-                        ForEach(group.tools, id: \.self) { kind in
-                            studioButton(kind)
-                                .disabled(!model.hasLineArtInput)
-                        }
-                    }
-                    .padding(.horizontal, 2)
+            // Centred where the row fits (a group holds at most five), scrolling where it doesn't
+            // (larger text).
+            ViewThatFits(in: .horizontal) {
+                groupRow
+                ScrollView(.horizontal) { groupRow }
+                    .scrollIndicators(.hidden)
+            }
+        }
+    }
+
+    /// The group's tools, each a round button.
+    private var groupRow: some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 8) {
+                ForEach(group.tools, id: \.self) { kind in
+                    studioButton(kind)
+                        .disabled(!model.hasLineArtInput)
                 }
             }
-            .scrollIndicators(.hidden)
-            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 2)
         }
     }
 
