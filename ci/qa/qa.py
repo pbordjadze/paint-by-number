@@ -28,7 +28,8 @@ In a clone anywhere (a Claude Code cloud session has no Mac):
       to the relay branch with [skip ci], so no workflow runs on it; waits for the runner's
       result in refs/qa-runs/<run-id>, extracts it to --out (default qa-relay-<run-id>) and prints
       the text results and the images' paths. The first result (relay/hello.json, with a
-      screenshot) is waiting before any call: `send <run-id> '[]'` fetches it.
+      screenshot) is waiting before any call: `send <run-id>` fetches it; `--result <n>` fetches
+      call n's result again (after a --wait ran out) without sending anything.
 
 A call is one of Maestro's local tools (list_devices, take_screenshot, inspect_screen, run,
 cheat_sheet; device_id is filled in), `_log` (the app log's last `lines`, default 60) or `_end`.
@@ -174,7 +175,8 @@ def timed_call(maestro, out, stem, tool, arguments, app_log=None):
     try:
         if tool == "_log":
             lines = Path(app_log).read_text(errors="replace").splitlines() if app_log else []
-            result = {"content": [{"type": "text", "text": "\n".join(lines[-int(arguments.get("lines", 60)):])}]}
+            count = max(1, int((arguments or {}).get("lines", 60)))
+            result = {"content": [{"type": "text", "text": "\n".join(lines[-count:])}]}
         elif tool not in LOCAL_TOOLS:
             result = {"isError": True, "content": [{"type": "text", "text": f"refused: {tool} is not a local tool"}]}
         else:
@@ -271,14 +273,19 @@ def relay(args):
     idle_until = time.monotonic() + IDLE_MINUTES * 60
     branch_ref = f"refs/heads/{args.branch}"
     while not ended and time.monotonic() < min(deadline, idle_until):
-        tip = git("ls-remote", "origin", branch_ref, check=False, auth=True).split()
-        if not tip or tip[0] == seen:
+        try:
+            tip = git("ls-remote", "origin", branch_ref, auth=True).split()
+            if not tip or tip[0] == seen:
+                time.sleep(POLL)
+                continue
+            git("fetch", "-q", "origin", f"+{branch_ref}:refs/qa-relay/cmd", auth=True)
+            seen = tip[0]
+        except RuntimeError as error:  # GitHub having a bad moment: poll again
+            print(f"relay: {error}", flush=True)
             time.sleep(POLL)
             continue
-        seen = tip[0]
-        git("fetch", "-q", "origin", f"+{branch_ref}:refs/qa-relay/cmd", auth=True)
         names = git("ls-tree", "--name-only", f"refs/qa-relay/cmd:cmd/{args.run}", check=False).split()
-        for name in sorted(names):
+        for name in sorted(n for n in names if n.split(".")[0].isdigit()):
             n = int(name.split(".")[0])
             if n <= done:
                 continue
@@ -288,16 +295,23 @@ def relay(args):
             except ValueError as error:
                 calls = [{"tool": "_invalid", "arguments": {"error": str(error)}}]
             results = []
-            for k, call in enumerate(calls, 1):
-                if call.get("tool") == "_end":
-                    ended = True
+            for k, call in enumerate(calls if isinstance(calls, list) else [calls], 1):
+                if not isinstance(call, dict):
+                    call = {"tool": "_invalid", "arguments": {"call": call}}
+                if call.get("tool") == "_end" or time.monotonic() >= deadline:
+                    ended = call.get("tool") == "_end"
                     break
                 entry = timed_call(maestro, out, f"{n:04}-{k}", call.get("tool"), call.get("arguments"), args.log)
                 results.append(entry)
                 print(f"{n}.{k} {summary_line(entry)}", flush=True)
             (out / f"{n:04}.json").write_text(json.dumps({"n": n, "results": results, "ended": ended}, indent=1))
             done = n
-        publish_dir(args.publish, f"refs/qa-runs/{args.run}", f"relay call {done}")
+            if ended or time.monotonic() >= deadline:
+                break
+        try:
+            publish_dir(args.publish, f"refs/qa-runs/{args.run}", f"relay call {done}")
+        except RuntimeError as error:  # the next call's publish carries this one too
+            print(f"relay: {error}", flush=True)
         idle_until = time.monotonic() + IDLE_MINUTES * 60
     maestro.close()
     reason = "ended by the agent" if ended else "out of time" if time.monotonic() >= deadline else "idle"
@@ -307,12 +321,14 @@ def relay(args):
 
 def send(args):
     text = sys.stdin.read() if args.calls == "-" else args.calls
-    calls = json.loads(text if text.lstrip()[:1] in "[{" else Path(text).read_text())
+    calls = [] if args.result else json.loads(text if text.lstrip()[:1] in "[{" else Path(text).read_text())
     calls = [calls] if isinstance(calls, dict) else calls
     out = Path(args.out or f"qa-relay-{args.run}")
     out.mkdir(parents=True, exist_ok=True)
     ref = f"refs/qa-runs/{args.run}"
-    if calls:
+    if args.result:
+        wanted = f"relay/{args.result:04}.json"
+    elif calls:
         branch_ref = f"refs/heads/{args.branch}"
         tip = git("ls-remote", "origin", branch_ref).split()
         entries = []
@@ -460,7 +476,8 @@ def main():
     p.set_defaults(func=relay)
     p = sub.add_parser("send")
     p.add_argument("run")
-    p.add_argument("calls")
+    p.add_argument("calls", nargs="?", default="[]")
+    p.add_argument("--result", type=int, help="fetch the result of call N again instead of sending")
     p.add_argument("--branch", default="claude/qa-relay")
     p.add_argument("--out")
     p.add_argument("--wait", type=float, default=300)

@@ -3,7 +3,7 @@ paint-by-numbers paintings and lets you paint them. It is running in an iOS simu
 device id `{{UDID}}`, app id `com.pbordjadze.paintbynumber`), freshly installed and launched. Use it
 as a curious, careful person would, find what is broken or confusing, and write a report. You
 report findings only: you change no code, settings outside the app, files outside your folder, or
-anything online.
+anything online. Flows use Maestro's commands only: no `runScript`, `evalScript` or HTTP.
 
 ## Your tools
 
