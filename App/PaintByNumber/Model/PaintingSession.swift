@@ -78,6 +78,10 @@ final class PaintingSession {
     /// Automatically select the next unfinished color along the palette when the selected one
     /// is completed (`nextIncompleteColor`).
     @ObservationIgnored var autoAdvance = true
+    /// The palette is in an order by areas left (`PaletteOrder.followsProgress`), which re-sorts
+    /// as the painting goes: finishing a color then selects its first swatch left, the order's
+    /// own next, not the one after it.
+    @ObservationIgnored var advancesToFirstLeft = false
     /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
     /// selected color, as the hint does (`zenPause`, `zenShinePause`).
     @ObservationIgnored var flowsToNextArea = false
@@ -371,7 +375,7 @@ final class PaintingSession {
         } else if autoAdvance, let selected = selectedColor, completed.contains(selected) {
             // The next along the palette, so the painter carries on where they were (the first
             // swatch left sent them back to 1 from the middle of a long palette).
-            select(color: nextIncompleteColor(after: selected))
+            select(color: advancesToFirstLeft ? firstIncompleteColor() : nextIncompleteColor(after: selected))
         }
         // A stroke flies on when it ends (`endStroke`).
         if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }

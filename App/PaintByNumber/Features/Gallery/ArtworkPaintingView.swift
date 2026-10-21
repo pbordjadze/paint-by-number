@@ -18,6 +18,8 @@ struct ArtworkPaintingView: View {
     /// cover, which dissolves into it once the canvas has drawn (`StartHandoff`).
     @Environment(\.startHandoff) private var handoff
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
+    @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @Environment(\.colorScheme) private var colorScheme
     @State private var autosaver: PaintingAutosaver?
     /// Made once when the painting is presented, not in `body`: each autosave replaces the
     /// artwork in the library, and values made afresh would reach `PaintView` as changed
@@ -124,6 +126,8 @@ struct ArtworkPaintingView: View {
             }
             .padding(.top, 62)
             .padding(.horizontal, 20)
+            // Over the painting, like its bars.
+            .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)

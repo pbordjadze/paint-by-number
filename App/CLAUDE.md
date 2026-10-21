@@ -293,8 +293,10 @@ synchronized folder would bundle it into the app.
   (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch
   (`firstIncompleteColor`), finishing the selected color selects the next color left after it
   (`nextIncompleteColor`, coming round; the finished swatch leaves, and the first swatch left
-  sent a painter in the middle of a long palette back to 1), and the Pencil's double tap and the
-  Paint menu's `]`/`[` step along it. A tap on an
+  sent a painter in the middle of a long palette back to 1), but the first swatch left in an
+  order by areas left, which re-sorts as the painting goes (Nearly Done, Most Left:
+  `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
+  double tap and the Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
   view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
@@ -306,7 +308,11 @@ synchronized folder would bundle it into the app.
   canvas touches hide a latched photo instead of painting.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
-  selected paint lifted until it reads on the paper.
+  selected paint lifted until it reads on the paper. Dark paper makes the bars, their popovers
+  and the painting's toasts dark on a light system too (`PaintView.chromeScheme`: light glass
+  slabs sat on it); the canvas, outside them, keeps its own trait collection.
+  `paint-book-night-paper` (and its `--tip-benchFind`) is that case's screenshot: a scenario
+  named `dark` is captured in dark appearance.
 - Quiet painting (`QuietPainting`, Debug and SideStore builds only: `#if UNRELEASED`): once an
   area is painted (`PaintChromeState.wantsQuiet`) the top bar fades to Back, the progress ring
   and Hint; a tap on the ring (`quiet-ring`) brings the rest back until the next fill. The canvas

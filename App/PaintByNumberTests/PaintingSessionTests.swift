@@ -313,6 +313,17 @@ struct PaintingSessionTests {
         #expect(session.selectedColor == (last >= 5 ? 5 : 0))
     }
 
+    /// An order by areas left (Nearly Done, Most Left) re-sorts as the painting goes: finishing a
+    /// color there selects the first swatch left, the order's own next.
+    @Test func anOrderByAreasLeftGoesToItsFirstSwatch() {
+        #expect(PaletteOrder.allCases.filter(\.followsProgress) == [.nearlyDone, .mostLeft])
+        let session = PaintingSession(template: template)
+        session.advancesToFirstLeft = true
+        session.select(color: 2)
+        session.paint(regions(ofColor: 2), from: .zero, animated: false)
+        #expect(session.selectedColor == 0)
+    }
+
     /// The next color goes by the palette's order on screen and comes round past its end; a
     /// painting opens on its first swatch.
     @Test func theNextColorFollowsThePalettesOrder() throws {

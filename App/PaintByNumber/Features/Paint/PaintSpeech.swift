@@ -19,8 +19,8 @@ nonisolated enum PaintSpeech {
 
     /// Whole percent painted, rounded down; 0 only when nothing is painted and 100 only when
     /// everything is, so the first fill and the last always change it. The one rule for every
-    /// percentage of a painting shown or spoken (the badge, the gallery, VoiceOver): rounded
-    /// down alone, the first fills of a large painting showed 0%.
+    /// percentage of a painting the painter sees or hears (the badge, the gallery, VoiceOver):
+    /// rounded down alone, the first fills of a large painting showed 0%.
     static func percent(painted: Int, total: Int) -> Int {
         guard total > 0, painted > 0 else { return 0 }
         guard painted < total else { return 100 }

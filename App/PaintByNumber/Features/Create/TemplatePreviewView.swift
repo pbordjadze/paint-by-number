@@ -539,7 +539,7 @@ struct TemplatePreviewView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(String(
                     localized: "create.settingsOrigin.label", defaultValue: "Settings",
-                    comment: "VoiceOver label of the chip above the create sliders; its value says whether they are suggested for the photo or custom")))
+                    comment: "VoiceOver label of the chip above the create sliders; its value says whether they are suggested for the picture or custom")))
                 .accessibilityValue("Suggested for this picture")
             }
         }

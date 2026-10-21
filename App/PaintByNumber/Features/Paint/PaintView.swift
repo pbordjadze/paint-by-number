@@ -150,6 +150,7 @@ struct PaintView: View {
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
+        .onChange(of: paletteOrder, initial: true) { _, order in session.advancesToFirstLeft = order.followsProgress }
         .onChange(of: zenMode, initial: true) { _, zen in
             session.flowsToNextArea = zen
             if zen { PaintTips.used(.benchZen) }
