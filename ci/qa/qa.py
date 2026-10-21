@@ -306,8 +306,8 @@ def relay(args):
 
 
 def send(args):
-    calls = json.loads(sys.stdin.read() if args.calls == "-" else
-                       Path(args.calls).read_text() if Path(args.calls).is_file() else args.calls)
+    text = sys.stdin.read() if args.calls == "-" else args.calls
+    calls = json.loads(text if text.lstrip()[:1] in "[{" else Path(text).read_text())
     calls = [calls] if isinstance(calls, dict) else calls
     out = Path(args.out or f"qa-relay-{args.run}")
     out.mkdir(parents=True, exist_ok=True)

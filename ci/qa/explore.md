@@ -29,6 +29,15 @@ anything online.
   `cheat_sheet` lists the commands. Text matchers are full-string regexes: copy texts and labels
   from `inspect_screen`, never from a screenshot. Every local tool needs `device_id`
   `{{UDID}}`. Use `- stopApp` then `- launchApp` (no `clearState`) to quit and relaunch the app.
+  What an earlier session learned about this setup:
+  - `inspect_screen` bounds are points; the screenshot is scaled (the root element's bounds give
+    the screen in points). A `point` is whole percentages (`"52%,38%"`; `"30.7%"` is refused) or
+    absolute points (`"317,547"`).
+  - While a tip (a popover) is showing, `inspect_screen` lists only the tip: close it with its
+    Close button first. Tips also go away on their own, so look again right before acting.
+  - A selector that matches nothing makes `run` wait about 17 s, then fail.
+  - Maestro's `doubleTapOn` didn't zoom the canvas there (twice): try it once; if nothing
+    changes, zoom with Hint and Fit to Screen and list double-tap zoom under Automation problems.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report, `report.md` is your report. Save evidence with
   `- takeScreenshot: {{DIR}}/shots/<short-name>` (no extension) in a flow.
