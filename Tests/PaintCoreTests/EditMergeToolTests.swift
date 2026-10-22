@@ -121,7 +121,7 @@ struct EditMergeToolTests {
     }
 
     /// Points off the canvas are left out; a drag within one area, a tap, or one wholly off the
-    /// canvas joins nothing and is declined.
+    /// canvas joins nothing and is declined, a drag or tap within one area saying so.
     @Test func aMergeOfFewerThanTwoAreasIsDeclined() throws {
         let t = Self.scene
         let offAndOn: [SIMD2<Float>] = [SIMD2(-40, 30), Self.sky, Self.ground, SIMD2(300, 120)]
@@ -129,7 +129,12 @@ struct EditMergeToolTests {
         #expect(outcome.regionsMerged == 1)
         let clipped = try TemplateEditor.apply(.merge(points: [SIMD2(0, 30), Self.sky, Self.ground, SIMD2(192, 120)]), to: t).template
         #expect(u == clipped)
-        let none: [[SIMD2<Float>]] = [[Self.sky, SIMD2(150, 20)], [Self.sky], [SIMD2(-40, 30), SIMD2(-10, 130)], []]
+        let inOne: [[SIMD2<Float>]] = [[Self.sky, SIMD2(150, 20)], [Self.sky]]
+        for points in inOne {
+            let (same, declined) = try TemplateEditor.apply(.merge(points: points), to: t)
+            #expect(declined.declined?.reason == TemplateEditor.mergeStaysInOneArea && !declined.changed && same == t, "\(points)")
+        }
+        let none: [[SIMD2<Float>]] = [[SIMD2(-40, 30), SIMD2(-10, 130)], []]
         for points in none {
             let (same, declined) = try TemplateEditor.apply(.merge(points: points), to: t)
             #expect(declined.declined?.reason == "the merge joins no areas" && !declined.changed && same == t, "\(points)")

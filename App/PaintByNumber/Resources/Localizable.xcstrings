@@ -2337,6 +2337,18 @@
         }
       }
     },
+    "refine.note.oneArea" : {
+      "comment" : "Refine screen toast: a Merge drag stayed inside one area, which is already a single area, so there was nothing to join; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s already one area."
+          }
+        }
+      }
+    },
     "refine.note.notMoved" : {
       "comment" : "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed",
       "extractionState" : "manual",
