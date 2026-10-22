@@ -19,7 +19,8 @@ it from App Store Connect › TestFlight › Friends & Family once Apple approve
 an RSA public key at LINK_RECIPIENT_FILE and the link is printed encrypted to it (RSA-OAEP,
 SHA-256, base64), for whoever holds the private key. The Test Information
 (description, feedback email, privacy policy, review contact) is filled in App Store Connect.
-Needs `cryptography` (ES256 tokens).
+Needs `cryptography` (ES256 tokens). Its client (`Client`, `APIError`, `private_key`, `summarize`,
+`BUNDLE_ID`) is also ci/store_screenshots_upload.py's: keep those names.
 """
 
 import base64

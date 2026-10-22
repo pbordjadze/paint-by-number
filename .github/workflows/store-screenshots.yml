@@ -1,0 +1,65 @@
+name: Store screenshots
+
+# Puts the App Store screenshots on the App Store version being prepared, through the App Store
+# Connect API (ci/store_screenshots_upload.py, its docstring the manual), on request only. The
+# slides show the painter's own photos, which never go in this public repository: they are read
+# from a branch of the private feedback repository (default `store-slides`), laid out as the
+# script's docstring says, under `store-slides/`.
+# Actions › Store screenshots › Run workflow from `main` with Upload ticked replaces the sets;
+# without it, or on a push to a `claude/store-screenshots*` branch (which ci.yml ignores), it is a
+# dry run: it lists the version's sets and the slides it found, changing nothing.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (as the TestFlight workflow's) and
+# FEEDBACK_GITHUB_TOKEN (Contents read on the feedback repository). The logs are public: nothing
+# prints a secret, an image or an upload URL.
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Replace the screenshot sets (otherwise list them only)'
+        type: boolean
+        default: false
+      slides:
+        description: 'Branch of the private feedback repository holding store-slides/'
+        required: false
+        default: 'store-slides'
+  push:
+    branches: ['claude/store-screenshots*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-screenshots
+  cancel-in-progress: false
+
+jobs:
+  screenshots:
+    name: App Store screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Slides from the feedback repository
+        id: slides
+        uses: actions/checkout@v5
+        # A dry run goes on without them (the branch may not exist yet).
+        continue-on-error: ${{ !(github.event_name == 'workflow_dispatch' && inputs.upload) }}
+        with:
+          repository: pbordjadze/paint-feedback
+          ref: ${{ inputs.slides || 'store-slides' }}
+          token: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+          path: feedback
+          persist-credentials: false
+      # Installed in a step of its own, with no secret in reach.
+      - name: Python
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+      - name: Screenshots
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && '--upload' || '' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_screenshots_upload.py feedback/store-slides $UPLOAD'
