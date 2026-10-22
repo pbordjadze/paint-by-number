@@ -34,6 +34,23 @@ final class UnlockUITests: XCTestCase {
         XCTAssertTrue(start.waitForNonExistence(timeout: 60), "Buying didn't start the painting")
     }
 
+    /// At the largest accessibility text size the sheet scrolls, and its buttons can still be
+    /// reached: `create-unlock` opens it once the painting is made.
+    @MainActor
+    func testTheSheetKeepsItsButtonsAtTheLargestTextSize() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-unlock", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+
+        let buy = app.buttons["unlock-buy"]
+        XCTAssertTrue(buy.waitForExistence(timeout: 120), "create-unlock didn't open the sheet")
+        XCTAssertTrue(waitFor(buy, toMatch: NSPredicate(format: "label CONTAINS '4.99'")), "The buy button never showed the price: \(buy.label)")
+        attachScreenshot(of: app, named: "unlock-accessibility")
+        let restore = app.buttons["unlock-restore"]
+        for _ in 0..<4 where !restore.isHittable { app.swipeUp() }
+        XCTAssertTrue(restore.isHittable, "Restore Purchases can't be reached at the largest text size")
+    }
+
     /// A library picture starts with no free painting left, and its preview counts none.
     @MainActor
     func testALibraryPictureStartsWithNoFreePaintingLeft() throws {
