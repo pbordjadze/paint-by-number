@@ -244,7 +244,9 @@ class Listing:
         if all(published.get(k) == v for k, v in wanted.items()):
             return
         if draft and all(draft["attributes"].get(k) == v for k, v in wanted.items()):
-            print(f"  accessibility {family}: these answers wait as a draft.", flush=True)
+            # Published from the draft once Apple allows it (after the release), so a run says so.
+            self.changes.append(f"accessibility {family}: publish the draft")
+            print(f"  {'Publishing' if self.apply else 'Waiting as a draft'}: accessibility {family}", flush=True)
             if not self.apply:
                 return
         elif not self.compare(f"accessibility {family}", published, wanted) or not self.apply:
@@ -262,7 +264,7 @@ class Listing:
         except APIError as error:
             # Apple publishes labels only for an app already on the App Store: the draft waits, and
             # the first run after the release publishes it.
-            if "must be available on the App Store" not in str(error):
+            if ": 409 " not in str(error) or "must be available on the App Store" not in str(error):
                 raise
             print(f"  accessibility {family}: kept as a draft until the app is on the App Store.", flush=True)
 
