@@ -8,19 +8,53 @@ import Foundation
 /// Pixels of the regions an edit leaves alone are never touched.
 extension EditWork {
     /// Hands the pixels of region `r` to `pieces` (`pieces[0]` is `r` itself).
+    ///
+    /// Only pixels round the pieces cut off can change hands, and most edits cut a small piece
+    /// from a large region (a tile from Blank's canvas, a cloud from a sky), whose every pixel a
+    /// box round the whole region walks again: 4 million of them for each tile on Blank. So the
+    /// box round the cut-off pieces is tried first. It gives what the whole region's box gives
+    /// unless a pixel no outline holds lies on its edge beside a pixel of `r` outside it (that
+    /// pixel's piece could then come from outside), or it holds none of `pieces[0]`'s pixels (a
+    /// piece with none owns its number's pixel, and only the whole box can tell): then the whole
+    /// region's box is walked, as it always was.
     mutating func distribute(region r: Int, among pieces: [(id: Int, rings: [[LatticePoint]], pole: SIMD2<Float>)]) {
-        let w = t.width, h = t.height
+        if pieces.count > 1, let near = pixelBox(round: pieces.dropFirst(), margin: 2),
+           let local = owners(of: r, among: pieces, in: near), !local.leaks, local.counts[0] > 0 {
+            hand(r, among: pieces, in: near, owner: local.owner, counts: local.counts)
+            return
+        }
+        guard let all = pixelBox(round: pieces[...], margin: 1), let whole = owners(of: r, among: pieces, in: all) else { return }
+        hand(r, among: pieces, in: all, owner: whole.owner, counts: whole.counts)
+    }
+
+    /// The pixels round `pieces`' outlines, `margin` beyond the pixels their points fall in,
+    /// within the canvas. Nil when that is empty.
+    private func pixelBox(
+        round pieces: ArraySlice<(id: Int, rings: [[LatticePoint]], pole: SIMD2<Float>)>, margin: Int
+    ) -> (x0: Int, y0: Int, x1: Int, y1: Int)? {
         var x0 = Int.max, y0 = Int.max, x1 = Int.min, y1 = Int.min
         for piece in pieces {
             for ring in piece.rings {
                 for p in ring {
-                    x0 = min(x0, Int(p.x / Lattice.unit) - 1); x1 = max(x1, Int(p.x / Lattice.unit) + 1)
-                    y0 = min(y0, Int(p.y / Lattice.unit) - 1); y1 = max(y1, Int(p.y / Lattice.unit) + 1)
+                    x0 = min(x0, Int(p.x / Lattice.unit) - margin); x1 = max(x1, Int(p.x / Lattice.unit) + margin)
+                    y0 = min(y0, Int(p.y / Lattice.unit) - margin); y1 = max(y1, Int(p.y / Lattice.unit) + margin)
                 }
             }
         }
-        x0 = max(x0, 0); y0 = max(y0, 0); x1 = min(x1, w - 1); y1 = min(y1, h - 1)
-        guard x0 <= x1, y0 <= y1 else { return }
+        x0 = max(x0, 0); y0 = max(y0, 0); x1 = min(x1, t.width - 1); y1 = min(y1, t.height - 1)
+        guard x0 <= x1, y0 <= y1 else { return nil }
+        return (x0, y0, x1, y1)
+    }
+
+    /// Which of `pieces` each pixel of `box` goes to (its index, -1 for none): the piece whose
+    /// outline holds its centre, else, for a pixel of `r`, a neighbouring pixel's piece. `counts`
+    /// are the pixels of `r` each piece gets; `leaks` says a pixel of `r` that no outline holds
+    /// lies on the box's edge beside a pixel of `r` outside it.
+    private func owners(
+        of r: Int, among pieces: [(id: Int, rings: [[LatticePoint]], pole: SIMD2<Float>)], in box: (x0: Int, y0: Int, x1: Int, y1: Int)
+    ) -> (owner: [Int], counts: [Int], leaks: Bool)? {
+        let (x0, y0, x1, y1) = box
+        let w = t.width, h = t.height, region = UInt32(r)
         let bw = x1 - x0 + 1, bh = y1 - y0 + 1
         var owner = [Int](repeating: -1, count: bw * bh)
 
@@ -29,9 +63,17 @@ extension EditWork {
         }
         // Pixels of the region that no outline holds take the piece of a neighbouring pixel.
         var unresolved: [Int] = []
+        var leaks = false
         for y in 0..<bh {
-            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == UInt32(r) && owner[y * bw + x] < 0 {
+            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == region && owner[y * bw + x] < 0 {
                 unresolved.append(y * bw + x)
+                if !leaks {
+                    let gx = x0 + x, gy = y0 + y
+                    leaks = (x == 0 && gx > 0 && t.regionMap[gx - 1, gy] == region)
+                        || (y == 0 && gy > 0 && t.regionMap[gx, gy - 1] == region)
+                        || (x == bw - 1 && gx < w - 1 && t.regionMap[gx + 1, gy] == region)
+                        || (y == bh - 1 && gy < h - 1 && t.regionMap[gx, gy + 1] == region)
+                }
             }
         }
         while !unresolved.isEmpty {
@@ -42,7 +84,7 @@ extension EditWork {
                 var taken = -1
                 for (dx, dy) in [(-1, 0), (0, -1), (1, 0), (0, 1)] where taken < 0 {
                     let nx = x + dx, ny = y + dy
-                    guard nx >= 0, ny >= 0, nx < bw, ny < bh, t.regionMap[x0 + nx, y0 + ny] == UInt32(r) else { continue }
+                    guard nx >= 0, ny >= 0, nx < bw, ny < bh, t.regionMap[x0 + nx, y0 + ny] == region else { continue }
                     taken = owner[ny * bw + nx]
                 }
                 if taken >= 0 { assigned.append((i, taken)) } else { rest.append(i) }
@@ -54,10 +96,22 @@ extension EditWork {
         }
         var counts = [Int](repeating: 0, count: pieces.count)
         for y in 0..<bh {
-            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == UInt32(r) && owner[y * bw + x] >= 0 {
+            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == region && owner[y * bw + x] >= 0 {
                 counts[owner[y * bw + x]] += 1
             }
         }
+        return (owner, counts, leaks)
+    }
+
+    /// Writes `owner` (over `box`) into the region map: each pixel of `r` to its piece.
+    private mutating func hand(
+        _ r: Int, among pieces: [(id: Int, rings: [[LatticePoint]], pole: SIMD2<Float>)], in box: (x0: Int, y0: Int, x1: Int, y1: Int),
+        owner: [Int], counts: [Int]
+    ) {
+        let (x0, y0, x1, y1) = box
+        let w = t.width, h = t.height, region = UInt32(r)
+        let bw = x1 - x0 + 1, bh = y1 - y0 + 1
+        var owner = owner
         // A piece too narrow to hold a pixel centre of its region still owns the pixel its
         // number sits on, so that it can be tapped.
         for (k, piece) in pieces.enumerated() where counts[k] == 0 {
@@ -68,7 +122,7 @@ extension EditWork {
             }
         }
         for y in 0..<bh {
-            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == UInt32(r) && owner[y * bw + x] >= 0 {
+            for x in 0..<bw where t.regionMap[x0 + x, y0 + y] == region && owner[y * bw + x] >= 0 {
                 t.regionMap[x0 + x, y0 + y] = UInt32(pieces[owner[y * bw + x]].id)
             }
         }
