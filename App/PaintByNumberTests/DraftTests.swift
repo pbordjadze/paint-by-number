@@ -379,6 +379,49 @@ struct DraftTests {
         resumed.cancelAll()
     }
 
+    /// A draft keeps the trail its edits made once they are laid on the base of the settings now
+    /// (not while a slider's new base is being made), and resuming its settings shows that base
+    /// with nothing made or laid again: a kept template marked as the base alone is what shows.
+    /// A kept trail of other edits is not taken up: the draft's are laid on the kept base.
+    @Test func aDraftsKeptTrailIsShownWithoutLayingItsEdits() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let template = try #require(model.preview?.template)
+        let w = Float(template.width), h = Float(template.height)
+        let serial = model.edit(.draw(points: [SIMD2(0.42 * w, 0.5 * h), SIMD2(0.5 * w, 0.46 * h), SIMD2(0.58 * w, 0.5 * h)]))
+        try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        let saved = try #require(model.draft)
+        let kept = try #require(model.keptTrail)
+        #expect(kept.edits == saved.refinements.edits && kept.template == model.preview?.template)
+
+        // A slider moved: the old base's trail is not the draft's until the new one is laid.
+        model.colorCount += 2
+        model.settingsChanged()
+        #expect(model.keptTrail == nil)
+        model.colorCount -= 2
+        model.settingsChanged()
+        try await waitUntil { model.isFinal && model.keptTrail != nil }
+
+        let store = store
+        let marked = EditTrail.Kept(base: kept.base, edits: kept.edits, made: kept.made, template: kept.base)
+        try store.write(saved, photo: try #require(model.source?.preview), kept: marked)
+        let read = try #require(try store.read())
+        let resumed = CreateModel()
+        resumed.load(draft: read, photo: try store.photoData(), kept: store.kept(edits: read.refinements.edits))
+        try await waitUntil { resumed.isFinal }
+        #expect(resumed.preview?.template == kept.base, "The kept trail wasn't taken up")
+
+        let other = EditTrail.Kept(base: kept.base, edits: [], made: [], template: kept.base)
+        let relaid = CreateModel()
+        relaid.load(draft: read, photo: try store.photoData(), kept: other)
+        try await waitUntil { relaid.isFinal }
+        #expect(relaid.preview?.template == kept.template, "A trail of other edits was taken up")
+        model.cancelAll()
+        resumed.cancelAll()
+        relaid.cancelAll()
+    }
+
     /// The edits a draft keeps are laid again on resuming it, in order, as the editor lays them:
     /// the template shown is the editor's result on the template the generator makes, which
     /// clearing the edits shows.

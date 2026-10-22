@@ -47,6 +47,7 @@ final class Drafts {
         #if UNRELEASED
         do {
             current = try store.read()
+            keptOnDisk = current != nil && store.hasKept
         } catch let error as CocoaError where !Library.isDamage(error) {
             // Can't be read just now (an I/O or data protection error), which says nothing
             // about the draft: kept for a later launch, as the library keeps such a painting.
@@ -84,9 +85,8 @@ final class Drafts {
             let reusesPhoto = current?.photoID == draft.photoID
             let store = store
             do {
-                try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo, kept: kept) }
+                keptOnDisk = try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo, kept: kept) }
                 current = draft
-                keptOnDisk = kept != nil
             } catch {
                 Log.create.error("Saving the draft failed: \(String(describing: error), privacy: .public)")
             }

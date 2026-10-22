@@ -232,6 +232,8 @@ struct RefineView: View {
     @State private var mergeAreas: [Int] = []
     @State private var mergeWanted: [SIMD2<Float>]?
     @State private var mergeProbing = false
+    /// The Merge drag the lit areas are for: one found for an earlier drag never lights this one.
+    @State private var mergeStroke = 0
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
@@ -1971,6 +1973,7 @@ extension RefineView {
 
     /// A Merge drag begins: the template on screen gets its probe, unless it has one.
     private func probeMerge() {
+        mergeStroke += 1
         mergeAreas = []
         guard let base, mergeProbe?.preview != base.id else { return }
         mergeProbe = (try? TemplateEditor.MergeProbe(base.template)).map { (base.id, $0) }
@@ -1990,11 +1993,12 @@ extension RefineView {
         else { return }
         mergeWanted = nil
         mergeProbing = true
+        let stroke = mergeStroke
         Task {
             let areas = await Self.areas(of: probe.probe, along: path)
             mergeProbing = false
-            // The finger may have lifted, or the template changed, meanwhile.
-            if trace != nil, probe.preview == mergeProbe?.preview { mergeAreas = areas }
+            // The finger may have lifted, another drag begun or the template changed meanwhile.
+            if trace != nil, stroke == mergeStroke, probe.preview == mergeProbe?.preview { mergeAreas = areas }
             if mergeWanted != nil { lightNext() }
         }
     }

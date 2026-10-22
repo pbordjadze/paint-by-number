@@ -130,10 +130,15 @@ nonisolated struct DraftStore: Sendable {
         }
     }
 
+    /// Whether the draft on disk has a trail beside it.
+    var hasKept: Bool { fm.fileExists(atPath: url(KeptFile.made).path) }
+
     /// Replaces the draft with `draft` and `photo` (encoded as an artwork's `source.jpg` is); a
     /// nil `photo` keeps the one already stored. `kept` goes beside it when it laid the draft's
-    /// edits.
-    func write(_ draft: CreateDraft, photo: CGImage?, kept: EditTrail.Kept? = nil) throws {
+    /// edits; the result says whether it did.
+    @discardableResult
+    func write(_ draft: CreateDraft, photo: CGImage?, kept: EditTrail.Kept? = nil) throws -> Bool {
+        var keptWritten = false
         let assembly = staging.appending(path: "Current", directoryHint: .isDirectory)
         try? fm.removeItem(at: assembly)
         try fm.createDirectory(at: assembly, withIntermediateDirectories: true)
@@ -158,6 +163,7 @@ nonisolated struct DraftStore: Sendable {
                         try compressed.write(to: assembly.appending(path: file.rawValue), options: .atomic)
                     }
                     try JSONEncoder().encode(kept.made).write(to: assembly.appending(path: KeptFile.made.rawValue), options: .atomic)
+                    keptWritten = true
                 } catch {
                     // The draft is whole without it: its edits are laid again.
                     for file in KeptFile.allCases { try? fm.removeItem(at: assembly.appending(path: file.rawValue)) }
@@ -173,6 +179,7 @@ nonisolated struct DraftStore: Sendable {
             try? fm.removeItem(at: assembly)
             throw error
         }
+        return keptWritten
     }
 
     func remove() {

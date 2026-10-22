@@ -161,9 +161,10 @@ final class CreateModel {
     var resolvedTitle: String { CreateDraft.resolvedTitle(typed: title, default: defaultTitle) }
 
     /// The trail the edits on screen made, kept with the draft (`Drafts.keep`): nil until every
-    /// one of them has been laid.
+    /// one of them has been laid on the base of the settings and inputs now (a slider moved or
+    /// a text corrected leaves the old base's trail until the new one is laid).
     var keptTrail: EditTrail.Kept? {
-        guard let trail, trail.edits == refinements.edits else { return nil }
+        guard let trail, trail.edits == refinements.edits, trailKey == currentKey else { return nil }
         return trail.kept
     }
 
@@ -220,9 +221,12 @@ final class CreateModel {
 
     /// The base template on screen with the edits laid on it, and what it is the base of.
     @ObservationIgnored private var trail: EditTrail?
-    /// A resumed draft's trail as it kept it (`Drafts.Opened.kept`), for its first full
-    /// resolution: when the base comes out the same, its edits are not laid again.
-    @ObservationIgnored private var resumeKept: EditTrail.Kept?
+    /// A resumed draft's trail as it kept it (`Drafts.Opened.kept`), and the settings and inputs
+    /// its base was made of (the draft's): the first full resolution of those is the kept base
+    /// with its edits as laid, nothing made or laid again. The base was made of the photo
+    /// itself, the draft keeps a JPEG of it: made again, it would not be the base the painter
+    /// refined.
+    @ObservationIgnored private var resumeKept: (trail: EditTrail.Kept, key: BaseKey)?
     @ObservationIgnored private var trailKey: BaseKey?
     /// Edits numbered as sent, and the newest whose turn has come (`MARK: Refine`).
     @ObservationIgnored private var sentEdits = 0
@@ -465,7 +469,9 @@ final class CreateModel {
     ) {
         cancelAll()
         isPractice = false
-        resumeKept = kept
+        resumeKept = saved.flatMap { saved in
+            kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
+        }
         // A new photo gets a new default name, and anything typed for the last one goes.
         self.defaultTitle = defaultTitle
         title = saved?.title ?? ""
@@ -768,14 +774,17 @@ final class CreateModel {
             let refinements = self.refinements
             let inputs = refinements.generatorInputs
             var shown: Shown
-            if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == inputs }) {
+            if !draft, let resumed = resumeKept, resumed.key == BaseKey(settings: settings, inputs: inputs) {
+                shown = try await Self.laid(
+                    resumed.trail.base, settings: settings, refinements: refinements, style: previewStyle, kept: resumed.trail)
+            } else if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == inputs }) {
                 shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
                 shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
-                    isDraft: draft, style: previewStyle, progress: draft ? nil : report, kept: draft ? nil : resumeKept)
+                    isDraft: draft, style: previewStyle, progress: draft ? nil : report)
             }
             // Kept even if cancelled meanwhile: it is what these settings and inputs make of this
             // photo, not of the one that replaced it (`made` was cleared for that one).
@@ -1296,7 +1305,7 @@ final class CreateModel {
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
-        progress: (@Sendable (Float) -> Void)?, kept: EditTrail.Kept? = nil
+        progress: (@Sendable (Float) -> Void)?
     ) async throws -> Shown {
         let template: Template
         if refinements.start == .blank {
@@ -1308,18 +1317,20 @@ final class CreateModel {
                 .template
         }
         try Task.checkCancellation()
-        return try composed(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style, kept: kept)
+        return try composed(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }
 
     /// A base template made earlier, with the edits of `refinements` laid on it and drawn again.
     @concurrent
     private static func laid(
-        _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle
+        _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle,
+        kept: EditTrail.Kept? = nil
     ) async throws -> Shown {
-        try composed(base, settings: settings, refinements: refinements, isDraft: false, style: style)
+        try composed(base, settings: settings, refinements: refinements, isDraft: false, style: style, kept: kept)
     }
 
-    /// `kept`, a resumed draft's trail, stands for the laying when it was laid on this base.
+    /// `kept`, a resumed draft's trail, stands for the laying when it was laid on this base and
+    /// laid these edits.
     nonisolated private static func composed(
         _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, isDraft: Bool, style: PreviewStyle,
         kept: EditTrail.Kept? = nil

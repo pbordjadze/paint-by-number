@@ -42,7 +42,6 @@ struct EditTrailTests {
         expectValid(trail.template)
     }
 
-    /// Taking an edit back, or putting it back, lays nothing when the template is kept.
     /// A trail kept beside its edits is taken up again as it was, laying nothing, only on the base
     /// it was laid on and with the edits it laid; a list moved on from it is the editor's again.
     @Test func aKeptTrailIsTakenUpAgainOnlyAsItWas() throws {
@@ -64,6 +63,7 @@ struct EditTrailTests {
         #expect(more.template == fresh.template)
     }
 
+    /// Taking an edit back, or putting it back, lays nothing when the template is kept.
     @Test func undoAndRedoNeedNoEditing() throws {
         var trail = EditTrail(base: TemplateEditorTests.scene)
         for edit in Self.edits { trail.add(edit) }

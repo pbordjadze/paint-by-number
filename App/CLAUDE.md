@@ -784,9 +784,11 @@ Conventions).
   `CreateModel.load(draft:photo:)`): the photo goes through the usual steps including the
   suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
   with its refinements, at full resolution: the base, then its `edits` laid on it in order
-  (`DraftTests.resumingADraftLaysItsEditsAgain`), unless the base comes out equal to the kept
-  trail's, when the kept template is shown and nothing is laid (`EditTrail(base:edits:resuming:)`;
-  a kept trail missing or damaged is laid again, never the draft's loss). Refine's undo and
+  (`DraftTests.resumingADraftLaysItsEditsAgain`), unless the draft kept the trail they made
+  (`CreateModel.keptTrail`, `DraftStore.KeptFile`): then the draft's own settings show its kept
+  base and template, nothing made or laid (`EditTrail(base:edits:resuming:)`), since the draft
+  keeps a JPEG of the photo, which would make another base; other settings make theirs from it.
+  A kept trail missing or damaged is laid again, never the draft's loss. Refine's undo and
   redo stacks are not kept. A draft
   with any file missing or damaged, or a photo that won't decode, is no draft: logged and
   removed, never a failure of the gallery; one that can't be read just now (an I/O or data

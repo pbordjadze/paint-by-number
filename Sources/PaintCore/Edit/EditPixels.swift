@@ -12,18 +12,22 @@ extension EditWork {
     /// Only pixels round the pieces cut off can change hands, and most edits cut a small piece
     /// from a large region (a tile from Blank's canvas, a cloud from a sky), whose every pixel a
     /// box round the whole region walks again: 4 million of them for each tile on Blank. So the
-    /// box round the cut-off pieces is tried first. It gives what the whole region's box gives
-    /// unless a pixel no outline holds lies on its edge beside a pixel of `r` outside it (that
-    /// pixel's piece could then come from outside), or it holds none of `pieces[0]`'s pixels (a
-    /// piece with none owns its number's pixel, and only the whole box can tell): then the whole
-    /// region's box is walked, as it always was.
+    /// box round the cut-off pieces, within the whole region's, is tried first. It gives what the
+    /// whole region's box gives unless a pixel no outline holds lies on its edge beside a pixel of
+    /// `r` outside it (that pixel's piece could then come from outside), or it holds none of
+    /// `pieces[0]`'s pixels (a piece with none owns its number's pixel, and only the whole box can
+    /// tell): then the whole region's box is walked, as it always was.
     mutating func distribute(region r: Int, among pieces: [(id: Int, rings: [[LatticePoint]], pole: SIMD2<Float>)]) {
-        if pieces.count > 1, let near = pixelBox(round: pieces.dropFirst(), margin: 2),
-           let local = owners(of: r, among: pieces, in: near), !local.leaks, local.counts[0] > 0 {
-            hand(r, among: pieces, in: near, owner: local.owner, counts: local.counts)
-            return
+        guard let all = pixelBox(round: pieces[...], margin: 1) else { return }
+        // Within the whole box: a pixel beyond it is one the whole box never walks.
+        if pieces.count > 1, let around = pixelBox(round: pieces.dropFirst(), margin: 2) {
+            let near = (x0: max(around.x0, all.x0), y0: max(around.y0, all.y0), x1: min(around.x1, all.x1), y1: min(around.y1, all.y1))
+            if near.x0 <= near.x1, near.y0 <= near.y1, let local = owners(of: r, among: pieces, in: near), !local.leaks, local.counts[0] > 0 {
+                hand(r, among: pieces, in: near, owner: local.owner, counts: local.counts)
+                return
+            }
         }
-        guard let all = pixelBox(round: pieces[...], margin: 1), let whole = owners(of: r, among: pieces, in: all) else { return }
+        guard let whole = owners(of: r, among: pieces, in: all) else { return }
         hand(r, among: pieces, in: all, owner: whole.owner, counts: whole.counts)
     }
 
