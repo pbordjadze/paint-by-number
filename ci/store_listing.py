@@ -317,7 +317,8 @@ def nomination(client, work, app_id, wanted):
     by name) until `submit` is true; a submitted one is left as it is."""
     wanted = dict(wanted)
     submit = wanted.pop("submit", False)
-    found = client.call("GET", "/nominations", query={"filter[relatedApps]": app_id, "limit": "50"})["data"]
+    found = client.call("GET", "/nominations", query={
+        "filter[relatedApps]": app_id, "filter[state]": "DRAFT,SUBMITTED,ARCHIVED", "limit": "50"})["data"]
     existing = next((n for n in found if n["attributes"].get("name") == wanted["name"]), None)
     if existing and existing["attributes"].get("state") != "DRAFT":
         print(f"Nomination {wanted['name']!r}: {existing['attributes'].get('state')}, left as is.")
