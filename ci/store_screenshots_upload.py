@@ -7,8 +7,13 @@ Connect API.
 SLIDES holds one folder per screenshot display type, named for it (APP_IPHONE_61, APP_IPHONE_67,
 APP_IPAD_PRO_3GEN_129, …), each with 1.png … 10.png in App Store order: what
 tools/store_screenshots.py renders (iphone-63-* is 1206 × 2622, iphone-69-* 1320 × 2868, ipad-13-*
-2064 × 2752). Run by `.github/workflows/store-screenshots.yml`, which reads SLIDES from the private
-feedback repository: the slides show the painter's own photos, which never go in this public one.
+2064 × 2752). It may also hold the creative assets App Store Connect shows from iOS 27 on, one
+image each in a folder named for its placement type, `CREATIVE`: PRODUCT_PAGE_HEADER_ASSET/1.png
+(3840 × 1646) and APP_STORE_SEARCH_RESULTS_ASSET/1.png (3:2, 1920 × 1280 to 3840 × 2560), or the
+universal 5244 × 2950 in either; and IAP_REVIEW_SCREENSHOT/1.png, the purchase's (PRODUCT_ID)
+screenshot for App Review, replaced unless it already is (by MD5). Run by `.github/workflows/store-screenshots.yml`, which reads
+SLIDES from the private feedback repository: the slides show the painter's own photos, which never
+go in this public one.
 
 It checks the slides first, before anything changes: each folder a display type of `SIZES`, 1 to
 10 files, each a PNG of one of that type's sizes (portrait or landscape) with no alpha channel or
@@ -19,7 +24,11 @@ folders SLIDES has and any problem with them, changing nothing (a missing SLIDES
 With --upload, for each folder it replaces that display type's set, unless the set already holds
 these files in this order (their MD5s): deletes the screenshots in it, reserves each file, sends
 its parts where App Store Connect says, commits it with its MD5, puts the set in file order. Then
-it waits for App Store Connect to process the images and fails naming any it refused.
+it waits for App Store Connect to process the images and fails naming any it refused. A creative
+asset goes to the app's Asset Library (its reference name carrying its MD5, which is how a re-run
+knows it is there already), then onto the version's localization as its placement, replacing the
+one there; Apple reviews it with the version. The dry run also prints what App Store Connect says
+the creative placements take.
 
 The appScreenshotSets and appScreenshots endpoints are marked deprecated (API 4.5, in favour of
 the App Asset Library) but still served; if they go, this is the script to move.
@@ -30,6 +39,7 @@ are signed). Needs `cryptography` (ES256 tokens, through ci/testflight_testers.p
 
 import argparse
 import hashlib
+import json
 import os
 import re
 import sys
@@ -38,7 +48,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from testflight_testers import BUNDLE_ID, APIError, Client, private_key, summarize
+from testflight_testers import APIError, Client, find_app, private_key, summarize
 
 # The states in which a version's metadata can still be changed.
 EDITABLE = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY")
@@ -49,8 +59,23 @@ SIZES = {
     "APP_IPHONE_67": {(1260, 2736), (1290, 2796), (1320, 2868)},
     "APP_IPAD_PRO_3GEN_129": {(2048, 2732), (2064, 2752)},
 }
+# The creative assets (the product page header and the search results card, iOS 27 and later),
+# each one image a folder, landscape only: the sizes of Apple's creative assets specifications.
+CREATIVE = {"PRODUCT_PAGE_HEADER_ASSET": "Header", "APP_STORE_SEARCH_RESULTS_ASSET": "Search results"}
+# The purchase's screenshot for App Review (IAP_REVIEW_SCREENSHOT/1.png): its sheet, as App Review
+# sees it; any size and opaque, like the others.
+IAP_REVIEW = "IAP_REVIEW_SCREENSHOT"
+PRODUCT_ID = "com.pbordjadze.paintbynumber.unlimited"
 # How long App Store Connect may take to process the images once they are sent.
 PROCESSING_MINUTES = 15
+
+
+def creative_size_ok(kind, width, height):
+    if (width, height) == (5244, 2950):  # the universal 16:9 image, either placement
+        return True
+    if kind == "PRODUCT_PAGE_HEADER_ASSET":
+        return (width, height) == (3840, 1646)
+    return width * 2 == height * 3 and 1920 <= width <= 3840
 
 
 def editable_version(client, app_id):
@@ -90,7 +115,12 @@ def png_problem(path, kind):
     if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
         return f"{path.name} is not a PNG"
     width, height = int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
-    if (width, height) not in SIZES[kind] and (height, width) not in SIZES[kind]:
+    if kind == IAP_REVIEW:
+        pass
+    elif kind in CREATIVE:
+        if not creative_size_ok(kind, width, height):
+            return f"{path.name} is {width} x {height}, not a size {kind} takes"
+    elif (width, height) not in SIZES[kind] and (height, width) not in SIZES[kind]:
         return f"{path.name} is {width} x {height}, not a size {kind} takes"
     # Colour types 4 and 6 carry alpha; a tRNS chunk makes a colour transparent.
     if data[25] in (4, 6) or b"tRNS" in data[:data.find(b"IDAT")]:
@@ -102,9 +132,12 @@ def problems(found):
     """Everything wrong with the slides, checked before anything is changed."""
     found_problems = []
     for kind, files in found.items():
-        if kind not in SIZES:
-            found_problems.append(f"{kind} is not a display type this script knows ({', '.join(SIZES)})")
+        if kind not in SIZES and kind not in CREATIVE and kind != IAP_REVIEW:
+            found_problems.append(f"{kind} is not a display or placement type this script knows "
+                                  f"({', '.join([*SIZES, *CREATIVE, IAP_REVIEW])})")
             continue
+        if (kind in CREATIVE or kind == IAP_REVIEW) and len(files) != 1:
+            found_problems.append(f"{kind} has {len(files)} files; it takes one, 1.png")
         if len(files) > 10:
             found_problems.append(f"{kind} has {len(files)} files; a set holds at most 10")
         found_problems += [f"{kind}: {p}" for p in (png_problem(f, kind) for f in files) if p]
@@ -168,6 +201,162 @@ def replace_set(client, localization_id, sets, kind, files):
     return ids
 
 
+def creative_specs(client):
+    """What App Store Connect says the creative placements take, for the dry run's log."""
+    try:
+        data = client.call("GET", "/appAssetLibraryRefData",
+                           query={"filter[placementTypes]": ",".join(CREATIVE)})["data"]
+    except APIError as error:
+        return [f"Creative asset specs: unavailable ({error})"]
+    lines = []
+    for datum in data:
+        attributes = datum["attributes"]
+        for spec in attributes.get("imageSpecs") or []:
+            if set(spec.get("compatiblePlacementTypes") or []) & set(CREATIVE):
+                lines.append(f"Spec {spec.get('specId')} {spec.get('shortName')}: {json.dumps(spec.get('dimensions'))} "
+                             f"{spec.get('aspectRatio')} alpha={spec.get('alphaAllowed')} max={spec.get('maxFileSize')} "
+                             f"{','.join(spec.get('fileExtensions') or [])} universal={spec.get('universalAsset')} "
+                             f"for {','.join(spec.get('compatiblePlacementTypes') or [])}")
+        for feature in attributes.get("features") or []:
+            for policy in feature.get("placementPolicies") or []:
+                if policy.get("placementType") in CREATIVE:
+                    lines.append(f"Policy {feature.get('featureId')} {policy['placementType']}: "
+                                 f"{json.dumps(policy.get('groupLimits'))}")
+    return lines or ["Creative asset specs: none listed"]
+
+
+def placements(client, localization_id, kind):
+    """The version's placements of `kind`, each with its image's reference name."""
+    found = client.call("GET", f"/appStoreVersionLocalizations/{localization_id}/placements", query={
+        "filter[placementType]": kind, "include": "image", "limit": "50"})
+    names = {i["id"]: i["attributes"].get("referenceName") for i in found.get("included") or []
+             if i["type"] == "appAssetLibraryImages"}
+    return [(p, names.get((((p.get("relationships") or {}).get("image") or {}).get("data") or {}).get("id")))
+            for p in found["data"]]
+
+
+def processed_image(client, library, kind, path, data, reference):
+    """The Asset Library's processed image of these bytes (by its reference name), uploaded and
+    waited for when it has none; one a run left failed or half sent is deleted first."""
+    found = client.call("GET", f"/appAssetLibraries/{library}/images", query={
+        "filter[category]": "CREATIVE_ASSETS", "filter[referenceName]": reference, "limit": "50"})["data"]
+    for image in found:
+        if image["attributes"].get("state") not in ("AWAITING_UPLOAD", "UPLOAD_COMPLETE", "FAILED", "ARCHIVED"):
+            print(f"{kind}: {reference!r} is in the Asset Library already.", flush=True)
+            return image["id"]
+    for image in found:
+        if image["attributes"].get("state") != "ARCHIVED":
+            client.call("DELETE", f"/appAssetLibraryImages/{image['id']}")
+    image = client.call("POST", "/appAssetLibraryImages", {"data": {
+        "type": "appAssetLibraryImages",
+        "attributes": {"category": "CREATIVE_ASSETS", "fileName": CREATIVE[kind].lower().replace(" ", "-") + path.suffix,
+                       "fileSize": len(data), "referenceName": reference},
+        "relationships": {"assetLibrary": {"data": {"type": "appAssetLibraries", "id": library}}}}})["data"]
+    send_parts(image["attributes"]["uploadOperations"], data)
+    client.call("PATCH", f"/appAssetLibraryImages/{image['id']}", {"data": {
+        "type": "appAssetLibraryImages", "id": image["id"], "attributes": {"uploaded": True}}})
+    print(f"{kind}: sent {path.name} ({len(data) // 1024} KB) as {reference!r}.", flush=True)
+    deadline = time.time() + PROCESSING_MINUTES * 60
+    while True:
+        attributes = client.call("GET", f"/appAssetLibraryImages/{image['id']}")["data"]["attributes"]
+        state = attributes.get("state")
+        if state == "FAILED":
+            client.call("DELETE", f"/appAssetLibraryImages/{image['id']}")
+            reasons = "; ".join(f"{d.get('code')}: {d.get('description')}" for d in attributes.get("stateDetails") or [])
+            raise APIError(f"App Store Connect refused {kind} {path.name}: {reasons or 'failed'}")
+        if state not in ("AWAITING_UPLOAD", "UPLOAD_COMPLETE"):
+            return image["id"]
+        if time.time() >= deadline:
+            raise APIError(f"{kind} {path.name} still processing after {PROCESSING_MINUTES} minutes")
+        print(f"Waiting for App Store Connect to process {kind} ({state})…", flush=True)
+        time.sleep(15)
+
+
+def replace_creative(client, app_id, localization_id, kind, path):
+    """Puts the image on the version as its `kind` placement, unless it is already there (its
+    reference name carries its MD5); returns the placement's id to wait on, or None. The placement
+    there now goes only once the new image is processed, so a refused file leaves it in place."""
+    data = path.read_bytes()
+    reference = f"{CREATIVE[kind]} {hashlib.md5(data).hexdigest()[:12]}"
+    existing = placements(client, localization_id, kind)
+    if len(existing) == 1 and existing[0][1] == reference and existing[0][0]["attributes"].get("state") != "FAILED":
+        print(f"{kind}: already {path.name} ({reference}), left as is.", flush=True)
+        return existing[0][0]["id"] if existing[0][0]["attributes"].get("state") == "ASSET_PROCESSING" else None
+    library = client.call("GET", f"/apps/{app_id}/assetLibrary")["data"]["id"]
+    image_id = processed_image(client, library, kind, path, data, reference)
+    for placement, _ in existing:  # one placement of each kind a version
+        client.call("DELETE", f"/appAssetLibraryPlacements/{placement['id']}")
+    placement = client.call("POST", "/appAssetLibraryPlacements", {"data": {
+        # DEFAULT_PROFILE: the one placement group the reference data lists for these (one each).
+        "type": "appAssetLibraryPlacements", "attributes": {"placementType": kind, "placementGroup": "DEFAULT_PROFILE"},
+        "relationships": {"image": {"data": {"type": "appAssetLibraryImages", "id": image_id}},
+                          "appStoreVersionLocalization": {"data": {"type": "appStoreVersionLocalizations",
+                                                                   "id": localization_id}}}}})["data"]
+    return placement["id"]
+
+
+def replace_review_screenshot(client, app_id, path):
+    """Attaches the purchase's App Review screenshot, unless it already is (by MD5); waits for it."""
+    data = path.read_bytes()
+    checksum = hashlib.md5(data).hexdigest()
+    purchases = client.call("GET", f"/apps/{app_id}/inAppPurchasesV2", query={"filter[productId]": PRODUCT_ID})["data"]
+    purchase = next((p for p in purchases if p["attributes"].get("productId") == PRODUCT_ID), None)
+    if purchase is None:
+        raise APIError(f"no in-app purchase {PRODUCT_ID} in App Store Connect yet")
+    try:
+        old = client.call("GET", f"/v2/inAppPurchases/{purchase['id']}/appStoreReviewScreenshot").get("data")
+    except APIError as error:
+        if ": 404 " not in str(error):
+            raise
+        old = None
+    if old and old["attributes"].get("sourceFileChecksum") == checksum \
+            and (old["attributes"].get("assetDeliveryState") or {}).get("state") == "COMPLETE":
+        print(f"{IAP_REVIEW}: already {path.name}, left as is.", flush=True)
+        return False
+    if old:  # a purchase has one: the new one takes its place
+        client.call("DELETE", f"/inAppPurchaseAppStoreReviewScreenshots/{old['id']}")
+    reserved = client.call("POST", "/inAppPurchaseAppStoreReviewScreenshots", {"data": {
+        "type": "inAppPurchaseAppStoreReviewScreenshots", "attributes": {"fileName": "unlimited-paintings.png", "fileSize": len(data)},
+        "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": purchase["id"]}}}}})["data"]
+    send_parts(reserved["attributes"]["uploadOperations"], data)
+    client.call("PATCH", f"/inAppPurchaseAppStoreReviewScreenshots/{reserved['id']}", {"data": {
+        "type": "inAppPurchaseAppStoreReviewScreenshots", "id": reserved["id"],
+        "attributes": {"uploaded": True, "sourceFileChecksum": checksum}}})
+    print(f"{IAP_REVIEW}: sent {path.name} ({len(data) // 1024} KB).", flush=True)
+    deadline = time.time() + PROCESSING_MINUTES * 60
+    while True:
+        attributes = client.call("GET", f"/inAppPurchaseAppStoreReviewScreenshots/{reserved['id']}")["data"]["attributes"]
+        state = attributes.get("assetDeliveryState") or {}
+        if state.get("state") == "COMPLETE":
+            return True
+        if state.get("state") == "FAILED":
+            reasons = "; ".join(f"{e.get('code')}: {e.get('description')}" for e in state.get("errors") or [])
+            raise APIError(f"App Store Connect refused {IAP_REVIEW} {path.name}: {reasons or 'failed'}")
+        if time.time() >= deadline:
+            raise APIError(f"{IAP_REVIEW} still processing after {PROCESSING_MINUTES} minutes")
+        time.sleep(10)
+
+
+def wait_until_placed(client, ids_by_kind):
+    """Fails naming each placement App Store Connect refused; returns once none is processing."""
+    deadline = time.time() + PROCESSING_MINUTES * 60
+    pending = dict(ids_by_kind)
+    while pending:
+        for kind, placement_id in list(pending.items()):
+            attributes = client.call("GET", f"/appAssetLibraryPlacements/{placement_id}")["data"]["attributes"]
+            state = attributes.get("state")
+            if state == "FAILED":
+                reasons = "; ".join(f"{d.get('code')}: {d.get('description')}" for d in attributes.get("stateDetails") or [])
+                raise APIError(f"App Store Connect refused the {kind} placement: {reasons or 'failed'}")
+            if state != "ASSET_PROCESSING":
+                print(f"{kind}: placed ({state}).", flush=True)
+                del pending[kind]
+        if pending:
+            if time.time() >= deadline:
+                raise APIError(f"{', '.join(pending)} still processing after {PROCESSING_MINUTES} minutes")
+            time.sleep(15)
+
+
 def wait_until_processed(client, ids_by_kind):
     """Fails naming each screenshot App Store Connect refused; returns once all are complete."""
     deadline = time.time() + PROCESSING_MINUTES * 60
@@ -203,24 +392,30 @@ def main():
         if not os.environ.get(name):
             sys.exit(f"{name} is not set")
     client = Client(private_key())
-    apps = client.call("GET", "/apps", query={"filter[bundleId]": BUNDLE_ID})["data"]
-    if not apps:
-        sys.exit(f"No App Store Connect app has the bundle id {BUNDLE_ID}")
+    app = find_app(client)
     found = slides(args.slides)
     wrong = problems(found)
-    version = editable_version(client, apps[0]["id"])
+    version = editable_version(client, app["id"])
     name = version["attributes"].get("versionString")
     target = localization(client, version["id"], args.locale)
     sets = screenshot_sets(client, target["id"])
+    placed = {kind: [f"{p['attributes'].get('state')} {name or '?'}" for p, name in placements(client, target["id"], kind)]
+              for kind in CREATIVE if kind in found}  # screenshots alone never touch the Asset Library
     print(f"Version {name}, {args.locale}: sets {', '.join(sorted(sets)) or 'none'}.")
+    for kind, now in placed.items():
+        print(f"{kind}: {', '.join(now) or 'none'}.")
     print(f"Slides: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none found'}.")
     for problem in wrong:
         print(f"Problem: {problem}")
     if not args.upload:
+        specs = creative_specs(client)
+        for line in specs:
+            print(line)
         summarize([f"### Version {name}, {args.locale} (dry run, nothing changed)",
-                   f"Screenshot sets now: {', '.join(sorted(sets)) or 'none'}.",
-                   f"Slides found: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none'}."]
-                  + [f"- Problem: {p}" for p in wrong])
+                   f"Screenshot sets now: {', '.join(sorted(sets)) or 'none'}."]
+                  + [f"{kind} now: {', '.join(now) or 'none'}." for kind, now in placed.items()]
+                  + [f"Slides found: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none'}."]
+                  + [f"- Problem: {p}" for p in wrong] + [f"- {line}" for line in specs])
         if wrong:
             sys.exit(f"{len(wrong)} problems with the slides")
         return
@@ -228,9 +423,17 @@ def main():
         sys.exit(f"No slides under {args.slides}: one folder per display type, each with 1.png, 2.png, …")
     if wrong:
         sys.exit(f"{len(wrong)} problems with the slides, nothing changed")
-    ids_by_kind = {kind: replace_set(client, target["id"], sets, kind, files) for kind, files in found.items()}
+    ids_by_kind = {kind: replace_set(client, target["id"], sets, kind, files)
+                   for kind, files in found.items() if kind in SIZES}
+    placed = {kind: replace_creative(client, app["id"], target["id"], kind, files[0])
+              for kind, files in found.items() if kind in CREATIVE}
     wait_until_processed(client, ids_by_kind)
+    wait_until_placed(client, {kind: i for kind, i in placed.items() if i})
+    if IAP_REVIEW in found:
+        sent = replace_review_screenshot(client, app["id"], found[IAP_REVIEW][0])
+        placed[IAP_REVIEW] = sent
     lines = [f"{kind}: {len(found[kind])} screenshots{'' if ids else ', unchanged'}" for kind, ids in ids_by_kind.items()]
+    lines += [f"{kind}: {found[kind][0].name}{'' if i else ', unchanged'}" for kind, i in placed.items()]
     print("Done. " + "; ".join(lines) + ".")
     summarize([f"### Screenshots on version {name}, {args.locale}"] + [f"- {line}" for line in lines])
 

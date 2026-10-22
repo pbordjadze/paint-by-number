@@ -1,7 +1,8 @@
 name: Store screenshots
 
-# Puts the App Store screenshots on the App Store version being prepared, through the App Store
-# Connect API (ci/store_screenshots_upload.py, its docstring the manual), on request only. The
+# Puts the App Store screenshots, and the header and search results images, on the App Store
+# version being prepared, through the App Store Connect API (ci/store_screenshots_upload.py, its
+# docstring the manual), on request only. The
 # slides show the painter's own photos, which never go in this public repository: they are read
 # from a branch of the private feedback repository (default `store-slides`), laid out as the
 # script's docstring says, under `store-slides/`.
@@ -37,7 +38,8 @@ jobs:
   screenshots:
     name: App Store screenshots
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Room for every wait of the script (15 minutes each) after the uploads.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
       - name: Slides from the feedback repository

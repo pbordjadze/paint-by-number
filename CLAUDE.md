@@ -131,7 +131,9 @@ before planning app work).
   the brief (its By design list, its tools' notes) for the next.
   `.github/workflows/store-screenshots.yml` puts the App Store screenshots on the version being
   prepared (`ci/store_screenshots_upload.py`), reading them from the private feedback
-  repository's `store-slides` branch, since the slides show the painter's own photos.
+  repository's `store-slides` branch, since the slides show the painter's own photos;
+  `.github/workflows/store-listing.yml` fills in its text, categories, age rating, review notes
+  and accessibility labels from `ci/store-listing.json` (`ci/store_listing.py`).
 - `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
   contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
   CI's `core` job too). It files each report in the developers' private GitHub repository. Its

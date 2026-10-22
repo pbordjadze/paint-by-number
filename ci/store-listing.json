@@ -1,0 +1,168 @@
+{
+  "app": {
+    "contentRightsDeclaration": "USES_THIRD_PARTY_CONTENT"
+  },
+  "appInfo": {
+    "primaryCategory": "ENTERTAINMENT",
+    "secondaryCategory": "GRAPHICS_AND_DESIGN"
+  },
+  "appInfoLocalization": {
+    "name": "Paint by Moonlight",
+    "subtitle": "Turn any photo into a painting",
+    "privacyPolicyUrl": "https://github.com/pbordjadze/paint-by-number/blob/main/PRIVACY.md"
+  },
+  "ageRating": {
+    "advertising": false,
+    "ageAssurance": false,
+    "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+    "contests": "NONE",
+    "gambling": false,
+    "gamblingSimulated": "NONE",
+    "gunsOrOtherWeapons": "NONE",
+    "healthOrWellnessTopics": false,
+    "horrorOrFearThemes": "NONE",
+    "lootBox": false,
+    "matureOrSuggestiveThemes": "NONE",
+    "medicalOrTreatmentInformation": "NONE",
+    "messagingAndChat": false,
+    "parentalControls": false,
+    "profanityOrCrudeHumor": "NONE",
+    "sexualContentGraphicAndNudity": "NONE",
+    "sexualContentOrNudity": "NONE",
+    "socialMedia": false,
+    "unrestrictedWebAccess": false,
+    "userGeneratedContent": false,
+    "violenceCartoonOrFantasy": "NONE",
+    "violenceRealistic": "NONE",
+    "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+  },
+  "version": {
+    "copyright": "2026 Paul Bordjadze",
+    "releaseType": "AFTER_APPROVAL"
+  },
+  "versionLocalization": {
+    "promotionalText": "Turn a photo of someone you love into a paint-by-numbers painting, then fill it in one tap at a time. Made on your iPhone or iPad. No account, no ads.",
+    "keywords": "numbers,color by number,coloring,pet portrait,art,relaxing,calm,mindful,canvas,drawing,keepsake",
+    "supportUrl": "https://paulbordjadze.com/paint-by-moonlight/",
+    "description": [
+      "Paint by Moonlight turns any photo into a paint-by-numbers painting, then lets you fill it in, one calm tap at a time.",
+      "",
+      "Choose a photo of your dog, your garden or a note in your grandmother's hand. Your iPhone or iPad then draws it as a coloring book: clean lines, numbered areas and a palette of paints mixed from the photo itself. Every paint has a name of its own, like Corn Husk or Inkpot.",
+      "",
+      "MADE FROM WHAT YOU LOVE",
+      "• People and pets: the drawing closes their outlines, spends more colors and detail on them, and draws people's eyes.",
+      "• Handwriting in your photo, like a note or a card, is traced in ink and kept clear of the numbers, so a love note stays readable.",
+      "• Choose Quick, Relaxed or Detailed in Settings, and each new painting's colors, detail and smoothness are suggested to match. Move a slider and the preview follows.",
+      "• Take a photo, pick one from your library, or open one from Files or another app.",
+      "",
+      "CALM, SATISFYING PAINTING",
+      "• Tap an area to fill it, or touch and hold, then drag to paint along.",
+      "• On iPad, Apple Pencil paints while your fingers move around the canvas.",
+      "• Hint finds the next area of your color; Zen Mode glides there for you.",
+      "• Peek at your photo whenever you like.",
+      "• Soft sounds with every fill, and haptics on iPhone.",
+      "• Dark paper for painting at night, and three line weights.",
+      "• When you're done, replay your painting from the first fill and share it as a time-lapse.",
+      "• Turn on The Making-of in Settings to watch your photo become a painting, step by step.",
+      "",
+      "A LIBRARY TO START FROM",
+      "44 public-domain pictures are built in: paintings and prints by Hokusai, Van Gogh, Vermeer, Monet, Cézanne and Hiroshige, and photographs of national parks, wildlife and the Earth from space.",
+      "",
+      "SHARE IT YOUR WAY",
+      "• Print the template, with a key to its colors, and paint it with real paints.",
+      "• Send a blank copy to a friend to paint in the app, with your photo if you like.",
+      "• Save or share the finished picture.",
+      "",
+      "FREE TO START",
+      "Three paintings of your own photos are free, and a free one comes back each day, up to three. The built-in pictures are always free. A one-time purchase unlocks unlimited paintings. No subscription.",
+      "",
+      "PRIVATE BY DESIGN",
+      "Every painting is made right on your iPhone or iPad, and your photos stay there unless you choose to share them. No account, no ads, no tracking, and it works offline. Nothing is uploaded except feedback you review and choose to send.",
+      "",
+      "Built for VoiceOver, Dynamic Type and Reduce Motion, with keyboard shortcuts on iPad."
+    ],
+    "marketingUrl": "https://paulbordjadze.com/paint-by-moonlight/"
+  },
+  "review": {
+    "demoAccountRequired": false,
+    "notes": [
+      "No account or sign-in is needed. The app is free: three paintings of your own photos are free, and one comes back each day, up to three; the built-in pictures under Samples are always free. To see the in-app purchase (Unlimited Paintings), open Settings > Unlimited Paintings, or start a fourth painting from your own photo the same day; Restore Purchases is in that sheet.",
+      "",
+      "To try it: tap + (New Painting), choose a picture under Samples (or any photo), and wait for the preview: Start Painting turns on once the settings are chosen, which can take tens of seconds on iPhone. Tap Start Painting, then paint by tapping areas whose number matches the paint selected in the palette (at the bottom, or along the right edge on iPad in landscape). The first launch also prepares two starter paintings in the gallery, which can take a minute.",
+      "",
+      "Everything runs on the device, including the on-device models that draw the lines. The app makes no network requests except when someone taps Send in Give Feedback (the More menu on a painting): that uploads the report they reviewed to the developers.",
+      "",
+      "Optional: Settings > The Making-of plays an animation of the painting being made after Start Painting. On iPad, the menu bar's Paint menu has keyboard shortcuts."
+    ]
+  },
+  "availability": {
+    "territories": "all",
+    "availableInNewTerritories": true
+  },
+  "accessibility": {
+    "IPHONE": {
+      "supportsVoiceover": false,
+      "supportsVoiceControl": false,
+      "supportsLargerText": false,
+      "supportsDarkInterface": false,
+      "supportsDifferentiateWithoutColorAlone": true,
+      "supportsSufficientContrast": false,
+      "supportsReducedMotion": true,
+      "supportsCaptions": false,
+      "supportsAudioDescriptions": false
+    },
+    "IPAD": {
+      "supportsVoiceover": false,
+      "supportsVoiceControl": false,
+      "supportsLargerText": false,
+      "supportsDarkInterface": false,
+      "supportsDifferentiateWithoutColorAlone": true,
+      "supportsSufficientContrast": false,
+      "supportsReducedMotion": true,
+      "supportsCaptions": false,
+      "supportsAudioDescriptions": false
+    }
+  },
+  "otherLocales": {
+    "en-GB": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    },
+    "en-AU": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    },
+    "en-CA": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    }
+  },
+  "inAppPurchases": {
+    "com.pbordjadze.paintbynumber.unlimited": {
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a fourth painting of your own photo on the same day. The sheet has the purchase and Restore Purchases. Library pictures are always free."
+    }
+  },
+  "nomination": {
+    "name": "Paint by Moonlight launch",
+    "type": "APP_LAUNCH",
+    "description": [
+      "Paint by Moonlight is a new iPhone and iPad app that turns any photo into a paint-by-numbers painting, made entirely on the device, then lets you fill it in one calm tap at a time.",
+      "",
+      "Its own pipeline draws each photo as a coloring book: clean outlines that close around people and pets, people's eyes drawn in, handwriting traced in ink and kept clear of the numbers, and a palette mixed from the photo itself, each paint with a name of its own. Painting is made for touch and Apple Pencil, with Zen Mode, dark paper for the evening, and a replay of the finished painting as a time-lapse; painting works with VoiceOver, area by area.",
+      "",
+      "It is made by one developer, with no account, ads or tracking, and works offline. 44 public-domain pictures are built in, from Hokusai, Van Gogh and Vermeer to national parks and the Earth from space. Three paintings of your own photos are free, and a one-time purchase unlocks unlimited paintings."
+    ],
+    "publishStartDate": "2026-10-27T00:00:00Z",
+    "deviceFamilies": [
+      "IPHONE",
+      "IPAD"
+    ],
+    "locales": [
+      "en-US"
+    ],
+    "supplementalMaterialsUris": [
+      "https://paulbordjadze.com/paint-by-moonlight/"
+    ],
+    "hasInAppEvents": false,
+    "launchInSelectMarketsFirst": false,
+    "preOrderEnabled": false,
+    "submit": false
+  }
+}

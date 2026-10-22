@@ -22,7 +22,7 @@ name: CI
 
 on:
   push:
-    branches-ignore: ['ci-shots/**', 'sidestore', 'claude/testflight-dryrun*', 'claude/testflight-testers*', 'claude/store-screenshots*']
+    branches-ignore: ['ci-shots/**', 'sidestore', 'claude/testflight-dryrun*', 'claude/testflight-testers*', 'claude/store-screenshots*', 'claude/store-listing*']
   workflow_dispatch:
     inputs:
       scenarios:
