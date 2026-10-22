@@ -169,11 +169,12 @@ extension XCTestCase {
         XCTAssertTrue(element(labeled: title, in: app).waitForNonExistence(timeout: 10), "“\(title)” stayed on screen")
     }
 
-    /// Opens Settings the way a person does: from the gallery's toolbar.
+    /// Opens Settings the way a person does: from the gallery's toolbar, launched with `arguments`
+    /// too.
     @MainActor
-    func openSettings() -> XCUIApplication {
+    func openSettings(arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "gallery-empty"]
+        app.launchArguments = ["-demo", "gallery-empty"] + arguments
         app.launch()
         let button = app.buttons["Settings"]
         XCTAssertTrue(button.waitForExistence(timeout: 30), "The gallery has no Settings button")

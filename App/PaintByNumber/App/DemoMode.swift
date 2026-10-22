@@ -38,12 +38,13 @@ enum DemoMode {
     static let opensFileOnQuestion = UserDefaults.standard.bool(forKey: "openFileOnQuestion")
 
     /// `-openFile <path>`: the file the app opens on launch, through the same handler as a file
-    /// opened from the share sheet. The `create-from-file` scenario, given none, opens a library
-    /// picture it writes to the temporary directory under a name of its own, so the title the
-    /// create flow derives from the file name is visible.
+    /// opened from the share sheet. The `create-from-file` and `create-unlock` scenarios, given
+    /// none, open a library picture written to the temporary directory under a name of its own, so
+    /// the title the create flow derives from the file name is visible.
     static let openFileURL: URL? = {
         if let path = UserDefaults.standard.string(forKey: "openFile") { return URL(fileURLWithPath: path) }
-        guard scenario == "create-from-file", let sample = Sample.named("red-fox")?.url else { return nil }
+        guard ShellDemo.current == .createFromFile || ShellDemo.current == .createUnlock,
+              let sample = Sample.named("red-fox")?.url else { return nil }
         let copy = FileManager.default.temporaryDirectory.appending(path: "Winter Fox.jpg")
         try? FileManager.default.removeItem(at: copy)
         do { try FileManager.default.copyItem(at: sample, to: copy) } catch { return nil }

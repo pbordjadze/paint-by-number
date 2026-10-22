@@ -54,6 +54,9 @@ import PaintCore
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
+/// - `create-unlock`, `-dark`, `-long-text`: the same photo with no free painting left
+///   (`freePaintings`): Start Painting tapped once the painting is made, Unlimited Paintings'
+///   sheet over the preview, ready once its price shows (`UnlockSheet`).
 /// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
 ///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
 ///   `paint-tip` (`PaintTips.configure`).
@@ -99,7 +102,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createRefineGuide, createSuggested, createCustom, createFromFile,
-         galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
          marginariumChapterOneTable, marginariumChapterTwo, marginariumWhosWho, marginariumWhosWhoTeams,
@@ -136,6 +139,7 @@ enum ShellDemo: Equatable {
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
+        case "create-unlock", "create-unlock-dark", "create-unlock-long-text": .createUnlock
         case "gallery-tip", "gallery-tip-dark", "gallery-tip-long-text": .galleryTip
         case "gallery-tip-gear": .galleryTipGear
         case "gallery-tips-off": .galleryTipsOff
@@ -258,6 +262,9 @@ enum ShellDemo: Equatable {
         }
     }
 
+    /// The free paintings left at launch (`UnlockStoreStub`); nil leaves the three a new painter has.
+    var freePaintings: Int? { self == .createUnlock ? 0 : nil }
+
     /// The painter moves Detail once the suggestion is ready, so the settings become custom.
     var movesASlider: Bool { self == .createCustom }
 
@@ -379,7 +386,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,

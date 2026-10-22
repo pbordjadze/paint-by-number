@@ -19,7 +19,9 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     #endif
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = false
+    @Environment(UnlimitedPaintings.self) private var paintings
     @State private var path: [Destination] = []
+    @State private var isUnlocking = false
 
     private let appInfo = AppInfo()
     /// iPad and the simulator have no haptics: nothing to switch, and the header says Sound alone.
@@ -172,6 +174,8 @@ struct SettingsView: View {
                         Text("After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it.")
                     }
 
+                    if paintings.isSold { unlimitedPaintings }
+
                     Section {
                         LabeledContent {
                             Text(appInfo.summary)
@@ -224,5 +228,43 @@ struct SettingsView: View {
         }
         .onAppear { PaintTips.drawerOpened() }
         .onDisappear { PaintTips.desk.leave(.drawer) }
+        .sheet(isPresented: $isUnlocking) { UnlockSheet() }
+    }
+
+    /// Unlimited Paintings (`UnlimitedPaintings`): bought, or the free paintings left and the way
+    /// to buy it or restore it (`UnlockSheet`). SideStore builds sell nothing and show none of it.
+    private var unlimitedPaintings: some View {
+        Section {
+            if paintings.isUnlocked {
+                LabeledContent {
+                    Text("Unlocked")
+                } label: {
+                    SwiftUI.Label("Unlimited Paintings", systemImage: "infinity")
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("settings-unlimited")
+            } else {
+                LabeledContent {
+                    Text(String(localized: "settings.freePaintings.left", defaultValue: "\(paintings.freeLeft) left",
+                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)"))
+                } label: {
+                    SwiftUI.Label("Free Paintings", systemImage: "photo")
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("settings-free-paintings")
+                Button {
+                    isUnlocking = true
+                } label: {
+                    SwiftUI.Label("Unlimited Paintings", systemImage: "infinity")
+                }
+                .accessibilityIdentifier("settings-unlimited")
+            }
+        } footer: {
+            if paintings.isUnlocked {
+                Text("Thank you for supporting Paint by Moonlight.")
+            } else {
+                Text("A free painting of your own photos comes back each day, up to three. Library pictures are always free.")
+            }
+        }
     }
 }

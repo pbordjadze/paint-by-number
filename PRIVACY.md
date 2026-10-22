@@ -36,6 +36,15 @@ original photo only if you switch it on (photos).
   app's own storage on your device. They are included in your device's backups like any app's
   data, and they are deleted when you delete the app.
 
+## Unlimited Paintings
+
+Three paintings of your own photos are free, and a free one comes back each day, up to three at
+a time; Unlimited Paintings, a one-time purchase, lifts that limit. You buy it from Apple through
+the App Store, under Apple's terms: Apple handles the payment and your Apple Account, and we never
+receive your name, email address or payment details (Apple's sales reports to developers count
+purchases without saying who made them). The app checks on your device whether you have bought
+it, and counts your free paintings on your device. Nothing about it is sent to us.
+
 ## Sharing and feedback
 
 Nothing leaves your device unless you send or share it yourself. When you share a painting, print

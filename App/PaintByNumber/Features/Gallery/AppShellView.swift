@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 /// settings and The Marginarium.
 struct AppShellView: View {
     @Environment(Library.self) private var library
+    @Environment(UnlimitedPaintings.self) private var paintings
     @Environment(\.horizontalSizeClass) private var sizeClass
     #if UNRELEASED
     /// The Marginarium is in Debug and SideStore builds only for now (`UNRELEASED`): the release
@@ -117,6 +118,7 @@ struct AppShellView: View {
             )
             .id(flowIdentity)
             .environment(library)
+            .environment(paintings)
             .environment(\.startHandoff, handoff)
             // The flow draws its own background and leaves the cover clear, so that it can fade to
             // the painting opened beneath it.
@@ -128,6 +130,7 @@ struct AppShellView: View {
         .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
             SettingsView()
                 .environment(library)
+                .environment(paintings)
         }
         #if UNRELEASED
         .sheet(isPresented: $isShowingMarginarium, onDismiss: presentIncomingImage) {

@@ -26,6 +26,8 @@ struct TemplatePreviewView: View {
     @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
     @State private var isStarting = false
     @State private var startError: String?
+    /// Start Painting found no free painting left for the painter's own photo.
+    @State private var offersUnlock = false
     @State private var isTuning = false
     #if UNRELEASED
     @State private var isRefining = false
@@ -34,6 +36,7 @@ struct TemplatePreviewView: View {
     @State private var tunedSetting: Setting?
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(UnlimitedPaintings.self) private var paintings
 
     var body: some View {
         Group {
@@ -148,7 +151,8 @@ struct TemplatePreviewView: View {
             if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
         }
         #endif
-        .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
+        .modifier(UnlockOffer(isPresented: $offersUnlock, start: start))
+        .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
             Button("Try Again", action: start)
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -170,8 +174,8 @@ struct TemplatePreviewView: View {
         let room = roomSize.width > 0 && roomSize.height > 0 ? roomSize : size
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         // The stacked controls card: title row, settings chip, the sliders (one and its chooser in
-        // a compact window), summary, Start.
-        let card: CGFloat = room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)
+        // a compact window), summary, Start and the free paintings under it.
+        let card: CGFloat = (room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)) + (showsFreeCount ? 30 : 0)
         let stacked = Self.fittedArea(
             width: room.width - 2 * sidePadding, height: room.height - card, aspect: photoAspect)
         let beside = Self.fittedArea(
@@ -305,6 +309,10 @@ struct TemplatePreviewView: View {
         let canRefine = false
         #endif
         PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: canRefine)
+        #if DEBUG
+        // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
+        if ShellDemo.current == .createUnlock { start() }
+        #endif
     }
 
     // MARK: Canvas
@@ -410,6 +418,8 @@ struct TemplatePreviewView: View {
             .tint(Theme.signature)
             .controlSize(.large)
             .disabled(model.preview == nil || model.isChoosingSettings || isStarting)
+
+            if showsFreeCount { freeCount }
         }
         .padding(.horizontal, 22)
         .padding(.top, 22)
@@ -575,13 +585,50 @@ struct TemplatePreviewView: View {
         .background(Theme.paper, in: .rect(cornerRadius: 14, style: .continuous))
     }
 
+    private var isShowingStartError: Binding<Bool> {
+        Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })
+    }
+
+    /// A photo of the painter's own, not a library picture: its painting may take a free painting.
+    private var isOwnPhoto: Bool { model.source != nil && model.source?.sampleName == nil }
+
+    /// The free paintings left show under Start Painting while one of the painter's own photos
+    /// would take one (`UnlimitedPaintings`).
+    private var showsFreeCount: Bool { isOwnPhoto && paintings.isSold && !paintings.isUnlocked }
+
+    private var freeCount: some View {
+        Group {
+            let left = paintings.freeLeft
+            if left > 0 {
+                Text(String(localized: "unlock.freeLeft", defaultValue: "\(left) free paintings left",
+                            comment: "Under the create flow's Start Painting, for a painting of the painter's own photo before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 3)"))
+            } else {
+                Text("Your next free painting comes tomorrow.")
+            }
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier("free-paintings")
+    }
+
+    /// Starts the painting, once a painting of the painter's own photo may (`UnlimitedPaintings`):
+    /// without the unlock and a free painting left, the unlock's sheet instead.
     private func start() {
         guard !isStarting else { return }
         titleFocused = false
         isStarting = true
+        let ownPhoto = isOwnPhoto
         Task {
             do {
+                guard await paintings.mayStart(ownPhoto: ownPhoto) else {
+                    isStarting = false
+                    offersUnlock = true
+                    return
+                }
                 try await onStart()
+                paintings.started(ownPhoto: ownPhoto)
             } catch {
                 startError = error.localizedDescription
                 isStarting = false
@@ -786,6 +833,21 @@ struct ContentSwipeBackOff: UIViewControllerRepresentable {
                 Self.holds[key] = nil
                 recognizer.isEnabled = hold.wasEnabled
             }
+        }
+    }
+}
+
+/// Unlimited Paintings' sheet over the preview (`UnlockSheet`): Start Painting opens it when no
+/// free painting is left for the painter's own photo, and once the unlock is bought the painting
+/// starts.
+private struct UnlockOffer: ViewModifier {
+    @Binding var isPresented: Bool
+    let start: () -> Void
+    @Environment(UnlimitedPaintings.self) private var paintings
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } }) {
+            UnlockSheet(fromStart: true)
         }
     }
 }
