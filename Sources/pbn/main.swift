@@ -74,19 +74,24 @@
 //       end moved onto ink, `maxEndShift`; `unexpectedChanges`, 0: regions the edit changed that
 //       it neither touched, merged nor sat beside) and how many regions are bit for bit as
 //       they were (`identicalRegions`)
-//   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm [--lines drawing.pgm]]
-//       [generate options]
+//   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --blank | --edges map.pgm [--lines drawing.pgm]]
+//       [--no-steps] [generate options]
 //       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
 //       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Smart
-//       Eraser's line from junction to junction, Fill with the photo's color there, Undo, Redo)
-//       on the coloring book of the photo (generated as the app does, the coloring book at its
-//       defaults unless --line-style says otherwise, or --template), each edit laid as the app lays
+//       Eraser's line from junction to junction, Fill with the photo's color there, the Bucket
+//       (`bucket`: a paint by number, OKLab `color` or the picker's sRGB `rgb`, else the photo's
+//       color there), Edit Paint (`repaint`: paint `paint` to `color` or `rgb`, `family`), Undo,
+//       Redo) on the coloring book of the photo (generated as the app does, the coloring book at
+//       its defaults unless --line-style says otherwise, --template, or --blank: Start From
+//       Blank, the photo as one area), each edit laid as the app lays
 //       it (a drawn line with the photo's colors, TemplateEditor.painted; EditTrail). gestures.json:
 //       Sources/pbn/Refine.swift's RefineScript, points normalized to the picture. Writes
 //       before.ppm, after.ppm and per gesture steps/NN-<tool>.ppm (the painting with the drawing in
 //       ink at 2×) and steps/NN-<tool>-touches.ppm (its touches over it, in magenta), photo.ppm, before.pbnt, template.pbnt, edits.json (the
 //       edits as refinements.json keeps them) and refine.json: per gesture the edit, what it did
-//       and the toast Refine shows; tools/refine_sheet.py lays them out in one picture
+//       and the toast Refine shows; tools/refine_sheet.py lays them out in one picture. --no-steps
+//       writes no step pictures (a long script's would fill the disk: 70 MB a gesture at the
+//       largest canvas), and refine.json's `picture` and `touches` are empty
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into

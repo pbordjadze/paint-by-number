@@ -42,7 +42,11 @@ struct RefineScript: Decodable {
         var bend: [Float]?
         var at: [Float]?
         var color: [Float]?
+        /// A color as the picker gives it: sRGB, 0...1, in the template's color space.
+        var rgb: [Float]?
         var paint: Int?
+        /// A repaint's Similar Colors Too.
+        var family: Bool?
         var zoom: Double?
         var caption: String?
         var target: String?
@@ -103,7 +107,7 @@ func refineScreen(for t: Template, width: Double, zoom: Double) -> RefineScreen 
 
 func runRefine(_ options: Options) throws {
     guard options.positional.count == 2, let out = options.out else {
-        fail("usage: pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm --lines drawing.pgm] [generate options]")
+        fail("usage: pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --blank | --edges map.pgm --lines drawing.pgm] [generate options]")
     }
     let photo = loadImage(options.positional[0])
     guard let data = FileManager.default.contents(atPath: options.positional[1]) else { fail("cannot read \(options.positional[1])") }
@@ -113,7 +117,13 @@ func runRefine(_ options: Options) throws {
     try FileManager.default.createDirectory(at: outDir.appendingPathComponent("steps"), withIntermediateDirectories: true)
 
     let base: Template
-    if let path = options.template {
+    if options.blank {
+        // As the app starts from Blank (`ArtworkFactory.blank`).
+        let size = options.settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        do { base = try TemplateEditor.blank(width: size.width, height: size.height, photo: photo, colorSpace: photo.colorSpace) } catch {
+            fail("no blank canvas: \(error)")
+        }
+    } else if let path = options.template {
         guard let bytes = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
         do { base = try Template(encoded: bytes) } catch { fail("cannot decode \(path): \(error)") }
     } else {
@@ -138,6 +148,22 @@ func runRefine(_ options: Options) throws {
     func point(_ p: [Float]?, _ what: String, _ k: Int) -> SIMD2<Float> {
         guard let p, p.count == 2 else { fail("gesture \(k + 1): \(what) is [x, y]") }
         return SIMD2(p[0], p[1])
+    }
+    /// A gesture's paint: `color` (OKLab), `rgb` (the picker's), or paint number `paint` of `t`.
+    func chosen(_ g: RefineScript.Gesture, on t: Template, _ k: Int) -> SIMD3<Float>? {
+        if let c = g.color {
+            guard c.count == 3 else { fail("gesture \(k + 1): color is OKLab [L, a, b]") }
+            return SIMD3(c[0], c[1], c[2])
+        }
+        if let c = g.rgb {
+            guard c.count == 3 else { fail("gesture \(k + 1): rgb is [r, g, b], 0...1") }
+            return ColorScience.encodedToOKLab(SIMD3(c[0], c[1], c[2]), space: t.colorSpace)
+        }
+        if let n = g.paint {
+            guard (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): there is no paint \(n)") }
+            return t.palette[n - 1].oklab
+        }
+        return nil
     }
     for (k, g) in script.gestures.enumerated() {
         let began = ContinuousClock.now
@@ -164,10 +190,8 @@ func runRefine(_ options: Options) throws {
             edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
         case "brush":
             let color: SIMD3<Float>
-            if let c = g.color, c.count == 3 {
-                color = SIMD3(c[0], c[1], c[2])
-            } else if let n = g.paint, (1...t.palette.count).contains(n) {
-                color = t.palette[n - 1].oklab
+            if let c = chosen(g, on: t, k) {
+                color = c
             } else if let first = samples.first {
                 color = LineEdit.photoColor(at: first, in: photo)
             } else {
@@ -202,6 +226,19 @@ func runRefine(_ options: Options) throws {
             case "star": edit = RefineGestures.shape(.star, from: a, to: b, on: screen, snapping: lines)
             default: fail("gesture \(k + 1): a shape is line, rectangle, oval, polygon, star or curve")
             }
+        case "bucket":
+            // The Bucket with the current paint, or the Eyedropper's color of the photo there.
+            let at = point(g.at, "at", k)
+            marks = [[at]]
+            edit = .paintArea(at: screen.canvasPoint(at), color: chosen(g, on: t, k) ?? LineEdit.photoColor(at: at, in: photo))
+        case "repaint":
+            // Edit Paint: paint `paint` becomes `color` or `rgb`.
+            guard let n = g.paint, (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): a repaint needs its paint") }
+            var to = g
+            to.paint = nil
+            guard let color = chosen(to, on: t, k) else { fail("gesture \(k + 1): a repaint needs a color or rgb") }
+            marks = []
+            edit = .repaint(from: t.palette[n - 1].oklab, to: color, family: g.family ?? false)
         case "smartEraser":
             let at = point(g.at, "at", k)
             marks = [[at]]
@@ -230,7 +267,7 @@ func runRefine(_ options: Options) throws {
             }
             step.verdict = "redo"
         default:
-            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, brush, reshape, moveLabel, smartEraser, fill, undo, redo)")
+            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, brush, bucket, repaint, reshape, moveLabel, smartEraser, fill, undo, redo)")
         }
 
         if let target {
@@ -279,12 +316,14 @@ func runRefine(_ options: Options) throws {
         }
         let took = ContinuousClock.now - began
         step.milliseconds = Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15
-        let name = String(format: "steps/%02d-%@", k + 1, g.tool)
         let canvasMarks = marks.filter { !$0.isEmpty }.map { (points: $0.map(screen.canvasPoint), rgb: touch, width: Float(1.5)) }
-        try writePPM(bookRaster(trail.template), name + ".ppm", in: outDir)
-        try writePPM(bookRaster(trail.template, marks: canvasMarks), name + "-touches.ppm", in: outDir)
-        step.picture = name + ".ppm"
-        step.touches = name + "-touches.ppm"
+        if options.steps {
+            let name = String(format: "steps/%02d-%@", k + 1, g.tool)
+            try writePPM(bookRaster(trail.template), name + ".ppm", in: outDir)
+            try writePPM(bookRaster(trail.template, marks: canvasMarks), name + "-touches.ppm", in: outDir)
+            step.picture = name + ".ppm"
+            step.touches = name + "-touches.ppm"
+        }
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
         case .draw(let points, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points
