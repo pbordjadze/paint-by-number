@@ -654,7 +654,9 @@ Conventions).
     adds a hexagon and a star in these builds (`RefineShape.offered`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
     share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
-    drag joins the cells it crosses into the first, boundaries and ink between them gone), Move Edge
+    drag joins the cells it crosses into the first, boundaries and ink between them gone; the cells
+    it will join glow while the finger is down, found off the main actor as the editor finds them,
+    `TemplateEditor.MergeProbe`; one that stays in one area says it is one area already), Move Edge
     (`.reshape` on a cell's boundary, inked or not), Fill Shape; while
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
@@ -769,8 +771,10 @@ Conventions).
   disappears or the scene leaves the foreground, off the main actor and one job after another.
   `Artworks/Drafts/Current/` holds `draft.json` (photo id, titles, settings, the Lines slider,
   sample name), `refinements.json` (an artwork's encoding) and `source.jpg` (the photo as the
-  flow holds it, encoded with a photo's first draft and copied after, never encoded twice), built
-  in `Drafts/.staging` and swapped in atomically (`DraftStore.write`). It goes when the painting
+  flow holds it, encoded with a photo's first draft and copied after, never encoded twice), and,
+  once the edits are all laid, the trail they made (`DraftStore.KeptFile`: `base.pbnt`,
+  `laid.pbnt`, `made.json`; `EditTrail.Kept`), built in `Drafts/.staging` and swapped in
+  atomically (`DraftStore.write`), so the trail is always that of the `refinements.json` beside it. It goes when the painting
   starts (`CreateFlowView.start`) or the refinements are undone to nothing (`Drafts.drop`, which
   removes only its own photo's draft) and by Discard on the gallery's `DraftRow` (confirmation).
   A different new painting leaves the draft alone and replaces it only once its own photo is
@@ -780,7 +784,10 @@ Conventions).
   `CreateModel.load(draft:photo:)`): the photo goes through the usual steps including the
   suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
   with its refinements, at full resolution: the base, then its `edits` laid on it in order
-  (`DraftTests.resumingADraftLaysItsEditsAgain`). Refine's undo and redo stacks are not kept. A draft
+  (`DraftTests.resumingADraftLaysItsEditsAgain`), unless the base comes out equal to the kept
+  trail's, when the kept template is shown and nothing is laid (`EditTrail(base:edits:resuming:)`;
+  a kept trail missing or damaged is laid again, never the draft's loss). Refine's undo and
+  redo stacks are not kept. A draft
   with any file missing or damaged, or a photo that won't decode, is no draft: logged and
   removed, never a failure of the gallery; one that can't be read just now (an I/O or data
   protection error) is kept, at launch and on Continue (`DraftTests`; `gallery-draft` is its

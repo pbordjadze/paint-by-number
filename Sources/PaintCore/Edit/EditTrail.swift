@@ -41,6 +41,47 @@ public struct EditTrail: Sendable {
         template = base
     }
 
+    /// A trail as it stands, to be taken up again without laying its edits (`init(base:edits:resuming:)`):
+    /// a draft keeps one beside its edits, so Continue Refining lays nothing that was laid.
+    public struct Kept: Sendable, Equatable {
+        public let base: Template
+        public let edits: [TemplateEditor.Edit]
+        /// Whether each edit changed the template it was laid on.
+        public let made: [Bool]
+        public let template: Template
+
+        public init(base: Template, edits: [TemplateEditor.Edit], made: [Bool], template: Template) {
+            self.base = base
+            self.edits = edits
+            self.made = made
+            self.template = template
+        }
+    }
+
+    /// The trail as it stands.
+    public var kept: Kept { Kept(base: base, edits: edits, made: made, template: template) }
+
+    /// The trail `kept` was, taken up again with nothing laid: when it was laid on `base` (equal
+    /// to it, as the same photo, settings and inputs make it) and its edits are `edits`. Nil
+    /// otherwise (the base was made differently, the edits changed), when the edits are laid
+    /// again (`move(to:)`). Its templates before the newest are not kept.
+    public init?(base: Template, edits: [TemplateEditor.Edit], resuming kept: Kept) {
+        guard kept.made.count == kept.edits.count, kept.edits == edits, kept.base == base else { return nil }
+        self.base = base
+        self.edits = edits
+        made = kept.made
+        template = kept.template
+    }
+
+    /// What laying the edits reported, as far as the trail knows it: those made and those left
+    /// out (`Replay.tooSmall` is not kept).
+    public var replayed: Replay {
+        var replay = Replay()
+        replay.made = made.filter { $0 }.count
+        replay.left = made.count - replay.made
+        return replay
+    }
+
     /// What one edit did to the template it was laid on.
     public enum Verdict: Sendable, Equatable {
         /// It changed the template. `tooSmall` is set when the shapes it closed all had no room

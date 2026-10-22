@@ -47,6 +47,31 @@ struct DraftTests {
 
     // MARK: The store
 
+    /// The trail a draft's edits made is kept beside them and read back only for those edits; a
+    /// trail of other edits is not kept, and a damaged one is no trail, the draft whole without it.
+    @Test func keepsTheTrailItsEditsMade() throws {
+        let store = store
+        let saved = draft()
+        let base = Fixtures.stripes()
+        let kept = EditTrail.Kept(base: base, edits: saved.refinements.edits, made: [true, false, true], template: base)
+        try store.write(saved, photo: try photo(), kept: kept)
+        #expect(store.kept(edits: saved.refinements.edits) == kept)
+        #expect(store.kept(edits: Array(saved.refinements.edits.dropLast())) == nil)
+
+        var other = saved
+        other.refinements.edits.removeLast()
+        try store.write(other, photo: nil, kept: kept)
+        #expect(store.kept(edits: other.refinements.edits) == nil)
+        for file in DraftStore.KeptFile.allCases {
+            #expect(!FileManager.default.fileExists(atPath: store.url(file).path), "\(file.rawValue)")
+        }
+
+        try store.write(saved, photo: nil, kept: kept)
+        try Data("not a template".utf8).write(to: store.url(DraftStore.KeptFile.laid))
+        #expect(store.kept(edits: saved.refinements.edits) == nil)
+        #expect(try store.read() == saved)
+    }
+
     @Test func roundTripsItsSettingsRefinementsAndPhoto() throws {
         let store = store
         let saved = draft()

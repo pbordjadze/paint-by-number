@@ -6,9 +6,10 @@ import os
 
 /// A new painting the painter refined and didn't start: what the create flow needs to pick up
 /// where it was left (`Drafts` keeps one on disk, `CreateModel.load(draft:photo:)` resumes it).
-/// The template is not kept: it is generated again from the photo, the settings and the
-/// refinements' generator inputs, and the painter's edits (`TemplateRefinements.edits`) are laid
-/// on it again, in order, as Refine laid them.
+/// The template is generated again from the photo, the settings and the refinements' generator
+/// inputs, and the painter's edits (`TemplateRefinements.edits`) are laid on it again, in order,
+/// as Refine laid them, unless the trail they made is kept beside them (`DraftStore.KeptFile`)
+/// and the base comes out the same: then nothing is laid again.
 nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     /// Names the photo, so a draft replaces its own earlier saves and the stored photo is
     /// encoded once (`DraftStore.write`).
@@ -44,6 +45,9 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
 ///     <root>/Current/draft.json        `CreateDraft` without its refinements
 ///                    refinements.json  `TemplateRefinements`
 ///                    source.jpg        the photo (≤ 2048 px), as the create flow holds it
+///                    base.pbnt         optional (`KeptFile`): the base the edits were laid on,
+///                    laid.pbnt         the template they made (both LZFSE, as an artwork's),
+///                    made.json         and which of them changed it
 ///     <root>/.staging/  a draft is assembled here and swapped into place atomically
 ///
 /// There is one draft: writing another replaces it. Nothing here creates a folder until
@@ -53,6 +57,15 @@ nonisolated struct DraftStore: Sendable {
         case draft = "draft.json"
         case refinements = "refinements.json"
         case source = "source.jpg"
+    }
+
+    /// The trail the edits made (`EditTrail.Kept`), written with the edits it laid and only
+    /// with them, so Continue Refining needn't lay them again. Never what makes the draft:
+    /// missing or damaged, the edits are laid again.
+    nonisolated enum KeptFile: String, CaseIterable {
+        case base = "base.pbnt"
+        case laid = "laid.pbnt"
+        case made = "made.json"
     }
 
     enum StoreError: Error, Equatable {
@@ -70,6 +83,7 @@ nonisolated struct DraftStore: Sendable {
     private var staging: URL { root.appending(path: ".staging", directoryHint: .isDirectory) }
 
     func url(_ file: File) -> URL { folder.appending(path: file.rawValue) }
+    func url(_ file: KeptFile) -> URL { folder.appending(path: file.rawValue) }
 
     /// The draft on disk, nil when there is none. Throws for one that is damaged: its files
     /// missing or unreadable.
@@ -99,9 +113,27 @@ nonisolated struct DraftStore: Sendable {
         return data
     }
 
+    /// The trail kept beside the draft's `edits`, nil when there is none or it can't be read.
+    func kept(edits: [TemplateEditor.Edit]) -> EditTrail.Kept? {
+        guard fm.fileExists(atPath: url(KeptFile.made).path) else { return nil }
+        do {
+            let made = try JSONDecoder().decode([Bool].self, from: Data(contentsOf: url(KeptFile.made)))
+            guard made.count == edits.count else { return nil }
+            func template(_ file: KeptFile) throws -> Template {
+                let compressed = try Data(contentsOf: url(file), options: .mappedIfSafe)
+                return try Template(encoded: ArtworkStore.lzfseDecoded(compressed, maximumBytes: ArtworkStore.maximumTemplateBytes))
+            }
+            return EditTrail.Kept(base: try template(.base), edits: edits, made: made, template: try template(.laid))
+        } catch {
+            Log.create.error("The draft's kept trail can't be read; its edits will be laid again: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
     /// Replaces the draft with `draft` and `photo` (encoded as an artwork's `source.jpg` is); a
-    /// nil `photo` keeps the one already stored.
-    func write(_ draft: CreateDraft, photo: CGImage?) throws {
+    /// nil `photo` keeps the one already stored. `kept` goes beside it when it laid the draft's
+    /// edits.
+    func write(_ draft: CreateDraft, photo: CGImage?, kept: EditTrail.Kept? = nil) throws {
         let assembly = staging.appending(path: "Current", directoryHint: .isDirectory)
         try? fm.removeItem(at: assembly)
         try fm.createDirectory(at: assembly, withIntermediateDirectories: true)
@@ -118,6 +150,19 @@ nonisolated struct DraftStore: Sendable {
             } else {
                 guard fm.fileExists(atPath: url(.source).path) else { throw StoreError.missingPhoto }
                 try fm.copyItem(at: url(.source), to: stored)
+            }
+            if let kept, kept.edits == draft.refinements.edits {
+                do {
+                    for (file, template) in [(KeptFile.base, kept.base), (.laid, kept.template)] {
+                        let compressed = try (template.encoded() as NSData).compressed(using: .lzfse) as Data
+                        try compressed.write(to: assembly.appending(path: file.rawValue), options: .atomic)
+                    }
+                    try JSONEncoder().encode(kept.made).write(to: assembly.appending(path: KeptFile.made.rawValue), options: .atomic)
+                } catch {
+                    // The draft is whole without it: its edits are laid again.
+                    for file in KeptFile.allCases { try? fm.removeItem(at: assembly.appending(path: file.rawValue)) }
+                    Log.create.error("Keeping the draft's trail failed: \(String(describing: error), privacy: .public)")
+                }
             }
             if fm.fileExists(atPath: folder.path) {
                 _ = try fm.replaceItemAt(folder, withItemAt: assembly)

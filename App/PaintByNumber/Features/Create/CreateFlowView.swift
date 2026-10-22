@@ -97,7 +97,7 @@ struct CreateFlowView: View {
             if let droppedPhoto {
                 model.load(imageData: droppedPhoto, title: droppedTitle)
             } else if let resuming {
-                model.load(draft: resuming.draft, photo: resuming.photo)
+                model.load(draft: resuming.draft, photo: resuming.photo, kept: resuming.kept)
             } else if let openingSample {
                 model.load(sample: openingSample)
             }
@@ -130,10 +130,11 @@ struct CreateFlowView: View {
             }
         }
         #endif
-        .onChange(of: model.draft) { old, draft in
-            if let draft, let photo = model.source?.preview {
-                library.drafts.keep(draft, photo: photo)
-            } else if let old, model.source != nil, old.photoID == model.photoID {
+        // With the template on screen too: its trail, once its edits are laid, goes with the draft.
+        .onChange(of: DraftKeeping(draft: model.draft, shown: model.preview?.id)) { old, keeping in
+            if let draft = keeping.draft, let photo = model.source?.preview {
+                library.drafts.keep(draft, photo: photo, kept: model.keptTrail)
+            } else if let old = old.draft, model.source != nil, old.photoID == model.photoID {
                 // Undone down to nothing. Another photo, or none, leaves the draft of the last.
                 library.drafts.drop(photoID: old.photoID)
             }
@@ -328,4 +329,11 @@ private struct DepartingPicture: View {
                 .equatable()
         }
     }
+}
+
+/// What the flow hands the drafts (`Drafts.keep`): the draft, and the template on screen, whose
+/// trail goes with it once the draft's edits are all laid.
+private struct DraftKeeping: Equatable {
+    let draft: CreateDraft?
+    let shown: UUID?
 }

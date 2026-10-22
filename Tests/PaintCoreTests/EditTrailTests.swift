@@ -43,6 +43,27 @@ struct EditTrailTests {
     }
 
     /// Taking an edit back, or putting it back, lays nothing when the template is kept.
+    /// A trail kept beside its edits is taken up again as it was, laying nothing, only on the base
+    /// it was laid on and with the edits it laid; a list moved on from it is the editor's again.
+    @Test func aKeptTrailIsTakenUpAgainOnlyAsItWas() throws {
+        var trail = EditTrail(base: TemplateEditorTests.scene)
+        try trail.move(to: Self.edits + [Self.doublingBack, Self.overPaper])
+        let kept = trail.kept
+        let resumed = try #require(EditTrail(base: TemplateEditorTests.scene, edits: kept.edits, resuming: kept))
+        #expect(resumed.template == trail.template && resumed.edits == trail.edits)
+        #expect(resumed.replayed.made == Self.edits.count && resumed.replayed.left == 2)
+        #expect(EditTrail(base: TemplateEditorTests.scene, edits: Array(kept.edits.dropLast()), resuming: kept) == nil)
+        #expect(EditTrail(base: try Self.laid([Self.edits[0]]), edits: kept.edits, resuming: kept) == nil)
+        var undone = resumed
+        try undone.move(to: Array(Self.edits.dropLast()))
+        #expect(undone.template == (try Self.laid(Array(Self.edits.dropLast()))))
+        var more = resumed
+        more.add(.eraseLine(at: SIMD2(100, 25), reach: 5))
+        var fresh = EditTrail(base: TemplateEditorTests.scene)
+        try fresh.move(to: more.edits)
+        #expect(more.template == fresh.template)
+    }
+
     @Test func undoAndRedoNeedNoEditing() throws {
         var trail = EditTrail(base: TemplateEditorTests.scene)
         for edit in Self.edits { trail.add(edit) }
