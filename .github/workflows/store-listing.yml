@@ -1,0 +1,46 @@
+name: Store listing
+
+# Fills in the App Store listing of the version being prepared from ci/store-listing.json, through
+# the App Store Connect API (ci/store_listing.py, its docstring the manual), on request only.
+# Actions › Store listing › Run workflow from `main` with Apply ticked sends what differs; without
+# it, or on a push to a `claude/store-listing*` branch (which ci.yml ignores), it is a dry run: it
+# lists each field that differs from App Store Connect, changing nothing.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (as the TestFlight workflow's). The logs are
+# public: nothing prints a secret or App Review's contact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Send what differs (otherwise list it only)'
+        type: boolean
+        default: false
+  push:
+    branches: ['claude/store-listing*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-listing
+  cancel-in-progress: false
+
+jobs:
+  listing:
+    name: App Store listing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      # Installed in a step of its own, with no secret in reach.
+      - name: Python
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+      - name: Listing
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLY: ${{ github.event_name == 'workflow_dispatch' && inputs.apply && '--apply' || '' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_listing.py ci/store-listing.json $APPLY'
