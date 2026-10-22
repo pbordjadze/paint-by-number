@@ -9,6 +9,10 @@ import XCTest
 final class RefineAfterSlidersTests: XCTestCase {
     /// How long each full resolution waits before it starts.
     private static let delay = 8
+    /// The same for the test that must reach a slider again before the template lands: on CI's
+    /// iPhone the queries and stalls between Refine's tap and the drag took longer than 8 s
+    /// (main's run 553: the template landed, Refine opened by itself and the drag called nothing off).
+    private static let longDelay = 20
 
     /// A drag of Detail, the slider Paul moved, released.
     @MainActor
@@ -68,7 +72,7 @@ final class RefineAfterSlidersTests: XCTestCase {
     /// doesn't open by itself once the painting is made, and a tap then opens it at once.
     @MainActor
     func testTouchingASliderCallsOffAWaitingRefine() throws {
-        let app = launchPreview()
+        let app = launchPreview(delay: Self.longDelay)
         let refine = app.buttons["refine"]
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         centre(settingSlider("Smoothness", in: app), in: app)
@@ -100,9 +104,9 @@ final class RefineAfterSlidersTests: XCTestCase {
 
     /// The Great Wave's preview, once Refine is on, with each full resolution made to wait.
     @MainActor
-    private func launchPreview() -> XCUIApplication {
+    private func launchPreview(delay: Int = RefineAfterSlidersTests.delay) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "\(Self.delay)"]
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "\(delay)"]
         app.launch()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 30), "The preview didn't open")
