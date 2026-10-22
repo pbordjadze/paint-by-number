@@ -122,5 +122,47 @@
       "supportsCaptions": false,
       "supportsAudioDescriptions": false
     }
+  },
+  "otherLocales": {
+    "en-GB": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    },
+    "en-AU": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    },
+    "en-CA": {
+      "keywords": "numbers,colour by number,colouring,color by number,pet portrait,art,relaxing,calm,mindful,keepsake"
+    }
+  },
+  "inAppPurchases": {
+    "com.pbordjadze.paintbynumber.unlimited": {
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a fourth painting of your own photo on the same day. The sheet has the purchase and Restore Purchases. Library pictures are always free."
+    }
+  },
+  "nomination": {
+    "name": "Paint by Moonlight launch",
+    "type": "APP_LAUNCH",
+    "description": [
+      "Paint by Moonlight is a new iPhone and iPad app that turns any photo into a paint-by-numbers painting, made entirely on the device, then lets you fill it in one calm tap at a time.",
+      "",
+      "Its own pipeline draws each photo as a coloring book: clean outlines that close around people and pets, people's eyes drawn in, handwriting traced in ink and kept clear of the numbers, and a palette mixed from the photo itself, each paint with a name of its own. Painting is made for touch and Apple Pencil, with Zen Mode, dark paper for the evening, and a replay of the finished painting as a time-lapse; painting works with VoiceOver, area by area.",
+      "",
+      "It is made by one developer, with no account, ads or tracking, and works offline. 44 public-domain pictures are built in, from Hokusai, Van Gogh and Vermeer to national parks and the Earth from space. Three paintings of your own photos are free, and a one-time purchase unlocks unlimited paintings."
+    ],
+    "publishStartDate": "2026-10-27T00:00:00Z",
+    "deviceFamilies": [
+      "IPHONE",
+      "IPAD"
+    ],
+    "locales": [
+      "en-US"
+    ],
+    "supplementalMaterialsUris": [
+      "https://paulbordjadze.com/paint-by-moonlight/"
+    ],
+    "hasInAppEvents": false,
+    "launchInSelectMarketsFirst": false,
+    "preOrderEnabled": false,
+    "submit": false
   }
 }

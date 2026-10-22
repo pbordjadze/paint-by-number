@@ -17,6 +17,13 @@ keeps it; a key or field left out is left as it is, and a list of strings is its
                          accessibilityDeclarations' supports* attributes, every one given
     availability         {"territories": "all", "availableInNewTerritories": true}: set only
                          while the app has none (later changes are App Store Connect's)
+    otherLocales         {"en-GB": {"keywords": …}, …}: other English storefronts' listings,
+                         LOCALE's app info and version text respelled (colour), with their own
+                         keywords, promotional text or subtitle; made when missing
+    inAppPurchases       {product id: {"reviewNote": …}}: written only where App Store Connect
+                         has none
+    nomination           a featuring nomination for Apple's editors (Nomination's attributes):
+                         kept as a draft until "submit" is true, then left as it is
 
 It finds the app by its bundle id, its iOS version in an editable state and the app info being
 prepared with it, and checks the fields and their lengths before anything changes. Without
@@ -36,6 +43,7 @@ Needs `cryptography` (ES256 tokens, through ci/testflight_testers.py's client).
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -73,7 +81,13 @@ FIELDS = {
                             "supportUrl": str},
     "review": {"notes": str, "demoAccountRequired": bool},
 }
-SECTIONS = (*FIELDS, "accessibility", "availability")
+# What another English locale's listing may say in its own words; the rest is LOCALE's, respelled.
+LOCALE_FIELDS = ("keywords", "promotionalText", "subtitle")
+NOMINATION = {"name": str, "type": ("APP_LAUNCH", "APP_ENHANCEMENTS", "NEW_CONTENT"), "description": str,
+              "publishStartDate": str, "deviceFamilies": list, "locales": list, "supplementalMaterialsUris": list,
+              "hasInAppEvents": bool, "launchInSelectMarketsFirst": bool, "preOrderEnabled": bool, "notes": str,
+              "submit": bool}
+SECTIONS = (*FIELDS, "accessibility", "availability", "otherLocales", "inAppPurchases", "nomination")
 
 
 def read_listing(path):
@@ -81,8 +95,11 @@ def read_listing(path):
     unknown = set(listing) - set(SECTIONS)
     if unknown:
         raise APIError(f"{path.name}: unknown sections {', '.join(sorted(unknown))}")
-    return {section: {field: "\n".join(value) if isinstance(value, list) else value
-                      for field, value in fields.items()} if section != "accessibility" else fields
+    def joined(section, field, value):
+        text = FIELDS.get(section, {}).get(field) is str or (section == "nomination" and NOMINATION.get(field) is str)
+        return "\n".join(value) if text and isinstance(value, list) else value
+    return {section: {field: joined(section, field, value) for field, value in fields.items()}
+            if section in FIELDS or section == "nomination" else fields
             for section, fields in listing.items()}
 
 
@@ -90,6 +107,24 @@ def problems(listing):
     """Everything App Store Connect would refuse, found before anything changes."""
     found = []
     for section, fields in listing.items():
+        if section == "otherLocales":
+            for locale, own in fields.items():
+                if not re.fullmatch(r"en-[A-Z]{2}", locale):
+                    found.append(f"otherLocales: {locale} is not an English locale (en-GB, en-AU, …)")
+                found += [f"otherLocales {locale}.{k} is not one of {', '.join(LOCALE_FIELDS)}" for k in own if k not in LOCALE_FIELDS]
+                if len(own.get("keywords", "")) > LIMITS["keywords"]:
+                    found.append(f"otherLocales {locale}.keywords is over {LIMITS['keywords']} characters")
+            continue
+        if section == "inAppPurchases":
+            found += [f"inAppPurchases {product}: only reviewNote is set here" for product, own in fields.items()
+                      if set(own) != {"reviewNote"}]
+            continue
+        if section == "nomination":
+            for field, value in fields.items():
+                kind = NOMINATION.get(field)
+                if kind is None or (isinstance(kind, tuple) and value not in kind) or (isinstance(kind, type) and not isinstance(value, kind)):
+                    found.append(f"nomination.{field}: not a field, or not a value, this script sends")
+            continue
         if section == "availability":
             if fields != {"territories": "all", "availableInNewTerritories": True}:
                 found.append('availability: the one choice this script makes is {"territories": "all", '
@@ -221,6 +256,85 @@ def availability(client, work, app_id, wanted):
                      for i, t in zip(ids, territories)]})
 
 
+def respelled(text):
+    """American English in British, Australian and Canadian spelling, for the words the listing
+    uses (color, coloring, colors and their capitals)."""
+    return re.sub(r"\b([Cc])olor", r"\1olour", text)
+
+
+def other_locales(client, work, version, info, listing):
+    """Each other English locale's listing: LOCALE's own, respelled, with its own keywords; created
+    when the version or the app info has none for that locale yet."""
+    base_info = {k: respelled(v) for k, v in listing.get("appInfoLocalization", {}).items()}
+    base_version = {k: respelled(v) for k, v in listing.get("versionLocalization", {}).items()}
+    version_found = {i["attributes"]["locale"]: i for i in
+                     client.call("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]}
+    info_found = {i["attributes"]["locale"]: i for i in
+                  client.call("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]}
+    for locale, own in listing["otherLocales"].items():
+        wanted_info = {**base_info, **{k: v for k, v in own.items() if k in FIELDS["appInfoLocalization"]}}
+        wanted_version = {**base_version, **{k: v for k, v in own.items() if k in FIELDS["versionLocalization"]}}
+        for kind, parent, found, wanted, label in (
+                ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), info_found, wanted_info, "appInfoLocalization"),
+                ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), version_found,
+                 wanted_version, "versionLocalization")):
+            if locale in found:
+                work.patch(f"{label} {locale}", kind, found[locale], wanted)
+                continue
+            work.compare(f"{label} {locale} (new)", {}, wanted)
+            if work.apply:
+                relation, parent_type, parent_id = parent
+                client.call("POST", f"/{kind}", {"data": {
+                    "type": kind, "attributes": {"locale": locale, **wanted},
+                    "relationships": {relation: {"data": {"type": parent_type, "id": parent_id}}}}})
+
+
+def in_app_purchases(client, work, app_id, wanted):
+    """Each purchase's App Review note, written only where it is empty: one written in App Store
+    Connect stays. Also reports each purchase's state."""
+    for product, own in wanted.items():
+        found = client.call("GET", f"/apps/{app_id}/inAppPurchasesV2", query={"filter[productId]": product})["data"]
+        purchase = next((p for p in found if p["attributes"].get("productId") == product), None)
+        if purchase is None:
+            print(f"In-app purchase {product}: not in App Store Connect yet, left for later.")
+            continue
+        attributes = purchase["attributes"]
+        print(f"In-app purchase {product}: {attributes.get('state')}.")
+        if attributes.get("reviewNote"):
+            if attributes["reviewNote"] != own["reviewNote"]:
+                print(f"In-app purchase {product}: its App Review note is already written, left as is.")
+            continue
+        differ = work.compare(f"inAppPurchase {product}", attributes, own)
+        if differ and work.apply:
+            client.call("PATCH", f"/v2/inAppPurchases/{purchase['id']}", {"data": {
+                "type": "inAppPurchases", "id": purchase["id"], "attributes": differ}})
+
+
+def nomination(client, work, app_id, wanted):
+    """The featuring nomination for Apple's editors, kept as a draft in App Store Connect (matched
+    by name) until `submit` is true; a submitted one is left as it is."""
+    wanted = dict(wanted)
+    submit = wanted.pop("submit", False)
+    found = client.call("GET", "/nominations", query={"filter[relatedApps]": app_id, "limit": "50"})["data"]
+    existing = next((n for n in found if n["attributes"].get("name") == wanted["name"]), None)
+    if existing and existing["attributes"].get("state") != "DRAFT":
+        print(f"Nomination {wanted['name']!r}: {existing['attributes'].get('state')}, left as is.")
+        return
+    current = dict(existing["attributes"]) if existing else {}
+    differ = work.compare("nomination" + ("" if existing else " (new draft)"), current, wanted)
+    if submit:
+        work.compare("nomination", {"submitted": False}, {"submitted": True})
+    if not work.apply or not (differ or submit):
+        return
+    if existing:
+        client.call("PATCH", f"/nominations/{existing['id']}", {"data": {
+            "type": "nominations", "id": existing["id"], "attributes": {**differ, "submitted": submit}}})
+    else:
+        client.call("POST", "/nominations", {"data": {
+            "type": "nominations", "attributes": {**wanted, "submitted": submit},
+            "relationships": {"relatedApps": {"data": [{"type": "apps", "id": app_id}]}}}})
+
+
 def editable_info(client, app_id):
     infos = client.call("GET", f"/apps/{app_id}/appInfos")["data"]
     for info in infos:
@@ -292,6 +406,12 @@ def main():
         work.accessibility(app["id"], family, answers)
     if "availability" in listing:
         availability(client, work, app["id"], listing["availability"])
+    if "otherLocales" in listing:
+        other_locales(client, work, version, info, listing)
+    if "inAppPurchases" in listing:
+        in_app_purchases(client, work, app["id"], listing["inAppPurchases"])
+    if "nomination" in listing:
+        nomination(client, work, app["id"], listing["nomination"])
     left = left_to_connect(client, app["id"])
     verb = "Changed" if args.apply else "Would change (dry run, nothing changed)"
     print(f"Version {name}, {args.locale}. {verb}: {len(work.changes) or 'nothing'}.")
