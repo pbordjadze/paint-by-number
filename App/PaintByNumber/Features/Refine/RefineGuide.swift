@@ -3,6 +3,7 @@ import CoreGraphics
 import os
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// A page of Refine's Tool Guide (`RefineGuideView`): the two that start it, or a tool's.
 nonisolated enum RefineGuideTopic: Hashable, Identifiable {
@@ -770,6 +771,11 @@ struct RefineGuidePageView: View {
     @State private var model: CreateModel?
     /// Reset's count: the canvas is made again each time.
     @State private var resets = 0
+    /// The cover (or, on iPhone, the page's push) has finished coming in. The practice canvas waits
+    /// for it: as the guide opened, CI's simulators stopped answering UI tests for 20 to 40 s
+    /// (main's runs 559 and 561), as the painting screen did while it was laid out at every frame
+    /// of its push (`ArtworkPaintingView.hasLanded`).
+    @State private var hasLanded = false
     @ScaledMetric(relativeTo: .subheadline) private var stepSize: CGFloat = 26
 
     private var page: RefineGuidePage { .of(topic) }
@@ -804,6 +810,7 @@ struct RefineGuidePageView: View {
         .background(Theme.paper)
         // A stroke to the right on the practice canvas draws: it never goes back (iPhone).
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
+        .background { GuidePageArrival(onArrival: land).frame(width: 0, height: 0) }
         .navigationTitle(Self.title(topic))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: picture != nil) {
@@ -816,11 +823,17 @@ struct RefineGuidePageView: View {
 
     // MARK: Practice
 
+    private func land() {
+        guard !hasLanded else { return }
+        hasLanded = true
+        Log.create.notice("Tool Guide page shown: \(topic.identifier, privacy: .public)")
+    }
+
     @ViewBuilder
     private func pad(_ practice: RefinePracticeSetup) -> some View {
         Group {
             // Once the picture is on it: a stroke before would have nothing to lay on.
-            if let model, model.phase == .ready {
+            if hasLanded, let model, model.phase == .ready {
                 RefineView(model: model, practice: practice) { resets += 1 }
                     .id(resets)
             } else if failed {
@@ -981,6 +994,31 @@ struct RefineGuidePageView: View {
         case .basics: "hand.draw"
         case .views: "eye"
         case .tool(let tool): RefineView.symbol(tool, shape: .star)
+        }
+    }
+}
+
+/// Tells a guide page that the transition bringing it in has finished: UIKit calls `viewDidAppear`
+/// once a cover or a push has landed (SwiftUI's `onAppear` comes as it starts), and at once for a
+/// page that takes another's place in the detail column.
+private struct GuidePageArrival: UIViewControllerRepresentable {
+    var onArrival: () -> Void
+
+    func makeUIViewController(context: Context) -> Controller {
+        let controller = Controller()
+        controller.onArrival = onArrival
+        return controller
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) { controller.onArrival = onArrival }
+
+    final class Controller: UIViewController {
+        var onArrival: () -> Void = {}
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            // Next turn: SwiftUI may be mid-update when UIKit calls this.
+            Task { onArrival() }
         }
     }
 }
