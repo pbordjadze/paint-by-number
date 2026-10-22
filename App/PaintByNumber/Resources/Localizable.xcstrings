@@ -2265,6 +2265,42 @@
         }
       }
     },
+    "refine.note.grabEdge" : {
+      "comment" : "Refine screen toast: a Move Edge drag began where no border between cells was (or where borders meet), so nothing moved",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start the drag on the border between two cells."
+          }
+        }
+      }
+    },
+    "refine.note.grabLine" : {
+      "comment" : "Refine screen toast: a Bend Line drag began where no drawn line was (or where lines meet), so nothing moved",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start the drag on a line."
+          }
+        }
+      }
+    },
+    "refine.note.grabNumber" : {
+      "comment" : "Refine screen toast: a Move Number drag began where no number was, so nothing moved",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start the drag on a number."
+          }
+        }
+      }
+    },
     "refine.note.notDivided" : {
       "comment" : "Refine screen toast: a Cell Edge stroke could not divide an area (it closed off no part of one); nothing changed",
       "extractionState" : "manual",

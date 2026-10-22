@@ -748,28 +748,44 @@ final class PreviewPictureProbe {
 /// the drags meant for the sliders (one that missed the thumb, or met a slider waiting for the
 /// suggestion) and for the comparison, and left for the photo step. SwiftUI has no switch for
 /// it, so this turns that content-area recognizer off while the preview shows; the edge swipe
-/// and Back keep working (`CreateFlowTests.testSwipeAcrossSettingsStaysOnPreview`).
-private struct ContentSwipeBackOff: UIViewControllerRepresentable {
+/// and Back keep working (`CreateFlowTests.testSwipeAcrossSettingsStaysOnPreview`). The Tool
+/// Guide's pages have it too, on iPhone, where a stroke to the right on a practice canvas went
+/// back to the list (`RefineUITests.testToolGuidePracticesAndResets`).
+struct ContentSwipeBackOff: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> Controller { Controller() }
 
     func updateUIViewController(_ controller: Controller, context: Context) {}
 
     final class Controller: UIViewController {
-        private weak var disabled: UIGestureRecognizer?
+        /// The screens holding each recognizer off, and whether it was on before the first did:
+        /// a guide page replacing another may appear before the one it replaces goes.
+        private static var holds: [ObjectIdentifier: (count: Int, wasEnabled: Bool)] = [:]
+        private weak var held: UIGestureRecognizer?
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            guard let recognizer = navigationController?.interactiveContentPopGestureRecognizer,
-                  recognizer.isEnabled else { return }
+            guard held == nil, let recognizer = navigationController?.interactiveContentPopGestureRecognizer else { return }
+            let key = ObjectIdentifier(recognizer)
+            let hold = Self.holds[key] ?? (0, recognizer.isEnabled)
+            Self.holds[key] = (hold.count + 1, hold.wasEnabled)
             recognizer.isEnabled = false
-            disabled = recognizer
+            held = recognizer
         }
 
-        // On again as the preview goes; an edge swipe called off halfway appears it again.
+        // On again as the last screen holding it goes; an edge swipe called off halfway appears
+        // it again.
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
-            disabled?.isEnabled = true
-            disabled = nil
+            guard let recognizer = held else { return }
+            held = nil
+            let key = ObjectIdentifier(recognizer)
+            guard let hold = Self.holds[key] else { return }
+            if hold.count > 1 {
+                Self.holds[key] = (hold.count - 1, hold.wasEnabled)
+            } else {
+                Self.holds[key] = nil
+                recognizer.isEnabled = hold.wasEnabled
+            }
         }
     }
 }
