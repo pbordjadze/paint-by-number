@@ -129,6 +129,9 @@ before planning app work).
   dispatch cancels the run waiting in it: look first, and give the run a `label`. Every run holds
   a macOS runner for up to two hours, out of the five CI shares. What a session taught goes into
   the brief (its By design list, its tools' notes) for the next.
+  `.github/workflows/store-screenshots.yml` puts the App Store screenshots on the version being
+  prepared (`ci/store_screenshots_upload.py`), reading them from the private feedback
+  repository's `store-slides` branch, since the slides show the painter's own photos.
 - `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
   contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
   CI's `core` job too). It files each report in the developers' private GitHub repository. Its
