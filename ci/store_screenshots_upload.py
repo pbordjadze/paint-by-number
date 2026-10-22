@@ -10,7 +10,8 @@ tools/store_screenshots.py renders (iphone-63-* is 1206 × 2622, iphone-69-* 132
 2064 × 2752). It may also hold the creative assets App Store Connect shows from iOS 27 on, one
 image each in a folder named for its placement type, `CREATIVE`: PRODUCT_PAGE_HEADER_ASSET/1.png
 (3840 × 1646) and APP_STORE_SEARCH_RESULTS_ASSET/1.png (3:2, 1920 × 1280 to 3840 × 2560), or the
-universal 5244 × 2950 in either. Run by `.github/workflows/store-screenshots.yml`, which reads
+universal 5244 × 2950 in either; and IAP_REVIEW_SCREENSHOT/1.png, the purchase's (PRODUCT_ID)
+screenshot for App Review, replaced unless it already is (by MD5). Run by `.github/workflows/store-screenshots.yml`, which reads
 SLIDES from the private feedback repository: the slides show the painter's own photos, which never
 go in this public one.
 
@@ -61,6 +62,10 @@ SIZES = {
 # The creative assets (the product page header and the search results card, iOS 27 and later),
 # each one image a folder, landscape only: the sizes of Apple's creative assets specifications.
 CREATIVE = {"PRODUCT_PAGE_HEADER_ASSET": "Header", "APP_STORE_SEARCH_RESULTS_ASSET": "Search results"}
+# The purchase's screenshot for App Review (IAP_REVIEW_SCREENSHOT/1.png): its sheet, as App Review
+# sees it; any size and opaque, like the others.
+IAP_REVIEW = "IAP_REVIEW_SCREENSHOT"
+PRODUCT_ID = "com.pbordjadze.paintbynumber.unlimited"
 # How long App Store Connect may take to process the images once they are sent.
 PROCESSING_MINUTES = 15
 
@@ -110,7 +115,9 @@ def png_problem(path, kind):
     if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
         return f"{path.name} is not a PNG"
     width, height = int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
-    if kind in CREATIVE:
+    if kind == IAP_REVIEW:
+        pass
+    elif kind in CREATIVE:
         if not creative_size_ok(kind, width, height):
             return f"{path.name} is {width} x {height}, not a size {kind} takes"
     elif (width, height) not in SIZES[kind] and (height, width) not in SIZES[kind]:
@@ -125,11 +132,11 @@ def problems(found):
     """Everything wrong with the slides, checked before anything is changed."""
     found_problems = []
     for kind, files in found.items():
-        if kind not in SIZES and kind not in CREATIVE:
+        if kind not in SIZES and kind not in CREATIVE and kind != IAP_REVIEW:
             found_problems.append(f"{kind} is not a display or placement type this script knows "
-                                  f"({', '.join([*SIZES, *CREATIVE])})")
+                                  f"({', '.join([*SIZES, *CREATIVE, IAP_REVIEW])})")
             continue
-        if kind in CREATIVE and len(files) != 1:
+        if (kind in CREATIVE or kind == IAP_REVIEW) and len(files) != 1:
             found_problems.append(f"{kind} has {len(files)} files; it takes one, 1.png")
         if len(files) > 10:
             found_problems.append(f"{kind} has {len(files)} files; a set holds at most 10")
@@ -288,6 +295,48 @@ def replace_creative(client, app_id, localization_id, kind, path):
     return placement["id"]
 
 
+def replace_review_screenshot(client, app_id, path):
+    """Attaches the purchase's App Review screenshot, unless it already is (by MD5); waits for it."""
+    data = path.read_bytes()
+    checksum = hashlib.md5(data).hexdigest()
+    purchases = client.call("GET", f"/apps/{app_id}/inAppPurchasesV2", query={"filter[productId]": PRODUCT_ID})["data"]
+    purchase = next((p for p in purchases if p["attributes"].get("productId") == PRODUCT_ID), None)
+    if purchase is None:
+        raise APIError(f"no in-app purchase {PRODUCT_ID} in App Store Connect yet")
+    try:
+        old = client.call("GET", f"/v2/inAppPurchases/{purchase['id']}/appStoreReviewScreenshot").get("data")
+    except APIError as error:
+        if ": 404 " not in str(error):
+            raise
+        old = None
+    if old and old["attributes"].get("sourceFileChecksum") == checksum \
+            and (old["attributes"].get("assetDeliveryState") or {}).get("state") == "COMPLETE":
+        print(f"{IAP_REVIEW}: already {path.name}, left as is.", flush=True)
+        return False
+    if old:  # a purchase has one: the new one takes its place
+        client.call("DELETE", f"/inAppPurchaseAppStoreReviewScreenshots/{old['id']}")
+    reserved = client.call("POST", "/inAppPurchaseAppStoreReviewScreenshots", {"data": {
+        "type": "inAppPurchaseAppStoreReviewScreenshots", "attributes": {"fileName": "unlimited-paintings.png", "fileSize": len(data)},
+        "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": purchase["id"]}}}}})["data"]
+    send_parts(reserved["attributes"]["uploadOperations"], data)
+    client.call("PATCH", f"/inAppPurchaseAppStoreReviewScreenshots/{reserved['id']}", {"data": {
+        "type": "inAppPurchaseAppStoreReviewScreenshots", "id": reserved["id"],
+        "attributes": {"uploaded": True, "sourceFileChecksum": checksum}}})
+    print(f"{IAP_REVIEW}: sent {path.name} ({len(data) // 1024} KB).", flush=True)
+    deadline = time.time() + PROCESSING_MINUTES * 60
+    while True:
+        attributes = client.call("GET", f"/inAppPurchaseAppStoreReviewScreenshots/{reserved['id']}")["data"]["attributes"]
+        state = attributes.get("assetDeliveryState") or {}
+        if state.get("state") == "COMPLETE":
+            return True
+        if state.get("state") == "FAILED":
+            reasons = "; ".join(f"{e.get('code')}: {e.get('description')}" for e in state.get("errors") or [])
+            raise APIError(f"App Store Connect refused {IAP_REVIEW} {path.name}: {reasons or 'failed'}")
+        if time.time() >= deadline:
+            raise APIError(f"{IAP_REVIEW} still processing after {PROCESSING_MINUTES} minutes")
+        time.sleep(10)
+
+
 def wait_until_placed(client, ids_by_kind):
     """Fails naming each placement App Store Connect refused; returns once none is processing."""
     deadline = time.time() + PROCESSING_MINUTES * 60
@@ -380,6 +429,9 @@ def main():
               for kind, files in found.items() if kind in CREATIVE}
     wait_until_processed(client, ids_by_kind)
     wait_until_placed(client, {kind: i for kind, i in placed.items() if i})
+    if IAP_REVIEW in found:
+        sent = replace_review_screenshot(client, app["id"], found[IAP_REVIEW][0])
+        placed[IAP_REVIEW] = sent
     lines = [f"{kind}: {len(found[kind])} screenshots{'' if ids else ', unchanged'}" for kind, ids in ids_by_kind.items()]
     lines += [f"{kind}: {found[kind][0].name}{'' if i else ', unchanged'}" for kind, i in placed.items()]
     print("Done. " + "; ".join(lines) + ".")
