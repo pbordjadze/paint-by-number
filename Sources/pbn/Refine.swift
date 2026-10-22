@@ -6,7 +6,7 @@ import PaintCore
 ///
 ///     {"screen": {"width": 960, "zoom": 1},
 ///      "gestures": [
-///        {"tool": "pen", "points": [[x, y], ...]},                  a finger's samples
+///        {"tool": "pen", "points": [[x, y], ...], "inked": true},   a finger's samples; `inked`: ink alone
 ///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "cellEdge", "points": [[x, y], ...]},             the Cell Edge's
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval" | "polygon" | "star", "from": [x, y], "to": [x, y]},
@@ -16,7 +16,7 @@ import PaintCore
 ///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "rgb": [r, g, b] | "paint": n},
 ///                                                                   the Paint Brush's stroke
 ///        {"tool": "bucket", "at": [x, y], "color" | "rgb" | "paint"},  the Bucket
-///        {"tool": "repaint", "paint": n, "color" | "rgb", "family": true},
+///        {"tool": "repaint", "paint": n | "fromRgb": [r, g, b], "color" | "rgb", "family": true},
 ///                                                                   Edit Paint: paint n becomes it
 ///        {"tool": "reshape", "points": [from, to], "target": "ink" | "edge"},
 ///                                                                   Bend Line's or Move Edge's drag
@@ -53,6 +53,11 @@ struct RefineScript: Decodable {
         var paint: Int?
         /// A repaint's Similar Colors Too.
         var family: Bool?
+        /// A repaint's paint picked as its swatch looks (sRGB, 0...1): the paint nearest it.
+        var fromRgb: [Float]?
+        /// A pen's line as the Toolbox's Pen draws it with Color from Photo off (its default): ink
+        /// alone, the pieces it cuts keeping their paint (`RefineView.inked`).
+        var inked: Bool?
         var zoom: Double?
         var caption: String?
         var target: String?
@@ -81,6 +86,8 @@ struct RefineReport: Codable {
         var joins = 0
         var strokes = 0
         var regionsMerged = 0
+        /// A Merge's areas that Refine lit while the finger was down (`TemplateEditor.MergeProbe`).
+        var lit: Int?
         /// The template after the gesture, and the same with its touches over it.
         var picture: String
         var touches: String
@@ -189,6 +196,7 @@ func runRefine(_ options: Options) throws {
         switch g.tool {
         case "pen":
             edit = RefineGestures.pen(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
+            if g.inked == true, case .draw(let points, let closed, nil)? = edit { edit = .draw(points: points, closed: closed, paints: []) }
         case "splitter":
             edit = RefineGestures.splitter(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "cellEdge":
@@ -197,6 +205,7 @@ func runRefine(_ options: Options) throws {
             edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
         case "merge":
             edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
+            if case .merge(let path)? = edit { step.lit = (try? TemplateEditor.MergeProbe(t))?.areas(along: path).count }
         case "brush":
             let color: SIMD3<Float>
             if let c = chosen(g, on: t, k) {
@@ -241,8 +250,15 @@ func runRefine(_ options: Options) throws {
             marks = [[at]]
             edit = .paintArea(at: screen.canvasPoint(at), color: chosen(g, on: t, k) ?? LineEdit.photoColor(at: at, in: photo))
         case "repaint":
-            // Edit Paint: paint `paint` becomes `color` or `rgb`.
-            guard let n = g.paint, (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): a repaint needs its paint") }
+            // Edit Paint: paint `paint` (or the one whose swatch looks like `fromRgb`) becomes `color` or `rgb`.
+            var picked = g.paint
+            if let c = g.fromRgb, c.count == 3 {
+                let want = ColorScience.linearSRGBToOKLab(
+                    SIMD3(ColorScience.decodeSRGB(c[0]), ColorScience.decodeSRGB(c[1]), ColorScience.decodeSRGB(c[2])))
+                picked = t.palette.indices.min { ColorScience.distance(t.palette[$0].oklab, want) < ColorScience.distance(t.palette[$1].oklab, want) }
+                    .map { $0 + 1 }
+            }
+            guard let n = picked, (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): a repaint needs its paint") }
             var to = g
             to.paint = nil
             guard let color = chosen(to, on: t, k) else { fail("gesture \(k + 1): a repaint needs a color or rgb") }

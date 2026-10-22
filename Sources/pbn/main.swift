@@ -88,8 +88,9 @@
 //       Sources/pbn/Refine.swift's RefineScript, points normalized to the picture. Writes
 //       before.ppm, after.ppm and per gesture steps/NN-<tool>.ppm (the painting with the drawing in
 //       ink at 2×) and steps/NN-<tool>-touches.ppm (its touches over it, in magenta), photo.ppm, before.pbnt, template.pbnt, edits.json (the
-//       edits as refinements.json keeps them) and refine.json: per gesture the edit, what it did
-//       and the toast Refine shows; tools/refine_sheet.py lays them out in one picture. --no-steps
+//       edits as refinements.json keeps them) and refine.json: per gesture the edit, what it did,
+//       the toast Refine shows and, for a Merge, how many areas it lit while the finger was down
+//       (`lit`); tools/refine_sheet.py lays them out in one picture. --no-steps
 //       writes no step pictures (a long script's would fill the disk: 70 MB a gesture at the
 //       largest canvas), and refine.json's `picture` and `touches` are empty
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
