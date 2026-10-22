@@ -120,14 +120,21 @@ struct UnlockSheet: View {
             .accessibilityIdentifier("unlock-restore")
     }
 
+    /// While buying, the price stays under the spinner, so the button keeps its width and the
+    /// buttons their layout.
     @ViewBuilder
     private var buyLabel: some View {
-        if isBuying {
-            ProgressView()
-                .accessibilityLabel(Text("Unlocking…"))
-        } else if let price = paintings.price {
+        if let price = paintings.price {
             Text(String(localized: "unlock.buy", defaultValue: "Unlock for \(price)",
                         comment: "The Unlimited Paintings sheet's buy button; the argument is the price as the App Store writes it (\"$4.99\")"))
+                .opacity(isBuying ? 0 : 1)
+                .accessibilityHidden(isBuying)
+                .overlay {
+                    if isBuying {
+                        ProgressView()
+                            .accessibilityLabel(Text("Unlocking…"))
+                    }
+                }
         } else if case .failed = note {
             Text("Try Again")
         } else {
@@ -209,13 +216,14 @@ private struct MoonMark: View {
     @ScaledMetric(relativeTo: .largeTitle) private var side: CGFloat = 36
 
     var body: some View {
-        Canvas { context, _ in
+        let side = side, gold = Theme.gold
+        return Canvas { context, _ in
             let moon = CGRect(x: side * 0.05, y: side * 0.2, width: side, height: side)
-            context.stroke(Path(Crescent.cgPath(in: moon)), with: .color(Theme.gold),
+            context.stroke(Path(Crescent.cgPath(in: moon)), with: .color(gold),
                            style: StrokeStyle(lineWidth: max(2, side * 0.06), lineCap: .round, lineJoin: .round))
             for (centre, size) in [(CGPoint(x: side * 1.3, y: side * 0.3), side * 0.34), (CGPoint(x: side * 1.55, y: side * 0.78), side * 0.24)] {
                 let star = CGRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size)
-                context.fill(Path(Sparkle.starPath(in: star)), with: .color(Theme.gold))
+                context.fill(Path(Sparkle.starPath(in: star)), with: .color(gold))
             }
         }
         .frame(width: side * 1.75, height: side * 1.25)
