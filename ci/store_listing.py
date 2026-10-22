@@ -29,7 +29,9 @@ It finds the app by its bundle id, its iOS version in an editable state and the 
 prepared with it, and checks the fields and their lengths before anything changes. Without
 --apply it lists each field that differs from what App Store Connect holds, changing nothing; with
 --apply it sends only those. An accessibility answer is sent as a new draft declaration, which is
-then published: that is what the product page shows. It also says what it leaves to App Store
+then published: that is what the product page shows. Apple publishes them only once the app is
+on the App Store, so until then they wait as drafts, and the first run after the release
+publishes them. It also says what it leaves to App Store
 Connect: App Privacy (not in the API), price, and App Review's contact, whose name, phone and
 email are not this public repository's to hold. Each change is printed as it is found (as it is
 sent, with --apply), so a run that fails part way has said what it sent; the field names and
@@ -248,8 +250,15 @@ class Listing:
             draft = self.client.call("POST", "/accessibilityDeclarations", {"data": {
                 "type": "accessibilityDeclarations", "attributes": {"deviceFamily": family, **wanted},
                 "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})["data"]
-        self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
-            "type": "accessibilityDeclarations", "id": draft["id"], "attributes": {"publish": True}}})
+        try:
+            self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
+                "type": "accessibilityDeclarations", "id": draft["id"], "attributes": {"publish": True}}})
+        except APIError as error:
+            # Apple publishes labels only for an app already on the App Store: the draft waits, and
+            # the first run after the release publishes it.
+            if "must be available on the App Store" not in str(error):
+                raise
+            print(f"  accessibility {family}: kept as a draft until the app is on the App Store.", flush=True)
 
 
 def availability(client, work, app_id, wanted):
