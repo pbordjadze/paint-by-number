@@ -866,7 +866,9 @@ sends it, the developers collect nothing).
   `started` once the painting is saved), and with none left it opens `UnlockSheet`
   (`Features/Unlock/`), whose purchase starts the painting. A line under Start Painting counts
   what is left (`free-paintings`); Settings › Unlimited Paintings shows it, or Unlocked, and opens
-  the same sheet, which has Restore Purchases (App Review requires one).
+  the same sheet, which has Restore Purchases (App Review requires one). Its mark is the design
+  system's crescent and two of the Moon's stars, drawn as `Nightfall` draws them (the Lamplit
+  Table's `factory/pieces/unlimited-paintings` on `claude/vibe-factory`).
 - StoreKit 2 on the device (`StoreKitUnlock`: the product
   `com.pbordjadze.paintbynumber.unlimited`, a non-consumable with Family Sharing on, bought with
   SwiftUI's `\.purchase`; `Transaction.updates` followed from launch for Ask to Buy, other

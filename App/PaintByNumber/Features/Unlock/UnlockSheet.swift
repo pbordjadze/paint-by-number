@@ -11,6 +11,7 @@ struct UnlockSheet: View {
     @Environment(UnlimitedPaintings.self) private var paintings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.purchase) private var purchase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var isBuying = false
     @State private var isRestoring = false
     @State private var note: Note?
@@ -28,10 +29,7 @@ struct UnlockSheet: View {
         // Scrolls when large text makes the sheet's content taller than its detent.
         ScrollView {
             VStack(spacing: 22) {
-                Image(systemName: "moon.stars.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Theme.gold)
-                    .accessibilityHidden(true)
+                MoonMark()
                 VStack(spacing: 8) {
                     Text("Unlimited Paintings")
                         .font(.display(.title3))
@@ -55,24 +53,27 @@ struct UnlockSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("unlock-note")
                 }
-                HStack(spacing: 12) {
-                    Button("Not Now") { dismiss() }
-                        .buttonStyle(.glass)
-                        .keyboardShortcut(.cancelAction)
-                        .accessibilityIdentifier("unlock-not-now")
-                    Button(action: buy) { buyLabel }
-                        .buttonStyle(.glassProminent)
-                        .tint(Theme.signature)
-                        .keyboardShortcut(.defaultAction)
-                        .disabled(isBuying || isRestoring)
-                        .accessibilityIdentifier("unlock-buy")
+                // Side by side while they fit, the price first once they don't (large text).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) {
+                        notNowButton
+                        buyButton
+                    }
+                    VStack(spacing: 12) {
+                        buyButton
+                        notNowButton
+                    }
                 }
-                VStack(spacing: 6) {
-                    Text("Library pictures are always free.")
-                        .foregroundStyle(.secondary)
-                    Button("Restore Purchases", action: restore)
-                        .disabled(isBuying || isRestoring)
-                        .accessibilityIdentifier("unlock-restore")
+                // One quiet line when it fits (the Lamplit Table: Rikyū).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) {
+                        libraryNote
+                        restoreButton
+                    }
+                    VStack(spacing: 6) {
+                        libraryNote
+                        restoreButton
+                    }
                 }
                 .font(.footnote)
                 .multilineTextAlignment(.center)
@@ -83,12 +84,40 @@ struct UnlockSheet: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
         }
         .scrollBounceBehavior(.basedOnSize)
-        .presentationDetents([.height(contentHeight)])
+        // At accessibility sizes the content outgrows any sheet: it opens full height, and scrolls.
+        .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(contentHeight)])
         .task { await loadPrice() }
         // Bought here, restored, or approved while the sheet was up (Ask to Buy).
         .onChange(of: paintings.isUnlocked) { _, unlocked in
             if unlocked { dismiss() }
         }
+    }
+
+    private var notNowButton: some View {
+        Button("Not Now") { dismiss() }
+            .buttonStyle(.glass)
+            .keyboardShortcut(.cancelAction)
+            .accessibilityIdentifier("unlock-not-now")
+    }
+
+    private var buyButton: some View {
+        Button(action: buy) { buyLabel }
+            .buttonStyle(.glassProminent)
+            .tint(Theme.signature)
+            .keyboardShortcut(.defaultAction)
+            .disabled(isBuying || isRestoring)
+            .accessibilityIdentifier("unlock-buy")
+    }
+
+    private var libraryNote: some View {
+        Text("Library pictures are always free.")
+            .foregroundStyle(.secondary)
+    }
+
+    private var restoreButton: some View {
+        Button("Restore Purchases", action: restore)
+            .disabled(isBuying || isRestoring)
+            .accessibilityIdentifier("unlock-restore")
     }
 
     @ViewBuilder
@@ -170,5 +199,26 @@ struct UnlockSheet: View {
             }
             isRestoring = false
         }
+    }
+}
+
+/// The design system's crescent inked in gold with two of the Moon's stars, as night brings them
+/// over a painting finished by night (`Nightfall`): the app's own moon, not a system symbol (the
+/// Lamplit Table: Originality).
+private struct MoonMark: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var side: CGFloat = 36
+
+    var body: some View {
+        Canvas { context, _ in
+            let moon = CGRect(x: side * 0.05, y: side * 0.2, width: side, height: side)
+            context.stroke(Path(Crescent.cgPath(in: moon)), with: .color(Theme.gold),
+                           style: StrokeStyle(lineWidth: max(2, side * 0.06), lineCap: .round, lineJoin: .round))
+            for (centre, size) in [(CGPoint(x: side * 1.3, y: side * 0.3), side * 0.34), (CGPoint(x: side * 1.55, y: side * 0.78), side * 0.24)] {
+                let star = CGRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size)
+                context.fill(Path(Sparkle.starPath(in: star)), with: .color(Theme.gold))
+            }
+        }
+        .frame(width: side * 1.75, height: side * 1.25)
+        .accessibilityHidden(true)
     }
 }
