@@ -13,8 +13,11 @@ import PaintCore
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
 ///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
-///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "paint": n},
+///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "rgb": [r, g, b] | "paint": n},
 ///                                                                   the Paint Brush's stroke
+///        {"tool": "bucket", "at": [x, y], "color" | "rgb" | "paint"},  the Bucket
+///        {"tool": "repaint", "paint": n, "color" | "rgb", "family": true},
+///                                                                   Edit Paint: paint n becomes it
 ///        {"tool": "reshape", "points": [from, to], "target": "ink" | "edge"},
 ///                                                                   Bend Line's or Move Edge's drag
 ///        {"tool": "moveLabel", "points": [from, to]},               Move Number's drag
@@ -26,8 +29,11 @@ import PaintCore
 /// iPad's Refine), `zoom` how far it is zoomed in (1 to 12); a gesture may give its own `zoom`.
 /// A curve without `bend` is laid straight. A reshape without `target` grabs any line (an edge,
 /// drawn or not, or a stroke); Bend Line's is `ink`, Move Edge's `edge`. Reshape and Move Number
-/// reach a finger's width on screen (`RefineGestures.fingerReach`). A brush without `color` or `paint` (a number of the
-/// palette shown) paints the photo's color under its first point. Any gesture may carry a `caption` for the sheet.
+/// reach a finger's width on screen (`RefineGestures.fingerReach`). A paint is `color` (OKLab), `rgb` (sRGB, 0…1, as
+/// Refine's color picker resolves a color whatever the template's space) or `paint` (a number of the palette shown); a
+/// brush or a bucket without one takes the photo's color under its point (the Eyedropper's). A repaint's toast is what
+/// Edit Paint says (paints made alike, or nothing); a declined repaint, which the app keeps in refinements.json and
+/// which changes nothing, is left out of edits.json. Any gesture may carry a `caption` for the sheet.
 struct RefineScript: Decodable {
     struct Screen: Decodable {
         var width: Double?
@@ -42,7 +48,7 @@ struct RefineScript: Decodable {
         var bend: [Float]?
         var at: [Float]?
         var color: [Float]?
-        /// A color as the picker gives it: sRGB, 0...1, in the template's color space.
+        /// A color as Refine's picker gives it: sRGB, 0...1.
         var rgb: [Float]?
         var paint: Int?
         /// A repaint's Similar Colors Too.
@@ -114,7 +120,8 @@ func runRefine(_ options: Options) throws {
     let script: RefineScript
     do { script = try JSONDecoder().decode(RefineScript.self, from: data) } catch { fail("cannot decode \(options.positional[1]): \(error)") }
     let outDir = URL(fileURLWithPath: out)
-    try FileManager.default.createDirectory(at: outDir.appendingPathComponent("steps"), withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(
+        at: options.steps ? outDir.appendingPathComponent("steps") : outDir, withIntermediateDirectories: true)
 
     let base: Template
     if options.blank {
@@ -157,7 +164,9 @@ func runRefine(_ options: Options) throws {
         }
         if let c = g.rgb {
             guard c.count == 3 else { fail("gesture \(k + 1): rgb is [r, g, b], 0...1") }
-            return ColorScience.encodedToOKLab(SIMD3(c[0], c[1], c[2]), space: t.colorSpace)
+            // As the app's pickers do: resolved in sRGB whatever the template's space.
+            let linear = SIMD3(ColorScience.decodeSRGB(c[0]), ColorScience.decodeSRGB(c[1]), ColorScience.decodeSRGB(c[2]))
+            return ColorScience.linearSRGBToOKLab(linear)
         }
         if let n = g.paint {
             guard (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): there is no paint \(n)") }
@@ -288,6 +297,10 @@ func runRefine(_ options: Options) throws {
                 redo.removeAll()
                 step.verdict = "made"
                 if tooSmall { step.toast = "That shape is too small for a number." }
+                // Edit Paint says only this (`CreateModel.recolor`).
+                if case .repaint = painted, trail.template.palette.count < t.palette.count {
+                    step.toast = "Colors that came out alike share a number now."
+                }
             case .nothing:
                 step.verdict = "nothing"
             case .declined(let why):
@@ -297,13 +310,15 @@ func runRefine(_ options: Options) throws {
                 case .draw: step.toast = "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
-                case .merge: step.toast = "Those areas couldn’t be joined."
+                case .merge:
+                    step.toast = why == TemplateEditor.mergeStaysInOneArea ? "That’s already one area." : "Those areas couldn’t be joined."
                 case .brush: step.toast = "That couldn’t be painted there."
                 case .reshape: step.toast = "That line couldn’t be moved there."
                 case .moveLabel: step.toast = "There’s no room for that number there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
-                case .paintArea, .look, .repaint: step.toast = "Those colors couldn’t be changed."
+                case .paintArea, .look: step.toast = "Those colors couldn’t be changed."
+                case .repaint: break
                 }
             }
             step.regionsSplit = outcome.regionsSplit
