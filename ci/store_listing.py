@@ -29,7 +29,9 @@ It finds the app by its bundle id, its iOS version in an editable state and the 
 prepared with it, and checks the fields and their lengths before anything changes. Without
 --apply it lists each field that differs from what App Store Connect holds, changing nothing; with
 --apply it sends only those. An accessibility answer is sent as a new draft declaration, which is
-then published: that is what the product page shows. It also says what it leaves to App Store
+then published: that is what the product page shows. Apple publishes them only once the app is
+on the App Store, so until then they wait as drafts, and the first run after the release
+publishes them. It also says what it leaves to App Store
 Connect: App Privacy (not in the API), price, and App Review's contact, whose name, phone and
 email are not this public repository's to hold. Each change is printed as it is found (as it is
 sent, with --apply), so a run that fails part way has said what it sent; the field names and
@@ -237,19 +239,34 @@ class Listing:
         found = self.client.call("GET", f"/apps/{app_id}/accessibilityDeclarations", query={
             "filter[deviceFamily]": family, "filter[state]": "DRAFT,PUBLISHED", "limit": "10"})["data"]
         by_state = {d["attributes"]["state"]: d for d in found}
-        current = by_state.get("PUBLISHED", {}).get("attributes", {})
-        if not self.compare(f"accessibility {family}", current, wanted) or not self.apply:
-            return
+        published = by_state.get("PUBLISHED", {}).get("attributes", {})
         draft = by_state.get("DRAFT")
-        if draft:
+        if all(published.get(k) == v for k, v in wanted.items()):
+            return
+        if draft and all(draft["attributes"].get(k) == v for k, v in wanted.items()):
+            # Published from the draft once Apple allows it (after the release), so a run says so.
+            self.changes.append(f"accessibility {family}: publish the draft")
+            print(f"  {'Publishing' if self.apply else 'Waiting as a draft'}: accessibility {family}", flush=True)
+            if not self.apply:
+                return
+        elif not self.compare(f"accessibility {family}", published, wanted) or not self.apply:
+            return
+        elif draft:
             self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
                 "type": "accessibilityDeclarations", "id": draft["id"], "attributes": wanted}})
         else:
             draft = self.client.call("POST", "/accessibilityDeclarations", {"data": {
                 "type": "accessibilityDeclarations", "attributes": {"deviceFamily": family, **wanted},
                 "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})["data"]
-        self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
-            "type": "accessibilityDeclarations", "id": draft["id"], "attributes": {"publish": True}}})
+        try:
+            self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
+                "type": "accessibilityDeclarations", "id": draft["id"], "attributes": {"publish": True}}})
+        except APIError as error:
+            # Apple publishes labels only for an app already on the App Store: the draft waits, and
+            # the first run after the release publishes it.
+            if ": 409 " not in str(error) or "must be available on the App Store" not in str(error):
+                raise
+            print(f"  accessibility {family}: kept as a draft until the app is on the App Store.", flush=True)
 
 
 def availability(client, work, app_id, wanted):
@@ -297,20 +314,20 @@ def locale_listing(listing, locale):
 def other_locales(client, work, version, info, listing):
     """Each other English locale's listing: LOCALE's own, respelled, with its own keywords; created
     when the version or the app info has none for that locale yet."""
-    version_found = {i["attributes"]["locale"]: i for i in
-                     client.call("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]}
-    info_found = {i["attributes"]["locale"]: i for i in
-                  client.call("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]}
+    def localizations(kind, parent_path):
+        return {i["attributes"]["locale"]: i for i in client.call("GET", f"{parent_path}/{kind}")["data"]}
     for locale, own in listing["otherLocales"].items():
         fields = locale_listing(listing, locale)
         wanted_info = {k: v for k, v in fields.items() if k in listing.get("appInfoLocalization", {}) or k in own
                        and k in FIELDS["appInfoLocalization"]}
         wanted_version = {k: v for k, v in fields.items() if k in listing.get("versionLocalization", {}) or k in own
                           and k in FIELDS["versionLocalization"]}
-        for kind, parent, found, wanted, label in (
-                ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), info_found, wanted_info, "appInfoLocalization"),
-                ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), version_found,
-                 wanted_version, "versionLocalization")):
+        for kind, parent, wanted, label in (
+                ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), wanted_info, "appInfoLocalization"),
+                ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), wanted_version,
+                 "versionLocalization")):
+            # Read afresh: making an app info localization makes the version's of the same locale.
+            found = localizations(kind, f"/{parent[1]}/{parent[2]}")
             if locale in found:
                 work.patch(f"{label} {locale}", kind, found[locale], wanted)
                 continue
