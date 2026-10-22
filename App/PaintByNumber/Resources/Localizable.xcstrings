@@ -7330,8 +7330,152 @@
       "extractionState" : "manual"
     },
     "Try Again" : {
-      "comment" : "Button in the time-lapse sheet after rendering failed, and in the alert after feedback couldn't be sent: sends it again",
+      "comment" : "Button in the time-lapse sheet after rendering failed, and in the alert after feedback couldn't be sent: sends it again, and in the Unlimited Paintings sheet once its price couldn't be loaded: asks the App Store again",
       "extractionState" : "manual"
+    },
+    "Unlimited Paintings" : {
+      "comment" : "Title of the sheet that sells Unlimited Paintings, the app's one purchase (paid once: as many paintings of the painter's own photos as they like), and the Settings row that opens it or says it is unlocked",
+      "extractionState" : "manual"
+    },
+    "Your next free painting comes tomorrow. One purchase unlocks as many paintings of your own photos as you like." : {
+      "comment" : "The Unlimited Paintings sheet's message when Start Painting found no free painting left for a painting of the painter's own photo (one free painting comes back each day)",
+      "extractionState" : "manual"
+    },
+    "One purchase unlocks as many paintings of your own photos as you like." : {
+      "comment" : "The Unlimited Paintings sheet's message when opened from Settings",
+      "extractionState" : "manual"
+    },
+    "Not Now" : {
+      "comment" : "The Unlimited Paintings sheet's button that closes it without buying",
+      "extractionState" : "manual"
+    },
+    "Library pictures are always free." : {
+      "comment" : "Note in the Unlimited Paintings sheet: paintings of the app's own pictures (its library) never need the purchase or a free painting",
+      "extractionState" : "manual"
+    },
+    "Restore Purchases" : {
+      "comment" : "The Unlimited Paintings sheet's button that asks the App Store for a purchase this Apple Account made before (on another device, or before reinstalling)",
+      "extractionState" : "manual"
+    },
+    "Unlocking…" : {
+      "comment" : "VoiceOver label of the progress indicator on the Unlimited Paintings sheet's buy button while the purchase goes on",
+      "extractionState" : "manual"
+    },
+    "Loading…" : {
+      "comment" : "VoiceOver label of the progress indicator on the Unlimited Paintings sheet's buy button while the price loads from the App Store",
+      "extractionState" : "manual"
+    },
+    "Waiting for approval. Your paintings unlock as soon as it comes." : {
+      "comment" : "Note in the Unlimited Paintings sheet when the purchase waits for a parent's approval (Ask to Buy)",
+      "extractionState" : "manual"
+    },
+    "This Apple Account hasn’t bought Unlimited Paintings yet." : {
+      "comment" : "Note in the Unlimited Paintings sheet after Restore Purchases found no earlier purchase",
+      "extractionState" : "manual"
+    },
+    "Your next free painting comes tomorrow." : {
+      "comment" : "Under the create flow's Start Painting, for a painting of the painter's own photo when no free painting is left before Unlimited Paintings is bought (one comes back each day)",
+      "extractionState" : "manual"
+    },
+    "Unlocked" : {
+      "comment" : "Settings › Unlimited Paintings: the value of its row once the purchase is bought",
+      "extractionState" : "manual"
+    },
+    "Free Paintings" : {
+      "comment" : "Settings › Unlimited Paintings: the row that says how many free paintings of the painter's own photos are left",
+      "extractionState" : "manual"
+    },
+    "Thank you for supporting Paint by Moonlight." : {
+      "comment" : "Footer of Settings › Unlimited Paintings once the purchase is bought",
+      "extractionState" : "manual"
+    },
+    "A free painting of your own photos comes back each day, up to three. Library pictures are always free." : {
+      "comment" : "Footer of Settings › Unlimited Paintings before the purchase is bought: how free paintings work (the app's own library pictures never need one)",
+      "extractionState" : "manual"
+    },
+    "unlock.buy" : {
+      "comment" : "The Unlimited Paintings sheet's buy button; the argument is the price as the App Store writes it (\"$4.99\")",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock for %@"
+          }
+        }
+      }
+    },
+    "unlock.freeLeft" : {
+      "comment" : "Under the create flow's Start Painting, for a painting of the painter's own photo before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld free painting left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld free paintings left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "settings.freePaintings.left" : {
+      "comment" : "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unlock.error.unavailable" : {
+      "comment" : "Message in the Unlimited Paintings sheet when the App Store can't offer the purchase (offline, or the store isn't reachable)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlimited Paintings can’t be bought right now. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "unlock.error.unverified" : {
+      "comment" : "Message in the Unlimited Paintings sheet when a purchase's receipt couldn't be verified; Restore Purchases is the sheet's button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The App Store couldn’t confirm the purchase. Try Restore Purchases in a moment."
+          }
+        }
+      }
     },
     "Try again in a moment." : {
       "comment" : "Message of the alert when the feedback couldn't be prepared",

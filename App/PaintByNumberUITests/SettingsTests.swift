@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
-/// Preview, The Marginarium and The Making-of.
+/// Preview, The Marginarium, The Making-of and Unlimited Paintings.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -202,6 +202,32 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "settings-making-of")
         // Stored in the simulator's defaults: off again for the other tests.
         XCTAssertTrue(flip(toggle, on: false), "The Making-of didn't switch off: \(toggle.value ?? "")")
+    }
+
+    /// Unlimited Paintings: the free paintings left, and the unlock's sheet, which buys it (the
+    /// App Store is the Debug stub) and leaves the row saying it is unlocked.
+    @MainActor
+    func testUnlimitedPaintingsShowsTheFreeOnesAndUnlocks() throws {
+        let app = openSettings(arguments: ["-demoFreePaintings", "2"])
+        let free = app.descendants(matching: .any)["settings-free-paintings"]
+        scroll(app, to: free)
+        for _ in 0..<3 where free.exists && !free.isHittable { app.swipeUp() }
+        XCTAssertTrue(free.exists, "Settings has no Free Paintings row")
+        XCTAssertTrue(describe(free).contains("2 left"), "The Free Paintings row doesn't say 2 left: \(describe(free))")
+        let unlimited = app.buttons["settings-unlimited"]
+        XCTAssertTrue(unlimited.exists, "Settings offers no Unlimited Paintings")
+        unlimited.tap()
+
+        let buy = app.buttons["unlock-buy"]
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "Unlimited Paintings didn't open its sheet")
+        XCTAssertTrue(app.buttons["unlock-restore"].exists, "The sheet has no Restore Purchases")
+        XCTAssertTrue(waitFor(buy, toMatch: NSPredicate(format: "label CONTAINS '4.99'")), "The buy button never showed the price: \(buy.label)")
+        attachScreenshot(of: app, named: "settings-unlock")
+        buy.tap()
+        XCTAssertTrue(buy.waitForNonExistence(timeout: 10), "Buying didn't close the sheet")
+        let unlocked = app.descendants(matching: .any)["settings-unlimited"]
+        XCTAssertTrue(waitUntil(timeout: 10) { describe(unlocked).contains("Unlocked") }, "The row doesn't say Unlocked: \(describe(unlocked))")
+        XCTAssertFalse(free.exists, "Free Paintings stayed once unlocked")
     }
 
     /// Settings › Tips is on until it is switched off (the only way to turn tips off), switches off

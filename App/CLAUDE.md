@@ -81,7 +81,8 @@ synchronized folder would bundle it into the app.
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `GalleryCounts`, `IncomingFile`, `SharedPaintingCodec`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
-  `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
+  `Background`, `Log` (every logger; CI's `*-app.log`), `UnlimitedPaintings` and `FreePaintings`
+  (see Unlimited Paintings); DEBUG `DemoTemplateCache`, `UnlockStoreStub`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
@@ -171,7 +172,7 @@ synchronized folder would bundle it into the app.
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
   in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`; `Tips/`
-  (the gentle tips, see Tips).
+  (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
 - `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
   linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
   growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
@@ -853,6 +854,32 @@ picture; never progress or refinements. The sheet deletes the file once the shar
 and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
 instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter
 sends it, the developers collect nothing).
+
+## Unlimited Paintings
+
+- The app's one purchase (Paul, October 22: "3 free at first, then one per day", $4.99 once,
+  $9.99 when Refine joins it): `UnlimitedPaintings` (`Model/`, in the environment from
+  `PaintByNumberApp`) holds whether it is bought, its price and the painter's `FreePaintings`
+  (three, one back at each midnight, never more than three; UserDefaults `freePaintings`).
+  Library pictures, paintings someone sent and paintings made again never take one: only Start
+  Painting on the painter's own photo does (`TemplatePreviewView.start`: `mayStart` before,
+  `started` once the painting is saved), and with none left it opens `UnlockSheet`
+  (`Features/Unlock/`), whose purchase starts the painting. A line under Start Painting counts
+  what is left (`free-paintings`); Settings › Unlimited Paintings shows it, or Unlocked, and opens
+  the same sheet, which has Restore Purchases (App Review requires one).
+- StoreKit 2 on the device (`StoreKitUnlock`: the product
+  `com.pbordjadze.paintbynumber.unlimited`, a non-consumable with Family Sharing on, bought with
+  SwiftUI's `\.purchase`; `Transaction.updates` followed from launch for Ask to Buy, other
+  devices, the family and refunds). Nothing reaches us (`PRIVACY.md` › Unlimited Paintings; no
+  change to the privacy manifest). `App/UnlimitedPaintings.storekit` sells it in Xcode runs (Edit
+  Scheme › Run › Options › StoreKit Configuration); App Store Connect must hold the product before
+  a TestFlight or App Store build that carries it.
+- SideStore builds (`UNRELEASED` without `DEBUG`) sell nothing: a sideloaded app can't buy from
+  the App Store, so everything is unlocked there and none of it shows. Demo and test launches use
+  `UnlockStoreStub` (DEBUG): `-demoFreePaintings <n>`, `-demoUnlocked YES`, `-demoPurchase
+  fail|pending|cancel`, the count kept in memory. `create-unlock` (with `-dark`, `-long-text`) is
+  the sheet over a photo's preview; `UnlimitedPaintingsTests`, `UnlockUITests` and
+  `SettingsTests.testUnlimitedPaintingsShowsTheFreeOnesAndUnlocks` cover it.
 
 ## Settings
 

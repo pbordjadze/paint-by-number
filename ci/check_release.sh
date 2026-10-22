@@ -4,8 +4,8 @@
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
 # behind Settings' The Making-of ships), none of the Marginarium or Refine's screen, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
 # template caches of demo and test launches, their main-thread watchdog, the feedback upload stub
-# and its `-feedback-upload` launch argument): those types are compiled out of Release by
-# `#if DEBUG`.
+# and its `-feedback-upload` launch argument, the App Store's stub and its `-demo…` arguments):
+# those types are compiled out of Release by `#if DEBUG`.
 set -euo pipefail
 APP="$1"
 BINARY="$APP/$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Info.plist")"
@@ -20,12 +20,14 @@ plutil -lint "$APP/PrivacyInfo.xcprivacy" || fail "PrivacyInfo.xcprivacy is not 
 # Type names survive in the binary as mangled metadata (`13PaintDemoView`), the
 # ready-marker and folder names as plain strings (`LineArtMaps` is the maps cache's type,
 # `DemoTemplates`; `FeedbackUploadStub` the feedback stub's, `feedback-upload` the launch argument
-# that picks it). Stripping first drops the debug map, which names every object file whether
+# that picks it; `UnlockStoreStub` the App Store's, `demoFreePaintings`, `demoUnlocked` and
+# `demoPurchase` its arguments). Stripping first drops the debug map, which names every object file whether
 # or not it compiled to anything.
 WORK="$(mktemp -d)"
 strip -S -x -o "$WORK/binary" "$BINARY"
 strings -a "$WORK/binary" > "$WORK/strings.txt"
-for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog FeedbackUploadStub feedback-upload; do
+for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog FeedbackUploadStub feedback-upload \
+              UnlockStoreStub demoFreePaintings demoUnlocked demoPurchase; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 

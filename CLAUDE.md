@@ -363,9 +363,10 @@ Saved paintings must open in every later build. The format history is documented
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
   screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`,
-  `SyntheticTemplate`, `LineArtMapsCache`, `DemoTemplateCache`, `MainThreadWatchdog` and
+  `SyntheticTemplate`, `LineArtMapsCache`, `DemoTemplateCache`, `MainThreadWatchdog`,
   `FeedbackUploadStub` (Debug builds' stand-in for the feedback relay, picked by
-  `-feedback-upload`: tests and CI never upload) are wrapped in `#if DEBUG`,
+  `-feedback-upload`: tests and CI never upload) and `UnlockStoreStub` (the App Store's, for
+  every demo and test launch: nothing is bought) are wrapped in `#if DEBUG`,
   and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
@@ -386,6 +387,11 @@ Saved paintings must open in every later build. The format history is documented
   scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver
   labels and values, Dynamic Type, Reduce Motion and dark mode for every new control, and the
   CLAUDE.md pointers kept current. No stubs or flags hiding unfinished work.
+- Monetization (Paul, October 22): free to download; Unlimited Paintings, one non-consumable
+  in-app purchase ($4.99; Refine joins it when it ships), lifts the free paintings of the
+  painter's own photos (three, one back each day). Library pictures, received and remade
+  paintings are always free; no ads, no subscription. StoreKit 2 checks it on the device and
+  SideStore builds sell nothing (`UnlimitedPaintings`; App/CLAUDE.md › Unlimited Paintings).
 - Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking; the one
   thing the app sends off the device is the feedback a painter chooses to send, declared as
   collected data not linked to them and used only for App Functionality: customer support, other
