@@ -471,6 +471,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     private let brush = UIPanGestureRecognizer()
     private let tap = UITapGestureRecognizer()
     private let press = UILongPressGestureRecognizer()
+    /// Where the brush's finger came down: the stroke starts there, not where the pan began, past
+    /// its slop (UIKit's translation at `.began` doesn't reach back to the touch).
+    private var touchDown: CGPoint?
     private var fittedSize: CGSize = .zero
     private var reported: (rect: CGRect, zoom: CGFloat)?
     private var isLayingOut = false
@@ -615,17 +618,22 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         switch recognizer.state {
         case .began:
             holdPicture(true)
-            // The stroke starts where the finger came down, before the pan's slop.
+            // The stroke starts where the finger came down, before the pan's slop (a stroke's
+            // first ten points or so were lost, so a shape drawn in strokes didn't close).
             let moved = recognizer.translation(in: content)
-            onDraw?(.began, normalized(CGPoint(x: location.x - moved.x, y: location.y - moved.y)))
+            let start = touchDown ?? CGPoint(x: location.x - moved.x, y: location.y - moved.y)
+            touchDown = nil
+            onDraw?(.began, normalized(start))
             onDraw?(.moved, normalized(location))
         case .changed:
             onDraw?(.moved, normalized(location))
         case .ended:
             holdPicture(false)
+            touchDown = nil
             onDraw?(.ended, normalized(location))
         default:
             holdPicture(false)
+            touchDown = nil
             onDraw?(.cancelled, normalized(location))
         }
     }
@@ -670,6 +678,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// then).
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if touch.type == .pencil { drawWithPencil() }
+        // Only a touch that can start the stroke: the first, of a kind the brush takes.
+        if gestureRecognizer === brush, brush.numberOfTouches == 0,
+           brush.allowedTouchTypes.contains(NSNumber(value: touch.type.rawValue)) {
+            touchDown = touch.location(in: content)
+        }
         return true
     }
 }

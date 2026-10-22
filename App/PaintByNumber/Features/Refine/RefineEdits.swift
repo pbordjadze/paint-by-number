@@ -111,6 +111,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notReshaped
         /// A number dragged where it has no room, or out of its cell.
         case notMoved
+        /// A Move Number, Bend Line or Move Edge drag that began on no number, line or edge.
+        case grabNumber, grabLine, grabEdge
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -170,6 +172,15 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notMoved:
             String(localized: "refine.note.notMoved", defaultValue: "There’s no room for that number there.",
                    comment: "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed")
+        case .grabNumber:
+            String(localized: "refine.note.grabNumber", defaultValue: "Start the drag on a number.",
+                   comment: "Refine screen toast: a Move Number drag began where no number was, so nothing moved")
+        case .grabLine:
+            String(localized: "refine.note.grabLine", defaultValue: "Start the drag on a line.",
+                   comment: "Refine screen toast: a Bend Line drag began where no drawn line was (or where lines meet), so nothing moved")
+        case .grabEdge:
+            String(localized: "refine.note.grabEdge", defaultValue: "Start the drag on the border between two cells.",
+                   comment: "Refine screen toast: a Move Edge drag began where no border between cells was (or where borders meet), so nothing moved")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -188,6 +199,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
+        case .grabNumber, .grabLine, .grabEdge: "hand.point.up.left"
         case .alike: "swatchpalette"
         case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted, .notReshaped, .notMoved, .notRecolored,
              .left:

@@ -997,6 +997,10 @@ final class CreateModel {
         }
     }
 
+    /// Refine's own note, for what the screen sees and the template never hears of (a drag that
+    /// held nothing).
+    func tell(_ kind: RefineNote.Kind) { say(kind) }
+
     func dismissNote() {
         noteTask?.cancel()
         note = nil

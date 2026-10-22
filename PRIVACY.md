@@ -16,7 +16,7 @@ sheet and when you tap Send in Give Feedback: then the feedback you reviewed is 
 developers (see Sharing and feedback below).
 
 That feedback is the only data the app collects. It is not linked to you (there is no account to
-link it to), it is not used for tracking, and it is used only to fix and improve the app. The
+link it to), it is not used for tracking, and it is used only to fix problems in the app. The
 app's privacy manifest declares no tracking and this collected data, for the app's own functions:
 your notes (customer support), the app version, device model and system version with the
 painting's settings (other diagnostic data), and your painting with your marks, plus your
@@ -70,8 +70,8 @@ the picture instead).
 - **Your connection.** As with any request over the internet, the upload reaches Cloudflare from
   your IP address. The relay uses it only to limit how quickly one connection can send reports,
   and does not save it with the report.
-- **Use.** The developers use a report only to see what went wrong with a painting, to fix it and
-  to improve the app. It is not sold, shared for advertising or used for anything else.
+- **Use.** The developers use a report only to see what went wrong with a painting and to fix it.
+  It is not sold, shared for advertising or used for anything else.
 - **Your choice.** Nothing is sent unless you tap Send. If sending fails you can try again, share
   the report some other way (for example Mail, Messages or AirDrop), or cancel, which keeps what
   you wrote.

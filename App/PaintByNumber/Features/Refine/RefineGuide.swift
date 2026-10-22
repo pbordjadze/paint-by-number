@@ -802,6 +802,8 @@ struct RefineGuidePageView: View {
             }
         }
         .background(Theme.paper)
+        // A stroke to the right on the practice canvas draws: it never goes back (iPhone).
+        .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .navigationTitle(Self.title(topic))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: picture != nil) {
