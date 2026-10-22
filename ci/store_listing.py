@@ -26,7 +26,8 @@ keeps it; a key or field left out is left as it is, and a list of strings is its
                          kept as a draft until "submit" is true, then left as it is
 
 It finds the app by its bundle id, its iOS version in an editable state and the app info being
-prepared with it, and checks the fields and their lengths before anything changes. Without
+prepared with it (none while a version is in review or live: then only the app's own sections go,
+app, accessibility, availability, inAppPurchases and nomination, and the rest waits), and checks the fields and their lengths before anything changes. Without
 --apply it lists each field that differs from what App Store Connect holds, changing nothing; with
 --apply it sends only those. An accessibility answer is sent as a new draft declaration, which is
 then published: that is what the product page shows. Apple publishes them only once the app is
@@ -398,6 +399,17 @@ def nomination(client, work, app_id, wanted):
             "relationships": {"relatedApps": {"data": [{"type": "apps", "id": app_id}]}}}})
 
 
+def being_prepared(find):
+    """What `find` finds, or None (said once) when nothing is in a state that can be changed."""
+    try:
+        return find()
+    except APIError as error:
+        if "in a state whose" not in str(error):
+            raise
+        print(f"Left for the next version: {error}.", flush=True)
+        return None
+
+
 def editable_info(client, app_id):
     infos = client.call("GET", f"/apps/{app_id}/appInfos")["data"]
     for info in infos:
@@ -444,32 +456,35 @@ def main():
         sys.exit(f"{len(wrong)} problems with {args.listing.name}, nothing changed")
     client = Client(private_key())
     app = find_app(client)
-    version = editable_version(client, app["id"])
-    info = editable_info(client, app["id"])
-    name = version["attributes"].get("versionString")
+    # In review or live, nothing is being prepared: the app's own sections (its fields, the
+    # accessibility labels, availability, purchases, the nomination) still go, the rest waits for
+    # the next version.
+    version = being_prepared(lambda: editable_version(client, app["id"]))
+    info = being_prepared(lambda: editable_info(client, app["id"]))
+    name = version["attributes"].get("versionString") if version else "(none being prepared)"
     work = Listing(client, args.apply)
     if "app" in listing:
         work.patch("app", "apps", app, listing["app"])
-    if "appInfo" in listing:
+    if "appInfo" in listing and info:
         work.categories(info, listing["appInfo"])
-    if "appInfoLocalization" in listing:
+    if "appInfoLocalization" in listing and info:
         work.patch("appInfoLocalization", "appInfoLocalizations",
                    info_localization(client, info["id"], args.locale), listing["appInfoLocalization"])
-    if "ageRating" in listing:
+    if "ageRating" in listing and info:
         declaration = client.call("GET", f"/appInfos/{info['id']}/ageRatingDeclaration")["data"]
         work.patch("ageRating", "ageRatingDeclarations", declaration, listing["ageRating"])
-    if "version" in listing:
+    if "version" in listing and version:
         work.patch("version", "appStoreVersions", version, listing["version"])
-    if "versionLocalization" in listing:
+    if "versionLocalization" in listing and version:
         work.patch("versionLocalization", "appStoreVersionLocalizations",
                    localization(client, version["id"], args.locale), listing["versionLocalization"])
-    if "review" in listing:
+    if "review" in listing and version:
         work.review(version, listing["review"])
     for family, answers in listing.get("accessibility", {}).items():
         work.accessibility(app["id"], family, answers)
     if "availability" in listing:
         availability(client, work, app["id"], listing["availability"])
-    if "otherLocales" in listing:
+    if "otherLocales" in listing and version and info:
         other_locales(client, work, version, info, listing)
     if "inAppPurchases" in listing:
         in_app_purchases(client, work, app["id"], listing["inAppPurchases"])
