@@ -453,8 +453,9 @@ any port of it, when changing the fitter: work from the paper.
    caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
    as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
    median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 4 (`iphone`,
-   about 85 min, is main's longest). `ci/fetch.sh` waits up to 140 min. A newer push to the same
-   branch cancels the older run, which then never reports. Work on something else while it runs.
+   about 110 min, is main's longest, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
+   push to the same branch cancels the older run, which then never reports. Work on something
+   else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
    Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
    `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in

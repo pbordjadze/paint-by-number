@@ -120,8 +120,9 @@ jobs:
     runs-on: macos-26
     # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
     # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
-    # last green run took 85).
-    timeout-minutes: 130
+    # last green run took 85), and 130 did too (main's run 559, October 22: its tests had passed,
+    # 76 minutes on a runner some 15% slower than run 557's, whose job took 110).
+    timeout-minutes: 160
     strategy:
       fail-fast: false
       matrix:
