@@ -41,6 +41,7 @@ Needs `cryptography` (ES256 tokens, through ci/testflight_testers.py's client).
 """
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -81,8 +82,12 @@ FIELDS = {
                             "supportUrl": str},
     "review": {"notes": str, "demoAccountRequired": bool},
 }
-# What another English locale's listing may say in its own words; the rest is LOCALE's, respelled.
+# The other English storefronts' locales, and what each may say in its own words; the rest is
+# LOCALE's, respelled.
+OTHER_LOCALES = ("en-GB", "en-AU", "en-CA")
 LOCALE_FIELDS = ("keywords", "promotionalText", "subtitle")
+# The prose respelled for them (never a URL).
+PROSE = ("name", "subtitle", "description", "keywords", "promotionalText")
 NOMINATION = {"name": str, "type": ("APP_LAUNCH", "APP_ENHANCEMENTS", "NEW_CONTENT"), "description": str,
               "publishStartDate": str, "deviceFamilies": list, "locales": list, "supplementalMaterialsUris": list,
               "hasInAppEvents": bool, "launchInSelectMarketsFirst": bool, "preOrderEnabled": bool, "notes": str,
@@ -96,11 +101,16 @@ def read_listing(path):
     if unknown:
         raise APIError(f"{path.name}: unknown sections {', '.join(sorted(unknown))}")
     def joined(section, field, value):
-        text = FIELDS.get(section, {}).get(field) is str or (section == "nomination" and NOMINATION.get(field) is str)
+        text = (FIELDS.get(section, {}).get(field) is str or (section == "nomination" and NOMINATION.get(field) is str)
+                or field in LOCALE_FIELDS or field == "reviewNote")
         return "\n".join(value) if text and isinstance(value, list) else value
-    return {section: {field: joined(section, field, value) for field, value in fields.items()}
-            if section in FIELDS or section == "nomination" else fields
-            for section, fields in listing.items()}
+    def each(section, fields):
+        if section in FIELDS or section == "nomination":
+            return {field: joined(section, field, value) for field, value in fields.items()}
+        if section in ("otherLocales", "inAppPurchases"):
+            return {key: {field: joined(section, field, value) for field, value in own.items()} for key, own in fields.items()}
+        return fields
+    return {section: each(section, fields) for section, fields in listing.items()}
 
 
 def problems(listing):
@@ -108,22 +118,34 @@ def problems(listing):
     found = []
     for section, fields in listing.items():
         if section == "otherLocales":
-            for locale, own in fields.items():
-                if not re.fullmatch(r"en-[A-Z]{2}", locale):
-                    found.append(f"otherLocales: {locale} is not an English locale (en-GB, en-AU, …)")
-                found += [f"otherLocales {locale}.{k} is not one of {', '.join(LOCALE_FIELDS)}" for k in own if k not in LOCALE_FIELDS]
-                if len(own.get("keywords", "")) > LIMITS["keywords"]:
-                    found.append(f"otherLocales {locale}.keywords is over {LIMITS['keywords']} characters")
+            for locale in fields:
+                if locale not in OTHER_LOCALES:
+                    found.append(f"otherLocales: {locale} is not one of {', '.join(OTHER_LOCALES)}")
+                for field, value in locale_listing(listing, locale).items():
+                    if value is not None and not isinstance(value, str):
+                        found.append(f"otherLocales {locale}.{field} should be text")
+                    elif value and field in LIMITS and len(value) > LIMITS[field]:
+                        found.append(f"otherLocales {locale}.{field} is {len(value)} characters, over {LIMITS[field]}")
+                found += [f"otherLocales {locale}.{k} is not one of {', '.join(LOCALE_FIELDS)}"
+                          for k in fields[locale] if k not in LOCALE_FIELDS]
             continue
         if section == "inAppPurchases":
-            found += [f"inAppPurchases {product}: only reviewNote is set here" for product, own in fields.items()
-                      if set(own) != {"reviewNote"}]
+            found += [f"inAppPurchases {product}: only reviewNote is set here, as text" for product, own in fields.items()
+                      if set(own) != {"reviewNote"} or not isinstance(own["reviewNote"], str)]
             continue
         if section == "nomination":
             for field, value in fields.items():
                 kind = NOMINATION.get(field)
                 if kind is None or (isinstance(kind, tuple) and value not in kind) or (isinstance(kind, type) and not isinstance(value, kind)):
                     found.append(f"nomination.{field}: not a field, or not a value, this script sends")
+            found += [f"nomination.{field} is required" for field in ("name", "type", "description", "publishStartDate")
+                      if not fields.get(field)]
+            try:
+                datetime.datetime.fromisoformat(str(fields.get("publishStartDate")))
+            except ValueError:
+                found.append("nomination.publishStartDate should be a time, like 2026-10-27T00:00:00Z")
+            found += [f"nomination.deviceFamilies: {f} is not one of {', '.join(FAMILIES)}"
+                      for f in fields.get("deviceFamilies", []) if f not in FAMILIES]
             continue
         if section == "availability":
             if fields != {"territories": "all", "availableInNewTerritories": True}:
@@ -264,18 +286,27 @@ def respelled(text):
     return re.sub(r"\b([Cc])olor", r"\1olour", text)
 
 
+def locale_listing(listing, locale):
+    """One other locale's fields, app info's and version's together: LOCALE's, its prose
+    respelled, then its own words."""
+    base = {**listing.get("appInfoLocalization", {}), **listing.get("versionLocalization", {})}
+    merged = {k: respelled(v) if k in PROSE and isinstance(v, str) else v for k, v in base.items()}
+    return {**merged, **listing.get("otherLocales", {}).get(locale, {})}
+
+
 def other_locales(client, work, version, info, listing):
     """Each other English locale's listing: LOCALE's own, respelled, with its own keywords; created
     when the version or the app info has none for that locale yet."""
-    base_info = {k: respelled(v) for k, v in listing.get("appInfoLocalization", {}).items()}
-    base_version = {k: respelled(v) for k, v in listing.get("versionLocalization", {}).items()}
     version_found = {i["attributes"]["locale"]: i for i in
                      client.call("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]}
     info_found = {i["attributes"]["locale"]: i for i in
                   client.call("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]}
     for locale, own in listing["otherLocales"].items():
-        wanted_info = {**base_info, **{k: v for k, v in own.items() if k in FIELDS["appInfoLocalization"]}}
-        wanted_version = {**base_version, **{k: v for k, v in own.items() if k in FIELDS["versionLocalization"]}}
+        fields = locale_listing(listing, locale)
+        wanted_info = {k: v for k, v in fields.items() if k in listing.get("appInfoLocalization", {}) or k in own
+                       and k in FIELDS["appInfoLocalization"]}
+        wanted_version = {k: v for k, v in fields.items() if k in listing.get("versionLocalization", {}) or k in own
+                          and k in FIELDS["versionLocalization"]}
         for kind, parent, found, wanted, label in (
                 ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), info_found, wanted_info, "appInfoLocalization"),
                 ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), version_found,
@@ -325,7 +356,18 @@ def nomination(client, work, app_id, wanted):
         print(f"Nomination {wanted['name']!r}: {existing['attributes'].get('state')}, left as is.")
         return
     current = dict(existing["attributes"]) if existing else {}
-    differ = work.compare("nomination" + ("" if existing else " (new draft)"), current, wanted)
+    # The same time however App Store Connect writes it, and the same lists in any order.
+    try:
+        if datetime.datetime.fromisoformat(current.get("publishStartDate") or "") == \
+                datetime.datetime.fromisoformat(wanted["publishStartDate"]):
+            current["publishStartDate"] = wanted["publishStartDate"]
+    except ValueError:
+        pass
+    for field in ("deviceFamilies", "locales", "supplementalMaterialsUris"):
+        if sorted(current.get(field) or []) == sorted(wanted.get(field) or []):
+            current[field] = wanted.get(field)
+    # Whatever was typed into the draft in App Store Connect shows in the public log only by length.
+    differ = work.compare("nomination" + ("" if existing else " (new draft)"), current, wanted, private=True)
     if submit:
         work.compare("nomination", {"submitted": False}, {"submitted": True})
     if not work.apply or not (differ or submit):
