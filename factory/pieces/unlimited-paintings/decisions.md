@@ -19,9 +19,11 @@ Changes taken:
   Nightfall draws them over a painting finished by night, not the system's moon-and-stars
   symbol (Originality: "Keep the crescent-and-stars our own drawing, never Apple's moon.stars
   glyph"; the Hedge Witch's "hand-kept").
-- At accessibility text sizes the sheet opens full height and its buttons stack, the price
-  first, so nobody meets a sentence cut off mid-way (Madeleine). It scrolled before, but showed
-  no sign of it.
+- At accessibility text sizes its buttons stack, the price first, and on iPhone the sheet opens
+  full height (Madeleine). On iPad its form sheet keeps its size (a detent changes nothing
+  there): the sentence still runs past the sheet's edge and scrolls, Restore Purchases within
+  reach (`UnlockUITests`, CI shots of 68e9d62). A page-sized sheet at those sizes is the next
+  step if Paul wants it.
 - "Library pictures are always free." and Restore Purchases share one quiet line when it fits
   (Rikyū).
 
