@@ -225,6 +225,13 @@ struct RefineView: View {
     /// The sparkles where a line closed off an area last: the line's number, where its ends met
     /// on screen, and the shape's smaller side on screen.
     @State private var sparkles: (id: Int, point: CGPoint, extent: CGFloat)?
+    /// What a Merge drag joins, lit while the finger is down: the probe of the template on screen
+    /// (with its preview's id), the areas found for the drag so far, and the drag waiting for
+    /// the probe while it works on an earlier one.
+    @State private var mergeProbe: (preview: UUID, probe: TemplateEditor.MergeProbe)?
+    @State private var mergeAreas: [Int] = []
+    @State private var mergeWanted: [SIMD2<Float>]?
+    @State private var mergeProbing = false
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
@@ -625,11 +632,17 @@ struct RefineView: View {
         case .began:
             trace = [point]
             snapLines = tool.erases || tool == .merge || tool == .brush || !snapsOn ? nil : currentSnapLines()
+            #if UNRELEASED
+            if tool == .merge { probeMerge() }
+            #endif
         case .moved:
             // Samples closer than a point add nothing the line shows.
             guard var current = trace, let last = current.last, screen.onScreenLength(point - last) >= 1 else { return }
             current.append(point)
             trace = current
+            #if UNRELEASED
+            if tool == .merge { light(current) }
+            #endif
         case .ended:
             guard var current = trace else { return }
             current.append(point)
@@ -662,6 +675,10 @@ struct RefineView: View {
     private func endStroke() {
         trace = nil
         snapLines = nil
+        #if UNRELEASED
+        mergeAreas = []
+        mergeWanted = nil
+        #endif
     }
 
     /// Whether a line's ends join the lines their ink touches: always in the release, the
@@ -1939,15 +1956,52 @@ extension RefineView {
             })
     }
 
-    /// The areas that glow: a card's paint's, the cell Select picked, or Edit Paint's paint's.
+    /// The areas that glow: those a Merge drag joins, a card's paint's, the cell Select picked,
+    /// or Edit Paint's paint's.
     private var glowAreas: [Int] {
         guard let template = base?.template else { return [] }
+        if tool == .merge, trace != nil, let probe = mergeProbe, probe.preview == base?.id { return mergeAreas }
         if let card, let region = template.region(at: card.at) {
             return RefinePaintGlow.areas(of: Int(template.regions[region].colorIndex), in: template)
         }
         if tool == .select, let region = selectedRegion { return [region] }
         if tool == .editPaint, let index = currentIndex { return RefinePaintGlow.areas(of: index, in: template) }
         return []
+    }
+
+    /// A Merge drag begins: the template on screen gets its probe, unless it has one.
+    private func probeMerge() {
+        mergeAreas = []
+        guard let base, mergeProbe?.preview != base.id else { return }
+        mergeProbe = (try? TemplateEditor.MergeProbe(base.template)).map { (base.id, $0) }
+    }
+
+    /// The areas the Merge drag so far joins, found off the main actor; a drag that moves on while
+    /// they are being found waits for that, and only its newest points are looked at.
+    private func light(_ points: [SIMD2<Float>]) {
+        mergeWanted = points
+        guard !mergeProbing else { return }
+        lightNext()
+    }
+
+    private func lightNext() {
+        guard let points = mergeWanted, let probe = mergeProbe,
+              case .merge(let path)? = RefineGestures.merge(points, on: screen)
+        else { return }
+        mergeWanted = nil
+        mergeProbing = true
+        Task {
+            let areas = await Self.areas(of: probe.probe, along: path)
+            mergeProbing = false
+            // The finger may have lifted, or the template changed, meanwhile.
+            if trace != nil, probe.preview == mergeProbe?.preview { mergeAreas = areas }
+            if mergeWanted != nil { lightNext() }
+        }
+    }
+
+    @concurrent
+    private static func areas(of probe: TemplateEditor.MergeProbe, along path: [SIMD2<Float>]) async -> [Int] {
+        probe.areas(along: path)
     }
 
     /// A tap of Select, the Bucket, the Eyedropper or Edit Paint on the cell under it.

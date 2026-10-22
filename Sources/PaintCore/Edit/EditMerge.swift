@@ -84,17 +84,10 @@ extension EditWork {
         summary.touched.insert(keep)
     }
 
-    /// Refine's Merge: the regions under `path` (lattice points, canvas units on the quantum
-    /// grid), in the order the path first enters them, walked in steps of half a unit, a point
-    /// off the canvas or in no region left out. The first region is joined by each next one that
-    /// shares an edge with those joined so far; one that doesn't is passed over. The edges
-    /// between them go, ink and all, with no stroke left of an inked one (unlike the eraser's
-    /// join); the strokes inside them stay. The joined area keeps the first region's index,
-    /// paint and number, and is a detail area only if the first was (a detail area is what a
-    /// fill or a cramped cut made: the painter dragged from it, so the area is it, grown). A
-    /// paint left with no area leaves the palette, the numbers after it closing up, as Only
-    /// This Area's does.
-    mutating func merge(along path: [LatticePoint]) throws {
+    /// The regions a Merge along `path` joins (`merge(along:)`), the one it keeps first, without
+    /// joining them: what Refine lights up while the finger is down (`TemplateEditor.MergeProbe`).
+    /// Throws as the merge does for a drag that joins none.
+    func mergeMembers(along path: [LatticePoint]) throws -> [Int] {
         let width = Int64(t.width) * Lattice.unit, height = Int64(t.height) * Lattice.unit
         var order: [Int] = []
         var seen = Set<Int>()
@@ -137,6 +130,22 @@ extension EditWork {
             }
         }
         guard members.count >= 2 else { throw EditFailure.invalid("the merge joins no areas") }
+        return members
+    }
+
+    /// Refine's Merge: the regions under `path` (lattice points, canvas units on the quantum
+    /// grid), in the order the path first enters them, walked in steps of half a unit, a point
+    /// off the canvas or in no region left out. The first region is joined by each next one that
+    /// shares an edge with those joined so far; one that doesn't is passed over. The edges
+    /// between them go, ink and all, with no stroke left of an inked one (unlike the eraser's
+    /// join); the strokes inside them stay. The joined area keeps the first region's index,
+    /// paint and number, and is a detail area only if the first was (a detail area is what a
+    /// fill or a cramped cut made: the painter dragged from it, so the area is it, grown). A
+    /// paint left with no area leaves the palette, the numbers after it closing up, as Only
+    /// This Area's does.
+    mutating func merge(along path: [LatticePoint]) throws {
+        let members = try mergeMembers(along: path)
+        let first = members[0], joined = Set(members)
         var between: [Int: [[LatticePoint]]] = [:]
         for m in members {
             for ring in ringsOf(m) {
@@ -181,6 +190,27 @@ extension EditWork {
                 let w = colorWeight(t.regions[left(e)].colorIndex, t.regions[other].colorIndex)
                 if w != weights[e] { weights[e] = w }
             }
+        }
+    }
+}
+
+extension TemplateEditor {
+    /// Refine's Merge ahead of time: the areas a drag joins on `template`, found as the editor finds
+    /// them (`EditWork.mergeMembers`), so the screen can light them up while the finger is still
+    /// down. A merge the editor then declines for another reason (the joined area with no room
+    /// for its number) is lit all the same; its toast says so.
+    public struct MergeProbe: Sendable {
+        let work: EditWork
+
+        public init(_ template: Template) throws {
+            work = try EditWork(template)
+        }
+
+        /// The regions a Merge along `points` (canvas units, as `Edit.merge` has them) joins, the
+        /// one it keeps first; none for a drag that joins none.
+        public func areas(along points: [SIMD2<Float>]) -> [Int] {
+            let lattice = points.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }.map(Lattice.clampedPoint)
+            return (try? work.mergeMembers(along: lattice)) ?? []
         }
     }
 }
