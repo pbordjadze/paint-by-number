@@ -4,8 +4,9 @@ import StoreKit
 import SwiftUI
 
 /// Debug launches' stand-in for the App Store in demos and the test host, so no test or CI run
-/// asks it for anything (`UnlimitedPaintings.forLaunch`). The free paintings are counted in memory,
-/// so each launch starts over. Its launch arguments:
+/// asks it for anything (`UnlimitedPaintings.forLaunch`). The free paintings are counted in memory
+/// on a clock stopped at launch: each launch starts over, and a test that runs past midnight isn't
+/// given one back. Its launch arguments:
 ///
 /// - `-demoFreePaintings <n>`: the free paintings left at launch (three, or the scenario's
 ///   `ShellDemo.freePaintings`, when not given);
@@ -59,9 +60,10 @@ final class UnlockStoreStub: UnlockStore {
         let stub = UnlockStoreStub(
             owned: arguments.bool(forKey: "demoUnlocked"),
             purchase: arguments.string(forKey: "demoPurchase").flatMap(Purchase.init(rawValue:)) ?? .unlocks)
+        let launch = Date.now
         let left = arguments.string(forKey: "demoFreePaintings").flatMap(Int.init) ?? ShellDemo.current?.freePaintings
-        let free = left.map { FreePaintings(left: $0, since: Calendar.autoupdatingCurrent.startOfDay(for: .now)) }
-        let paintings = UnlimitedPaintings(store: stub, defaults: nil, free: free)
+        let free = left.map { FreePaintings(left: $0, since: Calendar.autoupdatingCurrent.startOfDay(for: launch)) }
+        let paintings = UnlimitedPaintings(store: stub, defaults: nil, free: free, now: { launch })
         paintings.follow()
         return paintings
     }

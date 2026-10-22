@@ -151,17 +151,8 @@ struct TemplatePreviewView: View {
             if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
         }
         #endif
-        // Bought: the painting the painter asked for starts.
-        .sheet(isPresented: $offersUnlock, onDismiss: { if paintings.isUnlocked { start() } }) {
-            UnlockSheet(fromStart: true)
-        }
-        #if DEBUG
-        // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
-        .onChange(of: model.isFinal) { _, isFinal in
-            if isFinal, ShellDemo.current == .createUnlock { start() }
-        }
-        #endif
-        .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
+        .modifier(UnlockOffer(isPresented: $offersUnlock, start: start))
+        .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
             Button("Try Again", action: start)
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -318,6 +309,10 @@ struct TemplatePreviewView: View {
         let canRefine = false
         #endif
         PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: canRefine)
+        #if DEBUG
+        // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
+        if ShellDemo.current == .createUnlock { start() }
+        #endif
     }
 
     // MARK: Canvas
@@ -590,6 +585,10 @@ struct TemplatePreviewView: View {
         .background(Theme.paper, in: .rect(cornerRadius: 14, style: .continuous))
     }
 
+    private var isShowingStartError: Binding<Bool> {
+        Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })
+    }
+
     /// A photo of the painter's own, not a library picture: its painting may take a free painting.
     private var isOwnPhoto: Bool { model.source != nil && model.source?.sampleName == nil }
 
@@ -818,6 +817,21 @@ private struct ContentSwipeBackOff: UIViewControllerRepresentable {
             super.viewWillDisappear(animated)
             disabled?.isEnabled = true
             disabled = nil
+        }
+    }
+}
+
+/// Unlimited Paintings' sheet over the preview (`UnlockSheet`): Start Painting opens it when no
+/// free painting is left for the painter's own photo, and once the unlock is bought the painting
+/// starts.
+private struct UnlockOffer: ViewModifier {
+    @Binding var isPresented: Bool
+    let start: () -> Void
+    @Environment(UnlimitedPaintings.self) private var paintings
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } }) {
+            UnlockSheet(fromStart: true)
         }
     }
 }

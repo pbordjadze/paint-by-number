@@ -210,12 +210,13 @@ final class SettingsTests: XCTestCase {
     func testUnlimitedPaintingsShowsTheFreeOnesAndUnlocks() throws {
         let app = openSettings(arguments: ["-demoFreePaintings", "2"])
         let free = app.descendants(matching: .any)["settings-free-paintings"]
-        scroll(app, to: free)
-        for _ in 0..<3 where free.exists && !free.isHittable { app.swipeUp() }
+        // The lower of the two rows: once it is in view, both are.
+        let unlimited = app.buttons["settings-unlimited"]
+        scroll(app, to: unlimited)
+        for _ in 0..<3 where unlimited.exists && !unlimited.isHittable { app.swipeUp() }
+        XCTAssertTrue(unlimited.exists, "Settings offers no Unlimited Paintings")
         XCTAssertTrue(free.exists, "Settings has no Free Paintings row")
         XCTAssertTrue(describe(free).contains("2 left"), "The Free Paintings row doesn't say 2 left: \(describe(free))")
-        let unlimited = app.buttons["settings-unlimited"]
-        XCTAssertTrue(unlimited.exists, "Settings offers no Unlimited Paintings")
         unlimited.tap()
 
         let buy = app.buttons["unlock-buy"]

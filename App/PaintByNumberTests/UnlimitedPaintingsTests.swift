@@ -43,7 +43,8 @@ struct UnlimitedPaintingsTests {
         var free = Self.used(3, at: Self.start)
         #expect(free.left == 0)
         // 11 p.m. the same day.
-        #expect(!free.use(at: Self.at(days: 0, hours: 13), calendar: Self.calendar))
+        let usedLate = free.use(at: Self.at(days: 0, hours: 13), calendar: Self.calendar)
+        #expect(!usedLate)
         #expect(Self.left(free, at: Self.at(days: 0, hours: 13.9)) == 0)
         #expect(Self.left(free, at: Self.at(days: 0, hours: 14)) == 1)
     }
@@ -69,12 +70,31 @@ struct UnlimitedPaintingsTests {
         #expect(Self.left(free, at: Self.at(days: 1)) == 3)
     }
 
-    @Test func aClockSetBackNeitherGivesNorStalls() {
+    /// Back before the count began, the count can't know the days: all three come back, rather
+    /// than none until the clock catches up with the day they were used.
+    @Test func aClockSetBackBeforeTheCountBeganGivesThemBack() {
         let free = Self.used(3, at: Self.at(days: 5))
-        let back = free.at(Self.start, calendar: Self.calendar)
-        #expect(back.left == 0)
-        // The next midnight after the clock's new today gives one, not day 6's.
-        #expect(Self.left(back, at: Self.at(days: 1)) == 1)
+        #expect(free.at(Self.start, calendar: Self.calendar) == FreePaintings())
+        // Back within the day they were used, nothing changes.
+        #expect(Self.left(free, at: Self.at(days: 5, hours: -9)) == 0)
+    }
+
+    /// Days are counted between midnights where the painter is now: flying west, the day they used
+    /// their last one in Tokyo is still today in Honolulu, and the next comes at Honolulu's midnight.
+    @Test func aPainterFlyingWestKeepsTheirDay() throws {
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+        var honolulu = Calendar(identifier: .gregorian)
+        honolulu.timeZone = try #require(TimeZone(identifier: "Pacific/Honolulu"))
+        // Ten in the morning of October 22 in Tokyo is three in the afternoon of October 21 in Honolulu.
+        let used = try #require(tokyo.date(from: DateComponents(year: 2026, month: 10, day: 22, hour: 10)))
+        var free = FreePaintings()
+        for _ in 0..<3 { _ = free.use(at: used, calendar: tokyo) }
+
+        #expect(free.at(used.addingTimeInterval(5 * 3600), calendar: honolulu).left == 0)
+        let midnight = try #require(honolulu.date(from: DateComponents(year: 2026, month: 10, day: 22)))
+        #expect(free.at(midnight.addingTimeInterval(-60), calendar: honolulu).left == 0)
+        #expect(free.at(midnight, calendar: honolulu).left == 1)
     }
 
     @Test func aStoredCountStaysInBounds() throws {

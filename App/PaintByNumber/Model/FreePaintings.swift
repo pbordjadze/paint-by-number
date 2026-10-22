@@ -6,14 +6,17 @@ import Foundation
 /// made again never take one (`UnlimitedPaintings`).
 ///
 /// Counted on the device alone, in UserDefaults: a reinstall starts over and a changed clock
-/// moves the days, which is accepted rather than sending anything anywhere. A clock set back
-/// counts from the new today, so it never stalls the next free painting.
+/// moves the days, which is accepted rather than sending anything anywhere. Days are counted
+/// between local midnights where the painter is now, so a time zone crossed or a change of
+/// daylight saving time moves the count by no more than the clock did; a clock set back before
+/// the count began gives all three back rather than stalling them until it catches up.
 nonisolated struct FreePaintings: Codable, Equatable, Sendable {
     static let most = 3
 
     /// Free paintings left, as of `since`.
     private(set) var left: Int
-    /// The start of the day the next free painting counts from; nil while `most` are left.
+    /// When the count of days began (the start of the day one was used, or the last one came
+    /// back); nil while `most` are left.
     private(set) var since: Date?
 
     init(left: Int = Self.most, since: Date? = nil) {
@@ -32,10 +35,11 @@ nonisolated struct FreePaintings: Codable, Equatable, Sendable {
     func at(_ now: Date, calendar: Calendar) -> FreePaintings {
         guard left < Self.most, let since else { return FreePaintings() }
         let today = calendar.startOfDay(for: now)
-        guard since <= today else { return FreePaintings(left: left, since: today) }
-        let days = calendar.dateComponents([.day], from: since, to: today).day ?? 0
-        guard left + days < Self.most else { return FreePaintings() }
-        return FreePaintings(left: left + days, since: calendar.date(byAdding: .day, value: days, to: since) ?? today)
+        let first = calendar.startOfDay(for: since)
+        guard first <= today else { return FreePaintings() }
+        let days = calendar.dateComponents([.day], from: first, to: today).day ?? 0
+        guard days > 0 else { return self }
+        return FreePaintings(left: left + days, since: today)
     }
 
     /// Takes one free painting as of `now`; false, changing nothing but the day's count, when

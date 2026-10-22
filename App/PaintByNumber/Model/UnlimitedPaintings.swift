@@ -128,14 +128,14 @@ final class UnlimitedPaintings {
         await refresh()
     }
 
-    /// Checks what is owned, then follows the App Store's changes for as long as the app runs: a
-    /// purchase approved later (Ask to Buy), made on another device or by the family, or refunded.
+    /// Follows the App Store's changes for as long as the app runs (a purchase approved later by
+    /// Ask to Buy, made on another device or by the family, or refunded), then checks what is owned.
     func follow() {
         guard let store, follower == nil else { return }
         follower = Task { [weak self] in
-            await self?.refresh()
             await store.followChanges { [weak self] in await self?.refresh() }
         }
+        Task { [weak self] in await self?.refresh() }
     }
 
     private static func stored(in defaults: UserDefaults?) -> FreePaintings {
