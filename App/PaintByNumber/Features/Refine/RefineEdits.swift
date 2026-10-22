@@ -122,6 +122,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
         /// made the template anew).
         case left(Int)
+        /// The painting has as many edits as Refine keeps (`TemplateRefinements.isFull`): this one
+        /// was not made, whatever the tool.
+        case full
 
         /// What to say of an edit that was declined.
         init(declined edit: TemplateEditor.Edit) {
@@ -190,6 +193,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .tooSmall:
             String(localized: "refine.note.tooSmall", defaultValue: "That shape is too small for a number.",
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
+        case .full:
+            String(localized: "refine.note.full", defaultValue: "This painting has as many changes as Refine can keep.",
+                   comment: "Refine screen toast: the painting already has the most edits Refine keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed")
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
                    comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
@@ -202,7 +208,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .grabNumber, .grabLine, .grabEdge: "hand.point.up.left"
         case .alike: "swatchpalette"
         case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted, .notReshaped, .notMoved, .notRecolored,
-             .left:
+             .left, .full:
             "exclamationmark.circle"
         }
     }

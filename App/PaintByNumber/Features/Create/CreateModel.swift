@@ -921,7 +921,11 @@ final class CreateModel {
                 let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)
                 if replaces { next.edits[next.edits.count - 1] = edit } else { next.edits.append(edit) }
             }
-            guard next != before, next.edits.count <= TemplateRefinements.maximumEdits, refinements == before else { return }
+            guard next != before, refinements == before else { return }
+            guard next.edits.count <= TemplateRefinements.maximumEdits else {
+                say(.full)
+                return
+            }
             if !replaces { history.push(before) }
             let paints = current.template.palette.count
             await settle(on: next)
@@ -1106,7 +1110,10 @@ final class CreateModel {
                 kept = await Self.painting(edit, on: shown, photo: photo)
             }
             let now = refinements
-            if now.edits.count < TemplateRefinements.maximumEdits {
+            // Refused or kept, it settles with the edits sent before it, once the template is remade.
+            if now.isFull {
+                say(.full)
+            } else {
                 history.push(now)
                 refinements.edits.append(kept)
             }
@@ -1125,8 +1132,8 @@ final class CreateModel {
                 return
             }
         }
-        guard before.edits.count < TemplateRefinements.maximumEdits else {
-            say(.init(declined: edit))
+        guard !before.isFull else {
+            say(.full)
             handled(serial)
             return
         }
