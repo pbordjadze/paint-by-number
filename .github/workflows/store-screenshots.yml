@@ -38,7 +38,8 @@ jobs:
   screenshots:
     name: App Store screenshots
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Room for every wait of the script (15 minutes each) after the uploads.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
       - name: Slides from the feedback repository

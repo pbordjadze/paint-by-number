@@ -224,26 +224,26 @@ def placements(client, localization_id, kind):
         "filter[placementType]": kind, "include": "image", "limit": "50"})
     names = {i["id"]: i["attributes"].get("referenceName") for i in found.get("included") or []
              if i["type"] == "appAssetLibraryImages"}
-    return [(p, names.get(((p.get("relationships") or {}).get("image") or {}).get("data", {}).get("id")))
+    return [(p, names.get((((p.get("relationships") or {}).get("image") or {}).get("data") or {}).get("id")))
             for p in found["data"]]
 
 
-def replace_creative(client, app_id, localization_id, kind, path):
-    """Puts the image on the version as its `kind` placement, unless it is already there (its
-    reference name carries its MD5); returns the new placement's id, or None."""
-    data = path.read_bytes()
-    reference = f"{CREATIVE[kind]} {hashlib.md5(data).hexdigest()[:12]}"
-    file_name = CREATIVE[kind].lower().replace(" ", "-") + path.suffix  # how the Asset Library lists it
-    existing = placements(client, localization_id, kind)
-    if len(existing) == 1 and existing[0][1] == reference and existing[0][0]["attributes"].get("state") != "FAILED":
-        print(f"{kind}: already {path.name} ({reference}), left as is.", flush=True)
-        return None
-    for placement, _ in existing:
-        client.call("DELETE", f"/appAssetLibraryPlacements/{placement['id']}")
-    library = client.call("GET", f"/apps/{app_id}/assetLibrary")["data"]["id"]
+def processed_image(client, library, kind, path, data, reference):
+    """The Asset Library's processed image of these bytes (by its reference name), uploaded and
+    waited for when it has none; one a run left failed or half sent is deleted first."""
+    found = client.call("GET", f"/appAssetLibraries/{library}/images", query={
+        "filter[category]": "CREATIVE_ASSETS", "filter[referenceName]": reference, "limit": "50"})["data"]
+    for image in found:
+        if image["attributes"].get("state") not in ("AWAITING_UPLOAD", "UPLOAD_COMPLETE", "FAILED", "ARCHIVED"):
+            print(f"{kind}: {reference!r} is in the Asset Library already.", flush=True)
+            return image["id"]
+    for image in found:
+        if image["attributes"].get("state") != "ARCHIVED":
+            client.call("DELETE", f"/appAssetLibraryImages/{image['id']}")
     image = client.call("POST", "/appAssetLibraryImages", {"data": {
         "type": "appAssetLibraryImages",
-        "attributes": {"category": "CREATIVE_ASSETS", "fileName": file_name, "fileSize": len(data), "referenceName": reference},
+        "attributes": {"category": "CREATIVE_ASSETS", "fileName": CREATIVE[kind].lower().replace(" ", "-") + path.suffix,
+                       "fileSize": len(data), "referenceName": reference},
         "relationships": {"assetLibrary": {"data": {"type": "appAssetLibraries", "id": library}}}}})["data"]
     send_parts(image["attributes"]["uploadOperations"], data)
     client.call("PATCH", f"/appAssetLibraryImages/{image['id']}", {"data": {
@@ -254,18 +254,35 @@ def replace_creative(client, app_id, localization_id, kind, path):
         attributes = client.call("GET", f"/appAssetLibraryImages/{image['id']}")["data"]["attributes"]
         state = attributes.get("state")
         if state == "FAILED":
+            client.call("DELETE", f"/appAssetLibraryImages/{image['id']}")
             reasons = "; ".join(f"{d.get('code')}: {d.get('description')}" for d in attributes.get("stateDetails") or [])
             raise APIError(f"App Store Connect refused {kind} {path.name}: {reasons or 'failed'}")
         if state not in ("AWAITING_UPLOAD", "UPLOAD_COMPLETE"):
-            break
+            return image["id"]
         if time.time() >= deadline:
             raise APIError(f"{kind} {path.name} still processing after {PROCESSING_MINUTES} minutes")
         print(f"Waiting for App Store Connect to process {kind} ({state})…", flush=True)
         time.sleep(15)
+
+
+def replace_creative(client, app_id, localization_id, kind, path):
+    """Puts the image on the version as its `kind` placement, unless it is already there (its
+    reference name carries its MD5); returns the placement's id to wait on, or None. The placement
+    there now goes only once the new image is processed, so a refused file leaves it in place."""
+    data = path.read_bytes()
+    reference = f"{CREATIVE[kind]} {hashlib.md5(data).hexdigest()[:12]}"
+    existing = placements(client, localization_id, kind)
+    if len(existing) == 1 and existing[0][1] == reference and existing[0][0]["attributes"].get("state") != "FAILED":
+        print(f"{kind}: already {path.name} ({reference}), left as is.", flush=True)
+        return existing[0][0]["id"] if existing[0][0]["attributes"].get("state") == "ASSET_PROCESSING" else None
+    library = client.call("GET", f"/apps/{app_id}/assetLibrary")["data"]["id"]
+    image_id = processed_image(client, library, kind, path, data, reference)
+    for placement, _ in existing:  # one placement of each kind a version
+        client.call("DELETE", f"/appAssetLibraryPlacements/{placement['id']}")
     placement = client.call("POST", "/appAssetLibraryPlacements", {"data": {
         # DEFAULT_PROFILE: the one placement group the reference data lists for these (one each).
         "type": "appAssetLibraryPlacements", "attributes": {"placementType": kind, "placementGroup": "DEFAULT_PROFILE"},
-        "relationships": {"image": {"data": {"type": "appAssetLibraryImages", "id": image["id"]}},
+        "relationships": {"image": {"data": {"type": "appAssetLibraryImages", "id": image_id}},
                           "appStoreVersionLocalization": {"data": {"type": "appStoreVersionLocalizations",
                                                                    "id": localization_id}}}}})["data"]
     return placement["id"]
@@ -334,7 +351,7 @@ def main():
     target = localization(client, version["id"], args.locale)
     sets = screenshot_sets(client, target["id"])
     placed = {kind: [f"{p['attributes'].get('state')} {name or '?'}" for p, name in placements(client, target["id"], kind)]
-              for kind in CREATIVE}
+              for kind in CREATIVE if kind in found}  # screenshots alone never touch the Asset Library
     print(f"Version {name}, {args.locale}: sets {', '.join(sorted(sets)) or 'none'}.")
     for kind, now in placed.items():
         print(f"{kind}: {', '.join(now) or 'none'}.")

@@ -144,6 +144,8 @@ def problems(listing):
                 found.append(f"{section}.{field} is not a field this script sets ({', '.join(FIELDS[section])})")
             elif isinstance(kind, tuple) and value not in kind:
                 found.append(f"{section}.{field} is {value!r}, not one of {', '.join(kind)}")
+            elif value is None and kind is str:
+                pass  # clears the field (a secondary category, a URL)
             elif isinstance(kind, type) and not isinstance(value, kind):
                 found.append(f"{section}.{field} should be a {kind.__name__}")
             elif limit and isinstance(value, str) and len(value) > limit:
