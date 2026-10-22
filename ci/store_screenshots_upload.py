@@ -263,7 +263,8 @@ def replace_creative(client, app_id, localization_id, kind, path):
         print(f"Waiting for App Store Connect to process {kind} ({state})…", flush=True)
         time.sleep(15)
     placement = client.call("POST", "/appAssetLibraryPlacements", {"data": {
-        "type": "appAssetLibraryPlacements", "attributes": {"placementType": kind},
+        # DEFAULT_PROFILE: the one placement group the reference data lists for these (one each).
+        "type": "appAssetLibraryPlacements", "attributes": {"placementType": kind, "placementGroup": "DEFAULT_PROFILE"},
         "relationships": {"image": {"data": {"type": "appAssetLibraryImages", "id": image["id"]}},
                           "appStoreVersionLocalization": {"data": {"type": "appStoreVersionLocalizations",
                                                                    "id": localization_id}}}}})["data"]
