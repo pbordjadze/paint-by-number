@@ -20,7 +20,7 @@ an RSA public key at LINK_RECIPIENT_FILE and the link is printed encrypted to it
 SHA-256, base64), for whoever holds the private key. The Test Information
 (description, feedback email, privacy policy, review contact) is filled in App Store Connect.
 Needs `cryptography` (ES256 tokens). Its client (`Client`, `APIError`, `private_key`, `summarize`,
-`BUNDLE_ID`) is also ci/store_screenshots_upload.py's: keep those names.
+`find_app`) is also ci/store_screenshots_upload.py's and ci/store_listing.py's: keep those names.
 """
 
 import base64
@@ -78,7 +78,9 @@ class Client:
         self.key = key
 
     def call(self, method, path, body=None, query=None):
-        url = API + path + ("?" + urllib.parse.urlencode(query) if query else "")
+        # A path naming its version (/v2/…) is used as it is; any other is a /v1 one.
+        base = API.removesuffix("/v1") if path.startswith("/v2/") else API
+        url = base + path + ("?" + urllib.parse.urlencode(query) if query else "")
         data = json.dumps(body).encode() if body is not None else None
         request = urllib.request.Request(url, data=data, method=method)
         request.add_header("Authorization", "Bearer " + token(self.key))
@@ -96,6 +98,14 @@ class Client:
             except ValueError:
                 detail = error.reason
             raise APIError(f"{method} {path}: {error.code} {detail}") from None
+
+
+def find_app(client):
+    """The app whose bundle id is BUNDLE_ID itself: the filter also matches longer ones."""
+    for app in client.call("GET", "/apps", query={"filter[bundleId]": BUNDLE_ID})["data"]:
+        if app["attributes"].get("bundleId") == BUNDLE_ID:
+            return app
+    raise APIError(f"no App Store Connect app has the bundle id {BUNDLE_ID}")
 
 
 def find_build(client, app_id, wanted, wait_minutes=0):
@@ -171,10 +181,7 @@ def main():
         if not os.environ.get(name):
             sys.exit(f"{name} is not set")
     client = Client(private_key())
-    apps = client.call("GET", "/apps", query={"filter[bundleId]": BUNDLE_ID})["data"]
-    if not apps:
-        sys.exit(f"No App Store Connect app has the bundle id {BUNDLE_ID}")
-    app_id = apps[0]["id"]
+    app_id = find_app(client)["id"]
     wait = int(os.environ.get("WAIT_MINUTES", "0") or 0)
     build = find_build(client, app_id, os.environ.get("BUILD", "").strip(), wait)
     version = build["attributes"]["version"]

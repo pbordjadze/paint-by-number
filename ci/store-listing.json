@@ -80,7 +80,8 @@
       "Every painting is made right on your iPhone or iPad, and your photos stay there unless you choose to share them. No account, no ads, no tracking, and it works offline. Nothing is uploaded except feedback you review and choose to send.",
       "",
       "Built for VoiceOver, Dynamic Type and Reduce Motion, with keyboard shortcuts on iPad."
-    ]
+    ],
+    "marketingUrl": "https://paulbordjadze.com/paint-by-moonlight/"
   },
   "review": {
     "demoAccountRequired": false,
@@ -93,5 +94,33 @@
       "",
       "Optional: Settings > The Making-of plays an animation of the painting being made after Start Painting. On iPad, the menu bar's Paint menu has keyboard shortcuts."
     ]
+  },
+  "availability": {
+    "territories": "all",
+    "availableInNewTerritories": true
+  },
+  "accessibility": {
+    "IPHONE": {
+      "supportsVoiceover": false,
+      "supportsVoiceControl": false,
+      "supportsLargerText": false,
+      "supportsDarkInterface": false,
+      "supportsDifferentiateWithoutColorAlone": true,
+      "supportsSufficientContrast": false,
+      "supportsReducedMotion": true,
+      "supportsCaptions": false,
+      "supportsAudioDescriptions": false
+    },
+    "IPAD": {
+      "supportsVoiceover": false,
+      "supportsVoiceControl": false,
+      "supportsLargerText": false,
+      "supportsDarkInterface": false,
+      "supportsDifferentiateWithoutColorAlone": true,
+      "supportsSufficientContrast": false,
+      "supportsReducedMotion": true,
+      "supportsCaptions": false,
+      "supportsAudioDescriptions": false
+    }
   }
 }

@@ -15,14 +15,18 @@ keeps it; a key or field left out is left as it is, and a list of strings is its
     review               App Review Information: notes, demoAccountRequired
     accessibility        {IPHONE: {…}, IPAD: {…}}: the Accessibility Nutrition Labels, as
                          accessibilityDeclarations' supports* attributes, every one given
+    availability         {"territories": "all", "availableInNewTerritories": true}: set only
+                         while the app has none (later changes are App Store Connect's)
 
 It finds the app by its bundle id, its iOS version in an editable state and the app info being
-prepared with it, and checks the lengths App Store Connect allows before anything changes. Without
+prepared with it, and checks the fields and their lengths before anything changes. Without
 --apply it lists each field that differs from what App Store Connect holds, changing nothing; with
 --apply it sends only those. An accessibility answer is sent as a new draft declaration, which is
 then published: that is what the product page shows. It also says what it leaves to App Store
-Connect: App Privacy (not in the API), availability and price, and App Review's contact, whose
-name, phone and email are not this public repository's to hold.
+Connect: App Privacy (not in the API), price, and App Review's contact, whose name, phone and
+email are not this public repository's to hold. Each change is printed as it is found (as it is
+sent, with --apply), so a run that fails part way has said what it sent; the field names and
+values are checked against the API's before anything is.
 
 Run by `.github/workflows/store-listing.yml`. The logs are public: it prints the listing's own
 fields (what the store shows, and the notes for App Review), never a secret or the contact.
@@ -36,7 +40,7 @@ import sys
 from pathlib import Path
 
 from store_screenshots_upload import editable_version, localization
-from testflight_testers import BUNDLE_ID, APIError, Client, private_key, summarize
+from testflight_testers import APIError, Client, find_app, private_key, summarize
 
 # The app info states whose fields can still be changed.
 EDITABLE_INFO = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED")
@@ -46,8 +50,30 @@ LIMITS = {"name": 30, "subtitle": 30, "promotionalText": 170, "keywords": 100, "
 ACCESSIBILITY = ("supportsVoiceover", "supportsVoiceControl", "supportsLargerText", "supportsDarkInterface",
                  "supportsDifferentiateWithoutColorAlone", "supportsSufficientContrast",
                  "supportsReducedMotion", "supportsCaptions", "supportsAudioDescriptions")
-SECTIONS = ("app", "appInfo", "appInfoLocalization", "ageRating", "version", "versionLocalization", "review",
-            "accessibility")
+FAMILIES = ("IPHONE", "IPAD", "APPLE_TV", "APPLE_WATCH", "MAC", "VISION")
+LEVEL = ("NONE", "INFREQUENT_OR_MILD", "FREQUENT_OR_INTENSE", "INFREQUENT", "FREQUENT")
+# The fields each section may set and what each takes (str, bool, or its values), from the API's
+# update requests (4.5). App Review's contact is left out on purpose.
+FIELDS = {
+    "app": {"contentRightsDeclaration": ("DOES_NOT_USE_THIRD_PARTY_CONTENT", "USES_THIRD_PARTY_CONTENT"),
+            "accessibilityUrl": str},
+    "appInfo": {"primaryCategory": str, "secondaryCategory": str},
+    "appInfoLocalization": {"name": str, "subtitle": str, "privacyPolicyUrl": str, "privacyChoicesUrl": str},
+    "ageRating": {**{k: LEVEL for k in (
+        "alcoholTobaccoOrDrugUseOrReferences", "contests", "gamblingSimulated", "gunsOrOtherWeapons",
+        "horrorOrFearThemes", "matureOrSuggestiveThemes", "medicalOrTreatmentInformation", "profanityOrCrudeHumor",
+        "sexualContentGraphicAndNudity", "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic",
+        "violenceRealisticProlongedGraphicOrSadistic")},
+                  **{k: bool for k in (
+        "advertising", "ageAssurance", "gambling", "healthOrWellnessTopics", "lootBox", "messagingAndChat",
+        "parentalControls", "socialMedia", "socialMediaAgeRestricted", "unrestrictedWebAccess",
+        "userGeneratedContent")}},
+    "version": {"copyright": str, "releaseType": ("MANUAL", "AFTER_APPROVAL", "SCHEDULED")},
+    "versionLocalization": {"description": str, "keywords": str, "marketingUrl": str, "promotionalText": str,
+                            "supportUrl": str},
+    "review": {"notes": str, "demoAccountRequired": bool},
+}
+SECTIONS = (*FIELDS, "accessibility", "availability")
 
 
 def read_listing(path):
@@ -64,19 +90,37 @@ def problems(listing):
     """Everything App Store Connect would refuse, found before anything changes."""
     found = []
     for section, fields in listing.items():
+        if section == "availability":
+            if fields != {"territories": "all", "availableInNewTerritories": True}:
+                found.append('availability: the one choice this script makes is {"territories": "all", '
+                             '"availableInNewTerritories": true}')
+            continue
         if section == "accessibility":
             for family, answers in fields.items():
+                if family not in FAMILIES:
+                    found.append(f"accessibility: {family} is not a device family ({', '.join(FAMILIES)})")
                 if set(answers) != set(ACCESSIBILITY) or not all(isinstance(v, bool) for v in answers.values()):
                     found.append(f"accessibility {family}: give each of {', '.join(ACCESSIBILITY)} as true or false")
             continue
         for field, value in fields.items():
+            kind = FIELDS[section].get(field)
             limit = LIMITS.get(field)
-            if limit and isinstance(value, str) and len(value) > limit:
+            if kind is None:
+                found.append(f"{section}.{field} is not a field this script sets ({', '.join(FIELDS[section])})")
+            elif isinstance(kind, tuple) and value not in kind:
+                found.append(f"{section}.{field} is {value!r}, not one of {', '.join(kind)}")
+            elif isinstance(kind, type) and not isinstance(value, kind):
+                found.append(f"{section}.{field} should be a {kind.__name__}")
+            elif limit and isinstance(value, str) and len(value) > limit:
                 found.append(f"{section}.{field} is {len(value)} characters, over {limit}")
     return found
 
 
-def shown(value):
+def shown(value, private=False):
+    """The value for the public log; a private one (what App Store Connect holds for App Review,
+    which may be anything typed there) only by its length."""
+    if private and value is not None:
+        return f"{len(str(value))} characters" if isinstance(value, str) else "set"
     text = json.dumps(value, ensure_ascii=False)
     return text if len(text) <= 80 else f"{len(value) if isinstance(value, str) else len(text)} characters, {text[:60]}…"
 
@@ -87,15 +131,18 @@ class Listing:
     def __init__(self, client, apply):
         self.client, self.apply, self.changes = client, apply, []
 
-    def compare(self, label, current, wanted):
-        """The fields of `wanted` that differ from `current`, each noted."""
+    def compare(self, label, current, wanted, private=False):
+        """The fields of `wanted` that differ from `current`, each noted and printed as found, so a
+        run that fails part way has said what it sent before."""
         differ = {k: v for k, v in wanted.items() if current.get(k) != v}
         for field, value in differ.items():
-            self.changes.append(f"{label}.{field}: {shown(current.get(field))} → {shown(value)}")
+            change = f"{label}.{field}: {shown(current.get(field), private)} → {shown(value)}"
+            self.changes.append(change)
+            print(f"  {'Sending' if self.apply else 'Differs'}: {change}", flush=True)
         return differ
 
-    def patch(self, label, kind, item, wanted):
-        differ = self.compare(label, item["attributes"], wanted)
+    def patch(self, label, kind, item, wanted, private=False):
+        differ = self.compare(label, item["attributes"], wanted, private)
         if differ and self.apply:
             self.client.call("PATCH", f"/{kind}/{item['id']}",
                              {"data": {"type": kind, "id": item["id"], "attributes": differ}})
@@ -120,7 +167,7 @@ class Listing:
                 raise
             detail = None  # none written yet
         if detail:
-            return self.patch("review", "appStoreReviewDetails", detail, wanted)
+            return self.patch("review", "appStoreReviewDetails", detail, wanted, private=True)
         differ = self.compare("review", {}, wanted)
         if differ and self.apply:
             self.client.call("POST", "/appStoreReviewDetails", {"data": {
@@ -146,6 +193,34 @@ class Listing:
             "type": "accessibilityDeclarations", "id": draft["id"], "attributes": {"publish": True}}})
 
 
+def availability(client, work, app_id, wanted):
+    """Every territory, and new ones as they come, when the app has no availability yet; one it
+    has is App Store Connect's to change (its territories' release dates and pre-orders)."""
+    try:
+        current = client.call("GET", f"/apps/{app_id}/appAvailabilityV2").get("data")
+    except APIError as error:
+        if ": 404 " not in str(error):
+            raise
+        current = None
+    if current:
+        return
+    territories = client.call("GET", "/territories", query={"limit": "200"})["data"]
+    work.compare("availability", {}, {"territories": f"all {len(territories)}",
+                                      "availableInNewTerritories": wanted["availableInNewTerritories"]})
+    if not work.apply:
+        return
+    ids = [f"${{{t['id']}}}" for t in territories]  # inline creates take local ids
+    client.call("POST", "/v2/appAvailabilities", {
+        "data": {"type": "appAvailabilities",
+                 "attributes": {"availableInNewTerritories": wanted["availableInNewTerritories"]},
+                 "relationships": {"app": {"data": {"type": "apps", "id": app_id}},
+                                   "territoryAvailabilities": {"data": [
+                                       {"type": "territoryAvailabilities", "id": i} for i in ids]}}},
+        "included": [{"type": "territoryAvailabilities", "id": i, "attributes": {"available": True},
+                      "relationships": {"territory": {"data": {"type": "territories", "id": t["id"]}}}}
+                     for i, t in zip(ids, territories)]})
+
+
 def editable_info(client, app_id):
     infos = client.call("GET", f"/apps/{app_id}/appInfos")["data"]
     for info in infos:
@@ -165,13 +240,12 @@ def info_localization(client, info_id, locale):
 
 def left_to_connect(client, app_id):
     """What this leaves to App Store Connect, and whether it has been done there."""
-    def is_set(path):
+    def state(path):
         try:
-            return bool(client.call("GET", path).get("data"))
-        except APIError:
-            return False
-    return [f"Availability: {'set' if is_set(f'/apps/{app_id}/appAvailabilityV2') else 'not set yet'} (App Store Connect › Pricing and Availability)",
-            f"Price: {'set' if is_set(f'/apps/{app_id}/appPriceSchedule') else 'not set yet'} (App Store Connect › Pricing and Availability)",
+            return "set" if client.call("GET", path).get("data") else "not set yet"
+        except APIError as error:
+            return "not set yet" if ": 404 " in str(error) else f"unknown ({error})"
+    return [f"Price: {state(f'/apps/{app_id}/appPriceSchedule')} (App Store Connect › Pricing and Availability)",
             "App Privacy: in App Store Connect only (not in the API)",
             "App Review contact (name, phone, email): in App Store Connect › App Review Information"]
 
@@ -192,10 +266,7 @@ def main():
     if wrong:
         sys.exit(f"{len(wrong)} problems with {args.listing.name}, nothing changed")
     client = Client(private_key())
-    apps = client.call("GET", "/apps", query={"filter[bundleId]": BUNDLE_ID})["data"]
-    if not apps:
-        sys.exit(f"No App Store Connect app has the bundle id {BUNDLE_ID}")
-    app = apps[0]
+    app = find_app(client)
     version = editable_version(client, app["id"])
     info = editable_info(client, app["id"])
     name = version["attributes"].get("versionString")
@@ -219,6 +290,8 @@ def main():
         work.review(version, listing["review"])
     for family, answers in listing.get("accessibility", {}).items():
         work.accessibility(app["id"], family, answers)
+    if "availability" in listing:
+        availability(client, work, app["id"], listing["availability"])
     left = left_to_connect(client, app["id"])
     verb = "Changed" if args.apply else "Would change (dry run, nothing changed)"
     print(f"Version {name}, {args.locale}. {verb}: {len(work.changes) or 'nothing'}.")
