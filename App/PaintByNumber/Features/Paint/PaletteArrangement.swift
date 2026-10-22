@@ -36,6 +36,10 @@ nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
+    /// Sorted by the areas left, so the order changes as the painting goes: finishing a color
+    /// selects its first swatch, not the next one along (`PaintingSession.advancesToFirstLeft`).
+    var followsProgress: Bool { self == .nearlyDone || self == .mostLeft }
+
     /// Below this OKLab chroma a paint reads as a gray: the rainbow puts grays after the hues.
     static let grayChroma: Float = 0.03
 

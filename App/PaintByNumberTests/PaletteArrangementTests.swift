@@ -83,6 +83,15 @@ struct PaletteArrangementTests {
         #expect(bar.offset(revealing: 29, metrics: metrics) == CGFloat(30 * 56 + 24 - 378))
     }
 
+    /// The swatch to bring into view is the one a tap on its color's area just shook.
+    @Test func theShakenSwatchIsTheOneWhoseCountWentUp() {
+        #expect(PaletteBar.shaken(from: [:], to: [7: 1]) == 7)
+        #expect(PaletteBar.shaken(from: [7: 1, 3: 2], to: [7: 2, 3: 2]) == 7)
+        #expect(PaletteBar.shaken(from: [7: 1], to: [7: 1]) == nil)
+        #expect(PaletteBar.shaken(from: [7: 2], to: [:]) == nil)
+        #expect(PaletteBar.shaken(from: [:], to: [9: 1, 4: 1]) == 4)
+    }
+
     /// Paul's tap on "10": a scroll view reaching 170 pt past the glass on each side counts swatches
     /// under the glass as shown. Only what the glass shows counts.
     @Test func swatchesUnderTheGlassAreNotInView() {

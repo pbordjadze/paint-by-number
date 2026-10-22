@@ -58,6 +58,8 @@ import simd
 ///   over the paint; the selected color's cells are hatched, not outlined)
 /// - `paint-book-zoomed`: zoomed 4× into the busiest part, a color selected
 /// - `paint-book-dark-paper`: `paint-book-progress` on dark paper
+/// - `paint-book-night-paper`: the same in light appearance (no "dark" in its name), where dark
+///   paper makes the bars dark too (`PaintView.chromeScheme`)
 /// - `paint-book-moon-dark`: `paint-book-dark-paper` in dark appearance by Moon (Settings › Music),
 ///   zoomed 2.5× onto the unpainted area with the most room, which is painted and its two stars
 ///   held at their fullest (fills and sparkles slowed)
@@ -250,7 +252,7 @@ private final class Demo {
             showsPhoto = true
         case "paint-book-progress":
             paint(fraction: 0.45)
-        case "paint-book-dark-paper":
+        case "paint-book-dark-paper", "paint-book-night-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
         case "paint-book-moon-dark":

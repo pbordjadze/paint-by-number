@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import SwiftUI
 import Testing
 import UIKit
 @testable import PaintByNumber
@@ -82,6 +83,16 @@ struct CanvasPaletteTests {
         #expect(CanvasPalette.resolve(.automatic, interfaceIsDark: true).paper == CanvasPalette.darkPaper.paper)
         #expect(PaperAppearance.default == .light)
         #expect(PaperAppearance.allCases.map(\.name) == ["Light", "Dark", "Automatic"])
+    }
+
+    /// The painting screen's bars are dark over dark paper, on a light system too (light glass
+    /// slabs sat on it); over light paper they follow the system.
+    @Test func barsAreDarkOverDarkPaper() {
+        for system in [ColorScheme.light, .dark] {
+            #expect(PaintView.chromeScheme(paper: .dark, system: system) == .dark)
+            #expect(PaintView.chromeScheme(paper: .light, system: system) == system)
+            #expect(PaintView.chromeScheme(paper: .automatic, system: system) == system)
+        }
     }
 
     /// The canvas resolves its paper from the preference and the trait collection it inherits

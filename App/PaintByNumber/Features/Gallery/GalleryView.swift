@@ -316,9 +316,10 @@ struct GalleryView: View {
             Label("Share", systemImage: "square.and.arrow.up")
         }
         Divider()
-        // Nothing to clear on a painting nobody has painted on.
+        // Nothing to clear on a painting nobody has painted on. Red, as in the painting's More
+        // menu: it clears the painting.
         if artwork.isStarted {
-            Button("Restart", systemImage: "arrow.counterclockwise") {
+            Button("Restart", systemImage: "arrow.counterclockwise", role: .destructive) {
                 PaintTips.used(.shelfHold)
                 restarting = artwork
             }

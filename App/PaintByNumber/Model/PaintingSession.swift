@@ -64,8 +64,8 @@ final class PaintingSession {
     /// While the canvas replays the painting: how many of its areas are on screen, in the order
     /// they were painted (all as the paint starts to lift, none once it has gone, then each as its
     /// fill begins); nil otherwise. The painting itself is untouched: `progress` stays whole.
-    /// Only the progress badge reads it (`shownFraction`, `shownPaintedByColor`), so it says what
-    /// the canvas shows.
+    /// Only the progress badge reads it (`shownPaintedCount`, `shownFraction`,
+    /// `shownPaintedByColor`), so it says what the canvas shows.
     private(set) var replayed: Int?
     /// A replay plays: Undo waits and Replay becomes Stop. Stored apart from `replayed`, which
     /// changes many times a second, so the screen around the badge renders only as it starts and ends.
@@ -75,9 +75,13 @@ final class PaintingSession {
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
     @ObservationIgnored private var lastInteraction: ContinuousClock.Instant?
     @ObservationIgnored private let clock = ContinuousClock()
-    /// Automatically select the palette's first unfinished color when the selected one is
-    /// completed (`firstIncompleteColor`).
+    /// Automatically select the next unfinished color along the palette when the selected one
+    /// is completed (`nextIncompleteColor`).
     @ObservationIgnored var autoAdvance = true
+    /// The palette is in an order by areas left (`PaletteOrder.followsProgress`), which re-sorts
+    /// as the painting goes: finishing a color then selects its first swatch left, the order's
+    /// own next, not the one after it.
+    @ObservationIgnored var advancesToFirstLeft = false
     /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
     /// selected color, as the hint does (`zenPause`, `zenShinePause`).
     @ObservationIgnored var flowsToNextArea = false
@@ -233,9 +237,11 @@ final class PaintingSession {
     /// The share of the areas the screen shows painted: the replay's while one plays, else
     /// `fractionComplete`.
     var shownFraction: Double {
-        guard let replayed else { return fractionComplete }
-        return progress.regionCount == 0 ? 0 : Double(replayed) / Double(progress.regionCount)
+        progress.regionCount == 0 ? 0 : Double(shownPaintedCount) / Double(progress.regionCount)
     }
+
+    /// How many areas the screen shows painted: the replay's while one plays.
+    var shownPaintedCount: Int { replayed ?? progress.paintedCount }
 
     /// The painted areas of each palette color, as the screen shows them: the first `replayed` of
     /// the stroke log while a replay plays, else what the painting holds.
@@ -367,8 +373,9 @@ final class PaintingSession {
         if progress.isComplete {
             emit(.artworkCompleted)
         } else if autoAdvance, let selected = selectedColor, completed.contains(selected) {
-            // The finished color leaves the palette: the next is the first swatch left.
-            select(color: firstIncompleteColor())
+            // The next along the palette, so the painter carries on where they were (the first
+            // swatch left sent them back to 1 from the middle of a long palette).
+            select(color: advancesToFirstLeft ? firstIncompleteColor() : nextIncompleteColor(after: selected))
         }
         // A stroke flies on when it ends (`endStroke`).
         if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }

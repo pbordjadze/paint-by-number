@@ -43,7 +43,7 @@ LINK_LIMIT = 100
 WHAT_TO_TEST = (
     "Thanks for trying Paint by Moonlight! Make a painting from one of your photos (New Painting → "
     "Choose Photo) or a sample, then paint it. Tell us anything that felt confusing, slow or broken, "
-    "and what you loved — the feedback button in a painting's top bar lets you mark the spot."
+    "and what you loved: Give Feedback, in a painting's More menu, lets you mark the spot."
 )
 
 

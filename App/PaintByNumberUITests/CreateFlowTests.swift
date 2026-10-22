@@ -105,7 +105,7 @@ final class CreateFlowTests: XCTestCase {
 
         let chip = app.descendants(matching: .any)["settings-origin"]
         XCTAssertTrue(chip.waitForExistence(timeout: 10), "The preview has no settings chip")
-        XCTAssertEqual(chip.value as? String, "Suggested for this photo")
+        XCTAssertEqual(chip.value as? String, "Suggested for this picture")
         XCTAssertEqual(chip.label, "Settings")
 
         // The book's lines on a slider of their own.
@@ -130,7 +130,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: restored, object: detail)], timeout: 10), .completed,
             "Reset didn't bring Detail back to \(suggested)")
-        XCTAssertEqual(chip.value as? String, "Suggested for this photo")
+        XCTAssertEqual(chip.value as? String, "Suggested for this picture")
         XCTAssertFalse(reset.exists, "Reset is still offered after resetting")
         attachScreenshot(of: app, named: "create-suggested-settings")
     }

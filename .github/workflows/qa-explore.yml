@@ -1,11 +1,12 @@
 name: QA explore
+run-name: "QA explore: ${{ inputs.mode }}, ${{ inputs.build }}, ${{ inputs.device }}${{ inputs.label != '' && format(' · {0}', inputs.label) || '' }}"
 
 # An exploratory QA pass: the app built from source on one iOS simulator (`build`: release, what
 # the App Store gets, as ci.yml's Release check builds it; or debug, CI's Debug build with the
 # UNRELEASED features SideStore has), used through Maestro's MCP server (`maestro mcp`: screenshots, the screen's elements, flows of taps,
 # swipes and text) by an agent that is given goals, not a script. Manual only (Actions › QA explore
-# › Run workflow, or the API), one run at a time in a concurrency group of its own that cancels
-# nothing; it leaves ci.yml, its reports (refs/ci-shots/*) and main alone.
+# › Run workflow, or the API), in concurrency groups of its own (below) that cancel no running
+# run; it leaves ci.yml, its reports (refs/ci-shots/*) and main alone.
 #
 # Modes:
 #   agent  Claude Code runs on the runner beside the simulator: ci/qa/explore.md is its brief (the
@@ -68,13 +69,19 @@ on:
       relay_branch:
         description: 'relay: the branch the agent commits its calls to (claude/qa-relay…)'
         default: 'claude/qa-relay'
+      label:
+        description: 'Who asked and why, shown in the run list (optional)'
+        required: false
 
 permissions:
   # refs/qa-runs/<run id>, and the relay branch's deletion.
   contents: write
 
+# One queue per device and build (relay runs share one): an iPhone and an iPad run go side by
+# side. GitHub keeps one waiting run per queue, and a new dispatch silently cancels the waiting
+# one (run 9, October 21): before dispatching, look for a waiting run of the same queue.
 concurrency:
-  group: qa-explore
+  group: ${{ inputs.mode == 'relay' && 'qa-explore-relay' || format('qa-explore-{0}-{1}', inputs.device, inputs.build) }}
   cancel-in-progress: false
 
 env:
@@ -182,8 +189,9 @@ jobs:
           nohup xcrun simctl spawn "$UDID" log stream --level info --style compact \
             --predicate 'subsystem == "com.pbordjadze.paintbynumber"' > "$WORK/app.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/log.pid"
+          # The agent can't list a folder: crashes.txt names what crashes/ holds (empty: none).
           # shellcheck disable=SC2016
-          nohup bash -c 'while true; do cp -n ~/Library/Logs/DiagnosticReports/PaintByNumber* "$0/" 2>/dev/null; sleep 5; done' \
+          nohup bash -c 'while true; do cp -n ~/Library/Logs/DiagnosticReports/PaintByNumber* "$0/" 2>/dev/null; ls -1 "$0" > "$0.tmp" && mv "$0.tmp" "$0.txt"; sleep 5; done' \
             "$WORK/crashes" > /dev/null 2>&1 &
           echo $! > "$RUNNER_TEMP/crashes.pid"
           nohup xcrun simctl io "$UDID" recordVideo --codec=h264 --force "$RUNNER_TEMP/qa-video/session.mp4" \
