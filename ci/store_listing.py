@@ -239,11 +239,17 @@ class Listing:
         found = self.client.call("GET", f"/apps/{app_id}/accessibilityDeclarations", query={
             "filter[deviceFamily]": family, "filter[state]": "DRAFT,PUBLISHED", "limit": "10"})["data"]
         by_state = {d["attributes"]["state"]: d for d in found}
-        current = by_state.get("PUBLISHED", {}).get("attributes", {})
-        if not self.compare(f"accessibility {family}", current, wanted) or not self.apply:
-            return
+        published = by_state.get("PUBLISHED", {}).get("attributes", {})
         draft = by_state.get("DRAFT")
-        if draft:
+        if all(published.get(k) == v for k, v in wanted.items()):
+            return
+        if draft and all(draft["attributes"].get(k) == v for k, v in wanted.items()):
+            print(f"  accessibility {family}: these answers wait as a draft.", flush=True)
+            if not self.apply:
+                return
+        elif not self.compare(f"accessibility {family}", published, wanted) or not self.apply:
+            return
+        elif draft:
             self.client.call("PATCH", f"/accessibilityDeclarations/{draft['id']}", {"data": {
                 "type": "accessibilityDeclarations", "id": draft["id"], "attributes": wanted}})
         else:
@@ -306,20 +312,20 @@ def locale_listing(listing, locale):
 def other_locales(client, work, version, info, listing):
     """Each other English locale's listing: LOCALE's own, respelled, with its own keywords; created
     when the version or the app info has none for that locale yet."""
-    version_found = {i["attributes"]["locale"]: i for i in
-                     client.call("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]}
-    info_found = {i["attributes"]["locale"]: i for i in
-                  client.call("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]}
+    def localizations(kind, parent_path):
+        return {i["attributes"]["locale"]: i for i in client.call("GET", f"{parent_path}/{kind}")["data"]}
     for locale, own in listing["otherLocales"].items():
         fields = locale_listing(listing, locale)
         wanted_info = {k: v for k, v in fields.items() if k in listing.get("appInfoLocalization", {}) or k in own
                        and k in FIELDS["appInfoLocalization"]}
         wanted_version = {k: v for k, v in fields.items() if k in listing.get("versionLocalization", {}) or k in own
                           and k in FIELDS["versionLocalization"]}
-        for kind, parent, found, wanted, label in (
-                ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), info_found, wanted_info, "appInfoLocalization"),
-                ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), version_found,
-                 wanted_version, "versionLocalization")):
+        for kind, parent, wanted, label in (
+                ("appInfoLocalizations", ("appInfo", "appInfos", info["id"]), wanted_info, "appInfoLocalization"),
+                ("appStoreVersionLocalizations", ("appStoreVersion", "appStoreVersions", version["id"]), wanted_version,
+                 "versionLocalization")):
+            # Read afresh: making an app info localization makes the version's of the same locale.
+            found = localizations(kind, f"/{parent[1]}/{parent[2]}")
             if locale in found:
                 work.patch(f"{label} {locale}", kind, found[locale], wanted)
                 continue
