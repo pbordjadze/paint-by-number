@@ -193,7 +193,7 @@ couldn't turn to face left; her second, a hand-coloured almanac woodcut (Paul: "
 need of a new drawing"), mirrors her right-facing looks for the left. The Snow Queen followed as Andersen's own paper-cuts: white paper cut from a folded sheet, a snowflake-cut crown, no pins or lace. Medea followed as archaic Greek black-figure painting on a potsherd; the shard never moves, only the ram (Paul's rule). Scherenschnitt was redrawn with a thin cream edge on every cut, so she reads on the dark page (Paul's pick, b). The Hedge Witch followed as the approved redraw (Paul: "A for now"; a real woodcut by his mom someday). Bulat followed as a lit window with a black cat on the sill and a guitar inside, its idle calmed to one blink at Paul's tap. Dino followed from the top as a Dinotopia-style journal sketch of a shifty-eyed plesiosaur (Paul: "SKETCHES like the Dinotopia book had"). The twenty-five sheets totalled
 **19,190,522 bytes (18.30 MiB)** of the 24 MiB budget. Dino's, the Glassblower's and Niko's
 first sheets, in the table above, no longer ship. The new ones fill more of their cells than the
-factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, as the Baba Yaga's already did),
+factory's nineteen (top 6 and foot 201 in `pet-metrics.json`, now `tools/tests/fixtures/`'s, as the Baba Yaga's already did),
 so they stand a little larger beside them.
 
 ## October 18: Hope, Eno and Maynard hatch

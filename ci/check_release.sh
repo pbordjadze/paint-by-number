@@ -33,7 +33,8 @@ done
 
 # The Marginarium is in Debug builds only for now: Release leaves out its code, chapters and
 # drawings (the target's EXCLUDED_SOURCE_FILE_NAMES). The making-of show draws no guardian (its
-# crew was retired on October 23, 2026), so nothing of it reaches the Marginarium's sprite sheets.
+# crew was retired on October 23, 2026), so nothing of it reaches the Marginarium's sprite sheets;
+# the crew's pet-metrics.json lives in tools/tests/fixtures and must not creep back into the app.
 for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
@@ -44,7 +45,7 @@ done
 for symbol in RefineView RefineSurfaceView RefineColorsPanel RefineAreaCard RefinePaletteBar DraftRow; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
-for file in marginarium.json; do
+for file in marginarium.json pet-metrics.json; do
   [[ ! -e "$APP/$file" ]] || fail "the Release app bundles $file"
 done
 # The launch screen is the gallery's paper (light or dark), not a white flash before it.
