@@ -214,6 +214,12 @@ private struct SelfPaintingSketch: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var start: Date?
     @State private var isDone = false
+    #if DEBUG
+    /// `-introWaitsForTap YES` holds the sketch unpainted until a tap on it: the painting runs by
+    /// the clock from when the sketch appears, and a slow simulator can let it finish before a UI
+    /// test's first frame (`NightfallUITests`).
+    @State private var isHeld = UserDefaults.standard.bool(forKey: "introWaitsForTap")
+    #endif
 
     /// It painted itself already this launch: it shows painted.
     private static var hasPainted = false
@@ -228,8 +234,11 @@ private struct SelfPaintingSketch: View {
         TimelineView(.animation(paused: start == nil || painted)) { timeline in
             NightSketch(paint: painted ? .painted : paint(at: start.map { timeline.date.timeIntervalSince($0) / Self.slowdown } ?? 0))
         }
-        .task {
-            guard !isDone, !Self.hasPainted else { return }
+        #if DEBUG
+        .onTapGesture { isHeld = false }
+        #endif
+        .task(id: waits) {
+            guard !waits, !isDone, !Self.hasPainted else { return }
             start = .now
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled else { return }
@@ -240,6 +249,15 @@ private struct SelfPaintingSketch: View {
             if ShellDemo.current == .galleryEmpty { DemoMode.markReady() }
             #endif
         }
+    }
+
+    /// Held by a UI test (Debug only): it waits for the tap.
+    private var waits: Bool {
+        #if DEBUG
+        return isHeld
+        #else
+        return false
+        #endif
     }
 
     private func paint(at t: Double) -> SketchPaint {
