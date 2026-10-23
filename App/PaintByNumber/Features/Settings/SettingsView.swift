@@ -263,7 +263,7 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Paint by Moonlight.")
             } else {
-                Text("A free painting of your own photos comes back each day, up to three. Library pictures are always free.")
+                Text("A free painting of your own photos comes back each day, up to three. Everything in Samples is always free.")
             }
         }
     }
