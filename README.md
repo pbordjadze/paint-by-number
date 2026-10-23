@@ -70,7 +70,8 @@ stay on your iPhone or iPad unless you share them or send feedback. Its privacy 
 not linked to you, the feedback you choose to send; the only required-reason APIs it uses
 are `UserDefaults`, for its own settings, and file timestamps, to clean up its own temporary
 exports. Third-party credits and licenses are in
-[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); the app's privacy policy is [PRIVACY.md](PRIVACY.md).
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); the app's privacy policy is [PRIVACY.md](PRIVACY.md), and
+its accessibility notes are in [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
 ## Project layout
 
