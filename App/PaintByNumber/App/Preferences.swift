@@ -38,11 +38,10 @@ enum SettingsKey {
     static let refineBrushSize = "refineBrushSize"
 }
 
-/// The preferences that code outside views reads (the create flow, a painting's session), with
-/// their defaults; views bind the other keys with `@AppStorage`.
+/// The preferences that code outside views reads (the create flow), with their defaults; views
+/// bind the other keys with `@AppStorage` (a painting's session takes its settings from
+/// `PaintView`, whoever presents it).
 struct Preferences {
-    /// Select the next unfinished color when one is completed.
-    var autoAdvance: Bool
     /// How long a painting Suggested settings aim for in the create flow.
     var paintingLength: PaintingLength
     /// What the create flow's preview shows beside the photo.
@@ -51,15 +50,10 @@ struct Preferences {
     var playsMakingOf: Bool
 
     init(defaults: UserDefaults = .standard) {
-        autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
         previewStyle = PreviewStyle.stored(in: defaults)
         playsMakingOf = defaults.bool(forKey: SettingsKey.playsMakingOf)
-    }
-
-    func apply(to session: PaintingSession) {
-        session.autoAdvance = autoAdvance
     }
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,

@@ -95,6 +95,10 @@ struct PaintCanvas: UIViewRepresentable {
         view.isAnnotating = isAnnotating
         controller.view = view
     }
+
+    static func dismantleUIView(_ view: CanvasView, coordinator: Coordinator) {
+        view.tearDown()
+    }
 }
 
 /// Stands in for the canvas when the device can't draw it (Metal unavailable), instead of a

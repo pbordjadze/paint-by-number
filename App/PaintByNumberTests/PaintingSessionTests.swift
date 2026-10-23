@@ -588,6 +588,25 @@ struct PaintingSessionTests {
         #expect(!session.isReplaying, "a second Stop does nothing")
     }
 
+    /// The painting screen going takes its replay with it: nothing plays on over the next screen,
+    /// to finish there and announce the night to VoiceOver.
+    @Test func tearingTheCanvasDownEndsItsReplay() async throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        view.reduceMotion = true
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.layoutIfNeeded()
+        session.paint(Array(template.regions.indices), from: .zero, animated: false)
+        view.replay()
+        try await waitUntil(timeout: .seconds(10)) { session.replayed == 0 }
+        view.tearDown()
+        #expect(session.replayed == nil && !session.isReplaying)
+        // Under Reduce Motion a replay still running would show its first areas within this.
+        try await Task.sleep(for: .milliseconds(800))
+        #expect(session.replayed == nil, "the replay played on after its canvas went")
+        #expect(session.isComplete)
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false

@@ -944,6 +944,22 @@ final class CanvasView: UIView, PaintingCanvas {
         }
     }
 
+    /// The painting screen went (`PaintCanvas.dismantleUIView`): a replay, a finish or a night
+    /// still to come stops, so none plays on over the next screen (a replay ends in a finish, and
+    /// night falls with a VoiceOver announcement), and their tasks let the canvas go.
+    func tearDown() {
+        replayTask?.cancel()
+        replayTask = nil
+        if isReplaying {
+            isReplaying = false
+            session.showReplayed(nil)
+        }
+        cancelFinish()
+        #if UNRELEASED
+        endNightfall()
+        #endif
+    }
+
     /// Stop: the replay ends where it is and the painting shows whole.
     func stopReplay() {
         if isReplaying { endReplay() }

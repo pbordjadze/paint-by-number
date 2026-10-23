@@ -896,8 +896,9 @@ sends it, the developers collect nothing).
 
 ## Settings
 
-- `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
-  session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
+- `Preferences` is the snapshot that code outside views reads (the create flow); views bind the
+  other `SettingsKey`s with `@AppStorage`, and `PaintView` hands a painting's session the
+  painting settings (Advance to Next Color, Zen Mode, the palette's order) whoever presents it. Settings › Painting Length
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
   (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the

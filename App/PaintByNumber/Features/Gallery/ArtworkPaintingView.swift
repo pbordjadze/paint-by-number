@@ -17,7 +17,6 @@ struct ArtworkPaintingView: View {
     /// The hand-off from Start Painting: this painting, just made, opens under the create flow's
     /// cover, which dissolves into it once the canvas has drawn (`StartHandoff`).
     @Environment(\.startHandoff) private var handoff
-    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @Environment(\.colorScheme) private var colorScheme
     @State private var autosaver: PaintingAutosaver?
@@ -145,7 +144,6 @@ struct ArtworkPaintingView: View {
                 BackgroundSaving.shared.hold { await library.flush() }
             }
         }
-        .onChange(of: autoAdvance) { _, value in autosaver?.session.autoAdvance = value }
         .onDisappear {
             regeneration?.cancel()
             autosaver?.saveNow(refreshThumbnail: true)
@@ -181,7 +179,6 @@ struct ArtworkPaintingView: View {
             failure = .damaged(canRegenerate: artwork.map { ArtworkFactory.canRegenerate($0, store: library.store) } ?? false)
             return
         }
-        Preferences().apply(to: session)
         // Before the painting screen appears: its first tip and the first painting's limit.
         PaintTips.artworkOpened(artworkID)
         withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) {
