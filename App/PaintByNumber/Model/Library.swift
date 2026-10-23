@@ -256,6 +256,14 @@ final class Library {
         }
     }
 
+    #if DEBUG
+    /// `gallery-preparing`: `samples` as the first launch's placeholders, held there with nothing
+    /// made, for the screenshot of the wait.
+    func holdPlaceholders(_ samples: [Sample]) {
+        placeholders = samples.map { Placeholder(sample: $0) }
+    }
+    #endif
+
     struct SeedItem {
         var sample: Sample
         /// Fraction already painted (demos).

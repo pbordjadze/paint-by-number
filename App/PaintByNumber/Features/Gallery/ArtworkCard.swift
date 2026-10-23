@@ -208,6 +208,16 @@ struct PlaceholderCard: View {
     let placeholder: Library.Placeholder
     @State private var image: CGImage?
 
+    /// The picture shows sharp, in its colors, so the first launch's wait has the page's picture to
+    /// look at rather than a grey blur (the first-five-minutes walk, October 23; Paul: "let's build
+    /// them all"), the brush pulsing on glass over it. SideStore and Debug builds only for now
+    /// (`UNRELEASED`, root `CLAUDE.md` › App rules).
+    #if UNRELEASED
+    private static let showsPicture = true
+    #else
+    private static let showsPicture = false
+    #endif
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             CardFrame {
@@ -216,15 +226,17 @@ struct PlaceholderCard: View {
                         Image(decorative: image, scale: 1)
                             .resizable()
                             .scaledToFill()
-                            .saturation(0.15)
-                            .opacity(0.4)
-                            .blur(radius: 8)
+                            .saturation(Self.showsPicture ? 1 : 0.15)
+                            .opacity(Self.showsPicture ? 1 : 0.4)
+                            .blur(radius: Self.showsPicture ? 0 : 8)
                     }
-                    Image(systemName: "paintbrush.pointed.fill")
-                        .font(.system(size: 30, weight: .medium))
-                        .foregroundStyle(.tint)
-                        .symbolEffect(.pulse, options: .repeating)
-                        .accessibilityHidden(true)
+                    if Self.showsPicture {
+                        brush
+                            .frame(width: 56, height: 56)
+                            .glassEffect(.regular, in: .circle)
+                    } else {
+                        brush
+                    }
                 }
             }
             VStack(alignment: .leading, spacing: 3) {
@@ -239,5 +251,13 @@ struct PlaceholderCard: View {
         }
         .task { image = await SampleImages.shared.load(placeholder.sample, maxPixelSize: 400) }
         .accessibilityElement(children: .combine)
+    }
+
+    private var brush: some View {
+        Image(systemName: "paintbrush.pointed.fill")
+            .font(.system(size: 30, weight: .medium))
+            .foregroundStyle(.tint)
+            .symbolEffect(.pulse, options: .repeating)
+            .accessibilityHidden(true)
     }
 }
