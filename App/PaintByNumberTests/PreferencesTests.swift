@@ -114,6 +114,8 @@ struct PreferencesTests {
         #expect(Preferences.retiredKeys.contains("printPaperSize") && Preferences.retiredKeys.contains("colorNameStyle"))
         // Settings › Detail Brushes, later Text Corrections: Refine's Text tool is always there.
         #expect(Preferences.retiredKeys.contains("refineDetailBrushes"))
+        // Settings › The Marginarium, which left every build.
+        #expect(Preferences.retiredKeys.contains("showsMarginarium"))
         // The Custom palette order goes with every painting's arrangement; the rows stay.
         #expect(defaults.object(forKey: SettingsKey.paletteOrder) == nil)
         #expect(defaults.object(forKey: Preferences.retiredCustomOrderPrefix + "42") == nil)

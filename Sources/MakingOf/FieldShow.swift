@@ -4,9 +4,10 @@ import PaintCore
 /// The making-of show with no crew: each step's change grows from seeds over the picture itself, in
 /// a pattern of its own that follows what the step does: `size`, `lineWidth`, `timeline`,
 /// `duration`, `frame(at:)` and `composite` are what a view plays, and its frames carry two marks of
-/// their own (`ShowFrame.sparks`, `ShowFrame.stars`). It replaced the crew's show, three guardians
-/// walking over the photo, which the app played first; that one lives on in the Python clip tool
-/// (`making_of_show.py`), its Swift port retired on October 23, 2026.
+/// their own (`ShowFrame.sparks`, `ShowFrame.stars`). It replaced the crew's show, which the app
+/// played first; its Swift port was retired on October 23, 2026, and its Python left this repository
+/// with the Marginarium. Paul's decision (October 23): the Marginarium is private for now; it leaves
+/// every build and this repository. Its archive is in the private painting-company repository.
 ///
 ///  1. **sketch**: graphite races along the structure like frost along cracks; the color drains and
 ///     the paper washes in behind it, outward from the lines.

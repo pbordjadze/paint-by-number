@@ -112,8 +112,6 @@ jobs:
           set -o pipefail
           mkdir -p out
           python3 tools/strings_check.py --self-test
-          python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'
-          python3 tools/marginarium.py check
           python3 tools/strings_check.py | tee out/strings-check.log
       - name: CI report script
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.

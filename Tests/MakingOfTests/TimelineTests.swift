@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import MakingOf
 
-/// The same hand-made cases as `TimelineTests` in `tools/tests/test_making_of_show.py`, and the
+/// The same hand-made cases as `TimelineTests` in `tools/tests/test_making_of_fields.py`, and the
 /// spec's rules for the cards and the length of the show.
 @Suite struct TimelineTests {
     private func timeline(_ edit: (inout ShowSpec) -> Void = { _ in }) throws -> Timeline {

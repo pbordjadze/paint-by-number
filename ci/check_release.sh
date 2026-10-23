@@ -2,7 +2,7 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
-# behind Settings' The Making-of ships), none of the Marginarium or Refine's screen, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
+# behind Settings' The Making-of ships), nothing of the Marginarium, none of Refine's screen, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
 # template caches of demo and test launches, their main-thread watchdog, the feedback upload stub
 # and its `-feedback-upload` launch argument, the App Store's stub and its `-demo…` arguments):
 # those types are compiled out of Release by `#if DEBUG`.
@@ -31,11 +31,10 @@ for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplat
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 
-# The Marginarium is in Debug builds only for now: Release leaves out its code, chapters and
-# drawings (the target's EXCLUDED_SOURCE_FILE_NAMES). The making-of show draws no guardian (its
-# crew was retired on October 23, 2026), so nothing of it reaches the Marginarium's sprite sheets;
-# the crew's pet-metrics.json lives in tools/tests/fixtures and must not creep back into the app.
-for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites; do
+# Paul's decision (October 23): the Marginarium is private for now; it leaves every build and this
+# repository. Its archive is in the private painting-company repository. These checks keep any of
+# it from coming back into the app, and the making-of show draws no sprites.
+for symbol in MarginariumView MarginariumReaderView SpriteAtlas MakingOfSprites; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 # Refine is in SideStore and Debug builds only for now: Release leaves out its screen and the
@@ -45,7 +44,7 @@ done
 for symbol in RefineView RefineSurfaceView RefineColorsPanel RefineAreaCard RefinePaletteBar DraftRow; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
-for file in marginarium.json pet-metrics.json; do
+for file in marginarium.json; do
   [[ ! -e "$APP/$file" ]] || fail "the Release app bundles $file"
 done
 # The launch screen is the gallery's paper (light or dark), not a white flash before it.
@@ -53,10 +52,10 @@ done
   || fail "the launch screen isn't the Paper color (UILaunchScreen:UIColorName)"
 # The making-of ships behind Settings' The Making-of: its spec is bundled, or the switch would do nothing.
 [[ -s "$APP/making-of.json" ]] || fail "the Release app doesn't bundle making-of.json, so The Making-of would do nothing"
-if compgen -G "$APP/pet-*.webp" > /dev/null; then fail "the Release app bundles the Marginarium's pet sheets"; fi
+if compgen -G "$APP/pet-*.webp" > /dev/null; then fail "the Release app bundles the Marginarium's sprite sheets"; fi
 if xcrun --find assetutil > /dev/null 2>&1; then
   if xcrun assetutil --info "$APP/Assets.car" 2>/dev/null | grep -qE '"Name" : "(pip|colophon)-'; then
-    fail "the Release asset catalog holds Pip's or Colophon's frames"
+    fail "the Release asset catalog holds the Marginarium's frames"
   fi
 fi
 [[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, no Debug-only code, no Marginarium, no Refine"

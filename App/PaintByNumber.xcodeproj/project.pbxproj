@@ -398,7 +398,7 @@
 				COREML_CODEGEN_LANGUAGE = None;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				EXCLUDED_SOURCE_FILE_NAMES = "Marginarium*.swift SpriteAtlas.swift Marginarium.xcassets marginarium.json pet-*.webp Refine*.swift DraftRow.swift";
+				EXCLUDED_SOURCE_FILE_NAMES = "Refine*.swift DraftRow.swift";
 				GENERATE_INFOPLIST_FILE = YES;
 				INCLUDED_SOURCE_FILE_NAMES = RefineEdits.swift;
 				INFOPLIST_FILE = Config/Info.plist;

@@ -21,9 +21,6 @@ enum SettingsKey {
     nonisolated static let lineWeight = "lineWeight"
     /// What the create flow's preview shows beside the photo (`PreviewStyle`).
     nonisolated static let previewStyle = "previewStyle"
-    /// The gallery's toolbar offers The Marginarium, the storybook of how the app was made
-    /// (Settings › The Marginarium; off by default).
-    static let showsMarginarium = "showsMarginarium"
     /// Start Painting first plays the making-of show (`MakingOfView`): the painter's photo becoming
     /// its painting, step by step (Settings › The Making-of; off by default).
     static let playsMakingOf = "playsMakingOf"
@@ -62,11 +59,11 @@ struct Preferences {
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,
     /// line appearance and preview picture, and its switch for each sound, haptic and flourish;
     /// Settings' paper size for printing and Color Names; the time-lapse's pace; Settings › Detail
-    /// Brushes (later Text Corrections: Refine's Text tool is always there now). Left in place,
-    /// the first two would still shape new paintings, unseen.
+    /// Brushes (later Text Corrections: Refine's Text tool is always there now); Settings › The
+    /// Marginarium. Left in place, the first two would still shape new paintings, unseen.
     static let retiredKeys = [
         "advancedLineArt", "advancedPipelineTuning", "advancedLineAppearance", "advancedPreviewPicture",
-        "printPaperSize", "colorNameStyle", "timelapsePace", "refineDetailBrushes",
+        "printPaperSize", "colorNameStyle", "timelapsePace", "refineDetailBrushes", "showsMarginarium",
     ] + [
         "paintNotes", "colorJingle", "finishFanfare", "wrongColorSound", "fillHaptics", "wrongColorHaptics",
         "finishHaptics", "fillSparkles", "finishShine",

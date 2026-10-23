@@ -76,19 +76,17 @@ before planning app work).
   `ScheduleStyle`). Every random draw is a `ShowStreams` stream of SplitMix64; discrete decisions are
   exact (integers, `+ - * /`, `sqrt`) and the pictures are within measured tolerances of the Python
   reference `tools/factory/making_of_{exact,inputs,layers,compose,reveal,fields}.py`, which
-  `making_of_clip.py --no-crew` plays with Pillow (stills and video). The first show, three of the
-  Lamp's guardians walking over the photo (`making_of_pets.py`, `making_of_show.py`), is the clip
-  tool's alone now (`making_of_clip.py` without `--no-crew`); its Swift port was retired on October
-  23, 2026. What it shared and the field show doesn't use (`Arrival`'s visits, `PaintFlow`,
-  `StopWeights`, `StrokeSchedule`'s traces) stays, pinned by the fixtures, until it leaves with its
-  checks (backlog). Fixtures in
+  `making_of_clip.py` plays with Pillow (stills and video). The first show, with a crew, is gone: its
+  Swift port was retired on October 23, 2026, and its Python left with the Marginarium (below).
+  `making_of_pets.py` keeps its planner, SplitMix64 and streams, which the fixtures' inputs are
+  still drawn with; what the crew show shared and the field show doesn't use (`Arrival`'s visits,
+  `PaintFlow`, `StopWeights`, `StrokeSchedule`'s traces) stays, pinned by the fixtures, until it
+  leaves with its checks (backlog). Fixtures in
   `Tests/MakingOfTests/Fixtures/` are written by that Python and replayed by the tests:
   `show-small/inputs-small.json` by `making_of_inputs.py` (recipe in `test_making_of_inputs.py`),
   `reveal-small.json` by `making_of_reveal.py --fixture`, `layers-small.json` and
   `compose-small.json` by `tools/tests/test_making_of_layers.py --write-goldens`, and
-  `fields-small.json` by `tools/tests/test_making_of_fields.py --write-goldens`; the crew show's own
-  (`plan-parrots.json`, `frames-small.json`, `pet-metrics.json`) are in `tools/tests/fixtures/`, for
-  the Python alone. `python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'` (numpy,
+  `fields-small.json` by `tools/tests/test_making_of_fields.py --write-goldens`. `python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'` (numpy,
   Pillow; CI `core`) fails when a committed fixture is not what the Python makes now.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
@@ -104,15 +102,7 @@ before planning app work).
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights). `marginarium.py` imports approved chapter
-  Markdown from `docs/marginarium/` into the catalog and bundled `Resources/marginarium.json`;
-  its docstring defines the supported blocks and stable key markers. `marginarium.py check`
-  checks them word for word; `python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'`
-  exercises every block kind and key stability (fixtures never ship). `from-docs <view.json>`
-  converts Docs prose XML to Markdown, preserving inline styling, tables and signed margin notes;
-  `check --docs <view.json> --id <chapter>` also compares against the approved Doc. Chapter `pet:`
-  blocks, the pets beside margin notes, the shared imageset/v2-atlas player and the bundled
-  sheets' sizes: `docs/marginarium-pets.md`.
+  (the app's Core ML models from their source weights).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
@@ -141,14 +131,16 @@ before planning app work).
   per-agent reports are not committed (they live on their branch and in commit messages); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
-  in it ships or goes into the Marginarium until he says so, and its wording stays his.
+  in it ships until he says so, and its wording stays his.
   `docs/backlog.md` is the other: the backlog, one row for each idea, piece of feedback and
   go-ahead (Working with Paul).
 - `.claude/skills/front-desk/`: the front desk (`SKILL.md`; retired for now, Working with Paul),
   `sessions.py`, its summary of Paul's sessions, their cost and the status page's data, and
   `page.py`, the page's cards.
-- `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
-  chapter, quoted verbatim from the chapters, and its images); the README links it.
+- The Marginarium, the app's storybook, is gone from the app and the repository (its chapters,
+  sprites, tools and public preview). Paul's decision (October 23): the Marginarium is private for
+  now; it leaves every build and this repository. Its archive is in the private painting-company
+  repository.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
   `archive/lineart-research` (`research/lineart/`, which `LineArtSettings`, `convert_hed.py` and
   `docs/coloring-book.md` cite) and `archive/resume-notes` keep unmerged history
@@ -353,13 +345,8 @@ Saved paintings must open in every later build. The format history is documented
   durations, percentages and numbers go through `.formatted(...)` or `PaintingTimeText`'s catalog
   units, never concatenation; errors are `LocalizedError`; no conditional or `+` of literals in a
   SwiftUI literal position (one call per literal). Helper views taking a `LocalizedStringKey` are
-  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. Runtime key families
-  are `sample.<id>`, the library's titles (checked against `library.json`), and the stable block
-  keys in `marginarium.json` (`marginarium.<id>.block.<uuid>` plus the existing
-  title/subtitle/passage keys). The latter are unformatted Bundle lookups (literal percent signs);
-  `strings_check.py` calls `marginarium.py` to check the manifest and catalog against
-  `docs/marginarium/*.md`. Keep each Markdown block's key marker with it when editing or moving
-  it. The Markdown and tool fixtures are not bundled. A new string needs
+  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. The one runtime key
+  family is `sample.<id>`, the library's titles (checked against `library.json`). A new string needs
   its catalog entry, written by hand (`"comment"`, `"extractionState": "manual"`; an explicit key
   also `localizations.en`, with plural forms for a count): Xcode extracts nothing
   (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: "Finished" and "Finished!" would collide).
@@ -381,12 +368,11 @@ Saved paintings must open in every later build. The format history is documented
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
   shows up in the Release binary. The Making-of ships (its screen and Settings switch have no
-  `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
-  Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
-  the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
-  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`. So is
-  Refine (October 21, until a good one is ready): its button, tip and the gallery's draft row
-  under `#if UNRELEASED`, its screen's files left out the same way (App/CLAUDE.md › Create flow).
+  `#if`; `making-of.json` is bundled, which the same check requires). The Marginarium is in no
+  build (the Map), and the same check fails if any of it comes back. Refine is left out of the
+  release for now (October 21, until a good one is ready): its button, tip and the gallery's draft
+  row under `#if UNRELEASED`, its screen's files left out of Release by the target's Release
+  `EXCLUDED_SOURCE_FILE_NAMES` (App/CLAUDE.md › Create flow).
   `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
   what the release (TestFlight, App Store, the Release check) leaves out. It gates only

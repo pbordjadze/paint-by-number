@@ -6,17 +6,10 @@ import UIKit
 import UniformTypeIdentifiers
 
 /// The app's main navigation: gallery → painting (zoom transition), the create flow,
-/// settings and The Marginarium.
+/// and settings.
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(UnlimitedPaintings.self) private var paintings
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    #if UNRELEASED
-    /// The Marginarium is in Debug and SideStore builds only for now (`UNRELEASED`): the release
-    /// leaves out its code, its chapters and its drawings (the target's Release
-    /// `EXCLUDED_SOURCE_FILE_NAMES`, `ci/check_release.sh`).
-    @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
-    #endif
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -25,12 +18,10 @@ struct AppShellView: View {
     @State private var search = ShellDemo.current?.searchText ?? ""
     @State private var isCreating = ShellDemo.current?.opensCreateFlow ?? false
     @State private var isShowingSettings = ShellDemo.current?.opensSettings ?? false
-    @State private var isShowingMarginarium = ShellDemo.current?.opensMarginarium ?? false
     #else
     @State private var search = ""
     @State private var isCreating = false
     @State private var isShowingSettings = false
-    @State private var isShowingMarginarium = false
     #endif
     @State private var droppedPhoto: Data?
     @State private var droppedTitle: String?
@@ -132,16 +123,6 @@ struct AppShellView: View {
                 .environment(library)
                 .environment(paintings)
         }
-        #if UNRELEASED
-        .sheet(isPresented: $isShowingMarginarium, onDismiss: presentIncomingImage) {
-            if UIDevice.current.userInterfaceIdiom == .pad, sizeClass == .regular {
-                MarginariumView()
-                    .presentationSizing(.page)
-            } else {
-                MarginariumView()
-            }
-        }
-        #endif
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
             TimelapseExportSheet(request: request)
         }
@@ -204,9 +185,9 @@ struct AppShellView: View {
     }
 
     /// A screen over the shelf: the create flow, Settings, the time-lapse's or Send Template's
-    /// sheet, the Marginarium.
+    /// sheet.
     private var isCovered: Bool {
-        isCreating || isShowingSettings || timelapse != nil || sending != nil || isShowingMarginarium
+        isCreating || isShowingSettings || timelapse != nil || sending != nil
     }
 
     @ToolbarContentBuilder
@@ -214,13 +195,6 @@ struct AppShellView: View {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
         }
-        #if UNRELEASED
-        if showsMarginarium {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("The Marginarium", systemImage: "book.pages") { isShowingMarginarium = true }
-            }
-        }
-        #endif
         // An empty gallery's own New Painting is its only control there: nothing to filter, and
         // no second New Painting.
         if !library.isBare {
@@ -309,16 +283,15 @@ struct AppShellView: View {
     private static let questionDismissal: Duration = .milliseconds(600)
 
     /// Whether nothing stands in the way of what an opened file shows: on a cold launch the
-    /// first-launch samples are still being made, and the settings, Marginarium, time-lapse or
+    /// first-launch samples are still being made, and the settings, time-lapse or
     /// Send Template sheet has to close first (its `onDismiss` comes back to
     /// `presentIncomingImage`; dismissing the time-lapse sheet cancels its render), and so does a
     /// question the gallery is asking (rename, restart, delete), which has no `onDismiss`: this
     /// comes back once it has had time to go.
     private func isClearForIncoming() -> Bool {
         guard library.placeholders.isEmpty else { return false }
-        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil, sending == nil else {
+        guard !isShowingSettings, timelapse == nil, sending == nil else {
             isShowingSettings = false
-            isShowingMarginarium = false
             timelapse = nil
             sending = nil
             return false

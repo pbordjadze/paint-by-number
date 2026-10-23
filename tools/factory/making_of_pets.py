@@ -1,9 +1,10 @@
-"""The Lamp's guardians as the making-of show's crew: their sprites, their jobs, and how they move.
-
-Sprites come from the app's own sheets (`App/PaintByNumber/Resources/pet-<id>.webp`, the
-create-pet v2 contract in `SpriteAtlas.swift`): idle, walking right and left, waving, busy and
-reviewing. The motion is procedural, on top of those frames, and every number below is in the
-guardian's own height (h) or in seconds:
+"""The making-of show's crew planner, the show's SplitMix64 and its random streams, and the easing the
+shared modules use. The crew show it planned, and the sprites it drew, left this repository with the
+Marginarium. Paul's decision (October 23): the Marginarium is private for now; it leaves every build
+and this repository. Its archive is in the private painting-company repository. The planner stays:
+the field show's inputs are still drawn for the spec's crew, and its plan's visits and walked lines
+are in the fixtures Sources/MakingOf replays (making_of_reveal.py --fixture). Every number below is
+in a guardian's own height (h) or in seconds:
 
 - A guardian walks at WALK h/s. It takes the nearest job it can reach and finish within the step, so
   it does as many as fit and never darts; a guardian with nothing in reach keeps working where it is.
@@ -17,33 +18,20 @@ guardian's own height (h) or in seconds:
   anybody else; it arrives no sooner than the step it works for has begun.
 - At work it shows its busy pose for the hands-on steps (sketch, shading, ink) and its reviewing
   pose for the others (paints, merged, template).
-- A soft shadow stays on the ground, smaller and paler while the guardian is in the air; guardians higher in the
-  picture are a little smaller, and nearer ones are drawn over farther ones.
 - They pop in one after another at the start and wave one after another at the end.
-- Positions are drawn to a fraction of a pixel, so slow movement doesn't shimmer.
 
 `plan(inputs)` is the whole crew's planning as one pure function of plain data (the picture, the
 candidate spots of each step, the template's strokes, a seed), drawing every random number from
 SplitMix64, and a finished `Pet.state(t)` is a pure function of t. Its Swift port was retired on
-October 23, 2026 (the app plays the show with no crew); test_making_of_pets.py replays the recorded
-plan, tools/tests/fixtures/plan-parrots.json (making_of_clip.py --plan-json writes it).
+October 23, 2026 (the app plays the show with no crew).
 """
 
 import math
-import os
 from collections import namedtuple
 
 import numpy as np
-from PIL import Image, ImageDraw
 
-CELL = (192, 208)
-PAD = 4             # transparent margin added around each frame, for sampling between pixels
-ROWS = {'idle': (0, 6), 'right': (1, 8), 'left': (2, 8), 'wave': (3, 4), 'busy': (7, 6), 'review': (8, 6)}
-# Who comes first when fewer than all of them work: a mix of shapes and colors.
-ORDER = ['enchanted-workshop', 'dinotopia', 'snow-queen', 'scholar', 'baba-yaga', 'painter', 'glassblower',
-         'medea', 'nutcracker', 'emily-dickinson', 'pirosmani', 'robber-girl', 'hedge-witch', 'storybook',
-         'balanchine', 'originality', 'bulat-okudzhava', 'child-at-bedtime', 'open-source-enthusiast',
-         'bible-school-teacher']
+ORDER = []          # the crew, in order: the spec's (`configure`)
 WORK_POSE = ['busy', 'busy', 'review', 'review', 'busy', 'review']
 
 WALK = 2.4          # h per second
@@ -76,7 +64,7 @@ def configure(spec):
     """Sets the crew's constants from the show's spec (making-of.json, already loaded)."""
     global ORDER, WORK_POSE, WORK, BANDS, TRACE_RAMP
     crew = spec['crew']
-    ORDER = list(crew['pets']) + [i for i in ORDER if i not in crew['pets']]
+    ORDER = list(crew['pets'])
     WORK_POSE = [st['pose'] for st in spec['steps']]
     for key, name in (('walk', 'WALK'), ('lean', 'LEAN'), ('accel', 'ACCEL'), ('decel', 'DECEL'),
                       ('stride', 'STRIDE'), ('hop', 'HOP'), ('hopTime', 'HOP_TIME'), ('hopMin', 'HOP_MIN'),
@@ -224,37 +212,6 @@ def travelled(tau, dist, h):
 def traced(tau, dist, h):
     """Distance drawn `tau` s into tracing a line."""
     return trapezoid(tau, dist, TRACE * h, *TRACE_RAMP)
-
-
-class Sprites:
-    """One guardian's frames by row (each cell padded by PAD), plus where its feet are: `top`, `foot`
-    and `cx` in the padded frame; `metrics` has them in the cell's own pixels, as pet-metrics.json
-    does."""
-
-    def __init__(self, path):
-        sheet = Image.open(path).convert('RGBA')
-        if sheet.size != (CELL[0] * 8, CELL[1] * 11):
-            raise ValueError(f'{path}: not a create-pet v2 sheet')
-        self.rows = {}
-        self.size = (CELL[0] + 2 * PAD, CELL[1] + 2 * PAD)
-        for name, (r, n) in ROWS.items():
-            frames = []
-            for c in range(n):
-                im = Image.new('RGBA', self.size, (0, 0, 0, 0))
-                im.paste(sheet.crop((c * CELL[0], r * CELL[1], (c + 1) * CELL[0], (r + 1) * CELL[1])), (PAD, PAD))
-                frames.append(im)
-            self.rows[name] = frames
-        alpha = np.zeros(self.size[::-1], dtype=np.uint8)
-        for im in self.rows['idle']:
-            alpha = np.maximum(alpha, np.asarray(im)[..., 3])
-        ys, xs = np.nonzero(alpha > 24)
-        self.top, self.foot = int(ys.min()), int(ys.max())
-        self.cx = float(xs.mean())
-
-    @property
-    def metrics(self):
-        """(top, foot, cx) in the cell's own pixels."""
-        return self.top - PAD, self.foot - PAD, self.cx - PAD
 
 
 class Planner:
@@ -646,146 +603,3 @@ def quantized(inputs):
             'candidates': [spots(c) for c in inputs['candidates']],
             'strokes': [spots(s) for s in inputs['strokes']],
             'frameHeight': px(inputs['frameHeight'])}
-
-
-def _round(v, places=6):
-    return None if v == float('inf') else round(float(v), places) + 0.0
-
-
-def plan_data(planned):
-    """A plan as JSON-ready data, floats rounded to 1e-6 (an unbounded `leave` is null)."""
-    r = _round
-    points = lambda pts: [[r(x), r(y)] for x, y in pts]
-    pets = []
-    for p in planned.pets:
-        stops = [{'arrive': r(a), 'leave': r(l), 'x': r(x), 'y': r(y), 'step': k,
-                  'path': None if path is None else points(path)} for a, l, x, y, k, path in p.stops]
-        walks = [{'leave': r(g['leave']), 'arrive': r(g['arrive']), 'length': r(g['len']), 'distance': r(g['d']),
-                  'hurry': r(g['hurry']), 'before': r(g['before']), 'bend': r(g['bend'])} for g in p.segments]
-        pets.append({'id': p.id, 'appear': r(p.appear), 'stops': stops, 'walks': walks})
-    return {'pets': pets,
-            'visits': [[[r(t), r(x), r(y)] for t, x, y in v] for v in planned.visits],
-            'traces': [{'stroke': n, 'start': r(t), 'duration': r(d), 'points': points(pts)}
-                       for n, t, d, pts in planned.traces]}
-
-
-def states_data(pets, end, fps=30):
-    """Each guardian's `state(t)` every 1/`fps` s from 0 to `end`, as JSON-ready rows
-    [x, y, lift, row, frame, sx, sy, tilt, alpha] (floats rounded to 1e-6)."""
-    ts = [i / fps for i in range(round(end * fps) + 1)]
-    return {'fps': fps, 'pets': [[[_round(v) if isinstance(v, float) else v for v in p.state(t)] for t in ts]
-                                 for p in pets]}
-
-
-# How a guardian is drawn, beyond the spec.
-INVISIBLE = 0.01        # below this alpha a guardian is not drawn
-APPEAR = 0.18           # s: it fades in over this long as it appears, and swells by SWELL of its size over POP
-SWELL = 0.18
-DEPTH_FAR = 0.9         # one at the picture's top is this share of its height, one at the bottom this much more
-DEPTH_SPAN = 0.16
-SHADOW_WIDTH = 0.40     # the shadow's half width in guardian heights ...
-SHADOW_FLAT = 0.42      # ... its height in widths ...
-SHADOW_SHRINK = 0.4     # ... how much it shrinks and pales in the air ...
-SHADOW_PALE = 0.6
-SHADOW_ALPHA = 44 / 255  # ... and its alpha on the ground
-INK = (52, 42, 48)      # the shadow's color: the show's ink
-
-
-def sprite_draw(pid, state, since, fade, height, picture_h, metrics):
-    """A guardian to draw, or None while it can't be seen: `state` is Guardian.state(t) at a time `since`
-    it appeared, `fade` the whole crew's fade, `height` its height in px, `picture_h` the picture's,
-    `metrics` its sheet's (top, foot, cx) in cell pixels. Returns {id, row, frame, x, y, scale_x,
-    scale_y, rotation, alpha, shadow}: the cell's point (cx, foot) goes at (x, y) (lift taken off),
-    scaled about it by scale_x and scale_y, then turned `rotation` degrees CLOCKWISE (state's tilt is
-    Pillow's number, counter-clockwise positive), at `alpha`; the shadow is an ellipse
-    {x, y, half_width, height, alpha} on the ground. `frame` is wrapped to the row's length."""
-    x, y, lift, row, frame, sx, sy, tilt, alpha = state
-    x, y, lift, sx, sy, tilt, alpha = (float(v) for v in (x, y, lift, sx, sy, tilt, alpha))
-    if 0 <= since < POP:
-        u = since / POP
-        pop = 1 + SWELL * math.sin(math.pi * u) * (1 - u)
-        sx, sy = sx * pop, sy * pop
-    alpha = min(alpha, ease(since / APPEAR)) * fade
-    if not alpha > INVISIBLE:
-        return None
-    top, foot, _ = metrics
-    depth = DEPTH_FAR + DEPTH_SPAN * min(max(y / picture_h, 0), 1)
-    scale = height * depth / (foot - top)
-    air = min(lift / max(height * HOP, 1), 1)
-    half_width = height * depth * SHADOW_WIDTH * (1 - SHADOW_SHRINK * air)
-    return {'id': pid, 'row': row, 'frame': frame % ROWS[row][1], 'x': x, 'y': y - lift,
-            'scale_x': scale * sx, 'scale_y': scale * sy, 'rotation': -tilt, 'alpha': alpha,
-            'shadow': {'x': x, 'y': y, 'half_width': half_width, 'height': half_width * SHADOW_FLAT,
-                       'alpha': SHADOW_ALPHA * alpha * (1 - SHADOW_PALE * air)}}
-
-
-def draw_sprite(canvas, sprites, d):
-    """Draws a `sprite_draw` onto an RGBA canvas with Pillow (the factory's way: BICUBIC to turn it,
-    LANCZOS to scale it, sampling between pixels so slow movement doesn't shimmer)."""
-    im = sprites.rows[d['row']][d['frame']]
-    if abs(d['rotation']) > 0.05:
-        im = im.rotate(-d['rotation'], resample=Image.BICUBIC, center=(sprites.cx, sprites.foot))
-    sxs, sys_ = 1 / d['scale_x'], 1 / d['scale_y']          # source pixels per screen pixel
-    ox = d['x'] - sprites.cx * d['scale_x']                    # where the frame's corner lands, unrounded
-    oy = d['y'] - sprites.foot * d['scale_y']
-    # start on the first whole pixel inside the frame and sample from the fraction past its
-    # corner, so the guardian sits between pixels when it should (the frame's margin is clear)
-    ix, iy = math.ceil(ox), math.ceil(oy)
-    bx, by = (ix - ox) * sxs, (iy - oy) * sys_
-    w = max(1, math.floor((sprites.size[0] - bx) / sxs))
-    h = max(1, math.floor((sprites.size[1] - by) / sys_))
-    sprite = im.resize((w, h), Image.LANCZOS, box=(bx, by, bx + w * sxs, by + h * sys_))
-    if d['alpha'] < 0.999:
-        sprite.putalpha(sprite.getchannel('A').point(lambda v: int(v * d['alpha'])))
-    shadow = d['shadow']
-    sh = max(2, round(shadow['height']))
-    ground = Image.new('RGBA', (max(2, round(2 * shadow['half_width'])), sh), (0, 0, 0, 0))
-    ImageDraw.Draw(ground).ellipse((0, 0, ground.width - 1, sh - 1), fill=INK + (round(255 * shadow['alpha']),))
-    put(canvas, ground, round(shadow['x'] - shadow['half_width']), round(shadow['y'] - sh / 2))
-    put(canvas, sprite, ix, iy)
-
-
-def put(canvas, im, left, top):
-    """Composites `im` at (left, top), clipped to the canvas."""
-    x0, y0 = max(left, 0), max(top, 0)
-    x1, y1 = min(left + im.width, canvas.width), min(top + im.height, canvas.height)
-    if x0 >= x1 or y0 >= y1:
-        return
-    canvas.alpha_composite(im.crop((x0 - left, y0 - top, x1 - left, y1 - top)), dest=(x0, y0))
-
-
-def load(resources, ids):
-    return {i: Sprites(os.path.join(resources, f'pet-{i}.webp')) for i in ids}
-
-
-def metrics_table(resources):
-    """The metrics of every sheet in `resources` (pet-<id>.webp), as pet-metrics.json has them:
-    {"about", "version": 1, "cell": [w, h], "guardians": {id: {"top", "foot", "cx"}}} in the cell's own
-    pixels, ids in order. The crew show (making_of_show.py) reads it."""
-    ids = sorted(f[4:-5] for f in os.listdir(resources) if f.startswith('pet-') and f.endswith('.webp'))
-    table = {}
-    for i in ids:
-        top, foot, cx = Sprites(os.path.join(resources, f'pet-{i}.webp')).metrics
-        table[i] = {'top': top, 'foot': foot, 'cx': cx}
-    return {'about': "Where each guardian stands in its sprite sheet's cells, measured from the idle frames "
-                     "(every pixel with alpha above 24): the highest and lowest row and the mean column, in the "
-                     "cell's own pixels. Written by `making_of_pets.py --metrics`; the crew show (making_of_show.py) "
-                     "reads it.",
-            'version': 1, 'cell': list(CELL), 'pets': table}
-
-
-def main():
-    import argparse
-    import json
-    ap = argparse.ArgumentParser(description='Writes pet-metrics.json for the sheets in a folder.')
-    ap.add_argument('--metrics', metavar='RESOURCES', required=True, help="the folder of the pets' sheets")
-    ap.add_argument('out')
-    a = ap.parse_args()
-    doc = metrics_table(a.metrics)
-    with open(a.out, 'w', encoding='utf-8') as f:     # one line per guardian
-        f.write('{\n' + ',\n'.join(f'"{k}":' + json.dumps(v) for k, v in doc.items() if k != 'pets') + ',\n"pets":{\n'
-                + ',\n'.join(f'  {json.dumps(k)}:{json.dumps(v)}' for k, v in doc['pets'].items()) + '\n}\n}\n')
-
-
-if __name__ == '__main__':
-    main()
