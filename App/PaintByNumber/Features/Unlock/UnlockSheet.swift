@@ -67,11 +67,11 @@ struct UnlockSheet: View {
                 // One quiet line when it fits (the Lamplit Table: Rikyū).
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 6) {
-                        libraryNote
+                        samplesNote
                         restoreButton
                     }
                     VStack(spacing: 6) {
-                        libraryNote
+                        samplesNote
                         restoreButton
                     }
                 }
@@ -109,8 +109,8 @@ struct UnlockSheet: View {
             .accessibilityIdentifier("unlock-buy")
     }
 
-    private var libraryNote: some View {
-        Text("Library pictures are always free.")
+    private var samplesNote: some View {
+        Text("Everything in Samples is always free.")
             .foregroundStyle(.secondary)
     }
 
