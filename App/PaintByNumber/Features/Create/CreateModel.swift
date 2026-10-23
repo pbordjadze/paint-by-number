@@ -150,6 +150,10 @@ final class CreateModel {
     /// The painter tapped Refine before the final template was there (`askForRefine()`): it opens
     /// as soon as it is.
     private(set) var refineAsked = false
+    /// The painter tapped Start Painting before the painting was made (`askForStart()`): it starts
+    /// as soon as it is (`startsNow`). Called off wherever a waiting Refine is, and by Reset to
+    /// Suggested: a changed setting (a touch heard or not), a new photo, a failed generation.
+    private(set) var startAsked = false
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -306,6 +310,25 @@ final class CreateModel {
     func withdrawRefine() {
         refineAsked = false
         trace("Refine opens")
+    }
+
+    /// Start Painting, asked for early, can go: the settings are chosen and the full resolution is
+    /// there.
+    var startsNow: Bool { startAsked && !isChoosingSettings && isFinal }
+
+    /// A tap on Start Painting before the painting is made: it starts once it is
+    /// (`TemplatePreviewView.startsEarly`), unless something calls it off first.
+    func askForStart() {
+        guard source != nil else { return }
+        startAsked = true
+        trace("Start asked for")
+    }
+
+    /// The start asked for goes, or is not wanted any more.
+    func withdrawStart() {
+        guard startAsked else { return }
+        startAsked = false
+        trace("Start asked for is withdrawn or goes")
     }
 
     /// The preview matches the settings and refinements at full resolution.
@@ -555,8 +578,9 @@ final class CreateModel {
     func settingsChanged() {
         guard source != nil, !isChoosingSettings else { return }
         // A Refine tapped before is not wanted now, even when the slider's touch was never heard
-        // (`setAdjusting`): its template would be for settings that are gone.
+        // (`setAdjusting`): its template would be for settings that are gone. So with a Start.
         refineAsked = false
+        startAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
         if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
         if isAdjusting {
@@ -573,7 +597,10 @@ final class CreateModel {
     func setAdjusting(_ adjusting: Bool) {
         // Back to the sliders: a Refine tapped while the painting was updating is not wanted now,
         // whether or not the last drag's end was heard.
-        if adjusting { refineAsked = false }
+        if adjusting {
+            refineAsked = false
+            startAsked = false
+        }
         guard adjusting != isAdjusting else { return }
         isAdjusting = adjusting
         trace(adjusting ? "A slider was touched" : "A slider was let go")
@@ -601,6 +628,8 @@ final class CreateModel {
     /// Back to the suggestion's settings, without choosing again.
     func resetToSuggested() {
         guard let decision else { return }
+        // Other settings than the ones Start was tapped on.
+        startAsked = false
         apply(decision.settings)
         settingsOrigin = .suggested
         startGeneration(draftFirst: true)
@@ -613,12 +642,14 @@ final class CreateModel {
         refineQueue?.cancel()
         stopDrafts()
         refineAsked = false
+        startAsked = false
     }
 
     /// The full-resolution template for the current settings, generating it if needed.
     func makeDraft() async throws -> ArtworkDraft {
-        // Starting the painting leaves no Refine to open over it.
+        // Starting the painting leaves no Refine to open over it, and no start to wait for.
         refineAsked = false
+        startAsked = false
         // Settings still being chosen are chosen first, and the edits sent are laid.
         _ = await loadTask?.value
         _ = await refineQueue?.value
@@ -838,8 +869,9 @@ final class CreateModel {
             trace("\(kind) #\(id) cancelled")
         } catch {
             Log.create.error("Generation failed: \(String(describing: error), privacy: .public)")
-            // No final template is on its way: a Refine waiting for it would wait for ever.
+            // No final template is on its way: a Refine or a Start waiting for it would wait for ever.
             refineAsked = false
+            startAsked = false
             phase = .failed(CreateError.renderFailed.localizedDescription)
         }
     }
