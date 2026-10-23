@@ -229,7 +229,9 @@ synchronized folder would bundle it into the app.
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-send` (with `-dark`,
   `-long-text`) is Send Template's sheet, `gallery-received` (with `-dark`) opens a refined painting
   sent with its photo as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the
-  gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
+  gallery as the first launch leaves it (the two starters, none painted on); `gallery-preparing` holds
+  it before they are made, their placeholders showing the sample sharp in SideStore and Debug builds
+  (`PlaceholderCard.showsPicture`; a placeholder takes no tap). Demo launches and the test host
   reset TipKit and hide every tip except in the tip scenarios (Tips). The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
