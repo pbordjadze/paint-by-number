@@ -21,6 +21,16 @@ namespace_id = "3141"
   limit = 3
   period = 60
 
+# And one for every sender together: 10 reports a minute keeps the relay under GitHub's limit on
+# writes (about 80 a minute; a report makes 7) however many addresses send.
+[[ratelimits]]
+name = "RATE_LIMITER_ALL"
+namespace_id = "3142"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
 # Only what the worker logs itself (errors), not every request.
 [observability]
 enabled = true

@@ -462,6 +462,18 @@ test("rejects a request over the rate limit before reading it", async () => {
   assert.deepEqual(seen, ["203.0.113.9"]);
 });
 
+test("every sender together is braked too, after the sender's own brake", async () => {
+  const seen = [];
+  const limiter = (name, success) => ({ limit: async ({ key }) => (seen.push(`${name}:${key}`), { success }) });
+  const env = { ...ENV, RATE_LIMITER: limiter("ip", true), RATE_LIMITER_ALL: limiter("all", false) };
+  await rejected(await feedback(), 429, env);
+  assert.deepEqual(seen, ["ip:203.0.113.9", "all:all"]);
+  // A sender over its own brake doesn't count against everyone's.
+  seen.length = 0;
+  await rejected(await feedback(), 429, { ...env, RATE_LIMITER: limiter("ip", false) });
+  assert.deepEqual(seen, ["ip:203.0.113.9"]);
+});
+
 test("a failing rate limiter lets the report through", async () => {
   const fake = fakeGitHub();
   globalThis.fetch = fake.handler;

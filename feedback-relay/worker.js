@@ -25,9 +25,11 @@
 // 500 the relay is misconfigured, 502 GitHub refused.
 //
 // Secret FEEDBACK_GITHUB_TOKEN: a fine-grained token with Contents and Issues read and write on
-// that repository only. Variable FEEDBACK_REPO and the RATE_LIMITER binding: wrangler.toml.
-// Rate limiting is a flood brake per IP address (the binding's periods are 10 or 60 seconds, so
-// a limit per hour can't be made with it), applied before the body is read; it is per Cloudflare
+// that repository only. Variable FEEDBACK_REPO and the RATE_LIMITER and RATE_LIMITER_ALL bindings:
+// wrangler.toml. Rate limiting is two flood brakes, applied before the body is read: one per IP
+// address, and one for every sender together, so a few addresses can't use up GitHub's limit on
+// writes (about 80 a minute; a report makes 7) and turn every painter's report away. A binding's
+// period is 10 or 60 seconds, so neither can be a limit per hour; both are per Cloudflare
 // location and approximate by design.
 //
 // Memory: a request is parsed once and its files are read and encoded one at a time (the Workers
@@ -134,9 +136,17 @@ function configured(env) {
 }
 
 async function withinRate(request, env) {
-  if (!env.RATE_LIMITER) return true;
+  // The sender's own brake first, so one sender's flood spends its own allowance, not everyone's.
+  return (
+    (await allowed(env, env.RATE_LIMITER, request.headers.get("cf-connecting-ip") ?? "unknown")) &&
+    (await allowed(env, env.RATE_LIMITER_ALL, "all"))
+  );
+}
+
+async function allowed(env, limiter, key) {
+  if (!limiter) return true;
   try {
-    const { success } = await env.RATE_LIMITER.limit({ key: request.headers.get("cf-connecting-ip") ?? "unknown" });
+    const { success } = await limiter.limit({ key });
     return success;
   } catch (error) {
     // A broken limiter must not turn every report away.
