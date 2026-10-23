@@ -25,6 +25,8 @@ struct TemplatePreviewView: View {
     /// The layout chosen when title editing began, for that window width: kept until it ends.
     @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
     @State private var isStarting = false
+    /// Start Painting was tapped before the painting was made: it starts once it is (`startsEarly`).
+    @State private var startsWhenReady = false
     @State private var startError: String?
     /// Start Painting found no free painting left for the painter's own photo.
     @State private var offersUnlock = false
@@ -126,12 +128,26 @@ struct TemplatePreviewView: View {
             PaintTips.desk.enter(.preview)
             if model.isFinal { previewFinal() }
         }
-        .onDisappear { PaintTips.desk.leave(.preview) }
+        .onDisappear {
+            PaintTips.desk.leave(.preview)
+            callOffStart()
+        }
         .onChange(of: model.isFinal) { _, isFinal in
             if isFinal { previewFinal() }
         }
+        // A start asked for early goes once the painting is made, unless something called it off.
+        .onChange(of: isReadyToStart) { _, ready in
+            if ready, startsWhenReady {
+                startsWhenReady = false
+                start()
+            }
+        }
         .onChange(of: model.isAdjusting) { _, adjusting in
+            if adjusting { callOffStart() }
             if !adjusting { PaintTips.sliderReleased(isCustom: model.settingsOrigin == .custom) }
+        }
+        .onChange(of: model.phase) { _, phase in
+            if case .failed = phase { callOffStart() }
         }
         .onChange(of: model.settingsOrigin) { old, origin in
             if old == .custom, origin == .suggested { PaintTips.resetUsed() }
@@ -203,6 +219,7 @@ struct TemplatePreviewView: View {
     private func openRefine() {
         titleFocused = false
         guard !isStarting else { return }
+        callOffStart()
         if model.canRefine {
             model.withdrawRefine()
             isRefining = true
@@ -421,7 +438,7 @@ struct TemplatePreviewView: View {
             .buttonStyle(.glassProminent)
             .tint(Theme.signature)
             .controlSize(.large)
-            .disabled(model.preview == nil || (model.isChoosingSettings && !Self.startsEarly) || isStarting)
+            .disabled(model.preview == nil || (model.isChoosingSettings && !Self.startsEarly) || isStarting || startsWhenReady)
             .accessibilityLabel("Start Painting")
             .accessibilityValue(isPreparingStart ? String(localized: "Preparing…") : "")
 
@@ -529,7 +546,10 @@ struct TemplatePreviewView: View {
     private var originChip: some View {
         Group {
             if model.settingsOrigin == .custom {
-                Button { model.resetToSuggested() } label: {
+                Button {
+                    callOffStart()
+                    model.resetToSuggested()
+                } label: {
                     HStack(spacing: 6) {
                         Text("Custom")
                             .foregroundStyle(.secondary)
@@ -620,30 +640,58 @@ struct TemplatePreviewView: View {
     }
 
     /// Start Painting works from the first draft on screen, while the settings are still being
-    /// chosen: tapped then, it says Preparing… and starts by itself once the painting is made
-    /// (`CreateModel.makeDraft` waits for the settings, then makes it), as a tap while the painting
-    /// updates already did. The free paintings are counted at the tap (`start`), so the unlock
-    /// sheet never comes later on a screen the painter stopped watching; the sliders and Close wait
-    /// meanwhile, as for any Start. In SideStore and Debug builds only for
-    /// now (`UNRELEASED`, until a Lamplit Table round and Paul choose it for the release): the
-    /// first-five-minutes walk, October 23 ("Choosing settings…" takes tens of seconds on a phone,
-    /// with Start off); Paul: "let's build them all".
+    /// chosen and the painting made: tapped before the painting is final, it says Preparing… and
+    /// starts by itself once it is (`startsWhenReady`), as Refine's button opens Refine. The free
+    /// paintings are asked at the tap, so the unlock sheet comes then, never later on a screen the
+    /// painter stopped watching. Meanwhile the flow stays live: a slider touched, Reset to
+    /// Suggested, Refine or a failed generation calls the start off, and Close and Back leave.
+    /// In SideStore and Debug builds only for now (`UNRELEASED`, until a Lamplit Table round and
+    /// Paul choose it for the release): the first-five-minutes walk, October 23 ("Choosing
+    /// settings…" takes tens of seconds on a phone, with Start off); Paul: "let's build them all".
     #if UNRELEASED
     private static let startsEarly = true
     #else
     private static let startsEarly = false
     #endif
 
-    /// Start Painting was tapped and the painting it starts is still being made.
-    private var isPreparingStart: Bool { Self.startsEarly && isStarting && !model.isFinal }
+    /// Start Painting was tapped and waits for the painting to be made.
+    private var isPreparingStart: Bool { startsWhenReady }
+
+    /// The painting may start once it is made: the settings chosen and the full resolution there.
+    private var isReadyToStart: Bool { model.isFinal && !model.isChoosingSettings }
+
+    /// A start asked for early is called off.
+    private func callOffStart() {
+        if startsWhenReady { startsWhenReady = false }
+    }
 
     /// Starts the painting, once a painting of the painter's own photo may (`UnlimitedPaintings`):
     /// without the unlock and a free painting left, the unlock's sheet instead.
     private func start() {
-        guard !isStarting else { return }
+        guard !isStarting, !startsWhenReady else { return }
         titleFocused = false
-        isStarting = true
         let ownPhoto = isOwnPhoto
+        if Self.startsEarly && !isReadyToStart {
+            // Early: the free paintings now, the start once the painting is made.
+            startsWhenReady = true
+            Task {
+                guard await paintings.mayStart(ownPhoto: ownPhoto) else {
+                    // Unless called off, or started meanwhile (which asks again).
+                    if startsWhenReady {
+                        startsWhenReady = false
+                        offersUnlock = true
+                    }
+                    return
+                }
+                // Made while the App Store answered.
+                if startsWhenReady && isReadyToStart {
+                    startsWhenReady = false
+                    start()
+                }
+            }
+            return
+        }
+        isStarting = true
         Task {
             do {
                 guard await paintings.mayStart(ownPhoto: ownPhoto) else {

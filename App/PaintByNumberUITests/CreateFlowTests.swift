@@ -77,6 +77,33 @@ final class CreateFlowTests: XCTestCase {
             "The painting didn't open by itself once it was made")
     }
 
+    /// A slider touched while an early Start waits calls it off: Start Painting comes back, and no
+    /// painting opens.
+    @MainActor
+    func testASliderCallsOffAnEarlyStart() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "30"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
+        // The suggestion first, so the slider moved is the painter's and not under way.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
+        start.tap()
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 5),
+            "Start tapped before the painting was made doesn't say Preparing…")
+        let detail = settingSlider("Detail", in: app)
+        XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
+        detail.adjust(toNormalizedSliderPosition: 0.9)
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "isEnabled == true AND value != %@", "Preparing…"), timeout: 10),
+            "Touching a slider didn't call the early Start off")
+        sleep(5)
+        XCTAssertFalse(app.staticTexts["The Great Wave, 0 percent painted"].exists, "A called-off Start opened the painting")
+    }
+
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
