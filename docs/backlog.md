@@ -5,7 +5,8 @@
 Paul: "I'm not sure we have enough going on to justify the front desk pattern anymore right now",
 then "Do all five yeah". Sessions now report to Paul directly (push notification when something
 reaches SideStore, is blocked or needs him); everything else in CLAUDE.md › Working with Paul still
-holds. The table below is as of October 18 and is no longer kept.
+holds. The table below was the desk's until October 18; since then each session keeps its own
+rows (CLAUDE.md › Working with Paul › Backlog commits).
 
 **Running:** Refine Toolbox builder (`session_01FVkR2j8KVZmvGcQ4pnFc1u`): the whole Refine
 Toolbox (https://claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH), a drawing app at its core, behind
@@ -27,9 +28,9 @@ Refine Studio phase 1 (main f55728e, 1.0.512). Parked: Start From at
   and Emily on hold.
 - Parked unpushed: the LandscapeLayout flake fix on `claude/flake-fixes-2` in the workbench.
 
-Everything Paul asks for, decides or is waiting on, kept by the front desk session
-(`.claude/skills/front-desk/SKILL.md`), which alone edits this file and commits it with
-`[skip ci]`. Paul's ideas worth keeping as visions still go to `docs/ideas.md`, in his words; this
+Everything Paul asks for, decides or is waiting on, one row each, kept by the session that owns
+it, committed with `[skip ci]` (the front desk, `.claude/skills/front-desk/SKILL.md`, kept it
+alone until it retired). Paul's ideas worth keeping as visions still go to `docs/ideas.md`, in his words; this
 table is their working list. One row per thing, newest at the bottom. *Paul's words* quotes him
 exactly, cut short with "…"; an empty cell means none were recorded. *Where* names the session
 (its title) or the branch.
