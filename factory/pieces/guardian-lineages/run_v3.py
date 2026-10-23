@@ -2,6 +2,7 @@
 
 usage: python3 run_v3.py <lineages-v3.json> <guardian-id> <out dir> [steps, default 1 2 3 | wild]
        wild: one wildcard plate only; PLATES=<dir of plates> gives it the guardian's three jumps to answer.
+       BREAK=<text> suggests a way to break the rule (wildcards.json's menu); AVOID=<text> names a move to skip.
        NOWILD=1 leaves the optional wildcard out (for a redo).
 
 No image is attached: Codex sees only the card and the steps (RULE.md, How it runs). It may add
@@ -14,7 +15,7 @@ PLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'prompts', '_pl
 
 def prompt(g, steps, out, wild=True):
     if steps == ['wild']:
-        return wild_prompt(g, out)
+        return wild_prompt(g, out, os.environ.get('BREAK'), os.environ.get('AVOID'))
     c = g['card']
     lines = [f"Use the built-in image_gen tool (imagegen skill, built-in mode). Make one image_gen call "
              f"for each of these steps: {' '.join(map(str, steps))} (plus the optional wildcard at the end), no retries, then stop. Do not write code and do not "
@@ -56,7 +57,7 @@ def card_lines(g):
     return lines
 
 
-def wild_prompt(g, out):
+def wild_prompt(g, out, suggestion=None, avoid=None):
     """One wildcard plate that breaks the rule on purpose (RULE.md, Room to break it)."""
     steps = "\n".join(f"Step {i}, {s['title']} ({s['date']}): {s['medium']}. {s.get('native', '')}" for i, s in enumerate(g['steps']) if i)
     trail = " <- ".join(s['short'] for s in g['steps'])
@@ -73,6 +74,10 @@ def wild_prompt(g, out):
         "THE RULE you are free to break: carry the guardian's idea back, not its picture; each step is how that tradition, with "
         "its own tools, conventions and knowledge, would make the guardian's subject; no shapes hidden in landscapes, no "
         "double exposures, nothing in a later artist's manner.",
+        "",
+        *([f"A suggested way to break it, different from the other guardians' this time: {suggestion} "
+           "It's a suggestion: if you see a better break, take that instead."] if suggestion else []),
+        *([f"Please don't repeat this move: {avoid}"] if avoid else []),
         "",
         *card_lines(g), "", steps, "",
         open(PLATE, encoding='utf-8').read().strip(), "",

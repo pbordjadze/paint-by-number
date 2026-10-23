@@ -52,6 +52,12 @@ Each guardian gets a card with three parts:
   just mention it: one extra plate per guardian that breaks a rule on purpose, saved beside the
   others (`step-<N>-wild.png`) with one line saying which rule it breaks and why. It goes on the
   page next to the plate it answers, labelled as a wildcard, for Paul to judge.
+- Vary the wildcards. Paul, on the first four: "they all kinda broke the rule in the same way and
+  I'd prefer if they didn't". All four went to the real material, today. So a batch gives each
+  run a different suggested break from the menu in `wildcards.json` (sideways, forward, a scene,
+  an absence, a hybrid, what it inspired, scale, a new subject, the inside, a copy) and names the
+  moves earlier wildcards already made. A suggestion, not an order: a run that sees a better
+  break takes it.
 - Suggestions about the rule itself are welcome too (a better test, a card that's wrong, a lineage
   that should run another way); write them in the run's notes and on the page.
 - A redo is for a plate that has lost its idea or its craft, not for one that broke a rule in an

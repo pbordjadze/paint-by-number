@@ -19,6 +19,7 @@ h1{font-weight:normal;font-size:30px;margin:0 0 6px}
 .lede{color:#c9c0b2;max-width:900px}
 .row{margin:46px 0 0;padding-top:26px;border-top:1px solid #4a453f}
 .row h2{font-weight:normal;font-size:25px;margin:0}
+h2.section{font-weight:normal;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#e7c98f;margin:56px 0 -20px}
 .chain{font-style:italic;color:#d8cdb9;margin:2px 0 14px}
 .plates{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .plates.five{grid-template-columns:repeat(5,1fr)}
@@ -94,13 +95,15 @@ def main(data_path, plates, out):
             shutil.copy(os.path.join(plates, src), os.path.join(out, src))
             figs.append(f'<figure><img src="{src}" alt="{esc(w["title"])}" loading="lazy">'
                         f'<figcaption><b>Wildcard: {esc(w["title"])}</b><br>{esc(w["medium"])}<br>'
-                        f'<span class="kind spiritual">breaks the rule</span> {esc(w["link"])}'
+                        f'<span class="kind spiritual">{esc(w.get("kind", "breaks the rule"))}</span> {esc(w["link"])}'
                         + (f'<br><span class="note">{esc(w["note"])}</span>' if w.get('note') else '') + '</figcaption></figure>')
         sources = ''.join(f'<li><b>{esc(s["short"])}</b>: {esc(s.get("source", ""))}'
                           + (f' <a href="{esc(s["url"])}">{esc(s["url"])}</a>' if s.get('url') else '') + '</li>'
                           for s in g['steps'][1:])
         chain = ' \u2190 '.join(s['short'] for s in g['steps'])
         note = f'<p class="note">{esc(g["note"])}</p>' if g.get('note') else ''
+        if g.get('section'):
+            rows.append(f'<h2 class="section">{esc(g["section"])}</h2>')
         rows.append(f"""
 <section class="row" id="{g['id']}">
   <h2>{esc(g['name'])}</h2>

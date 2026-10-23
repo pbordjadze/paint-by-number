@@ -1,0 +1,17 @@
+{
+ "avoid": "Going to the raw material or the real thing itself, today: a fossil, a meteorite, a sound or wire sculpture made now, a found natural object. The first four wildcards (Eno, Dino, Scherenschnitt, the Moon) all made that same move.",
+ "menu": {
+  "sideways": "Go sideways: the same subject made by a tradition on another continent that never touched this line, in that tradition's own medium.",
+  "forward": "Go forward instead of back: the next step this line has not taken yet, a plausible object from a future tradition.",
+  "scene": "Break the single-object framing: a whole working scene, several objects in use together on the catalogue backdrop.",
+  "absence": "Show the absence: the trace the object leaves when it is gone (a stain, an empty stand or case, a worn ring, a mould), made with real craft.",
+  "hybrid": "Merge two of the steps into one plausible object that never existed, as if craftspeople of both eras had made it together.",
+  "inspired": "Turn the trail around: something this guardian's line later inspired, outside its own medium.",
+  "scale": "Change the scale: a tiny or monumental version, its scale made obvious within the catalogue framing.",
+  "essence": "Break the essence: keep one step's look and craft exactly, but give it a different subject that still rhymes with the guardian.",
+  "inside": "Show the inside: the object opened up, an X-ray, or the maker's or conservator's view of how it works.",
+  "copy": "A copy: a forgery, souvenir or student copy of one of the steps, made a century later and honest about being a copy."
+ },
+ "batch2": {"bulat-okudzhava": "inspired", "glassblower": "scale", "snow-queen": "essence", "nutcracker": "inside", "baba-yaga": "copy",
+            "pirosmani": "sideways", "emily-dickinson": "forward", "balanchine": "scene", "sen-no-rikyu": "absence", "keynes": "hybrid"}
+}

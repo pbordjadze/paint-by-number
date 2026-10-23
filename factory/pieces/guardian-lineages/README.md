@@ -88,3 +88,27 @@ break it).
   no redos (this run predates the wildcard). The prompts as run are in `prompts-v3/`.
 - The page at tailnet :8445 `/lineages/` shows version 3 (picks `lineage-v3-<id>`); versions 2
   and 1 are at `/lineages/v2/` and `/lineages/v1/`.
+
+## Ten more, and varied wildcards (October 23)
+
+Paul on version 3: "These are all so good—only issue is Dino's has become multiple Dinos.
+Otherwise these are perfect and I'd like to see a batch of another 10 done this same way", then
+"do the wildcard first". On the wildcards: "they all kinda broke the rule in the same way and I'd
+prefer if they didn't. Keep these ones anyways. For those 10, do the wildcards! But see if we can
+get more variety".
+
+- The pilot: a wildcard each (`run_v3.py ... wild`, which shows Codex the three jumps); Dino's card
+  now says he is one animal, and his 1830 plate was redrawn with one plesiosaur.
+- Ten more, chosen by Claude for range (people, characters and crafts; Hope left out as a living
+  person, the Hedge Witch as always): Niko, Emily, George, Rikyū, Maynard, Bulat, the
+  Glassblower, the Snow Queen, the Nutcracker, the Baba Yaga.
+  - Two Claude research agents wrote the chains with sources (`research-batch2/`).
+  - Claude checked them: Bulat's torban is marked spiritual, the Glassblower's last hop
+    inferred, and the Baba Yaga's lubok step is her own oldest picture, since her plate 0 is
+    already a lubok.
+  - `to_lineages.py` and `clean.py` turn them into `lineages-batch2.json`.
+- Plate 0s: `run_step0.sh` with `step0.tsv`, the media from `docs/marginarium-pets.md`. Jumps:
+  `run_v3.py`, no image. Wildcards: each guardian got a different suggested break from
+  `wildcards.json` and was told not to repeat the pilot's.
+- 60 image generations, no redos. Some lettering is the model's invention (noted on its row).
+- `build_site.py ~/pets-drafts/site/lineages` builds the whole page: the ten above the pilot, versions 2 and 1 below.
