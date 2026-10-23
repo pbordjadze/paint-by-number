@@ -19,7 +19,8 @@ synchronized folder would bundle it into the app.
   no content types: `loadTransferable` answers nil, however often it is asked, and the preview
   said "Couldn’t Open Photo" (CI, Oct 17). `CreateModel.load(item:)` keeps the data of the last
   three library photos by identifier and uses the kept copy then. The preview opens either way, so
-  `CreateFlowTests` waits for Start Painting to enable after the second pick (`previewLoads`).
+  `CreateFlowTests` waits for Start Painting to enable after the second pick, and for the settings'
+  chip (`previewLoads`, `waitForSuggestion`: in SideStore and Debug builds Start works from the first draft).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
@@ -573,7 +574,9 @@ Conventions).
   loading → analyzing (`SubjectImportance.analyze`: importance map plus `SubjectHints`, faces and
   animals, in one Vision pass, beside the line-art inputs) → suggesting (`AutoSettings.choose` on
   the draft, `CreateModel.maxCandidates`; its first candidate shows as a draft at once, unless the
-  preview is line art, sliders and Start wait) → the winner's draft (unless it is that candidate
+  preview is line art, sliders and Start wait; in SideStore and Debug builds Start is on from that draft,
+  and tapped before the painting is made waits for it, `CreateModel.askForStart`, called off as a
+  waiting Refine is) → the winner's draft (unless it is that candidate
   and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
   (a `withTaskCancellationHandler` flag reaches every candidate's thread).
 - `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`, reported through

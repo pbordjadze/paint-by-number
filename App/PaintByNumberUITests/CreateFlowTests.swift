@@ -53,8 +53,6 @@ final class CreateFlowTests: XCTestCase {
             "Panning moved the divider, or a second double tap didn't fit the layers again")
     }
 
-    /// The preview's title field offers the sample's name and names the painting with what
-    /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
     /// Start Painting tapped before the painting is made says Preparing…, and the painting opens by
     /// itself once it is (SideStore and Debug builds). `-slowFullResolution` keeps the full
     /// resolution waiting, as a phone's does.
@@ -104,6 +102,8 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertFalse(app.staticTexts["The Great Wave, 0 percent painted"].exists, "A called-off Start opened the painting")
     }
 
+    /// The preview's title field offers the sample's name and names the painting with what
+    /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
@@ -114,6 +114,8 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
+        // Start works from the first draft: what is timed below is a start from settings chosen.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
 
         let title = app.textFields["painting-title"]
         XCTAssertTrue(title.exists, "The preview has no title field")
@@ -536,6 +538,9 @@ final class CreateFlowTests: XCTestCase {
         while !loaded, !failure.exists, Date() < deadline {
             loaded = waitFor(start, toMatch: enabled, timeout: 2)
         }
+        // Start works from the first draft (SideStore and Debug builds): the settings are chosen
+        // once the chip shows.
+        if loaded { loaded = waitForSuggestion(in: app, timeout: max(1, deadline.timeIntervalSinceNow)) }
         attachScreenshot(of: app, named: shot)
         if !loaded { attachTree(of: app, named: "\(shot)-tree") }
         XCTAssertFalse(failure.exists, "\(what) says the photo couldn’t be opened")
