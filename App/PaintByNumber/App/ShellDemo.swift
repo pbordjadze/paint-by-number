@@ -20,6 +20,8 @@ import PaintCore
 /// - `gallery-empty`: the empty state, once its sketch has painted itself (SideStore and Debug).
 /// - `gallery-first-run`: the gallery as the first launch leaves it: the library's two starter
 ///   paintings, none of them painted on (ready to paint, nothing in progress).
+/// - `gallery-preparing`: the first launch's gallery while its two starters are still being made:
+///   their placeholders, held there (`Library.holdPlaceholders`), ready once their pictures load.
 /// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
 ///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
 ///   Discard; the second with every localized string twice as long.
@@ -99,7 +101,7 @@ import PaintCore
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createRefineGuide, createSuggested, createCustom, createFromFile,
          createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
@@ -117,6 +119,7 @@ enum ShellDemo: Equatable {
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
         case "gallery-first-run": .galleryFirstRun
+        case "gallery-preparing": .galleryPreparing
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-send", "gallery-send-dark", "gallery-send-long-text": .gallerySend
@@ -336,6 +339,15 @@ enum ShellDemo: Equatable {
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
                 DemoMode.markReady()
             })
+        case .galleryPreparing:
+            // The first launch's pages before they are made: nothing is made, the placeholders stay.
+            library.holdPlaceholders(Sample.starters)
+            Task {
+                // Ready once their pictures are loaded, at the size the cards ask for (the cache
+                // hands the cards the same images).
+                for sample in Sample.starters { _ = await SampleImages.shared.load(sample, maxPixelSize: PlaceholderCard.pictureSize) }
+                DemoMode.markReady()
+            }
         case .galleryTip:
             // The first launch's gallery, ready once the tip the scenario shows is up.
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
