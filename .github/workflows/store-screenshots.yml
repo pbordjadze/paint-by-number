@@ -41,6 +41,13 @@ jobs:
     # Room for every wait of the script (15 minutes each) after the uploads.
     timeout-minutes: 75
     steps:
+      - name: From main only
+        # Upload sends App Store Connect what this run checked out: only main's reviewed code goes
+        # (the header's rule).
+        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main'
+        run: |
+          echo "::error::Upload runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
+          exit 1
       - uses: actions/checkout@v5
       - name: Slides from the feedback repository
         id: slides

@@ -6,10 +6,10 @@ set -uo pipefail
 UDID="$1"
 mkdir -p out/attachments out/crashes
 cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || true
-# The app's log of the run (seeding, opening paintings, the canvas, feedback, the create flow),
-# should a test lose the app.
+# The app's log of the run (seeding, opening paintings, the canvas, feedback, the create flow, the
+# store), should a test lose the app: every category of `Log`, so a new one comes along.
 xcrun simctl spawn "$UDID" log show --last 90m --info --style compact \
-  --predicate 'subsystem == "com.pbordjadze.paintbynumber" AND category IN {"feedback", "library", "demo", "canvas", "create", "tips"}' \
+  --predicate 'subsystem == "com.pbordjadze.paintbynumber"' \
   > out/test-app.log 2>/dev/null || true
 grep -hE "error:|FAIL:" out/app-build.log out/app-test.log out/release-build.log out/release-check.log 2>/dev/null \
   | sort -u > out/errors.txt || true

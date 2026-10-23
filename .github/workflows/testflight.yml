@@ -57,6 +57,13 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
+      - name: From main only
+        # Upload sends App Store Connect and the testers what this run checked out: only main's
+        # reviewed code goes (the header's rule).
+        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main'
+        run: |
+          echo "::error::Upload runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
+          exit 1
       - uses: actions/checkout@v5
       - name: API key
         env:

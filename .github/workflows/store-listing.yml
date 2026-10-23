@@ -31,6 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: From main only
+        # Apply sends App Store Connect what this run checked out: only main's reviewed code goes
+        # (the header's rule).
+        if: github.event_name == 'workflow_dispatch' && inputs.apply && github.ref_name != 'main'
+        run: |
+          echo "::error::Apply runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Apply for a dry run"
+          exit 1
       - uses: actions/checkout@v5
       # Installed in a step of its own, with no secret in reach.
       - name: Python

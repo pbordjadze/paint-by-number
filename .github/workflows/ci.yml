@@ -33,8 +33,10 @@ on:
         type: boolean
         default: false
 
+# Read only, but for the two jobs that publish (the IPA's release and the SideStore source; the
+# report's ref): the others build and run code that has no need to push.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -55,6 +57,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+        with: { persist-credentials: false }
       - name: Install Python
         # Pillow decodes the regression's photos and draws its sheets (from pbn's rasters; no
         # node needed); the string catalog check is plain Python; numpy is for the making-of
@@ -111,6 +114,11 @@ jobs:
           python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'
           python3 tools/marginarium.py check
           python3 tools/strings_check.py | tee out/strings-check.log
+      - name: CI report script
+        # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: python3 ci/report.py --self-test
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
@@ -130,7 +138,7 @@ jobs:
         job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
-        with: { fetch-depth: 2 }
+        with: { fetch-depth: 2, persist-credentials: false }
       - name: Plan
         # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
         # out (`-only-testing`, `-skip-testing`; neither: all). The Settings and play mailbox UI
@@ -254,13 +262,20 @@ jobs:
       - name: Pipeline benchmark (Apple silicon)
         id: bench
         if: ${{ !cancelled() && env.RELEASE == '1' && env.COMPILE != '1' }}
+        env:
+          BEFORE: ${{ github.event.before }}
         run: |
           # Only when PaintCore differs from the shipping branch (on the shipping branch itself:
-          # from the previous commit), so a feature branch's later app-only commits keep
-          # benchmarking its pipeline changes; app-only work skips the 2-minute benchmark.
-          BASE=HEAD~1
-          if [[ "$GITHUB_REF_NAME" != main ]] && git fetch -q --depth=1 origin main; then BASE=FETCH_HEAD; fi
-          if git rev-parse -q --verify "$BASE" >/dev/null && git diff --quiet "$BASE" -- Sources Package.swift; then
+          # from where the push found it, as a night train lands several merges at once), so a
+          # feature branch's later app-only commits keep benchmarking its pipeline changes;
+          # app-only work skips the 2-minute benchmark. No base to compare with: it runs.
+          BASE=
+          if [[ "$GITHUB_REF_NAME" != main ]]; then
+            git fetch -q --depth=1 origin main && BASE=FETCH_HEAD
+          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            git fetch -q --depth=1 origin "$BEFORE" && BASE=FETCH_HEAD
+          fi
+          if [[ -n "$BASE" ]] && git diff --quiet "$BASE" -- Sources Package.swift; then
             echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
           fi
           swift build -c release --product pbn 2>&1 | tail -2
@@ -305,6 +320,8 @@ jobs:
     name: IPA for SideStore (unsigned device build)
     # On a branch, `[ipa]` in the commit's message archives without publishing.
     if: github.ref_name == 'main' || contains(github.event.head_commit.message, '[ipa]')
+    permissions:
+      contents: write
     runs-on: macos-26
     timeout-minutes: 30
     env:
@@ -379,6 +396,8 @@ jobs:
     name: Publish report
     needs: [core, apple, ipa]
     if: always()
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -408,7 +427,10 @@ jobs:
             else
               JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE")
             fi
-            python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }}
+            # Should the script break, the jobs' results still reach the ref (and its waiters).
+            python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }} \
+              || printf '%s\n' "core: ${{ needs.core.result }}" "${JOBS[@]/=/: }" "ipa: ${{ needs.ipa.result }}" \
+                "" "ci/report.py failed: no details (its error is in this job's log)"
           } > STATUS.md
           cat STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
