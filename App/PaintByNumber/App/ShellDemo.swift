@@ -343,8 +343,9 @@ enum ShellDemo: Equatable {
             // The first launch's pages before they are made: nothing is made, the placeholders stay.
             library.holdPlaceholders(Sample.starters)
             Task {
-                // Their pictures load from the bundle in well under this.
-                try? await Task.sleep(for: .seconds(3))
+                // Ready once their pictures are loaded, at the size the cards ask for (the cache
+                // hands the cards the same images).
+                for sample in Sample.starters { _ = await SampleImages.shared.load(sample, maxPixelSize: PlaceholderCard.pictureSize) }
                 DemoMode.markReady()
             }
         case .galleryTip:

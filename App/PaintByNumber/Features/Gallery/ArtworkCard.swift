@@ -208,6 +208,9 @@ struct PlaceholderCard: View {
     let placeholder: Library.Placeholder
     @State private var image: CGImage?
 
+    /// The long side its picture is decoded at.
+    static let pictureSize = 400
+
     /// The picture shows sharp, in its colors, so the first launch's wait has the page's picture to
     /// look at rather than a grey blur (the first-five-minutes walk, October 23; Paul: "let's build
     /// them all"), the brush pulsing on glass over it. SideStore and Debug builds only for now
@@ -249,7 +252,7 @@ struct PlaceholderCard: View {
             }
             .padding(.horizontal, 4)
         }
-        .task { image = await SampleImages.shared.load(placeholder.sample, maxPixelSize: 400) }
+        .task { image = await SampleImages.shared.load(placeholder.sample, maxPixelSize: Self.pictureSize) }
         .accessibilityElement(children: .combine)
     }
 
