@@ -35,8 +35,10 @@ final class LandscapeLayoutTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
-        // Start Painting enables at the draft; the full-resolution template is still updating, and
-        // auditing while its status capsule fades out reports an element that has just gone.
+        // Start Painting enables at the draft; the settings may still be chosen and the full-resolution
+        // template is still updating, and auditing while the status capsule fades out reports an
+        // element that has just gone.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
         let updating = app.staticTexts["Updating…"]
         XCTAssertTrue(waitUntil(timeout: 120) { !updating.exists }, "The template was still updating")
         sleep(1)

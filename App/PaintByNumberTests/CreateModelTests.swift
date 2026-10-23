@@ -283,6 +283,38 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// Start Painting tapped before the painting is made waits for it and goes by itself
+    /// (`startsNow`); a setting changed meanwhile calls it off, touch heard or not (VoiceOver's
+    /// adjust, a key), and so do Reset to Suggested and a new photo.
+    @Test func aStartAskedForEarlyGoesOnceMadeUnlessASettingChanges() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.phase == .suggesting }
+        model.askForStart()
+        #expect(model.startAsked && !model.startsNow, "Asked for while the settings are chosen")
+        try await waitUntil(timeout: .seconds(60)) { model.startsNow }
+        #expect(model.isFinal && !model.isChoosingSettings)
+        model.withdrawStart()
+        #expect(!model.startAsked && !model.startsNow)
+
+        // A setting changed with no touch heard: the start it was asked on is off.
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.askForStart()
+        #expect(model.startAsked)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        #expect(!model.startAsked, "A changed setting left the start on")
+
+        model.askForStart()
+        model.resetToSuggested()
+        #expect(!model.startAsked, "Reset to Suggested left the start on")
+        model.askForStart()
+        model.load(sample: try #require(Sample.named("great-wave")))
+        #expect(!model.startAsked, "A new photo left the start on")
+        model.cancelAll()
+    }
+
     /// A setting changed after Refine was tapped calls the wait off, even when the slider's touch
     /// was never heard (CI, Oct 18: a drag's start never reached `setAdjusting`).
     @Test func aRefineWaitedForIsCalledOffByAChangedSetting() async throws {

@@ -53,6 +53,55 @@ final class CreateFlowTests: XCTestCase {
             "Panning moved the divider, or a second double tap didn't fit the layers again")
     }
 
+    /// Start Painting tapped before the painting is made says Preparing…, and the painting opens by
+    /// itself once it is (SideStore and Debug builds). `-slowFullResolution` keeps the full
+    /// resolution waiting, as a phone's does.
+    @MainActor
+    func testStartTappedEarlyStartsByItself() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "20"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
+        start.tap()
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 5),
+            "Start tapped before the painting was made doesn't say Preparing…")
+        attachScreenshot(of: app, named: "create-start-preparing")
+        XCTAssertTrue(
+            app.staticTexts["The Great Wave, 0 percent painted"].waitForExistence(timeout: 180),
+            "The painting didn't open by itself once it was made")
+    }
+
+    /// A slider touched while an early Start waits calls it off: Start Painting comes back, and no
+    /// painting opens.
+    @MainActor
+    func testASliderCallsOffAnEarlyStart() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "30"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
+        // The suggestion first, so the slider moved is the painter's and not under way.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
+        start.tap()
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 5),
+            "Start tapped before the painting was made doesn't say Preparing…")
+        let detail = settingSlider("Detail", in: app)
+        XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
+        detail.adjust(toNormalizedSliderPosition: 0.9)
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "isEnabled == true AND value != %@", "Preparing…"), timeout: 10),
+            "Touching a slider didn't call the early Start off")
+        sleep(5)
+        XCTAssertFalse(app.staticTexts["The Great Wave, 0 percent painted"].exists, "A called-off Start opened the painting")
+    }
+
     /// The preview's title field offers the sample's name and names the painting with what
     /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
     @MainActor
@@ -65,6 +114,8 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
+        // Start works from the first draft: what is timed below is a start from settings chosen.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
 
         let title = app.textFields["painting-title"]
         XCTAssertTrue(title.exists, "The preview has no title field")
@@ -104,7 +155,7 @@ final class CreateFlowTests: XCTestCase {
         waitForExpectations(timeout: 90)
 
         let chip = app.descendants(matching: .any)["settings-origin"]
-        XCTAssertTrue(chip.waitForExistence(timeout: 10), "The preview has no settings chip")
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview has no settings chip")
         XCTAssertEqual(chip.value as? String, "Suggested for this picture")
         XCTAssertEqual(chip.label, "Settings")
 
@@ -487,6 +538,9 @@ final class CreateFlowTests: XCTestCase {
         while !loaded, !failure.exists, Date() < deadline {
             loaded = waitFor(start, toMatch: enabled, timeout: 2)
         }
+        // Start works from the first draft (SideStore and Debug builds): the settings are chosen
+        // once the chip shows.
+        if loaded { loaded = waitForSuggestion(in: app, timeout: max(1, deadline.timeIntervalSinceNow)) }
         attachScreenshot(of: app, named: shot)
         if !loaded { attachTree(of: app, named: "\(shot)-tree") }
         XCTAssertFalse(failure.exists, "\(what) says the photo couldn’t be opened")
