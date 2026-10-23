@@ -1,0 +1,46 @@
+Attributes: Button, 0x106244000, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Element subtree:
+ →Button, 0x106244000, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Path to element:
+ →Application, 0x1140e9400, pid: 51505, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1140e92c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x1140e9180, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x1140e9040, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x1140eb5c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x1140eb980, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x1140ebac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x1140ea6c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x1140ea800, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x1140ea940, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Other, 0x1140eaa80, {{0.0, 0.0}, {1032.0, 1376.0}}
+            ↳Other, 0x1140eabc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+             ↳Button, 0x106244000, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x113f3d7c0, pid: 51505, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x113f3d540, {{17.0, 6.0}, {44.0, 44.0}}, identifier: 'feedback-cancel', label: 'Cancel'
+      Button, 0x113f3d040, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+      Button, 0x113f3d900, {{901.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-redo', label: 'Redo', Disabled
+      Button, 0x113f3cf00, {{958.5, 11.0}, {61.5, 34.5}}, identifier: 'feedback-next', label: 'Next'
+      Button, 0x113f3de00, {{330.5, 1308.0}, {44.0, 44.0}}, identifier: 'feedback-tool-pen', label: 'Pen', Selected
+      Button, 0x113f3c780, {{392.5, 1308.0}, {44.0, 44.0}}, identifier: 'feedback-tool-highlighter', label: 'Highlighter'
+      Button, 0x113f3c500, {{454.5, 1308.0}, {44.0, 44.0}}, identifier: 'feedback-tool-eraser', label: 'Eraser'
+      Button, 0x113f3d400, {{533.5, 1308.0}, {44.0, 44.0}}, label: 'Red', Selected
+      Button, 0x113f3c640, {{595.5, 1308.0}, {44.0, 44.0}}, label: 'Blue'
+      Button, 0x113f3db80, {{657.5, 1308.0}, {44.0, 44.0}}, label: 'Green'
+      Button, 0x1136fbd40, {{144.4, 727.3}, {44.0, 44.0}}, identifier: 'canvas-area-101', label: 'Area 10', value: not painted, left
+      Button, 0x1136f9040, {{42.8, 782.0}, {44.0, 44.0}}, identifier: 'canvas-area-114', label: 'Area 10', value: not painted, botto...
+      Button, 0x1136f8780, {{67.2, 773.8}, {44.0, 44.0}}, identifier: 'canvas-area-117', label: 'Area 10', value: not painted, botto...
+      Button, 0x1136faf80, {{191.8, 781.5}, {44.0, 44.0}}, identifier: 'canvas-area-125', label: 'Area 10', value: not painted, botto...
+      Button, 0x1062d7e80, {{364.3, 956.1}, {44.0, 44.0}}, identifier: 'canvas-area-201', label: 'Area 10', value: not painted, bottom
+      Button, 0x1062d5040, {{393.1, 953.4}, {44.0, 44.0}}, identifier: 'canvas-area-176', label: 'Area 10', value: not painted, bottom
+      Button, 0x1062d5180, {{418.0, 968.9}, {44.0, 44.0}}, identifier: 'canvas-area-203', label: 'Area 10', value: not painted, bottom
+    }
+    ↪︎Find: Elements matching predicate '"feedback-undo" IN identifiers'
+      Output: {
+        Button, 0x1136fb700, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+      }

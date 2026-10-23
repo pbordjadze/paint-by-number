@@ -1,0 +1,21 @@
+Attributes: Button, 0x1140eb0c0, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Element subtree:
+ →Button, 0x1140eb0c0, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Path to element:
+ →Application, 0x1140e9400, pid: 51505, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x1140e92c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x1140e9180, {{inf, inf}, {0.0, 0.0}}
+    ↳Other, 0x1140e9040, {{inf, inf}, {0.0, 0.0}}
+     ↳Other, 0x1140eb5c0, {{inf, inf}, {0.0, 0.0}}
+      ↳Other, 0x1140eb980, {{inf, inf}, {0.0, 0.0}}
+       ↳Other, 0x1140ebac0, {{inf, inf}, {0.0, 0.0}}
+        ↳Other, 0x1140ea6c0, {{inf, inf}, {0.0, 0.0}}
+         ↳Other, 0x1140ea800, {{inf, inf}, {0.0, 0.0}}
+          ↳Other, 0x1140ea940, {{inf, inf}, {0.0, 0.0}}
+           ↳Other, 0x1140eaa80, {{inf, inf}, {0.0, 0.0}}
+            ↳Other, 0x1140eabc0, {{inf, inf}, {0.0, 0.0}}
+             ↳Button, 0x1140eb0c0, {{839.5, 6.0}, {44.0, 44.0}}, identifier: 'feedback-undo', label: 'Undo', Disabled
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Button
+    ↪︎Find: Elements matching predicate '"feedback-undo" IN identifiers'
