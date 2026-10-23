@@ -13,7 +13,7 @@ final class PaintingTipsTests: XCTestCase {
         let tip = app.staticTexts["Tap to Paint"]
         XCTAssertTrue(tip.waitForExistence(timeout: 90), "The first tip didn't appear")
         XCTAssertTrue(
-            app.staticTexts["Pick a color below, then tap an area marked with its number to fill it."].exists,
+            app.staticTexts["Pick a color, then tap an area marked with its number to fill it."].exists,
             "The first tip doesn't say what to do")
         attachScreenshot(of: app, named: "first-tip")
 

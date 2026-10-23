@@ -18,7 +18,7 @@ nonisolated struct FirstPaintTip: Tip {
 
     var id: String { PaintTips.scoped("tip.firstPaint") }
     var title: Text { Text("Tap to Paint") }
-    var message: Text? { Text("Pick a color below, then tap an area marked with its number to fill it.") }
+    var message: Text? { Text("Pick a color, then tap an area marked with its number to fill it.") }
     var image: Image? { Image(systemName: "hand.tap") }
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
