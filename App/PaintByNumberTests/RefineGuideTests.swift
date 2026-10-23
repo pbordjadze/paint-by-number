@@ -41,10 +41,9 @@ struct RefineGuideTests {
         #expect(UserDefaults.standard.bool(forKey: key) == false)
     }
 
-    /// The guide opens on the tool in hand, or on The Basics for one it doesn't list.
+    /// The guide opens on the tool in hand.
     @Test func theGuideOpensOnTheToolInHand() {
         #expect(RefineGuideTopic.opening(at: .merge) == .tool(.merge))
-        #expect(RefineGuideTopic.opening(at: .splitter) == (RefineView.offersSplitter ? .tool(.splitter) : .basics))
     }
 
     /// A practice is final at once, with nothing generated: an edit lays on it, and Cancel's way

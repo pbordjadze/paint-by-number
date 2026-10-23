@@ -396,9 +396,11 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   (the area card's picker and its palette chips read it with every look in it), so looks and
   repaints laid before it leave it as sent (`TemplateEditor.recolored`): a paint's own color,
   picked after a look, lands on that paint.
-- **Split.** Out of Refine's toolbar for now (Paul, October 18: "it's not working right, it like,
-  says 'this area is too small to be a number' or else just doesn't really do it"; the Pen's line
-  recolors what it cuts instead, above); the edit stays, so splits made meanwhile lay as ever.
+- **Split.** Retired from Refine: out of its toolbar on October 18 (Paul: "it's not working
+  right, it like, says 'this area is too small to be a number' or else just doesn't really do
+  it"; the Pen's line recolors what it cuts instead, above), its button and Tool Guide page gone
+  on October 23. The edit stays, so splits made meanwhile lay as ever, and `pbn refine`'s
+  `splitter` gesture still makes one.
   The Color Splitter (Paul, October 18, in place of the detail brushes: "a new brush
   to separate a color cell WITHOUT a line") lays the Pen's line as a draw with paints does,
   nudged the same way, but as undrawn boundaries (`LineLayer.color`): it divides the paint and

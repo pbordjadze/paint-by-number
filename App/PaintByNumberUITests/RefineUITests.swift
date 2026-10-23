@@ -2,7 +2,7 @@ import XCTest
 
 /// The create flow's optional Refine step, as the Toolbox lays it out in Debug builds (its groups:
 /// Ink, Cells, Paint, Numbers, See; a rail of every tool on iPad, tabs on iPhone): the pens, the eraser and
-/// Fill Shape, no Color Splitter, Writing's text marks, Select, Cell Edge and the Bucket, an area's
+/// Fill Shape, Writing's text marks, Select, Cell Edge and the Bucket, an area's
 /// card, Undo and Redo (the buttons and a two-finger tap), Done and Cancel.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
@@ -95,8 +95,7 @@ final class RefineUITests: XCTestCase {
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "The refined preview can't be started")
     }
 
-    /// The toolbar has no Color Splitter for now (`RefineView.offersSplitter`): the Pen's line
-    /// down the sky divides it instead. Text marks a line of text dragged across; there are no
+    /// The Pen's line down the sky divides it. Text marks a line of text dragged across; there are no
     /// detail brushes. Done keeps both.
     @MainActor
     func testPenSplitAndTextCorrections() throws {
@@ -106,7 +105,6 @@ final class RefineUITests: XCTestCase {
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
         XCTAssertFalse(app.buttons["refine-tool-more"].exists, "Refine still has the More Detail brush")
-        XCTAssertFalse(app.buttons["refine-tool-splitter"].exists, "Refine still offers the Color Splitter")
 
         let pen = app.buttons["refine-tool-pen"]
         XCTAssertTrue(waitFor(pen, toMatch: NSPredicate(format: "isSelected == true")), "Refine doesn't start on the pen")

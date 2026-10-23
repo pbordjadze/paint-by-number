@@ -65,10 +65,6 @@
       "comment" : "Refine screen: the tool that gives the current paint a new color everywhere it is used; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
-    "Erasers" : {
-      "comment" : "Refine screen: accessibility label of the button that holds the Eraser and the Smart Eraser (its value names the one it picks)",
-      "extractionState" : "manual"
-    },
     "Eyedropper" : {
       "comment" : "Refine screen: the tool whose tap picks an area's paint, or the photo's color, as the current paint; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
@@ -1809,42 +1805,6 @@
         }
       }
     },
-    "refine.guide.splitter.about" : {
-      "comment" : "Tool Guide, the Color Splitter: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw across a cell to divide it where its color changes in the photo. No line is drawn, and each side takes the photo’s color there."
-          }
-        }
-      }
-    },
-    "refine.guide.splitter.step1" : {
-      "comment" : "Tool Guide, the Color Splitter: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw across a cell where the photo’s color changes."
-          }
-        }
-      }
-    },
-    "refine.guide.splitter.summary" : {
-      "comment" : "Tool Guide, the Color Splitter: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Divides a cell’s color without drawing a line."
-          }
-        }
-      }
-    },
     "refine.guide.text.about" : {
       "comment" : "Tool Guide, Writing: the paragraph about what it does",
       "extractionState" : "manual",
@@ -2829,10 +2789,6 @@
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
       "extractionState" : "manual"
     },
-    "Color Splitter" : {
-      "comment" : "Refine screen: the tool whose stroke divides an area's color in two without drawing a line (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Compare Photo and Page" : {
       "comment" : "Title of the tip at the divider of the New Painting preview",
       "extractionState" : "manual"
@@ -3687,10 +3643,6 @@
     },
     "Fewer or More Areas" : {
       "comment" : "Title of the tip at the Colors slider of the New Painting preview, shown on the second page made",
-      "extractionState" : "manual"
-    },
-    "Fill" : {
-      "comment" : "Refine screen: the Fill tool, whose tap makes the closed shape of a new painting's drawing under it an area of its own, painted the photo's color there (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Finding the subject…" : {
@@ -6253,18 +6205,6 @@
         }
       }
     },
-    "refine.hint.splitter" : {
-      "comment" : "Refine screen: how the Color Splitter works (a stroke divides an area's paint where it goes, each side taking the photo's color there, and draws no line), read by VoiceOver as the hint of its button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw across an area to split it into two colors, with no line between them. Two fingers zoom and move."
-          }
-        }
-      }
-    },
     "refine.hint.text" : {
       "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
@@ -7085,10 +7025,6 @@
       "comment" : "Create flow on iPhone: toolbar button of the enlarged preview that brings back the whole page (the title, every slider and Start Painting)",
       "extractionState" : "manual"
     },
-    "Smart Eraser" : {
-      "comment" : "Refine screen: the Smart Eraser, which rubs lines out of a new painting's drawing or takes out a whole line with a tap (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
     "Smoothness" : {
       "comment" : "Create flow: label of the slider for how smooth the template's outlines are",
       "extractionState" : "manual"
@@ -7248,10 +7184,6 @@
           }
         }
       }
-    },
-    "Text" : {
-      "comment" : "Refine screen: the tool that corrects the lines of text found in the photo, which a painting draws as writing (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
     },
     "Thanks for the feedback!" : {
       "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared through the share sheet (Share Instead in the alert after sending failed)",

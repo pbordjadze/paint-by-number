@@ -2,7 +2,7 @@ import Foundation
 import PaintCore
 import SwiftUI
 
-/// The Refine Toolbox's groups of tools (SideStore and Debug builds, `#if UNRELEASED`; the design:
+/// The Refine Toolbox's groups of tools (the design:
 /// claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH, Paul, October 21, 2026: "a drawing app with the
 /// tools to make a paint by number"). Ink is the lines the painter sees, Cells the shapes of the
 /// color areas, Paint what color each is, Numbers where they sit, and See what shows: each tool
@@ -16,9 +16,7 @@ nonisolated enum RefineGroup: Hashable, CaseIterable {
     var tools: [RefineTool] {
         switch self {
         case .ink: [.pen, .shape, .bendLine, .eraser, .smartEraser]
-        case .cells:
-            RefineView.offersSplitter
-                ? [.select, .cellEdge, .merge, .moveEdge, .fill, .splitter] : [.select, .cellEdge, .merge, .moveEdge, .fill]
+        case .cells: [.select, .cellEdge, .merge, .moveEdge, .fill]
         case .paint: [.bucket, .brush, .eyedropper, .editPaint, .looks]
         case .numbers: [.moveNumber]
         case .see: [.text, .tryPainting]

@@ -37,14 +37,4 @@ extension RefineShape {
         case .star: "star"
         }
     }
-
-    /// The figures Shapes offers: the Toolbox's hexagon and star only in SideStore and Debug
-    /// builds (`#if UNRELEASED`).
-    nonisolated static var offered: [RefineShape] {
-        #if UNRELEASED
-        allCases
-        #else
-        [.line, .rectangle, .oval, .curve]
-        #endif
-    }
 }
