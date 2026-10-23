@@ -138,7 +138,8 @@ before planning app work).
   the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
-  per-agent reports are not committed (they live on their branch and in commit messages); a
+  per-agent reports are not committed here (they live in painting-company; a commit message says
+  what changed and why); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
   Paul's ideas and the backlog are in the private `painting-company` repository (Working with
   Paul › Three layers); `docs/ideas.md` and `docs/backlog.md` only point there.
@@ -510,11 +511,13 @@ him itself, with a push notification once he has gone quiet.
   dig (this repository and the SideStore build); and what is private: the
   `pbordjadze/painting-company` repository holds the backlog, his ideas and words, plans, the
   Lamp and its rounds, the chronicles and the Marginarium, and its CLAUDE.md the rest of how he
-  works. Nothing of it comes here: a commit or comment cites it ("painting-company row 12") and
-  quotes no one. A session that needs it attaches it (`add_repo`).
+  works. Nothing of it comes here: a new commit, comment or doc cites it ("painting-company row
+  12") and quotes no one; quotes already here stay. A session that needs it attaches it
+  (`add_repo`).
 
 - **Merging is standing permission, given once.** When a branch's CI is green, its review is done
-  (below) and the change is what Paul asked for, merge it into `main` without asking. Put
+  (below) and the change is what Paul asked for, merge it into `main` without asking (a docs-only
+  branch, `[skip ci]`, once its review is done: it has no CI to wait for). Put
   anything not yet chosen for the release behind `#if UNRELEASED`, so it reaches his SideStore
   build only. Don't wait for a "yes".
 - **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
@@ -535,8 +538,8 @@ him itself, with a push notification once he has gone quiet.
 - **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
   idle: look at the CI runs queued and in progress (GitHub's Actions list, by branch) before a
   push. Throwaway branches queue behind anything Paul called a must-have.
-  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
-  commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
+  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs-only commits carry
+  `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, and any further push queues again unless it fixes a red run.
 - **Paul's word counts once.** His words in your session, or his comment on a page a session made
@@ -550,7 +553,7 @@ him itself, with a push notification once he has gone quiet.
   mimicking mine is good. So then it can just kind of be clear when it's me writing"). Write as
   yourself: clear, precise and recognizably not Paul. Never imitate his voice or put words in his
   mouth: quote him verbatim and attribute it, as the backlog's *Paul's words* do (in
-  painting-company; this repository quotes no one, Three layers). Text he'll send
+  painting-company; new text here quotes no one, Three layers). Text he'll send
   as his own (a message, a post) is a draft for him to change, and your report says so; the app's
   copy keeps the app's voice. Nothing already written needs rewriting for this.
 - **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
