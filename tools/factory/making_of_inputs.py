@@ -8,14 +8,15 @@ Usage:
 
 <generate-out> is `pbn generate`'s output directory (template.svg), <snapshots> its `--snapshots`
 directory. Writes {"seed", "inputs", "seeds", "paints", "trace"} as JSON (stdout, or --out):
-`inputs` is what `making_of_pets.plan` and Sources/MakingOf's `CrewInputs` take, at the precision
+`inputs` is what `making_of_pets.plan` takes, at the precision
 the plan file keeps; `seeds` are step 3's [time, x, y, paint]; `paints` the distinct colours of
 palette.ppm as r << 16 | g << 8 | b, in order (a seed's paint is an index into it); `trace` the
 numbers on the way, for finding where a port first differs.
 
 Every random draw is SplitMix64's (`making_of_pets.stream`, one stream per purpose) and every
 quantity a draw or a comparison turns on is an integer or a double made of `+ - * /` and `sqrt`
-(making_of_exact.py), so Sources/MakingOf (`CrewInputs.make`) gets the same numbers bit for bit.
+(making_of_exact.py), so Sources/MakingOf (ExactMath, Labeling, Sampling) gets the same numbers bit
+for bit; its crew inputs (`CrewInputs.make`) were retired with the crew show on October 23, 2026.
 It works at the snapshots' size, as the app does; --width resamples the pictures first, as
 making_of_layers.py does, for a clip at another size.
 

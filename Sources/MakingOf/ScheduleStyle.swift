@@ -1,12 +1,12 @@
-/// The numbers the show's schedule (`Arrival`, `PaintFlow`, `StrokeSchedule`, `NumberSchedule`, and
-/// `Timeline` for the overlays) is tuned by, in one place: WHEN and WHERE things happen, worked out
+/// The numbers the show's schedule (`Arrival`, `PaintFlow`, `StrokeSchedule`, and `Timeline` for the
+/// overlays) is tuned by, in one place: WHEN and WHERE things happen, worked out
 /// once per show on the CPU. `RevealStyle` is the other style, and the two don't overlap: that one is
 /// what a pixel looks like at a moment (colors, and the ramps a change takes to come in, which the
 /// `Compositor` and the app's shader run for every pixel). `making_of_reveal.py` has this one in
 /// capitals with underscores (a lattice's cells are one pair there), and `test_making_of_reveal.py`
-/// checks that they agree; change them together and regenerate `reveal-small.json` and
-/// `frames-small.json`. Times are seconds, lengths pixels of the working image unless a unit says
-/// otherwise.
+/// checks that they agree; change them together and regenerate `reveal-small.json`,
+/// `fields-small.json` and the Python's `tools/tests/fixtures/frames-small.json`. Times are seconds,
+/// lengths pixels of the working image unless a unit says otherwise.
 public struct ScheduleStyle: Sendable, Equatable {
     public static let standard = ScheduleStyle()
 
@@ -104,9 +104,10 @@ public struct ScheduleStyle: Sendable, Equatable {
 /// When the show's steps begin and end, from the spec's `timing`: `intro`, then six steps of `step`.
 public struct ScheduleTiming: Sendable, Equatable {
     public static let steps = 6
-    /// The step whose lines are drawn by hand, and the step they relax in.
-    public static let inkStep = CrewPlan.inkStep
-    public static let templateStep = CrewPlan.inkStep + 1
+    /// The step whose lines are drawn by hand (`ShowSpec.StepID.ink`'s place, which the spec
+    /// insists on), and the step they relax in.
+    public static let inkStep = 4
+    public static let templateStep = inkStep + 1
 
     public var intro: Double
     public var step: Double

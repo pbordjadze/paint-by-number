@@ -1,5 +1,5 @@
 {
-"about":"Where each guardian stands in its sprite sheet's cells, measured from the idle frames (every pixel with alpha above 24): the highest and lowest row and the mean column, in the cell's own pixels. Written by `making_of_pets.py --metrics`; Sources/MakingOf's SpriteMetrics reads it.",
+"about":"Where each guardian stands in its sprite sheet's cells, measured from the idle frames (every pixel with alpha above 24): the highest and lowest row and the mean column, in the cell's own pixels. Written by `making_of_pets.py --metrics`; the crew show (making_of_show.py) reads it.",
 "version":1,
 "cell":[192, 208],
 "pets":{

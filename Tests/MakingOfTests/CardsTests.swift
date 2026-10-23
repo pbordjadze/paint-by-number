@@ -55,7 +55,7 @@ import Testing
     }
 
     @Test func aCardCarriesTheStepsWordsAndItsOpacities() throws {
-        let show = try ShowFixture.small
+        let show = try FieldFixture.small
         let spec = try SmallShow().spec
         let t = spec.timing.intro + 4 * spec.timing.step + spec.timing.step / 2
         let card = try #require(show.frame(at: t).card)

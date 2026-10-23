@@ -46,17 +46,6 @@ import Testing
         #expect(spec.tones == ShowSpec.Tones(low: 0.62, high: 0.92, mean: 0.85))
     }
 
-    @Test func fixtureWasMadeFromTheShippedSpec() throws {
-        // an edit to what the plan reads (the crew, the steps' order and poses, the timing) lands
-        // here until the plan fixture is regenerated (see CrewPlan); captions and cards don't
-        let shipped = try ShowSpec(json: shippedSpecData())
-        let made = try PlanFixture.load().spec
-        #expect(shipped.crew == made.crew)
-        #expect(shipped.steps.map(\.id) == made.steps.map(\.id))
-        #expect(shipped.steps.map(\.pose) == made.steps.map(\.pose))
-        #expect(shipped.timing == made.timing)
-    }
-
     @Test func badSpecsThrow() throws {
         let cases: [(String, Data)] = [
             ("another version", try edited { $0["version"] = 2 }),

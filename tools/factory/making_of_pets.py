@@ -24,9 +24,9 @@ guardian's own height (h) or in seconds:
 
 `plan(inputs)` is the whole crew's planning as one pure function of plain data (the picture, the
 candidate spots of each step, the template's strokes, a seed), drawing every random number from
-SplitMix64, and a finished `Pet.state(t)` is a pure function of t. Sources/MakingOf is the Swift
-port and this file the reference: change the two together and regenerate the fixture (the
-command is in Sources/MakingOf/MakingOf.swift).
+SplitMix64, and a finished `Pet.state(t)` is a pure function of t. Its Swift port was retired on
+October 23, 2026 (the app plays the show with no crew); test_making_of_pets.py replays the recorded
+plan, tools/tests/fixtures/plan-parrots.json (making_of_clip.py --plan-json writes it).
 """
 
 import math
@@ -92,7 +92,7 @@ def configure(spec):
 
 class SplitMix64:
     """PaintCore's SplitMix64 (Sources/PaintCore/Foundation/SplitMix64.swift) in 64-bit wrapping
-    arithmetic, with the draws the crew needs. Sources/MakingOf has the same ones; keep them equal
+    arithmetic, with the draws the show needs. Sources/MakingOf has the same ones; keep them equal
     (both test suites pin the first doubles of seed 1)."""
 
     MASK = (1 << 64) - 1
@@ -191,8 +191,8 @@ def trapezoid(tau, dist, v, acc, dec):
 
 def norm(dx, dy):
     """The length of (dx, dy). Plain arithmetic and a square root, not math.hypot or np.hypot:
-    those round differently from one C library to the next, and the Swift port must agree to the
-    last bit wherever a comparison could turn on it."""
+    those round differently from one C library to the next, and a port must agree to the last bit
+    wherever a comparison could turn on it."""
     return math.sqrt(dx * dx + dy * dy)
 
 
@@ -229,7 +229,7 @@ def traced(tau, dist, h):
 class Sprites:
     """One guardian's frames by row (each cell padded by PAD), plus where its feet are: `top`, `foot`
     and `cx` in the padded frame; `metrics` has them in the cell's own pixels, as pet-metrics.json
-    and Sources/MakingOf's SpriteMetrics do."""
+    does."""
 
     def __init__(self, path):
         sheet = Image.open(path).convert('RGBA')
@@ -595,8 +595,7 @@ Plan = namedtuple('Plan', 'pets visits traces')
 def plan(inputs):
     """The crew's whole show, planned: a pure function of plain data. Every random draw is
     SplitMix64's, in a fixed order (the guardians' appear order, their wave order, each job's work
-    time as the steps are planned, then each walk's bend), so Sources/MakingOf plans the same
-    show from the same inputs.
+    time as the steps are planned, then each walk's bend), so the same inputs plan the same show.
 
     inputs: size [W, H] and petHeight in px; intro and step in s; seed; guardians [{id, start: [x, y]}]
     in crew order; candidates, per step the spots [x, y] its jobs are done at (the ink step's are
@@ -678,7 +677,7 @@ def states_data(pets, end, fps=30):
                                  for p in pets]}
 
 
-# How a guardian is drawn, beyond the spec (SpriteDraw.Look in Sources/MakingOf/Sprites.swift).
+# How a guardian is drawn, beyond the spec.
 INVISIBLE = 0.01        # below this alpha a guardian is not drawn
 APPEAR = 0.18           # s: it fades in over this long as it appears, and swells by SWELL of its size over POP
 SWELL = 0.18
@@ -762,7 +761,7 @@ def load(resources, ids):
 def metrics_table(resources):
     """The metrics of every sheet in `resources` (pet-<id>.webp), as pet-metrics.json has them:
     {"about", "version": 1, "cell": [w, h], "guardians": {id: {"top", "foot", "cx"}}} in the cell's own
-    pixels, ids in order. Sources/MakingOf's SpriteMetrics.table reads it."""
+    pixels, ids in order. The crew show (making_of_show.py) reads it."""
     ids = sorted(f[4:-5] for f in os.listdir(resources) if f.startswith('pet-') and f.endswith('.webp'))
     table = {}
     for i in ids:
@@ -770,7 +769,7 @@ def metrics_table(resources):
         table[i] = {'top': top, 'foot': foot, 'cx': cx}
     return {'about': "Where each guardian stands in its sprite sheet's cells, measured from the idle frames "
                      "(every pixel with alpha above 24): the highest and lowest row and the mean column, in the "
-                     "cell's own pixels. Written by `making_of_pets.py --metrics`; Sources/MakingOf's SpriteMetrics "
+                     "cell's own pixels. Written by `making_of_pets.py --metrics`; the crew show (making_of_show.py) "
                      "reads it.",
             'version': 1, 'cell': list(CELL), 'pets': table}
 

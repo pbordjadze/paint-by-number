@@ -1,9 +1,9 @@
-"""The making-of crew's planner against its Swift port's fixture, and SplitMix64's pinned draws.
+"""The making-of crew's planner against its recorded plan (plan-parrots.json), and SplitMix64's pinned draws.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_pets.py'
 
-Needs numpy and Pillow (making_of_pets.py imports them). Sources/MakingOf's tests hold the same
-numbers and replay the same fixture."""
+Needs numpy and Pillow (making_of_pets.py imports them). The fixture was the Swift port's too, until
+that port was retired (October 23, 2026); Sources/MakingOf's SplitMixTests still pin the same draws."""
 
 import json
 from pathlib import Path
@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "factory"))
 import making_of_pets as pets
 
-FIXTURE = ROOT / "Tests" / "MakingOfTests" / "Fixtures" / "plan-parrots.json"
+FIXTURE = ROOT / "tools" / "tests" / "fixtures" / "plan-parrots.json"
 SPEC = ROOT / "App" / "PaintByNumber" / "Resources" / "making-of.json"
 
 

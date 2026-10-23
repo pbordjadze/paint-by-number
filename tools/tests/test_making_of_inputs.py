@@ -1,10 +1,10 @@
-"""The making-of crew's inputs against their Swift port: exact arithmetic, the draws, and the whole
-small fixture.
+"""The making-of crew's inputs against the Swift port's numbers: exact arithmetic, the draws, and the
+whole small fixture.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_inputs.py'
 
 Needs numpy and Pillow. Tests/MakingOfTests holds the same numbers (ExactMathTests, LabelingTests,
-SamplingTests, StopWeightsTests, CrewInputsTests) and reads the same fixture,
+SamplingTests, StopWeightsTests) and reads the same fixture,
 `Fixtures/show-small/inputs-small.json`: regenerate it, after changing making_of_exact.py or
 making_of_inputs.py, with
 

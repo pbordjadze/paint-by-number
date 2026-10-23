@@ -1,5 +1,5 @@
 /// How much ink a set of lines puts on each pixel: the reference rasterizer behind
-/// `Show.composite`, that a view's Core Graphics strokes are meant to look like. A pixel is covered
+/// `FieldShow.composite`, that a view's Core Graphics strokes are meant to look like. A pixel is covered
 /// by a line as far as its center is within half the width of the line, softened over one pixel
 /// (full at half a pixel inside the edge, none at half a pixel outside), and by the line's `value`;
 /// where lines meet, the darker one wins. Segments join round, and a line ends round, because the

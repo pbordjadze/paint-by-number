@@ -35,27 +35,23 @@ public struct Star: Sendable, Equatable {
     public var alpha: Double
 }
 
-/// Everything to draw at one moment of the show, `Show.frame(at:)`'s answer (and
-/// `FieldShow.frame(at:)`'s): plain numbers, from which the view executes the drawing. All places
-/// are pixels of the working image (the pictures' own size, `Show.size`), origin top-left, y down:
-/// the view scales them to fit.
+/// Everything to draw at one moment of the show, `FieldShow.frame(at:)`'s answer: plain numbers,
+/// from which the view executes the drawing. All places are pixels of the working image (the
+/// pictures' own size, `FieldShow.size`), origin top-left, y down: the view scales them to fit.
 ///
 /// The view draws, in this order:
 ///
 /// 1. **The picture**: the layers blended as `picture` says, with the lines of `ink` darkening the
-///    paper. Draw each line as a polyline `Show.lineWidth` pixels wide with round caps and joins,
-///    coverage times the line's `value` (0 paper, 1 full ink), into one coverage plane where the
-///    darker wins (a maximum, never a sum), and hand the plane to the shader.
-///    `Show.composite` does exactly this on the CPU, for a view to be checked against.
+///    paper. Draw each line as a polyline `FieldShow.lineWidth` pixels wide with round caps and
+///    joins, coverage times the line's `value` (0 paper, 1 full ink), into one coverage plane where
+///    the darker wins (a maximum, never a sum), and hand the plane to the shader.
+///    `FieldShow.composite` does exactly this on the CPU, for a view to be checked against.
 /// 2. **The numbers**, from stage 5 on, in ink: number `i` of the template at its place and size
 ///    (`ShowTemplate.numbers`), as the painting screen draws it, at `numbers[i]` opacity.
 /// 3. **The real template** over all of that at `picture.handoff` opacity, once the steps are over.
 /// 4. **The seed rings** (`seedRings`, in the paints step), drawn as `SeedRing` says.
-/// 5. **The sparks, then the stars** (`sparks`, `stars`: the field show's own, always empty in the
-///    crew's), drawn as `Spark` and `Star` say.
-/// 6. **The guardians** (`sprites`, back to front): each shadow, then its sprite. They may stand
-///    below the picture, where the card is; the view decides whether to clip them.
-/// 7. **The card** (`card`), in the band below the picture: the caption in New York, centered, and
+/// 5. **The sparks, then the stars** (`sparks`, `stars`), drawn as `Spark` and `Star` say.
+/// 6. **The card** (`card`), in the band below the picture: the caption in New York, centered, and
 ///    under it the credit lines, smaller, at `footnoteOpacity`.
 ///
 /// Reduce Motion needs nothing more than a few frames at chosen times: `frame(at:)` is a pure
@@ -76,6 +72,5 @@ public struct ShowFrame: Sendable, Equatable {
     /// The rings opening round the numbers, in the field show's last step and the first moments of
     /// the hold; empty at any other time.
     public var stars: [Star]
-    public var sprites: [SpriteDraw]
     public var card: CardDraw?
 }

@@ -90,7 +90,7 @@ extension FieldShow {
     static let liftAfter = 0.15, liftEnd = 0.3
 
     /// The compositor's numbers for this show: graphite goes down as the front passes, not after it.
-    /// `RevealStyle.standard` with the ramps of the fronts changed; `Show`'s own is untouched.
+    /// `RevealStyle.standard` with the ramps of the fronts changed.
     public static let style: RevealStyle = {
         var style = RevealStyle.standard
         style.graphiteDelay = 0.05

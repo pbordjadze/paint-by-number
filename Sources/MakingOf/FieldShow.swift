@@ -2,23 +2,24 @@ import Foundation
 import PaintCore
 
 /// The making-of show with no crew: each step's change grows from seeds over the picture itself, in
-/// a pattern of its own that follows what the step does. It has `Show`'s surface (`size`, `lineWidth`,
-/// `timeline`, `duration`, `frame(at:)`, `composite`), so a view plays either, and its frames carry
-/// two marks of their own (`ShowFrame.sparks`, `ShowFrame.stars`), no guardians.
+/// a pattern of its own that follows what the step does: `size`, `lineWidth`, `timeline`,
+/// `duration`, `frame(at:)` and `composite` are what a view plays, and its frames carry two marks of
+/// their own (`ShowFrame.sparks`, `ShowFrame.stars`). It replaced the crew's show, three guardians
+/// walking over the photo, which the app played first; that one lives on in the Python clip tool
+/// (`making_of_show.py`), its Swift port retired on October 23, 2026.
 ///
 ///  1. **sketch**: graphite races along the structure like frost along cracks; the color drains and
 ///     the paper washes in behind it, outward from the lines.
 ///  2. **shading**: watercolor blooms open from drops born at random moments, slow to a stop at
 ///     edges and seep past them, each with a darker tide line at its rim.
-///  3. **paints**: the real k-means++ seeds drop as rings (`PaintSeeds`, the ones the crew's show
-///     drops), and each paint runs through its own areas like dye, jumping slowly between them.
+///  3. **paints**: the real k-means++ seeds drop as rings (`PaintSeeds`), and each paint runs through its own areas like dye, jumping slowly between them.
 ///  4. **merged**: the tiny bits melt into their neighbors from the outside in, smallest first.
 ///  5. **ink**: the lines burn along the drawing like a fuse, branching at every junction, a spark at
 ///     every burning tip, grey at first and darkening to ink.
 ///  6. **template**: a second fuse relaxes the outlines into curves; the areas clear in drifts; the
 ///     numbers come out like stars, each with a faint ring.
 ///
-/// It is built from the same parts as `Show` (the k-means++ seeds and the paints, the merged
+/// It is built from the same parts as the crew's show (the k-means++ seeds and the paints, the merged
 /// regions, the template's lines and numbers, the layers, the compositor's formulas, the cards, the
 /// rings and the lines' stair steps), and what differs is when each part changes: an arrival time
 /// from each step's seeds through a cost field (`Geodesic`), roughened by domain-warped noise
@@ -36,7 +37,7 @@ import PaintCore
 ///
 /// Building (`init`) computes the fields of the six steps once: at 1024 x 682 about 0.7 s on four
 /// cores and 1.6 s on one (release, Linux x86); the show keeps about 35 MB, and the build peaks about
-/// 35 MB above that. After it `frame(at:)` is a pure function of the time, as `Show`'s is.
+/// 35 MB above that. After it `frame(at:)` is a pure function of the time.
 ///
 /// `making_of_fields.py` is the Python reference of the same (`FieldShow`, which `making_of_clip.py
 /// --no-crew` plays), and `fields-small.json` (what it makes of the small fixture, written by
@@ -111,7 +112,7 @@ public struct FieldShow: Sendable {
 
     /// What to draw at time `t` (seconds into the show, which can be outside 0...`duration`: before
     /// it is the photo, after it the finished drawing). Pure, and cheap: the lines, sparks and stars
-    /// of one moment, no pixels. `sprites` is always empty.
+    /// of one moment, no pixels.
     public func frame(at t: Double) -> ShowFrame {
         let stage = timeline.stage(at: t)
         let step = timeline.step(at: t)
@@ -158,7 +159,7 @@ public struct FieldShow: Sendable {
 
         return ShowFrame(
             time: t, step: step, picture: PictureRecipe(stage: stage, time: t, handoff: timeline.handoff(at: t)),
-            ink: ink, numbers: numbers, seedRings: rings, sparks: sparks, stars: stars, sprites: [], card: card)
+            ink: ink, numbers: numbers, seedRings: rings, sparks: sparks, stars: stars, card: card)
     }
 
     /// The ink step's lines at time `t`: every segment the fuse has reached at both ends, grey at
@@ -203,8 +204,7 @@ public struct FieldShow: Sendable {
     /// Draws the picture of `frame` into `pixels` (the pictures' size): the layers blended as the
     /// recipe says, with the lines of `frame.ink` rasterized by `InkCoverage` at `lineWidth`, and the
     /// tide line along the fronts of steps 2 to 4 (`tideDepth` darker for `tideWidth` seconds just
-    /// behind where the change is arriving, the part of the Python `TideCompositor` that `Show` has
-    /// no equivalent of). This is the part of a frame a shader does for every pixel, for a view to be
+    /// behind where the change is arriving, the Python's `TideCompositor`). This is the part of a frame a shader does for every pixel, for a view to be
     /// checked against; the numbers, the hand-off to the real template, the rings, the sparks and
     /// stars and the card are the view's own drawing and are not in it.
     public func composite(_ frame: ShowFrame, into pixels: inout Plane<SIMD4<UInt8>>) {
@@ -234,4 +234,9 @@ public struct FieldShow: Sendable {
     private static func byte(_ v: Double) -> UInt8 {
         UInt8(min(max(v * 255 + 0.5, 0), 255).rounded(.down))
     }
+}
+
+/// Why a show can't be made.
+public struct ShowError: Error, Equatable, CustomStringConvertible {
+    public let description: String
 }

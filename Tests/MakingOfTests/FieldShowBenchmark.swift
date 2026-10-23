@@ -7,7 +7,7 @@ import Testing
 import Glibc
 #endif
 
-/// How long the field show takes on a real picture, against the crew's show: set `FIELD_SHOW_PHOTO` to
+/// How long the field show takes on a real picture: set `FIELD_SHOW_PHOTO` to
 /// a binary PPM of 3:2 and 1536 px across (the pipeline makes the show's 1024 x 682 pictures of it) and
 /// run in release (`swift test -c release -Xswiftc -enable-testing --filter FieldShowBenchmark`),
 /// under `taskset -c 0` for one core. It prints the build, a frame and a composite, and the memory the
@@ -23,7 +23,6 @@ struct FieldShowBenchmark {
         let pictures = try ShowPictures(snapshots: recorder.values)
         let template = ShowTemplate(output.template, width: pictures.width, height: pictures.height)
         let spec = try ShowSpec(json: shippedSpecData())
-        let sprites = try SpriteMetrics.table(json: shippedMetricsData())
         let points = template.strokes.reduce(0) { $0 + $1.points.count }
         print("""
             FieldShowBenchmark: \(pictures.width) x \(pictures.height), \(template.strokes.count) lines of \(points) \
@@ -53,14 +52,6 @@ struct FieldShowBenchmark {
             builds.append(Date().timeIntervalSince(began))
         }
         print("FieldShowBenchmark build: best \(builds.min()!) s, mean \(builds.reduce(0, +) / 5) s")
-        _ = try Show(pictures: pictures, template: template, spec: spec, seed: 7, sprites: sprites)
-        var crew: [Double] = []
-        for _ in 0..<5 {
-            let began = Date()
-            _ = try Show(pictures: pictures, template: template, spec: spec, seed: 7, sprites: sprites)
-            crew.append(Date().timeIntervalSince(began))
-        }
-        print("FieldShowBenchmark crew show build: best \(crew.min()!) s, mean \(crew.reduce(0, +) / 5) s")
 
         // a frame and a composite, over the show
         let times = stride(from: 0.0, through: show.duration, by: show.duration / 200).map { $0 }
@@ -77,14 +68,6 @@ struct FieldShowBenchmark {
         for _ in 0..<20 { show.composite(heaviest, into: &pixels) }
         print("FieldShowBenchmark frame(at:): \(frameTime * 1000) ms on average; composite: \(compositeTime * 1000) ms on average, \(Date().timeIntervalSince(began) / 20 * 1000) ms with the most lines (\(heaviest.ink.count))")
 
-        let crewShow = try Show(pictures: pictures, template: template, spec: spec, seed: 7, sprites: sprites)
-        began = Date()
-        for t in times { _ = crewShow.frame(at: t) }
-        let crewFrame = Date().timeIntervalSince(began) / Double(times.count)
-        let crewFrames = times.map { crewShow.frame(at: $0) }
-        began = Date()
-        for frame in crewFrames { crewShow.composite(frame, into: &pixels) }
-        print("FieldShowBenchmark crew show frame(at:): \(crewFrame * 1000) ms; composite: \(Date().timeIntervalSince(began) / Double(crewFrames.count) * 1000) ms")
     }
 
     /// The process's resident and peak resident sizes in bytes, from /proc (Linux).
