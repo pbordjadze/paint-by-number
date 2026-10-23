@@ -138,15 +138,11 @@ before planning app work).
   the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
-  per-agent reports are not committed (they live on their branch and in commit messages); a
+  per-agent reports are not committed here (they live in painting-company; a commit message says
+  what changed and why); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
-  `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
-  in it ships or goes into the Marginarium until he says so, and its wording stays his.
-  `docs/backlog.md` is the other: the backlog, one row for each idea, piece of feedback and
-  go-ahead (Working with Paul).
-- `.claude/skills/front-desk/`: the front desk (`SKILL.md`; retired for now, Working with Paul),
-  `sessions.py`, its summary of Paul's sessions, their cost and the status page's data, and
-  `page.py`, the page's cards.
+  Paul's ideas and the backlog are in the private `painting-company` repository (Working with
+  Paul › Three layers); `docs/ideas.md` and `docs/backlog.md` only point there.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -337,9 +333,10 @@ Saved paintings must open in every later build. The format history is documented
   app's UI, the Astrologer, Rikyū, the Child at Bedtime, the Hedge Witch, Madeleine and
   Originality (who can only veto). Its charters and how a round runs (a low-effort Opus subagent
   per seat, the charter word for word, blind ballots, every reply kept) are `factory/GUARDIANS.md`
-  › The Lamplit Table and `factory/ORCHESTRATOR.md` on the `claude/vibe-factory` branch; a
-  round's brief, replies and decisions go in `factory/pieces/<piece>/` there, and its outcome in
-  the commit that acts on it. Its answers are proposals: Paul decides.
+  › The Lamplit Table and `factory/ORCHESTRATOR.md` in the private `painting-company` repository
+  (until October 23 on this repository's `claude/vibe-factory` branch, which older comments
+  name); a round's brief, replies and decisions go in its `factory/pieces/<piece>/`, and its
+  outcome in the commit that acts on it. Its answers are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
   Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
@@ -507,16 +504,20 @@ each step to the session that started it.
 
 ## Working with Paul
 
-Paul works in bursts, from his phone, often with several sessions going at once, each keeping to
-one topic, and he talks to each himself. The **front desk** (`/front-desk`:
-`.claude/skills/front-desk/SKILL.md`), the one session that took all he said and routed it, is
-retired for now (Paul, October 21: "I'm not sure we have enough going on to justify the front desk
-pattern anymore right now"), and the status page and CI queue it kept are no longer kept; should
-he start one again, its skill says how sessions work with it. When a session ships, gets blocked
-or needs Paul, it tells him itself, with a push notification once he has gone quiet.
+Paul talks to each session himself. When a session ships, gets blocked or needs Paul, it tells
+him itself, with a push notification once he has gone quiet.
+
+- **Three layers** (October 23). What Paul advertises (the App Store app); what is public if you
+  dig (this repository and the SideStore build); and what is private: the
+  `pbordjadze/painting-company` repository holds the backlog, his ideas and words, plans, the
+  Lamp and its rounds, the chronicles and the Marginarium, and its CLAUDE.md the rest of how he
+  works. Nothing of it comes here: a new commit, comment or doc cites it ("painting-company row
+  12") and quotes no one; quotes already here stay. A session that needs it attaches it
+  (`add_repo`).
 
 - **Merging is standing permission, given once.** When a branch's CI is green, its review is done
-  (below) and the change is what Paul asked for, merge it into `main` without asking. Put
+  (below) and the change is what Paul asked for, merge it into `main` without asking (a docs-only
+  branch, `[skip ci]`, once its review is done: it has no CI to wait for). Put
   anything not yet chosen for the release behind `#if UNRELEASED`, so it reaches his SideStore
   build only. Don't wait for a "yes".
 - **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
@@ -537,8 +538,8 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
 - **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
   idle: look at the CI runs queued and in progress (GitHub's Actions list, by branch) before a
   push. Throwaway branches queue behind anything Paul called a must-have.
-  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
-  commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
+  Branch pushes never carry `[iphone]` unless Paul asks for it. Docs-only commits carry
+  `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
   report: merge, and any further push queues again unless it fixes a red run.
 - **Paul's word counts once.** His words in your session, or his comment on a page a session made
@@ -551,11 +552,12 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
 - **Voices stay distinct** (Paul, October 23: "having agents write in their own voice and not
   mimicking mine is good. So then it can just kind of be clear when it's me writing"). Write as
   yourself: clear, precise and recognizably not Paul. Never imitate his voice or put words in his
-  mouth: quote him verbatim and attribute it, as the backlog's *Paul's words* do. Text he'll send
+  mouth: quote him verbatim and attribute it, as the backlog's *Paul's words* do (in
+  painting-company; new text here quotes no one, Three layers). Text he'll send
   as his own (a message, a post) is a draft for him to change, and your report says so; the app's
   copy keeps the app's voice. Nothing already written needs rewriting for this.
 - **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
-  propose new work it noticed: one short `new` row in `docs/backlog.md` (what, why, size, who
+  propose new work it noticed: one short `new` row in the backlog (what, why, size, who
   thought of it), at most one a night, keeping to its own topic, and its next report to Paul names
   the row. Paul signs off on it. Small fixes inside a session's own task aren't proposals.
 - **Reports** to Paul carry the row #, branch@sha, pushed or not, the CI state and the one thing
@@ -565,12 +567,10 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
   it's built.
 - **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
   branch@sha, CI state, open questions to Paul, pending check-ins and what's next (the shape of
-  `.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell Paul its id.
-- **Backlog commits.** A session adds and updates its own rows of `docs/backlog.md` and commits
-  them straight to `main` with `[skip ci]`, fetching first (several sessions write it), but not
-  while a night train is in CI: `ci/train.sh land` refuses a `main` that moved, so a row pushed
-  then costs the train a full run; hold it until the train lands. That is the one exception to
-  working on branches.
+  painting-company's `.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell Paul its id.
+- **Backlog commits.** A session adds and updates its own rows in painting-company's `backlog.md`
+  and commits them straight to that repository's `main`, fetching first (several sessions write
+  it). It runs no CI, so nothing there waits on a night train.
 
 ## Conventions
 
