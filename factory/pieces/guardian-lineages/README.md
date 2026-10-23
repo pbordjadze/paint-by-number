@@ -51,3 +51,23 @@ Hedge Witch is skipped in any full run: Paul is keeping her for a real woodcut b
 - `build_page.py` makes the contact sheet. Paul's reactions go through the pets-page server
   (tailnet :8445, `/lineages/`) to `~/pets-drafts/picks.jsonl` on lenovo-homelab, as picks named
   `lineage-<id>`.
+
+## Version 2: more abstraction (October 23)
+
+Paul, after seeing version 1: "We've kept the moon as having a lamp even though that's inherently
+tied to that time period. Eno has these tapes. Scherenschnitt is still a stylized bird that comes
+from that time period. Everything like that should be abstracted—the actual SHAPE can be the same
+so it's still recognizable, but more visual abstraction please".
+
+- Codex got only each guardian's black silhouette (`refs/<id>-shape.png`, cut from the approved
+  drawing's alpha), never the drawing, so no tape reel, lantern or feathered bird can carry over.
+  Each era builds the same shape from its own marks: Cage's dot fields, Satie's spiral
+  calligraphy, a pen-flourished initial; a breaking wave, a cement mass, a rock arch; zinc pierced
+  with rooftops, rocaille card, piying lattice; a band of Roman numerals, ruled wedges, a carved
+  sign.
+- Plate 0 is unchanged; the chains and sources are the same (`lineages-v2.json` changes only
+  the media, two notes and the pick names, `lineage-v2-<id>`).
+- 14 image generations: one run per guardian (`run_v2.sh`, `prompts-v2/`), plus one redo for
+  Dino I and III, whose first passes were the shape cut out and filled with a scene (a
+  double-exposure trick); in the redraws the shape hides inside a whole seascape.
+- The page at tailnet :8445 `/lineages/` now shows version 2; version 1 is at `/lineages/v1/`.

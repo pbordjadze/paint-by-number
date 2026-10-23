@@ -99,7 +99,7 @@ def main(data_path, plates, out):
   <div class="plates">{''.join(figs)}</div>
   {note}
   <details><summary>Sources for each jump</summary><ul>{sources}</ul></details>
-  <div class="react" data-pick="lineage-{g['id']}">
+  <div class="react" data-pick="{data.get('pick_prefix', 'lineage-')}{g['id']}">
     <button data-choice="more like this">more like this</button>
     <button data-choice="not this">not this</button>
     <input placeholder="a note (which plate, what to change)">
