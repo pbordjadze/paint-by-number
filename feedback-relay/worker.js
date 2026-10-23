@@ -26,11 +26,13 @@
 //
 // Secret FEEDBACK_GITHUB_TOKEN: a fine-grained token with Contents and Issues read and write on
 // that repository only. Variable FEEDBACK_REPO and the RATE_LIMITER and RATE_LIMITER_ALL bindings:
-// wrangler.toml. Rate limiting is two flood brakes, applied before the body is read: one per IP
-// address, and one for every sender together, so a few addresses can't use up GitHub's limit on
-// writes (about 80 a minute; a report makes 7) and turn every painter's report away. A binding's
-// period is 10 or 60 seconds, so neither can be a limit per hour; both are per Cloudflare
-// location and approximate by design.
+// wrangler.toml. Rate limiting is two burst brakes, applied before the body is read: one per IP
+// address, and one for every sender together, so a burst from a few addresses stays under
+// GitHub's limit on writes a minute (about 80; a report makes 7). They brake bursts only: a
+// binding's period is 10 or 60 seconds, so neither is a limit per hour, and a flood kept up
+// still meets GitHub's hourly limit (about 500 writes, some 70 reports) and still fills the
+// repository; only an hourly quota (a KV store) would stop that. Both are per Cloudflare
+// location ("every sender" is everyone at one location) and approximate by design.
 //
 // Memory: a request is parsed once and its files are read and encoded one at a time (the Workers
 // limit is 128 MB). Base64 comes from node:buffer (nodejs_compat), which is native: Workers' free
