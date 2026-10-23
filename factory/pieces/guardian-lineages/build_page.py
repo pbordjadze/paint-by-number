@@ -21,7 +21,8 @@ h1{font-weight:normal;font-size:30px;margin:0 0 6px}
 .row h2{font-weight:normal;font-size:25px;margin:0}
 .chain{font-style:italic;color:#d8cdb9;margin:2px 0 14px}
 .plates{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:900px){.plates{grid-template-columns:repeat(2,1fr)}}
+.plates.five{grid-template-columns:repeat(5,1fr)}
+@media(max-width:900px){.plates,.plates.five{grid-template-columns:repeat(2,1fr)}}
 .plates figure{margin:0}
 figcaption a{color:#e7c98f}
 .plates img{width:100%;display:block;border-radius:2px;cursor:zoom-in}
@@ -87,6 +88,14 @@ def main(data_path, plates, out):
             figs.append(f'<figure><img src="{src}" alt="{esc(s["title"])}" loading="lazy">'
                         f'<figcaption><b>{["Today", "Jump 1", "Jump 2", "Jump 3"][i]}: {esc(s["title"])}</b><br>'
                         f'{esc(s["medium"])}, {esc(s["date"])}<br>{badge}{esc(s.get("link", ""))}{redo}</figcaption></figure>')
+        if g.get('wild'):
+            w = g['wild']
+            src = f"{g['id']}-wild.webp"
+            shutil.copy(os.path.join(plates, src), os.path.join(out, src))
+            figs.append(f'<figure><img src="{src}" alt="{esc(w["title"])}" loading="lazy">'
+                        f'<figcaption><b>Wildcard: {esc(w["title"])}</b><br>{esc(w["medium"])}<br>'
+                        f'<span class="kind spiritual">breaks the rule</span> {esc(w["link"])}'
+                        + (f'<br><span class="note">{esc(w["note"])}</span>' if w.get('note') else '') + '</figcaption></figure>')
         sources = ''.join(f'<li><b>{esc(s["short"])}</b>: {esc(s.get("source", ""))}'
                           + (f' <a href="{esc(s["url"])}">{esc(s["url"])}</a>' if s.get('url') else '') + '</li>'
                           for s in g['steps'][1:])
@@ -96,7 +105,7 @@ def main(data_path, plates, out):
 <section class="row" id="{g['id']}">
   <h2>{esc(g['name'])}</h2>
   <div class="chain">{esc(chain)}</div>
-  <div class="plates">{''.join(figs)}</div>
+  <div class="plates{' five' if len(figs) > 4 else ''}">{''.join(figs)}</div>
   {note}
   <details><summary>Sources for each jump</summary><ul>{sources}</ul></details>
   <div class="react" data-pick="{data.get('pick_prefix', 'lineage-')}{g['id']}">

@@ -1,5 +1,5 @@
 {
- "lede": "<p><b>Version 3</b>: the lens codified (<code>RULE.md</code>): <i>carry the guardian's idea back, not its picture.</i> At each step, how would that tradition, with its own tools and knowledge, make this guardian's subject? Each guardian has a card: an essence that always stays, at most a rhyme or two where an era has its own form for them, and what gets left behind (today's objects, an outline that is someone's style, a period composition). For the jumps Codex saw no image at all, only the card. Three things to look for, not gates: an ordinary object of its own era (no hidden shapes or double exposures), recognisable with its liner notes, and nothing in a named artist's manner from before that artist.</p><p>Per your note, the rule is now a default, not a law: from the next run on, each run may also try one wildcard that breaks it, labelled, for you to judge (this run came before that). Eno is version 2 unchanged: it already passed. Dino, Scherenschnitt and the Moon are new. Earlier versions: <a href=\"v2/\" style=\"color:#e7c98f\">version 2</a> (only the shape kept), <a href=\"v1/\" style=\"color:#e7c98f\">version 1</a> (the objects kept).</p>",
+ "lede": "<p><b>Version 3</b>: the lens codified (<code>RULE.md</code>): <i>carry the guardian's idea back, not its picture.</i> At each step, how would that tradition, with its own tools and knowledge, make this guardian's subject? Each guardian has a card: an essence that always stays, at most a rhyme or two where an era has its own form for them, and what gets left behind (today's objects, an outline that is someone's style, a period composition). For the jumps Codex saw no image at all, only the card. Three things to look for, not gates: an ordinary object of its own era (no hidden shapes or double exposures), recognisable with its liner notes, and nothing in a named artist's manner from before that artist.</p><p>Per your note, the rule is now a default, not a law, and each row ends with a <b>wildcard</b>: one plate Codex made by breaking the rule on purpose, with its reason. All four broke the same rule in the same way (leaving the lineage of pictures for the real thing, today), which is worth knowing before the next batch. Dino's 1830 plate is redrawn with one plesiosaur. Eno is version 2 unchanged: it already passed. Dino, Scherenschnitt and the Moon are new. Earlier versions: <a href=\"v2/\" style=\"color:#e7c98f\">version 2</a> (only the shape kept), <a href=\"v1/\" style=\"color:#e7c98f\">version 1</a> (the objects kept).</p>",
  "guardians": [
   {
    "id": "eno",
@@ -21,7 +21,8 @@
      "kind": "cited influence",
      "link": "Eno to Cage: \"when I was in art college, I was shown your book Silence.\"",
      "source": "Eno, interviewing Cage, Musician, September 1985.",
-     "url": "http://www.moredarkthanshark.org/eno_int_musician-sep85.html"
+     "url": "http://www.moredarkthanshark.org/eno_int_musician-sep85.html",
+     "native": "John Cage's chance-operation scores of the late 1950s, like Fontana Mix: sheets of paper and clear transparencies with hand-drawn curved lines, scattered dots, a grid and a straight line, meant to be overlaid and read by chance."
     },
     {
      "short": "Satie",
@@ -31,7 +32,8 @@
      "kind": "championed",
      "link": "Cage built a Satie festival at Black Mountain in 1948: \"I give him first place with Webern and I fight for them both.\"",
      "source": "Cage to Peter Yates, 1948, quoted in Martin (2020); his lecture \"Defense of Satie\", Black Mountain College, summer 1948. Satie's red-and-black ink: Sotheby's 2016, lot 141.",
-     "url": "https://musicalcircuits.com/2022/06/18/cage_at_bmc/"
+     "url": "https://musicalcircuits.com/2022/06/18/cage_at_bmc/",
+     "native": "Erik Satie's manuscripts: pen in black and red ink on paper, an elegant pseudo-Gothic calligraphic hand, music written without bar lines, ornament drawn by the composer himself."
     },
     {
      "short": "plainchant",
@@ -40,7 +42,8 @@
      "date": "13th century",
      "kind": "teacher, then tradition",
      "link": "From 1874 his Honfleur organist Gustave Vinot stirred Satie's love of old church music, Gregorian chant above all.",
-     "source": "Gillmor, Erik Satie (1988), p. 7 (paraphrased). The square notation on a red staff dates from the 13th century."
+     "source": "Gillmor, Erik Satie (1988), p. 7 (paraphrased). The square notation on a red staff dates from the 13th century.",
+     "native": "A 13th-century chant book leaf: black square neumes on red four-line staves on parchment, Latin text in Gothic book hand, pen-flourished initials in red and blue."
     }
    ],
    "card": {
@@ -55,6 +58,14 @@
      "the die as an object",
      "the drawn wildflower"
     ]
+   },
+   "wild": {
+    "title": "A Room for Rain",
+    "medium": "Birch plywood, bronze, brass, porcelain, copper, linen and water; 2026",
+    "date": "",
+    "kind": "wildcard",
+    "link": "Codex: Breaks the backward lineage: a gravity-fed acoustic room makes Eno’s self-playing system physically real, with imbalance composing each event.",
+    "suggestion": ""
    }
   },
   {
@@ -100,12 +111,12 @@
      "link": "The first painted scene of prehistoric life, full of plesiosaurs; Witton, Naish and Conway list it, then Hawkins, as palaeoart's milestones. No documented hand-off.",
      "source": "De la Beche's watercolour (National Museum Cardiff), lithographed by George Scharf, May 1830; Witton, Naish & Conway, Palaeontologia Electronica 2014.",
      "url": "https://en.wikipedia.org/wiki/Duria_Antiquior",
-     "native": "Duria Antiquior's world as an 1830 lithograph: a crowded ancient sea seen from the shore, several plesiosaurs as the 1830s imagined them (snaky necks, small heads) among other sea creatures, the drawing of a geologist, grainy crayon on stone, thin hand-coloured washes, a printed border line."
+     "native": "Duria Antiquior's world as an 1830 lithograph: a crowded ancient sea seen from the shore with ONE plesiosaur as the 1830s imagined it (snaky neck, small head), among the other creatures of that sea (ichthyosaurs, ammonites, fish, a pterodactyl overhead), the drawing of a geologist, grainy crayon on stone, thin hand-coloured washes, a printed border line."
     }
    ],
    "note": "Each era makes its own plesiosaur, as it knew the animal: Knight's swan-necked swimmers, Hawkins's 1854 cement beast, the 1830 lithographer's snaky-necked crowd. Today's pose, colours and sly eye stay behind.",
    "card": {
-    "essence": "a long-necked sea creature, a plesiosaur, painted with wonder from careful looking",
+    "essence": "one long-necked sea creature, a plesiosaur, painted with wonder from careful looking. Dino is one animal: one plesiosaur in each plate, never a herd",
     "rhymes": [
      "a long neck rising from the water"
     ],
@@ -115,6 +126,15 @@
      "the sly sideways eye and any character acting",
      "the explorer's-journal page"
     ]
+   },
+   "wild": {
+    "title": "Before the Picture, the Bones",
+    "medium": "Fossil-bearing limestone, prepared with pneumatic chisel and needle, 2026",
+    "date": "",
+    "kind": "wildcard",
+    "link": "Codex: Breaks the lineage of artistic ancestors by returning to material evidence: wonder begins with the animal that constrained every imagined likeness.",
+    "suggestion": "",
+    "note": "Claude: this one has a real link. De la Beche drew Duria Antiquior from Mary Anning's fossils and sold its prints to help her, so the fossil is a fourth jump, not only a wildcard."
    }
   },
   {
@@ -175,6 +195,14 @@
      "the lace cuts in the feathers and the brass pin hinges",
      "the black-paper Scherenschnitt look itself, and anything that looks like Lotte Reiniger's work"
     ]
+   },
+   "wild": {
+    "title": "The Bird Is the Shadow",
+    "medium": "Hand-bent steel wire and silver-soldered steel tabs, 2026",
+    "date": "",
+    "kind": "wildcard",
+    "link": "Codex: Breaks the backward lineage: an abstract sculpture becomes a bird through light, giving the shadow itself the acting role.",
+    "suggestion": ""
    }
   },
   {
@@ -233,6 +261,14 @@
      "the lantern or any lamp, its shape included",
      "the almanac woodcut and its yellow"
     ]
+   },
+   "wild": {
+    "title": "The Moon, returned as stone",
+    "medium": "Lunar feldspathic breccia meteorite, diamond-sawn and lapped; contemporary preparation, 2026",
+    "date": "",
+    "kind": "wildcard",
+    "link": "Codex: Breaks the lineage of representations with lunar material itself: the distant light becomes a dark, tangible fragment.",
+    "suggestion": ""
    }
   }
  ],

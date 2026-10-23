@@ -21,7 +21,8 @@ drawing.
 Each guardian gets a card with three parts:
 
 1. **Essence** (always kept): what the guardian is, in a phrase taken from its charter and
-   subject. The Moon: the moon itself, the one light in the dark. Dino: a long-necked sea
+   subject, and how many: a guardian who is one figure stays one (Dino's 1830 plate first came
+   out as a herd). The Moon: the moon itself, the one light in the dark. Dino: a long-necked sea
    creature, wonder painted from careful looking.
 2. **Rhymes** (optional): at most one or two motifs that may echo from step to step, and only
    where that tradition has its own native form for them. Free in shape, scale, number and pose.
