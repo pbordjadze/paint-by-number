@@ -172,8 +172,8 @@ def simulator_lines(job, job_dir, steps):
             with open(results_path) as f:
                 counts, notes = test_summary(json.load(f))
             parts.append(counts)
-        except (OSError, ValueError) as error:
-            parts.append(f"test results unreadable ({error})")
+        except Exception as error:  # a shape a new Xcode writes must not cost the run its report
+            parts.append(f"test results unreadable ({type(error).__name__}: {error})")
     detail = "; ".join(part for part in parts if part) or "every step passed"
     notes += screenshot_notes(job_dir)
     notes += stall_notes(job, job_dir)
@@ -207,7 +207,10 @@ def main(argv):
             continue
         if steps is not None:
             head.append(f"{job}: {job_result(steps, result)}")
-            details += simulator_lines(job, job_dir, steps)
+            try:
+                details += simulator_lines(job, job_dir, steps)
+            except Exception as error:  # the job's line above still says how it went
+                details.append(f"{job}: details unreadable ({type(error).__name__}: {error})")
         else:
             head.append(f"{job}: {result}")
         if job == "core":
@@ -256,6 +259,12 @@ def self_test():
         log.format("answered after 9.5 seconds", "stall 1"), log.format("stuck for 2.0 seconds", "stall 2"),
         "2026-10-07 11:55:06.9 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo]   stall 2 #0 libsystem_kernel.dylib",
     ]) == {("55471", "1"): (9.5, True), ("55471", "2"): (2.0, False)}
+    import tempfile
+    with tempfile.TemporaryDirectory() as job_dir:
+        with open(os.path.join(job_dir, "test-results.json"), "w") as f:
+            f.write("[]")  # valid JSON of a shape test_summary doesn't know
+        lines = simulator_lines("ipad", job_dir, [("tests", "failure")])
+        assert lines[0].startswith("ipad: tests failure; test results unreadable (AttributeError"), lines
     print("report: self-test ok")
     return 0
 

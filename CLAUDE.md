@@ -435,8 +435,8 @@ any port of it, when changing the fitter: work from the paper.
    trimmed), `core/` (tests, strings check, `regression/` with its table and
    `sheets/<regime>/<sample>.jpg`), and per job
    (`ipad`, `ipad-ui`, `iphone`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
-   app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's library, demo,
-   canvas and feedback lines during the run), test results and `attachments/`. iPad is the primary
+   app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's own log lines
+   during the run, every category of `Log`), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
    screenshots, runs the unit tests and the Settings UI tests, builds Release for
    `ci/check_release.sh` (problems land in `ipad/errors.txt` too) and benchmarks the pipeline
