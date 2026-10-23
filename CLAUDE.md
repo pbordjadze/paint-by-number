@@ -562,6 +562,8 @@ him itself, with a push notification once he has gone quiet.
   the row. Paul signs off on it. Small fixes inside a session's own task aren't proposals.
 - **Reports** to Paul carry the row #, branch@sha, pushed or not, the CI state and the one thing
   needed. No "still waiting" pings.
+- **Times are Eastern.** Every time a session gives Paul (a report, a page, a notification) is
+  America/New_York, labelled ET, never UTC; logs and CI keep their own clocks.
 - **Audits** fix what they find, unless the file is in another session's open branch (the
   branches in CI and those Paul named); a change to one of Paul's own picks goes on a card before
   it's built.
