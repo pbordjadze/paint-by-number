@@ -71,7 +71,7 @@ not linked to you, the feedback you choose to send; the only required-reason API
 are `UserDefaults`, for its own settings, and file timestamps, to clean up its own temporary
 exports. Third-party credits and licenses are in
 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); the app's privacy policy is [PRIVACY.md](PRIVACY.md), and
-what it does for accessibility is [ACCESSIBILITY.md](ACCESSIBILITY.md).
+its accessibility notes are in [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
 ## Project layout
 
