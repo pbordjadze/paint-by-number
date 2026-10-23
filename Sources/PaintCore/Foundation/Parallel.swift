@@ -20,8 +20,19 @@ public enum Parallel {
     /// Number of worker bands to split work into. Oversubscribes slightly so that
     /// uneven bands (and efficiency cores) balance out.
     public static var bandCount: Int {
-        max(1, ProcessInfo.processInfo.activeProcessorCount * 2)
+        forcedBands.count ?? max(1, ProcessInfo.processInfo.activeProcessorCount * 2)
     }
+
+    /// Runs `body` with work split as a device with `count` bands splits it, for the tests that
+    /// hold the pipeline to the rule above (`BandCountTests`): one runner sees one core count.
+    /// Process-wide, since nested passes read `bandCount` on the workers' threads.
+    static func withBandCount<T>(_ count: Int, _ body: () throws -> T) rethrows -> T {
+        forcedBands.count = max(1, count)
+        defer { forcedBands.count = nil }
+        return try body()
+    }
+
+    private static let forcedBands = ForcedBands()
 
     /// Runs `body(range)` over disjoint sub-ranges covering `0..<count`, in parallel.
     /// Falls back to a single serial call for small workloads.
@@ -149,6 +160,17 @@ public enum Parallel {
             }
         }
         return results.map { $0! }
+    }
+}
+
+/// `Parallel.withBandCount`'s setting, read by every thread that splits work.
+private final class ForcedBands: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Int?
+
+    var count: Int? {
+        get { lock.withLock { value } }
+        set { lock.withLock { value = newValue } }
     }
 }
 

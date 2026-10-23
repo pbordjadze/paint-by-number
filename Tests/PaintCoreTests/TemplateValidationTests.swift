@@ -101,6 +101,24 @@ struct TemplateValidationTests {
         }
     }
 
+    /// What the decoder rejects fails validation too: a template in memory that passed it could be
+    /// saved and never open again (the app's Debug check, `pbn check` on what `pbn edit` writes).
+    @Test func whatTheDecoderRejectsIsInvalid() throws {
+        var offCanvas = Self.square()
+        offCanvas.labels[0].position = SIMD2(-1, 128)
+        var detail = Self.square()
+        detail.detailRegions = [3]
+        var radius = Self.square()
+        radius.regions[0].inscribedRadius = .nan
+        for template in [offCanvas, detail, radius] {
+            #expect(throws: Template.CodingError.self) { try template.validateReferences() }
+            let report = template.validate(minLabelRadius: LabelSizing.minimumRadius)
+            #expect(!report.isValid)
+            #expect(report.referenceError != nil && report.description.contains("unreadable"), "\(report)")
+        }
+        #expect(Self.square().validate().referenceError == nil)
+    }
+
     @Test func budgetRejectsOverflowingProducts() {
         var budget = ValidationWorkBudget(counts: [Int.max])
         let overflow = budget.consume(Int.max, times: Int.max)

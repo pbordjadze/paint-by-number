@@ -31,11 +31,15 @@ extension Template {
         /// Validation stopped before expanding spans or testing pairs beyond its linear
         /// work budget. This is a failure even when no bad edge was found yet.
         public var workLimitReason: String?
+        /// What the decoder would reject (`validateReferences`: a span, index or coordinate out of
+        /// range, a value not finite, detail regions or writing strokes out of order): such a
+        /// template saves but never opens again. Nothing else is checked then.
+        public var referenceError: String?
 
         public var isValid: Bool {
             invalidEdges.isEmpty && badRingRegions.isEmpty && badMeshRegions.isEmpty && badLabelRegions.isEmpty
                 && crampedLabelRegions.isEmpty && canvasAreaError <= 1e-3 * Double(max(1, canvasArea))
-                && (badLines ?? []).isEmpty && workLimitReason == nil
+                && (badLines ?? []).isEmpty && workLimitReason == nil && referenceError == nil
         }
         var canvasArea: Int = 0
 
@@ -45,6 +49,7 @@ extension Template {
             if minLabelRoom.isFinite { text += " minLabelRoom " + String(format: "%.3f", Double(minLabelRoom)) }
             if let badLines { text += " lines \(badLines.count)" + (badLines.isEmpty ? "" : " (\(badLines.prefix(3).joined(separator: "; ")))") }
             if let workLimitReason { text += " validation work limit exceeded: \(workLimitReason)" }
+            if let referenceError { text += " unreadable: \(referenceError)" }
             return text
         }
     }
@@ -60,6 +65,12 @@ extension Template {
     public func validate(minLabelRadius: Float? = nil) -> ValidationReport {
         var report = ValidationReport()
         report.canvasArea = width * height
+        do {
+            try validateReferences()
+        } catch {
+            report.referenceError = "\(error)"
+            return report
+        }
         var work = ValidationWorkBudget(counts: [
             regions.count, points.count, edges.count, ringEdges.count, rings.count,
             labels.count, mesh.vertices.count, mesh.indices.count,

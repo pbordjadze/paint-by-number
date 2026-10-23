@@ -40,9 +40,9 @@ nonisolated enum TemplateRasterizer {
         var hidesOutlinesBetweenPainted = true
         var numbers = false
         var numberColor = SIMD4<Float>(0.38, 0.40, 0.43, 1)
-        /// Largest number as a fraction of the canvas' long side; big regions carry several
-        /// labels of this size rather than one huge number.
-        var maximumNumberFraction: CGFloat = 1.0 / 64
+        /// Largest number as a fraction of the canvas' long side (`LabelSizing`'s for sheets);
+        /// big regions carry several labels of this size rather than one huge number.
+        var maximumNumberFraction = CGFloat(LabelSizing.sheetMaximumFraction)
         var paper = SIMD3<Float>(1, 1, 1)
         var lines = Lines.screen
         /// Draw a coloring book's drawing (off: the paint alone, for a drawing laid over it).

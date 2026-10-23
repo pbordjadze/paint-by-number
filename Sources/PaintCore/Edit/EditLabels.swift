@@ -118,9 +118,9 @@ extension EditWork {
     }
 
     /// The largest a number is drawn, its font size as a share of the canvas's shorter side: the
-    /// Metal canvas's cap (the app's `CanvasScene`), the largest of the renderers' (print and
-    /// thumbnails cap lower). Move Number keeps a number's drawn disc off another's by it.
-    static let largestNumberFraction: Float = 0.045
+    /// Metal canvas's cap (`LabelSizing.canvasMaximumFraction`), the largest of the renderers'
+    /// (print and thumbnails cap lower). Move Number keeps a number's drawn disc off another's by it.
+    static let largestNumberFraction = LabelSizing.canvasMaximumFraction
 
     /// Refine's Move Number (`TemplateEditor.Edit.moveLabel`): the number nearest `from`, within
     /// its radius and `reach` (`TemplateEditor.nearestLabel`), goes to `to` when that lies inside

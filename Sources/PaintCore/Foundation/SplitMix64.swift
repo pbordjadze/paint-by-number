@@ -1,9 +1,11 @@
 /// Small, fast, deterministic PRNG (SplitMix64): the pipeline's only random source (palette
 /// seeding, Auto's analysis, nickname draws).
 ///
-/// Its constants, `next()` and `nextFloat`'s 24-bit conversion are part of the deterministic
-/// output and of the color names saved paintings show, so change them only with a
-/// `TemplateGenerator.pipelineVersion` bump, knowing it renames nicknames.
+/// Its constants, `next()` and `nextFloat`'s 24-bit conversion are frozen: they are part of the
+/// deterministic output, and of the nickname formats (`ColorNickname`'s v1 and v2 draws), which
+/// paintings derive at every load from their artwork id whatever pipeline made them, so no
+/// `pipelineVersion` bump would keep their names. A pipeline that needs another generator adds a
+/// type of its own.
 public struct SplitMix64: RandomNumberGenerator, Sendable {
     public var state: UInt64
 

@@ -40,7 +40,7 @@ public struct ShowTemplate: Sendable, Equatable {
     // SVGExport's: a number is at most 1/64 of the canvas's long side, a line is 1/1900 of it with
     // a floor, and a coloring book draws it three times as heavy. `ShowTemplateTests` compares
     // all of it with the SVG itself.
-    private static let maxNumberSize: Float = 1.0 / 64
+    private static let maxNumberSize = LabelSizing.sheetMaximumFraction
     private static let lineWidthDivisor: Float = 1900
     private static let bookWidth: Float = 3
 
