@@ -38,7 +38,20 @@ struct TemplatePreviewView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(UnlimitedPaintings.self) private var paintings
 
+    // In two parts, which the compiler type-checks apart: as one chain it ran out of time.
     var body: some View {
+        observingTheModel(screen)
+            .modifier(UnlockOffer(isPresented: $offersUnlock, start: start))
+            .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
+                Button("Try Again", action: start)
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(startError ?? "")
+            }
+    }
+
+    /// The preview, its bar and its covers.
+    private var screen: some View {
         Group {
             if isSideBySide {
                 HStack(spacing: 24) {
@@ -121,53 +134,52 @@ struct TemplatePreviewView: View {
             if opens { openRefine() }
         }
         #endif
-        // The preview's tips: a template that is final is a moment, a slider let go another.
-        .onAppear {
-            PaintTips.desk.enter(.preview)
-            if model.isFinal { previewFinal() }
-        }
-        .onDisappear {
-            PaintTips.desk.leave(.preview)
-            model.withdrawStart()
-        }
-        .onChange(of: model.isFinal) { _, isFinal in
-            if isFinal { previewFinal() }
-        }
-        // A start asked for early goes once the painting is made, unless something called it off.
-        .onChange(of: model.startsNow) { _, now in
-            if now {
-                model.withdrawStart()
-                start()
+    }
+
+    /// What the preview does as the model changes: its tips' moments, Refine and a start asked
+    /// for early.
+    private func observingTheModel(_ content: some View) -> some View {
+        content
+            // The preview's tips: a template that is final is a moment, a slider let go another.
+            .onAppear {
+                PaintTips.desk.enter(.preview)
+                if model.isFinal { previewFinal() }
             }
-        }
-        .onChange(of: model.isAdjusting) { _, adjusting in
-            if !adjusting { PaintTips.sliderReleased(isCustom: model.settingsOrigin == .custom) }
-        }
-        .onChange(of: model.settingsOrigin) { old, origin in
-            if old == .custom, origin == .suggested { PaintTips.resetUsed() }
-        }
-        #if UNRELEASED
-        .onChange(of: isRefining) { _, refining in
-            if refining { PaintTips.refineOpened() }
-        }
-        #endif
-        // Start Painting saves the painting, and The Making-of may play: the preview says no more.
-        .onChange(of: isStarting) { _, starting in
-            if starting { PaintTips.desk.leave(.preview) }
-        }
-        #if DEBUG && UNRELEASED
-        // `create-refine` shows the Refine screen once its painting is refined.
-        .onChange(of: model.refinements.isEmpty) { _, isEmpty in
-            if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
-        }
-        #endif
-        .modifier(UnlockOffer(isPresented: $offersUnlock, start: start))
-        .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
-            Button("Try Again", action: start)
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(startError ?? "")
-        }
+            .onDisappear {
+                PaintTips.desk.leave(.preview)
+                model.withdrawStart()
+            }
+            .onChange(of: model.isFinal) { _, isFinal in
+                if isFinal { previewFinal() }
+            }
+            // A start asked for early goes once the painting is made, unless something called it off.
+            .onChange(of: model.startsNow) { _, now in
+                if now {
+                    model.withdrawStart()
+                    start()
+                }
+            }
+            .onChange(of: model.isAdjusting) { _, adjusting in
+                if !adjusting { PaintTips.sliderReleased(isCustom: model.settingsOrigin == .custom) }
+            }
+            .onChange(of: model.settingsOrigin) { old, origin in
+                if old == .custom, origin == .suggested { PaintTips.resetUsed() }
+            }
+            #if UNRELEASED
+            .onChange(of: isRefining) { _, refining in
+                if refining { PaintTips.refineOpened() }
+            }
+            #endif
+            // Start Painting saves the painting, and The Making-of may play: the preview says no more.
+            .onChange(of: isStarting) { _, starting in
+                if starting { PaintTips.desk.leave(.preview) }
+            }
+            #if DEBUG && UNRELEASED
+            // `create-refine` shows the Refine screen once its painting is refined.
+            .onChange(of: model.refinements.isEmpty) { _, isEmpty in
+                if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
+            }
+            #endif
     }
 
     /// Canvas beside the controls when that shows the photo larger than stacking them: landscape
