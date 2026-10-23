@@ -5,7 +5,7 @@
 /// where lines meet, the darker one wins. Segments join round, and a line ends round, because the
 /// distance is taken to the segments themselves.
 ///
-/// Only `+ - *` and `sqrt` on Doubles, in a fixed order: `ink_coverage` in `making_of_show.py`
+/// Only `+ - *` and `sqrt` on Doubles, in a fixed order: `ink_coverage` in `making_of_fields.py`
 /// gives the same numbers, bit for bit.
 enum InkCoverage {
     static func plane(_ lines: [InkLine], width: Int, height: Int, lineWidth: Double) -> Plane<Float> {

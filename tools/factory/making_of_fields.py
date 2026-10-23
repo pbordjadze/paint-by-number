@@ -15,13 +15,13 @@ a pattern of its own that follows what the step does.
                numbers come out like stars, each with a faint ring
 
     show = FieldShow(snapshots, svg, spec, seed=7)
-    frame = show.frame(t)             # making_of_show.Show's frame, with `sparks` and `stars`
+    frame = show.frame(t)             # what to draw at t, as plain data (`frame`)
     picture = show.composite(frame)
 
-It is built from the same shared modules as making_of_show.Show (the k-means++ seeds, the paints,
-the merged regions, the template's lines and numbers: making_of_inputs.py; the layers:
-making_of_layers.py; the pictures' formulas: making_of_compose.py; the cards, the rings and the
-lines' stair steps: making_of_reveal.py), and plays in making_of_clip.py with --no-crew. What
+It is built from the shared modules (the k-means++ seeds, the paints, the merged regions, the
+template's lines and numbers: making_of_inputs.py; the layers: making_of_layers.py; the pictures'
+formulas: making_of_compose.py; the cards, the rings and the lines' stair steps:
+making_of_reveal.py), and plays in making_of_clip.py. What
 differs is when each part changes: an arrival time from each step's seeds through a cost field
 (`geodesic`), roughened by domain-warped noise (`Noise`), then paced by rank (`paced`), so the
 change covers the picture evenly whatever the field's outliers. The fields are computed at half the
@@ -49,7 +49,6 @@ import making_of_inputs as inputs  # noqa: E402
 import making_of_layers as layers  # noqa: E402
 import making_of_pets as pets  # noqa: E402
 import making_of_reveal as reveal  # noqa: E402
-import making_of_show as show_module  # noqa: E402
 
 OUTRO = 1.6               # s the finished drawing holds: there is no goodbye to wait for
 SCALE = 2                 # the fields are computed at 1 / SCALE of the picture's size
@@ -241,13 +240,51 @@ class TideCompositor(compose.Compositor):
         return pic
 
 
+def show_inputs(snapshots, svg, spec, seed):
+    """The pictures, the template and what the show is built from (`making_of_inputs.build`). The show
+    draws no guardian, but its spots and seeds are still drawn for the spec's crew, as they were when
+    it had one: the fixtures pin them. Configures making_of_pets from the spec."""
+    pets.configure(spec)
+    pictures = inputs.Pictures(snapshots)
+    template = inputs.Template(svg, pictures.size[0])
+    built = inputs.build(pictures, template, spec, seed, pets.ORDER[:len(spec['crew']['pets'])])
+    return pictures, template, built
+
+
+def ink_coverage(lines, width, height, line_width):
+    """How much ink `lines` ([{points, value}]) put on each pixel, float32 (height, width): a pixel is
+    covered by a line as far as its centre is within half `line_width` of it, softened over one pixel
+    (full half a pixel inside the edge, none half a pixel outside) and times the line's value; where
+    lines meet the darker wins. Round joins and ends. Sources/MakingOf's `InkCoverage`, bit for bit:
+    only + - * and sqrt in float64, in a fixed order."""
+    coverage = np.zeros((height, width))
+    reach = line_width / 2 + 0.5
+    for line in lines:
+        pts, value = line['points'], line['value']
+        for (ax, ay), (bx, by) in zip(pts[:-1], pts[1:]):
+            x0 = max(int(math.floor(min(ax, bx) - reach)), 0)
+            x1 = min(int(math.floor(max(ax, bx) + reach)) + 1, width)
+            y0 = max(int(math.floor(min(ay, by) - reach)), 0)
+            y1 = min(int(math.floor(max(ay, by) + reach)) + 1, height)
+            if x0 >= x1 or y0 >= y1:
+                continue
+            px = np.arange(x0, x1, dtype=np.float64)[None, :] + 0.5
+            py = np.arange(y0, y1, dtype=np.float64)[:, None] + 0.5
+            vx, vy = bx - ax, by - ay
+            length_squared = vx * vx + vy * vy
+            along = np.clip(((px - ax) * vx + (py - ay) * vy) / length_squared, 0, 1) if length_squared > 0 else 0.0
+            dx, dy = px - (ax + along * vx), py - (ay + along * vy)
+            covered = np.clip(reach - np.sqrt(dx * dx + dy * dy), 0, 1) * value
+            np.maximum(coverage[y0:y1, x0:x1], covered, out=coverage[y0:y1, x0:x1])
+    return coverage.astype(np.float32)
+
+
 class FieldShow:
     """The show with no crew, built from `snapshots` (the folder `pbn generate --snapshots` writes),
-    `svg` (its template.svg), the spec (a dict, making-of.json) and `seed`: making_of_show.Show's
-    attributes and frames, without a crew."""
+    `svg` (its template.svg), the spec (a dict, making-of.json) and `seed`."""
 
     def __init__(self, snapshots, svg, spec, seed=7):
-        pictures, template, built = show_module.crew_inputs(snapshots, svg, spec, seed)
+        pictures, template, built = show_inputs(snapshots, svg, spec, seed)
         self.spec, self.seed, self.built = spec, seed, built
         self.size = (W, H) = pictures.size
         self.line_width = template.line_width
@@ -404,8 +441,12 @@ class FieldShow:
         return lines, sparks
 
     def frame(self, t):
-        """What to draw at time `t`: making_of_show.Show's frame (no sprites), with `sparks`
-        [{x, y, heat}] in the ink step and `stars` [{x, y, radius, alpha}] as the numbers come out."""
+        """What to draw at time `t`: {time, step, picture: {stage, time, handoff}, ink: [{stroke,
+        points, value}], numbers: [alpha], seed_rings: [{x, y, radius, alpha}], sprites (always empty),
+        card: {step, caption, methods, opacity, footnote_opacity} or None, sparks: [{x, y, heat}] in
+        the ink step, stars: [{x, y, radius, alpha}] as the numbers come out}, all places in pixels
+        of the snapshots' picture. Sources/MakingOf's `ShowFrame` has the same but `sprites`, and its
+        doc comment says what a view draws from it."""
         spec, intro, step = self.spec, self.intro, self.step
         stage = compose.stage_of(t, intro, step)
         k = stage if 0 <= stage < reveal.STEPS else None
@@ -444,7 +485,10 @@ class FieldShow:
                 'sparks': sparks, 'stars': stars}
 
     def composite(self, frame):
-        """The picture of `frame`, float32 (H, W, 3), as making_of_show.Show.composite makes it."""
+        """The picture of `frame`, float32 (H, W, 3): the layers blended as its recipe says, with its
+        lines rasterized by `ink_coverage` at the template's line width. The numbers, the hand-off,
+        the rings, the sparks, the stars and the card are the renderer's, as in Sources/MakingOf's
+        `FieldShow.composite`."""
         W, H = self.size
-        ink = show_module.ink_coverage(frame['ink'], W, H, self.line_width) if frame['ink'] else None
+        ink = ink_coverage(frame['ink'], W, H, self.line_width) if frame['ink'] else None
         return self.compositor.picture(frame['picture']['time'], ink)

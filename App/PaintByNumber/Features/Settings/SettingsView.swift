@@ -15,9 +15,6 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     /// On until switched off here (`TipPreference`).
     @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = true
-    #if UNRELEASED
-    @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
-    #endif
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = false
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var path: [Destination] = []
@@ -152,18 +149,6 @@ struct SettingsView: View {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")
                     }
-
-                    #if UNRELEASED
-                    // Debug and SideStore builds only for now (`AppShellView`).
-                    Section {
-                        Toggle(isOn: $showsMarginarium) {
-                            SwiftUI.Label("The Marginarium", systemImage: "book.pages")
-                        }
-                        .accessibilityIdentifier("settings-marginarium")
-                    } footer: {
-                        Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with its guardians.")
-                    }
-                    #endif
 
                     Section {
                         Toggle(isOn: $playsMakingOf) {

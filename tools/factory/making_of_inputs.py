@@ -288,7 +288,7 @@ def main():
     ap.add_argument('snapshots')
     ap.add_argument('--spec', default=SPEC)
     ap.add_argument('--seed', type=int, default=7)
-    ap.add_argument('--crew', type=int, help="the first N pets of the crew's order (default the spec's crew)")
+    ap.add_argument('--crew', type=int, help="the first N of the spec's crew (default all of it)")
     ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's shorter side")
     ap.add_argument('--width', type=int, help="the pictures' width in px (default the snapshots')")
     ap.add_argument('--out', help='write the JSON here instead of to stdout')

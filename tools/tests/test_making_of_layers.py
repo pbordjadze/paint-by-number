@@ -115,7 +115,7 @@ def compose_golden():
 
 
 def write_json(path, doc):
-    """One line per top-level part, as plan-parrots.json is."""
+    """One line per top-level part."""
     with open(path, "w", encoding="utf-8") as f:
         f.write("{\n" + ",\n".join(f'"{k}":' + json.dumps(v, separators=(",", ":")) for k, v in doc.items()) + "\n}\n")
 

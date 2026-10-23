@@ -70,22 +70,6 @@ import PaintCore
 /// - `settings-tips`: the same with tips on, for its Tips section; `settings-tip` waits for Worth a
 ///   Look Here at Painting Length.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
-/// - `marginarium`, with `-dark` and `-long-text`: The Marginarium's sheet over the empty
-///   gallery, its drawings idling at the top: Pip, Colophon and the guardians.
-/// - `marginarium-chapter`, `marginarium-chapter-dark`, `marginarium-chapter-long-text`: the
-///   reader opened to Two More Pets (Appendix F), with Pip and Colophon inside it.
-/// - `marginarium-chapter1`, `marginarium-chapter1-margin`, `marginarium-chapter1-guardians`,
-///   `marginarium-chapter1-table`: Chapter 1 at its title, first margin group (the narrator's
-///   notes, with Colophon), second margin group (five guardians' notes, each guardian drawn
-///   beside its note) or guardians table. Each also has `-dark` and `-long-text` variants;
-///   readiness follows the target reaching the scroll viewport.
-/// - `marginarium-chapter2`, with `-dark` and `-long-text`: Chapter 2, The Drawings We Actually
-///   Made, scrolled to its first guardian (Medea).
-/// - `marginarium-whos-who`, with `-dark` and `-long-text`: Who's Who at its top (the people,
-///   the helpers, the Lamp and its first teams); `marginarium-whos-who-teams` scrolled to the
-///   Workshop and the teams after it.
-/// - `marginarium-guardian`, with `-dark` and `-long-text`: Dino's brief, opened from Who's
-///   Who, its egg rocking.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
@@ -105,10 +89,7 @@ enum ShellDemo: Equatable {
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createRefineGuide, createSuggested, createCustom, createFromFile,
          createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
-         settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
-         marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
-         marginariumChapterOneTable, marginariumChapterTwo, marginariumWhosWho, marginariumWhosWhoTeams,
-         marginariumGuardian
+         settings, settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -152,19 +133,6 @@ enum ShellDemo: Equatable {
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
-        case "marginarium", "marginarium-dark", "marginarium-long-text": .marginarium
-        case "marginarium-chapter", "marginarium-chapter-dark", "marginarium-chapter-long-text": .marginariumChapter
-        case "marginarium-chapter1", "marginarium-chapter1-dark", "marginarium-chapter1-long-text": .marginariumChapterOne
-        case "marginarium-chapter1-margin", "marginarium-chapter1-margin-dark",
-             "marginarium-chapter1-margin-long-text": .marginariumChapterOneMargin
-        case "marginarium-chapter1-guardians", "marginarium-chapter1-guardians-dark",
-             "marginarium-chapter1-guardians-long-text": .marginariumChapterOneGuardians
-        case "marginarium-chapter1-table", "marginarium-chapter1-table-dark",
-             "marginarium-chapter1-table-long-text": .marginariumChapterOneTable
-        case "marginarium-chapter2", "marginarium-chapter2-dark", "marginarium-chapter2-long-text": .marginariumChapterTwo
-        case "marginarium-whos-who", "marginarium-whos-who-dark", "marginarium-whos-who-long-text": .marginariumWhosWho
-        case "marginarium-whos-who-teams": .marginariumWhosWhoTeams
-        case "marginarium-guardian", "marginarium-guardian-dark", "marginarium-guardian-long-text": .marginariumGuardian
         default: nil
         }
     }()
@@ -229,27 +197,6 @@ enum ShellDemo: Equatable {
     var opensSettings: Bool {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements || self == .settingsTips
             || self == .settingsTip
-    }
-
-    var opensMarginarium: Bool { self == .marginarium || !marginariumPath.isEmpty }
-
-    /// The Marginarium's navigation stack at launch: a chapter, or Who's Who and a guardian.
-    var marginariumPath: [String] {
-        switch self {
-        case .marginariumWhosWho, .marginariumWhosWhoTeams: [MarginariumCast.whosWho]
-        case .marginariumGuardian: [MarginariumCast.whosWho, MarginariumCast.destination(of: MarginariumCast.dinotopia)]
-        default: marginariumEntryID.map { [$0] } ?? []
-        }
-    }
-
-    var marginariumEntryID: String? {
-        switch self {
-        case .marginariumChapter: "twoMorePets"
-        case .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
-             .marginariumChapterOneTable: "marginarium"
-        case .marginariumChapterTwo: "petsWeMade"
-        default: nil
-        }
     }
 
     var previewSample: Sample? {
@@ -399,10 +346,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
-             .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
-             .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
-             .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,
-             .marginariumGuardian:
+             .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         }
     }

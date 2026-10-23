@@ -37,12 +37,6 @@ Forms scanned (comments and string contents are skipped by a small Swift lexer):
 The titles of the library's pictures are one exception: `Sample` looks each one up at
 runtime as `sample.<id>`, so every record of `Resources/Samples/library.json` counts as a use of
 that key with the record's `title` as its English default.
-The other runtime family is Marginarium blocks: `Resources/marginarium.json` records stable
-keys (marginarium.<id>.block.<uuid>, plus the original title/subtitle/passage keys). Every
-manifest key counts as a use, with its exact Markdown text as the English default. These are
-unformatted Bundle lookups: percent signs are literal, not printf placeholders. marginarium.py
-validates source Markdown, manifest structure, images and catalog together; no blanket prefix
-exemption hides unused block keys.
 
 `Text(verbatim:)`, `Text(someString)` and other non-literal arguments are not localized by
 SwiftUI and are not scanned: build such strings with form 2 or 3 first.
@@ -54,8 +48,6 @@ import plistlib
 import re
 import sys
 from pathlib import Path
-
-import marginarium
 
 APP_SOURCES = "App/PaintByNumber"
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
@@ -97,9 +89,6 @@ KEY_TYPE_DECLARATIONS = {
     "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
-    # Not a wrapper: MarginariumHighlighter joins a block's Texts by interpolation, a key of
-    # placeholders alone (`+` is deprecated).
-    "Features/Marginarium/MarginariumAnnotations.swift": 1,
 }
 # Calls that never carry user-facing text: logging, assertions, decoding diagnostics, file and
 # asset names.
@@ -123,12 +112,11 @@ ALLOWED_LITERALS = {
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations); and feedback's report (`feedback.md`), written for the
 # developers in English like pbn's output and never shown in the app; the uploader's HTTP header
-# lines (`Content-Disposition: form-data; name=…`, sent to the relay and never shown); and the
-# Marginarium's speaker table, whose strings are the signatures `marginarium.json` records,
-# matched and never shown. Their localizable sentences still go through the forms.
+# lines (`Content-Disposition: form-data; name=…`, sent to the relay and never shown). Their
+# localizable sentences still go through the forms.
 VERBATIM_FILES = {
     "Features/Settings/License.swift", "Features/Settings/Acknowledgements.swift", "Features/Feedback/FeedbackReport.swift",
-    "Features/Feedback/FeedbackUploader.swift", "Features/Marginarium/MarginariumSpeakers.swift",
+    "Features/Feedback/FeedbackUploader.swift",
 }
 # Properties of Info.plist that Xcode localizes through InfoPlist.xcstrings.
 LOCALIZED_INFOPLIST_KEY = re.compile(r"^(CFBundleDisplayName|CFBundleName|NS\w+UsageDescription)$")
@@ -404,10 +392,9 @@ class Finding:
 class Usage:
     """A key the sources look up, where, and (for explicit keys) the English default."""
 
-    def __init__(self, key, path, line, default=None, interpolations=0, comment=None, raw=False):
+    def __init__(self, key, path, line, default=None, interpolations=0, comment=None):
         self.key, self.path, self.line = key, path, line
         self.default, self.interpolations, self.comment = default, interpolations, comment
-        self.raw = raw
 
 
 def literal_of(arg_tokens):
@@ -683,9 +670,8 @@ def check_entry_value(path, key, en, default, findings):
         if unit.get("state") != "translated":
             findings.append(Finding(path, 0, f'"{key}": en state must be "translated"'))
         value = unit.get("value", "")
-        if not default.raw:
-            check_specifiers(path, key, "en", value, default.interpolations, findings)
-        if (value if default.raw else normalize_catalog(value)) != wanted:
+        check_specifiers(path, key, "en", value, default.interpolations, findings)
+        if normalize_catalog(value) != wanted:
             findings.append(Finding(path, 0, f'"{key}": English differs from the code\'s defaultValue: "{value}" vs "{shorten(default.default, 200)}"'))
         return
     plural = (variations or {}).get("plural")
@@ -764,11 +750,6 @@ def run(root):
         return [Finding(APP_SOURCES, 0, "no Swift sources found")], 0, 0
     usages, scan_findings = scan_sources(sources)
     findings += scan_findings
-    try:
-        _, blocks = marginarium.validate(root)
-        usages += [Usage(key, str(marginarium.MANIFEST), 0, default=value, raw=True) for key, value in blocks]
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        findings.append(Finding(str(marginarium.MANIFEST), 0, str(error)))
     library_path = root / LIBRARY
     if not library_path.exists():
         findings.append(Finding(LIBRARY, 0, "missing"))

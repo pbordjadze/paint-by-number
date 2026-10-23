@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import MakingOf
 
-/// The same hand-made cases as `InkCoverageTests` in `tools/tests/test_making_of_show.py`; the
+/// The same hand-made cases as `InkCoverageTests` in `tools/tests/test_making_of_fields.py`; the
 /// golden frames compare the rasterizer with the Python's on real lines, bit for bit.
 @Suite struct InkCoverageTests {
     private func coverage(_ lines: [InkLine], width: Double = 1, size: (Int, Int) = (12, 10)) -> Plane<Float> {

@@ -1,22 +1,17 @@
-"""The making-of crew's planner against its recorded plan (plan-parrots.json), and SplitMix64's pinned draws.
+"""SplitMix64's pinned draws and the show's random streams (tools/factory/making_of_pets.py).
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_pets.py'
 
-Needs numpy and Pillow (making_of_pets.py imports them). The fixture was the Swift port's too, until
-that port was retired (October 23, 2026); Sources/MakingOf's SplitMixTests still pin the same draws."""
+Needs numpy. Sources/MakingOf's SplitMixTests pin the same draws. The crew planner itself is
+exercised through the fixtures it made (test_making_of_inputs.py, test_making_of_reveal.py)."""
 
-import json
 from pathlib import Path
-import random
 import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "factory"))
 import making_of_pets as pets
-
-FIXTURE = ROOT / "tools" / "tests" / "fixtures" / "plan-parrots.json"
-SPEC = ROOT / "App" / "PaintByNumber" / "Resources" / "making-of.json"
 
 
 class SplitMixTests(unittest.TestCase):
@@ -49,7 +44,6 @@ class SplitMixTests(unittest.TestCase):
         self.assertEqual(pets.SplitMix64(3).permutation(0), [])
 
 
-
 class StreamTests(unittest.TestCase):
     def test_each_purpose_has_its_own_stream(self):
         pins = [
@@ -62,49 +56,6 @@ class StreamTests(unittest.TestCase):
         for purpose, index, doubles in pins:
             rng = pets.stream(7, purpose, index)
             self.assertEqual([rng.random() for _ in range(3)], doubles, (purpose, index))
-
-class PlanFixtureTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
-        pets.configure(cls.fixture["spec"])
-        cls.planned = pets.plan(cls.fixture["inputs"])
-
-    def test_fixture_was_made_from_the_shipped_spec(self):
-        # what the plan reads: a caption or card change needs no new fixture
-        shipped, made = json.loads(SPEC.read_text(encoding="utf-8")), self.fixture["spec"]
-        for key in ("crew", "timing"):
-            self.assertEqual(made[key], shipped[key])
-        self.assertEqual([(s["id"], s["pose"]) for s in made["steps"]],
-                         [(s["id"], s["pose"]) for s in shipped["steps"]])
-
-    def test_inputs_are_at_the_precision_the_file_keeps(self):
-        self.assertEqual(pets.quantized(self.fixture["inputs"]), self.fixture["inputs"])
-
-    def test_plan_replays(self):
-        again = json.loads(json.dumps(pets.plan_data(self.planned)))
-        self.assertEqual(again, self.fixture["plan"])
-
-    def test_states_replay(self):
-        timing = self.fixture["spec"]["timing"]
-        end = timing["intro"] + 6 * timing["step"] + timing["outro"]
-        again = json.loads(json.dumps(pets.states_data(self.planned.pets, end)))
-        self.assertEqual(again, self.fixture["states"])
-
-    def test_state_is_a_function_of_the_time(self):
-        times = [i / 60 for i in range(1080)]
-        shuffled = random.Random(1).sample(times, 300)
-        for pet in self.planned.pets:
-            sequential = {t: pet.state(t) for t in times}
-            for t in shuffled:
-                self.assertEqual(pet.state(t), sequential[t])
-
-    def test_no_line_takes_a_pet_out_of_the_picture(self):
-        inputs = dict(self.fixture["inputs"])
-        w, y, h = inputs["size"][0], inputs["size"][1] / 2, inputs["petHeight"]
-        # one line from inside the left band to the picture's edge, one that stays inside
-        inputs["strokes"] = [[[0.2 * w, y], [0.0, y]], [[0.45 * w, y], [0.45 * w + 1.5 * h, y]]]
-        self.assertEqual([t[0] for t in pets.plan(inputs).traces], [1])
 
 
 if __name__ == "__main__":

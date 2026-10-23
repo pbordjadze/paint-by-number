@@ -1,5 +1,7 @@
 """The making-of show with no crew (tools/factory/making_of_fields.py): its fields by hand, the show
-built from the small show fixture, and the numbers Sources/MakingOf's `FieldShow` is compared with.
+built from the small show fixture, and the numbers Sources/MakingOf's `FieldShow` is compared with;
+the lines' rasterizer and the cards' and rings' timing by hand (the same cases as Sources/MakingOf's
+InkCoverageTests and TimelineTests), and how the clip tool reads the credits.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_fields.py'
     python3 tools/tests/test_making_of_fields.py --write-goldens     # after changing the field show
@@ -28,11 +30,11 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "factory"))
+import making_of_clip as clip
 import making_of_exact as exact
 import making_of_fields as fields
 import making_of_pets as pets
 import making_of_reveal as reveal
-import making_of_show as show_module
 
 FIXTURES = ROOT / "Tests" / "MakingOfTests" / "Fixtures"
 SNAPSHOTS = FIXTURES / "show-small"
@@ -192,7 +194,7 @@ def fields_golden():
 
 
 def write_json(path, doc):
-    """One line per top-level part, as frames-small.json is."""
+    """One line per top-level part."""
     with open(path, "w", encoding="utf-8") as f:
         f.write("{\n" + ",\n".join(f'"{k}":' + json.dumps(v, separators=(",", ":")) for k, v in doc.items()) + "\n}\n")
 
@@ -297,7 +299,7 @@ class FieldShowTests(unittest.TestCase):
             self.assertLessEqual(at, self.starts[6])
 
     def test_the_paints_drop_the_crew_shows_own_seeds(self):
-        pictures, template, built = show_module.crew_inputs(
+        pictures, template, built = fields.show_inputs(
             str(SNAPSHOTS), str(SNAPSHOTS / "template.svg"), load_spec(), SEED)
         self.assertEqual(self.show.seeds, built.seeds)
 
@@ -366,6 +368,119 @@ class GoldenTests(unittest.TestCase):
         self.assertTrue(any(f["ink"]["lines"] and any(l["value"] < 1 for l in f["ink"]["lines"]) for f in frames))
         self.assertTrue(any(f["numbers"] and 0 < sum(f["numbers"]) < len(f["numbers"]) for f in frames))
         self.assertTrue(all(f["sprites"] == [] for f in frames))
+
+
+class InkCoverageTests(unittest.TestCase):
+    @staticmethod
+    def line(points, value=1.0):
+        return {"points": np.array(points, dtype=np.float64), "value": value}
+
+    def test_a_horizontal_line_covers_the_pixels_it_runs_through(self):
+        # two pixels wide along y = 5: rows 4 and 5 are full ink, rows 3 and 6 are not touched
+        cov = fields.ink_coverage([self.line([(2.0, 5.0), (8.0, 5.0)])], 12, 10, 2.0)
+        self.assertEqual(cov[4, 4], 1.0)
+        self.assertEqual(cov[5, 4], 1.0)
+        self.assertEqual(cov[3, 4], 0.0)
+        self.assertEqual(cov[6, 4], 0.0)
+        # round ends: a pixel a whole width past the end is clear, the one right at it is covered
+        self.assertEqual(cov[4, 9], 0.0)
+        self.assertGreater(cov[4, 8], 0.5)
+
+    def test_the_edge_is_soft_over_one_pixel(self):
+        # a line 1.5 wide: full ink half a pixel inside its edge (0.25 from its middle), none half a
+        # pixel outside (1.25), a pixel's worth of grey between
+        cov = fields.ink_coverage([self.line([(0.0, 5.0), (10.0, 5.0)])], 12, 10, 1.5)
+        self.assertEqual((float(cov[4, 5]), float(cov[5, 5]), float(cov[3, 5])), (0.75, 0.75, 0.0))
+        cov = fields.ink_coverage([self.line([(0.0, 5.25), (10.0, 5.25)])], 12, 10, 1.5)
+        self.assertEqual((float(cov[5, 5]), float(cov[4, 5]), float(cov[6, 5])), (1.0, 0.5, 0.0))
+
+    def test_a_value_scales_the_ink_and_the_darker_line_wins(self):
+        faint = self.line([(0.0, 5.0), (10.0, 5.0)], 0.4)
+        bold = self.line([(5.0, 0.0), (5.0, 9.0)], 1.0)
+        cov = fields.ink_coverage([faint, bold], 12, 10, 2.0)
+        self.assertAlmostEqual(float(cov[4, 2]), 0.4, places=6)
+        self.assertEqual(cov[4, 4], 1.0)             # where they cross
+        self.assertEqual(fields.ink_coverage([bold, faint], 12, 10, 2.0)[4, 4], 1.0)
+
+    def test_lines_off_the_picture_are_clipped(self):
+        cov = fields.ink_coverage([self.line([(-20.0, -5.0), (30.0, -3.0)]), self.line([(40.0, 2.0), (50.0, 3.0)])], 12, 10, 2.0)
+        self.assertEqual(float(cov.max()), 0.0)
+
+    def test_a_dot_is_round(self):
+        cov = fields.ink_coverage([self.line([(5.5, 5.5), (5.5, 5.5)])], 12, 10, 4.0)
+        self.assertEqual((float(cov[5, 5]), float(cov[5, 7]), float(cov[5, 8])), (1.0, 0.5, 0.0))
+        self.assertEqual(float(cov[7, 7]), 0.0)         # the corner of the square it isn't
+        self.assertEqual(float(cov[0, 0]), 0.0)
+
+
+class TimelineTests(unittest.TestCase):
+    INTRO, STEP = 0.6, 2.5
+
+    def card(self, k, t):
+        return reveal.card_fade(k, t, self.INTRO, self.STEP)
+
+    def test_a_card_lives_inside_its_step(self):
+        for k in range(6):
+            start = self.INTRO + k * self.STEP
+            self.assertEqual(self.card(k, start), 0.0)
+            self.assertAlmostEqual(self.card(k, start + self.STEP), 0.0, places=12)
+            self.assertEqual(self.card(k, start + self.STEP / 2), 1.0)
+            self.assertEqual(self.card(k, start - 0.01), 0.0)
+            self.assertEqual(self.card(k, start + self.STEP + 0.01), 0.0)
+            self.assertTrue(0 < self.card(k, start + 0.05) < 1 and 0 < self.card(k, start + self.STEP - 0.05) < 1)
+
+    def test_a_brisker_show_fades_faster(self):
+        # the fade is CARD_FADE over the square root of the pace: 0.15 / sqrt(1.5 / step)
+        for step in (0.75, 1.5, 3.0):
+            fade = 0.15 / math.sqrt(1.5 / step)
+            self.assertAlmostEqual(reveal.card_fade(0, 0.6 + fade, 0.6, step), 1.0, places=12)
+            self.assertLess(reveal.card_fade(0, 0.6 + fade * 0.99, 0.6, step), 1.0)
+
+    def test_the_crew_fades_out_over_the_last_of_the_show(self):
+        self.assertEqual(reveal.crew_fade(18.0, 19.0), 1.0)
+        self.assertEqual(reveal.crew_fade(18.7, 19.0), 1.0)
+        self.assertAlmostEqual(reveal.crew_fade(18.85, 19.0), 0.5, places=12)
+        self.assertEqual(reveal.crew_fade(19.0, 19.0), 0.0)
+        self.assertEqual(reveal.crew_fade(25.0, 19.0), 0.0)
+
+    def test_the_handoff_runs_as_the_steps_end(self):
+        end = self.INTRO + 6 * self.STEP
+        self.assertEqual(reveal.handoff(end - 1, self.INTRO, self.STEP), 0.0)
+        self.assertEqual(reveal.handoff(end, self.INTRO, self.STEP), 0.0)
+        self.assertAlmostEqual(reveal.handoff(end + 0.075, self.INTRO, self.STEP), 0.5, places=12)
+        self.assertEqual(reveal.handoff(end + 0.15, self.INTRO, self.STEP), 1.0)
+
+    def test_a_ring_pops_in_swells_and_goes_when_its_paint_has_spread(self):
+        seed = (6.0, 50.0, 40.0, 3)
+        ring = lambda t, spread=7.0: reveal.seed_ring(seed, spread, t, self.INTRO, self.STEP, 8.5, 0.3)
+        self.assertIsNone(ring(5.99))
+        self.assertIsNone(ring(6.0))                            # not yet opaque at all
+        self.assertAlmostEqual(ring(6.022)["alpha"], 0.3, places=12)        # a tenth of the pop, three times as fast
+        mid = ring(6.11)
+        self.assertEqual((mid["x"], mid["y"]), (50.0, 40.0))
+        self.assertEqual(mid["alpha"], 1.0)
+        self.assertAlmostEqual(mid["radius"], 8.5 * (1 + 0.35 * 0.5), places=12)      # half way, swollen the most
+        self.assertEqual(ring(6.5)["radius"], 8.5)              # settled
+        self.assertEqual(ring(6.5)["alpha"], 1.0)
+        # its paint spread at 7.0: gone 0.1 + 0.3 s after
+        self.assertEqual(ring(7.1)["alpha"], 1.0)
+        self.assertLess(ring(7.25)["alpha"], 1.0)
+        self.assertIsNone(ring(7.4))
+        # every ring is gone before the paints step ends, whichever its paint did
+        end = self.INTRO + 3 * self.STEP
+        self.assertIsNone(ring(end, spread=99.0))
+        self.assertLess(ring(end - 0.2, spread=99.0)["alpha"], 1.0)
+
+
+class ClipToolTests(unittest.TestCase):
+    """making_of_clip.py is a thin driver over the shared modules; what runs without ffmpeg, fonts
+    or node is how it reads the spec's credits."""
+
+    def test_a_method_without_a_credit_stops_it(self):
+        self.assertEqual(clip.credits(["Potrace"])[0][1], "2003")
+        with self.assertRaises(SystemExit) as stop:
+            clip.credits(["Informative Drawings"])          # the model's entry has no credit line of that shape
+        self.assertIn("Informative Drawings", str(stop.exception))
 
 
 if __name__ == "__main__":

@@ -99,86 +99,17 @@ synchronized folder would bundle it into the app.
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
-  Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
-  and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
-  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly). Debug
-  and SideStore builds only for now: the release has neither the switch nor the toolbar entry
-  (`#if UNRELEASED`) and leaves out its code, `marginarium.json`, the `pet-*.webp` sheets and `Marginarium.xcassets`
-  (Pip's and Colophon's frames) through the target's Release `EXCLUDED_SOURCE_FILE_NAMES`, which
-  `ci/check_release.sh` checks; its `marginarium.*` strings stay in the catalog, unused,
-  `MarginariumEntry` and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
-  carry the frames in the asset catalog's `Pip/` and `Colophon/`). Paul's shape for it (October
-  15): reductive, cute first, complexity only for whoever keeps digging. `MarginariumView` opens
-  on its drawings with nothing above them (`MarginariumCompany`: Pip, Colophon and every guardian
-  idling as small copies; a tap makes one wave and shows its name, a link to its brief), then one
-  way into the story (Chapter 1's opening paragraph, its entry's `passage`, and a link to keep
-  reading), then a lean contents: two chapters (1 The Marginarium; 2 The Drawings We Actually
-  Made, Codex's), the Who's Who link and Appendices A–F (A and B the book's first chapters, C–F
-  the one-passage chapters that followed Chapter 1), each a title and subtitle. Entries open
-  `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
-  Markdown rendered by AttributedString and `pet:` blocks using the same player. `MarginariumPet`
-  resolves imagesets or bundled v2 atlases; a decoded sheet is 14 MiB, so no player keeps one:
-  `SpriteAtlasCache.frames` decodes sheets off the main actor, two at a time, redraws the ten cells
-  a pet plays into bitmaps of their own (`SpriteAtlas.thumbnails`: a crop would keep its sheet
-  alive) and caches those in the gallery's bounded image cache. Authoring, the
-  atlas contract and size budget: `docs/marginarium-pets.md`. `tools/marginarium.py` is the import/check manual;
-  `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
-  not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
-  skipping. Chapter 1 is imported in full from its approved Docs prose: `tableCell` blocks keep
-  row/column/header metadata; numbered `marginNote` blocks keep every signature as `speakers`
-  (the last as `speaker`). `Chapter.sections` groups those blocks for
-  `MarginariumStructuredViews`: tables align in two columns where the scaled reading measure
-  allows, otherwise each row stacks its heading and text; VoiceOver reads a whole row at a time.
-  `Chapter.spreads` joins each margin group to the story since the previous one: where the page
-  is wide enough (`marginColumnMinimum`, scaled; not at accessibility sizes) and the chapter has
-  margins, the reader sets each spread as one row, story column beside margin column, top-aligned;
-  otherwise every section is its own lazy row. Each note names the words it is about (the
-  source's `<!-- anchor: … -->` line, `anchorBlocks` and the catalog's `<note>.anchor`;
-  `tools/marginarium.py`'s docstring), and `MarginariumAnnotations` finds them in the text the
-  reader shows; `MarginariumHighlighter` marks them as links (`MarginariumSelection`) the
-  reader's `openURL` handles, and `MarginariumWashRenderer` (a `TextRenderer`) washes them in the
-  tint, deeper where more voices meet, ending each line's band at its last word (a background
-  color on a wrapped space runs on to the margin). Beside a margin column a tap
-  picks out the notes (and each note shows its words, quoted); without one it opens
-  `MarginariumNoteCard` under the paragraph, and only notes whose words weren't found (a
-  translation that moved them; `-NSDoubleLocalizedStrings` finds none) keep a card after their
-  story. Opened notes' pets wave (`MarginariumSpritePlayer`'s `greeting`), and every chapter ends
-  with its narrator's pet saying goodnight (`MarginariumEntry.narrator`).
-  `MarginariumAnnotationsTests` covers anchors and highlights; the `marginarium-chapter1-margin`
-  and `-guardians` demos open the first note of their group (on iPhone the card, at the words
-  most voices share). Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
-  shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
-  VoiceOver; `MarginariumSpritePlayer` keeps only its pet's frames, never a sheet. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon is the Moon), and a test fails on an unmapped speaker. Chapter 2,
-  The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
-  nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
-  budget in `docs/marginarium-pets.md` with Dino's (his own design, repainted in the family style)
-  and the four drawn on October 18 (the Astrologer, Bart, Rikyū, Scherenschnitt; Who's Who shows
-  them); the Moon hatched on October 18 with her second drawing. `SpriteAtlasTests` checks a generated
-  WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
-  `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
-  (`MarginariumWhosWhoView`, from the contents and a drawing's name) shows `MarginariumCast`: the
-  people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
-  AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
-  `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
-  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. The Bible
-  School Teacher and Madeleine are one guardian since October 17 (Paul: "she was being merged
-  with Madeline Lengle"): Madeleine, the Bible School Teacher, with her drawing, id, seat on the
-  Hearth and signature in the chapters. A guardian's drawing
-  is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
-  egg's, "<name>, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
-  own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
-  (the drawing's `caption` is its VoiceOver label there, never shown).
-  `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
-  for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
-  going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
-  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`; `Tips/`
+  Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
+  The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
+  (October 23): the Marginarium is private for now; it leaves every build and this repository. Its
+  archive is in the private painting-company repository. `Preferences.retiredKeys` clears its
+  Settings switch at launch.
 - `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
   linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
-  growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
-  Marginarium's sprite sheets, so it ships in Release; `ci/check_release.sh` checks that
-  `making-of.json` is bundled and that no `SpriteAtlas` or `MakingOfSprites` is). It stays behind
+  growing from seeds over the picture itself, and draws no sprites (it ships in Release;
+  `ci/check_release.sh` checks that `making-of.json` is bundled and that no `SpriteAtlas` or
+  `MakingOfSprites` is). It stays behind
   Settings › The Making-of (`SettingsKey.playsMakingOf`, off by default; the switch and the screen
   have no `#if`, only `MakingOfDemoView` is DEBUG). With the switch on, `CreateFlowView.start` saves
   the painting as ever, then lays `MakingOfView` over the flow instead of opening it, its picture
@@ -235,19 +166,6 @@ synchronized folder would bundle it into the app.
   (`PlaceholderCard.showsPicture`; a placeholder takes no tap). Demo launches and the test host
   reset TipKit and hide every tip except in the tip scenarios (Tips). The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
-  `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
-  after it appears. `marginarium-chapter`, `marginarium-chapter-dark` and
-  `marginarium-chapter-long-text` open the reader on Two More Pets (Appendix F); readiness comes
-  when its Pip block appears after the manifest loads.
-  `marginarium-chapter1`, `-margin`, `-guardians` and `-table` open Chapter 1 at the top, the
-  first margin group (the narrator's notes), the second (five guardians' notes, each guardian
-  drawn beside its note) and the guardians table; `marginarium-chapter2` opens Chapter 2 at
-  Medea. All have `-dark` and `-long-text` variants. Readiness follows the requested section entering the
-  reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
-  `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
-  `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,
-  `marginarium-whos-who-teams` scrolled to the Workshop, and `marginarium-guardian` (with `-dark`,
-  `-long-text`) Dino's brief (`ShellDemo.marginariumPath`).
   `making-of`, `-ink`, `-stars`, `-dark`, `-long-text`, `-end` and `-reduce-motion` (DEBUG
   `MakingOfDemoView`) make the show of a portrait photograph and hold it at a moment (the paints
   step's rings, the ink step's sparks, the template step's stars); `MakingOfUITests` turns the
@@ -905,8 +823,7 @@ sends it, the developers collect nothing).
   other `SettingsKey`s with `@AppStorage`, and `PaintView` hands a painting's session the
   painting settings (Advance to Next Color, Zen Mode, the palette's order) whoever presents it. Settings › Painting Length
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
-  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Marginarium
-  puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
+  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
   sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
@@ -915,8 +832,8 @@ sends it, the developers collect nothing).
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
   switch per sound, haptic and flourish; Settings' paper size, Color Names and Detail Brushes,
-  later Text Corrections, whose Text tool Refine now always offers (Paul, October 18); the Custom palette
-  order with every painting's arrangement) are removed at launch by
+  later Text Corrections, whose Text tool Refine now always offers (Paul, October 18), and The
+  Marginarium; the Custom palette order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›
   Line Weight first; a setting retired later joins `Preferences.retiredKeys`.
 

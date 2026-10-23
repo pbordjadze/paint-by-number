@@ -4,9 +4,9 @@
 /// what a pixel looks like at a moment (colors, and the ramps a change takes to come in, which the
 /// `Compositor` and the app's shader run for every pixel). `making_of_reveal.py` has this one in
 /// capitals with underscores (a lattice's cells are one pair there), and `test_making_of_reveal.py`
-/// checks that they agree; change them together and regenerate `reveal-small.json`,
-/// `fields-small.json` and the Python's `tools/tests/fixtures/frames-small.json`. Times are seconds,
-/// lengths pixels of the working image unless a unit says otherwise.
+/// checks that they agree; change them together and regenerate `reveal-small.json` and
+/// `fields-small.json`. Times are seconds, lengths pixels of the working image unless a unit says
+/// otherwise.
 public struct ScheduleStyle: Sendable, Equatable {
     public static let standard = ScheduleStyle()
 
