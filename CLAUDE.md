@@ -467,7 +467,8 @@ any port of it, when changing the fitter: work from the paper.
    else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
    Compile first: `[compile]` in a branch commit's message runs only the Debug and Release builds,
-   `ci/check_release.sh` and the warnings gate, on one runner with no simulator (`compile` in
+   `ci/check_release.sh`, the SideStore build (Release with `UNRELEASED`, as the `ipa` job makes
+   it, which nothing else builds before a merge) and the warnings gate, on one runner with no simulator (`compile` in
    STATUS.md; `core` only builds and checks the strings): about 6 min once a runner takes it (its
    first, October 18), but it waits for one like any macOS job. Run it before asking
    for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
