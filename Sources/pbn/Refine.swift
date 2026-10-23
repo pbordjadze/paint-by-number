@@ -6,15 +6,18 @@ import PaintCore
 ///
 ///     {"screen": {"width": 960, "zoom": 1},
 ///      "gestures": [
-///        {"tool": "pen", "points": [[x, y], ...]},                  a finger's samples
+///        {"tool": "pen", "points": [[x, y], ...], "inked": true},   a finger's samples; `inked`: ink alone
 ///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "cellEdge", "points": [[x, y], ...]},             the Cell Edge's
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval" | "polygon" | "star", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
 ///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
 ///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
-///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "paint": n},
+///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "rgb": [r, g, b] | "paint": n},
 ///                                                                   the Paint Brush's stroke
+///        {"tool": "bucket", "at": [x, y], "color" | "rgb" | "paint"},  the Bucket
+///        {"tool": "repaint", "paint": n | "fromRgb": [r, g, b], "color" | "rgb", "family": true},
+///                                                                   Edit Paint: paint n becomes it
 ///        {"tool": "reshape", "points": [from, to], "target": "ink" | "edge"},
 ///                                                                   Bend Line's or Move Edge's drag
 ///        {"tool": "moveLabel", "points": [from, to]},               Move Number's drag
@@ -26,8 +29,11 @@ import PaintCore
 /// iPad's Refine), `zoom` how far it is zoomed in (1 to 12); a gesture may give its own `zoom`.
 /// A curve without `bend` is laid straight. A reshape without `target` grabs any line (an edge,
 /// drawn or not, or a stroke); Bend Line's is `ink`, Move Edge's `edge`. Reshape and Move Number
-/// reach a finger's width on screen (`RefineGestures.fingerReach`). A brush without `color` or `paint` (a number of the
-/// palette shown) paints the photo's color under its first point. Any gesture may carry a `caption` for the sheet.
+/// reach a finger's width on screen (`RefineGestures.fingerReach`). A paint is `color` (OKLab), `rgb` (sRGB, 0…1, as
+/// Refine's color picker resolves a color whatever the template's space) or `paint` (a number of the palette shown); a
+/// brush or a bucket without one takes the photo's color under its point (the Eyedropper's). A repaint's toast is what
+/// Edit Paint says (paints made alike, or nothing); a declined repaint, which the app keeps in refinements.json and
+/// which changes nothing, is left out of edits.json. Any gesture may carry a `caption` for the sheet.
 struct RefineScript: Decodable {
     struct Screen: Decodable {
         var width: Double?
@@ -42,7 +48,16 @@ struct RefineScript: Decodable {
         var bend: [Float]?
         var at: [Float]?
         var color: [Float]?
+        /// A color as Refine's picker gives it: sRGB, 0...1.
+        var rgb: [Float]?
         var paint: Int?
+        /// A repaint's Similar Colors Too.
+        var family: Bool?
+        /// A repaint's paint picked as its swatch looks (sRGB, 0...1): the paint nearest it.
+        var fromRgb: [Float]?
+        /// A pen's line as the Toolbox's Pen draws it with Color from Photo off (its default): ink
+        /// alone, the pieces it cuts keeping their paint (`RefineView.inked`).
+        var inked: Bool?
         var zoom: Double?
         var caption: String?
         var target: String?
@@ -71,6 +86,8 @@ struct RefineReport: Codable {
         var joins = 0
         var strokes = 0
         var regionsMerged = 0
+        /// A Merge's areas that Refine lit while the finger was down (`TemplateEditor.MergeProbe`).
+        var lit: Int?
         /// The template after the gesture, and the same with its touches over it.
         var picture: String
         var touches: String
@@ -103,17 +120,24 @@ func refineScreen(for t: Template, width: Double, zoom: Double) -> RefineScreen 
 
 func runRefine(_ options: Options) throws {
     guard options.positional.count == 2, let out = options.out else {
-        fail("usage: pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --edges map.pgm --lines drawing.pgm] [generate options]")
+        fail("usage: pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --blank | --edges map.pgm --lines drawing.pgm] [generate options]")
     }
     let photo = loadImage(options.positional[0])
     guard let data = FileManager.default.contents(atPath: options.positional[1]) else { fail("cannot read \(options.positional[1])") }
     let script: RefineScript
     do { script = try JSONDecoder().decode(RefineScript.self, from: data) } catch { fail("cannot decode \(options.positional[1]): \(error)") }
     let outDir = URL(fileURLWithPath: out)
-    try FileManager.default.createDirectory(at: outDir.appendingPathComponent("steps"), withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(
+        at: options.steps ? outDir.appendingPathComponent("steps") : outDir, withIntermediateDirectories: true)
 
     let base: Template
-    if let path = options.template {
+    if options.blank {
+        // As the app starts from Blank (`ArtworkFactory.blank`).
+        let size = options.settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        do { base = try TemplateEditor.blank(width: size.width, height: size.height, photo: photo, colorSpace: photo.colorSpace) } catch {
+            fail("no blank canvas: \(error)")
+        }
+    } else if let path = options.template {
         guard let bytes = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
         do { base = try Template(encoded: bytes) } catch { fail("cannot decode \(path): \(error)") }
     } else {
@@ -139,6 +163,24 @@ func runRefine(_ options: Options) throws {
         guard let p, p.count == 2 else { fail("gesture \(k + 1): \(what) is [x, y]") }
         return SIMD2(p[0], p[1])
     }
+    /// A gesture's paint: `color` (OKLab), `rgb` (the picker's), or paint number `paint` of `t`.
+    func chosen(_ g: RefineScript.Gesture, on t: Template, _ k: Int) -> SIMD3<Float>? {
+        if let c = g.color {
+            guard c.count == 3 else { fail("gesture \(k + 1): color is OKLab [L, a, b]") }
+            return SIMD3(c[0], c[1], c[2])
+        }
+        if let c = g.rgb {
+            guard c.count == 3 else { fail("gesture \(k + 1): rgb is [r, g, b], 0...1") }
+            // As the app's pickers do: resolved in sRGB whatever the template's space.
+            let linear = SIMD3(ColorScience.decodeSRGB(c[0]), ColorScience.decodeSRGB(c[1]), ColorScience.decodeSRGB(c[2]))
+            return ColorScience.linearSRGBToOKLab(linear)
+        }
+        if let n = g.paint {
+            guard (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): there is no paint \(n)") }
+            return t.palette[n - 1].oklab
+        }
+        return nil
+    }
     for (k, g) in script.gestures.enumerated() {
         let began = ContinuousClock.now
         let t = trail.template
@@ -154,6 +196,7 @@ func runRefine(_ options: Options) throws {
         switch g.tool {
         case "pen":
             edit = RefineGestures.pen(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
+            if g.inked == true, case .draw(let points, let closed, nil)? = edit { edit = .draw(points: points, closed: closed, paints: []) }
         case "splitter":
             edit = RefineGestures.splitter(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "cellEdge":
@@ -162,12 +205,11 @@ func runRefine(_ options: Options) throws {
             edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
         case "merge":
             edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
+            if case .merge(let path)? = edit { step.lit = (try? TemplateEditor.MergeProbe(t))?.areas(along: path).count }
         case "brush":
             let color: SIMD3<Float>
-            if let c = g.color, c.count == 3 {
-                color = SIMD3(c[0], c[1], c[2])
-            } else if let n = g.paint, (1...t.palette.count).contains(n) {
-                color = t.palette[n - 1].oklab
+            if let c = chosen(g, on: t, k) {
+                color = c
             } else if let first = samples.first {
                 color = LineEdit.photoColor(at: first, in: photo)
             } else {
@@ -202,6 +244,27 @@ func runRefine(_ options: Options) throws {
             case "star": edit = RefineGestures.shape(.star, from: a, to: b, on: screen, snapping: lines)
             default: fail("gesture \(k + 1): a shape is line, rectangle, oval, polygon, star or curve")
             }
+        case "bucket":
+            // The Bucket with the current paint, or the Eyedropper's color of the photo there.
+            let at = point(g.at, "at", k)
+            marks = [[at]]
+            edit = .paintArea(at: screen.canvasPoint(at), color: chosen(g, on: t, k) ?? LineEdit.photoColor(at: at, in: photo))
+        case "repaint":
+            // Edit Paint: paint `paint` (or the one whose swatch looks like `fromRgb`) becomes `color` or `rgb`.
+            var picked = g.paint
+            if let c = g.fromRgb {
+                guard c.count == 3, g.paint == nil else { fail("gesture \(k + 1): a repaint names its paint by `paint` or by a `fromRgb` of three values") }
+                let want = ColorScience.linearSRGBToOKLab(
+                    SIMD3(ColorScience.decodeSRGB(c[0]), ColorScience.decodeSRGB(c[1]), ColorScience.decodeSRGB(c[2])))
+                picked = t.palette.indices.min { ColorScience.distance(t.palette[$0].oklab, want) < ColorScience.distance(t.palette[$1].oklab, want) }
+                    .map { $0 + 1 }
+            }
+            guard let n = picked, (1...t.palette.count).contains(n) else { fail("gesture \(k + 1): a repaint needs its paint") }
+            var to = g
+            to.paint = nil
+            guard let color = chosen(to, on: t, k) else { fail("gesture \(k + 1): a repaint needs a color or rgb") }
+            marks = []
+            edit = .repaint(from: t.palette[n - 1].oklab, to: color, family: g.family ?? false)
         case "smartEraser":
             let at = point(g.at, "at", k)
             marks = [[at]]
@@ -230,7 +293,7 @@ func runRefine(_ options: Options) throws {
             }
             step.verdict = "redo"
         default:
-            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, brush, reshape, moveLabel, smartEraser, fill, undo, redo)")
+            fail("gesture \(k + 1): unknown tool \(g.tool) (pen, splitter, cellEdge, shape, eraser, merge, brush, bucket, repaint, reshape, moveLabel, smartEraser, fill, undo, redo)")
         }
 
         if let target {
@@ -251,6 +314,10 @@ func runRefine(_ options: Options) throws {
                 redo.removeAll()
                 step.verdict = "made"
                 if tooSmall { step.toast = "That shape is too small for a number." }
+                // Edit Paint says only this (`CreateModel.recolor`).
+                if case .repaint = painted, trail.template.palette.count < t.palette.count {
+                    step.toast = "Colors that came out alike share a number now."
+                }
             case .nothing:
                 step.verdict = "nothing"
             case .declined(let why):
@@ -260,13 +327,15 @@ func runRefine(_ options: Options) throws {
                 case .draw: step.toast = "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
-                case .merge: step.toast = "Those areas couldn’t be joined."
+                case .merge:
+                    step.toast = why == TemplateEditor.mergeStaysInOneArea ? "That’s already one area." : "Those areas couldn’t be joined."
                 case .brush: step.toast = "That couldn’t be painted there."
                 case .reshape: step.toast = "That line couldn’t be moved there."
                 case .moveLabel: step.toast = "There’s no room for that number there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
-                case .paintArea, .look, .repaint: step.toast = "Those colors couldn’t be changed."
+                case .paintArea, .look: step.toast = "Those colors couldn’t be changed."
+                case .repaint: break
                 }
             }
             step.regionsSplit = outcome.regionsSplit
@@ -279,12 +348,14 @@ func runRefine(_ options: Options) throws {
         }
         let took = ContinuousClock.now - began
         step.milliseconds = Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15
-        let name = String(format: "steps/%02d-%@", k + 1, g.tool)
         let canvasMarks = marks.filter { !$0.isEmpty }.map { (points: $0.map(screen.canvasPoint), rgb: touch, width: Float(1.5)) }
-        try writePPM(bookRaster(trail.template), name + ".ppm", in: outDir)
-        try writePPM(bookRaster(trail.template, marks: canvasMarks), name + "-touches.ppm", in: outDir)
-        step.picture = name + ".ppm"
-        step.touches = name + "-touches.ppm"
+        if options.steps {
+            let name = String(format: "steps/%02d-%@", k + 1, g.tool)
+            try writePPM(bookRaster(trail.template), name + ".ppm", in: outDir)
+            try writePPM(bookRaster(trail.template, marks: canvasMarks), name + "-touches.ppm", in: outDir)
+            step.picture = name + ".ppm"
+            step.touches = name + "-touches.ppm"
+        }
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
         case .draw(let points, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points

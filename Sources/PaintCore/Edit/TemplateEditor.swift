@@ -46,7 +46,8 @@ import Foundation
 ///   between them goes, ink and all, leaving no stroke (the strokes inside them stay); the joined
 ///   area has the first region's paint and number, and is a detail area only if the first was.
 ///   A paint left with no area leaves the palette as Only This Area's does. A merge that joins
-///   fewer than two areas is declined.
+///   fewer than two areas is declined, one whose drag never leaves the area it began in for
+///   `mergeStaysInOneArea` (Refine says it is one area already).
 /// - **Paint brush.** Refine's Paint Brush: everything within `radius` of the stroke (a disc for a
 ///   dab) becomes the paint a fill would take. The footprint's outline is laid as a closed cell
 ///   edge is, undrawn and clipped to the canvas, a piece with no room for a number not cut off;
@@ -96,6 +97,9 @@ import Foundation
 ///   across an undrawn boundary one area. Edits laid after one bring their colors through it
 ///   (`apply(_:to:verify:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
 public enum TemplateEditor {
+    /// Why a Merge whose drag never left the area it began in is declined.
+    public static let mergeStaysInOneArea = "the merge stays in one area"
+
     public enum Edit: Sendable, Equatable {
         /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's
         /// colors of the pieces it cuts, nil for a draw made before lines took them (no nudge, no

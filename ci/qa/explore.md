@@ -55,6 +55,15 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   - Taps are not retried. Two taps on one spot of the canvas or the New Painting preview within
     a moment make a double tap, which zooms in: look (`inspect_screen`, a screenshot) before
     tapping the same spot again.
+  - In Refine's palette (swatches 12 points apart), a tap at a swatch's centre picked the swatch
+    to its right in both sessions of October 23, by point and by id, though the swatches are
+    drawn where their bounds say and CI's own UI tests select them; a tap on a swatch's left
+    third, or the last swatch, picked it. Most likely Maestro's touch is wider than a finger's.
+    Tap the left third, check the ring moved (`inspect_screen`'s selected) before the Bucket
+    pours, and report a wrong pick only if the left third picks wrong too.
+  - A screenshot comes after a swipe has ended: what shows only while a finger is down (Refine's
+    Merge lighting the cells it will join, Move Edge's preview) can't be seen; list it under Not
+    tested.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with

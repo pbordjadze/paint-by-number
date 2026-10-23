@@ -51,6 +51,21 @@ struct RefineGesturesTests {
         #expect(laid.outcome.joins >= 1 && laid.outcome.declined == nil)
     }
 
+    /// An end whose ink only seems to touch a line, 2.5 points short of it at an ink of 1.5,
+    /// ends on it (`touchFloor`); one 4 points short stays where it was drawn.
+    @Test func thePenJoinsALineItsInkSeemsToTouch() throws {
+        let frame = RefineGestures.snapLines(
+            drawing: [], canvas: Self.screen.canvas, pending: [(.draw(points: [SIMD2(10, 100), SIMD2(180, 100)]), nil)])
+        func end(short points: Float) throws -> SIMD2<Float>? {
+            let samples = (0...20).map { Self.p(50, 60 + Float($0) * (40 - points / 5) / 20) }
+            let edit = try #require(RefineGestures.pen(RefineGestures.trace(samples, on: Self.screen), on: Self.screen, snapping: frame))
+            guard case .draw(let line, false, nil) = edit else { return nil }
+            return line.last
+        }
+        #expect(try end(short: 2.5).map { abs($0.y - 100) < 1e-3 } == true)
+        #expect(try end(short: 4).map { abs($0.y - 99.2) < 0.1 } == true)
+    }
+
     /// The Color Splitter's stroke is the Pen's line, as a split.
     @Test func theSplitterIsThePensLineAsASplit() throws {
         let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)

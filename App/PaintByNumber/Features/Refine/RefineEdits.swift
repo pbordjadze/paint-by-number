@@ -105,6 +105,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notDivided
         /// A Merge drag that joined no areas.
         case notMerged
+        /// A Merge drag that never left the area it began in: it is one area already.
+        case oneArea
         /// A Paint Brush stroke with no room for a number where it went.
         case notPainted
         /// A Bend Line or Move Edge drag that would have crossed a line or squeezed a number.
@@ -122,14 +124,17 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
         /// made the template anew).
         case left(Int)
+        /// The painting has as many edits as Refine keeps (`TemplateRefinements.isFull`): this one
+        /// was not made, whatever the tool.
+        case full
 
-        /// What to say of an edit that was declined.
-        init(declined edit: TemplateEditor.Edit) {
+        /// What to say of an edit that was declined, and why the editor declined it.
+        init(declined edit: TemplateEditor.Edit, because reason: String = "") {
             switch edit {
             case .draw: self = .notDrawn
             case .split: self = .notSplit
             case .cellEdge: self = .notDivided
-            case .merge: self = .notMerged
+            case .merge: self = reason == TemplateEditor.mergeStaysInOneArea ? .oneArea : .notMerged
             case .brush: self = .notPainted
             case .reshape: self = .notReshaped
             case .moveLabel: self = .notMoved
@@ -163,6 +168,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .notMerged:
             String(localized: "refine.note.notMerged", defaultValue: "Those areas couldn’t be joined.",
                    comment: "Refine screen toast: a Merge drag joined no areas (it crossed only one, or none that touch); nothing changed")
+        case .oneArea:
+            String(localized: "refine.note.oneArea", defaultValue: "That’s already one area.",
+                   comment: "Refine screen toast: a Merge drag stayed inside one area, which is already a single area, so there was nothing to join; nothing changed")
         case .notPainted:
             String(localized: "refine.note.notPainted", defaultValue: "That couldn’t be painted there.",
                    comment: "Refine screen toast: a Paint Brush stroke left no room for a number where it went; nothing changed")
@@ -190,6 +198,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .tooSmall:
             String(localized: "refine.note.tooSmall", defaultValue: "That shape is too small for a number.",
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
+        case .full:
+            String(localized: "refine.note.full", defaultValue: "This painting has as many changes as Refine can keep.",
+                   comment: "Refine screen toast: the painting already has the most edits Refine keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed")
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
                    comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
@@ -201,8 +212,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .tooSmall: "circle.dotted"
         case .grabNumber, .grabLine, .grabEdge: "hand.point.up.left"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted, .notReshaped, .notMoved, .notRecolored,
-             .left:
+        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped, .notMoved,
+             .notRecolored, .left, .full:
             "exclamationmark.circle"
         }
     }

@@ -2265,6 +2265,18 @@
         }
       }
     },
+    "refine.note.full" : {
+      "comment" : "Refine screen toast: the painting already has the most edits Refine keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting has as many changes as Refine can keep."
+          }
+        }
+      }
+    },
     "refine.note.grabEdge" : {
       "comment" : "Refine screen toast: a Move Edge drag began where no border between cells was (or where borders meet), so nothing moved",
       "extractionState" : "manual",
@@ -2321,6 +2333,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Those areas couldn’t be joined."
+          }
+        }
+      }
+    },
+    "refine.note.oneArea" : {
+      "comment" : "Refine screen toast: a Merge drag stayed inside one area, which is already a single area, so there was nothing to join; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s already one area."
           }
         }
       }

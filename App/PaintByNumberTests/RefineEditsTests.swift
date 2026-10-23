@@ -47,6 +47,17 @@ struct RefineEditsTests {
         #expect(RefineHistory(opening: refinements).opening == refinements)
     }
 
+    /// A painting with as many edits as Refine keeps is full, which Refine says in its own words
+    /// for any tool: an edit refused at the cap is not a line drawn badly.
+    @Test func aPaintingWithEveryEditKeptIsFull() {
+        var refinements = TemplateRefinements()
+        refinements.edits = Array(repeating: .eraseLine(at: .zero), count: TemplateRefinements.maximumEdits - 1)
+        #expect(!refinements.isFull)
+        refinements.edits.append(.eraseLine(at: .zero))
+        #expect(refinements.isFull)
+        #expect(RefineNote(kind: .full).text == "This painting has as many changes as Refine can keep.")
+    }
+
     /// Each kind of declined edit has its own words, and a count of edits left out reads right in
     /// the singular and the plural.
     @Test func notesSayWhatHappened() {
@@ -57,13 +68,15 @@ struct RefineEditsTests {
         #expect(RefineNote.Kind(declined: .split(points: [])) == .notSplit)
         #expect(RefineNote.Kind(declined: .cellEdge(points: [])) == .notDivided)
         #expect(RefineNote.Kind(declined: .merge(points: [])) == .notMerged)
+        #expect(RefineNote.Kind(declined: .merge(points: []), because: TemplateEditor.mergeStaysInOneArea) == .oneArea)
+        #expect(RefineNote.Kind(declined: .draw(points: []), because: TemplateEditor.mergeStaysInOneArea) == .notDrawn)
         #expect(RefineNote.Kind(declined: .brush(path: [], radius: 4, color: .zero)) == .notPainted)
         #expect(RefineNote.Kind(declined: .reshape(from: .zero, to: .one)) == .notReshaped)
         #expect(RefineNote.Kind(declined: .moveLabel(from: .zero, to: .one)) == .notMoved)
         #expect(RefineNote.Kind(declined: .paintArea(at: .zero, color: .zero)) == .notRecolored)
         let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted,
                                         .notReshaped, .notMoved, .tooSmall, .grabNumber, .grabLine, .grabEdge,
-                                        .left(1), .left(3)]
+                                        .left(1), .left(3), .full, .oneArea]
         let texts = kinds.map { RefineNote(kind: $0).text }
         #expect(texts.allSatisfy { !$0.isEmpty } && Set(texts).count == kinds.count)
         #expect(RefineNote(kind: .tooSmall).text == "That shape is too small for a number.")

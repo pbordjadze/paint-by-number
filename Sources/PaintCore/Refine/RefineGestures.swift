@@ -110,8 +110,10 @@ public enum RefineGestures {
     /// fingertip's slip is no line.
     public static let shortestLine: CGFloat = 8
     /// The Pen's ends move onto a line whose ink theirs touches: within one ink width (half of
-    /// each), and at least this many points.
-    public static let touchFloor: CGFloat = 2
+    /// each), and at least this many points, so an end whose ink only seems to touch on screen
+    /// joins too. At 2, a grid's lines that met its frame on screen ended 2 points short of it,
+    /// and its tiles ran into each other with no word (QA, October 23).
+    public static let touchFloor: CGFloat = 3
     /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
     public static let fingerReach: CGFloat = 16
     /// The Paint Brush's radius on screen, in points: about half a fingertip, so the paint is the

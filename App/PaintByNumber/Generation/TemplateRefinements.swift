@@ -98,6 +98,9 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// units, the template's). An edit that did nothing on a template, or no longer fits a
     /// regenerated one, stays here and does nothing again (`EditTrail`).
     var edits: [TemplateEditor.Edit] = []
+
+    /// It has as many edits as are kept (`maximumEdits`): Refine lays no more, and says so.
+    var isFull: Bool { edits.count >= Self.maximumEdits }
     var strokes: [Stroke] = []
     /// Lines of text the app found that the painter turned off, as they were found.
     var hiddenText: [[SIMD2<Float>]] = []

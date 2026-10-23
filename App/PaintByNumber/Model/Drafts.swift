@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import Observation
 import os
+import PaintCore
 
 /// Keeps the create flow's draft (`CreateDraft`) on disk: the one unfinished new painting the
 /// painter refined, which the gallery offers to continue in builds with Refine (not the release,
@@ -24,10 +25,14 @@ final class Drafts {
     nonisolated struct Opened: Sendable {
         let draft: CreateDraft
         let photo: Data
+        /// The trail its edits made, when the draft kept it (`DraftStore.KeptFile`).
+        var kept: EditTrail.Kept?
     }
 
     @ObservationIgnored let store: DraftStore
-    @ObservationIgnored private var pending: (draft: CreateDraft, photo: CGImage)?
+    @ObservationIgnored private var pending: (draft: CreateDraft, photo: CGImage, kept: EditTrail.Kept?)?
+    /// Whether the draft on disk has the trail its edits made beside it.
+    @ObservationIgnored private var keptOnDisk = false
     @ObservationIgnored private var debounce: Task<Void, Never>?
     @ObservationIgnored private var tail: Task<Void, Never>?
 
@@ -42,6 +47,7 @@ final class Drafts {
         #if UNRELEASED
         do {
             current = try store.read()
+            keptOnDisk = current != nil && store.hasKept
         } catch let error as CocoaError where !Library.isDamage(error) {
             // Can't be read just now (an I/O or data protection error), which says nothing
             // about the draft: kept for a later launch, as the library keeps such a painting.
@@ -53,9 +59,10 @@ final class Drafts {
         #endif
     }
 
-    /// Takes the flow's latest draft; it is written once the flow has been quiet for `delay`.
-    func keep(_ draft: CreateDraft, photo: CGImage) {
-        pending = (draft, photo)
+    /// Takes the flow's latest draft, and the trail its edits made when they have been laid; it
+    /// is written once the flow has been quiet for `delay`.
+    func keep(_ draft: CreateDraft, photo: CGImage, kept: EditTrail.Kept? = nil) {
+        pending = (draft, photo, kept?.edits == draft.refinements.edits ? kept : nil)
         debounce?.cancel()
         debounce = Task { [weak self] in
             try? await Task.sleep(for: Self.delay)
@@ -68,16 +75,17 @@ final class Drafts {
     func saveNow() {
         debounce?.cancel()
         debounce = nil
-        guard let (draft, photo) = pending else { return }
+        guard let (draft, photo, kept) = pending else { return }
         pending = nil
         enqueue { [self] in
             // Judged here, behind the writes before it: a draft that came back to what is on
-            // disk needs none, and the photo is encoded once, with its first draft.
-            guard draft != current else { return }
+            // disk needs none (unless the trail its edits made has been laid since), and the
+            // photo is encoded once, with its first draft.
+            guard draft != current || (kept != nil && !keptOnDisk) else { return }
             let reusesPhoto = current?.photoID == draft.photoID
             let store = store
             do {
-                try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo) }
+                keptOnDisk = try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo, kept: kept) }
                 current = draft
             } catch {
                 Log.create.error("Saving the draft failed: \(String(describing: error), privacy: .public)")
@@ -109,10 +117,13 @@ final class Drafts {
         guard current != nil else { return nil }
         let store = store
         do {
-            return try await Background.run { () throws -> Opened in
+            let opened = try await Background.run { () throws -> Opened in
                 guard let draft = try store.read() else { throw DraftStore.StoreError.missingPhoto }
-                return Opened(draft: draft, photo: try store.photoData())
+                return Opened(draft: draft, photo: try store.photoData(), kept: store.kept(edits: draft.refinements.edits))
             }
+            // A trail on disk that can't be taken up is written again once the edits are laid.
+            if opened.kept == nil { keptOnDisk = false }
+            return opened
         } catch let error as CocoaError where !Library.isDamage(error) {
             Log.create.error("The draft can't be opened now: \(String(describing: error), privacy: .public)")
             return nil
@@ -140,6 +151,7 @@ final class Drafts {
         let store = store
         await Background.run { store.remove() }
         current = nil
+        keptOnDisk = false
     }
 
     /// Queues file work behind the earlier jobs.

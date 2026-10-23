@@ -87,6 +87,9 @@ def main(argv):
         d.text((k * (top_w + GAP), 0), label, fill=INK, font=big)
     rows.append(head)
 
+    if any(not step["picture"] for step in report["steps"]):
+        print(f"{run} was made with --no-steps: there are no step pictures to lay out", file=sys.stderr)
+        return 1
     previous = Image.open(os.path.join(run, "before.ppm")).convert("RGB")
     crop_w = (WIDTH - TEXT_W - 3 * GAP) // 2
     for k, step in enumerate(report["steps"]):

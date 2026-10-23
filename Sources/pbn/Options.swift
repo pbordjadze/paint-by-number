@@ -30,6 +30,10 @@ struct Options {
     var photo: String?
     /// `pbn refine`'s template, instead of one generated from the photo.
     var template: String?
+    /// `pbn refine` from Refine's Start From Blank: the photo as one area (`TemplateEditor.blank`).
+    var blank = false
+    /// `pbn refine` writes each gesture's pictures; `--no-steps` only before and after.
+    var steps = true
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
 }
@@ -146,6 +150,8 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--line-edits": o.lineEdits = value(a, &it)
         case "--photo": o.photo = value(a, &it)
         case "--template": o.template = value(a, &it)
+        case "--blank": o.blank = true
+        case "--no-steps": o.steps = false
         case "--contour-weight": o.contourWeight = number(a, &it)
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))
