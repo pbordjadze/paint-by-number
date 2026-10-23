@@ -423,8 +423,9 @@ extension TemplateLineArt {
 
     /// Reads a `LINE` payload (trailing fields of a later writer are ignored). Spans and
     /// values are checked by `Template.validateReferences`. The style byte is optional: a
-    /// payload without it, or with a value this reader does not know, is layered (a later style
-    /// that must not be drawn layered flags its chunk required).
+    /// payload without it, or with a value this reader does not know, is layered. A reader that
+    /// knows `LINE` never reads its `required` flag, so a later style that must not be drawn
+    /// layered goes in a chunk of its own.
     init(_ r: inout BinaryReader, edgeCount: Int) throws {
         let count = try r.readCount(elementSize: 2)
         guard count == edgeCount else { throw Template.CodingError.corrupt("LINE edge count") }

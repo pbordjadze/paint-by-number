@@ -266,6 +266,11 @@ Saved paintings must open in every later build. The format history is documented
   painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
   input) follows the same rules: `shared-v1.moonlight` and `shared-v1-photo.moonlight` (the
   optional `PHOT` chunk) keep decoding.
+- `LINE` can't grow in place: every reader since 1.0 reads a layer past `color` as a corrupt
+  painting (`validateReferences`) and a style byte it doesn't know as layered, whatever the
+  chunk's flags (a reader that knows a chunk never reads its `required` flag). A new layer or
+  style goes in a chunk of its own, flagged `required` where an older app must not draw it
+  otherwise (backlog row 93).
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base layout
