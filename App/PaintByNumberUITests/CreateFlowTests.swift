@@ -55,6 +55,28 @@ final class CreateFlowTests: XCTestCase {
 
     /// The preview's title field offers the sample's name and names the painting with what
     /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
+    /// Start Painting tapped before the painting is made says Preparing…, and the painting opens by
+    /// itself once it is (SideStore and Debug builds). `-slowFullResolution` keeps the full
+    /// resolution waiting, as a phone's does.
+    @MainActor
+    func testStartTappedEarlyStartsByItself() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-slowFullResolution", "20"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
+        start.tap()
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "value == %@", "Preparing…"), timeout: 5),
+            "Start tapped before the painting was made doesn't say Preparing…")
+        attachScreenshot(of: app, named: "create-start-preparing")
+        XCTAssertTrue(
+            app.staticTexts["The Great Wave, 0 percent painted"].waitForExistence(timeout: 180),
+            "The painting didn't open by itself once it was made")
+    }
+
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
@@ -104,7 +126,7 @@ final class CreateFlowTests: XCTestCase {
         waitForExpectations(timeout: 90)
 
         let chip = app.descendants(matching: .any)["settings-origin"]
-        XCTAssertTrue(chip.waitForExistence(timeout: 10), "The preview has no settings chip")
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview has no settings chip")
         XCTAssertEqual(chip.value as? String, "Suggested for this picture")
         XCTAssertEqual(chip.label, "Settings")
 

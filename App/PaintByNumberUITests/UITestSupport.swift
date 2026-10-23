@@ -96,6 +96,15 @@ extension XCTestCase {
         return slider
     }
 
+    /// Waits for the New Painting preview's settings to be chosen: its chip shows once they are.
+    /// Start Painting is no sign of it, as it works from the first draft (SideStore and Debug
+    /// builds, so every UI test run).
+    @MainActor
+    @discardableResult
+    func waitForSuggestion(in app: XCUIApplication, timeout: TimeInterval = 120) -> Bool {
+        app.descendants(matching: .any)["settings-origin"].waitForExistence(timeout: timeout)
+    }
+
     /// The first element showing exactly `label`, whatever its kind.
     @MainActor
     func element(labeled label: String, in app: XCUIApplication) -> XCUIElement {

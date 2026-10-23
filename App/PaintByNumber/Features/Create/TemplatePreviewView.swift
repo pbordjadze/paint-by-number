@@ -408,7 +408,11 @@ struct TemplatePreviewView: View {
             Button(action: start) {
                 HStack(spacing: 10) {
                     if isStarting { ProgressView().tint(.white) }
-                    Text("Start Painting")
+                    if isPreparingStart {
+                        Text("Preparing…")
+                    } else {
+                        Text("Start Painting")
+                    }
                 }
                 .font(.headline)
                 .frame(maxWidth: .infinity)
@@ -417,7 +421,9 @@ struct TemplatePreviewView: View {
             .buttonStyle(.glassProminent)
             .tint(Theme.signature)
             .controlSize(.large)
-            .disabled(model.preview == nil || model.isChoosingSettings || isStarting)
+            .disabled(model.preview == nil || (model.isChoosingSettings && !Self.startsEarly) || isStarting)
+            .accessibilityLabel("Start Painting")
+            .accessibilityValue(isPreparingStart ? String(localized: "Preparing…") : "")
 
             if showsFreeCount { freeCount }
         }
@@ -612,6 +618,24 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity)
         .accessibilityIdentifier("free-paintings")
     }
+
+    /// Start Painting works from the first draft on screen, while the settings are still being
+    /// chosen: tapped then, it says Preparing… and starts by itself once the painting is made
+    /// (`CreateModel.makeDraft` waits for the settings, then makes it), as a tap while the painting
+    /// updates already did. The free paintings are counted at the tap (`start`), so the unlock
+    /// sheet never comes later on a screen the painter stopped watching; the sliders and Close wait
+    /// meanwhile, as for any Start. In SideStore and Debug builds only for
+    /// now (`UNRELEASED`, until a Lamplit Table round and Paul choose it for the release): the
+    /// first-five-minutes walk, October 23 ("Choosing settings…" takes tens of seconds on a phone,
+    /// with Start off); Paul: "let's build them all".
+    #if UNRELEASED
+    private static let startsEarly = true
+    #else
+    private static let startsEarly = false
+    #endif
+
+    /// Start Painting was tapped and the painting it starts is still being made.
+    private var isPreparingStart: Bool { Self.startsEarly && isStarting && !model.isFinal }
 
     /// Starts the painting, once a painting of the painter's own photo may (`UnlimitedPaintings`):
     /// without the unlock and a free painting left, the unlock's sheet instead.

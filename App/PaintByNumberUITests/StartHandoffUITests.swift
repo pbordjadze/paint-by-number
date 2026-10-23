@@ -116,6 +116,8 @@ final class StartHandoffUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30), "The preview has no Start Painting")
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 90)
+        // Start works from the first draft; the frames are of a start from settings chosen.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
         return start
     }
 
