@@ -293,8 +293,9 @@ synchronized folder would bundle it into the app.
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
-  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch
-  (`firstIncompleteColor`), finishing the selected color selects the next color left after it
+  (`PaintingSession.colorOrder`): a begun painting opens on the palette's first swatch
+  (`firstIncompleteColor`; a fresh one, in SideStore and Debug builds, on its largest area's color:
+  `OpeningColor`), finishing the selected color selects the next color left after it
   (`nextIncompleteColor`, coming round; the finished swatch leaves, and the first swatch left
   sent a painter in the middle of a long palette back to 1), but the first swatch left in an
   order by areas left, which re-sorts as the painting goes (Nearly Done, Most Left:

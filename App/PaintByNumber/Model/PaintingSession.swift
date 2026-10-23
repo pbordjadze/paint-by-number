@@ -32,6 +32,33 @@ enum PaintEvent: Equatable {
     case hintShown(region: Int)
 }
 
+/// The color a painting opens on. One nobody has painted on opens on the color of its largest
+/// area, so the first tap finds a big area whose number reads at the opening zoom: by number it
+/// opened on 1, often a few slivers that don't show there (the first-five-minutes walk, October
+/// 23: on the corpus books 1 covered 0.1 to 4.6% of the canvas, the largest color 11 to 28%;
+/// Paul: "let's build them all"). One begun opens as before, on the palette's first color with
+/// areas left. SideStore and Debug builds only for now (`UNRELEASED`, root `CLAUDE.md` › App rules).
+nonisolated enum OpeningColor {
+    #if UNRELEASED
+    static let isLargestArea = true
+    #else
+    static let isLargestArea = false
+    #endif
+
+    /// The color of `template`'s largest area, ties going to the lower number; nil without areas.
+    static func largestArea(in template: Template) -> Int? {
+        var best: (area: Float, color: Int)?
+        for region in template.regions {
+            let color = Int(region.colorIndex)
+            if let current = best, region.area < current.area || (region.area == current.area && color >= current.color) {
+                continue
+            }
+            best = (region.area, color)
+        }
+        return best?.color
+    }
+}
+
 /// The live state of painting one artwork: template, progress, selection and the rules of
 /// what may be painted where. UI observes it; the canvas is driven through `PaintingCanvas`.
 @Observable
@@ -89,14 +116,18 @@ final class PaintingSession {
     @ObservationIgnored var reduceMotion = false
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
     /// nil goes by number. Its first value (the screen showing the palette) moves the selection
-    /// the session opened with (the first color by number with areas left) to the palette's
-    /// first, as the swatches lead off; a color picked meanwhile stays.
+    /// a begun painting opened with (the first color by number with areas left) to the palette's
+    /// first, as the swatches lead off; a color picked meanwhile stays, and so does the largest
+    /// area's color a fresh painting opened on (`OpeningColor`), whatever the order.
     @ObservationIgnored var colorOrder: [Int]? {
         didSet {
-            guard oldValue == nil, selectedColor == remainingByColor.firstIndex(where: { $0 > 0 }) else { return }
+            guard oldValue == nil, !opensOnLargestArea,
+                  selectedColor == remainingByColor.firstIndex(where: { $0 > 0 }) else { return }
             select(color: firstIncompleteColor())
         }
     }
+    /// The session opened on the color of the largest area, the painting being fresh (`OpeningColor`).
+    private let opensOnLargestArea: Bool
     /// Fixes the colors' nicknames, and keys the painting's custom palette order.
     let nicknameSeed: UInt64
     /// The artwork's recorded vocabulary version, kept even when newer than this build knows.
@@ -166,6 +197,8 @@ final class PaintingSession {
         let titles: [String]
         let numbered: [String]
         let labels: [String]
+        let opening: Int?
+        let opensOnLargestArea: Bool
 
         init(template: Template, progress: PaintProgress, seed: UInt64, version: Int) {
             totals = template.regionCountsByColor
@@ -175,6 +208,8 @@ final class PaintingSession {
             }
             self.remaining = remaining
             completed = Set(remaining.indices.filter { remaining[$0] == 0 })
+            opensOnLargestArea = OpeningColor.isLargestArea && progress.paintedCount == 0
+            opening = opensOnLargestArea ? OpeningColor.largestArea(in: template) : remaining.firstIndex { $0 > 0 }
             let names = template.palette.map(\.colorName)
             let nicknames = ColorNameText.nicknames(for: template.palette, seed: seed, version: version)
             self.names = names
@@ -212,7 +247,8 @@ final class PaintingSession {
         isComplete = progress.isComplete
         isStarted = progress.paintedCount > 0
         completedColors = prepared.completed
-        selectedColor = prepared.remaining.firstIndex { $0 > 0 }
+        opensOnLargestArea = prepared.opensOnLargestArea
+        selectedColor = prepared.opening
     }
 
     // MARK: Queries
@@ -403,7 +439,8 @@ final class PaintingSession {
         revision += 1
         updateMilestones(colors: 0..<paletteCount)
         canvas?.session(self, didUnpaint: painted)
-        select(color: firstIncompleteColor())
+        // Started over, the painting is fresh again: it opens as a fresh one does.
+        select(color: OpeningColor.isLargestArea ? OpeningColor.largestArea(in: template) : firstIncompleteColor())
     }
 
     /// Asks the canvas to reveal the unpainted region of the selected color nearest to
