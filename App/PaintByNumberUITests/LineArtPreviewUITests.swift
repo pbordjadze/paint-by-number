@@ -84,6 +84,7 @@ final class LineArtPreviewUITests: XCTestCase {
     @MainActor
     func testCardShowsOneSliderAtATimeOnAPhone() throws {
         let app = launchPreview()
+        openPreviewSettings(in: app)
         let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
         let names = ["Colors", "Detail", "Smoothness", "Lines"]
         guard UIDevice.current.userInterfaceIdiom == .phone else {
@@ -98,6 +99,36 @@ final class LineArtPreviewUITests: XCTestCase {
         XCTAssertTrue(app.sliders["Detail"].waitForExistence(timeout: 5), "Choosing Detail didn't show its slider")
         XCTAssertFalse(app.sliders["Colors"].exists, "Colors still shows beside Detail")
         attachScreenshot(of: app, named: "create-card-detail")
+    }
+
+    /// The card folds its settings away: the title, the suggestion, the summary and Start Painting,
+    /// and Adjust, which shows the sliders and keeps them shown through a launch, until it folds
+    /// them again (SideStore and Debug builds).
+    @MainActor
+    func testAdjustShowsTheSettingsAndRemembers() throws {
+        var app = launchPreview()
+        let adjust = app.buttons["preview-adjust"]
+        XCTAssertTrue(adjust.waitForExistence(timeout: 10), "The card has no Adjust")
+        // An earlier test may have left them shown: fold them first.
+        if (adjust.value as? String) == "Settings shown" { adjust.tap() }
+        XCTAssertTrue(
+            waitFor(adjust, toMatch: NSPredicate(format: "value == %@", "Settings hidden")), "Adjust didn't fold the settings")
+        let names = ["Colors", "Detail", "Smoothness", "Lines"]
+        XCTAssertTrue(waitUntil { names.allSatisfy { !app.sliders[$0].exists } }, "Folded, the card still shows a slider")
+        XCTAssertFalse(app.descendants(matching: .any)["tuned-setting"].exists, "Folded, the card still shows its chooser")
+        XCTAssertTrue(app.descendants(matching: .any)["settings-origin"].exists, "Folded, the card lost its suggestion")
+        attachScreenshot(of: app, named: "create-folded")
+        adjust.tap()
+        XCTAssertTrue(app.sliders["Colors"].waitForExistence(timeout: 5), "Adjust didn't show the Colors slider")
+        app.terminate()
+        app = launchPreview()
+        XCTAssertTrue(app.sliders["Colors"].waitForExistence(timeout: 10), "The settings didn't stay shown through a launch")
+        attachScreenshot(of: app, named: "create-adjusted")
+        // Left as the next test expects to find them, folded.
+        app.buttons["preview-adjust"].tap()
+        XCTAssertTrue(
+            waitFor(app.buttons["preview-adjust"], toMatch: NSPredicate(format: "value == %@", "Settings hidden")),
+            "Adjust didn't fold the settings again")
     }
 
     // MARK: - Helpers
