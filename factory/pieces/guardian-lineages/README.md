@@ -71,3 +71,20 @@ so it's still recognizable, but more visual abstraction please".
   Dino I and III, whose first passes were the shape cut out and filled with a scene (a
   double-exposure trick); in the redraws the shape hides inside a whole seascape.
 - The page at tailnet :8445 `/lineages/` now shows version 2; version 1 is at `/lineages/v1/`.
+
+## Version 3: the lens codified (October 23)
+
+Paul on version 2: Eno "looks incredible"; Dino "started to look a bit like AI slop"; the Moon
+"can just be the moon"; Scherenschnitt's "original shape is so clearly Reiniger, her new ones
+shouldn't be"; "do you think this can be codified?" It is, in `RULE.md`: carry the guardian's
+idea back, not its picture. Each guardian has a card (essence, rhymes, what to leave behind) in
+`lineages-v3.json`, and `run_v3.py` builds every prompt from the rule, the card and the steps,
+with no image attached. Then Paul: "I just don't want the rule to be too strict ... make sure
+these sessions feel free to like, suggest or even try something if it breaks a rule". So the
+rule is a default, and each run may try one labelled wildcard that breaks it (`RULE.md`, Room to
+break it).
+
+- Eno is version 2 unchanged. Dino, Scherenschnitt and the Moon were redone: 9 image generations,
+  no redos (this run predates the wildcard). The prompts as run are in `prompts-v3/`.
+- The page at tailnet :8445 `/lineages/` shows version 3 (picks `lineage-v3-<id>`); versions 2
+  and 1 are at `/lineages/v2/` and `/lineages/v1/`.

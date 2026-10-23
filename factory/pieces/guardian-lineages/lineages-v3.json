@@ -1,0 +1,240 @@
+{
+ "lede": "<p><b>Version 3</b>: the lens codified (<code>RULE.md</code>): <i>carry the guardian's idea back, not its picture.</i> At each step, how would that tradition, with its own tools and knowledge, make this guardian's subject? Each guardian has a card: an essence that always stays, at most a rhyme or two where an era has its own form for them, and what gets left behind (today's objects, an outline that is someone's style, a period composition). For the jumps Codex saw no image at all, only the card. Three things to look for, not gates: an ordinary object of its own era (no hidden shapes or double exposures), recognisable with its liner notes, and nothing in a named artist's manner from before that artist.</p><p>Per your note, the rule is now a default, not a law: from the next run on, each run may also try one wildcard that breaks it, labelled, for you to judge (this run came before that). Eno is version 2 unchanged: it already passed. Dino, Scherenschnitt and the Moon are new. Earlier versions: <a href=\"v2/\" style=\"color:#e7c98f\">version 2</a> (only the shape kept), <a href=\"v1/\" style=\"color:#e7c98f\">version 1</a> (the objects kept).</p>",
+ "guardians": [
+  {
+   "id": "eno",
+   "name": "Eno",
+   "approved": "refs/eno-frame.png",
+   "emblem": "two mismatched tape spools joined by a slack loop of tape, a wildflower growing from the bigger hub, a die leaning on them; no face",
+   "steps": [
+    {
+     "short": "Eno",
+     "title": "Eno, as he is",
+     "medium": "Quarter-inch tape on two mismatched metal reels, a wildflower, a bone die",
+     "date": "mid-1970s"
+    },
+    {
+     "short": "Cage",
+     "title": "after John Cage",
+     "medium": "Ink lines and dots on paper and transparent sheets, chance-drawn, as in Fontana Mix",
+     "date": "1958",
+     "kind": "cited influence",
+     "link": "Eno to Cage: \"when I was in art college, I was shown your book Silence.\"",
+     "source": "Eno, interviewing Cage, Musician, September 1985.",
+     "url": "http://www.moredarkthanshark.org/eno_int_musician-sep85.html"
+    },
+    {
+     "short": "Satie",
+     "title": "after Erik Satie",
+     "medium": "Pen and black and red ink on paper: notes and lettering written in spirals, no bar lines",
+     "date": "1886–1900",
+     "kind": "championed",
+     "link": "Cage built a Satie festival at Black Mountain in 1948: \"I give him first place with Webern and I fight for them both.\"",
+     "source": "Cage to Peter Yates, 1948, quoted in Martin (2020); his lecture \"Defense of Satie\", Black Mountain College, summer 1948. Satie's red-and-black ink: Sotheby's 2016, lot 141.",
+     "url": "https://musicalcircuits.com/2022/06/18/cage_at_bmc/"
+    },
+    {
+     "short": "plainchant",
+     "title": "plainchant",
+     "medium": "Square neumes on a red staff, parchment, two pen-flourished initials",
+     "date": "13th century",
+     "kind": "teacher, then tradition",
+     "link": "From 1874 his Honfleur organist Gustave Vinot stirred Satie's love of old church music, Gregorian chant above all.",
+     "source": "Gillmor, Erik Satie (1988), p. 7 (paraphrased). The square notation on a red staff dates from the 13th century."
+    }
+   ],
+   "card": {
+    "essence": "a room that plays itself: a few simple rules and a little chance making what no one could have planned",
+    "rhymes": [
+     "two unequal rounds side by side, joined loosely",
+     "something growing out of the larger one",
+     "a small token of chance"
+    ],
+    "leave": [
+     "tape reels and tape",
+     "the die as an object",
+     "the drawn wildflower"
+    ]
+   }
+  },
+  {
+   "id": "dinotopia",
+   "name": "Dino",
+   "approved": "refs/dinotopia-frame.png",
+   "emblem": "a plesiosaur: long neck curled back into an S, small head looking sideways with a shifty narrow eye, four paddle flippers, pale belly",
+   "steps": [
+    {
+     "short": "Dino",
+     "title": "Dino, as he is",
+     "medium": "Watercolour and ink on a page of an explorer's journal, as in Dinotopia",
+     "date": "1862, as the book tells it (painted 1992)"
+    },
+    {
+     "short": "Charles R. Knight",
+     "title": "after Charles R. Knight",
+     "medium": "Watercolour and gouache on paper, a museum restoration painting",
+     "date": "1897",
+     "kind": "cited influence",
+     "link": "Gurney: \"One of the inspirations for the painting was this 1897 painting of Laelaps by Charles Knight.\"",
+     "source": "James Gurney, Gurney Journey, 18 March 2012.",
+     "url": "https://gurneyjourney.blogspot.com/2012/03/charles-knight-book.html",
+     "native": "Knight's museum restoration paintings: anatomy from the fossils and the palaeontologists he worked with, creatures in a believable landscape and weather, muted naturalistic colour; his plesiosaurs ride at the surface with necks raised like swans. A full painted scene on paper board."
+    },
+    {
+     "short": "the Crystal Palace beasts",
+     "title": "after the Crystal Palace dinosaurs",
+     "medium": "Clay model cast in cement over brick and iron, painted",
+     "date": "1854",
+     "kind": "spiritual, with a bridge",
+     "link": "No tie found between Knight and Hawkins himself. The bridge: Henry Fairfield Osborn studied at Princeton while Hawkins painted and lectured there, and later hired Knight (1896).",
+     "source": "W. B. Maynard, \"Tigers and Dinosaurs\", Princeton Alumni Weekly, 13 Nov 2013; Crystal Palace construction: cpdinosaurs.org.",
+     "url": "https://www.cpdinosaurs.org/",
+     "native": "Benjamin Waterhouse Hawkins's life-size Crystal Palace plesiosaur: an 1850s reconstruction (very long stiff swan-like neck, lizard-like head, heavy body), basking at the water's edge on rocks, cast cement over brick and iron and painted in dull Victorian colours, weathered. Photographed as the real sculpture."
+    },
+    {
+     "short": "Duria Antiquior",
+     "title": "after Duria Antiquior",
+     "medium": "Lithograph, coloured by hand",
+     "date": "1830",
+     "kind": "spiritual",
+     "link": "The first painted scene of prehistoric life, full of plesiosaurs; Witton, Naish and Conway list it, then Hawkins, as palaeoart's milestones. No documented hand-off.",
+     "source": "De la Beche's watercolour (National Museum Cardiff), lithographed by George Scharf, May 1830; Witton, Naish & Conway, Palaeontologia Electronica 2014.",
+     "url": "https://en.wikipedia.org/wiki/Duria_Antiquior",
+     "native": "Duria Antiquior's world as an 1830 lithograph: a crowded ancient sea seen from the shore, several plesiosaurs as the 1830s imagined them (snaky necks, small heads) among other sea creatures, the drawing of a geologist, grainy crayon on stone, thin hand-coloured washes, a printed border line."
+    }
+   ],
+   "note": "Each era makes its own plesiosaur, as it knew the animal: Knight's swan-necked swimmers, Hawkins's 1854 cement beast, the 1830 lithographer's snaky-necked crowd. Today's pose, colours and sly eye stay behind.",
+   "card": {
+    "essence": "a long-necked sea creature, a plesiosaur, painted with wonder from careful looking",
+    "rhymes": [
+     "a long neck rising from the water"
+    ],
+    "leave": [
+     "Gurney's blue-green and cream colouring",
+     "the S-curl pose of today's drawing",
+     "the sly sideways eye and any character acting",
+     "the explorer's-journal page"
+    ]
+   }
+  },
+  {
+   "id": "lotte-reiniger",
+   "name": "Scherenschnitt",
+   "approved": "refs/lotte-reiniger-frame.png",
+   "emblem": "a small plump perching bird in silhouette, upright, a little crest of three feathers, round eye, short beak, wings hinged at the shoulder, lace-like cuts in the wing feathers, two thin legs",
+   "note": "The often-repeated story that Reiniger loved Chinese shadow puppets as a child has no primary source; in her own 1936 account silhouettes \"never\" felt like an idea, and as a child she built a shadow theatre to stage Shakespeare. So this line runs through the shadow theatres she belongs to, and its first jump is labelled spiritual. In this version each theatre cuts its own bird; nothing keeps her outline.",
+   "steps": [
+    {
+     "short": "Scherenschnitt",
+     "title": "Scherenschnitt, as she is",
+     "medium": "Black paper, cut by hand, wings on brass pin hinges",
+     "date": "after Reiniger's films, 1919–1955"
+    },
+    {
+     "short": "the Chat Noir",
+     "title": "after the Chat Noir shadow theatre",
+     "medium": "Zinc figure cut for back-lit projection, with a pane of coloured glass",
+     "date": "Paris, 1886–1897",
+     "kind": "spiritual",
+     "link": "Henri Rivière's shadow plays at Le Chat Noir are the nearest shadow theatre before hers; no tie to Reiniger found.",
+     "source": "Le Chat Noir and Henri Rivière's shadow theatre (zinc figures); Reiniger in Sight and Sound, Spring 1936.",
+     "url": "https://en.wikipedia.org/wiki/Le_Chat_Noir",
+     "native": "Henri Rivière's zinc shadow figures for Le Chat Noir, cut in the Japanese manner he loved (Hokusai's birds and waves): a bird figure of cut zinc with clean graphic negative spaces, and behind it a pane of coloured glass of the kind used for the back-lit scenery. Photographed as the real zinc figure and glass lying together."
+    },
+    {
+     "short": "Séraphin",
+     "title": "after Séraphin's ombres chinoises",
+     "medium": "Solid cardboard figure, jointed with wire, on a wooden stick",
+     "date": "Versailles and the Palais-Royal, 1770s–1800",
+     "kind": "tradition",
+     "link": "The Chat Noir's shadow play built on a French form \"made popular by François Dominique Séraphin\" in the 18th century.",
+     "source": "Wikipedia, Le Chat Noir; Britannica, \"ombres chinoises\" (solid cardboard figures, unlike China's coloured transparencies).",
+     "url": "https://www.britannica.com/art/ombres-chinoises",
+     "native": "Séraphin's ombres chinoises: a rococo-era figure cut from solid blackened pasteboard, a bird on a little perch or branch, one wing jointed with a wire so a string can flap it, mounted on a wooden stick, cut with 18th-century French elegance (fine pierced dots, a rocaille curl on the branch)."
+    },
+    {
+     "short": "pi-ying",
+     "title": "Chinese shadow figure (piying)",
+     "medium": "Scraped hide cut in openwork and dyed so light shows through, on rods",
+     "date": "recorded from the Song dynasty, 960–1279",
+     "kind": "tradition, by name",
+     "link": "Séraphin's \"Chinese shadows\" took their name, and the idea, from travellers' reports of Chinese shadow play. The actual route is unclear.",
+     "source": "Wikipedia, François Dominique Séraphin; Kronthal, JAIC 40(1), 2001, on the hide and its colouring.",
+     "url": "https://cool.culturalheritage.org/jaic/articles/jaic40-01-001_2.html",
+     "native": "A traditional Chinese piying figure: a bird (a phoenix or crane, as the tradition draws it) in strict side profile, of scraped translucent hide, carved in dense openwork and dyed in transparent red, green and black, its neck and wing jointed with knotted thread, on thin bamboo rods."
+    }
+   ],
+   "card": {
+    "essence": "the shadow that acts: a small bird, read by its outline alone, caught in one clear gesture",
+    "rhymes": [
+     "a small bird",
+     "one clear gesture (singing, taking off, turning to look)"
+    ],
+    "leave": [
+     "Reiniger's outline: the plump upright body, the crest, the round eye hole",
+     "the lace cuts in the feathers and the brass pin hinges",
+     "the black-paper Scherenschnitt look itself, and anything that looks like Lotte Reiniger's work"
+    ]
+   }
+  },
+  {
+   "id": "moon",
+   "name": "The Moon",
+   "approved": "refs/moon-frame.png",
+   "emblem": "a crescent moon, horns pointing left, with a calm profile face looking right on its inner curve, a small lantern hanging from the lower horn",
+   "note": "The Moon is a tradition, not a person, so each jump is the older practice the newer one grew from: the almanac's moon tables come from the computus, the computus's 19-year cycle came from Babylon, and Babylon reckoned its moon under the moon-god Sin. In this version she is only the moon, as each tradition reckoned or carved it: a wheel of her ages, her disc among the constellations, Sin's crescent among the gods' signs.",
+   "steps": [
+    {
+     "short": "the Moon",
+     "title": "the Moon, as she is",
+     "medium": "Woodcut, coloured by hand, as in an early printed almanac",
+     "date": "in the manner of the 1470s–1490s"
+    },
+    {
+     "short": "the computus",
+     "title": "the computus",
+     "medium": "Ink and pigments on vellum: a wheel of the moon's ages",
+     "date": "England, late 11th–early 12th century",
+     "kind": "tradition",
+     "link": "Medieval kalendars carry the Golden Number, which places each new moon in a 19-year cycle; Bede's Reckoning of Time (725) codified it.",
+     "source": "Bede, De temporum ratione; copy in Cambridge, Corpus Christi College MS 291 (St Augustine's, Canterbury). Regiomontanus's printed Kalendarium (1476) carries the same tables.",
+     "url": "https://purl.stanford.edu/pj101rk1280",
+     "native": "A Romanesque computus diagram on vellum: a wheel (rota) of the moon's ages, a ring of thirty small discs from new moon through full and back, each with its Roman numeral, ruled in red and black, light washes of green and ochre, a few Latin words in minuscule. No face, no lamp."
+    },
+    {
+     "short": "Babylon's moon tables",
+     "title": "Babylonian lunar reckoning",
+     "medium": "Clay tablet, cuneiform, with drawings",
+     "date": "Uruk, c. 200 BC",
+     "kind": "tradition (probable)",
+     "link": "The 19-year cycle is evident in Babylon from about 500 BC and reached the Greeks as Meton's cycle (432 BC); the hand-off is likely, not proven.",
+     "source": "Wikipedia, Metonic cycle; drawn tablets like VAT 7847 (Uruk, early 2nd century BC), its lunar disc at the centre among drawn constellations (ISAW, NYU).",
+     "url": "https://en.wikipedia.org/wiki/Metonic_cycle",
+     "url2": "https://isaw.nyu.edu/exhibitions/time-cosmos/objects/late-babylonian-astrological",
+     "native": "A Seleucid Uruk astronomical tablet with drawings, like VAT 7847: a fired clay tablet with neat cuneiform, and in its upper part a simple incised drawing of the full lunar disc with constellation figures around it, drawn as the Babylonian scribes drew them."
+    },
+    {
+     "short": "Sin's crescent",
+     "title": "Sin's crescent",
+     "medium": "Limestone boundary stone (kudurru), the gods' signs carved in low relief",
+     "date": "Babylon, c. 1186–1172 BC",
+     "kind": "same tradition, older",
+     "link": "Babylon's moon was the god Sin, his sign the crescent, carved on boundary stones among the other gods' signs.",
+     "source": "Louvre, Kudurru de Meli-Shipak (Sb 22), c. 1186–1172 BC: its symbols include \"lune (Sin)\".",
+     "url": "https://collections.louvre.fr/en/ark:/53355/cl010174452",
+     "native": "A Kassite-period kudurru, limestone, its top carved in low relief with the gods' signs in a row: the crescent of Sin lying horns-up as on real kudurrus, beside the eight-pointed star of Ishtar and the sun disc of Shamash; cuneiform below. No lamp."
+    }
+   ],
+   "card": {
+    "essence": "the moon itself, the one light in the night sky",
+    "rhymes": [],
+    "leave": [
+     "the crescent with a face",
+     "the lantern or any lamp, its shape included",
+     "the almanac woodcut and its yellow"
+    ]
+   }
+  }
+ ],
+ "pick_prefix": "lineage-v3-"
+}
