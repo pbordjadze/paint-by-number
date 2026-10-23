@@ -25,10 +25,14 @@
 // 500 the relay is misconfigured, 502 GitHub refused.
 //
 // Secret FEEDBACK_GITHUB_TOKEN: a fine-grained token with Contents and Issues read and write on
-// that repository only. Variable FEEDBACK_REPO and the RATE_LIMITER binding: wrangler.toml.
-// Rate limiting is a flood brake per IP address (the binding's periods are 10 or 60 seconds, so
-// a limit per hour can't be made with it), applied before the body is read; it is per Cloudflare
-// location and approximate by design.
+// that repository only. Variable FEEDBACK_REPO and the RATE_LIMITER and RATE_LIMITER_ALL bindings:
+// wrangler.toml. Rate limiting is two burst brakes, applied before the body is read: one per IP
+// address, and one for every sender together, so a burst from a few addresses stays under
+// GitHub's limit on writes a minute (about 80; a report makes 7). They brake bursts only: a
+// binding's period is 10 or 60 seconds, so neither is a limit per hour, and a flood kept up
+// still meets GitHub's hourly limit (about 500 writes, some 70 reports) and still fills the
+// repository; only an hourly quota (a KV store) would stop that. Both are per Cloudflare
+// location ("every sender" is everyone at one location) and approximate by design.
 //
 // Memory: a request is parsed once and its files are read and encoded one at a time (the Workers
 // limit is 128 MB). Base64 comes from node:buffer (nodejs_compat), which is native: Workers' free
@@ -134,9 +138,17 @@ function configured(env) {
 }
 
 async function withinRate(request, env) {
-  if (!env.RATE_LIMITER) return true;
+  // The sender's own brake first, so one sender's flood spends its own allowance, not everyone's.
+  return (
+    (await allowed(env, env.RATE_LIMITER, request.headers.get("cf-connecting-ip") ?? "unknown")) &&
+    (await allowed(env, env.RATE_LIMITER_ALL, "all"))
+  );
+}
+
+async function allowed(env, limiter, key) {
+  if (!limiter) return true;
   try {
-    const { success } = await env.RATE_LIMITER.limit({ key: request.headers.get("cf-connecting-ip") ?? "unknown" });
+    const { success } = await limiter.limit({ key });
     return success;
   } catch (error) {
     // A broken limiter must not turn every report away.
