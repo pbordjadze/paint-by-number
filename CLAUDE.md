@@ -550,6 +550,12 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
+- **Voices stay distinct** (Paul, October 23: "having agents write in their own voice and not
+  mimicking mine is good. So then it can just kind of be clear when it's me writing"). Write as
+  yourself: clear, precise and recognizably not Paul. Never imitate his voice or put words in his
+  mouth: quote him verbatim and attribute it, as the backlog's *Paul's words* do. Text that will
+  go out under his name (the store listing, his site, a message he'll send) is a draft for him to
+  make his own, and says so. Nothing already written needs rewriting for this.
 - **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
   propose new work it noticed: one short `new` row in `docs/backlog.md` (what, why, size, who
   thought of it), at most one a night, keeping to its own topic, and its next report to Paul names
