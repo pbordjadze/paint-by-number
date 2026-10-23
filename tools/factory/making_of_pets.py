@@ -8,22 +8,14 @@ in a guardian's own height (h) or in seconds:
 
 - A guardian walks at WALK h/s. It takes the nearest job it can reach and finish within the step, so
   it does as many as fit and never darts; a guardian with nothing in reach keeps working where it is.
-- Setting off: it leans back and squashes a little for LEAN s, then speeds up over ACCEL s,
-  leaning forward as it goes; it slows over DECEL s before the spot.
-- Its walk cycle advances with the distance it covers (8 frames per STRIDE h), so the feet keep
-  pace, and its body bobs twice a cycle.
-- A longer walk ends in a low hop onto the spot (HOP h over its last HOP_TIME s); landing
-  squashes and springs back.
+- Setting off takes LEAN s, then it speeds up over ACCEL s; it slows over DECEL s before the spot.
 - A guardian sets off for its next job as soon as it finishes the last, so nobody moves in step with
   anybody else; it arrives no sooner than the step it works for has begun.
-- At work it shows its busy pose for the hands-on steps (sketch, shading, ink) and its reviewing
-  pose for the others (paints, merged, template).
 - They pop in one after another at the start and wave one after another at the end.
 
 `plan(inputs)` is the whole crew's planning as one pure function of plain data (the picture, the
 candidate spots of each step, the template's strokes, a seed), drawing every random number from
-SplitMix64, and a finished `Pet.state(t)` is a pure function of t. Its Swift port was retired on
-October 23, 2026 (the app plays the show with no crew).
+SplitMix64. Its Swift port was retired on October 23, 2026 (the app plays the show with no crew).
 """
 
 import math
@@ -32,15 +24,11 @@ from collections import namedtuple
 import numpy as np
 
 ORDER = []          # the crew, in order: the spec's (`configure`)
-WORK_POSE = ['busy', 'busy', 'review', 'review', 'busy', 'review']
 
 WALK = 2.4          # h per second
 LEAN = 0.14         # s, the breath before setting off
 ACCEL, DECEL = 0.22, 0.28
-STRIDE = 1.5        # h per walk cycle (8 frames)
-HOP, HOP_TIME, HOP_MIN = 0.06, 0.32, 1.6    # h, s, and the shortest walk (h) that ends in one
 WORK = (0.6, 0.95)  # s at a job
-POP = 0.42          # s for the pop at the start
 SIDE = 0.42         # h: a guardian stands this far to one side of its spot, and works toward it
 STILL = 0.5         # h: a job this close is worked from where the guardian stands, without a walk
 MARGIN = 0.12       # share of the picture: no job, nor a line's start, this close to a side or the top
@@ -48,29 +36,22 @@ BANDS = 3           # upright bands the crew shares out, left to right, so it sp
 SPACE = 1.0         # h: how far apart guardians' spots stay while both are there (see _clear)
 TRACE = 1.5         # h per second while drawing a line by walking along it
 TRACE_RAMP = (0.12, 0.16)
-HOLD = 0.3          # s: everyone standing takes the reviewing pose as a step ends
 EXIT = 1.8          # times walking pace, for the walk off the picture at the end
 WAVE = 0.6          # s of waving goodbye
 LOOK = 0.4          # s of a last look at the finished picture, before the wave
 EDGE_WAVE = 0.5     # s the last one out waves again, just inside the edge
-TILT = 4.0          # degrees of forward lean at full walking speed
 BEAT = 0.25         # share of a step between the beats arrivals land on
 INK_STEP = 4        # the step whose lines are drawn by walking along them
-TURN = 0.15         # px: a sideways step this small doesn't turn a walker around
-CURVE = 64          # pieces in the polyline each walk follows
 
 
 def configure(spec):
     """Sets the crew's constants from the show's spec (making-of.json, already loaded)."""
-    global ORDER, WORK_POSE, WORK, BANDS, TRACE_RAMP
+    global ORDER, WORK, BANDS, TRACE_RAMP
     crew = spec['crew']
     ORDER = list(crew['pets'])
-    WORK_POSE = [st['pose'] for st in spec['steps']]
     for key, name in (('walk', 'WALK'), ('lean', 'LEAN'), ('accel', 'ACCEL'), ('decel', 'DECEL'),
-                      ('stride', 'STRIDE'), ('hop', 'HOP'), ('hopTime', 'HOP_TIME'), ('hopMin', 'HOP_MIN'),
-                      ('pop', 'POP'), ('side', 'SIDE'), ('space', 'SPACE'), ('trace', 'TRACE'),
-                      ('hold', 'HOLD'), ('exit', 'EXIT'), ('wave', 'WAVE'), ('tilt', 'TILT'),
-                      ('still', 'STILL'), ('margin', 'MARGIN'), ('beat', 'BEAT'),
+                      ('side', 'SIDE'), ('space', 'SPACE'), ('trace', 'TRACE'), ('exit', 'EXIT'),
+                      ('wave', 'WAVE'), ('still', 'STILL'), ('margin', 'MARGIN'), ('beat', 'BEAT'),
                       ('look', 'LOOK'), ('edgeWave', 'EDGE_WAVE')):
         globals()[name] = float(crew[key])
     WORK = tuple(float(v) for v in crew['work'])
@@ -134,18 +115,6 @@ def ease(x):
     return x * x * (3 - 2 * x)
 
 
-def turned(facing, tx):
-    """Which way a walker faces after a step of `tx` px sideways."""
-    return facing if abs(tx) <= TURN else 'right' if tx > 0 else 'left'
-
-
-def spring(t, amount, period=0.2, decay=0.07):
-    """A damped spring's offset `t` s after a kick of `amount`."""
-    if t < 0:
-        return 0.0
-    return amount * math.exp(-t / decay) * math.cos(2 * math.pi * t / period)
-
-
 def walk_time(dist, h):
     """Seconds from setting off to arriving `dist` px away."""
     return LEAN + dist / (WALK * h) + 0.5 * (ACCEL + DECEL)
@@ -188,25 +157,6 @@ def cumulative(pts):
     """Distance along a polyline up to each of its points."""
     d = np.diff(pts, axis=0)
     return np.concatenate(([0.0], np.cumsum(np.sqrt(d[:, 0] * d[:, 0] + d[:, 1] * d[:, 1]))))
-
-
-def line_ahead(path, cum, dist):
-    """How far right a line runs over the 2 px after `dist` along it."""
-    return float(np.interp(min(dist + 2, cum[-1]), cum, path[:, 0]) - np.interp(dist, cum, path[:, 0]))
-
-
-def faces(facing, steps):
-    """The way a walker faces after each of `steps` (px sideways), starting from `facing`."""
-    out = []
-    for tx in steps:
-        facing = turned(facing, tx)
-        out.append(facing)
-    return out
-
-
-def travelled(tau, dist, h):
-    """Distance walked `tau` s after the lean."""
-    return trapezoid(tau, dist, WALK * h, ACCEL, DECEL)
 
 
 def traced(tau, dist, h):
@@ -416,134 +366,11 @@ class Pet:
     (step 0-5) worked standing at (x, y), or drawn by walking `path`; the first stop is where it
     pops in at `appear` (step -1); at the end it takes a last look at the picture (step -4), waves
     where it stands (step -2), then walks out of the frame (step -3), the last one out waving once
-    more just inside the edge (another step -2). `step_ends` are when steps end, for the shared
-    hold. Once `finish` has built the walks, `state` is a pure function of the time."""
+    more just inside the edge (another step -2)."""
 
-    def __init__(self, pid, start, height, rng, appear, step_ends):
+    def __init__(self, pid, start):
         self.id = pid
         self.stops = [start]
-        self.h = height
-        self.appear = appear
-        self.step_ends = step_ends
-        self.rng = rng
-
-    def finish(self):
-        """Builds the walks between stops once every stop is planned, and which way it faces along
-        them: the way it last stepped sideways, carried from one walk and line to the next."""
-        self.segments = []
-        for s0, s1 in zip(self.stops, self.stops[1:]):
-            l0 = s0[1]
-            x0, y0 = (float(s0[5][-1][0]), float(s0[5][-1][1])) if s0[5] is not None else (s0[2], s0[3])
-            a1, x1, y1 = s1[0], s1[2], s1[3]
-            dx, dy = x1 - x0, y1 - y0
-            d = norm(dx, dy)
-            bend = self.rng.uniform(0.06, 0.16) * self.rng.choice([-1, 1])
-            cx, cy = (x0 + x1) / 2 - dy * bend, (y0 + y1) / 2 + dx * bend
-            ts = np.arange(CURVE + 1) / CURVE
-            u = 1 - ts
-            px = u * u * x0 + 2 * u * ts * cx + ts * ts * x1
-            py = u * u * y0 + 2 * u * ts * cy + ts * ts * y1
-            cum = cumulative(np.stack([px, py], axis=1))
-            need = walk_time(float(cum[-1]), self.h) - LEAN
-            hurry = max(1.0, need / max(a1 - l0 - LEAN, 0.05))
-            self.segments.append({'leave': l0, 'arrive': a1, 'px': px, 'py': py, 'cum': cum,
-                                  'len': float(cum[-1]), 'd': d, 'hurry': hurry, 'bend': bend})
-        total = 0.0
-        for seg in self.segments:       # distance walked before each walk, so the cycle never jumps
-            seg['before'] = total
-            total += seg['len']
-        facing = 'right'
-        self.lines = [None] * len(self.stops)       # per stop that draws a line: (distances, facings)
-        for i, seg in enumerate(self.segments):
-            seg['entry'], seg['faces'] = facing, faces(facing, np.diff(seg['px']))
-            facing = seg['faces'][-1]
-            path = self.stops[i + 1][5]
-            if path is not None:
-                cum = cumulative(path)
-                line = faces(facing, [line_ahead(path, cum, at) for at in cum])
-                self.lines[i + 1] = (cum, line)
-                facing = line[-1]
-
-    def _point(self, s, dist):
-        u = np.interp(dist, s['cum'], np.arange(CURVE + 1) / CURVE)
-        i = min(int(u * CURVE), CURVE - 1)
-        f = u * CURVE - i
-        x = s['px'][i] + (s['px'][i + 1] - s['px'][i]) * f
-        y = s['py'][i] + (s['py'][i + 1] - s['py'][i]) * f
-        return x, y, i
-
-    def _walking(self, x, y, facing, walked, speed, extra_lift=0.0):
-        h = self.h
-        frame = int(walked / (STRIDE * h) * 8)
-        bob = 0.022 * h * abs(math.sin(math.pi * walked / (STRIDE * h / 2))) * min(speed, 1)
-        tilt = TILT * min(speed, 1) * (-1 if facing == 'right' else 1)
-        return x, y, bob + extra_lift, facing, frame, 1.0, 1.0, tilt, 1.0
-
-    def state(self, t):
-        """(x, y, lift, row, frame, sx, sy, tilt, alpha) at time t."""
-        h = self.h
-        start = self.stops[0]
-        if t < self.appear:
-            return start[2], start[3], 0.0, 'idle', 0, 1.0, 1.0, 0.0, 0.0
-        for i, seg in enumerate(self.segments):
-            if t < seg['leave']:
-                break
-            if t < seg['arrive']:
-                if seg['len'] < 1e-6:                           # the next job is right here: it stays put
-                    return self._at_stop(i, t, seg['before'])
-                dt = t - seg['leave']
-                if dt < LEAN:                                   # the breath before setting off
-                    w = math.sin(math.pi * dt / LEAN)
-                    x, y = seg['px'][0], seg['py'][0]
-                    lean_back = 2.5 * w * (1 if seg['px'][-1] >= seg['px'][0] else -1)
-                    return x, y, 0.0, seg['entry'], 0, 1 + 0.05 * w, 1 - 0.06 * w, lean_back, 1.0
-                k = seg['hurry']
-                dist = travelled((dt - LEAN) * k, seg['len'], h)
-                x, y, step = self._point(seg, dist)
-                speed = (travelled((dt - LEAN + 0.01) * k, seg['len'], h) - dist) / 0.01 / (WALK * h)
-                to_go = seg['arrive'] - t
-                hop = 0.0
-                nxt = self.stops[i + 1]
-                if seg['d'] >= HOP_MIN * h and to_go < HOP_TIME and nxt[5] is None:
-                    hop = HOP * h * math.sin(math.pi * (1 - to_go / HOP_TIME))
-                return self._walking(x, y, seg['faces'][step], seg['before'] + dist, speed, hop)
-            nxt = self.stops[i + 1]
-            if t <= nxt[1] or i + 1 == len(self.segments):
-                return self._at_stop(i + 1, t, seg['before'] + seg['len'])
-        return self._at_stop(0, t, 0.0)
-
-    def _holding(self, t):
-        return any(e - HOLD <= t < e for e in self.step_ends)
-
-    def _at_stop(self, n, t, walked):
-        arrive, leave, x, y, k, path = self.stops[n]
-        h = self.h
-        if path is not None:
-            cum, line = self.lines[n]
-            if arrive <= t <= arrive + trace_time(float(cum[-1]), h):   # drawing a line
-                dist = traced(t - arrive, float(cum[-1]), h)
-                x = float(np.interp(dist, cum, path[:, 0]))
-                y = float(np.interp(dist, cum, path[:, 1]))
-                speed = (traced(t - arrive + 0.01, float(cum[-1]), h) - dist) / 0.01 / (WALK * h)
-                passed = int(np.searchsorted(cum, dist, side='right'))      # vertices behind it: the first at least
-                facing = turned(line[passed - 1], line_ahead(path, cum, dist))
-                return self._walking(x, y, facing, walked + dist, speed)
-            x, y = float(path[-1][0]), float(path[-1][1])        # the line drawn, it looks it over
-            arrive += trace_time(float(cum[-1]), h)
-        land = t - arrive
-        sy = 1 + spring(land, -0.10, 0.22, 0.08) if path is None else 1.0
-        sx = 1 / math.sqrt(max(sy, 0.5))
-        if k == -4:                                             # a last look at the picture
-            return x, y, 0.0, 'review', int((t - arrive) * 8), 1.0, 1.0, 0.0, 1.0
-        if k == -2:                                             # waving goodbye
-            return x, y, 0.0, 'wave', int((t - arrive) * 7), 1.0, 1.0, 0.0, 1.0
-        if k == -3:                                             # gone
-            return x, y, 0.0, 'idle', 0, 1.0, 1.0, 0.0, 0.0
-        if self._holding(t):
-            return x, y, 0.0, 'review', int(t * 8), sx, sy, 0.0, 1.0
-        if t <= leave and k >= 0:
-            return x, y, 0.0, WORK_POSE[k], int(land * 8), sx, sy, 0.0, 1.0
-        return x, y, 0.0, 'idle', int(t * 6), sx, sy, 0.0, 1.0
 
 
 Plan = namedtuple('Plan', 'pets visits traces')
@@ -552,14 +379,14 @@ Plan = namedtuple('Plan', 'pets visits traces')
 def plan(inputs):
     """The crew's whole show, planned: a pure function of plain data. Every random draw is
     SplitMix64's, in a fixed order (the guardians' appear order, their wave order, each job's work
-    time as the steps are planned, then each walk's bend), so the same inputs plan the same show.
+    time as the steps are planned), so the same inputs plan the same show.
 
     inputs: size [W, H] and petHeight in px; intro and step in s; seed; guardians [{id, start: [x, y]}]
     in crew order; candidates, per step the spots [x, y] its jobs are done at (the ink step's are
     ignored); strokes, the template's lines [[x, y], ...], drawn by walking in the ink step;
     frameHeight, the video frame's, which the farewell walks off the bottom of.
 
-    Returns Plan(guardians, visits, traces): the guardians with their stops and walks, finished; per step the
+    Returns Plan(guardians, visits, traces): the guardians with their stops; per step the
     points its change spreads from, (time, x, y); the lines drawn by walking, (stroke index,
     start, duration, points in drawing order)."""
     W, H = inputs['size']
@@ -574,8 +401,7 @@ def plan(inputs):
     for i, member in enumerate(crew):
         appear = 0.04 + 0.035 * order[i]
         x, y = member['start']
-        pets.append(Pet(member['id'], (appear, appear + 0.05, x, y, -1, None), h, rng, appear,
-                        [s0 + step for s0 in starts]))
+        pets.append(Pet(member['id'], (appear, appear + 0.05, x, y, -1, None)))
     planner = Planner(pets, (W, H), h, rng, step * BEAT, intro)
     strokes = [np.array(s, dtype=np.float64) for s in inputs['strokes']]
     visits, traces = [], []
@@ -586,8 +412,6 @@ def plan(inputs):
             seeds = planner.step(starts[k], starts[k] + step - 0.15, inputs['candidates'][k], k)
         visits.append(seeds or [(starts[k] + 0.1, W / 2, H / 2)])
     planner.farewell([end - 0.05 + 0.03 * w for w in wave], inputs['frameHeight'])
-    for p in pets:
-        p.finish()
     return Plan(pets, visits, traces)
 
 

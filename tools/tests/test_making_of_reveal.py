@@ -3,7 +3,7 @@ fixture, and by hand.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_reveal.py'
 
-Needs numpy and Pillow (making_of_pets.py imports them). Sources/MakingOf's tests (ValueNoiseTests,
+Needs numpy. Sources/MakingOf's tests (ValueNoiseTests,
 ArrivalTests, OutlinesTests; the numbers' cases left with the crew show) replay the same fixture and the same hand-made
 cases; the Python and the Swift agree bit for bit, so every comparison here is exact."""
 

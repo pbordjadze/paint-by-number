@@ -45,7 +45,7 @@ paint-by-numbers templates — entirely on-device — and makes painting them fl
 ## How it is made
 
 Paul Bordjadze makes Paint by Moonlight with a small team of AI agents: Codex builds the tools,
-Claude orchestrates, reviews and tells the story, and the Lamp, a panel of nineteen AI guardians,
+Claude orchestrates and reviews, and the Lamp, a panel of nineteen AI guardians,
 weighs in on smaller design questions by blind ballot. The big creative choices stay with
 people: Paul, and the people he invites.
 
