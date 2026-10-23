@@ -252,7 +252,8 @@ func runRefine(_ options: Options) throws {
         case "repaint":
             // Edit Paint: paint `paint` (or the one whose swatch looks like `fromRgb`) becomes `color` or `rgb`.
             var picked = g.paint
-            if let c = g.fromRgb, c.count == 3 {
+            if let c = g.fromRgb {
+                guard c.count == 3, g.paint == nil else { fail("gesture \(k + 1): a repaint names its paint by `paint` or by a `fromRgb` of three values") }
                 let want = ColorScience.linearSRGBToOKLab(
                     SIMD3(ColorScience.decodeSRGB(c[0]), ColorScience.decodeSRGB(c[1]), ColorScience.decodeSRGB(c[2])))
                 picked = t.palette.indices.min { ColorScience.distance(t.palette[$0].oklab, want) < ColorScience.distance(t.palette[$1].oklab, want) }

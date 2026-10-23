@@ -117,10 +117,13 @@ final class Drafts {
         guard current != nil else { return nil }
         let store = store
         do {
-            return try await Background.run { () throws -> Opened in
+            let opened = try await Background.run { () throws -> Opened in
                 guard let draft = try store.read() else { throw DraftStore.StoreError.missingPhoto }
                 return Opened(draft: draft, photo: try store.photoData(), kept: store.kept(edits: draft.refinements.edits))
             }
+            // A trail on disk that can't be taken up is written again once the edits are laid.
+            if opened.kept == nil { keptOnDisk = false }
+            return opened
         } catch let error as CocoaError where !Library.isDamage(error) {
             Log.create.error("The draft can't be opened now: \(String(describing: error), privacy: .public)")
             return nil

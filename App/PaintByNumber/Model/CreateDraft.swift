@@ -8,8 +8,8 @@ import os
 /// where it was left (`Drafts` keeps one on disk, `CreateModel.load(draft:photo:)` resumes it).
 /// The template is generated again from the photo, the settings and the refinements' generator
 /// inputs, and the painter's edits (`TemplateRefinements.edits`) are laid on it again, in order,
-/// as Refine laid them, unless the trail they made is kept beside them (`DraftStore.KeptFile`)
-/// and the base comes out the same: then nothing is laid again.
+/// as Refine laid them, unless the trail they made is kept beside them (`DraftStore.KeptFile`):
+/// then the draft's settings show its base and template as they were, nothing made or laid.
 nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     /// Names the photo, so a draft replaces its own earlier saves and the stored photo is
     /// encoded once (`DraftStore.write`).

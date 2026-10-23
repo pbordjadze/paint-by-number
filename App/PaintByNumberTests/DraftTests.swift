@@ -411,6 +411,14 @@ struct DraftTests {
         resumed.load(draft: read, photo: try store.photoData(), kept: store.kept(edits: read.refinements.edits))
         try await waitUntil { resumed.isFinal }
         #expect(resumed.preview?.template == kept.base, "The kept trail wasn't taken up")
+        // Back from another slider position, the draft's settings lay its edits on the kept base,
+        // not on one made from the draft's JPEG of the photo.
+        resumed.colorCount += 2
+        resumed.settingsChanged()
+        try await waitUntil { resumed.isFinal && resumed.preview?.template != kept.base }
+        resumed.colorCount -= 2
+        resumed.settingsChanged()
+        try await waitUntil { resumed.isFinal && resumed.preview?.template == kept.template }
 
         let other = EditTrail.Kept(base: kept.base, edits: [], made: [], template: kept.base)
         let relaid = CreateModel()

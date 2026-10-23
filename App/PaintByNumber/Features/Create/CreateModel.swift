@@ -486,6 +486,9 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = saved?.refinements ?? TemplateRefinements()
         made = []
+        // What the draft's settings made of the photo itself, which the draft's JPEG of it would
+        // not make again: kept for coming back to them too.
+        if let resumed = resumeKept { remember(resumed.trail.base, settings: resumed.key.settings, refinements: resumed.key.inputs) }
         forgetEdits()
         progress = 0
         phase = .loading
@@ -813,8 +816,11 @@ final class CreateModel {
             }
             if let current = shown.trail {
                 trail = current
-                resumeKept = nil
-                trailKey = BaseKey(settings: settings, inputs: inputs)
+                let key = BaseKey(settings: settings, inputs: inputs)
+                // Only its own settings' trail stands in for it: a slider moved meanwhile leaves it
+                // for when they come back.
+                if resumeKept?.key == key { resumeKept = nil }
+                trailKey = key
                 settledEdits = handledEdits
                 // Told once: not again while the same edits stay out.
                 if left != leftOutEdits, left > 0 { say(.left(left)) }
