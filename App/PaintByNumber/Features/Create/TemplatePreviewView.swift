@@ -177,8 +177,8 @@ struct TemplatePreviewView: View {
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         // The stacked controls card: title row, settings chip, the sliders (one and its chooser in
         // a compact window), summary, Start and the free paintings under it.
-        let settings: CGFloat = room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)
-        let card: CGFloat = (showsSettings ? settings : 262) + (showsFreeCount ? 30 : 0)
+        // With its settings shown, folded or not: Adjust then never moves the card from under the finger.
+        let card: CGFloat = (room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)) + (showsFreeCount ? 30 : 0)
         let stacked = Self.fittedArea(
             width: room.width - 2 * sidePadding, height: room.height - card, aspect: photoAspect)
         let beside = Self.fittedArea(
@@ -393,7 +393,7 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
-            if Self.foldsSettings && model.settingsOrigin != .custom {
+            if Self.foldsSettings {
                 HStack(spacing: 12) {
                     originChip
                     adjustButton
@@ -458,15 +458,16 @@ struct TemplatePreviewView: View {
     /// Start Painting, and Adjust, which shows the sliders as they are and keeps them shown for
     /// whoever opened it (`SettingsKey.previewShowsSettings`). The first-five-minutes walk, October
     /// 23: four questions a newcomer can't answer, while Already Chosen for You says to just tap
-    /// Start Painting; Paul: "let's build them all". Settings of the painter's own keep them shown,
-    /// and Reset to Suggested with them.
+    /// Start Painting; Paul: "let's build them all". Adjust alone shows or folds them: settings of
+    /// the painter's own (from the enlarged preview) fold too, the chip saying Custom with its Reset
+    /// to Suggested, so no slider goes from under a finger as its drag comes back to its detent.
     #if UNRELEASED
     private static let foldsSettings = true
     #else
     private static let foldsSettings = false
     #endif
 
-    private var showsSettings: Bool { !Self.foldsSettings || opensSettings || model.settingsOrigin == .custom }
+    private var showsSettings: Bool { !Self.foldsSettings || opensSettings }
 
     /// Shows the settings, or folds them away again. Fewer or More Areas points here while they are
     /// folded.

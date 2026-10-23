@@ -827,8 +827,8 @@ Conventions).
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until
   Adjust shows them, and keeps them shown for whoever opened it (`TemplatePreviewView.foldsSettings`,
-  `SettingsKey.previewShowsSettings`; settings of the painter's own show them, with Reset to
-  Suggested); UI tests open them with `openPreviewSettings`. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
+  `SettingsKey.previewShowsSettings`; Adjust alone folds them, the chip keeping Reset to Suggested);
+  UI tests open them with `openPreviewSettings`, and find them as an earlier test left them. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
   of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s
