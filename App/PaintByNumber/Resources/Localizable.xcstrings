@@ -7193,6 +7193,18 @@
       "comment" : "Create flow chip above the sliders: the settings were chosen for this picture (a photo or a library painting) automatically; also the chip's VoiceOver value",
       "extractionState" : "manual"
     },
+    "Adjust" : {
+      "comment" : "Create flow button beside the settings chip (SideStore and Debug builds): shows the sliders (Colors, Detail, Smoothness, Lines), or folds them away again",
+      "extractionState" : "manual"
+    },
+    "Settings shown" : {
+      "comment" : "VoiceOver value of the create flow's Adjust button while the sliders show",
+      "extractionState" : "manual"
+    },
+    "Settings hidden" : {
+      "comment" : "VoiceOver value of the create flow's Adjust button while the sliders are folded away",
+      "extractionState" : "manual"
+    },
     "Take Photo" : {
       "comment" : "Toolbar button of the create flow that opens the camera",
       "extractionState" : "manual"

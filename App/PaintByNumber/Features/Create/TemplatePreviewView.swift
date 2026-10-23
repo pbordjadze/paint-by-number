@@ -34,6 +34,8 @@ struct TemplatePreviewView: View {
     #endif
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
+    /// The painter opened Adjust, and the card shows its settings from then on (`foldsSettings`).
+    @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = false
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -175,6 +177,7 @@ struct TemplatePreviewView: View {
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         // The stacked controls card: title row, settings chip, the sliders (one and its chooser in
         // a compact window), summary, Start and the free paintings under it.
+        // With its settings shown, folded or not: Adjust then never moves the card from under the finger.
         let card: CGFloat = (room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)) + (showsFreeCount ? 30 : 0)
         let stacked = Self.fittedArea(
             width: room.width - 2 * sidePadding, height: room.height - card, aspect: photoAspect)
@@ -390,18 +393,27 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
-            originChip
-            if isCompact && !isSideBySide {
-                // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
-                // the comparison large and asks one thing at once.
-                settingChooser
-                slider(shownSetting)
-                    .id(shownSetting)
+            if Self.foldsSettings {
+                HStack(spacing: 12) {
+                    originChip
+                    adjustButton
+                }
             } else {
-                slider(.colors)
-                slider(.detail)
-                slider(.smoothness)
-                if hasLines { slider(.lines) }
+                originChip
+            }
+            if showsSettings {
+                if isCompact && !isSideBySide {
+                    // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
+                    // the comparison large and asks one thing at once.
+                    settingChooser
+                    slider(shownSetting)
+                        .id(shownSetting)
+                } else {
+                    slider(.colors)
+                    slider(.detail)
+                    slider(.smoothness)
+                    if hasLines { slider(.lines) }
+                }
             }
             summary
 
@@ -439,6 +451,48 @@ struct TemplatePreviewView: View {
         .padding(.horizontal, 22)
         .padding(.top, 20)
         .padding(.bottom, 8)
+    }
+
+    /// In SideStore and Debug builds (`UNRELEASED`, until a Lamplit Table round and Paul choose it for
+    /// the release) the card folds its settings away: the title, the suggestion, the summary and
+    /// Start Painting, and Adjust, which shows the sliders as they are and keeps them shown for
+    /// whoever opened it (`SettingsKey.previewShowsSettings`). The first-five-minutes walk, October
+    /// 23: four questions a newcomer can't answer, while Already Chosen for You says to just tap
+    /// Start Painting; Paul: "let's build them all". Adjust alone shows or folds them: settings of
+    /// the painter's own (from the enlarged preview) fold too, the chip saying Custom with its Reset
+    /// to Suggested, so no slider goes from under a finger as its drag comes back to its detent.
+    #if UNRELEASED
+    private static let foldsSettings = true
+    #else
+    private static let foldsSettings = false
+    #endif
+
+    private var showsSettings: Bool { !Self.foldsSettings || opensSettings }
+
+    /// Shows the settings, or folds them away again. Fewer or More Areas points here while they are
+    /// folded.
+    private var adjustButton: some View {
+        Button {
+            titleFocused = false
+            withAnimation(reduceMotion ? nil : .snappy) { opensSettings.toggle() }
+        } label: {
+            HStack(spacing: 4) {
+                Text("Adjust")
+                Image(systemName: "chevron.down")
+                    .rotationEffect(.degrees(opensSettings ? 180 : 0))
+                    .accessibilityHidden(true)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.accent)
+            .padding(.vertical, 6)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .disabled(isStarting)
+        .accessibilityValue(opensSettings ? Text("Settings shown") : Text("Settings hidden"))
+        .accessibilityIdentifier("preview-adjust")
+        .gentleTip(.newPaintingSliders, active: !showsSettings, arrowEdge: .bottom)
     }
 
     /// Which setting the one slider tunes: the painter's choice, else Colors in the card and
@@ -481,7 +535,7 @@ struct TemplatePreviewView: View {
                 valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
                 detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
                 // Fewer or More Areas: over the slider, clear of the preview's picture.
-                .gentleTip(.newPaintingSliders, arrowEdge: .bottom)
+                .gentleTip(.newPaintingSliders, active: showsSettings, arrowEdge: .bottom)
         case .detail:
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
