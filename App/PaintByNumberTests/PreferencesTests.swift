@@ -5,24 +5,13 @@ import Testing
 
 @MainActor
 struct PreferencesTests {
-    @Test func defaultsAndSessionMapping() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        var preferences = Preferences(defaults: defaults)
-        #expect(preferences.autoAdvance)
-
-        defaults.set(false, forKey: SettingsKey.autoAdvance)
-        preferences = Preferences(defaults: defaults)
-        #expect(!preferences.autoAdvance)
-        // The persisted key strings: renaming one would forget every painter's switch.
+    /// The persisted key strings: renaming one would forget every painter's switch. Advance to
+    /// Next Color reaches a painting's session from `PaintView`, whoever presents it (the gallery,
+    /// Refine's Try Painting), as Zen Mode and the palette's order do.
+    @Test func settingKeys() {
         #expect(SettingsKey.haptics == "hapticsEnabled" && SettingsKey.sounds == "soundsEnabled")
-
-        let session = PaintingSession(template: Fixtures.stripes())
-        #expect(session.autoAdvance)
-        preferences.apply(to: session)
-        #expect(!session.autoAdvance)
+        #expect(SettingsKey.autoAdvance == "autoAdvanceColors")
+        #expect(PaintingSession(template: Fixtures.stripes()).autoAdvance)
     }
 
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments

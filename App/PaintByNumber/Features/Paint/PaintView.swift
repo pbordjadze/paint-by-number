@@ -64,6 +64,7 @@ struct PaintView: View {
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @AppStorage(SettingsKey.zenMode) private var zenMode = false
+    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     /// Feedback mode while set.
     @State private var feedback: FeedbackDraft?
     /// The white flash of the capture as feedback starts.
@@ -151,6 +152,7 @@ struct PaintView: View {
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
         .onChange(of: paletteOrder, initial: true) { _, order in session.advancesToFirstLeft = order.followsProgress }
+        .onChange(of: autoAdvance, initial: true) { _, advance in session.autoAdvance = advance }
         .onChange(of: zenMode, initial: true) { _, zen in
             session.flowsToNextArea = zen
             if zen { PaintTips.used(.benchZen) }
