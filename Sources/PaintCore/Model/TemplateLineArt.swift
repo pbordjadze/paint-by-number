@@ -11,8 +11,10 @@ public enum LineLayer: UInt8, Sendable, CaseIterable {
     case color = 3
 
     /// Whether a line stored with layer `raw` is part of the drawing: every layer before
-    /// `color`. A layer past it (from a newer app) reads as `color`, never drawn. The one rule
-    /// for the screen (`DrawableLineArt`) and Refine's gestures (`RefineGestures.drawingLines`).
+    /// `color`. No layer past it reaches here: the decoder reads one as a corrupt painting
+    /// (`Template.validateReferences`), so a new layer needs a chunk of its own (CLAUDE.md ›
+    /// Saved data compatibility). The one rule for the screen (`DrawableLineArt`) and Refine's
+    /// gestures (`RefineGestures.drawingLines`).
     public static func isDrawn(_ raw: UInt8) -> Bool { raw < color.rawValue }
 }
 
