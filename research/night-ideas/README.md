@@ -12,7 +12,9 @@ Python 3 with numpy, scipy, Pillow; `cairosvg` for the light renders.
 - Hold it to the light: `impasto.py` (height field: paint domed from each area's edge, optional
   brush marks along the photo's structure tensor by line integral convolution; lighting),
   `stills.py <dir> <out> x,y` (one crop at four strengths), `clip2.py <dir> <out> [frames] [x,y]
-  [brush]` (a tilt sweep from the template's own SVG).
+  [brush]` (a tilt sweep from the template's own SVG), `stills2.py` and `clip_rmap.py` (the same,
+  with the relief built from the region map, as PaintCore would: smoother, no serration along
+  straight edges; these made the page's pictures).
 - Mixing recipes: `km.py` (Kubelka–Munk: Wyman, Sloan & Shirley 2013 CMF fit, Burns' smoothest
   reflectance, KM mixing; nine estimated tubes, uncalibrated), `make_recipes.py <book dir> <out.json>`.
   Untested against real paint: the gate is on the page.
