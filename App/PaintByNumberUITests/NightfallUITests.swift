@@ -21,12 +21,19 @@ final class NightfallUITests: XCTestCase {
     @MainActor
     func testTheEmptyGallerysSketchPaintsItself() throws {
         let app = XCUIApplication()
-        // Four times slower: about nine seconds.
-        app.launchArguments = ["-demo", "gallery-empty", "-introSlowdown", "4"]
+        // Four times slower: about nine seconds. The sketch waits for a tap, or a simulator slow to
+        // answer could let it finish before the first frame (CI, October 23: twice in one run).
+        app.launchArguments = ["-demo", "gallery-empty", "-introSlowdown", "4", "-introWaitsForTap", "YES"]
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["Every painting starts with a photo"].waitForExistence(timeout: 60))
-        let frames = captureFrames(timeout: 12, keep: 60) { _ in false }
+        let title = app.staticTexts["Every painting starts with a photo"]
+        XCTAssertTrue(title.waitForExistence(timeout: 60))
+        let unpainted = ScreenFrame(since: .now)
+        // The sketch is hidden from VoiceOver: it is tapped where it stands, 198 pt high and 34 pt
+        // above the title (`EmptyGalleryView`).
+        let sketch = CGVector(dx: title.frame.midX, dy: title.frame.minY - 34 - 198 / 2)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(sketch).tap()
+        let frames = [unpainted] + captureFrames(timeout: 12, keep: 60) { _ in false }
         attachFrames(frames, named: "empty-gallery-sketch")
         XCTAssertGreaterThan(largestChange(in: frames), ScreenChanges.still, "The sketch didn't paint itself")
     }

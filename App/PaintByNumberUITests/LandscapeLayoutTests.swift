@@ -66,6 +66,34 @@ final class LandscapeLayoutTests: XCTestCase {
     @MainActor
     private func audit(_ app: XCUIApplication, named name: String) throws {
         let findings = Findings()
+        try Self.auditing(again: 1) {
+            try audit(app, into: findings)
+        }
+        let attachment = XCTAttachment(string: findings.all.isEmpty ? "No issues" : findings.all.joined(separator: "\n"))
+        attachment.name = "accessibility-\(name)"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertTrue(findings.blocking.isEmpty, "Accessibility issues:\n" + findings.blocking.joined(separator: "\n"))
+    }
+
+    /// Runs `audit`, and again after a pause when the audit itself ran out of time ("Audit failed
+    /// to complete in time", which a busy simulator gives: CI, October 23): that is the
+    /// measurement failing, not the screen, and a second audit starts its findings afresh.
+    @MainActor
+    private static func auditing(again retries: Int, _ audit: () throws -> Void) throws {
+        do {
+            try audit()
+        } catch let error as NSError
+                    where error.domain == "com.apple.xcode.xctest.accessibilityAudit" && error.code == -56 && retries > 0 {
+            sleep(3)
+            try auditing(again: retries - 1, audit)
+        }
+    }
+
+    @MainActor
+    private func audit(_ app: XCUIApplication, into findings: Findings) throws {
+        findings.all = []
+        findings.blocking = []
         try app.performAccessibilityAudit { issue in
             // The audit reports on the main thread.
             MainActor.assumeIsolated {
@@ -78,11 +106,6 @@ final class LandscapeLayoutTests: XCTestCase {
             }
             return true
         }
-        let attachment = XCTAttachment(string: findings.all.isEmpty ? "No issues" : findings.all.joined(separator: "\n"))
-        attachment.name = "accessibility-\(name)"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-        XCTAssertTrue(findings.blocking.isEmpty, "Accessibility issues:\n" + findings.blocking.joined(separator: "\n"))
     }
 
     private static func name(of type: XCUIAccessibilityAuditType) -> String {

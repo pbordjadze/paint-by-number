@@ -251,7 +251,9 @@ synchronized folder would bundle it into the app.
   setting on with `-playsMakingOf YES`, starts a painting, and skips the show into it.
   `paint-nightfall` (with `-dark`) is `paint-finish` by Moon, ready at the night's fullest; with
   `gallery-empty` (ready once its sketch has painted itself) it is in `NightfallUITests`, whose
-  frames (stretched by Debug's `-introSlowdown <factor>`) are the two animations to look at.
+  frames (stretched by Debug's `-introSlowdown <factor>`) are the two animations to look at; the
+  sketch waits there for a tap (`-introWaitsForTap YES`), since it paints by the clock from when
+  it appears and a slow simulator let it finish before the test's first frame.
 
 ## Painting screen
 
