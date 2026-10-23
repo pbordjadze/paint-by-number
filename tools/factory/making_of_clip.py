@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""A render of the making-of show, for judging its rhythm: the show exactly as the app will play it
-(making_of_show.py builds it from the shared modules, the Swift port in Sources/MakingOf makes the
-same frames), drawn with Pillow: the layers composited by making_of_compose.py, the template's lines
-and numbers, the cards, the seed rings and the Lamp's guardians (making_of_pets.py) as the crew.
+"""A render of the making-of show, for judging its rhythm, drawn with Pillow: the crew show
+(making_of_show.py, built from the shared modules: the layers composited by making_of_compose.py, the
+template's lines and numbers, the cards, the seed rings and the Lamp's guardians, making_of_pets.py,
+as the crew), or with --no-crew the show the app plays (making_of_fields.py, whose Swift port is
+Sources/MakingOf's FieldShow).
 
 Usage:
   making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width PX] [--fps 60] [--crew N] [--no-crew]
@@ -14,8 +15,8 @@ default App/PaintByNumber/Resources/making-of.json) sets the timing, each step's
 with its methods' credit lines from ACKNOWLEDGEMENTS.md as a footnote, printed letter for letter)
 and the crew's motion; --step, --crew (the first N guardians of its order) and --pet-height override it.
 Everything the show decides (where the crew pops in and works, the seeds step 3 drops, the noise that
-roughens each step's reveal, the lines' start jitters) is chosen by the shared modules from --seed, and
-makes the same numbers in Sources/MakingOf; the pictures are the snapshots' own size, which the
+roughens each step's reveal, the lines' start jitters) is chosen by the shared modules from --seed, as
+Sources/MakingOf chooses the shared parts; the pictures are the snapshots' own size, which the
 pipeline keeps to 1024 px on the long side, and --width only scales the video (and the stills) to
 that many pixels across.
 --no-crew plays the show with no crew instead (making_of_fields.py): each step's change grows from
@@ -23,9 +24,9 @@ seeds over the picture itself, with sparks along the burning lines and a ring as
 --motion DIR writes a motion report of the guardians and stops. --plan-json PATH writes the crew's
 plan and stops: {"spec", "inputs", "plan", "states"}, the inputs rounded to 0.01 px and 0.0001 s before
 the plan is made from them, and every guardian's state at 30 per second. That file is
-Sources/MakingOf's test fixture (Tests/MakingOfTests/Fixtures/plan-parrots.json); regenerate it,
-after changing making_of_pets.py, making_of_inputs.py or the spec, with the generated parrots as in
-the header of Sources/MakingOf/MakingOf.swift.
+tools/tests/fixtures/plan-parrots.json, which test_making_of_pets.py replays; regenerate it after
+changing making_of_pets.py, making_of_inputs.py or the spec, from the generated parrots (the
+recipe was in Sources/MakingOf/MakingOf.swift's header: `git show d3e3a954:Sources/MakingOf/MakingOf.swift`).
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
 for OUTRO. In each step the crew's stops are where its change spreads from, so it always grows from

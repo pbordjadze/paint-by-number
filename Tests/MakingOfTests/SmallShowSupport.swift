@@ -28,6 +28,24 @@ struct SmallShow {
 
     /// `making_of_inputs.py`'s JSON.
     struct ExpectedInputs: Decodable {
+        /// What the crew's plan was made from (the Python's crew still is): its sizes and seed.
+        struct Inputs: Decodable {
+            struct Member: Decodable {
+                var id: String
+                var start: [Double]
+            }
+
+            var size: [Double]
+            var petHeight: Double
+            var intro: Double
+            var step: Double
+            var seed: UInt64
+            var pets: [Member]
+            var candidates: [[[Double]]]
+            var strokes: [[[Double]]]
+            var frameHeight: Double
+        }
+
         struct Trace: Decodable {
             var labels: Int
             var inkPixels: Int
@@ -38,7 +56,7 @@ struct SmallShow {
         }
 
         var seed: UInt64
-        var inputs: PlanFixture.Inputs
+        var inputs: Inputs
         /// [time, x, y, paint] each.
         var seeds: [[Double]]
         /// The palette picture's colors, `r << 16 | g << 8 | b`, ascending.

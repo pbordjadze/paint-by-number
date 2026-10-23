@@ -2,7 +2,7 @@ import PaintCore
 
 /// What a stream of the show's random draws is for. Each purpose and index (a step, a stroke, a
 /// noise grid) has a stream of its own, so a draw count in one, such as a retry while sampling
-/// spots, can never shift another. The planner keeps its own `SplitMix64(seed:)` (`CrewPlan`).
+/// spots, can never shift another.
 public enum ShowStream: UInt64, Sendable {
     case homes = 1, spots, noise, seeds, strokes
     /// The field show's (`FieldShow`): its purposes run from here on, one for each step and the

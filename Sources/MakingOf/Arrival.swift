@@ -76,7 +76,7 @@ public enum Arrival {
 }
 
 /// How the paints of step 3 flow: each paint's areas spread from the k-means++ seeds that landed
-/// on it (`PaintSeed`, which `CrewInputs.make` chooses), and a paint no seed landed on follows the
+/// on it (`PaintSeed`, which `PaintSeeds` chooses), and a paint no seed landed on follows the
 /// crew's own change.
 public enum PaintFlow {
     public struct Result: Sendable, Equatable {
@@ -136,4 +136,11 @@ public enum PaintFlow {
         }
         return Result(regionTimes: regionTimes, spread: spread)
     }
+}
+
+/// A moment a step's change starts from, and where: the field grows from these.
+public struct Visit: Sendable, Equatable {
+    public var time: Double
+    public var x: Double
+    public var y: Double
 }

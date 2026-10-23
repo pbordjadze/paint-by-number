@@ -411,7 +411,7 @@ extension ShowPictures {
             let at = "t = \(expected.time)"
             #expect(frame.time == expected.time && frame.step == expected.step, "\(at)")
             #expect(frame.picture == PictureRecipe(stage: expected.picture.stage, time: expected.picture.time, handoff: expected.picture.handoff), "\(at)")
-            #expect(frame.sprites.isEmpty && expected.sprites.isEmpty, "\(at)")
+            #expect(expected.sprites.isEmpty, "\(at)")
 
             // the lines: which, how long and how dark exactly; where within the fuse's tolerance, but
             // exactly in the ink step (a prefix of the stair steps) and once the outlines are smooth
@@ -502,7 +502,7 @@ extension ShowPictures {
         #expect(show.size.width == 216 && show.size.height == 144)
         // the finished drawing holds with its numbers all in, no guardians, and the hand-off done
         let end = show.frame(at: show.duration)
-        #expect(end.sprites.isEmpty && end.picture.handoff == 1 && end.numbers.allSatisfy { $0 == 1 })
+        #expect(end.picture.handoff == 1 && end.numbers.allSatisfy { $0 == 1 })
         #expect(end.sparks.isEmpty && end.stars.isEmpty && end.card == nil && end.step == nil)
     }
 
@@ -522,7 +522,6 @@ extension ShowPictures {
                 #expect(card.caption == spec.steps[card.step].caption)
                 #expect(card.opacity > 0 && card.opacity <= spec.cards.opacity)
             }
-            #expect(frame.sprites.isEmpty)
             #expect(frame.numbers.isEmpty == (frame.picture.stage < 5))
             #expect(frame.seedRings.isEmpty || frame.picture.stage == 2)
             #expect(frame.ink.isEmpty || frame.picture.stage >= 4)
@@ -630,18 +629,9 @@ extension ShowPictures {
         #expect(other.picks != show.picks && other.numberTimes != show.numberTimes)
     }
 
-    @Test func theCrewShowHasNoMarks() throws {
-        let show = try ShowFixture.small
-        for t in stride(from: 0.0, through: show.duration, by: 0.7) {
-            let frame = show.frame(at: t)
-            #expect(frame.sparks.isEmpty && frame.stars.isEmpty, "t = \(t)")
-        }
-    }
-
     @Test func theFieldShowsStyleIsItsOwn() throws {
         #expect(FieldShow.style != RevealStyle.standard)
         #expect(try FieldFixture.small.compositor.layers.style == FieldShow.style)
-        #expect(try ShowFixture.small.compositor.layers.style == RevealStyle.standard)
         // only the ramps of the fronts differ, not what the layers are made of
         let standard = RevealStyle.standard
         var same = FieldShow.style
@@ -731,7 +721,6 @@ extension ShowPictures {
             let frame = show.frame(at: t)
             show.composite(frame, into: &pixels)
             distinct.formUnion(pixels.data)
-            #expect(frame.sprites.isEmpty)
         }
         #expect(distinct.count > 50)
         // the finished drawing has every number, and a line for each of the template's

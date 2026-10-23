@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""The making-of show, built once and then a pure function of the time: the factory's twin of
-Sources/MakingOf's `Show`, which it is the reference of. The clip tool (making_of_clip.py) plays it
-with Pillow; the app's view plays Sources/MakingOf's with Core Graphics and Metal.
+"""The making-of crew show, built once and then a pure function of the time. The clip tool
+(making_of_clip.py) plays it with Pillow. Its Swift port (Sources/MakingOf's `Show`) was retired on
+October 23, 2026: the app plays the show with no crew (making_of_fields.py, Sources/MakingOf's
+`FieldShow`), which shares this one's layers, compositor, seeds and schedules.
 
     show = Show(snapshots, svg, spec, seed=7)
     frame = show.frame(t)             # what to draw at t, as plain data
@@ -15,9 +16,9 @@ step's change reaches each pixel and the schedules of the lines and numbers (mak
 `frame(t)` is {time, step, picture: {stage, time, handoff}, ink: [{stroke, points, value}],
 numbers: [alpha], seed_rings: [{x, y, radius, alpha}], sprites: [sprite_draw, back to front],
 card: {step, caption, methods, opacity, footnote_opacity} or None}, all places in pixels of the
-snapshots' picture; Sources/MakingOf's `ShowFrame` has the same, and its doc comment says what a view
-draws from it. The tests write a few of these for the small show fixture (`frames-small.json`) for
-the Swift port to be compared with.
+snapshots' picture; Sources/MakingOf's `ShowFrame` has the same but `sprites`, and its doc comment says
+what a view draws from it. The tests write a few of these for the small show fixture
+(`tools/tests/fixtures/frames-small.json`).
 
 Changing the show means changing the two together: the cards' and rings' timing is
 making_of_reveal.py's, the guardians' look making_of_pets.py's, the layers' look
@@ -170,7 +171,7 @@ class Show:
     def composite(self, frame):
         """The picture of `frame`, float32 (H, W, 3): the layers blended as its recipe says, with its lines
         rasterized by `ink_coverage` at the template's line width. The numbers, the hand-off, the rings,
-        the guardians and the card are the renderer's, as in Sources/MakingOf's `Show.composite`."""
+        the guardians and the card are the renderer's, as in Sources/MakingOf's `FieldShow.composite`."""
         W, H = self.size
         ink = ink_coverage(frame['ink'], W, H, self.line_width) if frame['ink'] else None
         return self.compositor.picture(frame['picture']['time'], ink)

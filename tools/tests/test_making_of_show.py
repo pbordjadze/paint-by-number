@@ -1,14 +1,15 @@
-"""The making-of show's frames (tools/factory/making_of_show.py and what it is made of), the guardians'
-metrics, and the numbers Sources/MakingOf's `Show` is compared with.
+"""The making-of crew show's frames (tools/factory/making_of_show.py and what it is made of) and the
+guardians' metrics. The app plays the show with no crew (making_of_fields.py); this one is the clip
+tool's, and its Swift port was retired on October 23, 2026.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_show.py'
     python3 tools/tests/test_making_of_show.py --write-goldens     # after changing the show
 
-Needs numpy and Pillow. --write-goldens writes Tests/MakingOfTests/Fixtures/frames-small.json: the small
-show fixture (Fixtures/show-small, 216 x 144) built as the show is built, and fourteen moments of it,
+Needs numpy and Pillow. --write-goldens writes tools/tests/fixtures/frames-small.json: the small show
+fixture (Tests/MakingOfTests/Fixtures/show-small, 216 x 144) built as the show is built, and fourteen moments of it,
 each with its frame (the lines by their counts and a fingerprint of their points, the numbers, rings,
 guardians and card as they are) and the composite picture on a 24 x 16 lattice. The test here fails when
-the committed file is not what the Python makes now; ShowTests replays the same file in Swift."""
+the committed file is not what the Python makes now."""
 
 import json
 import math
@@ -31,7 +32,8 @@ FIXTURES = ROOT / "Tests" / "MakingOfTests" / "Fixtures"
 SNAPSHOTS = FIXTURES / "show-small"
 RESOURCES = ROOT / "App" / "PaintByNumber" / "Resources"
 SPEC = RESOURCES / "making-of.json"
-METRICS = RESOURCES / "pet-metrics.json"
+GOLDENS = ROOT / "tools" / "tests" / "fixtures"
+METRICS = GOLDENS / "pet-metrics.json"
 SEED = 7
 POINTS = (24, 16)
 
@@ -106,7 +108,7 @@ def frames_golden():
         frames.append(entry)
     return {
         "about": "Tests/MakingOfTests/Fixtures/show-small built by making_of_show.Show (seed 7, the shipped spec and the "
-                 "bundled pet-metrics.json), at fourteen moments: each frame, and the composite picture on a lattice, "
+                 "pinned pet-metrics.json), at fourteen moments: each frame, and the composite picture on a lattice, "
                  "row-major over xs by ys, three values a pixel. Written by tools/tests/test_making_of_show.py "
                  "--write-goldens.",
         "size": [W, H], "seed": SEED, "lineWidth": show.line_width, "duration": show.duration, "xs": xs, "ys": ys,
@@ -146,12 +148,12 @@ def same(test, got, expected, tolerance, what):
 class FramesGoldenTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.stored = json.loads((FIXTURES / "frames-small.json").read_text(encoding="utf-8"))
+        cls.stored = json.loads((GOLDENS / "frames-small.json").read_text(encoding="utf-8"))
         cls.made = json.loads(json.dumps(frames_golden()))
 
     def test_the_golden_is_current(self):
         # scalars come from the planner's sines and springs, the picture from float32 layers: the
-        # tolerances are Swift's own (ShowTests), the Python's across numpy versions and platforms
+        # tolerances are the Python's across numpy versions and platforms
         made, stored = self.made, self.stored
         self.assertEqual(made.keys(), stored.keys())
         for key in ("size", "seed", "xs", "ys", "lineWidth", "duration"):
@@ -426,6 +428,6 @@ class MetricsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     if "--write-goldens" in sys.argv:
-        write_json(FIXTURES / "frames-small.json", frames_golden())
+        write_json(GOLDENS / "frames-small.json", frames_golden())
     else:
         unittest.main()

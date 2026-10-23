@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """When each part of the making-of picture changes: the show's reveal schedule, in float64.
 
-This is the reference for Sources/MakingOf (ValueNoise, Arrival, Outlines, NumberSchedule, Timeline),
-which ports it line by line; change the two together and regenerate the fixture:
+This is the reference for Sources/MakingOf (ValueNoise, Arrival, Outlines, Timeline; `number_times`
+had NumberSchedule, retired with the crew show on October 23, 2026), which ports it line by line;
+change the two together and regenerate the fixture:
 
   python3 tools/factory/making_of_reveal.py --fixture Tests/MakingOfTests/Fixtures/show-small \\
       Tests/MakingOfTests/Fixtures/reveal-small.json

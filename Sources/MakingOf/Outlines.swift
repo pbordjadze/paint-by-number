@@ -51,7 +51,8 @@ public struct StrokeSchedule: Sendable {
 
     /// - Parameters:
     ///   - strokes: the template's lines, in pixels of the working image (the plan's inputs).
-    ///   - traces: the lines the crew walks (`CrewPlan.traces`), drawn from their start to end by the guardian.
+    ///   - traces: the lines the crew walked, drawn from their start to end by the guardian (the field
+    ///     show has none).
     ///   - inkArrival: the ink step's `Arrival.field`, which a line the crew doesn't walk begins after.
     ///   - relaxArrival: the template step's, which a point relaxes after.
     ///   - streams: each such line's wait is a draw from the `.strokes` stream of its index.
@@ -205,4 +206,14 @@ public struct StrokeSchedule: Sendable {
         }
         return lo
     }
+}
+
+/// A line drawn from one end to the other over a while, rather than laid down where it lies.
+public struct Trace: Sendable, Equatable {
+    /// The line's index in the strokes.
+    public var stroke: Int
+    public var start: Double
+    public var duration: Double
+    /// In drawing order, which may be the stroke's reversed.
+    public var line: Polyline
 }

@@ -92,15 +92,13 @@ struct MakingOfShowTests {
 
     /// What the view draws over the picture besides the numbers and rings: sparks at the burning
     /// tips of the ink step, stars round the numbers coming out in the template step (and the
-    /// first moments of the hold), in the ranges `MakingOfCanvas` draws them in, and never a
-    /// guardian.
-    @Test func theShowHasSparksAndStarsAndNoGuardians() async throws {
+    /// first moments of the hold), in the ranges `MakingOfCanvas` draws them in.
+    @Test func theShowHasSparksAndStars() async throws {
         let built = try await MakingOfShow.build(Self.source())
         let show = built.show
         var sparks = 0, stars = 0
         for t in stride(from: 0.0, through: show.duration, by: 0.02) {
             let frame = show.frame(at: t)
-            #expect(frame.sprites.isEmpty, "t = \(t)")
             if !frame.sparks.isEmpty { #expect(frame.picture.stage == ScheduleTiming.inkStep, "sparks at t = \(t)") }
             if !frame.stars.isEmpty { #expect(frame.picture.stage >= ScheduleTiming.templateStep, "stars at t = \(t)") }
             #expect(frame.sparks.allSatisfy { $0.heat > 0 && $0.heat <= 1 }, "t = \(t)")
@@ -164,8 +162,7 @@ struct MakingOfShowTests {
         let stills = await MakingOfPlayer.stills(of: built)
         #expect(stills.map(\.step) == [0, 1, 2, 3, 4, 5, nil])
         #expect(stills.allSatisfy {
-            $0.frame.seedRings.isEmpty && $0.frame.sparks.isEmpty && $0.frame.stars.isEmpty && $0.frame.sprites.isEmpty
-                && $0.picture != nil
+            $0.frame.seedRings.isEmpty && $0.frame.sparks.isEmpty && $0.frame.stars.isEmpty && $0.picture != nil
         })
         #expect((stills.last?.frame.picture.handoff ?? 0) > 0.999)
     }
