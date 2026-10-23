@@ -622,19 +622,14 @@ Conventions).
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
-  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
-  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Color Splitter, out of the toolbar for now
-  (`RefineView.offersSplitter`, Paul, October 18: a Pen line recolors the sides it parts instead), divides
-  an area's color where it goes and draws no line (a split, below; dashed while the finger is
-  down, and picking it shows the painting, where a split shows); the Eraser rubs out what it
-  touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
-  junction (both in one Erasers button, as Shapes holds its shapes, and the photo and the
-  painting beneath in one Show button; no line under the tools says how they work: each button's
+  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval, a curve (two
+  drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
+  rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from
+  junction to junction (no line under the tools says how they work: each button's
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
   what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
-  out (`EditFills`). Colors (after Fill; SideStore and Debug builds only for now, `#if UNRELEASED`,
-  backlog row 38) shows the painting and `RefineColorsPanel`: a row of looks (Photo, then the
+  out (`EditFills`). Looks and Edit Paint (backlog row 38) show the painting and `RefineColorsPanel`: a row of looks (Photo, then the
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
@@ -648,7 +643,7 @@ Conventions).
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
   once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
   tap switches between drawing and the Eraser.
-  - **The Toolbox** (SideStore and Debug builds, `#if UNRELEASED`; Paul, October 21: "a drawing app
+  - **The Toolbox** (Paul, October 21: "a drawing app
     with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
     grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
@@ -658,8 +653,7 @@ Conventions).
     options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
     `SettingsKey.refineSnaps`/`refinePenColors`), Shapes (its figures and Snap above the tools), the
     Eraser, the Line Eraser, Bend Line (`.reshape`: a drag moves the line under it, bending it near
-    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Shapes
-    adds a hexagon and a star in these builds (`RefineShape.offered`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
+    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
     share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
     drag joins the cells it crosses into the first, boundaries and ink between them gone; the cells
@@ -691,9 +685,11 @@ Conventions).
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
     each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
-    `create-refine-select` (with `-dark`) selects it. Without `UNRELEASED` the screen keeps the
-    one row of buttons described above (the release has no Refine at all).
-  - **The Tool Guide** (`RefineGuide.swift`, with the Toolbox in `#if UNRELEASED`; Paul, October 21:
+    `create-refine-select` (with `-dark`) selects it. Refine's files compile only where
+    `UNRELEASED` is (above), so nothing in them is gated again: the first release's one row of
+    buttons went on October 23, with the Color Splitter's button and Tool Guide page (Paul's yes,
+    backlog row 100).
+  - **The Tool Guide** (`RefineGuide.swift`; Paul, October 21:
     "each tool with a scenario that you can play with and reset easily", built for painters who
     will use Refine seriously, with tweaks, new tools and retired ones to come). Refine's toolbar
     opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; moving around) and
@@ -718,9 +714,9 @@ Conventions).
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
-    tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; a Color Splitter stroke:
-    `.split`, the Pen's line as an undrawn boundary whose sides end with different paints,
-    `docs/coloring-book.md` › Split), which
+    tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; the retired Color Splitter's
+    stroke was `.split`, the Pen's line as an undrawn boundary whose sides end with different
+    paints, `docs/coloring-book.md` › Split, and splits made before still lay), which
     `CreateModel.edit(_:)` / `fill(at:color:)` lays on the template on screen off the main actor
     (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. A drawn line
     first takes the photo's colors for the pieces it cuts (`TemplateEditor.painted` on the
@@ -748,7 +744,7 @@ Conventions).
     reusing a base made before, `made`) and the edits are laid on the new one, those that no
     longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
     drawing"); they stay in the list, so a correction undone brings them back. Refine's detail
-    brushes are gone (Paul, October 18: the Color Splitter took their place); areas a build
+    brushes are gone (Paul, October 18, for the Color Splitter, itself retired October 23); areas a build
     with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
     paintings and drafts regenerate as they were. A draft (a slider being
     dragged) shows the photo's own drawing, without edits. An edit sent while the base is being

@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import os
 import PaintCore
@@ -418,19 +417,6 @@ nonisolated struct RefineGuidePage {
                 ],
                 related: [.bucket, .shape, .pen],
                 practice: RefinePracticeSetup(scene: .inked, tool: .fill))
-        case .splitter:
-            RefineGuidePage(
-                summary: String(localized: "refine.guide.splitter.summary", defaultValue: "Divides a cell’s color without drawing a line.",
-                                comment: "Tool Guide, the Color Splitter: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.splitter.about",
-                              defaultValue: "Draw across a cell to divide it where its color changes in the photo. No line is drawn, and each side takes the photo’s color there.",
-                              comment: "Tool Guide, the Color Splitter: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.splitter.step1", defaultValue: "Draw across a cell where the photo’s color changes.",
-                           comment: "Tool Guide, the Color Splitter: a step of How to Use It"),
-                ],
-                tryThis: nil, notes: [], related: [.cellEdge, .pen],
-                practice: RefinePracticeSetup(scene: .inked, tool: .splitter))
         case .bucket:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.bucket.summary", defaultValue: "Pours the current paint into a cell.",
@@ -1022,4 +1008,3 @@ private struct GuidePageArrival: UIViewControllerRepresentable {
         }
     }
 }
-#endif

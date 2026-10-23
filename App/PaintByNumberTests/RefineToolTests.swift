@@ -12,7 +12,7 @@ struct RefineToolTests {
     @Test func thePencilSwitchesPenAndEraser() {
         #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
         #expect(RefineTool.shape.pencilPartner == .eraser && RefineTool.smartEraser.pencilPartner == .pen)
-        #expect(RefineTool.splitter.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
+        #expect(RefineTool.cellEdge.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
         let tools: [RefineTool] = [
             .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
@@ -89,7 +89,6 @@ struct RefineToolTests {
         #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
         #expect(RefineGroup.of(.bendLine) == .ink && RefineGroup.of(.moveEdge) == .cells && RefineGroup.of(.moveNumber) == .numbers)
         #expect(RefineGroup.of(.tryPainting) == .see)
-        #expect(all.contains(.splitter) == RefineView.offersSplitter)
     }
 
     /// The current paint is a color: a paint's exactly, a new one's, or within a just-noticeable
@@ -135,11 +134,9 @@ struct RefineToolTests {
         #expect(RefineView.inked(painted, colorsFromPhoto: false) == painted)
     }
 
-    /// Shapes offers the hexagon and the star in SideStore and Debug builds, after the release's
-    /// four.
+    /// Shapes offers the hexagon and the star after the first four.
     @Test func shapesOffersTheToolboxsFigures() {
-        #expect(RefineShape.offered.prefix(4) == [.line, .rectangle, .oval, .curve])
-        #expect(RefineShape.offered.contains(.polygon) && RefineShape.offered.contains(.star))
+        #expect(RefineShape.allCases == [.line, .rectangle, .oval, .curve, .polygon, .star])
         #expect(RefineShape.polygon.isClosed && RefineShape.star.isClosed)
     }
 

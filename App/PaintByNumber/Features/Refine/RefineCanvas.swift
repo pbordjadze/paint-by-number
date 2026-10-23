@@ -23,7 +23,7 @@ struct RefineInkLayer: View {
     let traceIsDrawn: Bool
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
-    /// The trace is the Color Splitter's or a Cell Edge's, a line that won't be drawn: dashed.
+    /// The trace is a Cell Edge's, a line that won't be drawn: dashed.
     var dashed = false
     /// The trace is Merge's, a path that draws nothing: in the signature color.
     var merging = false
