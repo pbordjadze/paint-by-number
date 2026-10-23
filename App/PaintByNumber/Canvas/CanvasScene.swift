@@ -56,7 +56,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         // and SVG; a detail area's down to its own floor), capped so huge regions don't shout,
         // then emit one instance per digit placed with the atlas's real advances.
         let atlas = context.atlas
-        let maxSize = 0.045 * Float(min(t.width, t.height))
+        let maxSize = LabelSizing.canvasMaximumFraction * Float(min(t.width, t.height))
         var glyphList: [GlyphInstance] = []
         glyphList.reserveCapacity(t.labels.count * 2)
         var sizes = [Float](repeating: 0, count: t.regions.count)

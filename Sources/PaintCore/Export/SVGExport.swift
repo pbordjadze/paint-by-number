@@ -30,11 +30,10 @@ public enum SVGExport {
     private static let lineColor = "#2b2530"
     private static let paperColor = "#ffffff"
     private static let selectionColor = "#7b3f7e"
-    /// Largest number size as a fraction of the canvas' long side; big regions get several
-    /// numbers of this size rather than one huge one. Numbers are sized by `LabelSizing` and
-    /// never dropped: none is smaller than `LabelSizing.minimumFontSize`, a detail area's than
-    /// its `detailMinimumFontSize`.
-    private static let maxNumberSize: Float = 1.0 / 64
+    /// Largest number size as a fraction of the canvas' long side (`LabelSizing`'s for sheets).
+    /// Numbers are sized by `LabelSizing` and never dropped: none is smaller than
+    /// `LabelSizing.minimumFontSize`, a detail area's than its `detailMinimumFontSize`.
+    private static let maxNumberSize = LabelSizing.sheetMaximumFraction
     /// A coloring book's line, as a factor on the outline width: the app draws it three times
     /// as heavy as a classic line with the painting fitted to the screen.
     private static let coloringBookWidth: Float = 3

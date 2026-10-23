@@ -35,6 +35,15 @@ public enum LabelSizing {
     /// room that keeps it).
     public static let detailMinimumRadius: Float = minimumRadius / roomFactor(digits: 3)
 
+    /// The largest a number is drawn on the Metal canvas, its font size as a share of the
+    /// canvas's shorter side (the app's `CanvasScene`), so huge regions don't shout; Refine's Move
+    /// Number keeps numbers' discs apart by it (`EditWork.largestNumberFraction`).
+    public static let canvasMaximumFraction: Float = 0.045
+    /// The largest a number is drawn on a sheet (SVG, thumbnails, print, the making-of), as a share
+    /// of the canvas's longer side: big regions carry several numbers of this size rather than one
+    /// huge one.
+    public static let sheetMaximumFraction: Float = 1.0 / 64
+
     /// Decimal digits of a positive number (at least 1).
     public static func digitCount(of number: Int) -> Int {
         var digits = 1
