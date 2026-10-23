@@ -80,13 +80,15 @@ extension XCTestCase {
         add(note)
     }
 
-    /// The New Painting slider of `setting` ("Colors", "Detail", "Smoothness", "Lines"). A compact
+    /// The New Painting slider of `setting` ("Colors", "Detail", "Smoothness", "Lines"). The card's
+    /// settings are opened first where they are folded away (`openPreviewSettings`). A compact
     /// window (iPhone) shows one slider at a time under its chooser (`tuned-setting`), which is
     /// turned to `setting` first; the iPad shows them all.
     @MainActor
     func settingSlider(_ setting: String, in app: XCUIApplication) -> XCUIElement {
         let slider = app.sliders[setting]
         let chooser = app.descendants(matching: .any).matching(identifier: "tuned-setting").firstMatch
+        if !slider.exists && !chooser.exists { openPreviewSettings(in: app) }
         // A tap as the full resolution lands is lost (main, 4bcffa0: twice, each within half a
         // second of it), so the chooser is tapped until its slider shows.
         for _ in 0..<3 where !slider.exists && chooser.exists {
@@ -94,6 +96,16 @@ extension XCTestCase {
             if slider.waitForExistence(timeout: 5) { break }
         }
         return slider
+    }
+
+    /// Opens the New Painting card's settings where Adjust folds them away (SideStore and Debug
+    /// builds, so every UI test run), and leaves them as they are where they show.
+    @MainActor
+    func openPreviewSettings(in app: XCUIApplication) {
+        let adjust = app.buttons["preview-adjust"]
+        guard adjust.exists, (adjust.value as? String) == "Settings hidden" else { return }
+        adjust.tap()
+        _ = waitFor(adjust, toMatch: NSPredicate(format: "value == %@", "Settings shown"), timeout: 5)
     }
 
     /// The first element showing exactly `label`, whatever its kind.
