@@ -145,9 +145,11 @@ before planning app work).
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
   `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
   in it ships or goes into the Marginarium until he says so, and its wording stays his.
-  `docs/backlog.md` is the other: the front desk's inbox (Working with Paul).
-- `.claude/skills/front-desk/`: the front desk (`SKILL.md`), `sessions.py`, its summary of
-  Paul's sessions, their cost and the status page's data, and `page.py`, the page's cards.
+  `docs/backlog.md` is the other: the backlog, one row for each idea, piece of feedback and
+  go-ahead (Working with Paul).
+- `.claude/skills/front-desk/`: the front desk (`SKILL.md`; retired for now, Working with Paul),
+  `sessions.py`, its summary of Paul's sessions, their cost and the status page's data, and
+  `page.py`, the page's cards.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -406,7 +408,9 @@ Saved paintings must open in every later build. The format history is documented
   `systemUptime`/`mach_absolute_time`, active keyboards) means adding its category and reason code
   there; `AboutTests` fails when the sources of the app or of `Sources/PaintCore` (not `pbn`) and
   the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category
-  are in `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
+  are in `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings. `ACCESSIBILITY.md` is
+  the page the App Store's accessibility link opens (`ci/store-listing.json`): a change to what the
+  app offers with VoiceOver, Reduce Motion, Dynamic Type or without color changes it too.
 - Picture library: public-domain pictures only, under hard license rules (reject on any doubt);
   `library.json` is its single source of truth. Read `docs/picture-library.md` before adding,
   replacing or removing a picture.
@@ -487,26 +491,26 @@ and its report ref can go. CI owns `sidestore` (never delete or push it) and the
 reports. Local `main` may lag: fetch before comparing.
 
 **The night train.** Several small branches through one full run, then into `main` as one push;
-the train holds one CI slot. The front desk picks who boards: branches reviewed (the last commit's
-message carries the review's notes, which the train's merge keeps), green on a compile check, and
-touching different files. A conductor session it starts (on Sonnet) runs `ci/train.sh make <name>
+the train holds one CI slot. Whoever starts it picks who boards: branches reviewed (the last
+commit's message carries the review's notes, which the train's merge keeps), green on a compile
+check, and touching different files. A conductor session (on Sonnet) runs `ci/train.sh make <name>
 <branch>…` (merges each into `claude/train-<name>`, fresh from `origin/main`, leaves off one that
 conflicts, and pushes), waits with `CI_BRANCH=claude/train-<name> ci/fetch.sh`, and on green runs
 `ci/train.sh land <name>`: `main` fast-forwards to the train, the one merge of that `main` run (it
 refuses a red, stale or compile-only report, or a `main` that moved: make the train again). On red,
 `ci/train.sh who <name> <path>…` names the branch that changed the failing file; the conductor
-makes the train again without it, and that branch goes back to its session through the front
-desk. The conductor reports each step to the front desk.
+makes the train again without it, and that branch goes back to its session. The conductor reports
+each step to the session that started it.
 
 ## Working with Paul
 
-Paul works in bursts, from his phone, often with several sessions going at once. He talks to one
-**front desk** session (`/front-desk`: `.claude/skills/front-desk/SKILL.md`). The front desk logs
-each idea, piece of feedback and go-ahead in `docs/backlog.md` and routes it to the session that
-owns it. It keeps the status page current: https://claude.ai/artifact/HWcNT2WZkA4kxvtGqyMbmo.
-Every other session keeps to one topic. When a session ships, gets blocked or needs Paul, it
-tells the front desk with `send_message` if one is running, and Paul with a push notification
-if he has gone quiet.
+Paul works in bursts, from his phone, often with several sessions going at once, each keeping to
+one topic, and he talks to each himself. The **front desk** (`/front-desk`:
+`.claude/skills/front-desk/SKILL.md`), the one session that took all he said and routed it, is
+retired for now (Paul, October 21: "I'm not sure we have enough going on to justify the front desk
+pattern anymore right now"), and the status page and CI queue it kept are no longer kept; should
+he start one again, its skill says how sessions work with it. When a session ships, gets blocked
+or needs Paul, it tells him itself, with a push notification once he has gone quiet.
 
 - **Merging is standing permission, given once.** When a branch's CI is green, its review is done
   (below) and the change is what Paul asked for, merge it into `main` without asking. Put
@@ -514,8 +518,8 @@ if he has gone quiet.
   build only. Don't wait for a "yes".
 - **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
   write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
-  subagent). Fix what it confirms; anything large or design-level goes to Paul through the front
-  desk. The merge commit's message lists what the review found and what was fixed. No PR, no
+  subagent). Fix what it confirms; anything large or design-level goes to Paul. The merge
+  commit's message lists what the review found and what was fixed. No PR, no
   extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
   head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
   `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
@@ -528,32 +532,34 @@ if he has gone quiet.
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
 - **CI etiquette.** One branch in CI across all sessions while `main` runs, up to three while it's
-  idle. The front desk keeps the order in the CI queue atop `docs/backlog.md`: read your place
-  there instead of asking. Throwaway branches queue behind anything Paul called a must-have.
+  idle: look at the CI runs queued and in progress (GitHub's Actions list, by branch) before a
+  push. Throwaway branches queue behind anything Paul called a must-have.
   Branch pushes never carry `[iphone]` unless Paul asks for it. Docs, factory and backlog
   commits carry `[skip ci]`. Hold small tweaks to a branch whose CI is running and push them
   together when it reports: every push cancels the run before it. A slot is freed by a green
-  report: merge, tell the front desk, and any further push queues again unless it fixes a red run.
-- **Paul's word counts once.** His comment on the status page, or his words the front desk relays
-  verbatim with their exact time, is his direct word for anything that can be undone. For what
-  can't, the page's card names the exact action, and his comment on that card counts. If auto
-  mode still blocks the action, tell the front desk, which asks Paul to repeat it in your session.
+  report: merge, and any further push queues again unless it fixes a red run.
+- **Paul's word counts once.** His words in your session, or his comment on a page a session made
+  for him, are his direct word for anything that can be undone. For what can't, the page's card
+  names the exact action, and his comment on that card counts. If auto mode still blocks the
+  action, ask Paul to repeat it in your session.
 - **Echo before you act** on names, characters, lore, identity or anything that removes
   something. Restate it in one line ("Heard: merge Madeleine into the teacher, keep both") and
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
 - **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
-  propose new work it noticed: send the front desk one short proposal (what, why, size, who
-  thought of it), at most one a night, and keep to its own topic. Paul signs off on the status
-  page. Small fixes inside a session's own task aren't proposals.
-- **Reports** to the front desk carry the row #, branch@sha, pushed or not, the CI state and the
-  one thing needed. No "still waiting" pings: the CI queue answers that.
-- **Audits** fix what they find, unless the file is in another queued branch's diff (the front
-  desk's brief lists them); a change to one of Paul's own picks goes on a card before it's built.
+  propose new work it noticed: one short `new` row in `docs/backlog.md` (what, why, size, who
+  thought of it), at most one a night, keeping to its own topic. Paul signs off on it. Small fixes
+  inside a session's own task aren't proposals.
+- **Reports** to Paul carry the row #, branch@sha, pushed or not, the CI state and the one thing
+  needed. No "still waiting" pings.
+- **Audits** fix what they find, unless the file is in another session's open branch (the
+  branches in CI and those Paul named); a change to one of Paul's own picks goes on a card before
+  it's built.
 - **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
-  branch@sha, CI state and queue place, open questions to Paul, pending check-ins and what's next
-  (`.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell the front desk its id.
-- **Backlog commits.** The front desk commits `docs/backlog.md` straight to `main`, with
-  `[skip ci]`. That is the one exception to working on branches.
+  branch@sha, CI state, open questions to Paul, pending check-ins and what's next (the shape of
+  `.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell Paul its id.
+- **Backlog commits.** A session adds and updates its own rows of `docs/backlog.md` and commits
+  them straight to `main` with `[skip ci]`, fetching first (several sessions write it). That is
+  the one exception to working on branches.
 
 ## Conventions
 
