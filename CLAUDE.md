@@ -558,8 +558,10 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
   branch@sha, CI state, open questions to Paul, pending check-ins and what's next (the shape of
   `.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell Paul its id.
 - **Backlog commits.** A session adds and updates its own rows of `docs/backlog.md` and commits
-  them straight to `main` with `[skip ci]`, fetching first (several sessions write it). That is
-  the one exception to working on branches.
+  them straight to `main` with `[skip ci]`, fetching first (several sessions write it), but not
+  while a night train is in CI: `ci/train.sh land` refuses a `main` that moved, so a row pushed
+  then costs the train a full run; hold it until the train lands. That is the one exception to
+  working on branches.
 
 ## Conventions
 
