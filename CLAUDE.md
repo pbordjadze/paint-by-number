@@ -547,8 +547,8 @@ or needs Paul, it tells him itself, with a push notification once he has gone qu
   wait for his yes. Phrases like "replace X with Y" are the ones to check.
 - **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
   propose new work it noticed: one short `new` row in `docs/backlog.md` (what, why, size, who
-  thought of it), at most one a night, keeping to its own topic. Paul signs off on it. Small fixes
-  inside a session's own task aren't proposals.
+  thought of it), at most one a night, keeping to its own topic, and its next report to Paul names
+  the row. Paul signs off on it. Small fixes inside a session's own task aren't proposals.
 - **Reports** to Paul carry the row #, branch@sha, pushed or not, the CI state and the one thing
   needed. No "still waiting" pings.
 - **Audits** fix what they find, unless the file is in another session's open branch (the
