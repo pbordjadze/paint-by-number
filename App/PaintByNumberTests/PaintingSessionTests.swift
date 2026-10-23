@@ -325,11 +325,15 @@ struct PaintingSessionTests {
     }
 
     /// The next color goes by the palette's order on screen and comes round past its end; a
-    /// painting opens on its first swatch.
+    /// begun painting opens on its first swatch.
     @Test func theNextColorFollowsThePalettesOrder() throws {
-        let session = PaintingSession(template: template)
-        let last = session.paletteCount - 1
+        let last = template.palette.count - 1
         try #require(last >= 3)
+        // Begun, so it opens by the palette's order: one area painted of a color that has more.
+        let begun = try #require((0...last).first { regions(ofColor: $0).count >= 2 })
+        var progress = PaintProgress(regionCount: template.regions.count)
+        progress.paint(regions(ofColor: begun)[0])
+        let session = try PaintingSession(template: template, progress: progress)
         // In the palette's order on screen: here backwards, so the last number leads.
         session.colorOrder = Array((0...last).reversed())
         #expect(session.selectedColor == last, "The palette's first swatch wasn't selected as it showed")
@@ -339,6 +343,31 @@ struct PaintingSessionTests {
         session.select(color: 0)
         session.paint(regions(ofColor: 0), from: .zero, animated: false)
         #expect(session.selectedColor == last)
+    }
+
+    /// A painting nobody has painted on opens on the color of its largest area, whatever the
+    /// palette's order, and so does one started over (`OpeningColor`); by number, 1 was often a
+    /// few slivers the opening zoom doesn't show.
+    @Test func aFreshPaintingOpensOnItsLargestAreasColor() throws {
+        // The largest area, ties going to the lower number.
+        let region = try #require(template.regions.indices.max { a, b in
+            let ra = template.regions[a], rb = template.regions[b]
+            return ra.area != rb.area ? ra.area < rb.area : ra.colorIndex > rb.colorIndex
+        })
+        let largest = Int(template.regions[region].colorIndex)
+        #expect(OpeningColor.largestArea(in: template) == largest)
+        let last = template.palette.count - 1
+        // Where the opening color is the first by number, the palette's first swatch takes over.
+        let opening = OpeningColor.isLargestArea ? largest : 0, shown = OpeningColor.isLargestArea ? largest : last
+        let session = PaintingSession(template: template)
+        #expect(session.selectedColor == opening)
+        session.colorOrder = Array((0...last).reversed())
+        #expect(session.selectedColor == shown, "The palette's order moved the largest area's color")
+        let other = (largest + 1) % template.palette.count
+        session.select(color: other)
+        session.paint([regions(ofColor: other)[0]], from: .zero, animated: false)
+        session.reset()
+        #expect(session.selectedColor == shown, "Started over, the painting didn't open as a fresh one")
     }
 
     @Test func paintingEverythingCompletesTheArtwork() {
