@@ -539,6 +539,35 @@ test("titles the issue 'Feedback' when the report has no first line, and cuts a 
   assert.equal(fake.calls[0].body.content.replaceAll("\r\n", "\n"), long);
 });
 
+test("cuts names, titles and the issue's report between characters, never inside one", async () => {
+  const fake = fakeGitHub();
+  globalThis.fetch = fake.handler;
+  // U+20000 (a letter, two UTF-16 units) straddling each cut: the name's 100, the title's 150 and
+  // the issue's 60000.
+  const astral = "\u{20000}";
+  const report = `${"t".repeat(149)}${astral} title\n\n${"r".repeat(59999)}${astral}${"r".repeat(10)}`;
+  const request = await feedback({
+    parts: { report, picture: [new Blob([PNG], { type: "image/png" }), `${"p".repeat(99)}${astral}.png`] },
+  });
+  assert.equal((await answers(request)).status, 201);
+  const wellFormed = (text) => !/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/.test(text);
+  const paths = fake.calls.find((call) => call.route === "/git/trees").body.tree.map((entry) => entry.path);
+  assert.equal(paths[1], `${FOLDER}/${"p".repeat(99)}.png`);
+  const [issue] = fake.state.issues;
+  assert.ok(wellFormed(issue.title) && issue.title.startsWith(`${"t".repeat(149)} (`), issue.title);
+  assert.ok(wellFormed(issue.body) && issue.body.includes("the whole report is in the folder"));
+});
+
+test("a report that can't be told as an issue is refused before anything is committed", async () => {
+  const fake = fakeGitHub();
+  globalThis.fetch = fake.handler;
+  // A lone surrogate can't be encoded for the issue's links: nothing reaches the repository.
+  const request = await feedback({ parts: { bundle: [new Blob([ZIP], { type: "application/zip" }), "ok.zip"] } });
+  const response = await handle(request, ENV, { ...DEPS, randomHex: () => "a1b2\ud800" });
+  assert.equal(response.status, 502);
+  assert.deepEqual(routes(fake), []);
+});
+
 test("titles an unreadable first line as plain Feedback", async () => {
   const fake = fakeGitHub();
   globalThis.fetch = fake.handler;

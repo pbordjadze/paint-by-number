@@ -108,13 +108,10 @@ export async function handle(request, env, deps = {}) {
 
   try {
     const gh = github(env);
+    // Made before the commit: a report that can't be told as an issue leaves no folder behind.
+    const issue = { title: issueTitle(reportText, app), body: issueBody(env.FEEDBACK_REPO, reportText, folder, pictureName) };
     await commitFiles(gh, files, `Feedback ${folder.slice("reports/".length)}\n\nPaint by Moonlight ${app}`);
-    gh.expect(
-      await gh.call("POST", "/issues", {
-        title: issueTitle(reportText, app),
-        body: issueBody(env.FEEDBACK_REPO, reportText, folder, pictureName),
-      }),
-    );
+    gh.expect(await gh.call("POST", "/issues", issue));
   } catch (error) {
     log(env, "Filing the report failed", error);
     return reject(502);
@@ -172,8 +169,17 @@ function safeName(name, extension, fallback) {
   let base = String(name ?? "").split(/[\\/]/).pop().normalize("NFC");
   base = base.replace(/[^\p{L}\p{N} ._()-]/gu, "_").replace(/^[.\s]+/, "");
   if (base.toLowerCase().endsWith(extension)) base = base.slice(0, -extension.length);
-  base = base.slice(0, 100).replace(/[.\s]+$/, "");
+  base = cut(base, 100).replace(/[.\s]+$/, "");
   return (base || fallback) + extension;
+}
+
+/**
+ * `text`'s first `length` UTF-16 units, never ending in half a character: a lone surrogate makes
+ * encodeURIComponent throw and GitHub refuse a title. (Node 18, CI's, has no toWellFormed.)
+ */
+function cut(text, length) {
+  const head = text.slice(0, length);
+  return /[\ud800-\udbff]$/.test(head) ? head.slice(0, -1) : head;
 }
 
 /** A path for a URL: every segment encoded, and the characters Markdown reads as syntax. */
@@ -186,7 +192,7 @@ function encodePath(path) {
 
 function issueTitle(report, app) {
   const first = report.split(/\r?\n/).find((line) => line.trim() !== "") ?? "";
-  const heading = first.replace(/[\x00-\x1f]/g, " ").replace(/^#+\s*/, "").trim().slice(0, 150);
+  const heading = cut(first.replace(/[\x00-\x1f]/g, " ").replace(/^#+\s*/, "").trim(), 150);
   return `${heading || "Feedback"} (${app})`;
 }
 
@@ -194,7 +200,7 @@ function issueBody(repo, report, folder, pictureName) {
   const picture = `https://github.com/${repo}/blob/${BRANCH}/${encodePath(`${folder}/${pictureName}`)}?raw=1`;
   const files = `https://github.com/${repo}/tree/${BRANCH}/${encodePath(folder)}`;
   const text =
-    report.length > MAX_ISSUE_REPORT ? `${report.slice(0, MAX_ISSUE_REPORT)}\n\n(Cut here: the whole report is in the folder.)` : report;
+    report.length > MAX_ISSUE_REPORT ? `${cut(report, MAX_ISSUE_REPORT)}\n\n(Cut here: the whole report is in the folder.)` : report;
   return `${text}\n\n![The painting with its marks](${picture})\n\n[All the files of this report](${files})\n`;
 }
 
