@@ -13,6 +13,7 @@ final class MakingOfUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 90)
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
         start.tap()
 
         let skip = app.buttons["making-of-skip"]

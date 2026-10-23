@@ -17,6 +17,8 @@ final class UnlockUITests: XCTestCase {
         let count = app.staticTexts["free-paintings"]
         XCTAssertTrue(count.exists, "No free paintings line under Start Painting")
         XCTAssertEqual(count.label, "Your next free painting comes tomorrow.")
+        // Start works from the first draft: the 60 s for buying to start are the full resolution's.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
 
         start.tap()
         let buy = app.buttons["unlock-buy"]
@@ -62,6 +64,8 @@ final class UnlockUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 60), "The sample didn't open its preview")
         XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
         XCTAssertFalse(app.staticTexts["free-paintings"].exists, "A library picture's preview counts free paintings")
+        // Start works from the first draft: the 60 s below are for the full resolution and the save.
+        XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
         start.tap()
         XCTAssertTrue(start.waitForNonExistence(timeout: 60), "The library picture's painting didn't start")
         XCTAssertFalse(app.buttons["unlock-buy"].exists, "A library picture asked for the unlock")
