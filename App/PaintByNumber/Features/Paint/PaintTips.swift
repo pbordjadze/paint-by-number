@@ -33,9 +33,11 @@ nonisolated struct HintTip: Tip {
     var title: Text { Text("Can’t Find It?") }
     var message: Text? { Text("Tap the selected color again, or the lightbulb, to be shown an area to paint.") }
     var image: Image? { Image(systemName: "lightbulb") }
+    static let needed = 1
     var rules: [Tips.Rule] {
+        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.stalls) { $0.donations.count >= 1 }
+        #Rule(TipEvents.stalls) { $0.donations.count >= needed }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
 }
@@ -46,9 +48,11 @@ nonisolated struct ZoomTip: Tip {
     var title: Text { Text("Zoom In on Small Areas") }
     var message: Text? { Text("Double-tap the page to zoom in. Pinch to zoom back out.") }
     var image: Image? { Image(systemName: "plus.magnifyingglass") }
+    static let needed = 2
     var rules: [Tips.Rule] {
+        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.smallMisses) { $0.donations.count >= 2 }
+        #Rule(TipEvents.smallMisses) { $0.donations.count >= needed }
     }
 }
 
@@ -58,9 +62,11 @@ nonisolated struct DragPaintTip: Tip {
     var title: Text { Text("Paint Several Areas") }
     var message: Text? { Text("Touch and hold, then drag across areas with this number to fill them in one stroke.") }
     var image: Image? { Image(systemName: "hand.draw") }
+    static let needed = 15
     var rules: [Tips.Rule] {
+        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.singleTaps) { $0.donations.count >= 15 }
+        #Rule(TipEvents.singleTaps) { $0.donations.count >= needed }
     }
 }
 
@@ -70,9 +76,11 @@ nonisolated struct PencilTip: Tip {
     var title: Text { Text("Paint with Apple Pencil") }
     var message: Text? { Text("The Pencil paints while fingers move the page. Double-tap the Pencil for the next color.") }
     var image: Image? { Image(systemName: "applepencil") }
+    static let needed = 1
     var rules: [Tips.Rule] {
+        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.pencilStrokes) { $0.donations.count >= 1 }
+        #Rule(TipEvents.pencilStrokes) { $0.donations.count >= needed }
     }
 }
 
@@ -278,12 +286,15 @@ enum PaintTips {
     static var demoTip: TipID? { DemoMode.forcedTip ?? DemoMode.scenario.flatMap { demoScenarios[$0] }?.tip }
 
     /// Every count a tip's rules wait for, so that whichever tip a `--tip-` scenario forces is
-    /// eligible.
+    /// eligible. An event two tips count is donated for each, which meets both rules.
     private static func donateEveryRule() {
         let counts: [(Tips.Event<Tips.EmptyDonation>, Int)] = [
-            (TipEvents.smallMisses, 2), (TipEvents.singleTaps, 15), (TipEvents.pencilStrokes, 1), (TipEvents.stalls, 1),
-            (TipEvents.quarters, 1), (TipEvents.finishes, 1), (TipEvents.sessions, 1), (TipEvents.pagesMade, 2),
-            (TipEvents.sliderReleases, 1), (TipEvents.linesDrawn, 1),
+            (TipEvents.stalls, HintTip.needed), (TipEvents.smallMisses, ZoomTip.needed),
+            (TipEvents.singleTaps, DragPaintTip.needed), (TipEvents.pencilStrokes, PencilTip.needed),
+            (TipEvents.sessions, ShelfNewPaintingTip.needed), (TipEvents.sliderReleases, NewPaintingResetTip.needed),
+            (TipEvents.pagesMade, NewPaintingSlidersTip.needed), (TipEvents.pagesMade, NewPaintingRefineTip.needed),
+            (TipEvents.linesDrawn, RefineFillTip.needed), (TipEvents.quarters, BenchShowPhotoTip.needed),
+            (TipEvents.finishes, BenchReplayTip.needed), (TipEvents.sessions, BenchZenTip.needed),
         ]
         Task {
             for (event, count) in counts {
