@@ -488,8 +488,9 @@ final class CreateFlowTests: XCTestCase {
     /// Taps "Browse All…" and returns the frame of the presented sheet's dismiss button, or
     /// fails the test (with diagnostics) and returns nil when no sheet appears. A tap that
     /// brings up no sheet is kept as a screenshot and tree and made once more: the out-of-process
-    /// picker's cold start can swallow the first (CI, iPad, October 23: no sheet in 25 s and no
-    /// main-thread stall, then the retry's sheet at once), as the inline picker's first tap can.
+    /// picker's cold start can swallow the first (CI, iPad, October 23: no sheet within the wait
+    /// and no main-thread stall, then the test's rerun saw it at once), as the inline picker's
+    /// first tap can. A button a late sheet has covered isn't tapped again.
     @MainActor
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector, via button: XCUIElement? = nil) -> CGRect? {
         let browse = button ?? app.buttons["Browse All…"]
@@ -498,7 +499,7 @@ final class CreateFlowTests: XCTestCase {
         if !waitUntil(timeout: 15, { cancel = sheet.dismissFrame; return cancel != nil }) {
             attachScreenshot(of: app, named: "browse-all-tap-missed")
             attachTree(of: app, named: "browse-all-tap-missed-tree")
-            browse.tap()
+            if browse.isHittable { browse.tap() }
             _ = waitUntil(timeout: 25) { cancel = sheet.dismissFrame; return cancel != nil }
         }
         if cancel != nil {
