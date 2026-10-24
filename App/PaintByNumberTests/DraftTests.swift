@@ -207,6 +207,79 @@ struct DraftTests {
         #expect(try store.read() == nil)
     }
 
+    // MARK: A failed write
+
+    /// Makes the drafts' folder read-only, so every write fails until `allow` is called.
+    private func refuseWrites() throws -> () -> Void {
+        let fm = FileManager.default
+        let folder = store.url(.draft).deletingLastPathComponent().deletingLastPathComponent()
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        try fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: folder.path)
+        return { try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: folder.path) }
+    }
+
+    /// A write that fails is said (`saveFailed`) and its draft waits: the painter's Retry writes it
+    /// once the disk takes it, and the notice goes.
+    @Test func aFailedWriteIsSaidAndRetried() async throws {
+        let drafts = Drafts(store: store)
+        let allow = try refuseWrites()
+        defer { allow() }
+        let saved = draft()
+        drafts.keep(saved, photo: try photo())
+        await drafts.flush()
+        #expect(drafts.current == nil)
+        #expect(drafts.saveFailed)
+
+        // Still failing: said again.
+        drafts.retry()
+        await drafts.flush()
+        #expect(drafts.saveFailed)
+
+        allow()
+        drafts.retry()
+        #expect(!drafts.saveFailed)
+        await drafts.flush()
+        #expect(drafts.current == saved)
+        #expect(try store.read() == saved)
+        #expect(!drafts.saveFailed)
+    }
+
+    /// The next save after a failure writes the newest draft, and its landing clears the notice.
+    @Test func theNextSaveAfterAFailureWritesTheNewest() async throws {
+        let drafts = Drafts(store: store)
+        let allow = try refuseWrites()
+        defer { allow() }
+        let id = UUID()
+        drafts.keep(draft(id, title: "One"), photo: try photo())
+        await drafts.flush()
+        #expect(drafts.saveFailed)
+
+        allow()
+        drafts.keep(draft(id, title: "Two"), photo: try photo())
+        await drafts.flush()
+        #expect(try store.read()?.title == "Two")
+        #expect(!drafts.saveFailed)
+    }
+
+    /// A draft dropped or discarded while its write was failing stays gone.
+    @Test(arguments: [false, true])
+    func aFailedWriteOfADraftLetGoStaysGone(discards: Bool) async throws {
+        let drafts = Drafts(store: store)
+        let allow = try refuseWrites()
+        defer { allow() }
+        let saved = draft()
+        drafts.keep(saved, photo: try photo())
+        drafts.saveNow()
+        if discards { drafts.discard() } else { drafts.drop(photoID: saved.photoID) }
+        await drafts.flush()
+        #expect(!drafts.saveFailed)
+
+        allow()
+        await drafts.flush()
+        #expect(drafts.current == nil)
+        #expect(try store.read() == nil)
+    }
+
     // MARK: Damage
 
     @Test(arguments: DraftStore.File.allCases)

@@ -3101,6 +3101,10 @@
       "comment" : "Toast on the painting screen (and its VoiceOver announcement) when saving progress to disk failed",
       "extractionState" : "manual"
     },
+    "Couldn’t save the draft" : {
+      "comment" : "Toast on the new painting's preview and on Refine (and its VoiceOver announcement) when saving the unfinished painting's draft to disk failed; Retry beside it",
+      "extractionState" : "manual"
+    },
     "Couldn’t Send Feedback" : {
       "comment" : "Alert title when the feedback couldn't be sent to the developers (no connection, a timeout or a refusal)",
       "extractionState" : "manual"

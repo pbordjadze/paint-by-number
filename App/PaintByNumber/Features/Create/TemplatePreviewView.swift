@@ -356,9 +356,14 @@ struct TemplatePreviewView: View {
                         status.padding(14)
                     }
                     #if UNRELEASED
-                    // What Refine had to say once the sliders made the template again.
+                    // What Refine had to say once the sliders made the template again, and a
+                    // draft that couldn't be saved.
                     .overlay(alignment: .top) {
-                        RefineNoteToast(note: model.note).padding(.top, 8)
+                        VStack(spacing: 8) {
+                            RefineNoteToast(note: model.note)
+                            DraftSaveToast()
+                        }
+                        .padding(.top, 8)
                     }
                     .animation(reduceMotion ? nil : .snappy, value: model.note)
                     #endif

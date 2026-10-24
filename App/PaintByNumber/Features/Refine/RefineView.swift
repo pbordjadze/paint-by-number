@@ -469,6 +469,18 @@ struct RefineView: View {
         .overlay(alignment: .top) {
             if !isPractice { topControls.padding(12) }
         }
+        // A draft that couldn't be saved, with its Retry, under the note (a practice canvas keeps
+        // no draft).
+        .overlay(alignment: .top) {
+            if !isPractice {
+                VStack(spacing: 8) {
+                    RefineNoteToast(note: model.note).hidden()
+                    DraftSaveToast()
+                }
+                .padding(.top, 12)
+                .animation(reduceMotion ? nil : .snappy, value: model.note)
+            }
+        }
         .popover(item: $card, attachmentAnchor: .rect(.rect(cardAnchor))) { pick in areaCard(pick) }
     }
 
