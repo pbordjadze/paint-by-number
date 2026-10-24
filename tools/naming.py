@@ -24,7 +24,7 @@ about (never a scan of everything up front):
             identifiers it was seen in and the commit
   sense     one meaning of a term: a one-line definition and the identifiers that carry it
   location  where a sense shows up: a file and its outermost symbol (or a pipeline stage), and
-            the commit it was seen at
+            the commit it was first seen at
   decision  Paul's ruling on a sense: the name to use, its meaning, the banned synonyms and the
             reason; it never expires (a later decision on the same sense supersedes it)
 
@@ -849,7 +849,10 @@ def cmd_record(root, args):
                 places[(hit.file, hit.top)].append(hit.line)
             for (file, top), lines in places.items():
                 loc = location_id(file, top)
-                graph.put_node(loc, "location", f"{file}#{top}", {"file": file, "symbol": top, "kind": "code", "sha": sha})
+                # A location keeps the commit it was first seen at: other terms share it, and
+                # restamping it on every record would rewrite lines no one changed.
+                if graph.node(loc) is None:
+                    graph.put_node(loc, "location", f"{file}#{top}", {"file": file, "symbol": top, "kind": "code", "sha": sha})
                 graph.put_edge(sense["id"], "used_in", loc, {"lines": len(set(lines)), "first": min(lines)})
         notes.append(f"`{search.key}`: {len(senses)} senses, {len(unsorted)} identifiers unsorted")
     for item in items:
