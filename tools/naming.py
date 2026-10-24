@@ -369,6 +369,8 @@ class Search:
             for kind, ident in source.hits(number, self.words):
                 self.hits.append(Hit(file, number, kind, ident, source.paths[number - 1],
                                      source.lines[number - 1].strip()))
+        # ripgrep searches files in parallel: sort, so examples and assignments repeat.
+        self.hits.sort(key=lambda h: (h.file, h.line))
         self.copy = catalog_matches(root, self.words)
 
     @property
@@ -519,7 +521,9 @@ class Graph:
                         "(SELECT src FROM edges WHERE type = 'flows_to')")
 
     def senses(self, key):
-        return [self.node(dst) for _, _, dst, _ in self.edges(src="term:" + key, type_="has_sense")]
+        """A term's senses in the order they were recorded, the order hits are assigned in."""
+        senses = [self.node(dst) for _, _, dst, _ in self.edges(src="term:" + key, type_="has_sense")]
+        return sorted(senses, key=lambda s: (s["data"].get("order", 0), s["id"]))
 
     def decisions(self):
         """Decisions not superseded, oldest first."""
@@ -699,7 +703,7 @@ def cmd_record(root, args):
                     notes.append(f"`{search.key}/{slug}`: `{name}` is not among the term's identifiers")
             slugs.add(slug)
             senses.append({"id": f"sense:{search.key}/{slug}", "data": {
-                "term": search.key, "definition": definition, "identifiers": rules,
+                "term": search.key, "order": len(senses), "definition": definition, "identifiers": rules,
                 "prose": bool(sense.get("prose")), "strings": bool(sense.get("strings"))}})
         owned = assign(search, senses)
         ignored = set(item.get("ignore", []))
@@ -823,10 +827,7 @@ def report_section(graph, name, search, term, senses):
     out.append("| Sense | Meaning | Places | Examples |\n| --- | --- | --- | --- |")
     for sense in senses:
         hits = owned[sense["id"]]
-        decls = [h for h in hits if h.kind == "decl"]
-        examples = decls[:1]
-        others = [h for h in hits if h.kind != "comment" and (not examples or h.file != examples[0].file)]
-        examples += others[:2 - len(examples)]
+        examples = pick_examples(hits, search.words)
         where = "; ".join(f"`{h.where}`" for h in examples) or "—"
         places = f"{len({(h.file, h.line) for h in hits}):,} lines · {len({h.file for h in hits})} files"
         out.append(f"| `{sense['id'][6:]}` | {sense['data']['definition']} | {places} | {where} |")
@@ -842,6 +843,31 @@ def report_section(graph, name, search, term, senses):
         out.append(f"\nIn UI copy: " + "; ".join(f"“{excerpt(s, search.words)}”" for s in search.copy[:3])
                    + (f" (+{len(search.copy) - 3})" if len(search.copy) > 3 else ""))
     return "\n".join(out) + "\n"
+
+
+TYPE_DECL = re.compile(r"\b(?:struct|class|enum|protocol|actor|typealias)\s+([A-Za-z_]\w*)")
+ASIDE = ("tools/", "Tests/", "App/PaintByNumberTests/", "App/PaintByNumberUITests/")
+
+
+def pick_examples(hits, words):
+    """A sense's two examples: the declaration of its main identifier (a type's first, the term's
+    own spelling first), then a use of it in another file; shipping code before tools and tests."""
+    code = [h for h in hits if h.ident]
+    uses = defaultdict(int)
+    for hit in code:
+        uses[hit.ident] += 1
+
+    def rank(hit):
+        is_type = any(m.group(1) == hit.ident for m in TYPE_DECL.finditer(hit.text))
+        return (hit.kind != "decl", not is_type, parts(hit.ident) != words, -uses[hit.ident],
+                hit.file.startswith(ASIDE), not hit.file.startswith("Sources/"), hit.file, hit.line)
+
+    if not code:
+        return [h for h in hits if h.kind != "comment"][:1]
+    first = min(code, key=rank)
+    rest = [h for h in code if h.file != first.file]
+    second = min(rest, key=lambda h: (h.ident != first.ident, h.file.startswith(ASIDE), h.file, h.line)) if rest else None
+    return [first] + ([second] if second else [])
 
 
 def cmd_decide(root, args):
