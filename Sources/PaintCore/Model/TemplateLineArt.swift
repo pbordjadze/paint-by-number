@@ -54,7 +54,7 @@ public struct TemplateLineArt: Sendable, Equatable {
 
     public init(
         edgeLayers: [UInt8], edgeWeights: [UInt8], strokePoints: [SIMD2<Float>] = [], strokes: [InteriorStroke] = [],
-        style: Style = .layered, writingStrokes: [UInt32] = []
+        style: Style = .coloringBook, writingStrokes: [UInt32] = []
     ) {
         self.edgeLayers = edgeLayers
         self.edgeWeights = edgeWeights
