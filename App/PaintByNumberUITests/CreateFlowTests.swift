@@ -486,12 +486,21 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// Taps "Browse All…" and returns the frame of the presented sheet's dismiss button, or
-    /// fails the test (with diagnostics) and returns nil when no sheet appears.
+    /// fails the test (with diagnostics) and returns nil when no sheet appears. A tap that
+    /// brings up no sheet is kept as a screenshot and tree and made once more: the out-of-process
+    /// picker's cold start can swallow the first (CI, iPad, October 23: no sheet in 25 s and no
+    /// main-thread stall, then the retry's sheet at once), as the inline picker's first tap can.
     @MainActor
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector, via button: XCUIElement? = nil) -> CGRect? {
-        (button ?? app.buttons["Browse All…"]).tap()
+        let browse = button ?? app.buttons["Browse All…"]
+        browse.tap()
         var cancel: CGRect?
-        _ = waitUntil(timeout: 15) { cancel = sheet.dismissFrame; return cancel != nil }
+        if !waitUntil(timeout: 15, { cancel = sheet.dismissFrame; return cancel != nil }) {
+            attachScreenshot(of: app, named: "browse-all-tap-missed")
+            attachTree(of: app, named: "browse-all-tap-missed-tree")
+            browse.tap()
+            _ = waitUntil(timeout: 25) { cancel = sheet.dismissFrame; return cancel != nil }
+        }
         if cancel != nil {
             // Read again once the sheet has slid into place: a frame read mid-animation misses.
             // The out-of-process sheet can be missing from a snapshot then (CI, iPhone, Oct 17:
