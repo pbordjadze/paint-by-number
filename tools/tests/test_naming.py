@@ -146,6 +146,75 @@ class NamingTests(unittest.TestCase):
         code, out = run(self.root, "report", "one area", "Area", "--also", "patch")
         self.assertIn("## Decisions already made", out)
 
+    def test_senses_keep_their_recorded_order(self):
+        # A catch-all whose slug sorts first must not take the hits of the sense listed before it.
+        senses = {"term": "region", "senses": [
+            {"slug": "z-count", "definition": "A count.", "identifiers": ["regionCount"]},
+            {"slug": "a-rest", "definition": "Everything else.", "identifiers": ["*"], "prose": True}]}
+        run(self.root, "record", self.write(senses))
+        code, out = run(self.root, "report", "x", "Region")
+        self.assertIn("| `region/z-count` | A count. | 1 lines", out)
+
+    def test_a_merge_cannot_revive_a_dropped_sense_and_the_later_decision_stands(self):
+        senses = {"term": "region", "senses": [
+            {"slug": "old", "definition": "Old.", "identifiers": ["Region"]},
+            {"slug": "area", "definition": "One area.", "identifiers": ["*"]}]}
+        run(self.root, "record", self.write(senses))
+        base = Path(self.root, naming.GRAPH).read_text()
+        senses["senses"] = senses["senses"][1:]
+        run(self.root, "record", self.write(senses))
+        # A union merge keeps both versions of every line the two sides changed.
+        merged = Path(self.root, naming.GRAPH).read_text() + base
+        Path(self.root, naming.GRAPH).write_text(merged)
+        graph = naming.Graph(self.root)
+        self.assertEqual([s["id"] for s in graph.senses("region")], ["sense:region/area"])
+        run(self.root, "decide", "Region", "--sense", "region/area", "--meaning", "m", "--reason", "r")
+        first = Path(self.root, naming.GRAPH).read_text()
+        run(self.root, "decide", "Patch", "--sense", "region/area", "--meaning", "m", "--reason", "r")
+        Path(self.root, naming.GRAPH).write_text(first + Path(self.root, naming.GRAPH).read_text())
+        names = [d["data"]["name"] for d in naming.Graph(self.root).decisions()]
+        self.assertEqual(names, ["Patch"])
+
+    def test_a_decision_shows_for_a_name_that_contains_its_words(self):
+        senses = {"term": "region", "senses": [{"slug": "area", "definition": "x", "identifiers": ["*"]}]}
+        run(self.root, "record", self.write(senses))
+        run(self.root, "decide", "Region", "--sense", "region/area", "--meaning", "m",
+            "--banned", "blob", "--reason", "r")
+        self.assertIn("## Decisions already made", run(self.root, "report", "x", "BlobMap")[1])
+
+    def test_words_run_together_match_their_parts(self):
+        Path(self.root, "Sources", "Ink.swift").write_text("let lineWork = 1\nlet oklab = 2\nlet OKLab = 3\n")
+        self.assertEqual({h.line for h in naming.Search(self.root, "linework", {}).hits}, {1})
+        self.assertEqual({h.line for h in naming.Search(self.root, "OKLab", {}).hits}, {2, 3})
+        self.assertEqual(naming.split_names(["oklab"], ["OKLab,lab"]), ["oklab", "lab"])
+
+    def test_declarations_in_lists_signatures_and_odd_line_ends(self):
+        Path(self.root, "Sources", "Paths.swift").write_bytes(
+            b'let a = "x\ry"\nenum Ink {\n    case darkInk, lightInk\n    func draw(\n        ink: Int\n'
+            b'    ) {\n        let inkWell = Ink.init()\n    }\n}\n')
+        hits = {(h.line, h.ident): h for h in naming.Search(self.root, "ink", {}).hits}
+        self.assertEqual(hits[(3, "lightInk")].kind, "decl")
+        self.assertEqual(hits[(7, "inkWell")].symbol, "Ink.draw", "`) {` keeps the function open")
+
+    def test_a_new_unclaimed_identifier_makes_a_term_stale(self):
+        senses = {"term": "region", "senses": [
+            {"slug": "area", "definition": "x", "identifiers": ["Region", "regionCount", "rgn"], "prose": True,
+             "strings": True}]}
+        run(self.root, "record", self.write(senses))
+        Path(self.root, "Sources", "Graph.swift").write_text("struct RegionGraph {}\n")
+        self.assertIn("new identifiers no sense claims: RegionGraph", run(self.root, "look", "Region")[1])
+
+    def test_the_catalog_counts_plural_variations(self):
+        os.makedirs(os.path.join(self.root, os.path.dirname(naming.CATALOG)))
+        Path(self.root, naming.CATALOG).write_text(json.dumps({"strings": {"gallery.count": {"localizations": {
+            "en": {"variations": {"plural": {"one": {"stringUnit": {"value": "%lld region left"}},
+                                             "other": {"stringUnit": {"value": "%lld regions left"}}}}}}}}}))
+        self.assertEqual(naming.catalog_matches(self.root, ["region"]), ["%lld region left", "%lld regions left"])
+
+    def test_a_malformed_record_file_is_a_message(self):
+        self.assertEqual(run(self.root, "record", self.write({"senses": []}))[0], 2)
+        self.assertEqual(run(self.root, "record", self.write({"term": "region", "aliases": [["a"]]}))[0], 2)
+
     def test_a_union_merge_keeps_the_later_record(self):
         os.makedirs(os.path.join(self.root, "tools", "naming"))
         old = {"node": "term:x", "type": "term", "name": "x", "data": {"lines": 1}, "at": "2026-10-24T10:00:00Z"}

@@ -45,3 +45,5 @@ don't work around it.
 
 Commit `tools/naming/graph.jsonl` (and `GLOSSARY.md` after a decision) with the work that asked
 the question. The next session reuses the senses you recorded instead of reading the code again.
+`GLOSSARY.md` is generated: after a merge that touched the graph, or on a conflict in it, run
+`tools/naming.py glossary` and commit what it writes.

@@ -36,18 +36,22 @@ Terms, senses and locations can be rebuilt from the code; decisions hold what th
 Matching: a term matches an identifier when its words are consecutive parts of it (split at
 camelCase, PascalCase and snake_case; plurals and ABBREVIATIONS folded), so `region` matches
 `RegionSimplifier` and `regions` but not `regional`; in comments, string literals and identifiers
-SENTENCE_WORDS long (test names) its words match as prose. Searched: CODE_GLOBS by ripgrep (.gitignore respected); the string catalog's
+SENTENCE_WORDS long (test names) its words match as prose. A name written as one word matches
+its parts run together and the other way round (`linework`, `lineWork`). Searched: CODE_GLOBS by
+ripgrep (ignored folders skipped); the string catalog's
 user-facing text is counted beside, never a location.
 
 Freshness: a recorded term stays fresh while its hit count is within TOLERANCE of the recorded
-one (at least TOLERANCE_FLOOR lines); `look` asks for stale terms to be interpreted again and
-lists the identifiers new since. `drift` lists identifiers new since each decision that use a
+one (at least TOLERANCE_FLOOR lines) and every identifier new since is claimed by a sense or
+ignored; `look` asks for stale terms to be interpreted again. `drift` lists identifiers new since each decision that use a
 banned word (each still to be checked: the word may name another sense), and new uses of the
 decided name.
 
 Storage: an in-memory SQLite (tables `nodes` and `edges`, a JSON column each), loaded from and
 saved to GRAPH, one record per line, sorted. It is text so that branches merge: .gitattributes
-merges it as a union, and when both sides changed a record the later `at` wins.
+merges it as a union, and when both sides changed a record the later `at` wins. A term's record
+lists its senses in order, so a merge can't revive a sense it dropped; of two decisions on one
+sense, the later stands. GLOSSARY.md is generated: after a merge, run `glossary`.
 """
 import argparse
 import datetime
@@ -83,7 +87,8 @@ IRREGULAR = {
     "alias": "alias", "aliases": "alias", "axes": "axis", "caches": "cache", "canvas": "canvas",
     "canvases": "canvas", "children": "child", "data": "data", "ids": "id", "indices": "index",
     "leaves": "leaf", "matrices": "matrix", "people": "person", "series": "series",
-    "vertices": "vertex",
+    "vertices": "vertex", "status": "status", "statuses": "status", "bias": "bias", "biases": "bias",
+    "atlas": "atlas", "atlases": "atlas", "focus": "focus", "focuses": "focus", "radii": "radius",
 }
 PLURALS = {singular: plural for plural, singular in IRREGULAR.items() if plural != singular}
 
@@ -175,6 +180,23 @@ def contains(seq, words):
     return any(seq[i:i + n] == words for i in range(len(seq) - n + 1))
 
 
+def matches(seq, words):
+    """`words` are consecutive parts of `seq`, or the same letters run together on either side
+    (`linework` in `lineWork`, `ok lab` in `oklab`)."""
+    if contains(seq, words):
+        return True
+    joined = "".join(words)
+    for i in range(len(seq)):
+        run = ""
+        for part in seq[i:]:
+            run += part
+            if run == joined:
+                return True
+            if not joined.startswith(run):
+                break
+    return False
+
+
 # Sources
 
 
@@ -185,12 +207,13 @@ class Lang:
         self.docstrings, self.scopes, self.decls = docstrings, scopes, decls or []
 
 
-SWIFT_SCOPE = re.compile(r"\b(?:struct|class|enum|protocol|actor|extension|func)\s+([A-Za-z_]\w*)|"
-                         r"\b(init)\s*[?!]?\s*[(<]")
+SWIFT_SCOPE = re.compile(r"\b(?:struct|class|enum|protocol|actor|extension|func)\s+"
+                         r"(?!(?:func|var|let|class|static)\b)([A-Za-z_]\w*)|(?<![.\w])(init)\s*[?!]?\s*[(<]")
+SWIFT_LIST = re.compile(r"\b(?:var|let|case)\s+(.*)")
 SWIFT_EXTENSION = re.compile(r"\bextension\s+([A-Za-z_]\w*)")
 LANGS = {
     ".swift": Lang(triples=('"""',), scopes=SWIFT_SCOPE,
-                   decls=[re.compile(r"\b(?:var|let|case|typealias|associatedtype)\s+([A-Za-z_]\w*)")]),
+                   decls=[re.compile(r"\b(?:typealias|associatedtype)\s+([A-Za-z_]\w*)")]),
     ".metal": Lang(scopes=re.compile(r"\bstruct\s+([A-Za-z_]\w*)")),
     ".py": Lang(hash_comments=True, quotes="\"'", triples=('"""', "'''"), docstrings=True,
                 scopes=re.compile(r"^\s*(?:async\s+)?(?:def|class)\s+([A-Za-z_]\w*)"),
@@ -267,8 +290,25 @@ def declared(code, lang):
     for pattern in lang.decls:
         names.update(m.group(1) for m in pattern.finditer(code) if m.group(1) not in KEYWORDS)
     if lang is LANGS[".swift"]:
+        for m in SWIFT_LIST.finditer(code):
+            names.update(n for n in leading_names(m.group(1)) if n not in KEYWORDS)
         names -= {m.group(1) for m in SWIFT_EXTENSION.finditer(code)}
     return scope, names
+
+
+def leading_names(rest):
+    """`a = f(x, y), b: Int` → a, b: the first name of each top-level comma-separated piece."""
+    names, depth, piece = [], 0, ""
+    for ch in rest + ",":
+        depth += (ch in "([{") - (ch in ")]}")
+        if ch == "," and depth <= 0:
+            m = re.match(r"\s*([A-Za-z_]\w*)", piece)
+            if m:
+                names.append(m.group(1))
+            piece = ""
+        else:
+            piece += ch
+    return names
 
 
 class Source:
@@ -276,7 +316,7 @@ class Source:
 
     def __init__(self, root, rel):
         self.rel, self.lang = rel, LANGS[os.path.splitext(rel)[1]]
-        with open(os.path.join(root, rel), encoding="utf-8", errors="replace") as f:
+        with open(os.path.join(root, rel), encoding="utf-8", errors="replace", newline="") as f:
             self.lines = f.read().split("\n")
         self.states, self.paths, self.decls = [], [], []
         stack, state = [], None
@@ -287,7 +327,9 @@ class Source:
             scope, names = (None, set())
             if code.strip():
                 indent = len(line) - len(line.lstrip())
-                while stack and stack[-1][0] >= indent:
+                # A multi-line signature's `) {` sits at its function's indent without closing it.
+                closer = code.strip()[:1] in ")]"
+                while stack and (stack[-1][0] > indent or (stack[-1][0] == indent and not closer)):
                     stack.pop()
                 scope, names = declared(code, self.lang)
                 if scope:
@@ -304,13 +346,13 @@ class Source:
             if kind == "code":
                 for m in IDENT.finditer(text):
                     ident_parts = parts(m.group())
-                    if not contains(ident_parts, words):
+                    if not matches(ident_parts, words):
                         continue
                     if len(ident_parts) >= SENTENCE_WORDS:
                         found.append(("comment", None))
                     else:
                         found.append(("decl" if m.group() in self.decls[number - 1] else "use", m.group()))
-            elif contains(parts(text), words):
+            elif matches(parts(text), words):
                 found.append((kind, None))
         return list(dict.fromkeys(found))
 
@@ -331,6 +373,8 @@ class Hit:
         symbol = self.symbol
         if self.kind == "decl" and self.ident and not symbol.endswith(self.ident):
             symbol = f"{symbol}.{self.ident}" if symbol else self.ident
+        elif self.kind == "use":
+            symbol = f"{symbol} ({self.ident})" if symbol else f"({self.ident})"
         return f"{self.file}:{self.line}" + (f" {symbol}" if symbol else "")
 
 
@@ -346,7 +390,7 @@ class Search:
         stems = {stem, plural(stem)} | {s for s, w in ABBREVIATIONS.items() if w == stem}
         stems |= {p for p, s in IRREGULAR.items() if s == stem}
         pattern = "|".join(sorted(re.escape(s) for s in stems))
-        command = ["rg", "--no-heading", "--line-number", "--color", "never", "--ignore-case",
+        command = ["rg", "--no-config", "--no-heading", "--line-number", "--color", "never", "--ignore-case",
                    "--max-columns", "400"]
         for glob in CODE_GLOBS:
             command += ["--glob", glob]
@@ -406,10 +450,29 @@ def catalog_matches(root, words):
         strings = json.load(f).get("strings", {})
     found = []
     for key, entry in strings.items():
-        text = (entry.get("localizations", {}).get("en", {}).get("stringUnit", {}).get("value") or key)
-        if contains(parts(text), words):
-            found.append(text)
-    return sorted(found)
+        for text in english(entry) or [key]:
+            if matches(parts(text), words):
+                found.append(text)
+    return sorted(set(found))
+
+
+def english(entry):
+    """Every English text of a catalog entry, its plural and device variations included."""
+    texts = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            unit = node.get("stringUnit")
+            if isinstance(unit, dict) and unit.get("value"):
+                texts.append(unit["value"])
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(entry.get("localizations", {}).get("en", {}))
+    return list(dict.fromkeys(texts))
 
 
 def git_head(root):
@@ -425,7 +488,8 @@ def git_head(root):
 
 
 def now_utc():
-    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Microseconds: two records of one term a second apart must still order.
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def now_eastern():
@@ -521,14 +585,32 @@ class Graph:
                         "(SELECT src FROM edges WHERE type = 'flows_to')")
 
     def senses(self, key):
-        """A term's senses in the order they were recorded, the order hits are assigned in."""
-        senses = [self.node(dst) for _, _, dst, _ in self.edges(src="term:" + key, type_="has_sense")]
-        return sorted(senses, key=lambda s: (s["data"].get("order", 0), s["id"]))
+        """A term's senses in the order they were recorded, the order hits are assigned in. The
+        term's record lists them, so a sense a union merge brought back stays out."""
+        term = self.node("term:" + key)
+        listed = term["data"].get("senses") if term else None
+        if listed is None:
+            ids = [dst for _, _, dst, _ in self.edges(src="term:" + key, type_="has_sense")]
+        else:
+            ids = listed
+        senses = [n for n in (self.node(i) for i in ids) if n]
+        if listed is None:
+            senses.sort(key=lambda s: (s["data"].get("order", 0), s["id"]))
+        return senses
 
     def decisions(self):
-        """Decisions not superseded, oldest first."""
-        active = [d for d in self.nodes("decision") if not d["data"].get("superseded_by")]
-        return sorted(active, key=lambda d: d["data"]["decided"])
+        """The standing decisions, oldest first: one per sense, the latest (two branches can each
+        decide one sense; their merge keeps both records)."""
+        latest = {}
+        for d in self.nodes("decision"):
+            if d["data"].get("superseded_by"):
+                continue
+            stamp = d["data"].get("decided_at", d["data"]["decided"])
+            for _, _, sense, _ in self.edges(src=d["id"], type_="settles") or [(None, None, d["id"], None)]:
+                if sense not in latest or latest[sense][0] < stamp:
+                    latest[sense] = (stamp, d)
+        unique = {d["id"]: (stamp, d) for stamp, d in latest.values()}
+        return [d for _, d in sorted(unique.values(), key=lambda pair: pair[0])]
 
 
 def sense_id(ref):
@@ -567,11 +649,19 @@ def assign(search, senses):
     return owned
 
 
-def freshness(term, search):
+def recorded(term):
+    """A term `record` wrote (a decision alone leaves a bare one)."""
+    return bool(term) and "sha" in term["data"]
+
+
+def freshness(term, search, senses):
+    """(fresh, recorded line count, identifiers new since that no sense claims nor ignore)."""
     recorded = term["data"]["lines"]
-    fresh = abs(search.lines - recorded) <= max(TOLERANCE_FLOOR, TOLERANCE * recorded)
+    rules = [r if isinstance(r, str) else r["name"] for s in senses for r in s["data"].get("identifiers", [])]
     new = sorted(set(search.identifiers()) - set(term["data"]["identifiers"]))
-    return fresh, recorded, new
+    unclaimed = [i for i in new if not ignores(term["data"].get("ignored", []) + rules, i)]
+    within = abs(search.lines - recorded) <= max(TOLERANCE_FLOOR, TOLERANCE * recorded)
+    return within and not unclaimed, recorded, unclaimed
 
 
 # Commands
@@ -584,14 +674,17 @@ def cmd_expand(root, args):
 
 
 def split_names(names, also):
+    """The candidates, then the --also words, without repeats (`oklab` and `OKLab` are one)."""
     out = list(names)
     for chunk in also or []:
         out += [w.strip() for w in chunk.split(",") if w.strip()]
-    keys = []
+    kept, seen = [], set()
     for name in out:
-        if term_key(name) not in [term_key(k) for k in keys]:
-            keys.append(name)
-    return keys
+        joined = "".join(words_of(name))
+        if joined not in seen:
+            seen.add(joined)
+            kept.append(name)
+    return kept
 
 
 def cmd_look(root, args):
@@ -607,29 +700,28 @@ def cmd_look(root, args):
             print(f"{heading}: unused in code" + (f"; in {len(search.copy)} UI strings" if search.copy else "") + "\n")
             continue
         senses = graph.senses(search.key) if term else []
-        if term and senses:
-            fresh, recorded, new = freshness(term, search)
+        if recorded(term):
+            fresh, lines, unclaimed = freshness(term, search, senses)
             if fresh:
-                print(f"{heading} · from the graph (fresh: {recorded:,} lines when recorded at "
+                print(f"{heading} · from the graph (fresh: {lines:,} lines when recorded at "
                       f"{term['data']['sha']})")
                 for sense in senses:
                     print(f"- `{sense['id'][6:]}`: {sense['data']['definition']}")
-                if new:
-                    print(f"- new since: {', '.join(new[:12])}" + (" …" if len(new) > 12 else ""))
+                if not senses:
+                    print("- no senses: every identifier was ignored")
                 print()
                 continue
-            print(f"{heading} · STALE: {recorded:,} lines when recorded, now {search.lines:,}; "
-                  f"interpret again, keeping these slugs where they still fit: "
-                  + ", ".join(f"`{s['id'][6:]}`" for s in senses))
-            if new:
-                print(f"New identifiers since: {', '.join(new)}")
+            print(f"{heading} · STALE: {lines:,} lines when recorded, now {search.lines:,}"
+                  + (f"; new identifiers no sense claims: {', '.join(unclaimed)}" if unclaimed else "")
+                  + ". Interpret again, keeping these slugs where they still fit: "
+                  + (", ".join(f"`{s['id'][6:]}`" for s in senses) or "none"))
         else:
             print(f"{heading} · interpret ({took:.1f} s to find)")
         pending.append(search.key)
         print_digest(search, args.top)
     if pending:
         print("To interpret: " + ", ".join(f"`{k}`" for k in pending) + ". Write their senses to a JSON "
-              "file (format: the naming skill, or `record --help`) and run tools/naming.py record FILE.")
+              "file (format: `tools/naming.py record --help`) and run tools/naming.py record FILE.")
 
 
 def print_digest(search, top):
@@ -679,10 +771,33 @@ no sense claims and not ignored stay unsorted in the report. An alias or flow na
 exist or are recorded in the same file (a `stage:NAME` location is made when missing)."""
 
 
+def check_payload(items):
+    """The record file's shape, so a slip is a message rather than a traceback."""
+    def fail(what):
+        raise UsageError(f"record file: {what} (format: tools/naming.py record --help)")
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(item.get("term"), str):
+            fail("each entry needs a \"term\"")
+        for sense in item.get("senses", []):
+            if not isinstance(sense, dict):
+                fail(f"`{item['term']}`: a sense is an object")
+            for rule in sense.get("identifiers", []):
+                if not isinstance(rule, str) and not (isinstance(rule, dict) and isinstance(rule.get("name"), str)):
+                    fail(f"`{item['term']}`: an identifier is a name or {{\"name\": …, \"files\": […]}}")
+        for key in ("aliases", "flows"):
+            for pair in item.get(key, []):
+                if not isinstance(pair, list) or len(pair) < 2 or not all(isinstance(x, str) for x in pair):
+                    fail(f"`{item['term']}`: each of {key} is [from, to, why]")
+
+
 def cmd_record(root, args):
-    with open(args.file, encoding="utf-8") as f:
-        payload = json.load(f)
+    try:
+        with open(args.file, encoding="utf-8") as f:
+            payload = json.load(f)
+    except (OSError, ValueError) as error:
+        raise UsageError(f"record file: {error}")
     items = payload if isinstance(payload, list) else [payload]
+    check_payload(items)
     graph, sources, sha, notes = Graph(root), {}, git_head(root), []
     for item in items:
         search = Search(root, item["term"], sources)
@@ -712,7 +827,7 @@ def cmd_record(root, args):
         graph.put_node(term_id, "term", search.key, {
             "words": search.words, "spellings": spellings(search.words), "lines": search.lines,
             "files": search.files, "identifiers": known, "ignored": sorted(ignored),
-            "unsorted": unsorted, "sha": sha})
+            "unsorted": unsorted, "sha": sha, "senses": [sense["id"] for sense in senses]})
         settled = {dst for _, _, dst, _ in graph.edges(type_="settles")}
         for _, _, old, _ in graph.edges(src=term_id, type_="has_sense"):
             if old not in {s["id"] for s in senses}:
@@ -767,8 +882,8 @@ def applying_decisions(graph, keys):
     for decision in graph.decisions():
         data = decision["data"]
         sense_terms = {dst[6:].rsplit("/", 1)[0] for _, _, dst, _ in graph.edges(src=decision["id"], type_="settles")}
-        words = {term_key(data["name"])} | {term_key(b) for b in data["banned"]} | sense_terms
-        if words & set(keys):
+        words = [term_key(data["name"])] + [term_key(b) for b in data["banned"]] + list(sense_terms)
+        if any(matches(k.split(), w.split()) or matches(w.split(), k.split()) for k in keys for w in words):
             out.append(decision)
     return out
 
@@ -779,9 +894,10 @@ def cmd_report(root, args):
     started = time.monotonic()
     searches = [Search(root, name, sources) for name in names]
     when, zone = now_eastern()
+    candidates = {"".join(words_of(n)) for n in args.names}
+    also = [n for n in names if "".join(words_of(n)) not in candidates]
     out = [f"# What should it be called?\n", f"> {args.concept}\n",
-           f"Candidates: {', '.join(args.names)}"
-           + (f" · also searched: {', '.join(names[len(args.names):])}" if len(names) > len(args.names) else "")
+           f"Candidates: {', '.join(args.names)}" + (f" · also searched: {', '.join(also)}" if also else "")
            + f" · HEAD {git_head(root)} · {when:%Y-%m-%d %H:%M} {zone}\n"]
     decisions = applying_decisions(graph, [s.key for s in searches])
     if decisions:
@@ -801,9 +917,9 @@ def cmd_report(root, args):
             out.append(f"| {name} | unused | — | {len(search.copy) or '—'} |")
             continue
         status = "not interpreted"
-        if senses:
-            fresh, recorded, _ = freshness(term, search)
-            status = str(len(senses)) + ("" if fresh else f" (stale: {recorded:,} lines when recorded)")
+        if recorded(term):
+            fresh, lines, _ = freshness(term, search, senses)
+            status = str(len(senses)) + ("" if fresh else f" (stale: {lines:,} lines when recorded)")
         out.append(f"| {name} | {search.lines:,} lines · {search.files:,} files | {status} | "
                    f"{len(search.copy) or '—'} |")
         sections.append(report_section(graph, name, search, term, senses))
@@ -820,6 +936,9 @@ def cmd_report(root, args):
 
 def report_section(graph, name, search, term, senses):
     out = [f"## {name}\n"]
+    if recorded(term) and not senses:
+        out.append("No senses: every identifier was ignored when it was recorded.\n")
+        return "\n".join(out)
     if not senses:
         out.append(f"Not interpreted yet: run `tools/naming.py look \"{name}\"` and record its senses.\n")
         return "\n".join(out)
@@ -889,7 +1008,7 @@ def cmd_decide(root, args):
             graph.put_node(old, "decision", node["name"], node["data"])
     graph.put_node(decision_id, "decision", args.name, {
         "name": args.name, "meaning": " ".join(args.meaning.split()), "banned": banned,
-        "reason": " ".join(args.reason.split()), "by": args.by, "decided": f"{when:%Y-%m-%d}",
+        "reason": " ".join(args.reason.split()), "by": args.by, "decided": f"{when:%Y-%m-%d}", "decided_at": when.isoformat(timespec="seconds"),
         "sha": git_head(root), "baseline": baseline})
     if graph.node("term:" + key) is None:
         graph.put_node("term:" + key, "term", key, {"words": key.split(), "lines": 0, "identifiers": {}})
