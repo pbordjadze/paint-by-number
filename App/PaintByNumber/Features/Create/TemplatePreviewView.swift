@@ -361,7 +361,7 @@ struct TemplatePreviewView: View {
                     .overlay(alignment: .top) {
                         VStack(spacing: 8) {
                             RefineNoteToast(note: model.note)
-                            DraftSaveToast()
+                            DraftSaveToast(photoID: model.photoID)
                         }
                         .padding(.top, 8)
                     }

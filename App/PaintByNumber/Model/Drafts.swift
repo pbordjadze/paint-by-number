@@ -16,15 +16,16 @@ import PaintCore
 /// painting replaces the draft when its photo is refined, and not before. A damaged draft is
 /// no draft: it is logged and removed. A write that fails keeps its draft waiting, written again by
 /// the next save, the painter's Retry (`retry`) or the flow's close, and the flow says so
-/// (`saveFailed`), as a painting's progress does (`Library.writeFailures`).
+/// (`saveFailed`), as a painting's progress does (`Library.writeFailures`). A newer draft handed
+/// over meanwhile takes its place.
 @Observable
 final class Drafts {
     /// The draft as it is on disk (what the gallery lists): nil when there is none, or its
     /// file hasn't landed yet.
     private(set) var current: CreateDraft?
-    /// The last write failed, so the flow's latest draft isn't on disk: cleared once a save
-    /// lands, the painter retries, or the draft is dropped.
-    private(set) var saveFailed = false
+    /// The photo whose draft's last write failed, so its latest draft isn't on disk: cleared once
+    /// a save lands, the painter retries, or the draft is let go.
+    private(set) var saveFailed: UUID?
 
     /// A draft read back, with its photo, ready for the create flow.
     nonisolated struct Opened: Sendable {
@@ -42,6 +43,9 @@ final class Drafts {
     /// draft was let go doesn't bring it back.
     @ObservationIgnored private var drops: [UUID: Int] = [:]
     @ObservationIgnored private var discards = 0
+    /// Counts the drafts handed over (`keep`), so a write that fails puts its draft back only when
+    /// none newer came since.
+    @ObservationIgnored private var keeps = 0
     @ObservationIgnored private var debounce: Task<Void, Never>?
     @ObservationIgnored private var tail: Task<Void, Never>?
 
@@ -72,6 +76,7 @@ final class Drafts {
     /// is written once the flow has been quiet for `delay`.
     func keep(_ draft: CreateDraft, photo: CGImage, kept: EditTrail.Kept? = nil) {
         pending = (draft, photo, kept?.edits == draft.refinements.edits ? kept : nil)
+        keeps += 1
         debounce?.cancel()
         debounce = Task { [weak self] in
             try? await Task.sleep(for: Self.delay)
@@ -86,13 +91,13 @@ final class Drafts {
         debounce = nil
         guard let (draft, photo, kept) = pending else { return }
         pending = nil
-        let letGo = (drops[draft.photoID], discards)
+        let handedOver = (drops[draft.photoID], discards, keeps)
         enqueue { [self] in
             // Judged here, behind the writes before it: a draft that came back to what is on
             // disk needs none (unless the trail its edits made has been laid since), and the
             // photo is encoded once, with its first draft.
             guard draft != current || (kept != nil && !keptOnDisk) else {
-                saveFailed = false
+                saveFailed = nil
                 return
             }
             let reusesPhoto = current?.photoID == draft.photoID
@@ -100,14 +105,15 @@ final class Drafts {
             do {
                 keptOnDisk = try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo, kept: kept) }
                 current = draft
-                saveFailed = false
+                saveFailed = nil
             } catch {
                 Log.create.error("Saving the draft failed: \(String(describing: error), privacy: .public)")
                 // The write leaves the disk as it was (`DraftStore.write`). The draft waits for
-                // the next save unless a newer one already does, or it was let go meanwhile.
-                guard letGo == (drops[draft.photoID], discards) else { return }
-                if pending == nil { pending = (draft, photo, kept) }
-                saveFailed = true
+                // the next save, unless it was let go meanwhile or a newer one was handed over
+                // (waiting or already queued behind this write).
+                guard handedOver == (drops[draft.photoID], discards, keeps) else { return }
+                pending = (draft, photo, kept)
+                saveFailed = draft.photoID
             }
         }
     }
@@ -115,7 +121,7 @@ final class Drafts {
     /// The painter's Retry after a failed write: writes the waiting draft now. A new failure
     /// shows up again in `saveFailed`.
     func retry() {
-        saveFailed = false
+        saveFailed = nil
         saveNow()
     }
 
@@ -124,7 +130,7 @@ final class Drafts {
     func drop(photoID: UUID) {
         if pending?.draft.photoID == photoID { forgetPending() }
         drops[photoID, default: 0] += 1
-        saveFailed = false
+        if saveFailed == photoID { saveFailed = nil }
         enqueue { [self] in
             guard current?.photoID == photoID else { return }
             await removeStored()
@@ -135,7 +141,7 @@ final class Drafts {
     func discard() {
         forgetPending()
         discards += 1
-        saveFailed = false
+        saveFailed = nil
         enqueue { [self] in await removeStored() }
     }
 

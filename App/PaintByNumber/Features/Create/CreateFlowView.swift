@@ -139,7 +139,7 @@ struct CreateFlowView: View {
                 library.drafts.drop(photoID: old.photoID)
             }
         }
-        .onChange(of: library.drafts.saveFailed) { _, failed in
+        .onChange(of: library.drafts.saveFailed == model.photoID) { _, failed in
             // Shown on the preview and in Refine (`DraftSaveToast`), told here once.
             if failed { Announcer.announce(DraftSaveToast.text) }
         }

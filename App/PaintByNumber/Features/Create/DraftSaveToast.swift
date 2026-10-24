@@ -1,9 +1,11 @@
+import Foundation
 import SwiftUI
 
-/// Says the draft's last save failed (`Drafts.saveFailed`), with a Retry, at the top of the
-/// create flow's preview and of Refine, as the painting screen says so of its progress. The flow
-/// tells VoiceOver once when it comes (`CreateFlowView`). Nothing while saves land.
+/// Says the last save of this photo's draft failed (`Drafts.saveFailed`), with a Retry, at the
+/// top of the create flow's preview and of Refine, as the painting screen says so of its progress.
+/// The flow tells VoiceOver once when it comes (`CreateFlowView`). Nothing while saves land.
 struct DraftSaveToast: View {
+    let photoID: UUID
     @Environment(Library.self) private var library
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -11,8 +13,9 @@ struct DraftSaveToast: View {
 
     var body: some View {
         let drafts = library.drafts
+        let failed = drafts.saveFailed == photoID
         VStack {
-            if drafts.saveFailed {
+            if failed {
                 Toast(text: Self.text, systemImage: "exclamationmark.triangle", edge: .top) {
                     Button("Retry") { drafts.retry() }
                         .fontWeight(.semibold)
@@ -21,6 +24,6 @@ struct DraftSaveToast: View {
                 .accessibilityIdentifier("draft-save-failed")
             }
         }
-        .animation(reduceMotion ? nil : .snappy, value: drafts.saveFailed)
+        .animation(reduceMotion ? nil : .snappy, value: failed)
     }
 }

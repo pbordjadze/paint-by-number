@@ -228,20 +228,20 @@ struct DraftTests {
         drafts.keep(saved, photo: try photo())
         await drafts.flush()
         #expect(drafts.current == nil)
-        #expect(drafts.saveFailed)
+        #expect(drafts.saveFailed == saved.photoID)
 
         // Still failing: said again.
         drafts.retry()
         await drafts.flush()
-        #expect(drafts.saveFailed)
+        #expect(drafts.saveFailed == saved.photoID)
 
         allow()
         drafts.retry()
-        #expect(!drafts.saveFailed)
+        #expect(drafts.saveFailed == nil)
         await drafts.flush()
         #expect(drafts.current == saved)
         #expect(try store.read() == saved)
-        #expect(!drafts.saveFailed)
+        #expect(drafts.saveFailed == nil)
     }
 
     /// The next save after a failure writes the newest draft, and its landing clears the notice.
@@ -252,13 +252,37 @@ struct DraftTests {
         let id = UUID()
         drafts.keep(draft(id, title: "One"), photo: try photo())
         await drafts.flush()
-        #expect(drafts.saveFailed)
+        #expect(drafts.saveFailed == id)
 
         allow()
         drafts.keep(draft(id, title: "Two"), photo: try photo())
         await drafts.flush()
         #expect(try store.read()?.title == "Two")
-        #expect(!drafts.saveFailed)
+        #expect(drafts.saveFailed == nil)
+    }
+
+    /// A write that fails behind a newer draft already queued doesn't come back over it.
+    @Test func aFailedWriteNeverReturnsOverANewerDraft() async throws {
+        let drafts = Drafts(store: store)
+        let allow = try refuseWrites()
+        defer { allow() }
+        let id = UUID()
+        drafts.keep(draft(id, title: "One"), photo: try photo())
+        drafts.saveNow()
+        drafts.keep(draft(id, title: "Two"), photo: try photo())
+        drafts.saveNow()
+        await drafts.flush()
+        #expect(drafts.saveFailed == id)
+
+        allow()
+        drafts.retry()
+        await drafts.flush()
+        #expect(try store.read()?.title == "Two")
+        // Nothing older is left waiting to be written over it.
+        drafts.saveNow()
+        await drafts.flush()
+        #expect(try store.read()?.title == "Two")
+        #expect(drafts.saveFailed == nil)
     }
 
     /// A draft dropped or discarded while its write was failing stays gone.
@@ -272,7 +296,7 @@ struct DraftTests {
         drafts.saveNow()
         if discards { drafts.discard() } else { drafts.drop(photoID: saved.photoID) }
         await drafts.flush()
-        #expect(!drafts.saveFailed)
+        #expect(drafts.saveFailed == nil)
 
         allow()
         await drafts.flush()

@@ -475,7 +475,7 @@ struct RefineView: View {
             if !isPractice {
                 VStack(spacing: 8) {
                     RefineNoteToast(note: model.note).hidden()
-                    DraftSaveToast()
+                    DraftSaveToast(photoID: model.photoID)
                 }
                 .padding(.top, 12)
                 .animation(reduceMotion ? nil : .snappy, value: model.note)
