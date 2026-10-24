@@ -101,8 +101,9 @@ before planning app work).
   `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
-  with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights).
+  with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker), `models/convert_*.py`
+  (the app's Core ML models from their source weights) and `naming.py` (the naming graph,
+  `naming/graph.jsonl`; Conventions).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
@@ -592,3 +593,6 @@ him itself, with a push notification once he has gone quiet.
   task in a fixed order (`RegionRuns.accumulate`: a region's pixels in raster order); never one
   partial sum per band or core (bands follow the core count).
 - Comments explain *why*, sparingly. No dead code, no TODO litter.
+- Names: `GLOSSARY.md` holds the names Paul settled; use them and never their banned words.
+  Before naming a new public type, property or function, run the naming skill
+  (`.claude/skills/naming/`) and commit the graph it grows with your work.

@@ -1,2 +1,4 @@
 # One scenario per line: two branches that each append one merge without a conflict.
 ci/scenarios.txt merge=union
+# The naming graph: branches add records; tools/naming.py keeps the later of two versions.
+tools/naming/graph.jsonl merge=union
