@@ -125,7 +125,7 @@ struct RefineGesturesTests {
         #expect(path == [SIMD2(50, 72)] && abs(radius - 4) < 1e-4, "20 points at 5 to a unit")
     }
 
-    /// A tap of the Smart Eraser beside a line takes it out from junction to junction, within a
+    /// A tap of the Line Eraser beside a line takes it out from junction to junction, within a
     /// finger's reach (16 points, 3.2 units); farther off it takes nothing.
     @Test func theSmartEraserTakesTheLineUnderATap() throws {
         let chains = LineChains(lines: RefineGestures.drawingLines(of: Self.scene))

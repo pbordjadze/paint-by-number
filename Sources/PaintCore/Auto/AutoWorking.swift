@@ -1,6 +1,6 @@
 /// The draft photo at the working size the candidates are segmented at, with what analysis
 /// and scoring read from it: the pipeline's own OKLab (chroma stretched) and importance
-/// weights, so Auto measures what the pipeline sees.
+/// weights, so Auto measures what the pipeline sees at the default settings.
 struct AutoWorking {
     let image: RGBAImage
     let parameters: SegmentationParameters
@@ -16,8 +16,11 @@ struct AutoWorking {
             cancel: cancel)
     }
 
-    /// An image already at its working size. The fields read here (chroma scale, structure
-    /// radius, histogram knobs, seed) depend only on the size, not on the settings.
+    /// An image already at its working size. `parameters` are the default settings' at that
+    /// size, whatever the candidate's: the structure radius follows the size alone and the
+    /// histogram's gamma is fixed, but the chroma scale and palette saliency are untuned and the
+    /// seed is the default's, so a candidate's `tuning` or `seed` doesn't reach what Auto reads
+    /// here (`PhotoAnalyzer`, the palette curve, `score`'s importance weights).
     init(working: RGBAImage, importance: Grid<Float>?, cancel: CancellationCheck) throws {
         image = working
         parameters = SegmentationParameters(settings: GenerationSettings(), width: working.width, height: working.height)

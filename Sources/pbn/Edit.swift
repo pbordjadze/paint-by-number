@@ -11,7 +11,7 @@ import PaintCore
 /// Merge: `"points"`, the drag), a `"brush"` (Refine's Paint Brush: `"points"`, the stroke, `"radius"`
 /// and `"color"` or `"paint"` as a paintArea's), a `"reshape"` (Bend Line and Move Edge: `"points"`,
 /// [from, to], `"reach"`, and `"target"`, `"ink"` for Bend Line or `"edge"` for Move Edge, any line
-/// without it), a `"moveLabel"` (Move Number: `"points"`, [from, to], and `"reach"`), a `"look"` (Refine's Colors: `"look"`, a `TemplateEditor.Look` name, and
+/// without it), a `"moveLabel"` (Move Number: `"points"`, [from, to], and `"reach"`), a `"look"` (Refine's Looks: `"look"`, a `TemplateEditor.Look` name, and
 /// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
 /// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
 /// know is left out with a warning.

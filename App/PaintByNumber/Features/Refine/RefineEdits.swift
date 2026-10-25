@@ -28,7 +28,7 @@ nonisolated enum RefineChange: Sendable, Equatable {
     }
 }
 
-/// A change Refine's Colors makes to the edits (`CreateModel.recolor(_:)`), described so it lands
+/// A change Refine's Looks and Edit Paint make to the edits (`CreateModel.recolor(_:)`), described so it lands
 /// on the edits as they are when its turn comes. A look and the photo's colors start the colors
 /// over: they take every look and repaint out first, so looks never stack and the strength slider
 /// replaces the look it moves.

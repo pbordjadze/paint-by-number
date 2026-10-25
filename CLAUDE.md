@@ -49,15 +49,16 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
-  - `Edit/`: `TemplateEditor`, the painter's pen, Color Splitter, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
-    This Area (`paintArea`) and Colors (looks and repaints, `Recolor.swift`) made to a finished
+  - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
+    This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
+    retired Color Splitter's splits made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact arithmetic;
     `docs/coloring-book.md` › Edits made to the template itself; a drawn line's paints, the
     photo's colors of the pieces it cuts, are read beforehand by `painted`);
     `EditTrail`, a base with a list of edits laid on it, with undo and redo from kept templates;
     `EditCoding`, the shape of an edit in a file (the app's `refinements.json`).
   - `Refine/`: what Refine's screen makes of a gesture, shared by the app's `RefineView` and
-    `pbn refine` (`RefineGestures` with `RefineScreen`: the Pen, Shapes, the Eraser, the Smart
+    `pbn refine` (`RefineGestures` with `RefineScreen`: the Pen, Shapes, the Eraser, the Line
     Eraser, Fill's taps; `RefineGeometry.swift`: `PenPath`, `PenAssist`, `ShapePath`, `SnapLines`,
     `LineChains`; `RefinePractice`, the Tool Guide's practice picture, drawn and laid as edits).
     The app keeps only drawing (`PenPath.path`) and its toolbar.

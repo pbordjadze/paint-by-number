@@ -969,7 +969,7 @@ final class CreateModel {
         return serial
     }
 
-    /// Refine's Colors, in its turn: a look over every paint (in place of any look or repaint
+    /// Refine's Looks and Edit Paint, in their turn: a look over every paint (in place of any look or repaint
     /// before it, read on the template the other edits make), the photo's colors again, or one
     /// paint repainted (in place of the last edit when that repainted the same color: the color
     /// picker still moving is one step of the history). Paints made alike become one, which a

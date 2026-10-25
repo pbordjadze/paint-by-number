@@ -128,7 +128,7 @@ final class PaintingSession {
     }
     /// The session opened on the color of the largest area, the painting being fresh (`OpeningColor`).
     private let opensOnLargestArea: Bool
-    /// Fixes the colors' nicknames, and keys the painting's custom palette order.
+    /// Fixes the colors' nicknames (it keyed the retired Custom palette order too).
     let nicknameSeed: UInt64
     /// The artwork's recorded vocabulary version, kept even when newer than this build knows.
     let nicknameVersion: Int

@@ -135,23 +135,24 @@ extension EditWork {
         summary.reshaped += 1 + plan.carried.count
     }
 
-    /// The chain a reshape grabs and where it goes. The line nearest `from` within `reach` of
-    /// those `target` grabs (any; drawn edges and strokes; or edges alone): an edge (not the
-    /// canvas's frame), drawn or undrawn, continued through every vertex where it
-    /// and one other edge alike (both drawn, or both undrawn) end, as the Smart Eraser's line
-    /// runs from junction to junction; or a drawn stroke. Its point nearest `from` goes to `to`
-    /// and the rest follows, each point by the drag times its weight (`falloff`) along the
-    /// chain's length: 1 at the grabbed point, 0 a spread away (`reshapeSpread`, or three times
-    /// the drag) or at the chain's end if that is nearer, which stays on its junction; beyond, the
-    /// chain keeps its points, the first of them made a vertex. A loop through no junction is held
-    /// at most at its far point, half its length round. A stroke's end that meets no line is free:
+    /// The chain a reshape grabs and where it goes. The line nearest `from` within `reach` of those
+    /// `target` grabs (any; drawn edges and strokes; or edges alone): an edge (not the canvas's
+    /// frame), drawn or undrawn, continued through every vertex where it and one other edge alike
+    /// (both drawn, or both undrawn) end, every edge counted and no stroke (the Line Eraser's
+    /// `eraseLine` counts drawn edges and strokes alone, so its line runs on past an undrawn edge
+    /// and stops at a vertex where a stroke ends); or a drawn stroke. Its point nearest `from` goes to `to` and
+    /// the rest follows, each point by the drag times its weight (`falloff`) along the chain's
+    /// length: 1 at the grabbed point, 0 a spread away (`reshapeSpread`, or three times the drag)
+    /// or at the chain's end if that is nearer, which stays on its junction; beyond, the chain
+    /// keeps its points, the first of them made a vertex. A loop through no junction is held at
+    /// most at its far point, half its length round. A stroke's end that meets no line is free:
     /// within the spread, the stretch from the grabbed point to it moves whole (a short stroke free
-    /// at both ends moves as it is); beyond it, it stays. Strokes
-    /// ending on the chain are carried, their end moving with the point of it they meet. Where
-    /// a step's two ends move at least half a unit apart, it bends: points are added along it so
-    /// that, moved, they are `reshapeStep` or less apart (a stretch moved whole stays as it
-    /// was). With `checking`, the moved chain must lie on the canvas, be simple, and meet the
-    /// drawing only where it met it: at its held ends and the strokes it carries.
+    /// at both ends moves as it is); beyond it, it stays. Strokes ending on the chain are carried,
+    /// their end moving with the point of it they meet. Where a step's two ends move at least half
+    /// a unit apart, it bends: points are added along it so that, moved, they are `reshapeStep` or
+    /// less apart (a stretch moved whole stays as it was). With `checking`, the moved chain must
+    /// lie on the canvas, be simple, and meet the drawing only where it met it: at its held ends
+    /// and the strokes it carries.
     mutating func reshapePlan(
         from: LatticePoint, to: LatticePoint, reach: Int64, target: TemplateEditor.ReshapeTarget, checking: Bool
     ) throws -> Reshape {
