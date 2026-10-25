@@ -646,7 +646,8 @@ final class CreateModel {
     }
 
     /// Waits until the work this model started has ended, cancelled work too (a cancelled
-    /// generation unwinds for a while): what is read afterwards is everything that work left.
+    /// generation unwinds for a while): what is read afterwards is everything that work left, but
+    /// for the progress it reports by hopping to the main actor.
     func settled() async {
         var waited = Set<Task<Void, Never>>()
         while let task = [loadTask, fullTask, draftTask, refineQueue].compactMap({ $0 }).first(where: { !waited.contains($0) }) {
