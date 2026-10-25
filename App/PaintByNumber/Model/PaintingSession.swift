@@ -104,7 +104,7 @@ final class PaintingSession {
     @ObservationIgnored private let clock = ContinuousClock()
     /// Automatically select the next unfinished color along the palette when the selected one
     /// is completed (`nextIncompleteColor`).
-    @ObservationIgnored var autoAdvance = true
+    @ObservationIgnored var autoAdvance = SettingsDefault.autoAdvance
     /// The palette is in an order by areas left (`PaletteOrder.followsProgress`), which re-sorts
     /// as the painting goes: finishing a color then selects its first swatch left, the order's
     /// own next, not the one after it.

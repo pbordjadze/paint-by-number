@@ -31,8 +31,8 @@ final class FeedbackEngine {
     /// update this per paint.
     var fillDuration: TimeInterval = 0.4
 
-    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.haptics) as? Bool ?? true }
-    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.sounds) as? Bool ?? true }
+    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.haptics) as? Bool ?? SettingsDefault.haptics }
+    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.sounds) as? Bool ?? SettingsDefault.sounds }
 
     private init() {}
 

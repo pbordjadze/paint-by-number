@@ -5,7 +5,7 @@ import Foundation
 /// earlier build has them too.
 nonisolated enum TipPreference {
     static func isEnabled(in defaults: UserDefaults = .standard) -> Bool {
-        defaults.object(forKey: SettingsKey.tipsEnabled) as? Bool ?? true
+        defaults.object(forKey: SettingsKey.tipsEnabled) as? Bool ?? SettingsDefault.tipsEnabled
     }
 
     static func record(_ enabled: Bool, in defaults: UserDefaults = .standard) {

@@ -63,8 +63,8 @@ struct PaintView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
-    @AppStorage(SettingsKey.zenMode) private var zenMode = false
-    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
+    @AppStorage(SettingsKey.zenMode) private var zenMode = SettingsDefault.zenMode
+    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = SettingsDefault.autoAdvance
     /// Feedback mode while set.
     @State private var feedback: FeedbackDraft?
     /// The white flash of the capture as feedback starts.

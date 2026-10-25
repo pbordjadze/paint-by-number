@@ -191,12 +191,12 @@ struct RefineView: View {
     @State private var photoShows = 0.5
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// Whether a line's ends join the lines their ink touches (`PenAssist`): the Toolbox's Snap.
-    @AppStorage(SettingsKey.refineSnaps) private var snaps = true
+    @AppStorage(SettingsKey.refineSnaps) private var snaps = SettingsDefault.refineSnaps
     /// Whether a drawn line gives the pieces it cuts the photo's colors (`TemplateEditor.painted`):
     /// the Toolbox's Color from Photo, off, so the Pen draws ink alone.
-    @AppStorage(SettingsKey.refinePenColors) private var penColors = false
+    @AppStorage(SettingsKey.refinePenColors) private var penColors = SettingsDefault.refinePenColors
     /// The Paint Brush's Size: its radius on screen, in points.
-    @AppStorage(SettingsKey.refineBrushSize) private var brushSize = Double(RefineGestures.brushSize)
+    @AppStorage(SettingsKey.refineBrushSize) private var brushSize = SettingsDefault.refineBrushSize
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
@@ -255,9 +255,9 @@ struct RefineView: View {
             // A practice's switches are its own, from the painter's: the Pen's page turning Color
             // from Photo on leaves Refine's Pen as it was.
             let store = RefinePracticeSetup.settings
-            _snaps = AppStorage(wrappedValue: true, SettingsKey.refineSnaps, store: store)
-            _penColors = AppStorage(wrappedValue: false, SettingsKey.refinePenColors, store: store)
-            _brushSize = AppStorage(wrappedValue: Double(RefineGestures.brushSize), SettingsKey.refineBrushSize, store: store)
+            _snaps = AppStorage(wrappedValue: SettingsDefault.refineSnaps, SettingsKey.refineSnaps, store: store)
+            _penColors = AppStorage(wrappedValue: SettingsDefault.refinePenColors, SettingsKey.refinePenColors, store: store)
+            _brushSize = AppStorage(wrappedValue: SettingsDefault.refineBrushSize, SettingsKey.refineBrushSize, store: store)
             _tool = State(initialValue: practice.tool)
             _group = State(initialValue: RefineGroup.of(practice.tool))
             _backdrop = State(initialValue: practice.backdrop)
