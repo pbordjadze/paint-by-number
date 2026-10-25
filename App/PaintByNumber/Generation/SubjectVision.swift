@@ -5,17 +5,14 @@ import os
 import PaintCore
 import Vision
 
-/// What Vision finds of a photo's subjects, from one pass of requests per photo, for each of its
-/// readers: `SubjectImportance` (the saliency heat map, the foreground mask, faces and animals),
+/// What Vision finds of a photo's subjects, from one pass of requests, for each of its readers:
+/// `SubjectImportance` (the saliency heat map, the foreground mask, faces and animals),
 /// `ObjectFinder` (the foreground mask, at its own size) and `EyeFinder` (the faces, whose
-/// landmarks it asks for). The create flow asks for a photo's importance and its coloring-book
-/// inputs side by side, so the findings are kept by the photo's identity (the same `CGImage`
-/// instance) for the last `cacheCapacity` photos, and concurrent requests for one photo share
-/// one pass. Findings are small: the masks are kept only as their readers sample them.
+/// landmarks it asks for). The create flow and `ArtworkFactory` ask for a photo's importance and
+/// its coloring-book inputs side by side, so callers asking for the same photo (the same `CGImage`
+/// instance) while its pass runs share that pass. Nothing is kept once it ends: the photo itself
+/// takes no place in memory beyond its callers' (`LineArtInputs` keeps the create flow's).
 nonisolated enum SubjectVision {
-    /// Photos whose findings are kept: as many as `LineArtInputs` keeps inputs for.
-    static let cacheCapacity = LineArtInputs.cacheCapacity
-
     struct Findings: Sendable {
         /// The attention-based saliency heat map and the foreground mask (every instance), each
         /// box-sampled to `SubjectImportance.mapSize`; nil when Vision gave none.
@@ -33,13 +30,12 @@ nonisolated enum SubjectVision {
         var observations: [VNFaceObservation] = []
     }
 
-    /// The findings for `image`, from the cache or a pass shared with the other callers waiting
-    /// for that photo.
+    /// The findings for `image`, from the pass running for it, or a new one.
     static func findings(in image: CGImage) async -> Findings {
-        await cache.findings(for: image)
+        await running.findings(for: image)
     }
 
-    /// One pass over `image`, outside the cache. Each request runs on its own, so one failing
+    /// One pass over `image`. Each request runs by itself, so one failing
     /// (common on simulators) doesn't sink the rest; every failure is logged.
     @concurrent
     static func find(in image: CGImage) async -> Findings {
@@ -76,24 +72,24 @@ nonisolated enum SubjectVision {
         return found
     }
 
-    private static let cache = FindingsCache()
+    private static let running = RunningPasses()
 }
 
-/// The cache behind `SubjectVision.findings`: one pass per photo, shared by its callers. A pass
-/// isn't cancelled (Vision's requests can't stop midway); one dropped from the cache finishes
-/// for whoever still waits for it.
-private actor FindingsCache {
+/// The passes behind `SubjectVision.findings` while they run, each shared by its callers. A pass
+/// isn't cancelled: Vision's requests can't stop midway.
+private actor RunningPasses {
     private var entries: [(image: CGImage, task: Task<SubjectVision.Findings, Never>)] = []
 
     func findings(for image: CGImage) async -> SubjectVision.Findings {
         let task: Task<SubjectVision.Findings, Never>
-        if let index = entries.firstIndex(where: { $0.image === image }) {
-            task = entries.remove(at: index).task
+        if let entry = entries.first(where: { $0.image === image }) {
+            task = entry.task
         } else {
             task = Task { await SubjectVision.find(in: image) }
+            entries.append((image, task))
         }
-        entries.append((image, task))
-        if entries.count > SubjectVision.cacheCapacity { entries.removeFirst(entries.count - SubjectVision.cacheCapacity) }
-        return await task.value
+        let found = await task.value
+        entries.removeAll { $0.task == task }
+        return found
     }
 }

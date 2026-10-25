@@ -437,7 +437,8 @@ Conventions).
 - Entry point: `LineArtInputs.forGeneration(of:settings:cached:)`: nil for classic settings, and on
   a model failure, so the template comes out classic. Cached per `CGImage` instance (two photos; a
   computation shared by its waiters, cancelled when all are); `CreateModel` computes the inputs once
-  per photo beside Vision, `ArtworkFactory.template` (regeneration, starters) uncached. Demo and
+  per photo beside Vision, `ArtworkFactory.template` (regeneration, starters) uncached; both share
+  the Vision pass (`SubjectVision`) with the importance map they compute alongside. Demo and
   test launches keep each photo's maps on disk (DEBUG `LineArtMapsCache`).
 - Tests compare each model with a PyTorch-made map (`HEDFixture.ppm` → `HEDFixture.pgm`,
   `LineArtFixture.pgm`, written by the conversion scripts; at most 2 levels apart), eyes on
