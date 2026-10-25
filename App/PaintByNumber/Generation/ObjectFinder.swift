@@ -3,12 +3,12 @@ import CoreVideo
 import Foundation
 import os
 import PaintCore
-import Vision
 
 /// The main subjects of a photo, for a coloring book to close their silhouettes where the
 /// detectors leave them open (`LineArtInput.objects`, `LineArtSettings.outlineObjects`): Vision's
-/// foreground instance masks (the people, animals and objects a photo is of), every instance
-/// together, scaled to `maskLongSide`, cut at half, traced by `MaskContours`.
+/// foreground instance masks (the people, animals and objects a photo is of, from its
+/// `SubjectVision` findings), every instance together, scaled to `maskLongSide`, cut at half,
+/// traced by `MaskContours`.
 ///
 /// The polygons are closed and normalized to the photo (0...1, origin top-left), largest
 /// subject first, quantized by `MaskContours`, so small differences in Vision's output between
@@ -18,26 +18,10 @@ nonisolated enum ObjectFinder {
     /// edge is soft, and still within a few canvas pixels of the subject on a 1152-px canvas.
     static let maskLongSide = 384
 
-    /// The subjects Vision finds in `image` (upright pixels). Empty when there are none, or
-    /// Vision can't run.
-    static func objects(in image: CGImage) -> [[SIMD2<Float>]] {
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        let request = VNGenerateForegroundInstanceMaskRequest()
-        do {
-            try handler.perform([request])
-        } catch {
-            Log.create.error("Finding subjects failed: \(String(describing: error), privacy: .public)")
-            return []
-        }
-        guard let observation = request.results?.first, !observation.allInstances.isEmpty else { return [] }
-        let buffer: CVPixelBuffer
-        do {
-            buffer = try observation.generateScaledMaskForImage(forInstances: observation.allInstances, from: handler)
-        } catch {
-            Log.create.error("Subject mask failed: \(String(describing: error), privacy: .public)")
-            return []
-        }
-        guard let mask = mask(from: buffer) else { return [] }
+    /// The subjects Vision finds in `image` (upright pixels), from its `SubjectVision` findings.
+    /// Empty when there are none, or Vision can't run.
+    static func objects(in image: CGImage) async -> [[SIMD2<Float>]] {
+        guard let mask = await SubjectVision.findings(in: image).subjects else { return [] }
         return MaskContours.outlines(of: mask.inside, width: mask.width, height: mask.height)
     }
 

@@ -68,15 +68,22 @@ nonisolated enum ArtworkFactory {
         if refinements.start == .blank {
             return try laying(refinements.edits, on: blank(from: photo, settings: settings))
         }
-        let importance = image.flatMap(SubjectImportance.map(for:))
+        // Side by side, so the line art's eyes and subjects share importance's pass of Vision
+        // (`SubjectVision`).
+        async let importance = Self.importance(of: image)
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
         let inputs = refinements.refining(
-            importance: importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
+            importance: await importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
         let base = try TemplateGenerator(settings: settings)
             .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
         return try laying(refinements.edits, on: base)
+    }
+
+    private static func importance(of image: CGImage?) async -> PaintCore.Grid<Float>? {
+        guard let image else { return nil }
+        return await SubjectImportance.map(for: image)
     }
 
     /// The base of a blank start (`TemplateRefinements.Start.blank`): `photo`, the image the

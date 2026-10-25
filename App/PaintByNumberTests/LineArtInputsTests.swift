@@ -154,9 +154,9 @@ struct EdgeDetectorTests {
 struct EyeFinderTests {
     /// `FaceFixture.jpg`: NASA's 1962 portrait of John Glenn (S62-05540, public domain), cropped
     /// to his head, 330 × 360. His eyes are near (0.36, 0.44) and (0.56, 0.43).
-    @Test func findsBothEyesOfAFaceWithTheirIrises() throws {
+    @Test func findsBothEyesOfAFaceWithTheirIrises() async throws {
         let image = try #require(ImageCodec.image(at: TestBundle.url("FaceFixture", "jpg")))
-        let eyes = EyeFinder.eyes(in: image)
+        let eyes = await EyeFinder.eyes(in: image)
         Attachment.record(Data((eyes.map { "\($0)" } + [Self.visionReport(image)]).joined(separator: "\n").utf8),
                           named: "face-fixture-eyes.txt")
         // On the simulator Vision can return landmarks for this fixture that are nobody's eyes
@@ -189,7 +189,9 @@ struct EyeFinderTests {
             #expect((0...1).contains(point.x) && (0...1).contains(point.y))
             #expect(point.x * 4096 == (point.x * 4096).rounded() && point.y * 4096 == (point.y * 4096).rounded())
         }
-        #expect(EyeFinder.eyes(in: image) == eyes, "Two runs found different eyes")
+        // Another image of the fixture: its own pass of Vision, not the first one's findings.
+        let again = try #require(ImageCodec.image(at: TestBundle.url("FaceFixture", "jpg")))
+        #expect(await EyeFinder.eyes(in: again) == eyes, "Two runs found different eyes")
     }
 
     /// What Vision itself reports for the fixture: faces, and the left eye's landmarks with and
@@ -221,13 +223,13 @@ struct EyeFinderTests {
         return lines.joined(separator: "\n")
     }
 
-    @Test func aPictureWithoutFacesHasNoEyes() throws {
+    @Test func aPictureWithoutFacesHasNoEyes() async throws {
         let context = try #require(CGContext(
             data: nil, width: 320, height: 240, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         context.setFillColor(CGColor(red: 0.55, green: 0.7, blue: 0.9, alpha: 1))
         context.fill(CGRect(x: 0, y: 0, width: 320, height: 240))
-        #expect(EyeFinder.eyes(in: try #require(context.makeImage())).isEmpty)
+        #expect(await EyeFinder.eyes(in: try #require(context.makeImage())).isEmpty)
     }
 
     /// An eye 100 px wide on a 1000-px photo: an almond through Vision's points, an iris

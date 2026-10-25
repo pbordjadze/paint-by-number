@@ -84,7 +84,8 @@ synchronized folder would bundle it into the app.
   `Sample`, `GalleryQuery`, `GalleryCounts`, `IncomingFile`, `SharedPaintingCodec`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`), `UnlimitedPaintings` and `FreePaintings`
   (see Unlimited Paintings); DEBUG `DemoTemplateCache`, `UnlockStoreStub`.
-- `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
+- `Generation/`: `PhotoLoader`, `SubjectVision` (one Vision pass a photo, shared by the three after
+  it while it runs), `SubjectImportance`, `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
   `CanvasTypes.swift`, `LineStyle.swift` (`ClassicLook`, `ColoringBookLook`, `DrawableLineArt`),
@@ -425,8 +426,8 @@ Conventions).
 - `EdgeDetector` runs the two bundled models (provenance in its doc comment and
   `tools/models/convert_*.py`): `edgeMap` the HED contours, `lineDrawing` the drawing;
   `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). `EyeFinder`
-  (Vision face landmarks → eye contours and irises) and `ObjectFinder` (Vision's foreground instance
-  mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
+  (Vision face landmarks of `SubjectVision`'s faces → eye contours and irises) and `ObjectFinder`
+  (its foreground instance mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
   recognition, down to 1/128 of the photo's height; none on the simulator) the lines of text PaintCore's `Writing` keeps
   legible (`docs/writing.md`).
 - `LineArtInputs.Maps.input(for:)` builds the generator's `LineArtInput` by the rule pbn uses too
@@ -436,7 +437,8 @@ Conventions).
 - Entry point: `LineArtInputs.forGeneration(of:settings:cached:)`: nil for classic settings, and on
   a model failure, so the template comes out classic. Cached per `CGImage` instance (two photos; a
   computation shared by its waiters, cancelled when all are); `CreateModel` computes the inputs once
-  per photo beside Vision, `ArtworkFactory.template` (regeneration, starters) uncached. Demo and
+  per photo beside Vision, `ArtworkFactory.template` (regeneration, starters) uncached; both share
+  the Vision pass (`SubjectVision`) with the importance map they compute alongside. Demo and
   test launches keep each photo's maps on disk (DEBUG `LineArtMapsCache`).
 - Tests compare each model with a PyTorch-made map (`HEDFixture.ppm` → `HEDFixture.pgm`,
   `LineArtFixture.pgm`, written by the conversion scripts; at most 2 levels apart), eyes on
@@ -495,7 +497,7 @@ Conventions).
   launch. Adding a picture: `docs/picture-library.md`.
 - Suggested settings (`CreateModel`): every photo (picker, camera, sample, drop, opened file) goes
   loading → analyzing (`SubjectImportance.analyze`: importance map plus `SubjectHints`, faces and
-  animals, in one Vision pass, beside the line-art inputs) → suggesting (`AutoSettings.choose` on
+  animals, from `SubjectVision`'s pass, which the line-art inputs' eyes and subjects share) → suggesting (`AutoSettings.choose` on
   the draft, `CreateModel.maxCandidates`; its first candidate shows as a draft at once, unless the
   preview is line art, sliders and Start wait; in SideStore and Debug builds Start is on from that draft,
   and tapped before the painting is made waits for it, `CreateModel.askForStart`, called off as a

@@ -8,12 +8,13 @@ import Testing
 /// `MaskContours`), on the red fox: well-formed polygons, the fox among them when Vision finds
 /// it, and an overlay attached so the mask's fit can be judged from the CI report.
 struct ObjectFinderTests {
-    @Test func foxSilhouetteIsWellFormedAndRecorded() throws {
+    @Test func foxSilhouetteIsWellFormedAndRecorded() async throws {
         let url = try #require(Bundle.main.url(forResource: "red-fox", withExtension: "jpg"))
         let photo = try PhotoLoader.load(url: url, maxPixelSize: 1152)
         let image = try #require(PhotoLoader.cgImage(from: photo))
-        let objects = ObjectFinder.objects(in: image)
-        let again = ObjectFinder.objects(in: image)
+        let objects = await ObjectFinder.objects(in: image)
+        // Another image of the same photo: its own pass of Vision, not the first one's findings.
+        let again = await ObjectFinder.objects(in: try #require(PhotoLoader.cgImage(from: photo)))
         #expect(objects == again, "the subjects differ between two runs")
         var shares: [Double] = []
         for polygon in objects {

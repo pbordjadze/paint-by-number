@@ -40,18 +40,16 @@ nonisolated enum EyeFinder {
     static let quantum = 4096.0
 
     /// The eyes of every face Vision finds in `image` (upright pixels). Empty when there are
-    /// none or Vision can't run. Faces are found first and handed to the landmarks request, the
-    /// pipeline Vision documents for landmarks of known faces.
-    static func eyes(in image: CGImage) -> [[SIMD2<Float>]] {
+    /// none or Vision can't run. The faces (`SubjectVision`'s findings) are handed to the landmarks
+    /// request, the pipeline Vision documents for landmarks of known faces.
+    static func eyes(in image: CGImage) async -> [[SIMD2<Float>]] {
+        let faces = await SubjectVision.findings(in: image).faces.observations.filter { $0.confidence >= minimumFaceConfidence }
+        guard !faces.isEmpty else { return [] }
         let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        let rectangles = VNDetectFaceRectanglesRequest()
         let request = VNDetectFaceLandmarksRequest()
         request.constellation = .constellation76Points
+        request.inputFaceObservations = faces
         do {
-            try handler.perform([rectangles])
-            let faces = (rectangles.results ?? []).filter { $0.confidence >= minimumFaceConfidence }
-            guard !faces.isEmpty else { return [] }
-            request.inputFaceObservations = faces
             try handler.perform([request])
         } catch {
             Log.create.error("Finding eyes failed: \(String(describing: error), privacy: .public)")
