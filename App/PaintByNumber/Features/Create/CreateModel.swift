@@ -636,13 +636,24 @@ final class CreateModel {
     }
 
     func cancelAll() {
+        // Kept, cancelled, for `settled()` to wait on.
         loadTask?.cancel()
-        loadTask = nil
         fullTask?.cancel()
         refineQueue?.cancel()
         stopDrafts()
         refineAsked = false
         startAsked = false
+    }
+
+    /// Waits until the work this model started has ended, cancelled work too (a cancelled
+    /// generation unwinds for a while): what is read afterwards is everything that work left, but
+    /// for the progress it reports by hopping to the main actor.
+    func settled() async {
+        var waited = Set<Task<Void, Never>>()
+        while let task = [loadTask, fullTask, draftTask, refineQueue].compactMap({ $0 }).first(where: { !waited.contains($0) }) {
+            waited.insert(task)
+            await task.value
+        }
     }
 
     /// The full-resolution template for the current settings, generating it if needed.
@@ -730,10 +741,10 @@ final class CreateModel {
         }
     }
 
-    /// A suggestion's first candidate, rendered: shown unless the photo changed or the
-    /// suggestion already finished.
+    /// A suggestion's first candidate, rendered: shown unless the photo changed, the suggestion
+    /// already finished or the flow was closed (`cancelAll()`).
     private func showFirstDraft(_ draft: Preview, load: Int) {
-        guard load == loadID, phase == .suggesting, preview == nil else { return }
+        guard load == loadID, loadTask?.isCancelled == false, phase == .suggesting, preview == nil else { return }
         withAnimation(.easeInOut(duration: 0.18)) { preview = draft }
     }
 
@@ -958,7 +969,7 @@ final class CreateModel {
         return serial
     }
 
-    /// Refine's Colors, in its turn: a look over every paint (in place of any look or repaint
+    /// Refine's Looks and Edit Paint, in their turn: a look over every paint (in place of any look or repaint
     /// before it, read on the template the other edits make), the photo's colors again, or one
     /// paint repainted (in place of the last edit when that repainted the same color: the color
     /// picker still moving is one step of the history). Paints made alike become one, which a

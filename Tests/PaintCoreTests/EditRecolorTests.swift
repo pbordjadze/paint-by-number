@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import PaintCore
 
-/// Refine's Colors (`TemplateEditor.Edit.look`, `.repaint`): paints alone change, paints that
+/// Refine's Looks and Edit Paint (`TemplateEditor.Edit.look`, `.repaint`): paints alone change, paints that
 /// meet become one and the numbers after them close up, areas that then share a paint across an
 /// undrawn boundary join, edits laid later bring their colors through, and the looks' math is
 /// pinned, since paintings record a look by name.

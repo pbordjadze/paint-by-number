@@ -62,7 +62,7 @@
 //       "ink", Bend Line's, grabs drawn lines only, "edge", Move Edge's, the boundaries between
 //       cells only), Move Number (the number nearest `from` within its radius and "reach" moved
 //       to `to` in its own region, sized for the room there, clear of the region's other
-//       numbers), Refine's Colors (a look over every
+//       numbers), Refine's Looks and Edit Paint (a look over every
 //       paint, its lightness read from the template when the file gives none, or one paint
 //       repainted with or without its family; later edits bring their colors through them, as
 //       the app's trail does, but for an area's, a color of the template as it is then); a kind
@@ -77,7 +77,7 @@
 //   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --blank | --edges map.pgm [--lines drawing.pgm]]
 //       [--no-steps] [generate options]
 //       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
-//       its ends joining the lines they touch, the Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Smart
+//       its ends joining the lines they touch, the retired Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Line
 //       Eraser's line from junction to junction, Fill with the photo's color there, the Bucket
 //       (`bucket`: a paint by number, OKLab `color` or the picker's sRGB `rgb`, else the photo's
 //       color there), Edit Paint (`repaint`: paint `paint` to `color` or `rgb`, `family`), Undo,

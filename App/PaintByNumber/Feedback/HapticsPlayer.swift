@@ -12,9 +12,19 @@ import Foundation
 nonisolated final class HapticsPlayer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.pbordjadze.paintbynumber.haptics", qos: .userInitiated)
     private var engine: CHHapticEngine?
-    private let isSupported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+    private let isSupported: Bool
     private var lastPaint: ContinuousClock.Instant?
     private let clock = ContinuousClock()
+    #if DEBUG
+    /// What was asked to play, in order (on `queue`): `played()`.
+    private var asked: [String] = []
+    #endif
+
+    /// `isSupported` true runs the queue where Core Haptics has no engine (CI's simulators), for
+    /// a test to see what it plays.
+    init(isSupported: Bool = CHHapticEngine.capabilitiesForHardware().supportsHaptics) {
+        self.isSupported = isSupported
+    }
 
     /// Paint spreading over a region. `strength` 0…1 (bigger regions feel heavier),
     /// `duration` matches the fill animation.
@@ -43,14 +53,14 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
                     .init(relativeTime: d, value: 0),
                 ],
                 relativeTime: 0.015)
-            play([press, swell], curves: [fade])
+            play("paint", [press, swell], curves: [fade])
         }
     }
 
     /// Tapped a region that wants a different color.
     func reject() {
         perform { [self] in
-            play([
+            play("reject", [
                 CHHapticEvent(eventType: .hapticTransient, parameters: [param(.hapticIntensity, 0.5), param(.hapticSharpness, 0.15)], relativeTime: 0),
                 CHHapticEvent(eventType: .hapticTransient, parameters: [param(.hapticIntensity, 0.35), param(.hapticSharpness, 0.15)], relativeTime: 0.085),
             ])
@@ -60,7 +70,7 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     /// Every region of a color is painted.
     func colorComplete() {
         perform { [self] in
-            play((0..<3).map { i in
+            play("colorComplete", (0..<3).map { i in
                 CHHapticEvent(
                     eventType: .hapticTransient,
                     parameters: [param(.hapticIntensity, 0.55 + 0.2 * Float(i)), param(.hapticSharpness, 0.6 + 0.15 * Float(i))],
@@ -90,14 +100,14 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
                     parameters: [param(.hapticIntensity, 0.9 - 0.08 * Float(i)), param(.hapticSharpness, 0.85)],
                     relativeTime: t))
             }
-            play(events, curves: [rise])
+            play("celebrate", events, curves: [rise])
         }
     }
 
     /// Light detent, e.g. picking a color or undoing.
     func tick() {
         perform { [self] in
-            play([CHHapticEvent(eventType: .hapticTransient, parameters: [param(.hapticIntensity, 0.4), param(.hapticSharpness, 0.8)], relativeTime: 0)])
+            play("tick", [CHHapticEvent(eventType: .hapticTransient, parameters: [param(.hapticIntensity, 0.4), param(.hapticSharpness, 0.8)], relativeTime: 0)])
         }
     }
 
@@ -134,7 +144,16 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
         }
     }
 
-    private func play(_ events: [CHHapticEvent], curves: [CHHapticParameterCurve] = []) {
+    #if DEBUG
+    /// What was asked to play so far, in order, once the work asked before this call has run.
+    func played() -> [String] { queue.sync { asked } }
+    #endif
+
+    private func play(_ name: String, _ events: [CHHapticEvent], curves: [CHHapticParameterCurve] = []) {
+        #if DEBUG
+        dispatchPrecondition(condition: .onQueue(queue))
+        asked.append(name)
+        #endif
         guard let engine = ensureEngine() else { return }
         do {
             let pattern = try CHHapticPattern(events: events, parameterCurves: curves)
