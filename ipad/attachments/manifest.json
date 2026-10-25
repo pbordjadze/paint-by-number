@@ -1,0 +1,814 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "44D1F4F4-4C9D-40DE-991C-03B7C05515E5.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "fills_0_C7DE34BA-BE0E-4857-ADB4-D8E185A16D43.png",
+        "timestamp" : 1792929453.01
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/paintedRegionsShowTheirPaintAndTheRestIsPaper()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/paintedRegionsShowTheirPaintAndTheRestIsPaper()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E4843240-B65F-4D4F-AE28-CA683BF853D7.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "outlines-finished_0_A7659100-3EB4-4572-B055-B6E7C3D61719.png",
+        "timestamp" : 1792929453.201
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "C19B9F32-E6CC-4DF7-9A2F-FF109E3C64BD.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "outlines-blank_0_66CEB184-EACB-4113-99E9-02BC55629474.png",
+        "timestamp" : 1792929453.178
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/outlinesDarkenOpenBoundariesAndDissolveBetweenPaintedRegions()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/outlinesDarkenOpenBoundariesAndDissolveBetweenPaintedRegions()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "9050CE17-ABBD-4C67-A783-2B1981254729.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "numbers_0_4FA3EA89-017B-4D5D-8E3D-D4EA4A0F2E00.png",
+        "timestamp" : 1792929453.367
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/numbersAppearWhenLegibleAndVanishOncePainted()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/numbersAppearWhenLegibleAndVanishOncePainted()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "DEE3BE58-756B-4433-9F50-CEB5DF635D40.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "highlight_0_481DA42F-A459-4FA6-86B7-69AD48A57FF6.png",
+        "timestamp" : 1792929453.552
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/selectedColorIsHighlighted()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/selectedColorIsHighlighted()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "C7F12682-4607-4155-A650-8FAC87AC369D.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "large-timings_0_E763C4ED-E710-473E-BDCB-4204FD68A64F.txt",
+        "timestamp" : 1792929456.674
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "5E117890-B9B5-4163-9118-6B3211F5D736.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "large_0_436E0DAF-1861-4C87-9C19-06DD43C7D246.png",
+        "timestamp" : 1792929456.655
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/largeTemplateBuildsAndRendersQuickly()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/largeTemplateBuildsAndRendersQuickly()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "FDB0B914-1B68-4014-8BF0-24126725F85A.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "real-template-timings_0_BDFEB4D1-2042-436C-ADEE-80D782EA5CBF.txt",
+        "timestamp" : 1792929457.618
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/realTemplateFrameCost()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/realTemplateFrameCost()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "D92E427F-E029-44C0-8BBE-068AFD5331C0.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "photo-overlay_0_9D731B49-9548-4AC2-99DC-97E6285D3361.png",
+        "timestamp" : 1792929457.666
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/photoOverlayCoversTheCanvasExactly()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/photoOverlayCoversTheCanvasExactly()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "DEBB723F-A275-4258-AACD-14684CD074CE.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "timelapse-frame_0_CB3308F3-74EC-4908-9407-4B1E26383AA9.png",
+        "timestamp" : 1792929457.703
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/timelapseFramesReplayTheStrokeLog()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/timelapseFramesReplayTheStrokeLog()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "A557ACEE-C1C7-41EA-A365-AA7C7CD22174.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "dark-paper-highlight_0_EE0FCC0D-95D9-4230-AD4E-D4904BC2B093.png",
+        "timestamp" : 1792929457.86
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "526807FD-BE1F-4E21-A9DA-274133C20FDD.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "dark-paper_0_B42A078E-0F52-4DAA-8F73-944C1880946C.png",
+        "timestamp" : 1792929457.747
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/darkPaperKeepsPaintAndLightensPaperNumbersAndHighlight()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/darkPaperKeepsPaintAndLightensPaperNumbersAndHighlight()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "25764A99-C980-4CDB-8146-EB0F611B41EC.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "dark-paper-rim_0_5AFC5B20-D5AE-4C1D-82FE-BD9A255FFD2B.png",
+        "timestamp" : 1792929457.892
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/darkPaperDrawsARimInsteadOfAShadow()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/darkPaperDrawsARimInsteadOfAShadow()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "19DB9CD0-5410-4DBB-AC01-DEEAF8B99BDD.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "feedback-marked_0_E6E9B96C-D8E0-45D6-9AE1-262A4FBAFAC9.png",
+        "timestamp" : 1792929806.841
+      }
+    ],
+    "testIdentifier" : "FeedbackTests/bundleIsAPictureAndAZip()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/FeedbackTests/bundleIsAPictureAndAZip()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "09A641F6-4E65-4D0D-AAC6-5C4680B1FB80.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "hed-fixture-comparison_0_8BF11981-3AB6-4852-BD52-2BCDE78BF870.txt",
+        "timestamp" : 1792929828.433
+      }
+    ],
+    "testIdentifier" : "EdgeDetectorTests/edgeMapMatchesThePyTorchReference()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/EdgeDetectorTests/edgeMapMatchesThePyTorchReference()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "9DA4DC33-E4D7-4A1D-8CCF-2003C309EEEF.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "lineart-fixture-comparison_0_6616AA43-0E8C-443B-866A-48F61F2AB14B.txt",
+        "timestamp" : 1792929829.925
+      }
+    ],
+    "testIdentifier" : "EdgeDetectorTests/lineDrawingMatchesThePyTorchReferenceAndCombinesWithHED()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/EdgeDetectorTests/lineDrawingMatchesThePyTorchReferenceAndCombinesWithHED()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "669847D3-7047-42CA-A0FB-68F1EFF3BA3C.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "hed-timings_0_00B98428-72A5-4A5A-889D-E26422470FDF.txt",
+        "timestamp" : 1792929844.888
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "A94B044C-D68C-4175-87F1-90A7A856E586",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "red-fox-hed-edges_0_78CBA920-A187-4D42-9A33-24F373161787.pgm",
+        "timestamp" : 1792929844.888
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "F6D8BEEF-2009-4CAC-99DD-54DF97BF8D85",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "red-fox-hed-input_0_199AF5DA-AB7B-4590-B21C-CC34E5A41C8F.ppm",
+        "timestamp" : 1792929844.887
+      }
+    ],
+    "testIdentifier" : "EdgeDetectorTests/edgeMapIsIdenticalAcrossRunsAtTheModelsSize()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/EdgeDetectorTests/edgeMapIsIdenticalAcrossRunsAtTheModelsSize()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "3577AAF5-B7E3-4052-9779-286279AFAF2C.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "face-fixture-eyes_0_4E8A4212-CB2A-4FBA-A773-757453250F97.txt",
+        "timestamp" : 1792929846.601
+      }
+    ],
+    "testIdentifier" : "EyeFinderTests/findsBothEyesOfAFaceWithTheirIrises()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/EyeFinderTests/findsBothEyesOfAFaceWithTheirIrises()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "EF5FD91E-07C3-49A9-85D9-AEF599FF1D5A.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "writing-unpainted_0_30353B49-3D54-48A6-99F7-B08B2F985F17.png",
+        "timestamp" : 1792929883.76
+      }
+    ],
+    "testIdentifier" : "LineArtRenderingTests/canvasTurnsWritingOverDarkPaintLightAsItsRegionIsPainted()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/LineArtRenderingTests/canvasTurnsWritingOverDarkPaintLightAsItsRegionIsPainted()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "D9AC2873-CFA7-4961-83A2-9B1EDB9A1D22.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-mosaic-selected_0_F94B3CF2-AB55-47E1-B80C-2F296D524DA3.png",
+        "timestamp" : 1792929885.101
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "732CE7FB-3FDF-4BDB-A66A-4E8D5B3B64AB.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-mosaic_0_82868367-9538-4C93-B9F7-16BA1E852E4F.png",
+        "timestamp" : 1792929885.009
+      }
+    ],
+    "testIdentifier" : "LineArtRenderingTests/coloringBookDrawsTheDrawingOverEverything()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/LineArtRenderingTests/coloringBookDrawsTheDrawingOverEverything()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "5A1821CA-350F-4BDD-87A2-A7A95AE936C6.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-stripes-print_0_9AC9CB41-1D06-4517-A428-9D4E90ED230E.png",
+        "timestamp" : 1792929885.209
+      }
+    ],
+    "testIdentifier" : "LineArtRenderingTests/coloringBookPicturesAndPrint()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/LineArtRenderingTests/coloringBookPicturesAndPrint()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "B69439EC-6985-4BD3-98D8-57AAF69D60C3.pdf",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-fox_0_0E200DAC-55DB-4662-B9A5-D92539074EBB.pdf",
+        "timestamp" : 1792929889.839
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "30D14C1B-A669-414F-9C5C-EAB28DD7DD12.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-fox-finished_0_C578EE5C-CDE6-4835-828C-D3F786C14EB0.png",
+        "timestamp" : 1792929889.784
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "2EF2F5FD-0856-4A97-8805-6148B33CC6D3.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-fox-thumbnail_0_2185EBDD-6552-4146-9380-742C2036637C.png",
+        "timestamp" : 1792929889.75
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "23112A43-0897-4D53-B282-1F3710CC4C2D.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "book-fox-canvas_0_3DF7E9F6-17DC-421A-A703-E5874EC926E4.png",
+        "timestamp" : 1792929889.723
+      }
+    ],
+    "testIdentifier" : "LineArtRenderingTests/coloringBookPicturesForReview()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/LineArtRenderingTests/coloringBookPicturesForReview()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "ED20469E-6713-499C-B4D1-3E8AD70BD18F.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "fox-subjects_0_4854B306-B660-427E-AE35-BAF3E73ED6A7.png",
+        "timestamp" : 1792929891.877
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "AD68D6FF-B4AE-41B7-9B48-1B24022491B9.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "fox-subjects_0_967291A7-9AB1-4CD1-8E5D-F591622279A3.txt",
+        "timestamp" : 1792929891.851
+      }
+    ],
+    "testIdentifier" : "ObjectFinderTests/foxSilhouetteIsWellFormedAndRecorded()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/ObjectFinderTests/foxSilhouetteIsWellFormedAndRecorded()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "419F65A5-56BF-4891-998D-11B2C31E90C3.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "zoomed-out-drag-timings_0_205550B6-D535-4F35-9F1E-B49D9C2FE2C6.txt",
+        "timestamp" : 1792929896.929
+      }
+    ],
+    "testIdentifier" : "PaintingSessionTests/zoomedOutDragIsFast()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PaintingSessionTests/zoomedOutDragIsFast()"
+  },
+  {
+    "attachments" : [
+      {
+        "arguments" : [
+          "true"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "BCC1312B-AF81-44BD-8627-1B4A55A03224.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "stripes-template-vector_0_2819FCCB-7214-4C54-AFBD-389AD61785A0.png",
+        "timestamp" : 1792929909.634
+      },
+      {
+        "arguments" : [
+          "false"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "F34482E6-6F55-4B6F-9886-D89E91535E14.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "stripes-template-raster_0_668F74A0-C453-4D63-BAE5-30890A520A84.png",
+        "timestamp" : 1792929909.659
+      }
+    ],
+    "testIdentifier" : "RasterizerTests/templateHasPaperOutlinesAndNumbers(vector:)",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/RasterizerTests/templateHasPaperOutlinesAndNumbers(vector:)"
+  },
+  {
+    "attachments" : [
+      {
+        "arguments" : [
+          "false"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "C06C04AD-1012-4B3B-BDB2-568536EB225F.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "three-digit-number-template_0_88FAE190-8E6A-48F3-941E-C865A64BDB19.png",
+        "timestamp" : 1792929910.083
+      },
+      {
+        "arguments" : [
+          "true"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "B954FE68-AC4B-4228-8AEA-10603B018B5A.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "three-digit-number-printable_0_60C4E27B-E86A-4BC7-A119-AEB51BA65657.png",
+        "timestamp" : 1792929910.098
+      }
+    ],
+    "testIdentifier" : "RasterizerTests/threeDigitNumbersFit(printable:)",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/RasterizerTests/threeDigitNumbersFit(printable:)"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "8D599732-4F8D-45FF-8F7B-553F7345714B.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave-numbers_0_89304816-4BD2-4F81-9324-25610795845E.png",
+        "timestamp" : 1792929911.942
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "5B22B483-5346-45E2-AAD7-4CDD1E12BC39.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave-finished_0_487285EB-BC4E-4A9B-85EF-EA7983A1EADC.png",
+        "timestamp" : 1792929911.942
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "D8798EAC-B3C3-4803-B253-00EC41237197.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave-thumbnail-40_0_BD4164C8-01BD-4073-BF67-48316496FEF5.png",
+        "timestamp" : 1792929911.942
+      }
+    ],
+    "testIdentifier" : "RasterizerTests/rendersGeneratedSample()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/RasterizerTests/rendersGeneratedSample()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "11DBF4D0-E14A-41A3-85F2-88CD6B90CF13.pdf",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "stripes_0_64A8E88B-D5CD-4F3D-B324-0103CFE34918.pdf",
+        "timestamp" : 1792929912.81
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/documentHasTemplateAndColorKeyPages()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/documentHasTemplateAndColorKeyPages()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "0189ED89-1345-4250-A380-A919FFA25D9D.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave-pdf-page2_0_BB338048-E5AC-4684-8AB0-C7C01FF85CF6.png",
+        "timestamp" : 1792929913.374
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "68C03FF8-0EEB-434E-866C-FD7FEFF649E3.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave-pdf-page1_0_670A022C-43FF-4D19-B730-ADFF552A3F65.png",
+        "timestamp" : 1792929913.297
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "6DB75228-AE86-42A7-B13F-528448CF3C1A.pdf",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "great-wave_0_2FC2471D-5B7F-48E5-A6D6-E8DB756E0A7C.pdf",
+        "timestamp" : 1792929913.235
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/samplePDFRendersPages()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/samplePDFRendersPages()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "3FC3BF17-C87F-441E-A402-C12599E69BB5.pdf",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "stripes-nicknames_0_FF792545-C3A2-442D-B3D4-3374C4D7468E.pdf",
+        "timestamp" : 1792929913.401
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/colorKeyShowsNicknameShadeAndHex()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/colorKeyShowsNicknameShadeAndHex()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E3480598-948F-4852-B885-652E3166351B.pdf",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "stripes-sheets_0_A7D133B8-BA99-493E-BA62-D32F5B7C3BFB.pdf",
+        "timestamp" : 1792929914.169
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/largeTemplatesPrintOnSheetsWithLegibleNumbers()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/largeTemplatesPrintOnSheetsWithLegibleNumbers()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "19FF047D-15F2-4A19-8612-94299C9B431A.txt",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "text-finder-lines_0_8C40D697-9352-45D9-AE59-A766DC4A6131.txt",
+        "timestamp" : 1792929924.615
+      }
+    ],
+    "testIdentifier" : "TextFinderTests/noteLinesAreWellFormedAndRecorded()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/TextFinderTests/noteLinesAreWellFormedAndRecorded()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E24F840B-BE3B-46B5-88A2-274A3F98E5BB.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-about_0_F6E5227A-0EC2-4F4E-9BF3-12F5C9F082B7.png",
+        "timestamp" : 1792930010.81
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testAboutShowsTheVersion()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testAboutShowsTheVersion"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "25816DCF-3EED-4871-B30E-5E18CD4BF9C0.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "acknowledgements_0_DD9D9361-1B4C-474D-A603-0E85ED3CC075.png",
+        "timestamp" : 1792930072.63
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testAcknowledgementsListTheAlgorithmPorts()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testAcknowledgementsListTheAlgorithmPorts"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "D33C3B5F-EABB-4310-9D44-D3B8B95627E1.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-line-weight-bold_0_35AB5A14-602C-475D-A27B-F4EB0F95345E.png",
+        "timestamp" : 1792930094.745
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testLineWeightPickerChangesTheValue()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testLineWeightPickerChangesTheValue"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "94B6390C-0F6D-4164-8848-C9BCCB347555.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-making-of_0_830401FC-F6C0-49F3-A107-4EC8AE4E829E.png",
+        "timestamp" : 1792930117.177
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testMakingOfSwitchStartsOffAndTurnsOn()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testMakingOfSwitchStartsOffAndTurnsOn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "513AC0A5-B1C6-410E-B0CD-762D93C66D82.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-music-moon_0_585078DB-AF7B-4CDF-82A8-925DF70E7C02.png",
+        "timestamp" : 1792930145.599
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testMusicPickerChangesTheChoice()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testMusicPickerChangesTheChoice"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "0E7CC2DC-EA4D-4DBC-A925-0E95FFB0AA23.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-painting-length-quick_0_6E064589-3934-44ED-8592-0B795DEBFFBD.png",
+        "timestamp" : 1792930175.233
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testPaintingLengthPickerChangesTheValue()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testPaintingLengthPickerChangesTheValue"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "FFDED8E6-07A3-467E-A2D7-6499C2F166DD.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-paper-dark_0_2CDC8DED-3928-464A-B30B-CCB94F8252B8.png",
+        "timestamp" : 1792930199.325
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testPaperPickerChangesTheValue()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testPaperPickerChangesTheValue"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "081640C6-F5EA-436A-9AA0-F730B1A90627.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-preview-line-art_0_04197F4F-5480-47FD-B8E0-A85E0185C1E0.png",
+        "timestamp" : 1792930223.819
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testPreviewPickerChangesTheValue()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testPreviewPickerChangesTheValue"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E952D7CD-FE50-487A-9FE3-9F91DC3B911A.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-show-tips-again_0_6DC9EA4C-7AD4-41AE-A42A-9B11F9E853B1.png",
+        "timestamp" : 1792930250.036
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testShowTipsAgainTurnsTipsOn()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testShowTipsAgainTurnsTipsOn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "B8E5A7A4-EB9A-4127-9D0F-F1D22759A8B4.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-tips-off_0_542E4CC8-C260-49C5-8276-8BD9AB865D8B.png",
+        "timestamp" : 1792930272.318
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testTipsSwitchStartsOnAndTurnsOffAndOn()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testTipsSwitchStartsOnAndTurnsOffAndOn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "687AB7EE-DF9A-4A96-878E-7509AB01A80C",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "EE0B16F6-5028-4237-901E-DAEB36703626.png",
+        "isAssociatedWithFailure" : false,
+        "repetitionNumber" : 1,
+        "suggestedHumanReadableName" : "settings-unlock_0_FBB1BE59-80C6-4F46-A3F7-6634433990D9.png",
+        "timestamp" : 1792930292.311
+      }
+    ],
+    "testIdentifier" : "SettingsTests/testUnlimitedPaintingsShowsTheFreeOnesAndUnlocks()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/SettingsTests/testUnlimitedPaintingsShowsTheFreeOnesAndUnlocks"
+  }
+]
