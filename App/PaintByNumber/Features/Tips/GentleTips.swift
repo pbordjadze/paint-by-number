@@ -18,8 +18,7 @@ nonisolated struct TipSwitch {
 }
 
 /// The counts the tips' rules are made of. Ids carry the generation Show Tips Again bumps, so every
-/// count starts over. Donated by `PaintTips`. How many a tip waits for is its `needed`, written once:
-/// its rule reads it, and so do the forced-tip demos (`PaintTips.donateEveryRule`).
+/// count starts over. Donated by `PaintTips`.
 nonisolated enum TipEvents {
     /// Taps beside an area too small to hit at this zoom.
     static var smallMisses: Tips.Event<Tips.EmptyDonation> { event("smallMiss") }
@@ -70,11 +69,9 @@ nonisolated struct ShelfNewPaintingTip: Tip {
     var title: Text { Text("Make Your Own Page") }
     var message: Text? { Text("Tap + to turn one of your photos, or a sample, into a page to paint.") }
     var image: Image? { Image(systemName: "plus.circle") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.sessions) { $0.donations.count >= needed }
+        #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
 }
 
@@ -156,11 +153,9 @@ nonisolated struct NewPaintingResetTip: Tip {
     var title: Text { Text("You Can Always Go Back") }
     var message: Text? { Text("Watch the preview change. Reset to Suggested returns every slider to where it started.") }
     var image: Image? { Image(systemName: "arrow.counterclockwise") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.sliderReleases) { $0.donations.count >= needed }
+        #Rule(TipEvents.sliderReleases) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -171,11 +166,9 @@ nonisolated struct NewPaintingSlidersTip: Tip {
     var title: Text { Text("Fewer or More Areas") }
     var message: Text? { Text("Fewer colors and less detail make a calmer page. More makes a longer, finer one.") }
     var image: Image? { Image(systemName: "slider.horizontal.3") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.pagesMade) { $0.donations.count >= needed }
+        #Rule(TipEvents.pagesMade) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -186,11 +179,9 @@ nonisolated struct NewPaintingRefineTip: Tip {
     var title: Text { Text("Shape the Lines Yourself") }
     var message: Text? { Text("Refine, top right, lets you draw or erase lines and fill shapes. It is optional.") }
     var image: Image? { Image(systemName: "pencil.tip") }
-    static let needed = 2
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.pagesMade) { $0.donations.count >= needed }
+        #Rule(TipEvents.pagesMade) { $0.donations.count >= 2 }
     }
 }
 
@@ -215,11 +206,9 @@ nonisolated struct RefineFillTip: Tip {
     var title: Text { Text("Make a Shape Its Own") }
     var message: Text? { Text("Draw a closed shape, then fill it to make it an area with its own number.") }
     var image: Image? { Image(systemName: "drop.fill") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.linesDrawn) { $0.donations.count >= needed }
+        #Rule(TipEvents.linesDrawn) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -232,11 +221,9 @@ nonisolated struct BenchShowPhotoTip: Tip {
     var title: Text { Text("Peek at the Photo") }
     var message: Text? { Text("Hold Show Photo to see the original. Tap it to keep it showing.") }
     var image: Image? { Image(systemName: "photo") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.quarters) { $0.donations.count >= needed }
+        #Rule(TipEvents.quarters) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -247,11 +234,9 @@ nonisolated struct BenchReplayTip: Tip {
     var title: Text { Text("Watch It Again") }
     var message: Text? { Text("Replay Painting plays your page back from the first fill.") }
     var image: Image? { Image(systemName: "play") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.finishes) { $0.donations.count >= needed }
+        #Rule(TipEvents.finishes) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -262,11 +247,9 @@ nonisolated struct BenchZenTip: Tip {
     var title: Text { Text("A Calmer Way to Paint") }
     var message: Text? { Text("In More, Zen Mode moves the page to the next area after each fill.") }
     var image: Image? { Image(systemName: "leaf") }
-    static let needed = 1
     var rules: [Tips.Rule] {
-        let needed = Self.needed
         #Rule(TipSwitch.$tipsOn) { $0 == true }
-        #Rule(TipEvents.sessions) { $0.donations.count >= needed }
+        #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
