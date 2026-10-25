@@ -50,6 +50,12 @@ struct LineArtCodingTests {
         #expect(plain.lineArt == nil && plain.regions == t.regions)
     }
 
+    /// Line art made in code is a coloring book unless it says otherwise: the layered style is
+    /// retired, and only a decoder reading an old painting makes it.
+    @Test func lineArtDefaultsToTheColoringBook() {
+        #expect(TemplateLineArt(edgeLayers: [0], edgeWeights: [255]).style == .coloringBook)
+    }
+
     /// `Fixtures/template-v2-book.pbnt` was written by the LINE encoder of the commit adding
     /// `TemplateLineArt.style`, with the layered fixture's command and `--line-style coloringBook`:
     /// the same five cells and twelve edges in the same layers (the sky's faint line, below

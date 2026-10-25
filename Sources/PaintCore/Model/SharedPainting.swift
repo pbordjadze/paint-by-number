@@ -99,17 +99,22 @@ public struct SharedPainting: Sendable, Equatable {
     }
 
     /// The file's bytes, the template uncompressed.
-    public func encoded() -> Data { encoded(compression: .none) { $0 } }
+    public func encoded() throws -> Data { try encoded(compression: .none) { $0 } }
 
     /// The file's bytes. `compress` turns the encoded template into `compression`'s stream; it
-    /// isn't called for `.none`.
-    public func encoded(compression: Compression, compress: (Data) throws -> Data) rethrows -> Data {
+    /// isn't called for `.none`. Throws what `compress` throws, or an `EncodingError` when the
+    /// META chunk can't be written as a reader takes it (settings that aren't finite, or JSON
+    /// over `maximumMetaBytes`): a file nobody could open is never written. The title is written
+    /// as a reader would clean it, so no title is too long to send.
+    public func encoded(compression: Compression, compress: (Data) throws -> Data) throws -> Data {
         let raw = template.encoded()
         let payload = compression == .none ? raw : try compress(raw)
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        // A title and settings always encode.
-        let meta = (try? encoder.encode(Meta(title: title, settings: settings, sampleName: sampleName))) ?? Data()
+        let meta = try encoder.encode(Meta(title: Self.cleanTitle(title), settings: settings, sampleName: sampleName))
+        guard meta.count <= Self.maximumMetaBytes else {
+            throw EncodingError.invalidValue(meta.count, .init(codingPath: [], debugDescription: "META exceeds maximumMetaBytes"))
+        }
 
         var body = BinaryWriter()
         body.write(compression.rawValue)

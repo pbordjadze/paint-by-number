@@ -24,7 +24,7 @@ struct SharedPaintingTests {
         #expect(data.dropLast(10147).suffix(20) == Data([
             0x54, 0x4D, 0x50, 0x4C, 1, 0, 0, 0, 0xAB, 0x27, 0, 0, 0, 0, 0, 0, 0xA3, 0x27, 0, 0,
         ]))
-        #expect(shared.encoded() == data)
+        #expect(try shared.encoded() == data)
     }
 
     /// `Fixtures/shared-v1-photo.moonlight` was written by the encoder of the commit adding the
@@ -42,7 +42,7 @@ struct SharedPaintingTests {
         #expect(photo.startIndex == 0)
         // PHOT closes the file: its tag, flags 0 (optional) and length, then the photo.
         #expect(data.dropLast(663).suffix(12) == Data([0x50, 0x48, 0x4F, 0x54, 0, 0, 0, 0, 0x97, 0x02, 0, 0]))
-        #expect(shared.encoded() == data)
+        #expect(try shared.encoded() == data)
         // A reader that doesn't know PHOT would skip it: the painting without its photo.
         #expect(try Self.fixture().photo == nil)
     }
@@ -54,7 +54,7 @@ struct SharedPaintingTests {
 
     @Test func roundTripsCompressed() throws {
         let shared = try Self.fixture()
-        let data = shared.encoded(compression: .lzfse, compress: Self.reversed)
+        let data = try shared.encoded(compression: .lzfse, compress: Self.reversed)
         var asked: (SharedPainting.Compression, Int)?
         let decoded = try SharedPainting(encoded: data) { method, stream, length in
             asked = (method, length)
@@ -93,6 +93,20 @@ struct SharedPaintingTests {
         for bad in ["", "Great-Wave", "../wave", "wave.jpg", "wave name", String(repeating: "a", count: 65), "vågen"] {
             #expect(try decoded(bad) == nil, "\(bad)")
         }
+    }
+
+    /// A META no reader would take is never written: the encoder throws instead of sending a
+    /// file nobody can open. A title is never the reason, since it is written already cleaned.
+    @Test func unreadableMetaThrows() throws {
+        let template = try Self.fixture().template
+        var settings = GenerationSettings()
+        settings.detail = .nan
+        #expect(throws: EncodingError.self) { try SharedPainting(title: "A", settings: settings, template: template).encoded() }
+        let name = String(repeating: "a", count: SharedPainting.maximumMetaBytes)
+        #expect(throws: EncodingError.self) { try SharedPainting(title: "A", settings: nil, template: template, sampleName: name).encoded() }
+        let long = String(repeating: "é", count: 2 * SharedPainting.maximumMetaBytes)
+        #expect(try SharedPainting(encoded: SharedPainting(title: long, settings: nil, template: template).encoded()).title.count
+            == SharedPainting.maximumTitleLength)
     }
 
     // MARK: - Hostile input
