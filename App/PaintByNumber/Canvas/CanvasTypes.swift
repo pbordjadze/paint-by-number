@@ -123,8 +123,8 @@ nonisolated extension CanvasUniforms {
     /// time-lapse, feedback close-ups).
     init(_ frame: CanvasFrame) {
         self.init()
-        transform = SIMD4(frame.origin, frame.scale, frame.pointScale)
-        viewport = SIMD4(frame.targetSize, frame.canvasSize)
+        transform = SIMD4(frame.origin.x, frame.origin.y, frame.scale, frame.pointScale)
+        viewport = SIMD4(lowHalf: frame.targetSize, highHalf: frame.canvasSize)
         setChrome(frame.palette, shadowOpacity: frame.shadowOpacity, outlineOpacity: frame.outlineOpacity)
         if let paint = frame.selection?.paint { select(paint, palette: frame.palette) }
         outline = SIMD4(frame.outlineWidth, frame.selectedOutlineWidth, frame.hatch, frame.numbersShown)
@@ -135,7 +135,7 @@ nonisolated extension CanvasUniforms {
         labels = frame.labels
         numbers = frame.numbers
         time = frame.time
-        if let cursor = frame.brush { brush = SIMD4(cursor.center, cursor.radius, 1) }
+        if let cursor = frame.brush { brush = SIMD4(cursor.center.x, cursor.center.y, cursor.radius, 1) }
         shine = SIMD4(frame.shine.start, Float(frame.shine.color), 0, 0)
         ids = SIMD4(Int32(frame.selection?.color ?? -1), Int32(frame.hovered), Int32(frame.pulsing), Int32(frame.bumped))
         photo = SIMD4(frame.photoOpacity, 0, 0, 0)
