@@ -62,7 +62,7 @@
 //       "ink", Bend Line's, grabs drawn lines only, "edge", Move Edge's, the boundaries between
 //       cells only), Move Number (the number nearest `from` within its radius and "reach" moved
 //       to `to` in its own region, sized for the room there, clear of the region's other
-//       numbers), Refine's Colors (a look over every
+//       numbers), Refine's Looks and Edit Paint (a look over every
 //       paint, its lightness read from the template when the file gives none, or one paint
 //       repainted with or without its family; later edits bring their colors through them, as
 //       the app's trail does, but for an area's, a color of the template as it is then); a kind

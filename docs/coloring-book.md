@@ -290,8 +290,11 @@ smoothing, fitting). `TemplateEditor.apply(_:to:)` (`Sources/PaintCore/Edit/`, `
 Refine without it: the edit is made to the finished template, with no photo, edge map,
 segmentation, smoothing or fitting, so a line is the line drawn and everything the edit does not
 reach is bit for bit what it was. All points are canvas units; the edits are
-`draw(points, closed, paints)`, `split(points, closed, paints)`, `erase(path, radius)`,
-`eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
+`draw(points, closed, paints)`, `split(points, closed, paints)` (the retired Color Splitter's),
+`cellEdge(points, closed)`, `merge(points)`, `brush(path, radius, color)`,
+`reshape(from, to, reach, target)`, `moveLabel(from, to, reach)`, `erase(path, radius)`,
+`eraseLine(at, reach)`, `fill(at, color)`, `paintArea(at, color)`, `look(look, strength,
+lightness)` and `repaint(from, to, family)`, each below. They are `Codable` (a `kind`
 and its `points`, the shape `pbn edit` reads: `EditCoding.swift`), and `EditTrail` lays a list on a
 template and keeps the templates after the last few, so taking an edit back or putting it back
 costs no editing; an edit that does nothing on a template (declined, or nothing to change) is left
@@ -485,8 +488,11 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   never a stroke inside one; `any`, what a reshape saved without a target means, grabs either.
   The line nearest the drag's start within a finger's reach (an edge, not the canvas's frame, or
   a drawn stroke) that the target grabs is taken with the chain it continues into:
-  through every vertex where it and just one other edge alike (both inked, or both undrawn) end,
-  from junction to junction, as the Smart Eraser finds its line (`EditWork.reshapePlan`). Its
+  through every vertex where it and just one other edge alike (both inked, or both undrawn) end
+  (`EditWork.reshapePlan`). That is not the Line Eraser's junction: a tapped line (`eraseLine`)
+  counts the drawn lines ending at a vertex, strokes too, and no undrawn edge, so it runs on where
+  an undrawn edge meets it and stops where a stroke ends on it, where a chain grabbed here does
+  the opposite. Its
   point nearest the drag's start goes where the finger lifts, and every other point by the drag
   times a weight along the chain's length: 1 at the grabbed point, 0 a spread away, a smoothstep
   between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on every
@@ -542,9 +548,9 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   inner corners 0.4 of the way out, each stretched to the box as the oval is a circle stretched
   to it. The closed ones are sent as closed lines, their start once; new shapes go last in
   `RefineShape`, whose order the app lists them in.
-- **Colors** (`look`, `repaint`; `Recolor.swift`). Refine's Colors change paints alone: a look
-  over every paint (`TemplateEditor.Look`, at a strength), or one paint made another color, with
-  or without its family (the paints of about its hue, full within 30° and none past 60°, turning
+- **Looks and Edit Paint** (`look`, `repaint`; `Recolor.swift`). Refine's Looks and Edit Paint
+  change paints alone: a look over every paint (`TemplateEditor.Look`, at a strength), or one
+  paint made another color, with or without its family (the paints of about its hue, full within 30° and none past 60°, turning
   and growing as the swatch did; a gray's family is the colors within 0.1 of it). One swatch
   alone often looks wrong: the red parrot is six paints, and turning one of them blue leaves a
   patchy bird, which is why the family moves by default. Where a changed paint lands within a

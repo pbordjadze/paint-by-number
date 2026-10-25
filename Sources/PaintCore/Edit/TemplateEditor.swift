@@ -1,10 +1,13 @@
 import Foundation
 
-/// Manual editing of a coloring-book template, for the app's Refine screen: the painter's pen,
-/// eraser, line eraser and fill applied to a finished `Template`, and nothing else. No photo, no
-/// edge map, no segmentation, no smoothing or fitting is involved: a line is the polyline the
-/// painter drew (quantized to `Template.coordinateQuantum`), an erasure cuts the ink at the edge
-/// of the eraser's reach, a fill joins cells and picks a paint. Whatever an edit does not touch
+/// Manual editing of a coloring-book template, for the app's Refine screen: each of Refine's
+/// tools makes one of the `Edit`s below (the Pen and Shapes a draw, Cell Edge, Merge, the Paint
+/// Brush, Bend Line and Move Edge a reshape, Move Number, the Eraser, the Line Eraser, Fill, the
+/// Bucket and Only This Area, Looks and Edit Paint; a split is the retired Color Splitter's, kept
+/// so paintings made with it lay as they did) applied to a finished `Template`, and nothing else. No
+/// photo, no edge map, no segmentation, no smoothing or fitting is involved: a line is the
+/// polyline the painter drew (quantized to `Template.coordinateQuantum`), an erasure cuts the ink
+/// at the edge of the eraser's reach, a fill joins cells and picks a paint. Whatever an edit does not touch
 /// stays as it was, byte for byte: regions, outlines, fills, numbers, paints. Edits are exact
 /// on the quantum grid (`Lattice`), so the same edits give the same template on every device,
 /// and a template that validates before an edit validates after it
@@ -31,7 +34,8 @@ import Foundation
 ///   (`paintTolerance`), else a new paint of that color added last. Where that leaves one paint
 ///   on both sides of the line and the photo tells the sides apart, the side farther from it
 ///   takes its photo's color, or a shade of the paint toward it (`EditWork.paint`).
-/// - **Split.** The Color Splitter's line, laid as a draw with paints is, but as an undrawn
+/// - **Split.** The retired Color Splitter's line (no tool makes one now; a split saved before is
+///   laid as ever), laid as a draw with paints is, but as an undrawn
 ///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
 ///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
 ///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
@@ -91,7 +95,7 @@ import Foundation
 ///   an undrawn boundary the two become one area. Its color is one of the template on screen
 ///   (Refine's picker and palette chips read it with every look in it), so looks and repaints
 ///   laid before it leave it as sent: a paint's own color lands on that paint.
-/// - **Look, repaint.** Paints alone change color (Refine's Colors): a look over all of them, or
+/// - **Look, repaint.** Paints alone change color (Refine's Looks and Edit Paint): a look over all of them, or
 ///   one paint with or without its family (`recolor(_:by:)`). Paints that land within a
 ///   just-noticeable difference of each other become one, and areas that then share a paint
 ///   across an undrawn boundary one area. Edits laid after one bring their colors through it
