@@ -7,9 +7,9 @@ import Vision
 
 /// Builds a per-pixel importance map (0…1) from on-device Vision analysis, so the template
 /// pipeline spends colors and detail where people look: faces and animals first, then the
-/// subject, then salient background. The same findings (`SubjectVision`, one pass per photo,
-/// shared with the coloring book's eyes and silhouettes) yield the `SubjectHints` that Suggested
-/// settings read (`AutoSettings.choose`).
+/// subject, then salient background. The same findings (`SubjectVision`, one pass a photo,
+/// shared with the coloring book's eyes and silhouettes asked for meanwhile) yield the
+/// `SubjectHints` that Suggested settings read (`AutoSettings.choose`).
 nonisolated enum SubjectImportance {
     /// Long side of the returned map; the pipeline resamples it to the working size.
     static let resolution = 256

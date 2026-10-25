@@ -84,8 +84,8 @@ synchronized folder would bundle it into the app.
   `Sample`, `GalleryQuery`, `GalleryCounts`, `IncomingFile`, `SharedPaintingCodec`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`), `UnlimitedPaintings` and `FreePaintings`
   (see Unlimited Paintings); DEBUG `DemoTemplateCache`, `UnlockStoreStub`.
-- `Generation/`: `PhotoLoader`, `SubjectVision` (one Vision pass per photo for the three after
-  it), `SubjectImportance`, `EdgeDetector`, `EyeFinder`,
+- `Generation/`: `PhotoLoader`, `SubjectVision` (one Vision pass a photo, shared by the three after
+  it while it runs), `SubjectImportance`, `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
   `CanvasTypes.swift`, `LineStyle.swift` (`ClassicLook`, `ColoringBookLook`, `DrawableLineArt`),
