@@ -100,7 +100,7 @@ struct CreateModelTests {
         try await waitUntil { model.phase == .suggesting }
         model.cancelAll()
         let shown = model.preview?.id
-        try await Task.sleep(for: .seconds(3))
+        await model.settled()
         #expect(model.decision == nil && model.settingsOrigin == nil)
         #expect(model.preview?.id == shown)
     }
@@ -165,7 +165,7 @@ struct CreateModelTests {
         #expect(model.phase == .failed(CreateModel.CreateError.cameraCapture.localizedDescription))
         #expect(model.source == nil && model.preview == nil && model.stats == nil)
         #expect(model.decision == nil && model.settingsOrigin == nil)
-        try await Task.sleep(for: .milliseconds(300))
+        await model.settled()
         #expect(model.preview == nil)
     }
 
@@ -176,7 +176,7 @@ struct CreateModelTests {
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.phase == .generating }
         model.fail(.cameraCapture)
-        try await Task.sleep(for: .seconds(3))
+        await model.settled()
         #expect(model.rememberedBases == 0 && model.preview == nil)
 
         model.load(sample: try #require(Sample.named("red-fox")))
@@ -347,7 +347,7 @@ struct CreateModelTests {
         #expect(!model.isWaitingToRefine, "A touch on a slider left the wait on")
         model.setAdjusting(false)
         try await waitUntil(timeout: .seconds(60)) { model.isFinal }
-        try await Task.sleep(for: .milliseconds(200))
+        await model.settled()
         #expect(!model.opensRefine, "Refine opened by itself after the sliders were touched")
 
         model.colorCount = model.colorCount < 20 ? 28 : 12
@@ -416,7 +416,7 @@ struct CreateModelTests {
         #expect(model.isAdjusting && model.preview?.settings?.colorCount == 9)
         let shown = model.preview?.id
         model.setAdjusting(false)
-        try await Task.sleep(for: .milliseconds(400))
+        await model.settled()
         #expect(model.preview?.id == shown, "Letting go generated the same settings again")
         #expect(model.phase == .ready)
     }
