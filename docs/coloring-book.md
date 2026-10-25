@@ -491,8 +491,8 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   through every vertex where it and just one other edge alike (both inked, or both undrawn) end
   (`EditWork.reshapePlan`). That is not the Line Eraser's junction: a tapped line (`eraseLine`)
   counts the drawn lines ending at a vertex, strokes too, and no undrawn edge, so it runs on where
-  an undrawn edge meets it and stops where a stroke ends on it, where a chain grabbed here does
-  the opposite. Its
+  an undrawn edge ends at a vertex of it and stops where a stroke does, where a chain of drawn
+  edges grabbed here does the opposite. Its
   point nearest the drag's start goes where the finger lifts, and every other point by the drag
   times a weight along the chain's length: 1 at the grabbed point, 0 a spread away, a smoothstep
   between (`falloff`, the raised cosine's cubic twin in `+ - *` alone, so the same on every

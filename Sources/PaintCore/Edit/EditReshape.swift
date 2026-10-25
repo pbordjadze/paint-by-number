@@ -140,7 +140,7 @@ extension EditWork {
     /// frame), drawn or undrawn, continued through every vertex where it and one other edge alike
     /// (both drawn, or both undrawn) end, every edge counted and no stroke (the Line Eraser's
     /// `eraseLine` counts drawn edges and strokes alone, so its line runs on past an undrawn edge
-    /// and stops at a stroke's end); or a drawn stroke. Its point nearest `from` goes to `to` and
+    /// and stops at a vertex where a stroke ends); or a drawn stroke. Its point nearest `from` goes to `to` and
     /// the rest follows, each point by the drag times its weight (`falloff`) along the chain's
     /// length: 1 at the grabbed point, 0 a spread away (`reshapeSpread`, or three times the drag)
     /// or at the chain's end if that is nearer, which stays on its junction; beyond, the chain

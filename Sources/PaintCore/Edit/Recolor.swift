@@ -1,7 +1,7 @@
 import Foundation
 
 extension TemplateEditor {
-    /// A look laid over a whole painting's paints (Refine's Looks and Edit Paint): each is a fixed function of
+    /// A look laid over a whole painting's paints (Refine's Looks): each is a fixed function of
     /// a color, so a paint a later edit brings (a drawn line's piece, a fill) takes the look too
     /// (`recolor(_:by:)`). A look's math is frozen once it ships, like a file format: a painting
     /// records the look's name and must lay the same paints in every later build. A retuned look
