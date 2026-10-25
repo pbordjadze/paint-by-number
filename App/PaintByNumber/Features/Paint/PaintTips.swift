@@ -277,17 +277,17 @@ enum PaintTips {
     /// The tip the running scenario shows.
     static var demoTip: TipID? { DemoMode.forcedTip ?? DemoMode.scenario.flatMap { demoScenarios[$0] }?.tip }
 
-    /// Every count a tip's rules wait for, so that whichever tip a `--tip-` scenario forces is
-    /// eligible.
+    /// Every event 20 times, more than any tip's rule waits for, so that whichever tip a `--tip-`
+    /// scenario forces is eligible. The counts themselves are written only in the rules, since
+    /// TipKit's `#Rule` takes a literal and this list can't share it; every rule is a `>=`.
     private static func donateEveryRule() {
-        let counts: [(Tips.Event<Tips.EmptyDonation>, Int)] = [
-            (TipEvents.smallMisses, 2), (TipEvents.singleTaps, 15), (TipEvents.pencilStrokes, 1), (TipEvents.stalls, 1),
-            (TipEvents.quarters, 1), (TipEvents.finishes, 1), (TipEvents.sessions, 1), (TipEvents.pagesMade, 2),
-            (TipEvents.sliderReleases, 1), (TipEvents.linesDrawn, 1),
+        let events = [
+            TipEvents.smallMisses, TipEvents.singleTaps, TipEvents.pencilStrokes, TipEvents.stalls, TipEvents.quarters,
+            TipEvents.finishes, TipEvents.sessions, TipEvents.pagesMade, TipEvents.sliderReleases, TipEvents.linesDrawn,
         ]
         Task {
-            for (event, count) in counts {
-                for _ in 0..<count { await event.donate() }
+            for event in events {
+                for _ in 0..<20 { await event.donate() }
             }
         }
     }
