@@ -35,10 +35,10 @@ import Foundation
 ///   (`paintTolerance`), else a new paint of that color added last. Where that leaves one paint
 ///   on both sides of the line and the photo tells the sides apart, the side farther from it
 ///   takes its photo's color, or a shade of the paint toward it (`EditWork.paint`).
-/// - **Split.** The retired Color Splitter's line (no tool in the app makes one now; a split saved before is
-///   laid as ever), laid as a draw with paints is, but as an undrawn
-///   boundary (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge,
-///   the drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
+/// - **Split.** The retired Color Splitter's line (no tool in the app makes one now; a split
+///   saved before is laid as ever), laid as a draw with paints is, but as an undrawn boundary
+///   (`LineLayer.color`): it divides the paint and draws nothing. Its ends meet any edge, the
+///   drawing's strokes are no part of it, and a stretch that closes nothing leaves nothing.
 ///   Each piece takes the photo's color there as a drawn line's pieces do (`paintTolerance`),
 ///   else a new paint; a split that divides no area, or leaves the same paint on both sides of its boundary,
 ///   is declined.
