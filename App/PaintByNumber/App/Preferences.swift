@@ -38,6 +38,24 @@ enum SettingsKey {
     static let refineBrushSize = "refineBrushSize"
 }
 
+/// What each switch of `SettingsKey` is until the painter sets it, written once: the `@AppStorage`
+/// declarations and the code reading `UserDefaults` itself start from these. The keys whose
+/// values are a type of their own keep their default on it (`PaintingLength.default`,
+/// `SkySetting.default`, `PaperAppearance.default`, `LineWeight.default`, `PreviewStyle.default`,
+/// `PaletteRows.default`, `PaletteOrder.default`).
+nonisolated enum SettingsDefault {
+    static let haptics = true
+    static let sounds = true
+    static let autoAdvance = true
+    static let zenMode = false
+    static let playsMakingOf = false
+    static let tipsEnabled = true
+    static let previewShowsSettings = false
+    static let refineSnaps = true
+    static let refinePenColors = false
+    static let refineBrushSize = Double(RefineGestures.brushSize)
+}
+
 /// The preferences that code outside views reads (the create flow), with their defaults; views
 /// bind the other keys with `@AppStorage` (a painting's session takes its settings from
 /// `PaintView`, whoever presents it).
@@ -53,7 +71,9 @@ struct Preferences {
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
         previewStyle = PreviewStyle.stored(in: defaults)
-        playsMakingOf = defaults.bool(forKey: SettingsKey.playsMakingOf)
+        // `bool(forKey:)` reads a launch argument's `YES` too.
+        playsMakingOf = defaults.object(forKey: SettingsKey.playsMakingOf) == nil
+            ? SettingsDefault.playsMakingOf : defaults.bool(forKey: SettingsKey.playsMakingOf)
     }
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,
