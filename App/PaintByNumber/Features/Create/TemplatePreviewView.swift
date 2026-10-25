@@ -35,7 +35,7 @@ struct TemplatePreviewView: View {
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
     /// The painter opened Adjust, and the card shows its settings from then on (`foldsSettings`).
-    @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = false
+    @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(UnlimitedPaintings.self) private var paintings

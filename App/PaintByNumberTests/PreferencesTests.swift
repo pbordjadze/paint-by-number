@@ -5,13 +5,46 @@ import Testing
 
 @MainActor
 struct PreferencesTests {
-    /// The persisted key strings: renaming one would forget every painter's switch. Advance to
-    /// Next Color reaches a painting's session from `PaintView`, whoever presents it (the gallery,
-    /// Refine's Try Painting), as Zen Mode and the palette's order do.
+    /// The persisted key strings, every one: renaming one would forget every painter's switch.
+    /// Advance to Next Color reaches a painting's session from `PaintView`, whoever presents it
+    /// (the gallery, Refine's Try Painting), as Zen Mode and the palette's order do.
     @Test func settingKeys() {
-        #expect(SettingsKey.haptics == "hapticsEnabled" && SettingsKey.sounds == "soundsEnabled")
-        #expect(SettingsKey.autoAdvance == "autoAdvanceColors")
-        #expect(PaintingSession(template: Fixtures.stripes()).autoAdvance)
+        let keys = [
+            SettingsKey.haptics, SettingsKey.sounds, SettingsKey.sky, SettingsKey.autoAdvance,
+            SettingsKey.zenMode, SettingsKey.paintingLength, SettingsKey.paperAppearance,
+            SettingsKey.paletteRows, SettingsKey.paletteOrder, SettingsKey.lineWeight,
+            SettingsKey.previewStyle, SettingsKey.playsMakingOf, SettingsKey.tipsEnabled,
+            SettingsKey.previewShowsSettings, SettingsKey.refineSnaps, SettingsKey.refinePenColors,
+            SettingsKey.refineBrushSize,
+        ]
+        #expect(keys == [
+            "hapticsEnabled", "soundsEnabled", "sky", "autoAdvanceColors",
+            "zenMode", "paintingLength", "paperAppearance",
+            "paletteRows", "paletteOrder", "lineWeight",
+            "previewStyle", "playsMakingOf", "tipsEnabled",
+            "previewShowsSettings", "refineSnaps", "refinePenColors",
+            "refineBrushSize",
+        ])
+        // No retired key comes back as a current one: launch would remove the painter's choice.
+        #expect(Set(keys).isDisjoint(with: Preferences.retiredKeys))
+        #expect(PaintingSession(template: Fixtures.stripes()).autoAdvance == SettingsDefault.autoAdvance)
+    }
+
+    /// What each switch is until the painter sets it: haptics, sounds, Advance to Next Color,
+    /// Tips and Refine's Snap on; Zen Mode, the Making-of, the preview's settings and Color from
+    /// Photo off. The code reading `UserDefaults` itself agrees with the `@AppStorage` views.
+    @Test func settingDefaults() throws {
+        #expect(SettingsDefault.haptics && SettingsDefault.sounds && SettingsDefault.autoAdvance)
+        #expect(SettingsDefault.tipsEnabled && SettingsDefault.refineSnaps)
+        #expect(!SettingsDefault.zenMode && !SettingsDefault.playsMakingOf)
+        #expect(!SettingsDefault.previewShowsSettings && !SettingsDefault.refinePenColors)
+        #expect(SettingsDefault.refineBrushSize == Double(RefineGestures.brushSize))
+
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        #expect(TipPreference.isEnabled(in: defaults) == SettingsDefault.tipsEnabled)
+        #expect(Preferences(defaults: defaults).playsMakingOf == SettingsDefault.playsMakingOf)
     }
 
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments

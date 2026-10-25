@@ -5,17 +5,17 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
-    @AppStorage(SettingsKey.haptics) private var haptics = true
-    @AppStorage(SettingsKey.sounds) private var sounds = true
+    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = SettingsDefault.autoAdvance
+    @AppStorage(SettingsKey.haptics) private var haptics = SettingsDefault.haptics
+    @AppStorage(SettingsKey.sounds) private var sounds = SettingsDefault.sounds
     @AppStorage(SettingsKey.sky) private var sky = SkySetting.default
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     /// On until switched off here (`TipPreference`).
-    @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = true
-    @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = false
+    @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = SettingsDefault.tipsEnabled
+    @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var path: [Destination] = []
     @State private var isUnlocking = false
