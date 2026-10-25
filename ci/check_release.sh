@@ -35,21 +35,22 @@ sources = sorted((root / "App/PaintByNumber").rglob("*.swift"))
 def setting(block, name):
     m = re.search(r"\b%s = (\"[^\"]*\"|[^;]*);" % name, block)
     return shlex.split(m.group(1).strip('"')) if m else []
-blocks = [b for b in re.findall(r"isa = XCBuildConfiguration;(.*?)name = Release;", project, re.S)
-          if "EXCLUDED_SOURCE_FILE_NAMES" in b]
+# Each configuration is `isa`, then its `buildSettings = { … };` (no braces inside), then its name.
+configurations = re.findall(r"isa = XCBuildConfiguration;\s*buildSettings = \{([^{}]*)\};\s*name = (\w+);", project)
+blocks = [b for b, name in configurations if name == "Release" and "EXCLUDED_SOURCE_FILE_NAMES" in b]
 if len(blocks) != 1: sys.exit("expected one Release configuration with EXCLUDED_SOURCE_FILE_NAMES, found %d" % len(blocks))
 excluded, included = setting(blocks[0], "EXCLUDED_SOURCE_FILE_NAMES"), setting(blocks[0], "INCLUDED_SOURCE_FILE_NAMES")
 def matches(path, patterns): return any(fnmatch.fnmatchcase(path.name, p) for p in patterns)
 left_out = [p for p in sources if matches(p, excluded) and not matches(p, included)]
 def debug_only(path):
-    lines = [l.strip() for l in path.read_text().splitlines()]
-    code = [l for l in lines if l and not l.startswith("//") and not l.startswith("import ")]
-    if not code or code[0] != "#if DEBUG": return False
+    text = re.sub(r"/\*.*?\*/", "", path.read_text(), flags=re.S)
+    lines = [l.split("//")[0].strip() for l in text.splitlines()]
+    code = [l for l in lines if l and not l.startswith("import ")]
     depth = 0
-    for i, l in enumerate(code):
+    for l in code:
+        if depth == 0 and l != "#if DEBUG": return False
         depth += l.startswith("#if ") - (l == "#endif")
-        if depth == 0: return i == len(code) - 1
-    return False
+    return bool(code) and depth == 0
 declaration = re.compile(r"^(?:(?:public|internal|private|fileprivate|final|nonisolated|indirect|@\w+(?:\([^)]*\))?) +)*(?:struct|class|enum|actor|protocol) +(\w+)", re.M)
 files = left_out + [p for p in sources if debug_only(p)]
 if not left_out or len(files) == len(left_out): sys.exit("found no excluded or no Debug-only files: the check would check nothing")
@@ -57,12 +58,12 @@ for path in files:
     for name in declaration.findall(path.read_text()):
         print(name, path.relative_to(root))
 PY
-# A type's name is a string of its own in the binary (its descriptor) and inside mangled names
-# (`13PaintDemoView`), never with a digit just before the length or a lowercase letter after the
-# name, so a shipped type that merely contains the name (`DemoTemplate` in `DemoTemplateCache`)
-# doesn't count.
+# A type's descriptor holds its name as a C string of its own, so a whole line of the strings.
+# Mangled names are no test: they abbreviate words already seen (`PaletteBuilder` can hold
+# `7Builder`), and a shipped type that merely contains the name (`DemoTemplate` in
+# `DemoTemplateCache`) must not count.
 while read -r name file; do
-  if grep -qE "^${name}\$|(^|[^0-9])${#name}${name}([^a-z]|\$)" "$WORK/strings.txt"; then
+  if grep -qxF "$name" "$WORK/strings.txt"; then
     fail "the Release binary contains $name ($file)"
   fi
 done < "$WORK/types.txt"
