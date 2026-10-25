@@ -90,12 +90,12 @@ nonisolated enum LineArtInputs {
 
     @concurrent
     private static func findEyes(in image: CGImage) async -> [[SIMD2<Float>]] {
-        EyeFinder.eyes(in: image)
+        await EyeFinder.eyes(in: image)
     }
 
     @concurrent
     private static func findObjects(in image: CGImage) async -> [[SIMD2<Float>]] {
-        ObjectFinder.objects(in: image)
+        await ObjectFinder.objects(in: image)
     }
 
     @concurrent

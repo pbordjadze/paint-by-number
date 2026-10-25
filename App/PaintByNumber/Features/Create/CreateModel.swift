@@ -1284,7 +1284,7 @@ final class CreateModel {
     @concurrent
     private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings) async throws -> Prepared {
         async let input = LineArtInputs.forGeneration(of: decoded.preview, settings: lineArt, cached: true)
-        let subject = SubjectImportance.analyze(decoded.preview)
+        let subject = await SubjectImportance.analyze(decoded.preview)
         let draft = AutoSettings.draftImage(from: decoded.image)
         return Prepared(importance: subject.map, hints: subject.hints, draft: draft, lineArt: try await input)
     }

@@ -1,12 +1,14 @@
 import CoreGraphics
 import CoreVideo
 import Foundation
+import os
 import PaintCore
 import Vision
 
 /// Builds a per-pixel importance map (0…1) from on-device Vision analysis, so the template
 /// pipeline spends colors and detail where people look: faces and animals first, then the
-/// subject, then salient background. The same pass yields the `SubjectHints` that Suggested
+/// subject, then salient background. The same findings (`SubjectVision`, one pass per photo,
+/// shared with the coloring book's eyes and silhouettes) yield the `SubjectHints` that Suggested
 /// settings read (`AutoSettings.choose`).
 nonisolated enum SubjectImportance {
     /// Long side of the returned map; the pipeline resamples it to the working size.
@@ -19,8 +21,8 @@ nonisolated enum SubjectImportance {
     }
 
     /// The importance map alone. Nil when Vision can't help.
-    static func map(for image: CGImage) -> Grid<Float>? {
-        analyze(image).map
+    static func map(for image: CGImage) async -> Grid<Float>? {
+        await analyze(image).map
     }
 
     /// Hints from Vision's observations: rects (normalized, bottom-left origin, as Vision
@@ -43,38 +45,35 @@ nonisolated enum SubjectImportance {
         return SubjectHints(faces: normalized(faces), animals: normalized(animals))
     }
 
-    /// The importance map and the subject hints, from one pass of Vision requests.
-    static func analyze(_ image: CGImage) -> Analysis {
-        let aspect = Double(image.width) / Double(image.height)
+    /// The size of the map for a `width` × `height` photo: `resolution` on the long side.
+    static func mapSize(width: Int, height: Int) -> (width: Int, height: Int) {
+        let aspect = Double(width) / Double(height)
         let w = aspect >= 1 ? resolution : max(1, Int(Double(resolution) * aspect))
         let h = aspect >= 1 ? max(1, Int(Double(resolution) / aspect)) : resolution
+        return (w, h)
+    }
 
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        let foreground = VNGenerateForegroundInstanceMaskRequest()
-        let faces = VNDetectFaceRectanglesRequest()
-        let animals = VNRecognizeAnimalsRequest()
-        let saliency = VNGenerateAttentionBasedSaliencyImageRequest()
-        let requests: [VNRequest] = [foreground, faces, animals, saliency]
-        // Run independently: one failing request (common on simulators) shouldn't sink the rest.
-        for request in requests {
-            try? handler.perform([request])
-        }
+    /// The importance map and the subject hints of `image`, from its `SubjectVision` findings.
+    static func analyze(_ image: CGImage) async -> Analysis {
+        let size = mapSize(width: image.width, height: image.height)
+        return analysis(of: await SubjectVision.findings(in: image), width: size.width, height: size.height)
+    }
 
+    /// The importance map (`width` × `height`, the photo's `mapSize`) and the hints of `found`.
+    static func analysis(of found: SubjectVision.Findings, width w: Int, height h: Int) -> Analysis {
         var map = Grid<Float>(width: w, height: h, repeating: 0.25)
         var informative = false
 
-        if let heat = saliency.results?.first?.pixelBuffer, let sampled = sample(heat, width: w, height: h) {
+        if let sampled = found.saliency, sampled.width == w, sampled.height == h {
             for i in 0..<map.count { map.storage[i] = max(map.storage[i], 0.2 + 0.4 * sampled.storage[i]) }
             informative = true
         }
-        if let observation = foreground.results?.first,
-           let mask = try? observation.generateScaledMaskForImage(forInstances: observation.allInstances, from: handler),
-           let sampled = sample(mask, width: w, height: h) {
+        if let sampled = found.foreground, sampled.width == w, sampled.height == h {
             for i in 0..<map.count { map.storage[i] = max(map.storage[i], 0.75 * sampled.storage[i]) }
             informative = true
         }
-        let faceBoxes = (faces.results ?? []).map(\.boundingBox)
-        let animalBoxes = (animals.results ?? []).map(\.boundingBox)
+        let faceBoxes = found.faces.observations.map(\.boundingBox)
+        let animalBoxes = found.animals
         for box in faceBoxes + animalBoxes {
             emphasize(&map, around: box)
             informative = true
@@ -102,9 +101,12 @@ nonisolated enum SubjectImportance {
     }
 
     /// Box-samples a one-channel pixel buffer (8-bit or float) into a w×h grid in 0…1.
-    private static func sample(_ buffer: CVPixelBuffer, width w: Int, height h: Int) -> Grid<Float>? {
+    static func sample(_ buffer: CVPixelBuffer, width w: Int, height h: Int) -> Grid<Float>? {
         let format = CVPixelBufferGetPixelFormatType(buffer)
-        guard format == kCVPixelFormatType_OneComponent32Float || format == kCVPixelFormatType_OneComponent8 else { return nil }
+        guard format == kCVPixelFormatType_OneComponent32Float || format == kCVPixelFormatType_OneComponent8 else {
+            Log.create.error("Vision's map in an unexpected pixel format \(format)")
+            return nil
+        }
         CVPixelBufferLockBaseAddress(buffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(buffer) else { return nil }

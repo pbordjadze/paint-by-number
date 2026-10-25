@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PaintCore
 import Testing
+import Vision
 @testable import PaintByNumber
 
 struct SubjectImportanceTests {
@@ -40,9 +41,34 @@ struct SubjectImportanceTests {
         #expect(SubjectImportance.hints(faces: [], animals: []) == SubjectHints())
     }
 
+    /// The map from `SubjectVision`'s findings: saliency lifts the floor, the foreground mask
+    /// lifts the subject higher, a face or an animal nearly to 1; no findings, no map.
+    @Test func mapIsMadeFromTheFindings() throws {
+        let size = SubjectImportance.mapSize(width: 400, height: 200)
+        #expect(size.width == SubjectImportance.resolution && size.height == SubjectImportance.resolution / 2)
+        let w = size.width, h = size.height
+        #expect(SubjectImportance.analysis(of: SubjectVision.Findings(), width: w, height: h).map == nil)
+
+        var foreground = PaintCore.Grid<Float>(width: w, height: h, repeating: 0)
+        for y in 0..<h { for x in 0..<(w / 2) { foreground[x, y] = 1 } }
+        var found = SubjectVision.Findings(
+            saliency: PaintCore.Grid<Float>(width: w, height: h, repeating: 0.5), foreground: foreground)
+        // Vision's origin is at the bottom left: this face sits in the top right quarter.
+        found.faces.observations = [VNFaceObservation(boundingBox: CGRect(x: 0.7, y: 0.6, width: 0.1, height: 0.2))]
+        found.animals = [CGRect(x: 0.3, y: 0.1, width: 0.1, height: 0.2)]
+        let analysis = SubjectImportance.analysis(of: found, width: w, height: h)
+        let map = try #require(analysis.map)
+        #expect(map.width == w && map.height == h)
+        #expect(abs(map[w - 1, h - 1] - 0.4) < 1e-6, "saliency alone")
+        #expect(abs(map[0, h - 1] - 0.75) < 1e-6, "the subject")
+        #expect(map[w * 3 / 4, h * 3 / 10] > 0.95, "the face")
+        #expect(analysis.hints == SubjectImportance.hints(faces: [CGRect(x: 0.7, y: 0.6, width: 0.1, height: 0.2)],
+                                                          animals: found.animals))
+    }
+
     /// A plain synthetic image: Vision finds no faces or animals (and may find nothing at all
     /// on a simulator). The analysis still returns well-formed hints, never a crash.
-    @Test func analysisOfAnImageWithoutSubjectsGivesWellFormedHints() throws {
+    @Test func analysisOfAnImageWithoutSubjectsGivesWellFormedHints() async throws {
         let width = 320, height = 240
         let context = try #require(CGContext(
             data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
@@ -53,7 +79,7 @@ struct SubjectImportanceTests {
         context.fill(CGRect(x: 0, y: 0, width: width, height: height / 3))
         let image = try #require(context.makeImage())
 
-        let analysis = SubjectImportance.analyze(image)
+        let analysis = await SubjectImportance.analyze(image)
         #expect(analysis.hints.faces.isEmpty)
         #expect(analysis.hints.animals.isEmpty)
         if let map = analysis.map {

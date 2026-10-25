@@ -68,7 +68,8 @@ nonisolated enum ArtworkFactory {
         if refinements.start == .blank {
             return try laying(refinements.edits, on: blank(from: photo, settings: settings))
         }
-        let importance = image.flatMap(SubjectImportance.map(for:))
+        var importance: PaintCore.Grid<Float>?
+        if let image { importance = await SubjectImportance.map(for: image) }
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
         let inputs = refinements.refining(
