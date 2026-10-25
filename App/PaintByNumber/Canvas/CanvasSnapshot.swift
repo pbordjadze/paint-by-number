@@ -116,29 +116,24 @@ nonisolated enum CanvasSnapshot {
         let shown = rect.map { (x: Float($0.minX), y: Float($0.minY), w: Float($0.width), h: Float($0.height)) }
             ?? (x: 0, y: 0, w: canvasW, h: canvasH)
         let scale = min(Float(w) / shown.w, Float(h) / shown.h)
-        let palette = options.palette
-        var u = CanvasUniforms()
-        u.transform = SIMD4(
-            (Float(w) - shown.w * scale) / 2 - shown.x * scale, (Float(h) - shown.h * scale) / 2 - shown.y * scale, scale, 1)
-        u.viewport = SIMD4(Float(w), Float(h), canvasW, canvasH)
-        u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
+        let highlight = options.highlight.flatMap { $0 >= 0 && $0 < scene.paletteLinear.count ? $0 : nil }
         let width = options.outlineWidth * (rect == nil ? max(scale, 0.25) : min(max(scale, 0.25), closeUpLineScale))
-        u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
-        if scene.isColoringBook {
-            let weight = (options.lineWeight ?? .stored()).factor
-            u.setColoringBookLines(width: width * ColoringBookLook.widthFactor * weight)
-        } else {
-            u.setClassicLines()
-        }
-        u.labels = SIMD4(5, 7, rect == nil ? .greatestFiniteMagnitude : closeUpMaxFontPixels, 0)
-        u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
-        u.time = SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never)
-        if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {
-            u.select(scene.paletteLinear[color], palette: palette)
-            u.ids.x = Int32(color)
-            u.outline.z = 1
-        }
-        return u
+        let lines: CanvasFrame.Lines = scene.isColoringBook
+            ? .coloringBook(width: width * ColoringBookLook.widthFactor * (options.lineWeight ?? .stored()).factor)
+            : .classic
+        return CanvasUniforms(CanvasFrame(
+            origin: SIMD2((Float(w) - shown.w * scale) / 2 - shown.x * scale, (Float(h) - shown.h * scale) / 2 - shown.y * scale),
+            scale: scale, pointScale: 1,
+            targetSize: SIMD2(Float(w), Float(h)), canvasSize: SIMD2(canvasW, canvasH),
+            palette: options.palette, shadowOpacity: 0, outlineOpacity: options.palette.outlineOpacity,
+            outlineWidth: width, selectedOutlineWidth: width, hatch: highlight == nil ? 0 : 1,
+            numbersShown: options.numbers ? 1 : 0, lines: lines,
+            labels: SIMD4(5, 7, rect == nil ? .greatestFiniteMagnitude : closeUpMaxFontPixels, 0),
+            numbers: SIMD4(0.8, 0.9, 0.04, 0),
+            time: SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never),
+            selection: highlight.map { (color: $0, paint: scene.paletteLinear[$0]) },
+            hovered: -1, pulsing: -1, bumped: -1, brush: nil, shine: (start: CanvasClock.never, color: -1),
+            photoOpacity: 0))
     }
 
     /// Output size for a template fitted into `longSide` pixels.
