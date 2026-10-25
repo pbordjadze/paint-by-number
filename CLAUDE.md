@@ -302,7 +302,8 @@ Saved paintings must open in every later build. The format history is documented
 
 ## App rules
 
-- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI). Swift 6 with
+- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI; named once, in `ci/xcode.sh`, and
+  the simulators run its SDK's iOS). Swift 6 with
   `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are MainActor
   by default; mark pure/background helpers `nonisolated` and CPU-heavy async work `@concurrent`.
   PaintCore is a separate module (nonisolated). The test targets have neither setting: their suites
@@ -364,8 +365,8 @@ Saved paintings must open in every later build. The format history is documented
   and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
-  `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
-  shows up in the Release binary. The Making-of ships (its screen and Settings switch have no
+  `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a type of a file wholly in
+  `#if DEBUG`, or of one Release excludes, shows up in the Release binary (both read from the sources). The Making-of ships (its screen and Settings switch have no
   `#if`; `making-of.json` is bundled, which the same check requires). The Marginarium is in no
   build (the Map), and the same check fails if any of it comes back. Refine is left out of the
   release for now (October 21, until a good one is ready): its button, tip and the gallery's draft

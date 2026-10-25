@@ -85,7 +85,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
   BUNDLE_ID: com.pbordjadze.paintbynumber
@@ -112,6 +111,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { persist-credentials: false }
+      - name: Xcode
+        run: ci/xcode.sh
       - name: Check inputs and credentials
         env:
           HAS_OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}

@@ -2,12 +2,12 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
-# behind Settings' The Making-of ships), nothing of the Marginarium, none of Refine's screen, and none of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
-# template caches of demo and test launches, their main-thread watchdog, the feedback upload stub
-# and its `-feedback-upload` launch argument, the App Store's stub and its `-demo…` arguments):
-# those types are compiled out of Release by `#if DEBUG`.
+# behind Settings' The Making-of ships), nothing of the Marginarium, none of what the project leaves
+# out of Release, and none of the Debug-only code. Run from the repository: the types it looks for
+# are read from the sources, so a file added to either set is checked without an edit here.
 set -euo pipefail
 APP="$1"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BINARY="$APP/$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Info.plist")"
 failed=0
 fail() { echo "FAIL: $*"; failed=1; }
@@ -17,17 +17,60 @@ plutil -lint "$APP/PrivacyInfo.xcprivacy" || fail "PrivacyInfo.xcprivacy is not 
 [[ "$(/usr/libexec/PlistBuddy -c "Print ITSAppUsesNonExemptEncryption" "$APP/Info.plist")" == "false" ]] \
   || fail "ITSAppUsesNonExemptEncryption is not false"
 
-# Type names survive in the binary as mangled metadata (`13PaintDemoView`), the
-# ready-marker and folder names as plain strings (`LineArtMaps` is the maps cache's type,
-# `DemoTemplates`; `FeedbackUploadStub` the feedback stub's, `feedback-upload` the launch argument
-# that picks it; `UnlockStoreStub` the App Store's, `demoFreePaintings`, `demoUnlocked` and
-# `demoPurchase` its arguments). Stripping first drops the debug map, which names every object file whether
-# or not it compiled to anything.
+# Strings left after stripping, which drops the debug map (it names every object file whether or
+# not it compiled to anything).
 WORK="$(mktemp -d)"
 strip -S -x -o "$WORK/binary" "$BINARY"
 strings -a "$WORK/binary" > "$WORK/strings.txt"
-for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog FeedbackUploadStub feedback-upload \
-              UnlockStoreStub demoFreePaintings demoUnlocked demoPurchase; do
+
+# The top-level types of two sets of files, each line "<name> <file>": the files the app target's
+# Release EXCLUDED_SOURCE_FILE_NAMES leaves out (less its INCLUDED_SOURCE_FILE_NAMES: Refine's
+# screen and the gallery's draft row, which SideStore builds carry, CLAUDE.md › App rules), and the
+# files whose code is wholly inside `#if DEBUG` (the demo and test launches' code).
+python3 - "$ROOT" > "$WORK/types.txt" <<'PY'
+import fnmatch, pathlib, re, shlex, sys
+root = pathlib.Path(sys.argv[1])
+project = (root / "App/PaintByNumber.xcodeproj/project.pbxproj").read_text()
+sources = sorted((root / "App/PaintByNumber").rglob("*.swift"))
+def setting(block, name):
+    m = re.search(r"\b%s = (\"[^\"]*\"|[^;]*);" % name, block)
+    return shlex.split(m.group(1).strip('"')) if m else []
+# Each configuration is `isa`, then its `buildSettings = { … };` (no braces inside), then its name.
+configurations = re.findall(r"isa = XCBuildConfiguration;\s*buildSettings = \{([^{}]*)\};\s*name = (\w+);", project)
+blocks = [b for b, name in configurations if name == "Release" and "EXCLUDED_SOURCE_FILE_NAMES" in b]
+if len(blocks) != 1: sys.exit("expected one Release configuration with EXCLUDED_SOURCE_FILE_NAMES, found %d" % len(blocks))
+excluded, included = setting(blocks[0], "EXCLUDED_SOURCE_FILE_NAMES"), setting(blocks[0], "INCLUDED_SOURCE_FILE_NAMES")
+def matches(path, patterns): return any(fnmatch.fnmatchcase(path.name, p) for p in patterns)
+left_out = [p for p in sources if matches(p, excluded) and not matches(p, included)]
+def debug_only(path):
+    text = re.sub(r"/\*.*?\*/", "", path.read_text(), flags=re.S)
+    lines = [l.split("//")[0].strip() for l in text.splitlines()]
+    code = [l for l in lines if l and not l.startswith("import ")]
+    depth = 0
+    for l in code:
+        if depth == 0 and l != "#if DEBUG": return False
+        depth += l.startswith("#if ") - (l == "#endif")
+    return bool(code) and depth == 0
+declaration = re.compile(r"^(?:(?:public|internal|private|fileprivate|final|nonisolated|indirect|@\w+(?:\([^)]*\))?) +)*(?:struct|class|enum|actor|protocol) +(\w+)", re.M)
+files = left_out + [p for p in sources if debug_only(p)]
+if not left_out or len(files) == len(left_out): sys.exit("found no excluded or no Debug-only files: the check would check nothing")
+for path in files:
+    for name in declaration.findall(path.read_text()):
+        print(name, path.relative_to(root))
+PY
+# A type's descriptor holds its name as a C string of its own, so a whole line of the strings.
+# Mangled names are no test: they abbreviate words already seen (`PaletteBuilder` can hold
+# `7Builder`), and a shipped type that merely contains the name (`DemoTemplate` in
+# `DemoTemplateCache`) must not count.
+while read -r name file; do
+  if grep -qxF "$name" "$WORK/strings.txt"; then
+    fail "the Release binary contains $name ($file)"
+  fi
+done < "$WORK/types.txt"
+echo "checked $(wc -l < "$WORK/types.txt" | tr -d ' ') types left out of Release"
+# The Debug-only launch arguments and folder names (the ready marker, the demo library, the
+# caches, the feedback stub's `-feedback-upload` and the App Store stub's `-demo…` arguments).
+for symbol in demo-ready DemoLibrary LineArtMaps DemoTemplates feedback-upload demoFreePaintings demoUnlocked demoPurchase; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 
@@ -35,13 +78,6 @@ done
 # repository. Its archive is in the private painting-company repository. These checks keep any of
 # it from coming back into the app, and the making-of show draws no sprites.
 for symbol in MarginariumView MarginariumReaderView SpriteAtlas MakingOfSprites; do
-  if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
-done
-# Refine is in SideStore and Debug builds only for now: Release leaves out its screen and the
-# gallery's draft row, which continues it (the target's EXCLUDED_SOURCE_FILE_NAMES, every
-# Refine*.swift; its edits' model, RefineEdits.swift, is back in by INCLUDED_SOURCE_FILE_NAMES, for
-# paintings refined before).
-for symbol in RefineView RefineSurfaceView RefineColorsPanel RefineAreaCard RefinePaletteBar DraftRow; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 for file in marginarium.json; do
@@ -58,5 +94,5 @@ if xcrun --find assetutil > /dev/null 2>&1; then
     fail "the Release asset catalog holds the Marginarium's frames"
   fi
 fi
-[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, no Debug-only code, no Marginarium, no Refine"
+[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, nothing the project leaves out of Release, no Debug-only code, no Marginarium"
 exit $failed
