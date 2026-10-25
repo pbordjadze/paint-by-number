@@ -27,6 +27,37 @@ struct CanvasRenderTests {
         #expect(u.lightInk == SIMD4(CanvasPalette.darkPaper.ink, 1))
     }
 
+    /// The live canvas and the offscreen frames make their constants in one place, so every field
+    /// a frame describes reaches the shaders, chrome and selection included.
+    @Test func aFrameReachesEveryUniform() {
+        let paint = SIMD3<Float>(0.8, 0.1, 0.1)
+        let u = CanvasUniforms(CanvasFrame(
+            origin: SIMD2(3, 4), scale: 2, pointScale: 3, targetSize: SIMD2(640, 480), canvasSize: SIMD2(320, 240),
+            palette: .darkPaper, shadowOpacity: 0.25, outlineOpacity: 0.5,
+            outlineWidth: 1.5, selectedOutlineWidth: 2.5, hatch: 1, numbersShown: 0.75, lines: .coloringBook(width: 4),
+            labels: SIMD4(1, 2, 3, 4), numbers: SIMD4(5, 6, 7, 1), time: SIMD4(8, 9, 10, 11),
+            selection: (color: 2, paint: paint), hovered: 5, pulsing: 6, bumped: 7,
+            brush: (center: SIMD2(12, 13), radius: 14), shine: (start: 15, color: 2), photoOpacity: 0.5))
+        #expect(u.transform == SIMD4(3, 4, 2, 3) && u.viewport == SIMD4(640, 480, 320, 240))
+        #expect(u.paper == SIMD4(CanvasPalette.darkPaper.paper, 0.25) && u.ink.w == 0.5)
+        #expect(u.lightInk == SIMD4(CanvasPalette.darkPaper.ink, 1) && u.rim.w == CanvasPalette.darkPaper.rimOpacity)
+        #expect(u.selected == SIMD4(paint, 1) && u.accent == SIMD4(CanvasPalette.darkPaper.accent(for: paint), CanvasPalette.darkPaper.hatchCeiling))
+        #expect(u.outline == SIMD4(1.5, 2.5, 1, 0.75))
+        #expect(u.lineWidth == SIMD4(4, 4, 4, 0) && u.lineMode.x == 1)
+        #expect(u.labels == SIMD4(1, 2, 3, 4) && u.numbers == SIMD4(5, 6, 7, 1) && u.time == SIMD4(8, 9, 10, 11))
+        #expect(u.ids == SIMD4(2, 5, 6, 7) && u.brush == SIMD4(12, 13, 14, 1) && u.shine == SIMD4(15, 2, 0, 0))
+        #expect(u.photo.x == 0.5)
+
+        let idle = CanvasUniforms(CanvasFrame(
+            origin: .zero, scale: 1, pointScale: 1, targetSize: SIMD2(1, 1), canvasSize: SIMD2(1, 1),
+            palette: .light, shadowOpacity: 0, outlineOpacity: 0.5, outlineWidth: 1, selectedOutlineWidth: 1, hatch: 0,
+            numbersShown: 1, lines: .classic, labels: .zero, numbers: .zero, time: .zero,
+            selection: (color: 1, paint: nil), hovered: -1, pulsing: -1, bumped: -1, brush: nil,
+            shine: (start: CanvasClock.never, color: -1), photoOpacity: 0))
+        #expect(idle.ids.x == 1 && idle.selected.w == 0 && idle.brush == .zero)
+        #expect(idle.lineAlpha == SIMD4(repeating: 0.5) && idle.lineWidth == SIMD4(repeating: 1) && idle.lineMode == .zero)
+    }
+
     @Test func syntheticTemplateIsWatertight() {
         let t = Fixtures.mosaic
         var total: Float = 0

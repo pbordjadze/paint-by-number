@@ -782,40 +782,37 @@ final class CanvasView: UIView, PaintingCanvas {
 
     private func makeUniforms(time: Float, camera: Camera, palette: CanvasPalette) -> CanvasUniforms {
         let s = Float(contentScaleFactor)
-        var u = CanvasUniforms()
-        u.transform = SIMD4(Float(camera.origin.x) * s, Float(camera.origin.y) * s, Float(camera.zoom) * s, s)
-        u.viewport = SIMD4(
-            Float(metalLayer.drawableSize.width), Float(metalLayer.drawableSize.height),
-            Float(template.width), Float(template.height))
         // Line art gets finer and lighter when zoomed out, where regions are small on screen.
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
         let widthPt = ClassicLook.widthPoints(depth: depth)
-        u.setChrome(
-            palette, shadowOpacity: palette.shadowOpacity,
-            outlineOpacity: palette.outlineOpacity * ClassicLook.strength(depth: depth))
         // A replay shows the painting as it was made, without the brush's highlight.
         let selected = isReplaying ? nil : session.selectedColor
-        if let selected, let scene, selected < scene.paletteLinear.count {
-            u.select(scene.paletteLinear[selected], palette: palette)
+        let paint = selected.flatMap { selected in
+            scene.flatMap { selected < $0.paletteLinear.count ? $0.paletteLinear[selected] : nil }
         }
-        u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersFade.value(at: time))
-        if scene?.isColoringBook == true {
-            u.setColoringBookLines(width: ColoringBookLook.widthPoints(depth: depth, weight: lineWeight.factor) * s)
-        } else {
-            u.setClassicLines()
-        }
-        u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
-        u.numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
-        u.time = SIMD4(time, selectionTime, pulseStart, bumpStart)
-        if let brushPoint {
-            // Drawn as large as it paints (drags cap the radius in canvas units).
+        let lines: CanvasFrame.Lines = scene?.isColoringBook == true
+            ? .coloringBook(width: ColoringBookLook.widthPoints(depth: depth, weight: lineWeight.factor) * s)
+            : .classic
+        // Drawn as large as it paints (drags cap the radius in canvas units).
+        let brush = brushPoint.map { point in
             let radius = min(Self.brushRadius, CGFloat(PaintingSession.maxBrushRadius) * camera.zoom)
-            u.brush = SIMD4(Float(brushPoint.x) * s, Float(brushPoint.y) * s, Float(radius) * s, 1)
+            return (center: SIMD2(Float(point.x), Float(point.y)) * s, radius: Float(radius) * s)
         }
-        u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
-        u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
-        u.photo = SIMD4(photoFade.value(at: time), 0, 0, 0)
-        return u
+        return CanvasUniforms(CanvasFrame(
+            origin: SIMD2(Float(camera.origin.x), Float(camera.origin.y)) * s, scale: Float(camera.zoom) * s, pointScale: s,
+            targetSize: SIMD2(Float(metalLayer.drawableSize.width), Float(metalLayer.drawableSize.height)),
+            canvasSize: SIMD2(Float(template.width), Float(template.height)),
+            palette: palette, shadowOpacity: palette.shadowOpacity,
+            outlineOpacity: palette.outlineOpacity * ClassicLook.strength(depth: depth),
+            outlineWidth: widthPt * s, selectedOutlineWidth: (widthPt + 0.55) * s, hatch: 1,
+            numbersShown: numbersFade.value(at: time), lines: lines,
+            labels: SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s),
+            numbers: SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0),
+            time: SIMD4(time, selectionTime, pulseStart, bumpStart),
+            selection: selected.map { (color: $0, paint: paint) },
+            hovered: isReplaying ? -1 : hoverRegion, pulsing: pulseRegion, bumped: bumpRegion,
+            brush: brush, shine: (start: shineStart, color: shineColor),
+            photoOpacity: photoFade.value(at: time)))
     }
 
     private func numbersChanged() {

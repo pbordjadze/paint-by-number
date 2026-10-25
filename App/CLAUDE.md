@@ -47,7 +47,9 @@ synchronized folder would bundle it into the app.
   `FeedbackUITests` and `RecoveryTests`. Alerts (`.alert`) are centered and need none of this.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
   change both in the same order, 16-byte vectors only
-  (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads
+  (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). A frame's constants are
+  packed in one place, `CanvasUniforms(_:)` from a `CanvasFrame` (no defaults), for the canvas
+  and `CanvasSnapshot` alike: a new uniform is a `CanvasFrame` field, set by both. No shader reads
   `CanvasUniforms.background`: it carries the backdrop to `TimelapseFrameRenderer`'s clear.
 - The shaders hold no paper, ink or accent literals (the brush and the paint sheen keep theirs): the
   chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`; `lightInk` is the tone writing

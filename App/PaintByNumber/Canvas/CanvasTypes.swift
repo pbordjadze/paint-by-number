@@ -117,6 +117,76 @@ nonisolated extension CanvasUniforms {
         lineWidth = SIMD4(width, width, width, 0)
         lineMode = SIMD4(1, 0, 0, 0)
     }
+
+    /// The constants for `frame`: the one place a frame's uniforms are packed, for the live
+    /// canvas (`CanvasView`) and the offscreen frames alike (`CanvasSnapshot`: pictures, the
+    /// time-lapse, feedback close-ups).
+    init(_ frame: CanvasFrame) {
+        self.init()
+        transform = SIMD4(frame.origin, frame.scale, frame.pointScale)
+        viewport = SIMD4(frame.targetSize, frame.canvasSize)
+        setChrome(frame.palette, shadowOpacity: frame.shadowOpacity, outlineOpacity: frame.outlineOpacity)
+        if let paint = frame.selection?.paint { select(paint, palette: frame.palette) }
+        outline = SIMD4(frame.outlineWidth, frame.selectedOutlineWidth, frame.hatch, frame.numbersShown)
+        switch frame.lines {
+        case .classic: setClassicLines()
+        case .coloringBook(let width): setColoringBookLines(width: width)
+        }
+        labels = frame.labels
+        numbers = frame.numbers
+        time = frame.time
+        if let cursor = frame.brush { brush = SIMD4(cursor.center, cursor.radius, 1) }
+        shine = SIMD4(frame.shine.start, Float(frame.shine.color), 0, 0)
+        ids = SIMD4(Int32(frame.selection?.color ?? -1), Int32(frame.hovered), Int32(frame.pulsing), Int32(frame.bumped))
+        photo = SIMD4(frame.photoOpacity, 0, 0, 0)
+    }
+}
+
+/// What a frame shows, from which `CanvasUniforms(_:)` makes its shader constants. No field has
+/// a default, so a new one is set by every renderer (live and offscreen) or doesn't compile,
+/// instead of reading zero in the frames that forgot it.
+nonisolated struct CanvasFrame {
+    /// Where the canvas origin lands (px), px per canvas unit and px per point.
+    var origin: SIMD2<Float>
+    var scale: Float
+    var pointScale: Float
+    /// The target's size (px) and the canvas's (units).
+    var targetSize: SIMD2<Float>
+    var canvasSize: SIMD2<Float>
+    var palette: CanvasPalette
+    var shadowOpacity: Float
+    var outlineOpacity: Float
+    /// Outline widths (px): every region's, and the selected color's.
+    var outlineWidth: Float
+    var selectedOutlineWidth: Float
+    /// The selected color's hatch strength.
+    var hatch: Float
+    /// How visible the numbers are (0…1).
+    var numbersShown: Float
+    var lines: Lines
+    /// As `CanvasUniforms.labels` and `.numbers`.
+    var labels: SIMD4<Float>
+    var numbers: SIMD4<Float>
+    /// As `CanvasUniforms.time`.
+    var time: SIMD4<Float>
+    /// The selected palette color and its paint (linear P3; nil when the scene has none).
+    var selection: (color: Int, paint: SIMD3<Float>?)?
+    /// Regions hovered, pulsing and bumped (-1 = none).
+    var hovered: Int
+    var pulsing: Int
+    var bumped: Int
+    /// The brush cursor (px).
+    var brush: (center: SIMD2<Float>, radius: Float)?
+    /// A light sweep over finished paint: its start and palette color (-1 = everything).
+    var shine: (start: Float, color: Int)
+    var photoOpacity: Float
+
+    enum Lines {
+        /// Every layer the classic line (`setClassicLines`).
+        case classic
+        /// A coloring book's drawing, every layer `width` px wide (`setColoringBookLines`).
+        case coloringBook(width: Float)
+    }
 }
 
 /// Animated paint state of one region. Layout mirrors `RegionState` in Shaders.metal.
