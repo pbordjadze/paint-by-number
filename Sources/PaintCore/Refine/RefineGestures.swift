@@ -264,7 +264,7 @@ public enum RefineGestures {
         drawEdit([screen.onScreen(a), screen.onScreen(b)], on: screen)
     }
 
-    /// A tap of the Smart Eraser: the drawn line under it from junction to junction (`chains`,
+    /// A tap of the Line Eraser: the drawn line under it from junction to junction (`chains`,
     /// for the flash and the ink laid over it; the template's editor decides what goes), within a
     /// finger's reach. The chain is normalized to the picture.
     public static func lineEraser(

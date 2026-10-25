@@ -632,7 +632,7 @@ Conventions).
     `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
-    oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
+    oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Line Eraser
     tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; the retired Color Splitter's
     stroke was `.split`, the Pen's line as an undrawn boundary whose sides end with different
     paints, `docs/coloring-book.md` › Split, and splits made before still lay), which
@@ -831,8 +831,9 @@ sends it, the developers collect nothing).
   (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
-- Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
-  switch per sound, haptic and flourish; Settings' paper size, Color Names and Detail Brushes,
+- Settings the app retired (Settings › Advanced's line art, tuning, line appearance and preview
+  picture, and its switch per sound, haptic and flourish; the time-lapse's pace; Settings' paper
+  size, Color Names and Detail Brushes,
   later Text Corrections, whose Text tool Refine now always offers (Paul, October 18), and The
   Marginarium; the Custom palette order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›

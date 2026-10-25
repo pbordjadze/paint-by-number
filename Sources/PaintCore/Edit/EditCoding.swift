@@ -29,7 +29,7 @@ import Foundation
 /// empty too (`[]`), which reads back as a draw with no paints to give: it lays nudged, unlike one
 /// without the key.
 /// An older reader skips `paints` and lays such a draw as before, in the paints it had. `look` and
-/// `repaint` (Refine's Colors) have no points; an older reader leaves them, and a `paintArea`, out
+/// `repaint` (Refine's Looks and Edit Paint) have no points; an older reader leaves them, and a `paintArea`, out
 /// of the list, and the painting it saved keeps their colors. A look's name is a
 /// `TemplateEditor.Look`; one this build does not know fails the edit as an unknown kind does. A
 /// missing `lightness` is none, a missing `family` false. An older reader leaves a `cellEdge` out

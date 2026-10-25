@@ -106,7 +106,7 @@ nonisolated enum RefineBackdrop: Hashable {
 ///   curve's ends move onto a line their ink touches, as the Pen's do;
 /// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
 ///   tap takes out a dab;
-/// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction;
+/// - the Line Eraser rubs too, and a tap takes the line out from junction to junction;
 /// - Fill: a tap inside a closed shape makes it an area of its own, painted the photo's color
 ///   where it was tapped (`LineEdit.photoColor`), kept however small, its number allowed down to
 ///   about half the usual size and read zoomed in (a detail area, `Template.detailRegions`); a
