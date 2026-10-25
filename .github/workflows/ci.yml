@@ -45,7 +45,6 @@ concurrency:
 
 env:
   COMPILE: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '1' || '0' }}
-  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
   APP: build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
@@ -138,6 +137,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
+      - name: Xcode
+        run: ci/xcode.sh
       - name: Plan
         # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
         # out (`-only-testing`, `-skip-testing`; neither: all). The Settings and play mailbox UI
@@ -341,6 +342,8 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v5
+      - name: Xcode
+        run: ci/xcode.sh
       - name: Archive
         run: |
           set -o pipefail

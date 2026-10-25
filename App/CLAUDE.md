@@ -526,7 +526,8 @@ Conventions).
   Refine button or tip on the preview, no Refine note over it and no draft row (`Drafts` reads
   no draft there, leaving the one on disk for a build with Refine), and Release's
   `EXCLUDED_SOURCE_FILE_NAMES` leaves out every `Refine*.swift` and `DraftRow.swift`, which
-  `ci/check_release.sh` checks: a new file of Refine's screen named so is left out too, and
+  `ci/check_release.sh` checks (its types, read from the files the setting names): a new file of
+  Refine's screen named so is left out and checked too, and
   anything outside them that names its types needs `#if UNRELEASED`. `RefineEdits.swift` (the
   edits' model, back in by `INCLUDED_SOURCE_FILE_NAMES`) and `CreateModel`'s refining stay, so
   paintings refined before regenerate as they were.
