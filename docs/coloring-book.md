@@ -338,7 +338,9 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
 - **The tiny-piece rule.** A piece gets the numbers `LabelSizing` asks of its paint (the label
   search of the pipeline, `PolyLabel`, kept where the old number still has 85% of the room, away
   from the lines it left inside). A piece with room for a detail area's number
-  (`LabelSizing.detailMinimumRadius`) and not for the usual one becomes a detail area
+  (`LabelSizing.detailMinimumRadius`) and not for the usual one, measured finely (the coarse
+  search can find up to a quarter unit less than there is: until October 26 a piece that fit its
+  2- or 3-digit number could be found short of it and made a detail area), becomes a detail area
   (`Template.detailRegions`); one with less is not cut off: the chains round it go back to being
   strokes and the cell stays as it was (`Outcome.tooSmall` says where). A line through a crowd
   cuts what it can. The app says a shape is too small only when its line cut nothing off
@@ -531,9 +533,10 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   where the finger lifts when that is inside its own region (not on its outline) and a number of
   its digits fits there: the room there, measured to the outline and to the strokes in the
   region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor or, in
-  a detail area, a detail area's. Its radius is that room, never more than the region's roomiest
-  spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged into open
-  space doesn't grow huge. It must keep clear of the region's other numbers: a move whose circle
+  a detail area, a detail area's. Its radius is that room (which no spot of the region exceeds:
+  until October 26 a search for the roomiest spot, seeded at the point, capped it and so never
+  changed it); a number dragged into open space is drawn up to the renderers' cap, as any
+  number is. It must keep clear of the region's other numbers: a move whose circle
   there overlaps another's is declined, each circle the disc its digits are drawn in: its room,
   but no more than a number at the largest size a renderer draws fills (`largestNumberFraction`,
   the canvas's cap, 4.5% of the shorter side). A circle as large as the room alone would decline

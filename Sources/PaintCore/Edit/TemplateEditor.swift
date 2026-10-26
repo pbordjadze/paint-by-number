@@ -79,8 +79,8 @@ import Foundation
 /// - **Move number.** Refine's Move Number: the number nearest a point, within its radius and the
 ///   edit's reach (`labelNear`), goes to another inside its own region, where a number of its
 ///   digits fits (a detail area's by its own floor), off the strokes in the region and clear of
-///   its other numbers; its size is the room there, never more than the region's roomiest spot
-///   gives. Nothing else changes. An edit that plans the region's numbers again later keeps
+///   its other numbers; its size is the room there (which no spot of the region exceeds).
+///   Nothing else changes. An edit that plans the region's numbers again later keeps
 ///   it there while it keeps most of the room, and may move it otherwise.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the

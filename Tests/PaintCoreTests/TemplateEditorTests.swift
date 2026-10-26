@@ -394,6 +394,37 @@ struct TemplateEditorTests {
         #expect(abs(declined.tooSmall[0].x - 100) < 1 && abs(declined.tooSmall[0].y - 25) < 1)
     }
 
+    /// A piece with room for its 2- or 3-digit number keeps the usual one: its room is measured
+    /// finely before it is made a detail area, though those floors (3.17, 4.39) are above the
+    /// vectorizer's fine-search radius (3). Each triangle here has a little more room than its
+    /// floor, which the coarse search alone finds short of it.
+    @Test func aPieceThatFitsItsLongerNumberIsNoDetailArea() throws {
+        let work = try EditWork(Self.scene)
+        for (color, corners) in [
+            (UInt32(11), [SIMD2<Float>(10, 10), SIMD2(25, 10), SIMD2(16, 18)]),
+            (UInt32(99), [SIMD2<Float>(10, 10), SIMD2(31, 10), SIMD2(16, 21)]),
+        ] {
+            let ring = corners.map(Lattice.point)
+            let usual = Double(LabelSizing.minimumRadius(digits: LabelSizing.digitCount(colorIndex: color)))
+            let poly = EditWork.flatPolygon([ring])
+            let coarse = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: SIMD2(10, 10), keepOut: LabelKeepOut(rects: []))
+            #expect(coarse.distance >= Double(Vectorizer.smallRegionRadius) && coarse.distance < usual, "\(coarse.distance)")
+            let plan = try #require(work.labelPlan(rings: [ring], color: color, detail: false, hints: [], region: 0, keepOut: []))
+            #expect(!plan.needsDetail && Double(plan.labels[0].radius) >= usual, "\(color): \(plan.labels[0].radius) of \(usual)")
+            #expect(poly.signedDistance(Double(plan.labels[0].position.x), Double(plan.labels[0].position.y)) >= usual)
+        }
+        // So a line closing the first in a cell of number 12 cuts off a cell like it, not a detail area.
+        let t = Self.rich
+        let cell = try Self.region(t, 90, 15)
+        #expect(t.regions[cell].colorIndex == 11 && !t.isDetailRegion(cell))
+        let triangle = [SIMD2<Float>(82, 11), SIMD2(97, 11), SIMD2(88, 19)]
+        let (u, outcome) = try Self.apply(.draw(points: triangle, closed: true), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.detailAreas == 0 && u.detailRegions == t.detailRegions)
+        let piece = try Self.region(u, 89, 13)
+        #expect(piece != cell && u.regions[piece].colorIndex == 11)
+        #expect(u.labels(ofRegion: piece).allSatisfy { $0.radius >= LabelSizing.minimumRadius(digits: 2) })
+    }
+
     /// A line laid along ink is that ink: nothing is drawn twice, and the cells are as they were.
     @Test func aLineAlongInkIsThatInk() throws {
         let t = Self.scene
