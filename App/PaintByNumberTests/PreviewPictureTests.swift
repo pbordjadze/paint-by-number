@@ -8,11 +8,13 @@ import UIKit
 /// (`PreviewPictureProbe`): in the window's coordinates, wherever the comparison's view sits.
 @MainActor
 struct PreviewPictureTests {
-    @Test func theProbeFitsThePhotoInTheComparisonsFrame() {
+    @Test func theProbeFitsThePhotoInTheComparisonsFrame() throws {
         let probe = PreviewPictureProbe()
         #expect(probe.picture == nil)
 
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 800, height: 1000))
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 800, height: 1000)
         // A container moved down the screen, as a pushed screen's content is.
         let container = UIView(frame: CGRect(x: 0, y: 62, width: 800, height: 938))
         window.addSubview(container)
