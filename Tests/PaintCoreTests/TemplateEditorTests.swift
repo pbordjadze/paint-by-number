@@ -394,6 +394,37 @@ struct TemplateEditorTests {
         #expect(abs(declined.tooSmall[0].x - 100) < 1 && abs(declined.tooSmall[0].y - 25) < 1)
     }
 
+    /// A piece with room for its 2- or 3-digit number keeps the usual one: its room is measured
+    /// finely before it is made a detail area, though those floors (3.17, 4.39) are above the
+    /// vectorizer's fine-search radius (3). Each triangle here has a little more room than its
+    /// floor, which the coarse search alone finds short of it.
+    @Test func aPieceThatFitsItsLongerNumberIsNoDetailArea() throws {
+        let work = try EditWork(Self.scene)
+        for (color, corners) in [
+            (UInt32(11), [SIMD2<Float>(10, 10), SIMD2(25, 10), SIMD2(16, 18)]),
+            (UInt32(99), [SIMD2<Float>(10, 10), SIMD2(31, 10), SIMD2(16, 21)]),
+        ] {
+            let ring = corners.map(Lattice.point)
+            let usual = Double(LabelSizing.minimumRadius(digits: LabelSizing.digitCount(colorIndex: color)))
+            let poly = EditWork.flatPolygon([ring])
+            let coarse = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: SIMD2(10, 10), keepOut: LabelKeepOut(rects: []))
+            #expect(coarse.distance >= Double(Vectorizer.smallRegionRadius) && coarse.distance < usual, "\(coarse.distance)")
+            let plan = try #require(work.labelPlan(rings: [ring], color: color, detail: false, hints: [], region: 0, keepOut: []))
+            #expect(!plan.needsDetail && Double(plan.labels[0].radius) >= usual, "\(color): \(plan.labels[0].radius) of \(usual)")
+            #expect(poly.signedDistance(Double(plan.labels[0].position.x), Double(plan.labels[0].position.y)) >= usual)
+        }
+        // So a line closing the first in a cell of number 12 cuts off a cell like it, not a detail area.
+        let t = Self.rich
+        let cell = try Self.region(t, 90, 15)
+        #expect(t.regions[cell].colorIndex == 11 && !t.isDetailRegion(cell))
+        let triangle = [SIMD2<Float>(82, 11), SIMD2(97, 11), SIMD2(88, 19)]
+        let (u, outcome) = try Self.apply(.draw(points: triangle, closed: true), to: t)
+        #expect(outcome.regionsSplit == 1 && outcome.detailAreas == 0 && u.detailRegions == t.detailRegions)
+        let piece = try Self.region(u, 89, 13)
+        #expect(piece != cell && u.regions[piece].colorIndex == 11)
+        #expect(u.labels(ofRegion: piece).allSatisfy { $0.radius >= LabelSizing.minimumRadius(digits: 2) })
+    }
+
     /// A line laid along ink is that ink: nothing is drawn twice, and the cells are as they were.
     @Test func aLineAlongInkIsThatInk() throws {
         let t = Self.scene
@@ -480,6 +511,60 @@ struct TemplateEditorTests {
         #expect(v.lineArt!.strokes.count == 3 && marked.count == 2)
         #expect(marked.allSatisfy { v.lineArt!.strokes[$0].layer == t.lineArt!.strokes[0].layer })
         #expect(try Template(encoded: v.encoded()).lineArt!.writingStrokes == v.lineArt!.writingStrokes)
+    }
+
+    /// Writing is no part of the drawing a line meets, on the note of `WritingTests.book` ("Hi
+    /// you", traced): a line across the letters cuts the cells along itself alone, the letters it
+    /// crosses cut with them, every piece still writing; one ending beside the "o" neither joins
+    /// it nor closes it into a cell. Either way no area lies within the writing.
+    @Test func aLineMeetingWritingLeavesItWritingAndNoCellBorder() throws {
+        let t = try WritingTests.book().template
+        let scale = Float(t.width) / Float(WritingTests.size.w)
+        let box = SIMD4<Float>(66, 88, 158, 124) * scale
+        func inBox(_ p: SIMD2<Float>) -> Bool { p.x > box.x && p.x < box.z && p.y > box.y && p.y < box.w }
+        func writing(_ t: Template) -> (count: Int, length: Float) {
+            let art = t.lineArt!
+            var length: Float = 0
+            for k in art.writingStrokes.map(Int.init) {
+                let s = art.strokes[k]
+                let points = art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
+                for (a, b) in zip(points, points.dropFirst()) { length += simdLength(b - a) }
+            }
+            return (art.writingStrokes.count, length)
+        }
+        func noAreaInTheWriting(_ u: Template) -> Bool {
+            u.regions.allSatisfy { r in
+                let b = r.bounds
+                return !(Float(b.minX) > box.x && Float(b.maxX) < box.z && Float(b.minY) > box.y && Float(b.maxY) < box.w)
+            }
+        }
+        let before = writing(t)
+        #expect(before.count >= 6 && noAreaInTheWriting(t))
+
+        // Across the note through the letters' middle (the "o" twice, the H, the i, the y, the u),
+        // from the ground on one side to the other.
+        let y = 111 * scale
+        let (u, across) = try Self.apply(.draw(points: [SIMD2(30 * scale, y), SIMD2(330 * scale, y)], paints: []), to: t)
+        #expect(across.regionsSplit >= 1)
+        let after = writing(u)
+        #expect(after.count > before.count, "the letters it crosses are cut, each piece writing")
+        #expect(abs(after.length - before.length) < 0.005 * before.length, "\(after.length) of \(before.length)")
+        #expect(noAreaInTheWriting(u))
+        // The only boundary within the writing is the line.
+        for e in u.edges { for p in u.points(of: e) where inBox(p) { #expect(abs(p.y - y) < 0.05, "an edge at \(p)") } }
+        // A cell edge there cuts the letters as the line does.
+        let (w, _) = try Self.apply(.cellEdge(points: [SIMD2(30 * scale, y), SIMD2(330 * scale, y)]), to: t)
+        let edged = writing(w)
+        #expect(edged.count > before.count && abs(edged.length - before.length) < 0.005 * before.length)
+
+        // Ending 2 units above the "o" (its top at (128.5, 102) on the note), clear of the rest.
+        let top = SIMD2<Float>(128.5, 102) * scale
+        let (v, beside) = try Self.apply(.draw(points: [top - SIMD2(0, 13), top - SIMD2(0, 2)], paints: []), to: t)
+        #expect(beside.joins == 0 && beside.regionsSplit == 0 && beside.strokes == 1)
+        #expect(v.regions.count == t.regions.count && noAreaInTheWriting(v))
+        #expect(v.lineArt!.writingStrokes == t.lineArt!.writingStrokes)
+        let marked = { (t: Template) in t.lineArt!.writingStrokes.map { t.lineArt!.strokes[Int($0)] } }
+        #expect(marked(v) == marked(t))
     }
 
     /// A tapped line goes from junction to junction: the square's outline against the sky, from where

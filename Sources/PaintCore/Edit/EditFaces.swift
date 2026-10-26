@@ -223,7 +223,8 @@ extension EditWork {
     }
 
     /// Gives the strokes `indices` (of the region just cut) to the area they lie in, cutting a
-    /// stroke that crosses the new boundary `cutters` where it does.
+    /// stroke that crosses or touches the new boundary `cutters` where it does (writing, which a
+    /// drawn line never joins, meets the line it lies across this way).
     mutating func reassign(strokes indices: [Int], among areas: [(id: Int, rings: [[LatticePoint]])], cutters: [Int]) {
         let boundaries = cutters.map { lattice(of: $0) }
         for i in indices {
@@ -232,8 +233,9 @@ extension EditWork {
             for k in 0..<(points.count - 1) {
                 for boundary in boundaries {
                     for j in 0..<(boundary.count - 1) {
-                        if case .cross(let p) = Lattice.contact(points[k], points[k + 1], boundary[j], boundary[j + 1]) {
-                            inserts.append((k, p))
+                        switch Lattice.contact(points[k], points[k + 1], boundary[j], boundary[j + 1]) {
+                        case .cross(let p), .touch(let p): inserts.append((k, p))
+                        case .none, .overlap: continue
                         }
                     }
                 }

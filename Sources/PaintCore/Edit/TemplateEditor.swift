@@ -26,8 +26,11 @@ import Foundation
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
 ///   area; a piece with less is not cut off. A stretch that closes nothing is an interior stroke,
-///   verbatim. A draw with `paints` (every draw the app makes now; one without is a draw from
-///   before, laid exactly as it was) also nudges the line, and only the line, where it crosses an
+///   verbatim. Traced writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins
+///   it and no stretch closes a shape with it, so a letter never becomes an outline; where the line
+///   cuts the region the letters it crosses are cut with it, each piece still writing. A draw
+///   with `paints` (every draw the app makes now; one without is a draw from before, laid
+///   exactly as it was) also nudges the line, and only the line, where it crosses an
 ///   edge within `inkWidth` of a junction (an end of an edge): it passes through the junction, so
 ///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
 ///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
@@ -76,8 +79,8 @@ import Foundation
 /// - **Move number.** Refine's Move Number: the number nearest a point, within its radius and the
 ///   edit's reach (`labelNear`), goes to another inside its own region, where a number of its
 ///   digits fits (a detail area's by its own floor), off the strokes in the region and clear of
-///   its other numbers; its size is the room there, never more than the region's roomiest spot
-///   gives. Nothing else changes. An edit that plans the region's numbers again later keeps
+///   its other numbers; its size is the room there (which no spot of the region exceeds).
+///   Nothing else changes. An edit that plans the region's numbers again later keeps
 ///   it there while it keeps most of the room, and may move it otherwise.
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
@@ -102,6 +105,14 @@ import Foundation
 ///   across an undrawn boundary one area. Edits laid after one bring their colors through it
 ///   (`apply(_:to:verify:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
 public enum TemplateEditor {
+    /// What a list of edits makes of a given template, as a number kept with the edits a
+    /// painting saves (the app's `TemplateRefinements.editorVersion`). Bump in the same commit as
+    /// any change to what a list of edits makes on a given template (`EditGoldenTests` pins it),
+    /// so saved edits record which editor laid them. 1 is the editor from October 26, 2026, which
+    /// keeps writing out of drawn lines and measures a piece short of its number finely; edits
+    /// saved before it record none.
+    public static let version = 1
+
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"
 

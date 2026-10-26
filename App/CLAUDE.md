@@ -693,8 +693,10 @@ Conventions).
     drafts refined that way regenerate that way, what they mean never changes, and nothing refines
     by it any more; a fill such a build made is part of the base, and a tap there fills again).
     A `refinements.json` without `edits` decodes as it did; an edit it can't read
-    is left out; at most `maximumEdits` are kept. Drafts, Start (which saves the template on
-    screen, no regeneration) and a refined painting's `refinements.json` carry the edits, and
+    is left out; at most `maximumEdits` are kept. Edits are written with the editor's version
+    (`editorVersion`, PaintCore's `TemplateEditor.version`; edits saved before it read 0).
+    Drafts, Start (which saves the template on screen, no regeneration) and a refined painting's
+    `refinements.json` carry the edits, and
     `Library.regenerate` makes the base and lays them (`ArtworkFactory.laying`). PaintCore's
     `LineEdits` (root `CLAUDE.md` › Line art) stays the way the generator reads `lines`.
 - Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter
