@@ -2,6 +2,7 @@ import CoreGraphics
 import os
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// New painting: pick a photo (library, camera or a sample) → tune the template → paint.
 ///
@@ -40,13 +41,14 @@ struct CreateFlowView: View {
     @State private var path: [Step] = []
     /// Where the preview's picture is on screen, which the show or the hand-off moves it from.
     @State private var previewPicture = PreviewPictureProbe()
-    /// The screen inside the safe area, and the safe area: where the painting's page will be is
-    /// laid out from them.
-    @State private var screen: FlowScreen?
+    /// The flow's safe area as SwiftUI has laid it out, which the status bar's going changes on an
+    /// iPad (`letStatusBarGo`).
+    @State private var safeArea = EdgeInsets()
 
     // Into the painting (`handOver`).
     /// Start has saved the painting: the flow is on its way to it.
     @State private var isHandingOver = false
+    @State private var handingOver: Task<Void, Never>?
     /// The flow's screens, which fade away around the picture on Start.
     @State private var controlsOpacity = 1.0
     /// The flow's paper, which stays until the painting beneath has drawn, then fades to it.
@@ -82,15 +84,13 @@ struct CreateFlowView: View {
     var body: some View {
         flow
             .opacity(controlsOpacity)
-            .onGeometryChange(for: FlowScreen.self) { proxy in
-                FlowScreen(size: proxy.size, safe: proxy.safeAreaInsets, origin: proxy.frame(in: .global).origin)
-            } action: { screen = $0 }
+            .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { safeArea = $0 }
             .background(Theme.paper.ignoresSafeArea().opacity(paperOpacity))
             .overlay {
                 if let makingOf {
                     MakingOfView(
-                        source: makingOf.source, entry: makingOf.entry, arrived: hasArrived, page: page,
-                        leaving: leaving, onFinish: { showDidEnd() })
+                        source: makingOf.source, entry: makingOf.entry, place: expectedPage, arrived: hasArrived,
+                        page: page, leaving: leaving, onFinish: { showDidEnd() })
                 }
             }
             .overlay {
@@ -177,6 +177,8 @@ struct CreateFlowView: View {
         .onDisappear {
             model.cancelAll()
             library.drafts.saveNow()
+            // A flow replaced on the way (a file opened meanwhile) opens no painting.
+            handingOver?.cancel()
         }
     }
 
@@ -221,45 +223,54 @@ struct CreateFlowView: View {
 
     // MARK: Into the painting
 
-    /// Start has saved `artwork`: the flow's controls fade around the picture (the show's photo
-    /// coming in over the preview's, or the preview's picture whole), the status bar goes, and the
+    /// Start has saved `artwork`: the picture comes in over the preview's (the show's photo, or the
+    /// preview's picture whole), the flow's controls fade around it, the status bar goes, and the
     /// picture moves once to where the painting's page will be, the show playing there. Then the
     /// painting opens beneath the cover (`onStart`, `StartHandoff`), where nothing will move it.
-    /// Reduce Motion: the picture fades in at its place instead.
+    /// Reduce Motion: the picture comes in at its place instead, once the status bar is gone.
     private func handOver(_ artwork: Artwork, template: Template, show: MakingOfSource?) {
         guard !isHandingOver else { return }
         isHandingOver = true
+        let window = previewPicture.window
         let entry = StartHandoffPlan.entry(reduceMotion: reduceMotion, from: previewPicture.picture)
-        if let show {
-            makingOf = MakingOfRequest(source: show, entry: entry)
-        } else if let picture = model.preview?.picture {
-            departure = PictureDeparture(picture: picture, rect: entry ?? .zero, radius: Theme.cardRadius, opacity: 0)
-        }
-        Task {
-            withAnimation(.easeOut(duration: StartHandoffPlan.clear)) {
-                controlsOpacity = 0
-                if entry != nil { departure?.opacity = 1 }
+        if let entry {
+            if let show {
+                makingOf = MakingOfRequest(source: show, entry: entry)
+            } else if let picture = model.preview?.picture {
+                departure = PictureDeparture(picture: picture, rect: entry, radius: Theme.cardRadius, opacity: 0)
             }
+        }
+        handingOver = Task {
+            if entry != nil {
+                withAnimation(.easeOut(duration: StartHandoffPlan.lift)) { departure?.opacity = 1 }
+                try? await Task.sleep(for: .seconds(StartHandoffPlan.lift))
+            }
+            withAnimation(.easeOut(duration: StartHandoffPlan.clear)) { controlsOpacity = 0 }
             try? await Task.sleep(for: .seconds(StartHandoffPlan.clear))
-            await letStatusBarGo()
-            let place = pagePlace(of: template)
+            await letStatusBarGo(in: window)
+            guard !Task.isCancelled else { return }
+            let place = window.flatMap { pagePlace(of: template, in: $0) }
             expectedPage = place
             if let place { renderPage(of: template, size: place.size) }
             Log.create.notice("Hand-off: the page is expected at \(String(describing: place), privacy: .public)")
-            if let place, entry == nil {
+            if entry == nil {
                 // Nowhere to move from: it comes in where it goes.
-                departure?.rect = place
-                departure?.radius = 0
-                withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { departure?.opacity = 1 }
+                if let show {
+                    makingOf = MakingOfRequest(source: show, entry: nil)
+                } else if let place, let picture = model.preview?.picture {
+                    departure = PictureDeparture(picture: picture, rect: place, radius: 0, opacity: 0)
+                    withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { departure?.opacity = 1 }
+                }
             }
             withAnimation(.smooth(duration: StartHandoffPlan.glide)) {
                 hasArrived = true
-                if let place, entry != nil {
+                if entry != nil, let place {
                     departure?.rect = place
                     departure?.radius = 0
                 }
             }
             try? await Task.sleep(for: .seconds(StartHandoffPlan.glide))
+            guard !Task.isCancelled else { return }
             // Once the picture is still: opening a painting keeps the main thread busy a moment.
             onStart(artwork)
             isOpening = true
@@ -267,30 +278,38 @@ struct CreateFlowView: View {
         }
     }
 
-    /// Hides the status bar and waits for the layout to follow (an iPad's safe area changes; a
-    /// phone's with a sensor housing doesn't, which a short wait tells).
-    private func letStatusBarGo() async {
-        let before = screen
+    /// Hides the status bar and waits for the layout to follow, UIKit's and then the flow's (an
+    /// iPad's safe area changes; a phone's with a sensor housing doesn't, which the wait tells).
+    private func letStatusBarGo(in window: UIWindow?) async {
+        let before = window?.safeAreaInsets
         hidesStatusBar = true
         let deadline = ContinuousClock.now + StartHandoffPlan.statusBarSettles
-        while screen == before, ContinuousClock.now < deadline {
+        while let window, ContinuousClock.now < deadline,
+              window.safeAreaInsets == before || abs(window.safeAreaInsets.top - safeArea.top) > 0.5 {
             try? await Task.sleep(for: .milliseconds(10))
         }
     }
 
-    /// Where a new painting's page of `template` will be (window coordinates), as the painting
-    /// screen lays itself out on this screen (`PaintingLayout`); nil before the flow is laid out.
-    private func pagePlace(of template: Template) -> CGRect? {
-        guard let screen, screen.size.width > 0, screen.size.height > 0 else { return nil }
+    /// Where a new painting's page of `template` will be in `window` (its coordinates), as the
+    /// painting screen lays itself out there (`PaintingLayout`), from the window's own bounds and
+    /// safe area as UIKit has them.
+    private func pagePlace(of template: Template, in window: UIWindow) -> CGRect? {
+        let insets = window.safeAreaInsets
+        let rightToLeft = layoutDirection == .rightToLeft
+        let size = CGSize(
+            width: window.bounds.width - insets.left - insets.right,
+            height: window.bounds.height - insets.top - insets.bottom)
+        guard size.width > 0, size.height > 0 else { return nil }
         let inputs = PaintingLayout.Inputs(
-            size: screen.size, safe: screen.safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
-            rows: paletteRows, colors: PaletteBar.visibleColorCount(template), isComplete: false)
+            size: size,
+            safe: EdgeInsets(
+                top: insets.top, leading: rightToLeft ? insets.right : insets.left, bottom: insets.bottom,
+                trailing: rightToLeft ? insets.left : insets.right),
+            regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize, rows: paletteRows,
+            colors: PaletteBar.visibleColorCount(template), isComplete: false)
         let page = PaintingLayout(inputs).page(
-            of: CGSize(width: template.width, height: template.height), inputs: inputs,
-            rightToLeft: layoutDirection == .rightToLeft)
-        // The layout's coordinates start at the screen's corner, the safe area before the flow's.
-        let place = page.offsetBy(dx: screen.origin.x - screen.safe.leading, dy: screen.origin.y - screen.safe.top)
-        return place.isPlace ? place : nil
+            of: CGSize(width: template.width, height: template.height), inputs: inputs, rightToLeft: rightToLeft)
+        return page.isPlace ? page : nil
     }
 
     /// Draws the page as the canvas will (`HandoffPage`), which the picture then becomes: the
@@ -342,17 +361,13 @@ struct CreateFlowView: View {
         Log.create.notice("Hand-off: the painting drew, its page at \(String(describing: reported), privacy: .public)")
         Task {
             await pageSettled()
-            // Where the picture stays, when not where it was expected.
-            var place: CGRect?
+            // Where the picture stays: on the canvas's page.
             var inPlace = false
             if let expected = expectedPage, StartHandoffPlan.matches(expected, reported) {
+                // Within a point: onto the canvas's page exactly, which no one sees.
                 inPlace = true
-                if expected != reported {
-                    // Within a point: onto the canvas's page exactly, which no one sees.
-                    place = reported
-                    leaving = .moving(reported)
-                    departure?.rect = reported
-                }
+                leaving = .moving(reported)
+                departure?.rect = reported
             } else if let target = StartHandoffPlan.correction(
                 expected: expectedPage ?? .null, reported: reported, reduceMotion: reduceMotion) {
                 Log.create.error("Hand-off: the page is not where it was expected; the picture moves there")
@@ -361,10 +376,14 @@ struct CreateFlowView: View {
                     departure?.rect = target
                 }
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.correct))
-                place = target
-                inPlace = true
+                // The page was drawn at the expected size: at another, the canvas draws it otherwise.
+                inPlace = expectedPage.map { abs($0.width - target.width) <= 1 && abs($0.height - target.height) <= 1 } ?? false
             }
             let staysAsThePage = inPlace && page != nil
+            let place: CGRect? = switch leaving {
+            case .moving(let target): target
+            case .staying, .revealing, .fading: nil
+            }
             withAnimation(.easeInOut(duration: StartHandoffPlan.reveal)) {
                 paperOpacity = 0
                 leaving = staysAsThePage ? .revealing(place) : .fading(place)
@@ -401,14 +420,6 @@ struct CreateFlowView: View {
             handoff?.complete()
         }
     }
-}
-
-/// The screen as the create flow sees it: its size inside the safe area, the safe area, and where
-/// the flow starts in the window.
-private nonisolated struct FlowScreen: Equatable, Sendable {
-    var size: CGSize
-    var safe: EdgeInsets
-    var origin: CGPoint
 }
 
 /// The preview's picture, between Start and the painting: fixed in its place, then moved to where

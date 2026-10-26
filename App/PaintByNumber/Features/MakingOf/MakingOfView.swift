@@ -15,7 +15,7 @@ import SwiftUI
 /// Motion plays the cards over still pictures, cross-faded. The photo shows while the show is being
 /// made, which is how it begins.
 ///
-/// The show plays where the painting's page will be (`PaintingLayout.page`, `MakingOfLayout`), so
+/// The show plays where the painting's page will be (`place`, `PaintingLayout.page`), so
 /// the journey from the preview to the canvas is one move (`StartHandoff`): the picture fades in
 /// where the preview's was (`entry`, window coordinates) while the paper fades in behind it, moves
 /// to its place when the create flow says (`arrived`), and the card and Skip come in after it.
@@ -41,6 +41,7 @@ struct MakingOfView: View {
 
     private let source: MakingOfSource
     private let entry: CGRect?
+    private let place: CGRect?
     private let arrived: Bool
     private let page: CGImage?
     private let leaving: Leaving
@@ -66,11 +67,12 @@ struct MakingOfView: View {
     private static let top: CGFloat = 64
 
     init(
-        source: MakingOfSource, entry: CGRect? = nil, arrived: Bool = true, page: CGImage? = nil,
-        leaving: Leaving = .staying, onFinish: @escaping () -> Void
+        source: MakingOfSource, entry: CGRect? = nil, place: CGRect? = nil, arrived: Bool = true,
+        page: CGImage? = nil, leaving: Leaving = .staying, onFinish: @escaping () -> Void
     ) {
         self.source = source
         self.entry = entry
+        self.place = place
         self.arrived = arrived
         self.page = page
         self.leaving = leaving
@@ -121,9 +123,8 @@ struct MakingOfView: View {
         .accessibilityAddTraits(.isModal)
         .accessibilityIdentifier("making-of")
         .task { await start() }
-        .onAppear {
-            withAnimation(.easeOut(duration: StartHandoffPlan.clear)) { shown = true }
-        }
+        // How it comes in is the picture's and the paper's own animations.
+        .onAppear { shown = true }
         .onDisappear { player.release() }
     }
 
@@ -150,21 +151,25 @@ struct MakingOfView: View {
     /// The page as the canvas draws it shows over the show's last picture once the show is over.
     private var showsPage: Bool { page != nil && player.phase == .finished }
 
+    /// The picture comes in over the preview's (`lift`), or at its place as long as it would
+    /// have taken to get there.
     private var pictureAnimation: Animation {
-        showsPicture
-            ? .easeOut(duration: StartHandoffPlan.clear)
-            : .easeInOut(duration: StartHandoffPlan.reveal)
+        guard showsPicture else { return .easeInOut(duration: StartHandoffPlan.reveal) }
+        return .easeOut(duration: entry == nil ? StartHandoffPlan.glide : StartHandoffPlan.lift)
     }
 
+    /// The paper comes in once the picture has, with the flow's controls going: under a picture
+    /// still coming in it would show through it.
     private var paperAnimation: Animation {
-        showsPaper
-            ? .easeOut(duration: StartHandoffPlan.clear)
-            : .easeInOut(duration: StartHandoffPlan.reveal)
+        guard showsPaper else { return .easeInOut(duration: StartHandoffPlan.reveal) }
+        return entry == nil
+            ? .easeOut(duration: StartHandoffPlan.glide)
+            : .easeOut(duration: StartHandoffPlan.clear).delay(StartHandoffPlan.lift)
     }
 
     private var chromeAnimation: Animation {
         chromeOpacity > 0
-            ? .easeOut(duration: 0.25).delay(entry == nil ? 0 : StartHandoffPlan.glide)
+            ? .easeOut(duration: 0.25).delay(StartHandoffPlan.glide)
             : .easeOut(duration: 0.2)
     }
 
@@ -172,15 +177,22 @@ struct MakingOfView: View {
     private var template: Template? { source.template ?? player.built?.template }
 
     /// The show where the painting's page will be, in this view's coordinates (inside the safe
-    /// area), with the card in the roomiest band beside it.
+    /// area), with the card in the roomiest band beside it: at `place`, where the create flow
+    /// expects the page, or, before it knows (and in demos), where this screen's layout puts it.
     private func layout(in geometry: GeometryProxy) -> MakingOfLayout {
-        let safe = geometry.safeAreaInsets
-        let inputs = PaintingLayout.Inputs(
-            size: geometry.size, safe: safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
-            rows: paletteRows, colors: template.map(PaletteBar.visibleColorCount) ?? 1, isComplete: false)
-        let page = PaintingLayout(inputs)
-            .page(of: pictureSize, inputs: inputs, rightToLeft: layoutDirection == .rightToLeft)
-            .offsetBy(dx: -safe.leading, dy: -safe.top)
+        let page: CGRect
+        if let place {
+            let origin = geometry.frame(in: .global).origin
+            page = place.offsetBy(dx: -origin.x, dy: -origin.y)
+        } else {
+            let safe = geometry.safeAreaInsets
+            let inputs = PaintingLayout.Inputs(
+                size: geometry.size, safe: safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
+                rows: paletteRows, colors: template.map(PaletteBar.visibleColorCount) ?? 1, isComplete: false)
+            page = PaintingLayout(inputs)
+                .page(of: pictureSize, inputs: inputs, rightToLeft: layoutDirection == .rightToLeft)
+                .offsetBy(dx: -safe.leading, dy: -safe.top)
+        }
         return MakingOfLayout(
             size: geometry.size, picture: page, band: min(band, geometry.size.height * 0.4), top: Self.top)
     }

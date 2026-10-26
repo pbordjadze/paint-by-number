@@ -724,14 +724,16 @@ Conventions).
   screenshot).
 - Start Painting into the painting (`StartHandoff`, `StartHandoffPlan`,
   `Features/Create/StartHandoff.swift`; backlog row 142, Paul's "one move, then still"): the
-  journey from the settings to the canvas is one picture moving once. On Start the flow's controls
-  fade around its picture (`clear`; the show's photo fades in over the preview's, or the preview's
-  picture whole, `DepartingPicture`), the status bar goes (the painting has none, and an iPad's
-  safe area changes with it), and the picture glides once (`glide`, no bounce) to where the
-  painting's page will be: `PaintingLayout.page`, the painting screen's own layout (palette, bars,
-  `CanvasView.fittedPage`), which `PaintView` lays itself out by, so the two can't drift
-  (`PaintingLayoutTests` pins the places CI's canvases put the page). The making-of show plays
-  there; the preview's picture becomes the page as the canvas draws it on the way (`HandoffPage`:
+  journey from the settings to the canvas is one picture moving once. On Start the picture comes in
+  over the preview's (`lift`: the show's photo, or the preview's picture whole, `DepartingPicture`;
+  first, or the paper would show through both), the flow's controls fade around it (`clear`), the
+  status bar goes (the painting has none, and an iPad's safe area changes with it), and the
+  picture glides once (`glide`, no bounce) to where the painting's page will be:
+  `PaintingLayout.page` from the window's own bounds and safe area, the painting screen's own
+  layout (palette, bars, `CanvasView.fittedPage`), which `PaintView` lays itself out by, so the two
+  can't drift (`PaintingLayoutTests` pins the places CI's canvases put the page). The making-of
+  show plays there (its `place`; the 2.5 s fallback runs meanwhile, and a report after it still
+  counts while the cover is up); the preview's picture becomes the page as the canvas draws it on the way (`HandoffPage`:
   the canvas's `CanvasLook`, nothing selected), the show's once it is over (`settle`). Once the
   picture is still, the shell `begin`s the hand-off and pushes the painting *under* the cover
   (`startPainting`: the usual push and its zoom, unseen behind the opaque cover; a push with

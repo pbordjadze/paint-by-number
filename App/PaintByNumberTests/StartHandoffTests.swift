@@ -57,11 +57,39 @@ struct StartHandoffTests {
         let handoff = StartHandoff(timeout: .milliseconds(40))
         #expect(handoff.begin(id))
         try await waitUntil(timeout: .seconds(10)) { handoff.phase == .timedOut(id) }
-        // A canvas that draws after the cover has been told to go changes nothing.
-        handoff.paintingDrew(id, templateRect: template)
-        #expect(handoff.phase == .timedOut(id))
         handoff.complete()
         #expect(handoff.isFinished)
+        // A canvas that draws after the cover has gone changes nothing.
+        handoff.paintingDrew(id, templateRect: template)
+        #expect(handoff.phase == .finished(id))
+    }
+
+    /// The making-of plays while the painting opens beneath it: a painting that draws after its
+    /// time is up, while the cover is still up, is still handed over to.
+    @Test func aLateReportStillCountsWhileTheCoverIsUp() async throws {
+        let handoff = StartHandoff(timeout: .milliseconds(40))
+        #expect(handoff.begin(id))
+        try await waitUntil(timeout: .seconds(10)) { handoff.phase == .timedOut(id) }
+        handoff.paintingDrew(UUID(), templateRect: template)
+        #expect(handoff.phase == .timedOut(id))
+        handoff.paintingDrew(id, templateRect: template)
+        #expect(handoff.phase == .ready(id, template))
+    }
+
+    /// A canvas a painting is handed over to opens with the color to paint hidden, as the page the
+    /// create flow ends on is drawn (`HandoffPage`), and eases it in once the cover is gone; any
+    /// other canvas shows it at once.
+    @Test func theCanvasHandedOverToEasesItsColorIn() async throws {
+        _ = try #require(RenderContext.shared)
+        let session = PaintingSession(template: Fixtures.mosaic)
+        let opened = CanvasView(session: session)
+        #expect(opened.frameUniforms().outline.z == 1)
+
+        let handedOver = CanvasView(session: session)
+        handedOver.watchesFirstFrame = true
+        #expect(handedOver.frameUniforms().outline.z == 0)
+        handedOver.revealSelection()
+        try await waitUntil(timeout: .seconds(5)) { handedOver.frameUniforms().outline.z == 1 }
     }
 
     @Test func aReportCancelsTheFallback() async throws {

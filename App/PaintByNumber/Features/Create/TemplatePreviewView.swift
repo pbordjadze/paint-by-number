@@ -910,6 +910,9 @@ final class PreviewPictureProbe {
         self.aspect = aspect
     }
 
+    /// The window the preview is in: the screen the painting will have.
+    var window: UIWindow? { view?.window }
+
     /// The picture: the photo's shape fitted in the comparison's frame (the enlarged preview's
     /// frame is the whole page), in the window's coordinates; nil before it has been laid out.
     var picture: CGRect? {

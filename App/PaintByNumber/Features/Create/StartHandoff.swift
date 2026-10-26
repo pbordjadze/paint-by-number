@@ -54,9 +54,9 @@ final class StartHandoff {
         return true
     }
 
-    /// The painting `id` has its first frame on screen, its template at `templateRect` (global
-    /// coordinates), or a layout has moved the template since. Ignored unless that painting is the
-    /// one being opened, and once the flow has dissolved.
+    /// The painting `id` has its first frame on screen, its template at `templateRect` (the
+    /// window's coordinates), or a layout has moved the template since. Ignored unless that
+    /// painting is the one being opened, and once the flow has dissolved.
     func paintingDrew(_ id: UUID, templateRect: CGRect) {
         guard logic.paintingDrew(id, templateRect: templateRect) else { return }
         fallback?.cancel()
@@ -116,13 +116,14 @@ nonisolated struct StartHandoffLogic: Equatable, Sendable {
         return true
     }
 
-    /// Accepted from the painting being opened, and again, with a new rect, while the flow is on
-    /// its way (a layout moved the template); a report after the timeout or the flow's end, from
-    /// another painting or before any hand-off is ignored.
+    /// Accepted from the painting being opened, after the timeout too (the making-of may still be
+    /// playing, the cover up), and again, with a new rect, until the flow is done (a rotation moved
+    /// the page); a report after the flow's end, from another painting or before any hand-off is
+    /// ignored.
     @discardableResult
     mutating func paintingDrew(_ id: UUID, templateRect: CGRect) -> Bool {
         switch phase {
-        case .opening(let current) where current == id:
+        case .opening(let current) where current == id, .timedOut(let current) where current == id:
             phase = .ready(id, templateRect)
             return true
         case .ready(let current, let rect) where current == id && rect != templateRect:
@@ -162,14 +163,14 @@ nonisolated struct StartHandoffLogic: Equatable, Sendable {
     }
 }
 
-/// How the hand-off moves and for how long: one move, then still. On Start the create flow's
-/// controls fade around the picture (`clear`), the status bar goes (the painting has none), and the
-/// picture moves once (`glide`) to where the painting's page will be (`PaintingLayout.page`); the
-/// making-of show, when it plays, plays there. The painting opens beneath; once the canvas has
-/// drawn, the picture, by then the page as the canvas draws it (`HandoffPage`; the show's last
-/// picture `settle`s into it), stays where it is while the paper fades away around it (`reveal`),
-/// and the canvas beneath shows the same. Reduce Motion moves nothing: the picture fades in at the
-/// page's place instead.
+/// How the hand-off moves and for how long: one move, then still. On Start the picture comes in
+/// over the preview's (`lift`), the create flow's controls fade around it (`clear`), the status bar
+/// goes (the painting has none), and the picture moves once (`glide`) to where the painting's page
+/// will be (`PaintingLayout.page`); the making-of show, when it plays, plays there. The painting
+/// opens beneath; once the canvas has drawn, the picture, by then the page as the canvas draws it
+/// (`HandoffPage`; the show's last picture `settle`s into it), stays where it is while the paper
+/// fades away around it (`reveal`), and the canvas beneath shows the same. Reduce Motion moves
+/// nothing: the picture fades in at the page's place instead.
 nonisolated enum StartHandoffPlan {
     /// Where the picture starts, `from` being where the preview's picture was (window
     /// coordinates); nil: it fades in at its place.
@@ -193,13 +194,16 @@ nonisolated enum StartHandoffPlan {
         return max(abs(a.minX - b.minX), abs(a.minY - b.minY), abs(a.maxX - b.maxX), abs(a.maxY - b.maxY)) <= 1
     }
 
-    /// The flow's controls fade around the picture, which fades in over them (the show's photo,
-    /// or the preview's picture whole), before it moves.
-    static var clear: Double { 0.25 * timeScale }
+    /// The picture comes in over the preview's (the show's photo, or the preview's picture whole),
+    /// before anything else goes: both at once would show the paper through them.
+    static var lift: Double { 0.15 * timeScale }
+    /// Then the flow's controls fade around it, before it moves.
+    static var clear: Double { 0.2 * timeScale }
     /// The one move: smooth, with no bounce.
     static var glide: Double { 0.5 * timeScale }
-    /// How long the status bar's going may take to reach the layout (an iPad's safe area changes).
-    static let statusBarSettles = Duration.milliseconds(100)
+    /// How long the status bar's going may take to reach the layout (an iPad's safe area changes),
+    /// UIKit's and then SwiftUI's.
+    static let statusBarSettles = Duration.milliseconds(150)
     /// The show's last picture, or the preview's, becomes the page as the canvas draws it.
     static var settle: Double { 0.5 * timeScale }
     /// The paper and the show's card fade to the painting beneath.
