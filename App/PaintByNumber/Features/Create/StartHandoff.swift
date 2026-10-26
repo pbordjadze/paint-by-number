@@ -212,9 +212,10 @@ nonisolated enum StartHandoffPlan {
     static var clear: Double { 0.2 * timeScale }
     /// The one move: smooth, with no bounce.
     static var glide: Double { 0.5 * timeScale }
-    /// How long the status bar's going may take to reach the layout (an iPad's safe area changes),
-    /// UIKit's and then SwiftUI's.
-    static let statusBarSettles = Duration.milliseconds(150)
+    /// How long UIKit may take to hide the status bar (a busy simulator's main thread stalls), and
+    /// then the flow's layout to follow the window's.
+    static let statusBarHides = Duration.seconds(2)
+    static let layoutFollows = Duration.milliseconds(150)
     /// The show's last picture, or the preview's, becomes the page as the canvas draws it.
     static var settle: Double { 0.5 * timeScale }
     /// The paper and the show's card fade to the painting beneath.

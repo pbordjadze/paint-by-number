@@ -281,16 +281,26 @@ struct CreateFlowView: View {
         }
     }
 
-    /// Hides the status bar and waits for the layout to follow, UIKit's and then the flow's (an
-    /// iPad's safe area changes; a phone's with a sensor housing doesn't, which the wait tells).
+    /// Hides the status bar and waits until UIKit has (an iPad's safe area changes with it; a
+    /// phone's with a sensor housing doesn't), and the window and the flow are laid out without
+    /// it: the page's place is worked out from that layout. A short wait missed it on CI's busy
+    /// simulators, and the picture then moved again at the hand-over.
     private func letStatusBarGo(in window: UIWindow?) async {
-        let before = window?.safeAreaInsets
         hidesStatusBar = true
-        let deadline = ContinuousClock.now + StartHandoffPlan.statusBarSettles
-        while let window, ContinuousClock.now < deadline,
-              window.safeAreaInsets == before || abs(window.safeAreaInsets.top - safeArea.top) > 0.5 {
+        guard let window else { return }
+        let start = ContinuousClock.now
+        let hidden = start + StartHandoffPlan.statusBarHides
+        while window.windowScene?.statusBarManager?.isStatusBarHidden == false, ContinuousClock.now < hidden {
             try? await Task.sleep(for: .milliseconds(10))
         }
+        window.layoutIfNeeded()
+        let laidOut = ContinuousClock.now + StartHandoffPlan.layoutFollows
+        while abs(window.safeAreaInsets.top - safeArea.top) > 0.5, ContinuousClock.now < laidOut {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        let waited = ContinuousClock.now - start
+        Log.create.notice(
+            "Hand-off: the status bar went in \(String(describing: waited), privacy: .public), safe area top \(Double(window.safeAreaInsets.top), privacy: .public) (the flow's \(Double(safeArea.top), privacy: .public))")
     }
 
     /// Where a new painting's page of `template` will be in `window` (its coordinates), as the
