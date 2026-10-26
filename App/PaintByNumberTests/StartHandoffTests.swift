@@ -23,7 +23,7 @@ struct StartHandoffTests {
 
         handoff.paintingDrew(id, templateRect: template)
         #expect(handoff.phase == .ready(id, template))
-        #expect(!handoff.isOpening(id))
+        #expect(!handoff.isOpening(id) && !handoff.isAwaiting(id))
 
         // A layout that moves the template while the flow is on its way is followed...
         let moved = template.offsetBy(dx: 0, dy: -48)
@@ -70,6 +70,8 @@ struct StartHandoffTests {
         let handoff = StartHandoff(timeout: .milliseconds(40))
         #expect(handoff.begin(id))
         try await waitUntil(timeout: .seconds(10)) { handoff.phase == .timedOut(id) }
+        // The painting still opens under the cover, as one being opened does.
+        #expect(handoff.isAwaiting(id) && !handoff.isOpening(id) && !handoff.isAwaiting(UUID()))
         handoff.paintingDrew(UUID(), templateRect: template)
         #expect(handoff.phase == .timedOut(id))
         handoff.paintingDrew(id, templateRect: template)

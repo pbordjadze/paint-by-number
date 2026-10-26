@@ -41,6 +41,8 @@ final class StartHandoff {
     var isFinished: Bool { logic.isFinished }
 
     func isOpening(_ id: UUID) -> Bool { logic.isOpening(id) }
+    /// The painting `id` is opening under the cover, or the cover still waits for it past its time.
+    func isAwaiting(_ id: UUID) -> Bool { logic.isAwaiting(id) }
 
     /// Start has saved the painting `id`. True when the shell is to push it now; false when a
     /// hand-off is already under way, so a second Start does not push it twice.
@@ -107,6 +109,15 @@ nonisolated struct StartHandoffLogic: Equatable, Sendable {
     func isOpening(_ id: UUID) -> Bool {
         if case .opening(let current) = phase { return current == id }
         return false
+    }
+
+    /// Opening, or timed out with the cover still up (the making-of playing): a painting that draws
+    /// now is still handed over to.
+    func isAwaiting(_ id: UUID) -> Bool {
+        switch phase {
+        case .opening(let current), .timedOut(let current): current == id
+        case .idle, .ready, .finished: false
+        }
     }
 
     /// Whether this call began a hand-off: only one runs at a time.

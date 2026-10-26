@@ -253,7 +253,10 @@ struct CreateFlowView: View {
             expectedPage = place
             if let place { renderPage(of: template, size: place.size) }
             Log.create.notice("Hand-off: the page is expected at \(String(describing: place), privacy: .public)")
-            if entry == nil {
+            if entry != nil {
+                // The show's place, a frame before it moves there: the move sets out from it.
+                try? await Task.sleep(for: .milliseconds(33))
+            } else {
                 // Nowhere to move from: it comes in where it goes.
                 if let show {
                     makingOf = MakingOfRequest(source: show, entry: nil)
