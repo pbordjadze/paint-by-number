@@ -215,6 +215,9 @@ nonisolated enum StartHandoffPlan {
     /// How long UIKit may take to hide the status bar and lay the window out without it (a busy
     /// simulator's main thread stalls), and then the flow's layout to follow the window's.
     static let statusBarHides = Duration.seconds(2)
+    /// Once it is hidden, how long the window's safe area may take to follow it (CI's iPad: up to
+    /// about 0.35 s).
+    static let safeAreaFollows = Duration.milliseconds(750)
     static let layoutFollows = Duration.milliseconds(150)
     /// The show's last picture, or the preview's, becomes the page as the canvas draws it.
     static var settle: Double { 0.5 * timeScale }

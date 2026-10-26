@@ -290,14 +290,16 @@ struct CreateFlowView: View {
         let before = window?.safeAreaInsets
         let wasHidden = window?.windowScene?.statusBarManager?.isStatusBarHidden ?? true
         hidesStatusBar = true
-        guard let window, let before, !wasHidden else { return }
+        // A window that isn't the whole screen (Stage Manager, Split View) keeps its status bar.
+        guard let window, let before, !wasHidden, window.windowScene?.isFullScreen != false else { return }
         let start = ContinuousClock.now
         let deadline = start + StartHandoffPlan.statusBarHides
         while window.windowScene?.statusBarManager?.isStatusBarHidden == false, ContinuousClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(10))
         }
         if Self.statusBarSetsTheTop(window) {
-            while window.safeAreaInsets == before, ContinuousClock.now < deadline {
+            let followed = min(deadline, ContinuousClock.now + StartHandoffPlan.safeAreaFollows)
+            while window.safeAreaInsets == before, ContinuousClock.now < followed {
                 try? await Task.sleep(for: .milliseconds(10))
             }
         }
