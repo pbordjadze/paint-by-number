@@ -907,7 +907,9 @@ final class CreateModel {
     //   An edit that is declined (`EditTrail.Verdict.declined`) or has nothing to change changes
     //   nothing: it is not kept, takes no step of the history, and a declined one
     //   says so (`note`). A shape a line closed that has no room for a number is cut off by nothing,
-    //   but the line stays, and says so.
+    //   but the line stays, and says so. Looks, repaints and Only This Area (`recolor(_:)`,
+    //   `paintArea(at:color:)`) are laid so too; one in the place of others (the color picker still
+    //   moving, a look starting the colors over) takes it even when it lays nothing itself.
     // - A correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
     //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
     //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
@@ -915,8 +917,8 @@ final class CreateModel {
     // - Start From (`start(from:)`, only before the first edit) makes the base again too, through
     //   the refinements (`TemplateRefinements.start`): Blank the photo as one area on the canvas
     //   the generator would make, Generated the generator's template.
-    // - While the base is being made again, an edit is kept with the others and the new template
-    //   has it laid before it shows (`generate`).
+    // - While the base is being made again, an edit, a look or a repaint is kept with the others
+    //   and the new template has it laid before it shows (`generate`).
     //
     // `settledEdits` says which edits sent the template on screen already shows, so Refine draws
     // only the ones after it.
@@ -948,23 +950,15 @@ final class CreateModel {
     /// Only This Area, in its turn: the area under `point` (canvas units) takes `color` (OKLab), a
     /// paint of its own or the painting's paint of that color (`TemplateEditor.Edit.paintArea`),
     /// in place of the last edit when that was the same card's (the same point: the color picker
-    /// still moving is one step of the history). Numbered as `edit(_:)` is.
+    /// still moving is one step of the history). Laid and numbered as `edit(_:)` lays an edit.
     @discardableResult
     func paintArea(at point: SIMD2<Float>, color: SIMD3<Float>) -> Int {
         sentEdits += 1
         let serial = sentEdits
         enqueue { [self] in
-            let edit = TemplateEditor.Edit.paintArea(at: point, color: color)
-            guard trail != nil, let key = trailKey, key == currentKey,
-                  case .paintArea(let last, _)? = refinements.edits.last, last == point
-            else {
-                await lay(edit, serial: serial, tapped: false)
-                return
-            }
-            var next = refinements
-            next.edits[next.edits.count - 1] = edit
-            await settle(on: next)
-            handled(serial)
+            var again = false
+            if case .paintArea(let last, _)? = refinements.edits.last { again = last == point }
+            await lay(.paintArea(at: point, color: color), serial: serial, tapped: false, placement: again ? .inPlaceOfLast : .last)
         }
         return serial
     }
@@ -973,33 +967,35 @@ final class CreateModel {
     /// before it, read on the template the other edits make), the photo's colors again, or one
     /// paint repainted (in place of the last edit when that repainted the same color: the color
     /// picker still moving is one step of the history). Paints made alike become one, which a
-    /// note says. Nothing happens while the template is being made again.
+    /// note says. A look and a repaint are laid as `edit(_:)` lays an edit: one the editor
+    /// declines is not kept and says so, and one sent while the template is being made again is
+    /// kept and laid on the new one (a look read on the template on screen, as a split takes its
+    /// paints there).
     func recolor(_ change: RefineColors) {
         enqueue { [self] in
-            guard let current = trail, let key = trailKey, key == currentKey else { return }
-            let before = refinements
-            var next = before
-            let replaces = change.replacesLast(of: before.edits)
             switch change {
             case .photo:
+                let before = refinements
+                var next = before
                 next.edits = RefineColors.withoutColors(before.edits)
+                guard next != before else { return }
+                history.push(before)
+                let paints = trail?.template.palette.count ?? 0
+                await settle(on: next)
+                if refinements == next, let shown = trail?.template, shown.palette.count < paints { say(.alike) }
             case .look(let look, let strength):
-                let kept = RefineColors.withoutColors(before.edits)
-                guard let edit = try? await Self.lookEdit(look, strength: strength, on: current, edits: kept) else { return }
-                next.edits = kept + [edit]
+                guard let shown = trail else {
+                    say(.notRecolored)
+                    return
+                }
+                let edits = trailKey == currentKey ? refinements.edits : shown.edits
+                guard let edit = try? await Self.lookEdit(look, strength: strength, on: shown, edits: RefineColors.withoutColors(edits))
+                else { return }
+                await lay(edit, serial: nil, tapped: false, placement: .overColors)
             case .repaint(let from, let to, let family):
-                let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)
-                if replaces { next.edits[next.edits.count - 1] = edit } else { next.edits.append(edit) }
+                let placement: Placement = change.replacesLast(of: refinements.edits) ? .inPlaceOfLast : .last
+                await lay(.repaint(from: from, to: to, family: family), serial: nil, tapped: false, placement: placement)
             }
-            guard next != before, refinements == before else { return }
-            guard next.edits.count <= TemplateRefinements.maximumEdits else {
-                say(.full)
-                return
-            }
-            if !replaces { history.push(before) }
-            let paints = current.template.palette.count
-            await settle(on: next)
-            if refinements == next, let shown = trail?.template, shown.palette.count < paints { say(.alike) }
         }
     }
 
@@ -1137,11 +1133,11 @@ final class CreateModel {
         if take(target) { await converge() }
     }
 
-    /// The edit numbered `serial` has had its turn; `shown` when the template on screen shows
-    /// what it did (or it did nothing).
-    private func handled(_ serial: Int, shown: Bool = true) {
-        handledEdits = serial
-        if shown { settledEdits = serial }
+    /// The edit numbered `serial` (none for a look or a repaint) has had its turn; `shown` when the
+    /// template on screen shows what it did (or it did nothing).
+    private func handled(_ serial: Int?, shown: Bool = true) {
+        if let serial { handledEdits = serial }
+        if shown { settledEdits = handledEdits }
     }
 
     /// Shows a template with its edits laid. No crossfade: an edit is there the moment it lands.
@@ -1170,8 +1166,39 @@ final class CreateModel {
         }
     }
 
-    private func lay(_ edit: TemplateEditor.Edit, serial: Int, tapped: Bool) async {
+    /// Where an edit goes among the edits before it (`lay`).
+    nonisolated private enum Placement {
+        /// After them all.
+        case last
+        /// In place of the last one: the color picker still moving, no step of the history.
+        case inPlaceOfLast
+        /// After them all but the looks and repaints, which it takes out: a look starts the colors over.
+        case overColors
+
+        /// The ones of `edits` it goes after.
+        func prior(_ edits: [TemplateEditor.Edit]) -> [TemplateEditor.Edit] {
+            switch self {
+            case .last: edits
+            case .inPlaceOfLast: Array(edits.dropLast())
+            case .overColors: RefineColors.withoutColors(edits)
+            }
+        }
+
+        /// Whether taking it is a step of the history.
+        var isStep: Bool { self != .inPlaceOfLast }
+    }
+
+    /// Lays `edit` in its turn, after the edits before it or those of them `placement` keeps, and
+    /// keeps it when it changed the template (`MARK: Refine`). `serial` is its number
+    /// (`edit(_:)`); a look or a repaint has none.
+    private func lay(_ edit: TemplateEditor.Edit, serial: Int?, tapped: Bool, placement: Placement = .last) async {
         let before = refinements
+        let prior = placement.prior(before.edits)
+        // In the place of another, the same edit again (a color picked twice) has nothing to change.
+        guard placement == .last || prior + [edit] != before.edits else {
+            handled(serial, shown: trailKey == currentKey)
+            return
+        }
         guard let current = trail, let key = trailKey, key == currentKey else {
             // The template on screen is being made again: it has the edit laid with the others. A
             // split can't be made without its paints, so it takes them from the template on screen.
@@ -1180,12 +1207,13 @@ final class CreateModel {
                 kept = await Self.painting(edit, on: shown, photo: photo)
             }
             let now = refinements
+            let edits = placement.prior(now.edits) + [kept]
             // Refused or kept, it settles with the edits sent before it, once the template is remade.
-            if now.isFull {
+            if edits.count > TemplateRefinements.maximumEdits {
                 say(.full)
             } else {
-                history.push(now)
-                refinements.edits.append(kept)
+                if placement.isStep { history.push(now) }
+                refinements.edits = edits
             }
             handled(serial, shown: false)
             return
@@ -1202,39 +1230,50 @@ final class CreateModel {
                 return
             }
         }
-        guard !before.isFull else {
+        guard prior.count < TemplateRefinements.maximumEdits else {
             say(.full)
             handled(serial)
             return
         }
         var next = before
-        next.edits.append(edit)
+        next.edits = prior + [edit]
         do {
             let laid = try await Self.laying(
-                edit, on: current, photo: source?.image, settings: key.settings, refinements: next, style: previewStyle)
+                edit, on: current, after: prior, photo: source?.image, settings: key.settings, refinements: next,
+                style: previewStyle)
             next.edits[next.edits.count - 1] = laid.edit
             guard refinements == before, trailKey == key else {
                 // Something else changed the refinements meanwhile: the edit joins them.
-                history.push(refinements)
-                refinements.edits.append(laid.edit)
+                if placement.isStep { history.push(refinements) }
+                refinements.edits = placement.prior(refinements.edits) + [laid.edit]
                 await converge()
                 handled(serial)
                 return
             }
             switch laid.verdict {
             case .made(let tooSmall):
-                history.push(before)
+                if placement.isStep { history.push(before) }
                 refinements = next
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
                 if tooSmall { say(.tooSmall) }
+                if TemplateEditor.isRecolor(laid.edit), laid.trail.template.palette.count < current.template.palette.count {
+                    say(.alike)
+                }
                 // A line or a cell edge that cut a piece off made an area: they add areas and never
                 // join them.
-                if let line = Self.dividing(laid.edit), let end = line.closed ? line.points.first : line.points.last,
+                if let serial, let line = Self.dividing(laid.edit), let end = line.closed ? line.points.first : line.points.last,
                    laid.trail.template.regions.count > current.template.regions.count {
                     closedShape = ClosedShape(serial: serial, at: end, extent: Self.extent(of: line.points))
                 }
             case .nothing:
+                // In the place of others it takes their place though it lays nothing itself (the
+                // picker back on the paint's own color, a look at no strength): it is what the
+                // painter chose last, and the picker moving on takes its place in turn.
+                if placement != .last {
+                    if placement.isStep { history.push(before) }
+                    await settle(on: next)
+                }
                 handled(serial)
             case .declined(let why):
                 Log.create.info("An edit was declined: \(why, privacy: .public)")
@@ -1444,14 +1483,16 @@ final class CreateModel {
         TemplateEditor.painted(edit, on: template, photo: photo)
     }
 
-    /// `edit` laid on `trail`, a drawn line with the colors of `photo` for the pieces it cuts;
-    /// `refinements` are the ones the template will have been made with, the edit last among them.
+    /// `edit` laid on `trail` after `edits` (the trail's own, or those of them a repaint or a look
+    /// goes after), a drawn line with the colors of `photo` for the pieces it cuts; `refinements`
+    /// are the ones the template will have been made with, the edit last among them.
     @concurrent
     private static func laying(
-        _ edit: TemplateEditor.Edit, on trail: EditTrail, photo: RGBAImage?, settings: GenerationSettings,
-        refinements: TemplateRefinements, style: PreviewStyle
+        _ edit: TemplateEditor.Edit, on trail: EditTrail, after edits: [TemplateEditor.Edit], photo: RGBAImage?,
+        settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle
     ) async throws -> Laid {
         var trail = trail
+        try trail.move(to: edits, cancel: .task)
         let edit = photo.map { TemplateEditor.painted(edit, on: trail.template, photo: $0) } ?? edit
         let verdict = trail.add(edit)
         guard verdict.isMade else { return Laid(edit: edit, trail: trail, verdict: verdict, preview: nil) }
