@@ -281,26 +281,39 @@ struct CreateFlowView: View {
         }
     }
 
-    /// Hides the status bar and waits until UIKit has (an iPad's safe area changes with it; a
-    /// phone's with a sensor housing doesn't), and the window and the flow are laid out without
-    /// it: the page's place is worked out from that layout. A short wait missed it on CI's busy
-    /// simulators, and the picture then moved again at the hand-over.
+    /// Hides the status bar and waits until the window is laid out without it, and the flow too:
+    /// the page's place is worked out from that layout. UIKit says the status bar is hidden a
+    /// moment before the safe area follows (on CI's iPad, every time), so where the status bar
+    /// alone keeps the top clear (`statusBarSetsTheTop`) the safe area itself is waited for; where
+    /// a sensor housing does, it doesn't change.
     private func letStatusBarGo(in window: UIWindow?) async {
+        let before = window?.safeAreaInsets
+        let wasHidden = window?.windowScene?.statusBarManager?.isStatusBarHidden ?? true
         hidesStatusBar = true
-        guard let window else { return }
+        guard let window, let before, !wasHidden else { return }
         let start = ContinuousClock.now
-        let hidden = start + StartHandoffPlan.statusBarHides
-        while window.windowScene?.statusBarManager?.isStatusBarHidden == false, ContinuousClock.now < hidden {
+        let deadline = start + StartHandoffPlan.statusBarHides
+        while window.windowScene?.statusBarManager?.isStatusBarHidden == false, ContinuousClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(10))
         }
-        window.layoutIfNeeded()
+        if Self.statusBarSetsTheTop(window) {
+            while window.safeAreaInsets == before, ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(10))
+            }
+        }
         let laidOut = ContinuousClock.now + StartHandoffPlan.layoutFollows
         while abs(window.safeAreaInsets.top - safeArea.top) > 0.5, ContinuousClock.now < laidOut {
             try? await Task.sleep(for: .milliseconds(10))
         }
         let waited = ContinuousClock.now - start
         Log.create.notice(
-            "Hand-off: the status bar went in \(String(describing: waited), privacy: .public), safe area top \(Double(window.safeAreaInsets.top), privacy: .public) (the flow's \(Double(safeArea.top), privacy: .public))")
+            "Hand-off: the status bar went in \(String(describing: waited), privacy: .public), safe area top \(Double(before.top), privacy: .public) → \(Double(window.safeAreaInsets.top), privacy: .public) (the flow's \(Double(safeArea.top), privacy: .public))")
+    }
+
+    /// Whether the window's top safe area is the status bar's alone, so that it goes with it: on an
+    /// iPad, or a phone with no sensor housing (none with a home indicator has one).
+    private static func statusBarSetsTheTop(_ window: UIWindow) -> Bool {
+        window.traitCollection.userInterfaceIdiom == .pad || window.safeAreaInsets.bottom == 0
     }
 
     /// Where a new painting's page of `template` will be in `window` (its coordinates), as the
