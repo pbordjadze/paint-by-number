@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 118,
+ "duration_ms": 1499826,
+ "total_cost_usd": 3.8237434000000006,
+ "result": "I tested Refine in the Debug build on the \"J\u016bmantsubo Plain at Fukagawa Susaki\" sample and found two serious bugs. The full report is in `/Users/runner/work/_temp/qa/report.md`, with screenshots in `shots/`. There were no crashes.\n\n**Bugs, each seen at least twice:**\n1. **Edit Paint's color picker switches to a different paint while it's open.** After a pick, the panel jumps to another paint (Paint 1 \u2192 18, Paint 9 \u2192 6) and the palette numbers get reshuffled. The picker stays open, so the next pick recolors a paint you never chose. With \"Similar colors too\" on (the default), that spread to the sky and other paints. Seen in 2 of 2 sessions.\n2. **Paper's numbers pile up when the whole picture is in view.** The sky cell has about 20 overlapping \"15\"s and can't be read; parts of the \"10\" and \"2\" areas do the same. Seen 3 of 3 times. Zoomed far in, the numbers are clear.\n3. **Undo takes back a whole color-picker session at once.** Picking blue, then green, then yellow on an area's card, one Undo went straight back to the color before blue. Redo works the same way. That may be on purpose, but the brief asked for one change at a time.\n4. **Every Undo or Redo logs tip offers from the New Painting preview behind Refine** (7 of 7 times). No tip appeared on screen; it suggests the hidden preview re-runs on each change.\n\n**What works:**\n- The tool rail lists every tool in the expected sections and order.\n- The Tool Guide (question mark) opened on Writing, the tool I had in hand.\n- A Pen line across the red label with the writing split it cleanly, and the new cell got its number straight away.\n- After quick picks and quickly closing the picker and card, the last color picked stuck.\n- Each Look is one Undo step, and Undo brings back the colors you picked by hand.\n\n**Seen once or unsure:**\n- After the first pick on an area's card, the picker moved down, so my next quick tap landed on a pale peach instead of green.\n- On the first Moonlit tap, the lines were drawn offset from the fills; a second tap looked fine.\n- Applying a Look throws away colors picked by hand, with no note (Undo brings them back).\n- The Edit Paint color well ignored my first two taps.\n- After tapping the tiny-number badge, which zooms about 10\u00d7, there is no way back out without a pinch.\n\n**Not tested:**\n- Whether the tiny-number badge makes way for a note: I never got a note to appear.\n- Paper numbers at in-between zoom levels.\n- Most drawing tools, Writing's detection on this picture, and Done/Cancel.\n\nI ended the session still zoomed in, because double tap doesn't zoom Refine and Maestro can't pinch.",
+ "usage": {
+  "input_tokens": 132,
+  "cache_creation_input_tokens": 265503,
+  "cache_read_input_tokens": 8881402,
+  "output_tokens": 35971,
+  "output_tokens_details": {
+   "thinking_tokens": 8573
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 265503
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 41,
+  "Read": 11,
+  "mcp__maestro__run": 47,
+  "mcp__maestro__inspect_screen": 10,
+  "Write": 4
+ },
+ "images_received": 45
+}
