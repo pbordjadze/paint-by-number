@@ -557,11 +557,13 @@ Conventions).
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
-  along while Similar Colors Too is on); the picked paint's areas glow (`RefinePaintGlow`).
+  along while Similar Colors Too is on; laid once the picker rests, or as the panel or the
+  area's card goes, `RefinePendingPick`); the picked paint's areas glow (`RefinePaintGlow`).
   `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
-  of the history); paints made alike merge and a note says so. New colors cross-fade in (none
+  of the history); paints made alike merge and a note says so. They are laid as an edit is
+  (`CreateModel.lay`): one the editor declines is not kept (below). New colors cross-fade in (none
   under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
   12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
@@ -674,9 +676,11 @@ Conventions).
     with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
     paintings and drafts regenerate as they were. A draft (a slider being
     dragged) shows the photo's own drawing, without edits. An edit sent while the base is being
-    made again is kept and laid before the new template shows (`generate`).
+    made again (a look or a repaint too, a look read on the template on screen) is kept and laid
+    before the new template shows (`generate`).
   - **An edit that can't be made** (`EditTrail.Verdict.declined`: a line that doubles back on
-    itself, lines closer than the lattice can tell apart, a fill with no room for its number)
+    itself, lines closer than the lattice can tell apart, a fill with no room for its number, a
+    look, a repaint or Only This Area the template can't take)
     changes nothing, is not kept and takes no step of the history; a toast says so
     (`RefineNote`, `RefineNoteToast`, announced to VoiceOver by `CreateModel.say`, gone after
     `CreateModel.noteDuration`). A shape a line closed with no room for a number is not cut off but

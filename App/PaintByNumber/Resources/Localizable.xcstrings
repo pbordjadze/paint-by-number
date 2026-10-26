@@ -210,13 +210,13 @@
       }
     },
     "refine.card.others.hint" : {
-      "comment" : "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens Paints with the area's paint picked",
+      "comment" : "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens the Edit Paint tool with the area's paint picked",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows every area of this paint, glowing, in Paints."
+            "value" : "Shows every area of this paint, glowing, in Edit Paint."
           }
         }
       }
