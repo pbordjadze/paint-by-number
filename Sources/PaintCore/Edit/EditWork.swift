@@ -40,6 +40,12 @@ struct EditWork {
         /// Traced writing (`TemplateLineArt.writingStrokes`), kept by the pieces it is cut into.
         var writing = false
         var alive = true
+
+        /// Whether a drawn line meets it as part of the drawing (`drawRun`): its ends join it and
+        /// it is cut into the line's chains, which may bound a cell. Writing is letters over the
+        /// drawing, not part of it: a line that met a letter that way would make the letter an
+        /// outline, no longer writing, and a loop of it (an "o") a cell.
+        var joinsLines: Bool { alive && layer != LineLayer.color.rawValue && !writing }
     }
 
     var t: Template

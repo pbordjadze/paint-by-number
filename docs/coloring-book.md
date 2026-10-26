@@ -319,6 +319,11 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   which becomes a vertex of that ink), an end near the other end closes the line. The line is cut
   at every point it meets the drawing (edges, itself, the strokes it touches: a stroke is ink for
   the next line, so a shape drawn in two strokes closes) and each stretch between is a *chain*.
+  Writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins a letter and no
+  letter is cut into chains, so none bounds a cell; where the line cuts a region, the letters it
+  crosses are cut with it, each piece still writing (`EditWork.reassign`). Until October 26 a
+  line that met a letter took it in: the "o" of a note closed into a cell, and the pieces lost
+  their mark, so they stopped reading over dark paint.
   The chains in a region, with its outline, cut it exactly where they close off part of it
   (`EditWork.splitRegion`: the faces of the planar graph, traced at each vertex along the sharpest
   turn toward the region, as `BoundaryGraph` does on the lattice): each piece keeps the region's

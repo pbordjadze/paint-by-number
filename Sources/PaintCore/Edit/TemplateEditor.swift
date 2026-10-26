@@ -26,8 +26,11 @@ import Foundation
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
 ///   area; a piece with less is not cut off. A stretch that closes nothing is an interior stroke,
-///   verbatim. A draw with `paints` (every draw the app makes now; one without is a draw from
-///   before, laid exactly as it was) also nudges the line, and only the line, where it crosses an
+///   verbatim. Traced writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins
+///   it and no stretch closes a shape with it, so a letter never becomes an outline; where the line
+///   cuts the region the letters it crosses are cut with it, each piece still writing. A draw
+///   with `paints` (every draw the app makes now; one without is a draw from before, laid
+///   exactly as it was) also nudges the line, and only the line, where it crosses an
 ///   edge within `inkWidth` of a junction (an end of an edge): it passes through the junction, so
 ///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
 ///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
