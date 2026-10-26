@@ -837,10 +837,13 @@ struct RefineView: View {
 
     /// The lines on screen, in the template's canvas units: its drawing, the lines drawn since,
     /// less what was erased since (the edits sent that it doesn't show yet).
+    /// The lines a stroke's ends may join: the drawing's, but its writing, which the editor never
+    /// joins a line to (an end snapped onto a letter would hang there and close nothing).
     private func currentSnapLines() -> SnapLines? {
         guard let drawing = base?.drawing else { return nil }
         return RefineGestures.snapLines(
-            drawing: drawing.lines.map(\.points), canvas: drawing.size, pending: submitted.map { ($0.edit, $0.chain) })
+            drawing: drawing.lines.filter { !$0.isWriting }.map(\.points), canvas: drawing.size,
+            pending: submitted.map { ($0.edit, $0.chain) })
     }
 
     // MARK: Landing
@@ -1852,7 +1855,7 @@ extension RefineView {
         if let template = base?.template {
             RefineAreaCard(
                 template: template, at: pick.at,
-                paintArea: { model.paintArea(at: pick.at, color: $0) },
+                paintArea: { model.paintArea(at: pick.at, color: $0, picking: true) },
                 repaint: { from, to in model.recolor(.repaint(from: from, to: to, family: false)) },
                 showPaint: { paint in
                     card = nil

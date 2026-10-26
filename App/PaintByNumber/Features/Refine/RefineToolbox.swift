@@ -367,21 +367,25 @@ struct RefineNumbers: View, Equatable {
     var body: some View {
         let template = base.template, rect = rect
         let size = CGSize(width: template.width, height: template.height)
-        Canvas { context, _ in
+        Canvas { context, area in
             guard size.width > 0, size.height > 0, rect.width > 0 else { return }
             let s = max(rect.width / size.width, rect.height / size.height)
             let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+            // Zoomed in, most numbers are off screen: a frame draws only those it shows (Paper
+            // shows them through every zoom and move).
+            let shown = CGRect(origin: .zero, size: area).insetBy(dx: -40, dy: -40)
             for label in template.labels {
                 let region = Int(label.region)
                 guard region < template.regions.count else { continue }
                 let paint = template.regions[region].colorIndex
                 let digits = LabelSizing.digitCount(colorIndex: paint)
                 let points = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, detail: template.isDetailRegion(region))) * s
-                guard points >= 4 else { continue }
+                let at = CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s)
+                guard points >= 4, shown.contains(at) else { continue }
                 let text = Text(verbatim: "\(paint + 1)")
                     .font(.system(size: points, weight: .semibold, design: .serif))
                     .foregroundStyle(LineArtDrawing.ink.opacity(0.75))
-                context.draw(text, at: CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s))
+                context.draw(text, at: at)
             }
         }
         .allowsHitTesting(false)

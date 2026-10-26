@@ -84,6 +84,13 @@ nonisolated struct RefineHistory: Equatable, Sendable {
         if undo.count > Self.limit { undo.removeFirst(undo.count - Self.limit) }
         redo.removeAll()
     }
+
+    /// `state` is about to change, as a step of its own (`push`) or as part of the last step (the
+    /// color picker still moving): either way what was undone is gone, or Redo would bring back an
+    /// older color over the newer.
+    mutating func take(_ state: TemplateRefinements, step: Bool) {
+        if step { push(state) } else { redo.removeAll() }
+    }
 }
 
 /// What Refine tells the painter, in a toast (`RefineNoteToast`) that VoiceOver announces

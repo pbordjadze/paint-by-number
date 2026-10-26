@@ -47,6 +47,22 @@ struct RefineEditsTests {
         #expect(RefineHistory(opening: refinements).opening == refinements)
     }
 
+    /// A change in the place of the last (the color picker still moving) is part of the last
+    /// step, and, like a step of its own, leaves nothing to redo: Redo would bring back an older
+    /// color over the newer.
+    @Test func aChangeInTheLastOnesPlaceLeavesNothingToRedo() {
+        var history = RefineHistory()
+        var refinements = TemplateRefinements()
+        history.push(refinements)
+        refinements.edits = [.eraseLine(at: .zero, reach: 8)]
+        history.redo = [refinements]
+        history.take(refinements, step: false)
+        #expect(history.undo.count == 1 && history.redo.isEmpty)
+        history.redo = [refinements]
+        history.take(refinements, step: true)
+        #expect(history.undo.count == 2 && history.redo.isEmpty)
+    }
+
     /// A painting with as many edits as Refine keeps is full, which Refine says in its own words
     /// for any tool: an edit refused at the cap is not a line drawn badly.
     @Test func aPaintingWithEveryEditKeptIsFull() {

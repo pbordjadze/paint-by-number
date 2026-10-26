@@ -186,7 +186,7 @@ func runRefine(_ options: Options) throws {
         let t = trail.template
         let screen = refineScreen(for: t, width: width, zoom: g.zoom ?? script.screen?.zoom ?? 1)
         let drawing = RefineGestures.drawingLines(of: t)
-        let lines = RefineGestures.snapLines(drawing: drawing, canvas: screen.canvas, pending: [])
+        let lines = RefineGestures.snapLines(drawing: RefineGestures.drawingLines(of: t, writing: false), canvas: screen.canvas, pending: [])
         let samples = (g.points ?? []).enumerated().map { point($0.element, "points[\($0.offset)]", k) }
         var marks: [[SIMD2<Float>]] = [samples]
         var edit: TemplateEditor.Edit?

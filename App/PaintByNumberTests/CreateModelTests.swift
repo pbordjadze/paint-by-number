@@ -792,9 +792,10 @@ struct CreateModelTests {
         let moved = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false)
         model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
         model.recolor(.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false))
+        // Sent while the template is being made again (whether they are laid before or after it
+        // comes is the main actor's timing, not something to wait on).
+        #expect(!model.isFinal)
         try await waitUntil(polling: .milliseconds(2)) { model.refinements.edits == [moved] }
-        // Kept before the template it is laid on is there.
-        #expect(model.preview?.settings != model.settings)
         try await waitUntil { model.isFinal }
         #expect(model.preview?.refinements.edits == [moved])
         #expect(model.preview?.template == (try TemplateEditor.apply(moved, to: first).template))
@@ -826,19 +827,49 @@ struct CreateModelTests {
         try #require(others.count >= 2)
         let point = label.position
 
-        try await waitForEdits(model, model.paintArea(at: point, color: others[0]))
+        try await waitForEdits(model, model.paintArea(at: point, color: others[0], picking: true))
         #expect(model.refinements.edits == [.paintArea(at: point, color: others[0])])
-        try await waitForEdits(model, model.paintArea(at: point, color: others[1]))
+        try await waitForEdits(model, model.paintArea(at: point, color: others[1], picking: true))
         let again = TemplateEditor.Edit.paintArea(at: point, color: others[1])
         #expect(model.refinements.edits == [again])
         #expect(model.preview?.template == (try TemplateEditor.apply(again, to: before).template))
 
-        try await waitForEdits(model, model.paintArea(at: point, color: before.palette[own].oklab))
+        try await waitForEdits(model, model.paintArea(at: point, color: before.palette[own].oklab, picking: true))
         #expect(model.refinements.edits.count == 1 && model.note == nil)
         #expect(model.preview?.template == before)
         model.undo()
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
         #expect(model.preview?.template == before && !model.canUndo)
+
+        // The Bucket's taps are steps of their own, the same point or not.
+        try await waitForEdits(model, model.paintArea(at: point, color: others[0]))
+        try await waitForEdits(model, model.paintArea(at: point, color: others[1]))
+        #expect(model.refinements.edits == [.paintArea(at: point, color: others[0]), again])
+        model.undo()
+        try await waitUntil { model.refinements.edits.count == 1 && model.isFinal }
+        #expect(model.refinements.edits == [.paintArea(at: point, color: others[0])])
+        model.cancelAll()
+    }
+
+    /// Once Refine is cancelled, a color its card or Edit Paint still had waiting as the screen
+    /// went is not laid over what Cancel put back; Refine opened again takes colors again.
+    @Test func aColorSentAfterCancelIsNotLaid() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let from = try #require(before.palette.first?.oklab)
+        let point = SIMD2(0.5 * Float(before.width), 0.5 * Float(before.height))
+        model.beginRefining()
+        model.cancelRefining()
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        model.paintArea(at: point, color: SIMD3(0.5, 0.1, -0.1), picking: true)
+        await model.settled()
+        #expect(model.refinements.isEmpty && model.preview?.template == before)
+
+        model.beginRefining()
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        try await waitUntil { !model.refinements.edits.isEmpty && model.isFinal }
         model.cancelAll()
     }
 

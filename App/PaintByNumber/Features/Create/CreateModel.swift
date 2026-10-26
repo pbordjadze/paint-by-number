@@ -240,6 +240,9 @@ final class CreateModel {
     /// Refine's changes run one after another (`enqueue`); a new photo makes the ones waiting moot.
     @ObservationIgnored private var refineQueue: Task<Void, Never>?
     @ObservationIgnored private var refineEpoch = 0
+    /// Refine was cancelled and hasn't opened again: a color its card or Edit Paint still had
+    /// waiting as the screen went (`RefinePendingPick.flush`) isn't laid over what Cancel put back.
+    @ObservationIgnored private var refiningCancelled = false
     @ObservationIgnored private var noteTask: Task<Void, Never>?
 
     /// How many full-resolution templates `made` keeps: a template is a megabyte or two.
@@ -947,17 +950,20 @@ final class CreateModel {
         return serial
     }
 
-    /// Only This Area, in its turn: the area under `point` (canvas units) takes `color` (OKLab), a
-    /// paint of its own or the painting's paint of that color (`TemplateEditor.Edit.paintArea`),
-    /// in place of the last edit when that was the same card's (the same point: the color picker
-    /// still moving is one step of the history). Laid and numbered as `edit(_:)` lays an edit.
+    /// Only This Area and the Bucket, in their turn: the area under `point` (canvas units) takes
+    /// `color` (OKLab), a paint of its own or the painting's paint of that color
+    /// (`TemplateEditor.Edit.paintArea`). With `picking` (the card's color picker) it takes the
+    /// last edit's place when that was the same card's (the same point: the picker still moving is
+    /// one step of the history); a Bucket tap is always a step of its own, wherever it lands.
+    /// Laid and numbered as `edit(_:)` lays an edit.
     @discardableResult
-    func paintArea(at point: SIMD2<Float>, color: SIMD3<Float>) -> Int {
+    func paintArea(at point: SIMD2<Float>, color: SIMD3<Float>, picking: Bool = false) -> Int {
+        guard !refiningCancelled else { return sentEdits }
         sentEdits += 1
         let serial = sentEdits
         enqueue { [self] in
             var again = false
-            if case .paintArea(let last, _)? = refinements.edits.last { again = last == point }
+            if picking, case .paintArea(let last, _)? = refinements.edits.last { again = last == point }
             await lay(.paintArea(at: point, color: color), serial: serial, tapped: false, placement: again ? .inPlaceOfLast : .last)
         }
         return serial
@@ -972,6 +978,7 @@ final class CreateModel {
     /// kept and laid on the new one (a look read on the template on screen, as a split takes its
     /// paints there).
     func recolor(_ change: RefineColors) {
+        guard !refiningCancelled else { return }
         enqueue { [self] in
             switch change {
             case .photo:
@@ -1052,6 +1059,7 @@ final class CreateModel {
 
     /// Refine opened: its history starts here.
     func beginRefining() {
+        refiningCancelled = false
         enqueue { [self] in
             history = RefineHistory(opening: refinements)
             dismissNote()
@@ -1060,6 +1068,7 @@ final class CreateModel {
 
     /// Refine's Cancel: back to what it opened with.
     func cancelRefining() {
+        refiningCancelled = true
         enqueue { [self] in
             let opening = history.opening
             history = RefineHistory(opening: opening)
@@ -1193,6 +1202,7 @@ final class CreateModel {
     /// (`edit(_:)`); a look or a repaint has none.
     private func lay(_ edit: TemplateEditor.Edit, serial: Int?, tapped: Bool, placement: Placement = .last) async {
         let before = refinements
+        let epoch = refineEpoch
         let prior = placement.prior(before.edits)
         // In the place of another, the same edit again (a color picked twice) has nothing to change.
         guard placement == .last || prior + [edit] != before.edits else {
@@ -1212,7 +1222,7 @@ final class CreateModel {
             if edits.count > TemplateRefinements.maximumEdits {
                 say(.full)
             } else {
-                if placement.isStep { history.push(now) }
+                history.take(now, step: placement.isStep)
                 refinements.edits = edits
             }
             handled(serial, shown: false)
@@ -1243,8 +1253,15 @@ final class CreateModel {
                 style: previewStyle)
             next.edits[next.edits.count - 1] = laid.edit
             guard refinements == before, trailKey == key else {
+                // The photo it was made on is gone (`forgetEdits`): it has no place among another's.
+                guard epoch == refineEpoch else { return }
+                if case .declined(let why) = laid.verdict {
+                    say(.init(declined: edit, because: why))
+                    handled(serial)
+                    return
+                }
                 // Something else changed the refinements meanwhile: the edit joins them.
-                if placement.isStep { history.push(refinements) }
+                history.take(refinements, step: placement.isStep)
                 refinements.edits = placement.prior(refinements.edits) + [laid.edit]
                 await converge()
                 handled(serial)
@@ -1252,7 +1269,7 @@ final class CreateModel {
             }
             switch laid.verdict {
             case .made(let tooSmall):
-                if placement.isStep { history.push(before) }
+                history.take(before, step: placement.isStep)
                 refinements = next
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
@@ -1271,7 +1288,7 @@ final class CreateModel {
                 // picker back on the paint's own color, a look at no strength): it is what the
                 // painter chose last, and the picker moving on takes its place in turn.
                 if placement != .last {
-                    if placement.isStep { history.push(before) }
+                    history.take(before, step: placement.isStep)
                     await settle(on: next)
                 }
                 handled(serial)

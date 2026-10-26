@@ -186,4 +186,22 @@ struct RefineGesturesTests {
             drawing: [], canvas: Self.screen.canvas, pending: [(drawn, nil), (.erase(path: [SIMD2(100, 20)], radius: 5), nil)])
         #expect(erased.nearestPoint(to: CGPoint(x: 101, y: 20), within: 2) == nil)
     }
+
+    /// A drawn line's ends may join the drawing's lines but never its writing, which the editor
+    /// never joins a line to (an end snapped onto a letter would hang there and close nothing);
+    /// the drawing itself still has the letters.
+    @Test func aLinesEndsMayJoinTheDrawingButNotItsWriting() throws {
+        let t = try WritingTests.book().template
+        let art = try #require(t.lineArt)
+        let letters = art.writingStrokes.map { k in
+            let s = art.strokes[Int(k)]
+            return art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)].map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }
+        }
+        try #require(!letters.isEmpty)
+        let all = RefineGestures.drawingLines(of: t), joinable = RefineGestures.drawingLines(of: t, writing: false)
+        #expect(letters.allSatisfy { all.contains($0) })
+        #expect(!letters.contains { joinable.contains($0) })
+        #expect(joinable.count + letters.count == all.count)
+    }
+
 }

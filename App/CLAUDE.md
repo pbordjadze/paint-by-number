@@ -546,7 +546,8 @@ Conventions).
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
-  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval, a curve (two
+  bent back into a hook: `PenAssist`, `SnapLines`; never onto writing, which the editor never
+  joins a line to: `RefineGestures.drawingLines(of:writing:)`, `LineArtDrawing.Line.isWriting`), Shapes draws a straight line, a rectangle, an oval, a curve (two
   drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from
   junction to junction (no line under the tools says how they work: each button's
@@ -558,7 +559,8 @@ Conventions).
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
   along while Similar Colors Too is on; laid once the picker rests, or as the panel or the
-  area's card goes, `RefinePendingPick`); the picked paint's areas glow (`RefinePaintGlow`).
+  area's card goes, `RefinePendingPick`, but never over what Cancel put back,
+  `CreateModel.refiningCancelled`); the picked paint's areas glow (`RefinePaintGlow`).
   `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
@@ -590,7 +592,8 @@ Conventions).
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
-    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint), the
+    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint,
+    each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
     the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
