@@ -35,8 +35,8 @@ struct RefineColorsPanel: View {
     @State private var strength: Float = 1
     /// The picked paint's color when it was picked: a repaint's `from` while the picker moves.
     @State private var from: SIMD3<Float>?
-    /// The picker's last color, laid once it has rested a moment.
-    @State private var pending: Task<Void, Never>?
+    /// The picker's last color, laid once it has rested a moment or as the panel goes.
+    @State private var pending = RefinePendingPick()
 
     /// The look the painting has, nil for none.
     private var look: (look: TemplateEditor.Look, strength: Float)? { RefineColors.look(in: edits) }
@@ -63,7 +63,7 @@ struct RefineColorsPanel: View {
             if case .repaint(let started, _, _)? = edits.last, started == from { return }
             pick(paint)
         }
-        .onDisappear { pending?.cancel() }
+        .onDisappear { pending.flush() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-colors")
     }
@@ -207,7 +207,7 @@ struct RefineColorsPanel: View {
     }
 
     /// The picked paint's color as the picker shows it; a color picked is laid once the picker
-    /// rests a moment, so a drag across the spectrum doesn't queue an edit per step.
+    /// rests a moment (`RefinePendingPick`).
     private func color(of index: Int) -> Binding<Color> {
         Binding(
             get: { PaletteBar.paint(template, index) },
@@ -216,17 +216,52 @@ struct RefineColorsPanel: View {
                 let resolved = color.resolve(in: environment)
                 let to = ColorScience.linearSRGBToOKLab(SIMD3(resolved.linearRed, resolved.linearGreen, resolved.linearBlue))
                 let family = family
-                pending?.cancel()
-                pending = Task {
-                    try? await Task.sleep(for: .milliseconds(150))
-                    guard !Task.isCancelled else { return }
-                    change(.repaint(from: from, to: to, family: family))
-                }
+                pending.pick { change(.repaint(from: from, to: to, family: family)) }
             })
     }
 
+    /// The paint whose color the picker changes; a color still waiting is laid on the one before.
     private func pick(_ index: Int?) {
-        pending?.cancel()
+        pending.flush()
         from = index.flatMap { $0 < template.palette.count ? template.palette[$0].oklab : nil }
+    }
+}
+
+/// The system color picker's last color, laid once the picker rests a moment (`rest`), so a drag
+/// across the spectrum doesn't queue an edit per step; and at once when the view it was picked
+/// in goes (`flush`), so the last color picked is never dropped. Refine's card and its Edit Paint
+/// share it.
+final class RefinePendingPick {
+    /// How long the picker rests before its color is laid.
+    static let rest: Duration = .milliseconds(150)
+
+    private var waiting: (() -> Void)?
+    private var timer: Task<Void, Never>?
+
+    /// A color picked: `lay` lays it, once the picker rests, in place of any still waiting.
+    func pick(_ lay: @escaping () -> Void) {
+        waiting = lay
+        timer?.cancel()
+        timer = Task {
+            try? await Task.sleep(for: Self.rest)
+            guard !Task.isCancelled else { return }
+            flush()
+        }
+    }
+
+    /// Lays the color waiting, if one is, now.
+    func flush() {
+        timer?.cancel()
+        timer = nil
+        guard let lay = waiting else { return }
+        waiting = nil
+        lay()
+    }
+
+    /// Forgets the color waiting: something else was chosen in its place.
+    func drop() {
+        timer?.cancel()
+        timer = nil
+        waiting = nil
     }
 }

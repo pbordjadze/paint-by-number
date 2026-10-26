@@ -61,8 +61,8 @@ struct RefineAreaCard: View {
     /// its own, else it repaints its paint, from `from`.
     @State private var isolates: Bool?
     @State private var from: SIMD3<Float>?
-    /// The picker's last color, laid once it has rested a moment.
-    @State private var pending: Task<Void, Never>?
+    /// The picker's last color, laid once it has rested a moment or as the card goes.
+    @State private var pending = RefinePendingPick()
 
     private var region: Int? { template.region(at: at) }
 
@@ -93,8 +93,8 @@ struct RefineAreaCard: View {
                         Label { Text("Show Its Other Areas") } icon: { Image(systemName: "sparkle.magnifyingglass") }
                     }
                     .accessibilityHint(Text(String(
-                        localized: "refine.card.others.hint", defaultValue: "Shows every area of this paint, glowing, in Paints.",
-                        comment: "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens Paints with the area's paint picked")))
+                        localized: "refine.card.others.hint", defaultValue: "Shows every area of this paint, glowing, in Edit Paint.",
+                        comment: "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens the Edit Paint tool with the area's paint picked")))
                     .accessibilityIdentifier("refine-card-others")
                 }
             }
@@ -104,7 +104,7 @@ struct RefineAreaCard: View {
         .presentationDetents([.medium, .large])
         .presentationCompactAdaptation(.sheet)
         .onAppear(perform: begin)
-        .onDisappear { pending?.cancel() }
+        .onDisappear { pending.flush() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-card")
     }
@@ -149,7 +149,7 @@ struct RefineAreaCard: View {
                     ForEach(template.palette.indices.filter { $0 != current }, id: \.self) { index in
                         Button {
                             FeedbackEngine.shared.selectionChanged()
-                            pending?.cancel()
+                            pending.drop()
                             paintArea(template.palette[index].oklab)
                         } label: {
                             Text(verbatim: "\(index + 1)")
@@ -187,7 +187,7 @@ struct RefineAreaCard: View {
     }
 
     /// The area's color as the picker shows it; a color picked is laid once the picker rests a
-    /// moment, so a drag across the spectrum doesn't queue an edit per step (Colors' way).
+    /// moment (`RefinePendingPick`, Edit Paint's way).
     private func color(paint: Int) -> Binding<Color> {
         Binding(
             get: { PaletteBar.paint(template, paint) },
@@ -195,10 +195,7 @@ struct RefineAreaCard: View {
                 let resolved = color.resolve(in: environment)
                 let to = ColorScience.linearSRGBToOKLab(SIMD3(resolved.linearRed, resolved.linearGreen, resolved.linearBlue))
                 let isolates = isolates ?? true, from = from
-                pending?.cancel()
-                pending = Task {
-                    try? await Task.sleep(for: .milliseconds(150))
-                    guard !Task.isCancelled else { return }
+                pending.pick {
                     if isolates {
                         paintArea(to)
                     } else if let from {

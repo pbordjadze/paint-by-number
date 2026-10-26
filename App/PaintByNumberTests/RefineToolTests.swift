@@ -59,6 +59,32 @@ struct RefineToolTests {
         #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
     }
 
+    /// The color picker's last color is laid once the picker rests, in place of the ones before
+    /// it, or at once when its view goes (`flush`), and then only once; one something else took
+    /// the place of is never laid.
+    @MainActor
+    @Test func aPickedColorIsLaidOnceThePickerRestsOrItsViewGoes() async throws {
+        var laid: [Int] = []
+        let pending = RefinePendingPick()
+        pending.pick { laid.append(1) }
+        pending.pick { laid.append(2) }
+        #expect(laid.isEmpty)
+        try await waitUntil(polling: .milliseconds(10)) { !laid.isEmpty }
+        #expect(laid == [2])
+
+        pending.pick { laid.append(3) }
+        pending.flush()
+        #expect(laid == [2, 3])
+        pending.flush()
+        try await Task.sleep(for: RefinePendingPick.rest * 3)
+        #expect(laid == [2, 3], "A color laid as its view went was laid again")
+
+        pending.pick { laid.append(4) }
+        pending.drop()
+        try await Task.sleep(for: RefinePendingPick.rest * 3)
+        #expect(laid == [2, 3])
+    }
+
     /// A picked paint glows in every area that uses it, including separated areas.
     @Test func aPickedPaintFindsExactlyItsAreas() {
         var template = Fixtures.stripes(count: 4)
