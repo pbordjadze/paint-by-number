@@ -480,6 +480,63 @@ struct CanvasRenderTests {
         #expect(maxDifference(px[left - 8, midY], backdrop) <= 2, "the rim should be one pixel, with no shadow beyond it")
     }
 
+    /// A painting handed over to opens with its selected color hidden (hatch strength 0), which
+    /// draws exactly as no selection, as the page the create flow ends on is drawn
+    /// (`HandoffPage`); shown, it is the usual highlight. Classic templates and books alike.
+    @Test func aHiddenSelectionDrawsAsNone() throws {
+        let context = try #require(RenderContext.shared)
+        for t in [Fixtures.mosaic, LineArtRenderingTests.book] {
+            let scene = try #require(CanvasScene(template: t, context: context))
+            let color = Int(t.regions[0].colorIndex)
+            let (w, h) = (t.width * 2, t.height * 2)
+            func frame(selected: Int?, shown: Float) -> CanvasUniforms {
+                let look = CanvasLook(
+                    pointScale: 2, depth: 0, palette: .light, coloringBook: scene.isColoringBook, lineWeight: .regular,
+                    selectionShown: shown, reduceMotion: false)
+                return CanvasUniforms(CanvasFrame(
+                    origin: .zero, scale: 2, pointScale: 2, targetSize: SIMD2(Float(w), Float(h)),
+                    canvasSize: SIMD2(Float(t.width), Float(t.height)), palette: .light, shadowOpacity: 0,
+                    outlineOpacity: look.outlineOpacity, outlineWidth: look.outlineWidth,
+                    selectedOutlineWidth: look.selectedOutlineWidth, hatch: shown, numbersShown: 1, lines: look.lines,
+                    labels: look.labels, numbers: look.numbers, time: SIMD4(0, -10, CanvasClock.never, CanvasClock.never),
+                    selection: selected.map { (color: $0, paint: scene.paletteLinear[$0]) },
+                    hovered: -1, pulsing: -1, bumped: -1, brush: nil, shine: (start: CanvasClock.never, color: -1),
+                    photoOpacity: 0))
+            }
+            func pixels(_ uniforms: CanvasUniforms) throws -> Data {
+                let image = try #require(unpainted(
+                    scene, uniforms: uniforms, content: RenderContext.Content(), width: w, height: h, context: context))
+                return try #require(image.dataProvider?.data as Data?)
+            }
+            let none = try pixels(frame(selected: nil, shown: 0))
+            #expect(try pixels(frame(selected: color, shown: 0)) == none)
+            #expect(try pixels(frame(selected: color, shown: 1)) != none)
+        }
+    }
+
+    /// The page the create flow ends on (`HandoffPage`) is drawn at its size in points times the
+    /// screen's scale, opaque: it covers the canvas's page exactly.
+    @Test func theHandoffPageCoversThePage() async throws {
+        _ = try #require(RenderContext.shared)
+        let t = LineArtRenderingTests.book
+        let size = CGSize(width: Double(t.width) * 0.75, height: Double(t.height) * 0.75)
+        let look = HandoffPage.Look(
+            size: size, scale: 2, paper: .light, interfaceIsDark: false, lineWeight: .regular, reduceMotion: false)
+        let page = try #require(await HandoffPage.render(t, look: look))
+        record(page, "handoff-page")
+        #expect(page.width == Int((size.width * 2).rounded()) && page.height == Int((size.height * 2).rounded()))
+        let data = try #require(page.dataProvider?.data as Data?)
+        var transparent = 0
+        for y in 0..<page.height {
+            for x in 0..<page.width where data[y * page.bytesPerRow + x * 4 + 3] < 255 { transparent += 1 }
+        }
+        #expect(transparent == 0)
+        // Nothing to draw it at.
+        var empty = look
+        empty.size = .zero
+        #expect(await HandoffPage.render(t, look: empty) == nil)
+    }
+
     // MARK: Helpers
 
     /// One offscreen frame with explicit uniforms and content, nothing painted, through the

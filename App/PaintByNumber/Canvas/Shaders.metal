@@ -111,7 +111,8 @@ static float3 wetPaint(float3 paint, PaintSample ps) {
 }
 
 /// Unpainted regions of the selected color: a light tint of the paint plus fine diagonal
-/// hatching in screen space that glides in when the color is picked, then rests.
+/// hatching in screen space that glides in when the color is picked, then rests. Both scale with
+/// the hatch strength (`outline.z`), which eases in on a painting just handed over to.
 static float3 highlightPaper(float3 paper, float2 pt, constant FrameUniforms &u) {
     float3 sel = u.accent.rgb;
     float since = max(u.time.x - u.time.y, 0.0);
@@ -119,7 +120,7 @@ static float3 highlightPaper(float3 paper, float2 pt, constant FrameUniforms &u)
     float phase = 6.0 * (1.0 - exp(-since * 1.8));
     float lum = dot(sel, float3(0.2126, 0.7152, 0.0722));
     float3 ink = lum > u.accent.a ? sel * (u.accent.a / lum) : sel;
-    float3 tint = mix(paper, sel, 0.14 + 0.12 * intro);
+    float3 tint = mix(paper, sel, (0.14 + 0.12 * intro) * u.outline.z);
     const float period = 6.0;                       // points
     float w = (pt.x + pt.y) * 0.70710678 + phase;
     float d = abs(fract(w / period) - 0.5) * period;
@@ -291,7 +292,10 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     float width = selected ? max(u.outline.y, lineWidth) : lineWidth;
     // Thinner than a pixel: keep one pixel and fade instead, so lines never shimmer.
     float drawn = max(width, 1.0);
-    float alpha = (selected ? max(lineAlpha, u.ink.a) : lineAlpha) * visible * (width / drawn) * (selected ? 1.3 : 1.0);
+    // As strong as the selection shows (the hatch strength, which eases in on a painting just
+    // handed over to; the selected width eases with it, `CanvasLook`).
+    float strong = selected ? u.outline.z : 0.0;
+    float alpha = mix(lineAlpha, max(lineAlpha, u.ink.a) * 1.3, strong) * visible * (width / drawn);
     float hw = 0.5 * drawn;
 
     float2 a = toPixels(points[seg.x], u);
@@ -369,8 +373,10 @@ vertex GlyphOut glyphVertex(uint vid [[vertex_id]],
     }
     PaintSample ps = samplePaint(states[g.region], g.center, now, 1.0 / u.transform.z);
     bool selected = u.selected.a > 0.5 && int(regionColors[g.region].w + 0.5) == u.ids.x;
+    // The selected color's numbers stand out as much as its hatch shows.
+    float emphasis = selected ? u.outline.z : 0.0;
     float visibility = max(legible * u.outline.w, bump);
-    float alpha = visibility * (1.0 - ps.coverage) * (selected || bump > 0.0 ? u.numbers.y : u.numbers.x);
+    float alpha = visibility * (1.0 - ps.coverage) * (bump > 0.0 ? u.numbers.y : mix(u.numbers.x, u.numbers.y, emphasis));
 
     float4 rect = digitRects[g.digit];
     float4 uvRect = digitUVs[g.digit];
@@ -381,7 +387,7 @@ vertex GlyphOut glyphVertex(uint vid [[vertex_id]],
     o.position = alpha < 0.004 ? float4(-2.0, -2.0, 0.0, 1.0) : toClip(p, u);
     o.uv = mix(uvRect.xy, uvRect.zw, corner);
     o.alpha = alpha;
-    o.weight = selected ? u.numbers.z : 0.0;
+    o.weight = u.numbers.z * emphasis;
     return o;
 }
 

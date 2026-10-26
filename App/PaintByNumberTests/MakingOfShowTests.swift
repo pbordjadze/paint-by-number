@@ -183,21 +183,32 @@ struct MakingOfShowTests {
         #expect(player.built == nil && player.picture == nil)
     }
 
-    /// The picture fits above the card's band, centered, keeping its shape.
-    @Test func theLayoutFitsThePictureAboveTheCard() {
-        for (screen, picture) in [
-            (CGSize(width: 1032, height: 1376), CGSize(width: 1024, height: 682)),
-            (CGSize(width: 1032, height: 1376), CGSize(width: 682, height: 1024)),
-            (CGSize(width: 402, height: 800), CGSize(width: 682, height: 1024)),
-            (CGSize(width: 1376, height: 1000), CGSize(width: 1024, height: 768)),
-        ] {
-            let layout = MakingOfLayout(size: screen, picture: picture, band: 150, top: 64)
-            let p = layout.picture
-            #expect(abs(p.width / p.height - picture.width / picture.height) < 0.01)
-            #expect(p.minY >= 64 && p.minX >= MakingOfLayout.margin - 0.5 && p.maxX <= screen.width - MakingOfLayout.margin + 0.5)
-            #expect(abs(p.midX - screen.width / 2) < 0.5)
-            #expect(layout.band.minY == p.maxY && layout.band.maxY <= screen.height)
-        }
+    /// The picture is where it is given (the painting's page), and the card goes in the band
+    /// under it where there is room, else in the largest band it fits in: above it, or beside it
+    /// where a side palette will be.
+    @Test func theCardTakesTheRoomiestBandBesideThePicture() {
+        // A phone: room under the page.
+        let phone = MakingOfLayout(
+            size: CGSize(width: 402, height: 778), picture: CGRect(x: 16, y: 238, width: 370, height: 248), band: 150, top: 64)
+        #expect(phone.picture == CGRect(x: 16, y: 238, width: 370, height: 248))
+        #expect(phone.side == .under && phone.band.minY == 486 && phone.band.maxY == 778 - MakingOfLayout.margin)
+        #expect(phone.band.minX == MakingOfLayout.margin && phone.band.maxX == 402 - MakingOfLayout.margin)
+
+        // A tall picture on a phone: not 150 points under it, but more there than above.
+        let tall = MakingOfLayout(
+            size: CGSize(width: 402, height: 778), picture: CGRect(x: 38, y: 72, width: 326, height: 580), band: 150, top: 64)
+        #expect(tall.side == .under && tall.band.height == 778 - MakingOfLayout.margin - 652)
+
+        // An iPad on its side: the page fills the height, the palette's column beside it is free.
+        let landscape = MakingOfLayout(
+            size: CGSize(width: 1376, height: 1012), picture: CGRect(x: 16, y: 83, width: 1176, height: 882), band: 150, top: 64)
+        #expect(landscape.side == .beside)
+        #expect(landscape.band.minX == 1192 + MakingOfLayout.margin && landscape.band.maxX == 1376 - MakingOfLayout.margin)
+
+        // Most room above: the card hugs the picture from there.
+        let above = MakingOfLayout(
+            size: CGSize(width: 600, height: 900), picture: CGRect(x: 16, y: 600, width: 568, height: 250), band: 150, top: 64)
+        #expect(above.side == .above && above.band.minY == 64 && above.band.maxY == 600)
     }
 
     // MARK: Helpers

@@ -367,9 +367,9 @@ struct AppShellView: View {
         isCreating = true
     }
 
-    /// Start Painting has saved `artwork`. The cover stays up, showing the create flow's picture;
-    /// the painting is pushed beneath it, and the flow dissolves into it once its canvas has drawn
-    /// (`StartHandoff`). The push is the usual one, its zoom run unseen under the opaque cover: with
+    /// Start Painting has saved `artwork` and the create flow's picture has moved to where its page
+    /// will be. The cover stays up, showing that picture; the painting is pushed beneath it, and the
+    /// flow dissolves into it once its canvas has drawn (`StartHandoff`). The push is the usual one, its zoom run unseen under the opaque cover: with
     /// no animation at all the edge swipe back never worked (`StartHandoffUITests`).
     private func startPainting(_ artwork: Artwork) {
         guard handoff.begin(artwork.id) else { return }

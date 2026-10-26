@@ -68,9 +68,12 @@ final class CanvasView: UIView, PaintingCanvas {
     /// A canvas touch asked to hide the photo.
     var onDismissPhoto: (() -> Void)?
     /// Whether the first frame is watched for (`hasShownFirstFrame`): the start of a painting is
-    /// handed over to it (`StartHandoff`). Set before the canvas is in a window; nothing draws
-    /// before it has been laid out.
-    var watchesFirstFrame = false
+    /// handed over to it (`StartHandoff`), and it opens with the selected color hidden until
+    /// `revealSelection`. Set before the canvas is in a window; nothing draws before it has been
+    /// laid out.
+    var watchesFirstFrame = false {
+        didSet { if watchesFirstFrame { selectionFade = Fade(from: 0, to: 0, duration: selectionFade.duration) } }
+    }
     /// The first frame is on screen (a tenth of a second after the GPU finished it).
     private(set) var hasShownFirstFrame = false
     /// The painter zoomed the canvas: a double tap or a pinch.
@@ -123,6 +126,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
     private var numbersFade = Fade(from: 1, to: 1, duration: 0.25)
+    /// How much the selected color shows (its hatch and its numbers' emphasis): hidden on a canvas
+    /// a painting is handed over to until `revealSelection`.
+    private var selectionFade = Fade(from: 1, to: 1, duration: 0.6)
     /// When the finishing shine starts (renderer clock; tests read it).
     private(set) var shineStart = CanvasClock.never
     private var replayTask: Task<Void, Never>?
@@ -191,7 +197,25 @@ final class CanvasView: UIView, PaintingCanvas {
         case first
     }
 
-    static let margin: CGFloat = 16
+    nonisolated static let margin: CGFloat = 16
+
+    /// Points per canvas unit that fit a canvas of `template` size inside `insets` of `bounds`,
+    /// `margin` clear all round.
+    nonisolated static func fittedZoom(_ template: CGSize, in bounds: CGRect, insets: UIEdgeInsets) -> CGFloat {
+        let avail = bounds.inset(by: insets).insetBy(dx: margin, dy: margin)
+        return max(1e-3, min(avail.width / max(template.width, 1), avail.height / max(template.height, 1)))
+    }
+
+    /// Where the page of a canvas of `template` size lies, fitted (`zoomToFit`, and every canvas as
+    /// it opens): centered in what `insets` leave of `bounds`. `PaintingLayout.page` says it
+    /// before the canvas exists, for the start of a painting (`StartHandoff`).
+    nonisolated static func fittedPage(_ template: CGSize, in bounds: CGRect, insets: UIEdgeInsets) -> CGRect {
+        let zoom = fittedZoom(template, in: bounds, insets: insets)
+        let area = bounds.inset(by: insets)
+        let size = CGSize(width: template.width * zoom, height: template.height * zoom)
+        return CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
+    }
+
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 
@@ -425,8 +449,7 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: Camera
 
     private func updateZoomLimits() {
-        let avail = bounds.inset(by: chromeInsets).insetBy(dx: Self.margin, dy: Self.margin)
-        let fit = max(1e-3, min(avail.width / CGFloat(template.width), avail.height / CGFloat(template.height)))
+        let fit = Self.fittedZoom(CGSize(width: template.width, height: template.height), in: bounds, insets: chromeInsets)
         fitZoom = fit
         // Deep enough that small numbers read comfortably, never absurd.
         let legible = 15 / CGFloat(max(scene?.smallLabelSize ?? 4, 0.25))
@@ -782,17 +805,16 @@ final class CanvasView: UIView, PaintingCanvas {
 
     private func makeUniforms(time: Float, camera: Camera, palette: CanvasPalette) -> CanvasUniforms {
         let s = Float(contentScaleFactor)
-        // Line art gets finer and lighter when zoomed out, where regions are small on screen.
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
-        let widthPt = ClassicLook.widthPoints(depth: depth)
+        let shown = selectionFade.value(at: time)
+        let look = CanvasLook(
+            pointScale: s, depth: depth, palette: palette, coloringBook: scene?.isColoringBook == true,
+            lineWeight: lineWeight, selectionShown: shown, reduceMotion: reduceMotion)
         // A replay shows the painting as it was made, without the brush's highlight.
         let selected = isReplaying ? nil : session.selectedColor
         let paint = selected.flatMap { selected in
             scene.flatMap { selected < $0.paletteLinear.count ? $0.paletteLinear[selected] : nil }
         }
-        let lines: CanvasFrame.Lines = scene?.isColoringBook == true
-            ? .coloringBook(width: ColoringBookLook.widthPoints(depth: depth, weight: lineWeight.factor) * s)
-            : .classic
         // Drawn as large as it paints (drags cap the radius in canvas units).
         let brush = brushPoint.map { point in
             let radius = min(Self.brushRadius, CGFloat(PaintingSession.maxBrushRadius) * camera.zoom)
@@ -802,17 +824,26 @@ final class CanvasView: UIView, PaintingCanvas {
             origin: SIMD2(Float(camera.origin.x), Float(camera.origin.y)) * s, scale: Float(camera.zoom) * s, pointScale: s,
             targetSize: SIMD2(Float(metalLayer.drawableSize.width), Float(metalLayer.drawableSize.height)),
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
-            palette: palette, shadowOpacity: palette.shadowOpacity,
-            outlineOpacity: palette.outlineOpacity * ClassicLook.strength(depth: depth),
-            outlineWidth: widthPt * s, selectedOutlineWidth: (widthPt + 0.55) * s, hatch: 1,
-            numbersShown: numbersFade.value(at: time), lines: lines,
-            labels: SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s),
-            numbers: SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0),
+            palette: palette, shadowOpacity: palette.shadowOpacity, outlineOpacity: look.outlineOpacity,
+            outlineWidth: look.outlineWidth, selectedOutlineWidth: look.selectedOutlineWidth, hatch: shown,
+            numbersShown: numbersFade.value(at: time), lines: look.lines, labels: look.labels, numbers: look.numbers,
             time: SIMD4(time, selectionTime, pulseStart, bumpStart),
             selection: selected.map { (color: $0, paint: paint) },
             hovered: isReplaying ? -1 : hoverRegion, pulsing: pulseRegion, bumped: bumpRegion,
             brush: brush, shine: (start: shineStart, color: shineColor),
             photoOpacity: photoFade.value(at: time)))
+    }
+
+    /// The selected color shows, easing in with its hatch gliding in as on a pick: the canvas a
+    /// painting was handed over to opened without it (`watchesFirstFrame`), looking as the create
+    /// flow's last picture of it did (`HandoffPage`). Reduce Motion: the hatch at rest, fading in.
+    func revealSelection() {
+        guard selectionFade.to < 1 else { return }
+        let t = now()
+        selectionFade.retarget(to: 1, at: t)
+        selectionTime = reduceMotion ? t - 10 : t
+        activeUntil = max(activeUntil, t + max(selectionFade.duration, 2))
+        requestRender()
     }
 
     private func numbersChanged() {

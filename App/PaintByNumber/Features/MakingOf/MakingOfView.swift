@@ -1,40 +1,48 @@
 import CoreGraphics
 import MakingOf
+import PaintCore
 import SwiftUI
 
 /// The making-of show, full screen over the create flow after Start Painting when Settings › The
 /// Making-of is on (`SettingsKey.playsMakingOf`, off by default): the painter's photo becoming its
 /// painting in six steps (`Sources/MakingOf`, `FieldShow`: each step grows from seeds over the
-/// picture itself), and under the picture a faint card for each step. Skip, a tap anywhere or the
-/// show's end calls `onFinish`, which opens the painting Start has already saved; so does a show
+/// picture itself), and beside the picture a faint card for each step. Skip, a tap anywhere or the
+/// show's end calls `onFinish`, after which the painting Start has saved takes over; so does a show
 /// that can't be made.
 ///
-/// `MakingOfPlayer` makes and times the show; this draws it (`MakingOfCanvas`): the picture fitted
-/// above the card's band (`MakingOfLayout`), on the screen's paper in either appearance (the
-/// picture is a sheet of its own paper, like the canvas's). Reduce Motion plays the cards over
-/// still pictures, cross-faded. The photo shows while the show is being made, which is how it
-/// begins.
+/// `MakingOfPlayer` makes and times the show; this draws it (`MakingOfCanvas`) on the screen's
+/// paper in either appearance (the picture is a sheet of its own paper, like the canvas's). Reduce
+/// Motion plays the cards over still pictures, cross-faded. The photo shows while the show is being
+/// made, which is how it begins.
 ///
-/// The show comes and goes as one picture moving (`StartHandoff`). It comes in from the preview:
-/// its picture starts where the preview's was (`entry`, global coordinates), moves to its place
-/// while the paper behind it fades in, and the card and Skip come in after it. Without an `entry`
-/// (Reduce Motion) it fades in where it stands. It goes to the painting Start has opened beneath
-/// the cover (`leaving`): the picture moves to the template's place there (`moving`) while the
-/// card, Skip and the paper fade to clear, then cross-fades into the canvas (`landed`).
+/// The show plays where the painting's page will be (`PaintingLayout.page`, `MakingOfLayout`), so
+/// the journey from the preview to the canvas is one move (`StartHandoff`): the picture fades in
+/// where the preview's was (`entry`, window coordinates) while the paper fades in behind it, moves
+/// to its place when the create flow says (`arrived`), and the card and Skip come in after it.
+/// Without an `entry` (Reduce Motion) it fades in at its place. When the show is over, its last
+/// picture settles into `page`, the page as the canvas draws it, and the card and Skip go; then,
+/// once the painting beneath has drawn, the paper fades away around the picture (`leaving`), and
+/// the canvas shows the same page.
 struct MakingOfView: View {
     /// How the show goes, once the painting beneath the cover has drawn its first frame.
     enum Leaving: Equatable {
-        /// The show plays, or holds its last frame while the painting opens.
+        /// The show plays, or holds its last picture while the painting opens.
         case staying
-        /// The picture moves to the template's rect (global coordinates) while the rest fades.
+        /// The picture moves to the page where the canvas put it (window coordinates), should that
+        /// be elsewhere than expected (`StartHandoffPlan.correction`).
         case moving(CGRect)
-        /// The picture fades into the painting, at the template's rect once it has moved there, or
-        /// in place (nil: Reduce Motion, or no place to move to).
-        case landed(CGRect?)
+        /// The paper fades to the painting; the picture, the page now, stays over the canvas's, where
+        /// it moved to (nil: its place).
+        case revealing(CGRect?)
+        /// Everything fades, the picture too, where it is: there is no page to become, or no
+        /// painting drew.
+        case fading(CGRect?)
     }
 
     private let source: MakingOfSource
     private let entry: CGRect?
+    private let arrived: Bool
+    private let page: CGImage?
     private let leaving: Leaving
     private let onFinish: () -> Void
     #if DEBUG
@@ -45,17 +53,26 @@ struct MakingOfView: View {
     private var onReady: () -> Void = {}
     #endif
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.layoutDirection) private var layoutDirection
+    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @ScaledMetric(relativeTo: .title3) private var band: CGFloat = 150
     @State private var player = MakingOfPlayer()
-    /// The show has come in (it starts where it is not yet seen).
-    @State private var entered = false
+    /// The show has come in: its picture and its paper have faded in.
+    @State private var shown = false
 
     /// Room at the top for Skip.
     private static let top: CGFloat = 64
 
-    init(source: MakingOfSource, entry: CGRect? = nil, leaving: Leaving = .staying, onFinish: @escaping () -> Void) {
+    init(
+        source: MakingOfSource, entry: CGRect? = nil, arrived: Bool = true, page: CGImage? = nil,
+        leaving: Leaving = .staying, onFinish: @escaping () -> Void
+    ) {
         self.source = source
         self.entry = entry
+        self.arrived = arrived
+        self.page = page
         self.leaving = leaving
         self.onFinish = onFinish
     }
@@ -67,14 +84,13 @@ struct MakingOfView: View {
         forcesReduceMotion = reduceMotion
         self.onReady = onReady
         // The scenarios hold the show for a screenshot: it is simply there.
-        _entered = State(initialValue: true)
+        _shown = State(initialValue: true)
     }
     #endif
 
     var body: some View {
         GeometryReader { geometry in
-            let layout = MakingOfLayout(
-                size: geometry.size, picture: pictureSize, band: min(band, geometry.size.height * 0.4), top: Self.top)
+            let layout = layout(in: geometry)
             let move = travel(of: layout, from: geometry.frame(in: .global).origin)
             stage(layout)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -99,65 +115,84 @@ struct MakingOfView: View {
                 .animation(chromeAnimation, value: chromeOpacity)
                 .accessibilityIdentifier("making-of-skip")
         }
-        // Nothing to skip, or to touch beneath, while the picture is on its way to the painting.
-        .allowsHitTesting(leaving == .staying)
+        // Nothing to skip, or to touch beneath, once the show is over or on its way.
+        .allowsHitTesting(arrived && leaving == .staying && player.phase != .finished)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityIdentifier("making-of")
         .task { await start() }
         .onAppear {
-            let coming = entry == nil
-                ? Animation.easeInOut(duration: StartHandoffPlan.move)
-                : .spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)
-            withAnimation(coming) { entered = true }
+            withAnimation(.easeOut(duration: StartHandoffPlan.clear)) { shown = true }
         }
         .onDisappear { player.release() }
     }
 
     // MARK: Coming and going
 
-    /// The picture is seen: it has come in, and is not yet cross-faded into the painting.
+    /// The picture is seen: it has come in, and is not fading out.
     private var showsPicture: Bool {
-        if case .landed = leaving { return false }
-        return entered
+        if case .fading = leaving { return false }
+        return shown
     }
 
-    /// The paper behind the show, which fades in as the picture settles and out as it leaves.
-    private var showsPaper: Bool { entered && leaving == .staying }
-
-    /// The card and Skip: in after the picture has moved, out as soon as it leaves.
-    private var chromeOpacity: Double { entered && leaving == .staying ? 1 : 0 }
-
-    /// Whether the show leaves where it stands: Reduce Motion, or no place to move to.
-    private var leavesInPlace: Bool {
-        if case .landed(let target) = leaving { return target == nil }
-        return false
+    /// The paper behind the show, which fades in with the picture and out to the painting.
+    private var showsPaper: Bool {
+        guard shown else { return false }
+        if case .moving = leaving { return true }
+        return leaving == .staying
     }
+
+    /// The card and Skip: in once the picture has moved, out once the show is over.
+    private var chromeOpacity: Double {
+        shown && arrived && leaving == .staying && player.phase != .finished ? 1 : 0
+    }
+
+    /// The page as the canvas draws it shows over the show's last picture once the show is over.
+    private var showsPage: Bool { page != nil && player.phase == .finished }
 
     private var pictureAnimation: Animation {
-        if showsPicture { return .easeOut(duration: entry == nil ? StartHandoffPlan.move : StartHandoffPlan.appear) }
-        return leavesInPlace ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.crossFade)
+        showsPicture
+            ? .easeOut(duration: StartHandoffPlan.clear)
+            : .easeInOut(duration: StartHandoffPlan.reveal)
     }
 
     private var paperAnimation: Animation {
-        if showsPaper { return entry == nil ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.move) }
-        return leavesInPlace ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.fade)
+        showsPaper
+            ? .easeOut(duration: StartHandoffPlan.clear)
+            : .easeInOut(duration: StartHandoffPlan.reveal)
     }
 
     private var chromeAnimation: Animation {
         chromeOpacity > 0
-            ? .easeOut(duration: 0.25).delay(StartHandoffPlan.chromeDelay)
-            : .easeOut(duration: StartHandoffPlan.fade / 2)
+            ? .easeOut(duration: 0.25).delay(entry == nil ? 0 : StartHandoffPlan.glide)
+            : .easeOut(duration: 0.2)
     }
 
-    /// Where the picture is carried to: the preview's picture before the show has come in, the
-    /// painting's template as it leaves, otherwise nowhere (`layout` is its place). `origin` is
-    /// where this view starts, in global coordinates.
+    /// The template the painting will show: what places the picture and what it ends on.
+    private var template: Template? { source.template ?? player.built?.template }
+
+    /// The show where the painting's page will be, in this view's coordinates (inside the safe
+    /// area), with the card in the roomiest band beside it.
+    private func layout(in geometry: GeometryProxy) -> MakingOfLayout {
+        let safe = geometry.safeAreaInsets
+        let inputs = PaintingLayout.Inputs(
+            size: geometry.size, safe: safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
+            rows: paletteRows, colors: template.map(PaletteBar.visibleColorCount) ?? 1, isComplete: false)
+        let page = PaintingLayout(inputs)
+            .page(of: pictureSize, inputs: inputs, rightToLeft: layoutDirection == .rightToLeft)
+            .offsetBy(dx: -safe.leading, dy: -safe.top)
+        return MakingOfLayout(
+            size: geometry.size, picture: page, band: min(band, geometry.size.height * 0.4), top: Self.top)
+    }
+
+    /// Where the picture is carried to: the preview's picture until it has arrived, the page where
+    /// the canvas put it should that be elsewhere, otherwise nowhere (`layout` is its place).
+    /// `origin` is where this view starts, in global coordinates (the window's).
     private func travel(of layout: MakingOfLayout, from origin: CGPoint) -> PictureTravel {
         let destination: CGRect? = switch leaving {
         case .moving(let target): target
-        case .landed(let target): target
-        case .staying: entered ? nil : entry
+        case .revealing(let target), .fading(let target): target
+        case .staying: arrived ? nil : entry
         }
         return PictureTravel(home: layout.picture, destination: destination?.offsetBy(dx: -origin.x, dy: -origin.y))
     }
@@ -172,14 +207,31 @@ struct MakingOfView: View {
         await player.run(source, reduceMotion: reduceMotion, onFinish: onFinish)
     }
 
-    /// The pictures' size, or the photo's while the show is being made.
+    /// The page's size in canvas units, or the photo's before there is a template (demos).
     private var pictureSize: CGSize {
-        if let size = player.built?.show.size { return CGSize(width: size.width, height: size.height) }
+        if let template { return CGSize(width: template.width, height: template.height) }
         return CGSize(width: source.photo.width, height: source.photo.height)
     }
 
-    @ViewBuilder
+    /// The show, and over it, once it is over, the page as the canvas draws it.
     private func stage(_ layout: MakingOfLayout) -> some View {
+        ZStack(alignment: .topLeading) {
+            show(layout)
+            if let page, showsPage {
+                Image(decorative: page, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: layout.picture.width, height: layout.picture.height)
+                    .offset(x: layout.picture.minX, y: layout.picture.minY)
+                    .transition(.opacity)
+                    .accessibilityHidden(true)
+            }
+        }
+        .animation(.easeInOut(duration: StartHandoffPlan.settle), value: showsPage)
+    }
+
+    @ViewBuilder
+    private func show(_ layout: MakingOfLayout) -> some View {
         if let built = player.built, player.phase == .playing || (player.phase == .finished && player.stills.isEmpty) {
             TimelineView(.animation(minimumInterval: 1.0 / 60, paused: player.phase != .playing)) { timeline in
                 inTime(built, at: player.time(at: timeline.date), in: layout)
@@ -202,8 +254,9 @@ struct MakingOfView: View {
                     .accessibilityHidden(true)
                 if player.phase == .preparing {
                     ProgressView()
-                        .frame(width: layout.band.width)
-                        .offset(x: layout.band.minX, y: layout.band.minY + 24)
+                        .padding(layout.side.cardEdge, 24)
+                        .frame(width: layout.band.width, height: layout.band.height, alignment: layout.side.cardAlignment)
+                        .offset(x: layout.band.minX, y: layout.band.minY)
                         .accessibilityLabel(Text("Preparing the Making-of"))
                 }
             }
@@ -235,30 +288,67 @@ struct MakingOfView: View {
 
     private func cardView(_ card: MakingOfCard, opacity: Double, footnote: Double, in layout: MakingOfLayout) -> some View {
         MakingOfCardView(card: card, opacity: opacity, footnoteOpacity: footnote)
-            .padding(.top, 16)
-            .frame(width: layout.band.width, height: layout.band.height, alignment: .top)
+            .padding(layout.side.cardEdge, 16)
+            .frame(width: layout.band.width, height: layout.band.height, alignment: layout.side.cardAlignment)
             .offset(x: layout.band.minX, y: layout.band.minY)
             .opacity(chromeOpacity)
             .animation(chromeAnimation, value: chromeOpacity)
     }
 }
 
-/// Where the show goes on a screen of `size`: the picture as large as it fits under `top` and
-/// over a band of `band` points for the card, the two centered together.
+/// Where the show goes on a screen of `size` (inside the safe area): the picture at `picture`, the
+/// painting's page (`PaintingLayout.page`), and the card in the band of the screen beside it that
+/// suits it best: under the picture where `band` points are free there, as on most screens, else
+/// whichever of under, above (below `top`, Skip's room) and beside it (where a side palette will be)
+/// is largest, of those the card fits in at all.
 nonisolated struct MakingOfLayout: Equatable, Sendable {
+    /// Which band the card is in.
+    nonisolated enum Side: Equatable, Sendable {
+        case under, above, beside
+
+        /// The card hugs the picture: the top of a band under it, the bottom of one above.
+        var cardAlignment: Alignment {
+            switch self {
+            case .under: .top
+            case .above: .bottom
+            case .beside: .center
+            }
+        }
+
+        var cardEdge: Edge.Set {
+            switch self {
+            case .under: .top
+            case .above: .bottom
+            case .beside: .horizontal
+            }
+        }
+    }
+
     let picture: CGRect
     let band: CGRect
+    let side: Side
 
     static let margin: CGFloat = 16
+    /// The least a band takes the card in.
+    static let least = CGSize(width: 120, height: 72)
 
-    init(size: CGSize, picture aspect: CGSize, band: CGFloat, top: CGFloat) {
+    init(size: CGSize, picture: CGRect, band: CGFloat, top: CGFloat) {
         let margin = Self.margin
-        let room = CGSize(width: max(size.width - 2 * margin, 1), height: max(size.height - top - band - margin, 1))
-        let scale = min(room.width / max(aspect.width, 1), room.height / max(aspect.height, 1))
-        let (w, h) = (aspect.width * scale, aspect.height * scale)
-        let y = top + max((room.height - h) / 2, 0)
-        picture = CGRect(x: (size.width - w) / 2, y: y, width: w, height: h)
-        self.band = CGRect(x: margin, y: picture.maxY, width: max(size.width - 2 * margin, 1), height: band)
+        let width = max(size.width - 2 * margin, 0)
+        let bands: [(CGRect, Side)] = [
+            (CGRect(x: margin, y: picture.maxY, width: width, height: max(size.height - margin - picture.maxY, 0)), .under),
+            (CGRect(x: margin, y: top, width: width, height: max(picture.minY - top, 0)), .above),
+            (CGRect(
+                x: picture.maxX + margin, y: top, width: max(size.width - 2 * margin - picture.maxX, 0),
+                height: max(size.height - margin - top, 0)), .beside),
+        ]
+        self.picture = picture
+        let under = bands[0]
+        let chosen = under.0.height >= band ? under : bands
+            .filter { $0.0.width >= Self.least.width && $0.0.height >= Self.least.height }
+            .max { $0.0.width * $0.0.height < $1.0.width * $1.0.height } ?? under
+        self.band = chosen.0
+        side = chosen.1
     }
 }
 

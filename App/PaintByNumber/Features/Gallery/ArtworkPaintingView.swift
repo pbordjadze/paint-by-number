@@ -54,8 +54,8 @@ struct ArtworkPaintingView: View {
         return { rect in canvasDrew(rect) }
     }
 
-    /// The canvas has its template at `templateRect` (global coordinates): where the cover is to
-    /// bring its picture.
+    /// The canvas has its template at `templateRect` (the window's coordinates): where the cover's
+    /// picture is to be.
     private func canvasDrew(_ templateRect: CGRect) {
         Log.create.notice("Painting reports its template at \(String(describing: templateRect), privacy: .public)")
         handoff?.paintingDrew(artworkID, templateRect: templateRect)

@@ -3,21 +3,23 @@ import Foundation
 import Observation
 
 /// The hand-off from Start Painting to the painting, so that the journey from the create flow's
-/// settings to the canvas is one picture moving.
+/// settings to the canvas is one picture moving once (`StartHandoffPlan`).
 ///
 /// `AppShellView` owns one and passes it through the environment (`\.startHandoff`) to the create
 /// flow's cover and, through the navigation stack, to the painting. The sequence:
 ///
-/// 1. Start has saved the painting (with Settings › The Making-of on, after its show): the shell
-///    `begin`s the hand-off and pushes the painting *under* the cover (its zoom runs unseen). The
-///    cover stays up and shows what it showed.
-/// 2. The painting loads, and once its canvas has its first frame on screen it reports the
-///    template's rect in global coordinates (`paintingDrew`: `PaintView.reportTemplate`), and again
-///    if a layout moves the template while the flow is still on its way there.
-/// 3. The create flow, which observes `phase`, moves its picture (the making-of's, or the
-///    preview's) to that rect while everything else fades to clear, cross-fades the picture into
-///    the canvas beneath it, and `complete`s.
-/// 4. The shell takes the cover away without a slide (`isFinished`) and `reset`s.
+/// 1. Start has saved the painting, and the create flow's picture has moved to where the
+///    painting's page will be (`PaintingLayout.page`; the making-of show, with Settings › The
+///    Making-of on, plays there): the shell `begin`s the hand-off and pushes the painting *under*
+///    the cover (its zoom runs unseen). The cover stays up and shows what it showed.
+/// 2. The painting loads, and once its canvas has its first frame on screen it reports where its
+///    page is, in the window's coordinates (`paintingDrew`: `PaintView.reportTemplate`), and again
+///    should a layout move it (a rotation).
+/// 3. The create flow, which observes `phase`, waits for the show to be over, its picture having
+///    become the page as the canvas draws it (`HandoffPage`), then fades its paper away around the
+///    picture, which stays where it is over the canvas's same page, and `complete`s.
+/// 4. The shell takes the cover away without a slide (`isFinished`) and `reset`s; the canvas
+///    eases in the color to paint (`CanvasController.revealSelection`).
 ///
 /// A painting that has not drawn within `StartHandoffPlan.fallback` (a slow open, an error that
 /// shows the recovery screen) `timeOut`s: the cover fades out alone and the painting stays pushed.
@@ -160,45 +162,50 @@ nonisolated struct StartHandoffLogic: Equatable, Sendable {
     }
 }
 
-/// How the pieces of the hand-off move and for how long. Reduce Motion moves nothing: cross-fades
-/// only, over the same time.
+/// How the hand-off moves and for how long: one move, then still. On Start the create flow's
+/// controls fade around the picture (`clear`), the status bar goes (the painting has none), and the
+/// picture moves once (`glide`) to where the painting's page will be (`PaintingLayout.page`); the
+/// making-of show, when it plays, plays there. The painting opens beneath; once the canvas has
+/// drawn, the picture, by then the page as the canvas draws it (`HandoffPage`; the show's last
+/// picture `settle`s into it), stays where it is while the paper fades away around it (`reveal`),
+/// and the canvas beneath shows the same. Reduce Motion moves nothing: the picture fades in at the
+/// page's place instead.
 nonisolated enum StartHandoffPlan {
-    nonisolated enum Motion: Equatable, Sendable {
-        /// The picture moves to where the painting's template is.
-        case fly
-        /// Everything fades into the painting where it stands.
-        case crossFade
-    }
-
-    /// How the picture reaches `target` (global coordinates): it flies unless Reduce Motion is on or
-    /// there is nowhere to fly to.
-    static func motion(reduceMotion: Bool, target: CGRect?) -> Motion {
-        guard !reduceMotion, let target, target.isPlace else { return .crossFade }
-        return .fly
-    }
-
-    /// Where the show's picture starts, `from` being where the preview's picture was (global
-    /// coordinates); nil: it starts in its place and fades in.
+    /// Where the picture starts, `from` being where the preview's picture was (window
+    /// coordinates); nil: it fades in at its place.
     static func entry(reduceMotion: Bool, from: CGRect?) -> CGRect? {
         guard !reduceMotion, let from, from.isPlace else { return nil }
         return from
     }
 
-    /// A move: about 0.45 s with a gentle spring.
-    static var move: Double { 0.45 * timeScale }
-    static let bounce = 0.12
-    /// The rest of the screen fades to clear while the picture moves.
-    static var fade: Double { 0.3 * timeScale }
-    /// A picture that comes in fades in over this time.
-    static var appear: Double { 0.2 * timeScale }
-    /// The picture starts to cross-fade into the canvas this long after it started to move.
-    static var landAfter: Double { 0.4 * timeScale }
-    /// The picture lands once the template has stayed where it is this long.
-    static let settle = Duration.milliseconds(350)
-    /// The cross-fade into the canvas.
-    static var crossFade: Double { 0.2 * timeScale }
-    /// The show's card and Skip come in after the picture has moved.
-    static var chromeDelay: Double { 0.4 * timeScale }
+    /// Where the picture moves before the paper fades, should the canvas have put the page
+    /// elsewhere than `expected` (`matches`): nil when it is where expected, or under Reduce
+    /// Motion (the picture fades out instead).
+    static func correction(expected: CGRect, reported: CGRect, reduceMotion: Bool) -> CGRect? {
+        guard reported.isPlace, !matches(expected, reported), !reduceMotion else { return nil }
+        return reported
+    }
+
+    /// Whether two places of the page are the same to the eye: no edge more than a point apart
+    /// (the canvas's scroll view rounds its camera to the screen).
+    static func matches(_ a: CGRect, _ b: CGRect) -> Bool {
+        guard a.isPlace, b.isPlace else { return false }
+        return max(abs(a.minX - b.minX), abs(a.minY - b.minY), abs(a.maxX - b.maxX), abs(a.maxY - b.maxY)) <= 1
+    }
+
+    /// The flow's controls fade around the picture, which fades in over them (the show's photo,
+    /// or the preview's picture whole), before it moves.
+    static var clear: Double { 0.25 * timeScale }
+    /// The one move: smooth, with no bounce.
+    static var glide: Double { 0.5 * timeScale }
+    /// How long the status bar's going may take to reach the layout (an iPad's safe area changes).
+    static let statusBarSettles = Duration.milliseconds(100)
+    /// The show's last picture, or the preview's, becomes the page as the canvas draws it.
+    static var settle: Double { 0.5 * timeScale }
+    /// The paper and the show's card fade to the painting beneath.
+    static var reveal: Double { 0.35 * timeScale }
+    /// A correction (`correction`).
+    static var correct: Double { 0.35 * timeScale }
     /// How long the painting has to draw its first frame before the cover leaves alone.
     static var fallback: Duration {
         #if DEBUG

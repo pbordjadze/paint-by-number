@@ -115,10 +115,11 @@ synchronized folder would bundle it into the app.
   `MakingOfSprites` is). It stays behind
   Settings › The Making-of (`SettingsKey.playsMakingOf`, off by default; the switch and the screen
   have no `#if`, only `MakingOfDemoView` is DEBUG). With the switch on, `CreateFlowView.start` saves
-  the painting as ever, then lays `MakingOfView` over the flow instead of opening it, its picture
-  coming from where the preview's was; Skip, a tap or the show's end opens it (`onStart`: the
-  painting opens under the cover and the show's picture moves to it, Create flow › Start Painting
-  into the painting), and so does a show that can't be made. `MakingOfPlayer`
+  the painting as ever, then lays `MakingOfView` over the flow, its picture coming from where the
+  preview's was to where the painting's page will be, and playing there (`MakingOfLayout`: the card
+  in the roomiest band beside the page, under it on most screens); the painting opens beneath, and
+  Skip, a tap or the show's end hands over to it once its picture has become the page (Create flow
+  › Start Painting into the painting), and so does a show that can't be made. `MakingOfPlayer`
   makes the show off the main actor (`MakingOfShow.build`: the base generated again with a
   `PipelineSnapshot` observer from `CreateModel.makingOfSource`, the saved template, the bundled
   `making-of.json`, seeded by the artwork id), composites the picture on the CPU with
@@ -721,35 +722,40 @@ Conventions).
   removed, never a failure of the gallery; one that can't be read just now (an I/O or data
   protection error) is kept, at launch and on Continue (`DraftTests`; `gallery-draft` is its
   screenshot).
-- Start Painting into the painting (`StartHandoff`, `Features/Create/StartHandoff.swift`): the
-  journey from the settings to the canvas is one picture moving. `AppShellView` owns the hand-off
-  object and passes it through the environment (`\.startHandoff`) to the create flow's cover and the
-  painting. On Start (after the show, with Settings › The Making-of on) the shell `begin`s it and
-  pushes the painting *under* the cover (`startPainting`: the usual push and its zoom, unseen behind
-  the opaque cover; a push with animations off left the edge swipe back dead), and
-  `ArtworkPaintingView` mounts without its fades (`isUnderCover`). The canvas notes when its first
-  frame is on screen (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished
-  it), and `PaintView.reportTemplate` then tells the hand-off where the template is, in global
-  coordinates once it has stayed put for a moment, and again whenever it moves: a painting's first
-  layout is not its last (the size class, the palette and the status bar settle after it, and the
-  status bar goes with the cover). The flow, which observes `phase`, moves its picture there in
-  `StartHandoffPlan.move` (about 0.45 s, a gentle spring, following the template if it moves on the
-  way and landing once it has stopped) while the card, Skip, the sliders and its own paper fade to
-  clear, cross-fades the picture into the canvas and `complete`s, and the shell takes the cover away
-  with animations off (`endCreateFlow`). The flow hides the status bar as it goes, so the painting
-  beneath has the layout it keeps once the cover is gone. The picture is the show's when it played
-  (`MakingOfView`: `entry`, `leaving`; `PictureTravel` is its scale and offset), else the preview's
-  (`PreviewPictureProbe`, `DepartingPicture`). A painting that has not drawn in
+- Start Painting into the painting (`StartHandoff`, `StartHandoffPlan`,
+  `Features/Create/StartHandoff.swift`; backlog row 142, Paul's "one move, then still"): the
+  journey from the settings to the canvas is one picture moving once. On Start the flow's controls
+  fade around its picture (`clear`; the show's photo fades in over the preview's, or the preview's
+  picture whole, `DepartingPicture`), the status bar goes (the painting has none, and an iPad's
+  safe area changes with it), and the picture glides once (`glide`, no bounce) to where the
+  painting's page will be: `PaintingLayout.page`, the painting screen's own layout (palette, bars,
+  `CanvasView.fittedPage`), which `PaintView` lays itself out by, so the two can't drift
+  (`PaintingLayoutTests` pins the places CI's canvases put the page). The making-of show plays
+  there; the preview's picture becomes the page as the canvas draws it on the way (`HandoffPage`:
+  the canvas's `CanvasLook`, nothing selected), the show's once it is over (`settle`). Once the
+  picture is still, the shell `begin`s the hand-off and pushes the painting *under* the cover
+  (`startPainting`: the usual push and its zoom, unseen behind the opaque cover; a push with
+  animations off left the edge swipe back dead), and `ArtworkPaintingView` mounts without its fades
+  (`isUnderCover`). The canvas notes when its first frame is on screen
+  (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished it), and
+  `PaintView.reportTemplate` then tells the hand-off where the page is, in the window's coordinates
+  as UIKit has the canvas (`CanvasController.templateFrameInWindow`; SwiftUI's global frame of the
+  pushed canvas put it a safe area's height too low, October 25), and again should it move (a
+  rotation). The preview's picture is measured the same way (`PreviewPictureProbe`). The flow then
+  fades its paper away around the picture (`reveal`), which stays over the canvas's identical page,
+  and `complete`s; the shell takes the cover away with animations off (`endCreateFlow`), and the
+  canvas, which opened with the selected color hidden (`watchesFirstFrame`, hatch strength 0 draws
+  as no selection), eases its hatch and its numbers' emphasis in (`revealSelection`). A page more
+  than a point from where it was expected is moved to first (`StartHandoffPlan.correction`, logged
+  as an error: it means the layouts drifted). A painting that has not drawn in
   `StartHandoffPlan.fallback` (2.5 s: a slow open, the recovery screen) `timeOut`s: the cover fades
-  out alone and the painting stays pushed. The same motion plays the other way into the show: its
-  picture starts where the preview's was. Reduce Motion moves nothing (`StartHandoffPlan.motion`,
-  `entry`): cross-fades over the same time. The painting's tips wait for the cover to go (a popover
-  can't present under it). `StartHandoffLogic` holds the rules for `StartHandoffTests`;
-  `StartHandoffUITests` attach the frames of the screen around the hand-off (`ScreenFrames.swift`),
-  `-handoffSlowdown N` (Debug) stretches every duration N times for their `Slowed` runs, and
-  `-handoffFallback S` sets the seconds a painting has to draw: CI's simulators take several to
-  open one, and stall their main thread for seconds meanwhile, so a motion of half a second is a
-  frame or two there.
+  out alone and the painting stays pushed. Reduce Motion moves nothing: the picture fades in at the
+  page's place. The painting's tips wait for the cover to go (a popover can't present under it).
+  `StartHandoffLogic` holds the rules for `StartHandoffTests`; `StartHandoffUITests` attach the
+  frames of the screen around the hand-off (`ScreenFrames.swift`), `-handoffSlowdown N` (Debug)
+  stretches every duration N times for their `Slowed` runs, and `-handoffFallback S` sets the
+  seconds a painting has to draw: CI's simulators take several to open one, and stall their main
+  thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until

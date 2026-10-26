@@ -349,8 +349,8 @@ struct TemplatePreviewView: View {
                 CompareView(
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
-                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-                        pictureProbe?.measured(frame: frame, aspect: photoAspect)
+                    .background {
+                        if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }
                     .overlay(alignment: .bottom) {
                         status.padding(14)
@@ -895,26 +895,46 @@ private extension View {
     }
 }
 
-/// Where the preview's picture is on screen: the preview writes it as it is laid out and the create
-/// flow reads it when Start Painting is tapped, to move the picture from there (`StartHandoff`). A
-/// reference, so that neither invalidates the other.
+/// Where the preview's picture is on screen: the create flow asks when Start Painting is tapped,
+/// to move the picture from there (`StartHandoff`). A view laid out behind the comparison
+/// (`PreviewPictureAnchor`) answers in the window's coordinates, as UIKit has it at that moment:
+/// SwiftUI's global frame, read as the preview was laid out, could be stale by then. A reference,
+/// so that neither invalidates the other.
 final class PreviewPictureProbe {
-    private var frame = CGRect.zero
+    private weak var view: UIView?
     private var aspect: CGFloat = 0
 
-    /// The comparison's frame (global coordinates) and the photo's shape.
-    func measured(frame: CGRect, aspect: CGFloat) {
-        self.frame = frame
+    /// `view` has the comparison's frame, and the photo the `aspect`.
+    func anchor(_ view: UIView, aspect: CGFloat) {
+        self.view = view
         self.aspect = aspect
     }
 
     /// The picture: the photo's shape fitted in the comparison's frame (the enlarged preview's
-    /// frame is the whole page), in global coordinates; nil before it has been laid out.
+    /// frame is the whole page), in the window's coordinates; nil before it has been laid out.
     var picture: CGRect? {
-        guard aspect > 0, frame.isPlace else { return nil }
+        guard aspect > 0, let view, view.window != nil else { return nil }
+        let frame = view.convert(view.bounds, to: nil)
+        guard frame.isPlace else { return nil }
         let size = CompareView.fitted(aspect, in: frame.size)
         return CGRect(
             x: frame.midX - size.width / 2, y: frame.midY - size.height / 2, width: size.width, height: size.height)
+    }
+}
+
+/// The comparison's frame for `PreviewPictureProbe`: an empty view behind it, its size.
+private struct PreviewPictureAnchor: UIViewRepresentable {
+    let probe: PreviewPictureProbe
+    let aspect: CGFloat
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) {
+        probe.anchor(view, aspect: aspect)
     }
 }
 
