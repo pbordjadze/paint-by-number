@@ -105,6 +105,14 @@ import Foundation
 ///   across an undrawn boundary one area. Edits laid after one bring their colors through it
 ///   (`apply(_:to:verify:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
 public enum TemplateEditor {
+    /// What a list of edits makes of a given template, as a number kept with the edits a
+    /// painting saves (the app's `TemplateRefinements.editorVersion`). Bump in the same commit as
+    /// any change to what a list of edits makes on a given template (`EditGoldenTests` pins it),
+    /// so saved edits record which editor laid them. 1 is the editor from October 26, 2026, which
+    /// keeps writing out of drawn lines and measures a piece short of its number finely; edits
+    /// saved before it record none.
+    public static let version = 1
+
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"
 

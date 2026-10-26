@@ -98,6 +98,12 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// units, the template's). An edit that did nothing on a template, or no longer fits a
     /// regenerated one, stays here and does nothing again (`EditTrail`).
     var edits: [TemplateEditor.Edit] = []
+    /// The editor (`TemplateEditor.version`, which changes whenever what a list of edits makes
+    /// does) of the build that began these edits: new refinements carry this build's, and
+    /// refinements read from a file keep the file's (a newer app's too), as a draft does while it
+    /// goes on being refined here. A file with edits from before the editor kept a version reads
+    /// 0. It is about the edits alone: written only with some, and no input of the generator.
+    var editorVersion = TemplateEditor.version
 
     /// It has as many edits as are kept (`maximumEdits`): Refine lays no more, and says so.
     var isFull: Bool { edits.count >= Self.maximumEdits }
@@ -120,11 +126,13 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// lines of text turned off or marked. The start is not counted: it is where they began.
     var changeCount: Int { lines.count + edits.count + strokes.count + hiddenText.count + addedText.count }
 
-    /// What the generator reads: these refinements without the edits, which are laid on the
-    /// template it makes. Two refinements with the same generator inputs make the same base.
+    /// What the generator reads: these refinements without the edits (nor their editor's
+    /// version), which are laid on the template it makes. Two refinements with the same generator
+    /// inputs make the same base.
     var generatorInputs: TemplateRefinements {
         var inputs = self
         inputs.edits = []
+        inputs.editorVersion = TemplateEditor.version
         return inputs
     }
 
@@ -334,12 +342,14 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Coding
 
-    private enum CodingKeys: String, CodingKey { case start, lines, edits, strokes, hiddenText, addedText }
+    private enum CodingKeys: String, CodingKey { case start, lines, edits, editorVersion, strokes, hiddenText, addedText }
 
     /// Tolerant: a field, line, edit or stroke it can't read (a kind from a newer app) is left out
     /// rather than costing the rest, a file without `edits` (a painting refined before they
     /// were made by hand) is the refinements it was, and one without `start`, or with a start it
-    /// doesn't know, starts from the generator's template.
+    /// doesn't know, starts from the generator's template. Edits with no `editorVersion` it can
+    /// read were laid before the editor kept one (0); without edits it is this build's, as new
+    /// refinements have it.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         start = (try? c.decodeIfPresent(Start.self, forKey: .start)) ?? .generated
@@ -347,18 +357,21 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         edits = Array(
             ((try? c.decodeIfPresent([Lossy<TemplateEditor.Edit>].self, forKey: .edits)) ?? []).compactMap(\.value)
                 .prefix(Self.maximumEdits))
+        editorVersion = (try? c.decodeIfPresent(Int.self, forKey: .editorVersion)) ?? (edits.isEmpty ? TemplateEditor.version : 0)
         strokes = ((try? c.decodeIfPresent([Lossy<Stroke>].self, forKey: .strokes)) ?? []).compactMap(\.value)
         hiddenText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .hiddenText)) ?? []
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []
     }
 
     /// The fields in their order; `start` only for a blank start, so a file that starts from the
-    /// generator's template is byte for byte what it was before there were starts.
+    /// generator's template is byte for byte what it was before there were starts, and
+    /// `editorVersion` only with edits, so one without any is too.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         if start == .blank { try c.encode(start, forKey: .start) }
         try c.encode(lines, forKey: .lines)
         try c.encode(edits, forKey: .edits)
+        if !edits.isEmpty { try c.encode(editorVersion, forKey: .editorVersion) }
         try c.encode(strokes, forKey: .strokes)
         try c.encode(hiddenText, forKey: .hiddenText)
         try c.encode(addedText, forKey: .addedText)

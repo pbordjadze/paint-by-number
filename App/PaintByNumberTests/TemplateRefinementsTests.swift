@@ -199,6 +199,44 @@ struct TemplateRefinementsTests {
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data(hostile.utf8)).edits.count == TemplateRefinements.maximumEdits)
     }
 
+    /// The editor's version is kept with the edits: new refinements carry this build's and a file
+    /// keeps the one it recorded (a newer app's too); a file with edits and none it can read was
+    /// laid before the editor kept one (0); without edits none is written, and a file without any
+    /// reads as new refinements do. It is no input of the generator.
+    @Test func theEditorVersionIsKeptWithTheEdits() throws {
+        let draw = TemplateEditor.Edit.draw(points: [SIMD2(1, 2), SIMD2(3, 4)], closed: false)
+        var refinements = TemplateRefinements()
+        #expect(refinements.editorVersion == TemplateEditor.version)
+        refinements.edits = [draw]
+        let data = try JSONEncoder().encode(refinements)
+        let object = try JSONSerialization.jsonObject(with: data)
+        let fields = try #require(object as? [String: Any])
+        #expect(fields["editorVersion"] as? Int == TemplateEditor.version)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: data) == refinements)
+
+        let newer = #"{"edits":[{"kind":"draw","points":[[1,2],[3,4]]}],"editorVersion":99}"#
+        let kept = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
+        #expect(kept.editorVersion == 99 && kept.edits == [draw])
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: JSONEncoder().encode(kept)) == kept)
+
+        let older = #"{"lines":[],"edits":[{"kind":"draw","points":[[1,2],[3,4]]}],"strokes":[],"hiddenText":[],"addedText":[]}"#
+        let before = try JSONDecoder().decode(TemplateRefinements.self, from: Data(older.utf8))
+        #expect(before.editorVersion == 0 && before.edits == [draw])
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: JSONEncoder().encode(before)) == before)
+        let wrong = #"{"edits":[{"kind":"draw","points":[[1,2],[3,4]]}],"editorVersion":"one"}"#
+        let unreadable = try JSONDecoder().decode(TemplateRefinements.self, from: Data(wrong.utf8))
+        #expect(unreadable.editorVersion == 0 && unreadable.edits == [draw])
+
+        // Without edits there is nothing for it to be about.
+        var lined = TemplateRefinements()
+        lined.lines = Self.lines
+        let plain = try JSONEncoder().encode(lined)
+        #expect(!String(decoding: plain, as: UTF8.self).contains("editorVersion"))
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: plain) == lined)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data(#"{"editorVersion":"?"}"#.utf8)) == TemplateRefinements())
+        #expect(before.generatorInputs == TemplateRefinements() && kept.generatorInputs == before.generatorInputs)
+    }
+
     /// A blank start is kept in the file and is a refinement and a generator input, though it
     /// counts no change; one that starts from the generator's template writes no `start`, so its
     /// file is what it was before starts; a file from before them, or with a start this app
