@@ -136,6 +136,13 @@ struct PaletteBar: View {
         (0..<session.paletteCount).filter { !session.isColorComplete($0) || session.selectedColor == $0 }
     }
 
+    /// How many swatches a new painting of `template` shows: every paint with an area (a paint with
+    /// none is finished from the start, and the color it opens on has areas). The create flow lays
+    /// out the painting screen by it before the painting opens (`PaintingLayout`).
+    nonisolated static func visibleColorCount(_ template: Template) -> Int {
+        template.regionCountsByColor.filter { $0 > 0 }.count
+    }
+
     /// `colors` cut into lanes of `lines` swatches: a bottom bar's columns, read top to bottom
     /// (1 4 7 over 2 5 8 over 3 6 9), a side bar's rows, read leading to trailing.
     static func lanes(_ colors: [Int], lines: Int) -> [[Int]] {

@@ -189,6 +189,35 @@ nonisolated struct CanvasFrame {
     }
 }
 
+/// The live canvas's look at a zoom (`depth`: log2 of the zoom over the fit, 0 fitted) with the
+/// selected color shown `selectionShown` (0…1): its lines' widths and opacity, its numbers' sizes
+/// and opacities. `CanvasView` draws every frame with it, and `HandoffPage` the page a new painting
+/// is handed over from, so that the two are drawn alike.
+nonisolated struct CanvasLook {
+    var outlineOpacity: Float
+    var outlineWidth: Float
+    var selectedOutlineWidth: Float
+    var lines: CanvasFrame.Lines
+    var labels: SIMD4<Float>
+    var numbers: SIMD4<Float>
+
+    init(
+        pointScale s: Float, depth: Float, palette: CanvasPalette, coloringBook: Bool, lineWeight: LineWeight,
+        selectionShown: Float, reduceMotion: Bool
+    ) {
+        // Line art gets finer and lighter when zoomed out, where regions are small on screen.
+        let widthPt = ClassicLook.widthPoints(depth: depth)
+        outlineOpacity = palette.outlineOpacity * ClassicLook.strength(depth: depth)
+        outlineWidth = widthPt * s
+        selectedOutlineWidth = (widthPt + 0.55 * selectionShown) * s
+        lines = coloringBook
+            ? .coloringBook(width: ColoringBookLook.widthPoints(depth: depth, weight: lineWeight.factor) * s)
+            : .classic
+        labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
+        numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
+    }
+}
+
 /// Animated paint state of one region. Layout mirrors `RegionState` in Shaders.metal.
 nonisolated struct RegionState {
     var origin: SIMD2<Float>

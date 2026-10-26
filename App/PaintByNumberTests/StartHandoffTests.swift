@@ -4,8 +4,8 @@ import Testing
 @testable import PaintByNumber
 
 /// The hand-off from Start Painting to the painting (`StartHandoff`): the painting's report of its
-/// first frame, the fallback when it never comes, the single push, and Reduce Motion's choice of
-/// no movement.
+/// first frame, the fallback when it never comes, the single push, the picture moving again only
+/// when the page is elsewhere than expected, and Reduce Motion's choice of no movement.
 @MainActor
 struct StartHandoffTests {
     private let id = UUID()
@@ -23,7 +23,7 @@ struct StartHandoffTests {
 
         handoff.paintingDrew(id, templateRect: template)
         #expect(handoff.phase == .ready(id, template))
-        #expect(!handoff.isOpening(id))
+        #expect(!handoff.isOpening(id) && !handoff.isAwaiting(id))
 
         // A layout that moves the template while the flow is on its way is followed...
         let moved = template.offsetBy(dx: 0, dy: -48)
@@ -57,11 +57,41 @@ struct StartHandoffTests {
         let handoff = StartHandoff(timeout: .milliseconds(40))
         #expect(handoff.begin(id))
         try await waitUntil(timeout: .seconds(10)) { handoff.phase == .timedOut(id) }
-        // A canvas that draws after the cover has been told to go changes nothing.
-        handoff.paintingDrew(id, templateRect: template)
-        #expect(handoff.phase == .timedOut(id))
         handoff.complete()
         #expect(handoff.isFinished)
+        // A canvas that draws after the cover has gone changes nothing.
+        handoff.paintingDrew(id, templateRect: template)
+        #expect(handoff.phase == .finished(id))
+    }
+
+    /// The making-of plays while the painting opens beneath it: a painting that draws after its
+    /// time is up, while the cover is still up, is still handed over to.
+    @Test func aLateReportStillCountsWhileTheCoverIsUp() async throws {
+        let handoff = StartHandoff(timeout: .milliseconds(40))
+        #expect(handoff.begin(id))
+        try await waitUntil(timeout: .seconds(10)) { handoff.phase == .timedOut(id) }
+        // The painting still opens under the cover, as one being opened does.
+        #expect(handoff.isAwaiting(id) && !handoff.isOpening(id) && !handoff.isAwaiting(UUID()))
+        handoff.paintingDrew(UUID(), templateRect: template)
+        #expect(handoff.phase == .timedOut(id))
+        handoff.paintingDrew(id, templateRect: template)
+        #expect(handoff.phase == .ready(id, template))
+    }
+
+    /// A canvas a painting is handed over to opens with the color to paint hidden, as the page the
+    /// create flow ends on is drawn (`HandoffPage`), and eases it in once the cover is gone; any
+    /// other canvas shows it at once.
+    @Test func theCanvasHandedOverToEasesItsColorIn() async throws {
+        _ = try #require(RenderContext.shared)
+        let session = PaintingSession(template: Fixtures.mosaic)
+        let opened = CanvasView(session: session)
+        #expect(opened.frameUniforms().outline.z == 1)
+
+        let handedOver = CanvasView(session: session)
+        handedOver.watchesFirstFrame = true
+        #expect(handedOver.frameUniforms().outline.z == 0)
+        handedOver.revealSelection()
+        try await waitUntil(timeout: .seconds(5)) { handedOver.frameUniforms().outline.z == 1 }
     }
 
     @Test func aReportCancelsTheFallback() async throws {
@@ -124,21 +154,41 @@ struct StartHandoffTests {
 
     @Test func reduceMotionMovesNothing() {
         let place = CGRect(x: 10, y: 20, width: 300, height: 200)
-        #expect(StartHandoffPlan.motion(reduceMotion: false, target: place) == .fly)
-        #expect(StartHandoffPlan.motion(reduceMotion: true, target: place) == .crossFade)
-        // The show's picture starts where the preview's was, or in its own place.
+        // The show's or the preview's picture starts where the preview's was, or comes in at its
+        // place.
         #expect(StartHandoffPlan.entry(reduceMotion: false, from: place) == place)
         #expect(StartHandoffPlan.entry(reduceMotion: true, from: place) == nil)
+        // Nor does it move to a page the canvas put elsewhere: it fades instead.
+        let elsewhere = place.offsetBy(dx: 0, dy: 40)
+        #expect(StartHandoffPlan.correction(expected: place, reported: elsewhere, reduceMotion: false) == elsewhere)
+        #expect(StartHandoffPlan.correction(expected: place, reported: elsewhere, reduceMotion: true) == nil)
+    }
+
+    /// The picture waits where the page was expected; it moves again only when the canvas put the
+    /// page more than a point away (the scroll view rounds the camera to the screen).
+    @Test func aPageWhereExpectedMovesNothing() {
+        let expected = CGRect(x: 16, y: 299.76, width: 370, height: 248.49)
+        let rounded = CGRect(x: 16, y: 300, width: 370, height: 248.49)
+        #expect(StartHandoffPlan.matches(expected, rounded))
+        #expect(StartHandoffPlan.correction(expected: expected, reported: rounded, reduceMotion: false) == nil)
+        // CI's canvases reported theirs a safe area too low (October 25); that would move.
+        let low = expected.offsetBy(dx: 0, dy: 61.67)
+        #expect(!StartHandoffPlan.matches(expected, low))
+        #expect(StartHandoffPlan.correction(expected: expected, reported: low, reduceMotion: false) == low)
+        // A page of another size is elsewhere too.
+        #expect(!StartHandoffPlan.matches(expected, expected.insetBy(dx: 4, dy: 3)))
     }
 
     @Test func aPictureWithNowhereToGoFades() {
         for unusable in [CGRect.zero, .null, .infinite, CGRect(x: 0, y: 0, width: 0.5, height: 80),
                          CGRect(x: CGFloat.nan, y: 0, width: 40, height: 40)] {
-            #expect(StartHandoffPlan.motion(reduceMotion: false, target: unusable) == .crossFade)
             #expect(StartHandoffPlan.entry(reduceMotion: false, from: unusable) == nil)
+            #expect(StartHandoffPlan.correction(expected: template, reported: unusable, reduceMotion: false) == nil)
+            #expect(!StartHandoffPlan.matches(unusable, unusable))
         }
-        #expect(StartHandoffPlan.motion(reduceMotion: false, target: nil) == .crossFade)
         #expect(StartHandoffPlan.entry(reduceMotion: false, from: nil) == nil)
+        // Nowhere expected (the flow wasn't laid out): to the canvas's page.
+        #expect(StartHandoffPlan.correction(expected: .null, reported: template, reduceMotion: false) == template)
     }
 
     @Test func aPictureTravelsToItsDestination() {

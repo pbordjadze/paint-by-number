@@ -45,6 +45,8 @@ nonisolated struct MakingOfShow: Sendable {
     let handoff: CGImage?
     /// The space the pictures' bytes are in: the photo's.
     let colorSpace: RGBColorSpace
+    /// The template the show ends on: the painting's, or the base when there is none (demos).
+    let template: Template
 
     /// The long side the real template is drawn at: about the screen's, so it stays sharp.
     static let handoffSize = 2048
@@ -73,7 +75,7 @@ nonisolated struct MakingOfShow: Sendable {
             digits: template.labels.map { Int(template.regions[Int($0.region)].colorIndex) + 1 },
             cards: spec.steps.enumerated().map { MakingOfCard(step: $1, index: $0) },
             handoff: TemplateRasterizer.image(template, style: handoffStyle, maxPixelSize: handoffSize),
-            colorSpace: template.colorSpace)
+            colorSpace: template.colorSpace, template: template)
     }
 
     /// The base template made again from `source`, and the stage pictures its making showed.

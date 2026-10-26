@@ -34,9 +34,6 @@ struct PaintView: View {
     var onTemplateFrame: ((CGRect) -> Void)?
 
     @State private var controller = CanvasController()
-    /// Where the canvas is in global coordinates, read when its first frame is on screen. A
-    /// reference, so that measuring it never invalidates the screen.
-    @State private var canvasOrigin = CanvasOrigin()
     @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
@@ -80,17 +77,15 @@ struct PaintView: View {
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
 
-    private static let edge: CGFloat = 12
-    /// The top bar below the safe area, the bottom bar above it, and either bar to the canvas
-    /// (`canvasInsets` keeps the canvas clear of the bars by these).
-    private static let topGap: CGFloat = 6
-    private static let bottomGap: CGFloat = 4
-    private static let canvasGap: CGFloat = 6
+    /// The bars' margins (`PaintingLayout`, whose canvas insets keep the canvas clear of them).
+    private static let edge = PaintingLayout.edge
+    private static let topGap = PaintingLayout.topGap
+    private static let bottomGap = PaintingLayout.bottomGap
 
     /// How much bigger the bar's buttons and the swatches are here (`QuietPainting.scale`).
-    private var chromeScale: CGFloat { QuietPainting.scale(regularWidth: sizeClass == .regular) }
+    private var chromeScale: CGFloat { PaintingLayout.chromeScale(regularWidth: sizeClass == .regular) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.
-    private var barHeight: CGFloat { 44 * chromeScale }
+    private var barHeight: CGFloat { PaintingLayout.barHeight(regularWidth: sizeClass == .regular) }
     private var chromeScheme: ColorScheme { Self.chromeScheme(paper: paperAppearance, system: colorScheme) }
 
     /// The bars' appearance: dark over dark paper whatever the system's (on a light system the
@@ -115,17 +110,12 @@ struct PaintView: View {
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
-    /// Where the canvas view is in global coordinates (`onTemplateFrame` reports in them).
-    private final class CanvasOrigin {
-        var point = CGPoint.zero
-    }
-
     var body: some View {
         GeometryReader { geo in
             if canvasUnavailable {
                 CanvasUnavailableView(onClose: onClose)
             } else {
-                canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
+                canvasAndChrome(geo: geo, layout: layout(in: geo))
             }
         }
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
@@ -147,7 +137,10 @@ struct PaintView: View {
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
         .onChange(of: startHandoff?.isRunning == true) { _, running in
-            if !running { chrome.observe(session) }
+            guard !running else { return }
+            chrome.observe(session)
+            // The cover is gone: the color to paint comes in (`PaintCanvas.watchesFirstFrame`).
+            controller.revealSelection()
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
@@ -205,11 +198,12 @@ struct PaintView: View {
     }
 
     /// The Metal canvas with the floating bars over it.
-    private func canvasAndChrome(geo: GeometryProxy, palette: PaletteLayout) -> some View {
-        ZStack {
+    private func canvasAndChrome(geo: GeometryProxy, layout: PaintingLayout) -> some View {
+        let palette = layout.palette
+        return ZStack {
             PaintCanvas(
                 session: session, controller: controller,
-                chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
+                chromeInsets: layout.canvasInsets,
                 showsNumbers: showsNumbers, paperAppearance: paperAppearance,
                 lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
@@ -226,7 +220,6 @@ struct PaintView: View {
                 watchesFirstFrame: onTemplateFrame != nil)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
-                .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { canvasOrigin.point = $0 }
 
             if let feedback {
                 MarkupCanvas(
@@ -240,7 +233,7 @@ struct PaintView: View {
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
             if feedback == nil, PaintTips.desk.pageTip != nil {
-                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette)
+                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, insets: layout.canvasInsets)
                 TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
@@ -305,17 +298,16 @@ struct PaintView: View {
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
     /// screen and its template has stayed where it is for a moment, tells `report` where the
-    /// template is (global coordinates), and again whenever it moves. A painting's first layout is
-    /// not its last: its size class, palette and status bar settle after it (the status bar goes
-    /// with the create flow's cover), and polling sees whichever of them moved it.
+    /// template is, and again whenever it moves (a rotation). In the window's coordinates, as
+    /// UIKit has the canvas there at that moment: SwiftUI's global frame of the canvas, read when
+    /// it was laid out, put the template a safe area's height too low on CI's simulators.
     private func reportTemplate(to report: (CGRect) -> Void) async {
         var previous: CGRect?
         var announced: CGRect?
         for _ in 0..<600 {
             try? await Task.sleep(for: .milliseconds(100))
             guard !Task.isCancelled, startHandoff?.isRunning == true else { return }
-            guard controller.isShowingFirstFrame, let local = controller.templateFrame else { continue }
-            let frame = local.offsetBy(dx: canvasOrigin.point.x, dy: canvasOrigin.point.y)
+            guard controller.isShowingFirstFrame, let frame = controller.templateFrameInWindow else { continue }
             defer { previous = frame }
             guard frame != announced else { continue }
             // The first time, once two looks agree; after that, as it moves.
@@ -328,76 +320,23 @@ struct PaintView: View {
 
     // MARK: Layout
 
-    /// Where the palette goes and how many lines it wraps into: along the trailing edge of a
-    /// wide window (landscape iPad), otherwise at the bottom. Roomy windows show every color
-    /// at once in a few lines; compact ones scroll a single line and name the selected color
-    /// in a caption above it (regular widths name it in the progress badge).
-    struct PaletteLayout: Equatable {
-        var side: Bool
-        var lines: Int
-        var caption: Bool
-        var metrics: PaletteMetrics
-        var thickness: CGFloat { metrics.thickness(lines: lines, caption: caption) }
+    /// The palette's place and the canvas's insets (`PaintingLayout`, which the create flow reads
+    /// too, to put its picture where this page will be).
+    typealias PaletteLayout = PaintingLayout.Palette
+
+    private func layout(in geo: GeometryProxy) -> PaintingLayout {
+        PaintingLayout(PaintingLayout.Inputs(
+            size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
+            dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
+            isComplete: session.isComplete))
     }
 
-    private var paletteMetrics: PaletteMetrics {
-        PaletteMetrics(dynamicTypeSize: dynamicTypeSize).scaled(by: chromeScale)
-    }
-
-    private var sidePaletteTop: CGFloat { Self.topGap + barHeight + 12 }
-
-    private func paletteLayout(in size: CGSize) -> PaletteLayout {
-        let count = PaletteBar.visibleColors(session).count
-        let metrics = paletteMetrics
-        if sizeClass == .regular && size.width > size.height {
-            let length = size.height - sidePaletteTop - Self.edge
-            return PaletteLayout(
-                side: true,
-                lines: paletteLines(count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics),
-                caption: false, metrics: metrics)
-        }
-        let length = size.width - 2 * Self.edge
-        let caption = sizeClass != .regular
-        return PaletteLayout(
-            side: false,
-            lines: paletteLines(
-                count: count, length: length, automatic: sizeClass == .regular ? 3 : 1,
-                room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics),
-            caption: caption, metrics: metrics)
-    }
-
-    /// The palette's lines for `count` swatches `length` points long, under the Rows setting:
-    /// Auto allows `automatic` lines, and no choice makes the bar thicker than `room` points.
-    private func paletteLines(count: Int, length: CGFloat, automatic: Int, room: CGFloat, metrics: PaletteMetrics) -> Int {
-        let lines = (room - 2 * PaletteMetrics.padding + PaletteMetrics.spacing) / metrics.pitch
-        // `Int(_:)` traps on a non-finite size (a zero-sized layout pass).
-        let fit = lines.isFinite ? Int(max(lines, 0)) : 1
-        let most = max(1, min(paletteRows.maxLines(automatic: automatic), fit))
-        if paletteRows.isFixed { return max(1, min(most, count)) }
-        return metrics.lines(count: count, length: length, maxLines: most)
-    }
+    private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: sizeClass == .regular) }
 
     /// Every color of the palette in its order on screen (finished ones too).
     private var colorOrder: [Int] {
         paletteOrder.arrange(
             Array(0..<session.paletteCount), palette: session.template.palette, remaining: session.remainingByColor)
-    }
-
-    /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
-    private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let top = safe.top + Self.topGap + barHeight + Self.canvasGap
-        if session.isComplete {
-            return EdgeInsets(
-                top: top, leading: safe.leading,
-                bottom: safe.bottom + Self.bottomGap + CompletionBar.height + Self.canvasGap, trailing: safe.trailing)
-        }
-        if palette.side {
-            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
-                              trailing: safe.trailing + Self.edge + palette.thickness + 4)
-        }
-        return EdgeInsets(
-            top: top, leading: safe.leading,
-            bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
     }
 
     /// How far below the top of the visible canvas the page tips lie: just inside the top of the page
@@ -415,9 +354,8 @@ struct PaintView: View {
     private static let pageTipWidth: CGFloat = 420
 
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
-    private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let insets = canvasInsets(safe: safe, palette: palette)
-        return EdgeInsets(
+    private func visibleCanvasPadding(safe: EdgeInsets, insets: EdgeInsets) -> EdgeInsets {
+        EdgeInsets(
             top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
             bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
     }

@@ -7,7 +7,7 @@ import UIKit
 /// Replaces the palette once the painting is finished.
 struct CompletionBar: View {
     /// As tall as a one-line palette, so the canvas keeps its place when the painting finishes.
-    static let height = PaletteMetrics.standard.thickness(lines: 1, caption: false)
+    nonisolated static let height = PaletteMetrics.standard.thickness(lines: 1, caption: false)
 
     let session: PaintingSession
     let title: String

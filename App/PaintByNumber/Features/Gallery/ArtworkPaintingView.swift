@@ -43,9 +43,10 @@ struct ArtworkPaintingView: View {
     private var artwork: Artwork? { library.artwork(with: artworkID) }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
-    /// Under the create flow's cover, waiting to be handed the screen: nothing of the painting
-    /// fades in, since the cover is what dissolves.
-    private var isUnderCover: Bool { handoff?.isOpening(artworkID) == true }
+    /// Under the create flow's cover, waiting to be handed the screen (past the hand-off's time too,
+    /// while the making-of plays on): nothing of the painting fades in, since the cover is what
+    /// dissolves.
+    private var isUnderCover: Bool { handoff?.isAwaiting(artworkID) == true }
 
     /// What the canvas tells once its first frame is on screen, while the cover waits for it, and
     /// when a layout moves the template after that.
@@ -54,8 +55,8 @@ struct ArtworkPaintingView: View {
         return { rect in canvasDrew(rect) }
     }
 
-    /// The canvas has its template at `templateRect` (global coordinates): where the cover is to
-    /// bring its picture.
+    /// The canvas has its template at `templateRect` (the window's coordinates): where the cover's
+    /// picture is to be.
     private func canvasDrew(_ templateRect: CGRect) {
         Log.create.notice("Painting reports its template at \(String(describing: templateRect), privacy: .public)")
         handoff?.paintingDrew(artworkID, templateRect: templateRect)
