@@ -353,8 +353,9 @@ struct RefineHeldNumber: View {
     }
 }
 
-/// The areas' numbers over the drawing in `rect` while Numbers is picked, as the painting will
-/// show them (`LabelSizing`), so Move Number has something to take; Refine shows none otherwise.
+/// The areas' numbers over the drawing in `rect` while Numbers is picked or Paper shows, as the
+/// painting will show them (`LabelSizing`): Move Number has something to take, and Paper is the
+/// page as it will be painted. Over the painting or the photo Refine shows none.
 struct RefineNumbers: View, Equatable {
     let base: CreateModel.Preview
     let rect: CGRect

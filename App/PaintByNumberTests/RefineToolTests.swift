@@ -77,13 +77,10 @@ struct RefineToolTests {
         #expect(Set(all).count == all.count)
         #expect(RefineGroup.allCases.allSatisfy { !$0.tools.isEmpty && $0.tools.count <= 5 })
         #expect(RefineGroup.ink.tools.first == .pen)
-        let tools: [RefineTool] = [
-            .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .merge, .fill, .bucket, .brush, .eyedropper, .editPaint,
-            .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
-        ]
-        for tool in tools {
-            #expect(all.contains(tool), "\(tool) is in no group")
-        }
+        #expect(all == RefineTool.allCases, "every tool stands in its group, in the order declared")
+        #expect(RefineGroup.ink.tools == [.pen, .shape, .bendLine, .eraser, .smartEraser])
+        #expect(RefineGroup.cells.tools == [.select, .cellEdge, .merge, .moveEdge, .fill])
+        #expect(RefineGroup.paint.tools == [.bucket, .brush, .eyedropper, .editPaint, .looks])
         #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
         #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
         #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)

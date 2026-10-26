@@ -131,7 +131,7 @@ nonisolated struct RefineGuidePage {
                 steps: [
                     String(localized: "refine.guide.views.step1", defaultValue: "Painting shows every cell in its paint, as the picture will look finished.",
                            comment: "Tool Guide, Views: a step of How to Use It"),
-                    String(localized: "refine.guide.views.step2", defaultValue: "Paper shows the lines alone, as the page looks before you paint.",
+                    String(localized: "refine.guide.views.step2", defaultValue: "Paper shows the lines and numbers, as the page looks before you paint.",
                            comment: "Tool Guide, Views: a step of How to Use It"),
                     String(localized: "refine.guide.views.step3", defaultValue: "Photo shows your photo under the lines.",
                            comment: "Tool Guide, Views: a step of How to Use It"),
@@ -143,7 +143,7 @@ nonisolated struct RefineGuidePage {
                                 defaultValue: "In Photo Behind, slide toward the photo, then trace the peach glow above the far hills with the Pen.",
                                 comment: "Tool Guide, Views: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)"),
                 notes: [
-                    String(localized: "refine.guide.views.note1", defaultValue: "On iPhone, the views are in the menu at the top, which names the one showing.",
+                    String(localized: "refine.guide.views.note1", defaultValue: "On iPhone, the views are in the menu at the top, under the symbol of the one showing.",
                            comment: "Tool Guide, Views: a note under Good to Know"),
                 ],
                 related: [.pen, .eyedropper],

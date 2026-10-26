@@ -12,21 +12,11 @@ import SwiftUI
 nonisolated enum RefineGroup: Hashable, CaseIterable {
     case ink, cells, paint, numbers, see
 
-    /// The group's tools, in their order on screen.
-    var tools: [RefineTool] {
-        switch self {
-        case .ink: [.pen, .shape, .bendLine, .eraser, .smartEraser]
-        case .cells: [.select, .cellEdge, .merge, .moveEdge, .fill]
-        case .paint: [.bucket, .brush, .eyedropper, .editPaint, .looks]
-        case .numbers: [.moveNumber]
-        case .see: [.text, .tryPainting]
-        }
-    }
+    /// The group's tools, in their order on screen (`RefineTool`'s, each tool's `group`).
+    var tools: [RefineTool] { RefineTool.allCases.filter { $0.group == self } }
 
     /// The group `tool` is in.
-    static func of(_ tool: RefineTool) -> RefineGroup {
-        allCases.first { $0.tools.contains(tool) } ?? .ink
-    }
+    static func of(_ tool: RefineTool) -> RefineGroup { tool.group }
 }
 
 /// An area a long press picked, for its card (`RefineAreaCard`).

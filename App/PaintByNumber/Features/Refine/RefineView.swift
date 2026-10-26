@@ -4,21 +4,18 @@ import PaintCore
 import SwiftUI
 
 /// What one finger (or the Pencil) does on the Refine screen.
-nonisolated enum RefineTool: Hashable {
+nonisolated enum RefineTool: Hashable, CaseIterable {
     /// Draws lines as they are drawn.
     case pen
     /// Draws the shape picked (`RefineShape`) across a drag.
     case shape
+    /// The Toolbox's Bend Line: a drag moves the line under it, bending it near where it was
+    /// grabbed (`TemplateEditor.Edit.reshape`).
+    case bendLine
     /// Rubs out what it touches; a tap takes out a dab.
     case eraser
     /// Rubs lines out, or takes out the one tapped, junction to junction (`LineChains`).
     case smartEraser
-    /// A tap makes the closed shape under it an area of its own in the photo's color there, or
-    /// clears that again (`EditFills`).
-    case fill
-    /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
-    /// one it missed.
-    case text
     /// The Toolbox's Select: a tap picks the cell under it, which shows its outline and a bar
     /// with its paint (`RefineSelectionBar`); a tap on it again lets it go.
     case select
@@ -28,12 +25,18 @@ nonisolated enum RefineTool: Hashable {
     /// The Toolbox's Merge: a drag across cells joins them into the first, boundaries and all
     /// (`TemplateEditor.Edit.merge`).
     case merge
-    /// The Toolbox's Paint Brush: the stroke's footprint takes the current paint, joining the
-    /// cells of that paint it meets (`TemplateEditor.Edit.brush`); a tap is a dab.
-    case brush
+    /// The Toolbox's Move Edge: a drag moves a cell's boundary, inked or not, so the cell and its
+    /// neighbour change shape (`TemplateEditor.Edit.reshape`, as Bend Line's).
+    case moveEdge
+    /// A tap makes the closed shape under it an area of its own in the photo's color there, or
+    /// clears that again (`EditFills`).
+    case fill
     /// The Toolbox's Bucket: a tap gives the cell under it the current paint
     /// (`TemplateEditor.Edit.paintArea`).
     case bucket
+    /// The Toolbox's Paint Brush: the stroke's footprint takes the current paint, joining the
+    /// cells of that paint it meets (`TemplateEditor.Edit.brush`); a tap is a dab.
+    case brush
     /// The Toolbox's Eyedropper: a tap makes the cell's paint the current paint, or over the
     /// photo the photo's color there.
     case eyedropper
@@ -42,18 +45,27 @@ nonisolated enum RefineTool: Hashable {
     case editPaint
     /// The Toolbox's Looks over every paint (`RefineColorsPanel`'s row).
     case looks
-    /// The Toolbox's Bend Line: a drag moves the line under it, bending it near where it was
-    /// grabbed (`TemplateEditor.Edit.reshape`).
-    case bendLine
-    /// The Toolbox's Move Edge: a drag moves a cell's boundary, inked or not, so the cell and its
-    /// neighbour change shape (`TemplateEditor.Edit.reshape`, as Bend Line's).
-    case moveEdge
     /// The Toolbox's Move Number: a drag moves a number within its cell
     /// (`TemplateEditor.Edit.moveLabel`).
     case moveNumber
+    /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
+    /// one it missed.
+    case text
     /// The Toolbox's Try Painting: the painting screen on the template as it stands, saving
     /// nothing. An action, never the finger's tool.
     case tryPainting
+
+    /// The Toolbox's group the tool stands in (`RefineGroup`), which lists its tools in the order
+    /// they are declared here: a new tool doesn't compile without its place.
+    var group: RefineGroup {
+        switch self {
+        case .pen, .shape, .bendLine, .eraser, .smartEraser: .ink
+        case .select, .cellEdge, .merge, .moveEdge, .fill: .cells
+        case .bucket, .brush, .eyedropper, .editPaint, .looks: .paint
+        case .moveNumber: .numbers
+        case .text, .tryPainting: .see
+        }
+    }
 
     /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
     var pencilPartner: RefineTool? {
@@ -145,6 +157,8 @@ struct RefineView: View {
     let model: CreateModel
 
     @Environment(\.dismiss) private var dismiss
+    /// For the draft's save toast, which the tiny-numbers badge makes way for.
+    @Environment(Library.self) private var library: Library?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @State private var tool: RefineTool
@@ -418,7 +432,7 @@ struct RefineView: View {
                     if let bend {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
-                    if group == .numbers, let base {
+                    if group == .numbers || backdrop == .paper, let base {
                         RefineNumbers(base: base, rect: picture)
                             .equatable()
                     }
@@ -1597,24 +1611,56 @@ extension RefineView {
     }
 
     /// What shows beneath the drawing: a segmented control in the bar where there is room, else a
-    /// menu; Photo Behind adds its slider.
+    /// menu under the symbol of the view showing (a phone's bar has no room for its name, which
+    /// wrapped onto two lines); Photo Behind adds its slider.
     @ViewBuilder
     private var backdropPicker: some View {
         if sizeClass == .regular {
             backdropChoice.pickerStyle(.segmented).fixedSize()
         } else {
-            backdropChoice.pickerStyle(.menu)
+            Menu {
+                Picker("Show", selection: $backdrop) {
+                    ForEach(Self.backdrops, id: \.self) { kind in
+                        Label { Self.backdropName(kind) } icon: { Image(systemName: Self.backdropSymbol(kind)) }.tag(kind)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label { Text("Show") } icon: { Image(systemName: Self.backdropSymbol(backdrop)) }
+                    .labelStyle(.iconOnly)
+            }
+            .accessibilityValue(Self.backdropName(backdrop))
+            .accessibilityIdentifier("refine-backdrop")
         }
     }
 
     private var backdropChoice: some View {
         Picker("Show", selection: $backdrop) {
-            Text("Painting").tag(RefineBackdrop.painting)
-            Text("Paper").tag(RefineBackdrop.paper)
-            Text("Photo").tag(RefineBackdrop.photo)
-            Text("Photo Behind").tag(RefineBackdrop.photoBehind)
+            ForEach(Self.backdrops, id: \.self) { kind in Self.backdropName(kind).tag(kind) }
         }
         .accessibilityIdentifier("refine-backdrop")
+    }
+
+    /// The views, in the order they are offered.
+    static let backdrops: [RefineBackdrop] = [.painting, .paper, .photo, .photoBehind]
+
+    static func backdropName(_ kind: RefineBackdrop) -> Text {
+        switch kind {
+        case .painting: Text("Painting")
+        case .paper: Text("Paper")
+        case .photo: Text("Photo")
+        case .photoBehind: Text("Photo Behind")
+        }
+    }
+
+    /// A view's symbol: the iPhone's menu shows the one showing.
+    static func backdropSymbol(_ kind: RefineBackdrop) -> String {
+        switch kind {
+        case .painting: "paintpalette"
+        case .paper: "doc"
+        case .photo: "photo"
+        case .photoBehind: "square.2.layers.3d"
+        }
     }
 
     /// Photo Behind's slider: how plainly the photo shows through the painting.
@@ -1855,10 +1901,11 @@ extension RefineView {
         }
     }
 
-    /// How many numbers are near the smallest: a tap brings the next of them up close.
+    /// How many numbers are near the smallest: a tap brings the next of them up close. Out of the
+    /// way while a note or the draft's save toast holds the top, which it covered.
     @ViewBuilder
     private var tinyBadge: some View {
-        if !tiny.isEmpty, let template = base?.template {
+        if !tiny.isEmpty, model.note == nil, library?.drafts.saveFailed != model.photoID, let template = base?.template {
             Button {
                 tinyShown = (tinyShown + 1) % tiny.count
                 let label = tiny[tinyShown].label

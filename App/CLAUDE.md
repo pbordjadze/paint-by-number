@@ -571,7 +571,8 @@ Conventions).
     with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
     grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
-    (`RefineGroup`: Ink, Cells, Paint, Numbers, See): on iPad a rail along the leading edge holds every tool
+    (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
+    lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
@@ -595,8 +596,9 @@ Conventions).
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing). The views (Painting, Paper,
-    Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
-    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
+    the lines with their numbers, Photo, Photo Behind, whose slider sets how faint the painting
+    lies over the photo) are in the navigation bar (on compact widths a menu under the symbol of
+    the one showing: the bar has no room for its name), opening on the painting. Until the first edit a
     Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
     `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
     canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
