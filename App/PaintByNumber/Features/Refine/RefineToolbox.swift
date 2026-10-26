@@ -374,12 +374,16 @@ struct RefineNumbers: View, Equatable {
             // Zoomed in, most numbers are off screen: a frame draws only those it shows (Paper
             // shows them through every zoom and move).
             let shown = CGRect(origin: .zero, size: area).insetBy(dx: -40, dy: -40)
+            // As large as a page draws them (`TemplateRasterizer`): a big area carries several
+            // numbers of this size, which unbounded piled up over each other.
+            let maximum = LabelSizing.sheetMaximumFraction * Float(max(template.width, template.height))
             for label in template.labels {
                 let region = Int(label.region)
                 guard region < template.regions.count else { continue }
                 let paint = template.regions[region].colorIndex
                 let digits = LabelSizing.digitCount(colorIndex: paint)
-                let points = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, detail: template.isDetailRegion(region))) * s
+                let points = CGFloat(LabelSizing.fontSize(
+                    radius: label.radius, digits: digits, maximum: maximum, detail: template.isDetailRegion(region))) * s
                 let at = CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s)
                 guard points >= 4, shown.contains(at) else { continue }
                 let text = Text(verbatim: "\(paint + 1)")

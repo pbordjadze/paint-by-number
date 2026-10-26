@@ -495,7 +495,7 @@ struct RefineView: View {
                 .animation(reduceMotion ? nil : .snappy, value: model.note)
             }
         }
-        .popover(item: $card, attachmentAnchor: .rect(.rect(cardAnchor))) { pick in areaCard(pick) }
+        .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in areaCard(pick) }
     }
 
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
@@ -893,7 +893,8 @@ struct RefineView: View {
                 }
                 if demo.selectsCell { selection = at }
                 if demo.opensCard, let at {
-                    card = RefineAreaPick(point: SIMD2(at.x / Float(template.width), at.y / Float(template.height)), at: at)
+                    let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
+                    card = RefineAreaPick(point: point, at: at, screen: onScreen(point), template: template)
                 }
                 didPickDemoPaint = true
             }
@@ -1065,7 +1066,13 @@ struct RefineView: View {
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
         }
-        ToolbarItem(placement: .principal) { backdropPicker }
+        if sizeClass == .regular {
+            ToolbarItem(placement: .principal) { backdropPicker }
+        } else {
+            // In the middle, a phone's bar moved the menu sideways as its symbol's width changed
+            // (QA, October 26): it stands with the leading buttons.
+            ToolbarItem(placement: .topBarLeading) { backdropPicker }
+        }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
                 .tint(Theme.signature)
@@ -1285,7 +1292,7 @@ struct RefineView: View {
         guard let template = base?.template, model.hasLineArtInput, template.region(at: canvasPoint(point)) != nil else { return }
         endStroke()
         FeedbackEngine.shared.selectionChanged()
-        card = RefineAreaPick(point: point, at: canvasPoint(point))
+        card = RefineAreaPick(point: point, at: canvasPoint(point), screen: onScreen(point), template: template)
     }
 
     /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.
@@ -1312,7 +1319,8 @@ extension RefineView {
             RefineSelectionBar(template: template, region: region) {
                 guard let selection else { return }
                 FeedbackEngine.shared.selectionChanged()
-                card = RefineAreaPick(point: picturePoint(selection), at: selection)
+                let point = picturePoint(selection)
+                card = RefineAreaPick(point: point, at: selection, screen: onScreen(point), template: template)
             }
             .transition(.opacity)
         }
@@ -1551,7 +1559,7 @@ extension RefineView {
                 RefineColorsPanel(
                     template: base.template, paintsBefore: model.paintsBeforeEdits, edits: base.refinements.edits,
                     mode: tool == .looks ? .looks : .paint, paint: currentIndexBinding, family: $colorFamily,
-                    change: model.recolor)
+                    change: recolor)
                     .disabled(model.phase == .generating || !model.hasLineArtInput)
                     .transition(.opacity)
             }
@@ -1721,6 +1729,17 @@ extension RefineView {
     }
 
     /// Edit Paint's paint, as the colors panel picks it: the current paint.
+    /// Looks and Edit Paint's change. The paint repainted stays the current paint, in the color
+    /// the repaint gives it, so a picker still open goes on with it: followed from its old color,
+    /// a repaint whose paints came out alike (and so were numbered anew) sent it to another paint,
+    /// which the next pick then recolored (QA, October 26).
+    private func recolor(_ change: RefineColors) {
+        if case .repaint(let from, let to, let family) = change {
+            currentPaint = TemplateEditor.recolor(from, by: .repaint(from: from, to: to, family: family))
+        }
+        model.recolor(change)
+    }
+
     private var currentIndexBinding: Binding<Int?> {
         Binding(
             get: { currentIndex },
@@ -1831,13 +1850,6 @@ extension RefineView {
         AccessibilityNotification.Announcement(announcement).post()
     }
 
-    /// Where the card points: the pressed spot, on screen.
-    private var cardAnchor: CGRect {
-        guard let card else { return .zero }
-        let p = onScreen(card.point)
-        return CGRect(x: p.x - 12, y: p.y - 12, width: 24, height: 24)
-    }
-
     /// A point of the picture (0…1) on screen.
     private func onScreen(_ p: SIMD2<Float>) -> CGPoint {
         CGPoint(x: picture.minX + CGFloat(p.x) * picture.width, y: picture.minY + CGFloat(p.y) * picture.height)
@@ -1854,7 +1866,7 @@ extension RefineView {
     private func areaCard(_ pick: RefineAreaPick) -> some View {
         if let template = base?.template {
             RefineAreaCard(
-                template: template, at: pick.at,
+                template: template, at: pick.at, isolates: pick.isolates, from: pick.from,
                 paintArea: { model.paintArea(at: pick.at, color: $0, picking: true) },
                 repaint: { from, to in model.recolor(.repaint(from: from, to: to, family: false)) },
                 showPaint: { paint in

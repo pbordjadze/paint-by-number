@@ -26,6 +26,27 @@ nonisolated struct RefineAreaPick: Identifiable, Equatable {
     let point: SIMD2<Float>
     /// The same point in the template's canvas units.
     let at: SIMD2<Float>
+    /// Where the card points on screen, as the press found it. It stays while the card is open:
+    /// a popover whose anchor moves is shown anew, its state and its open color picker lost with
+    /// it (picks went missing, QA, October 26).
+    let anchor: CGRect
+    /// Whether the area shared its paint as the card opened: its picker then gives it a paint of
+    /// its own, else it repaints its paint, from `from`. Decided once, at the press, so the first
+    /// pick (which makes the area its paint's only one) doesn't turn the rest into repaints.
+    let isolates: Bool
+    let from: SIMD3<Float>
+
+    /// The card of the area at `at` (canvas units) of `template`, `point` normalized, pointing at
+    /// `screen`; nil where there is no area.
+    init?(point: SIMD2<Float>, at: SIMD2<Float>, screen: CGPoint, template: Template) {
+        guard let region = template.region(at: at) else { return nil }
+        let paint = Int(template.regions[region].colorIndex)
+        self.point = point
+        self.at = at
+        anchor = CGRect(x: screen.x - 12, y: screen.y - 12, width: 24, height: 24)
+        isolates = RefineAreaCard.areaCount(of: paint, in: template) > 1
+        from = template.palette[paint].oklab
+    }
 }
 
 /// An area's card, from a long press on it with any tool: its paint, how many areas share it, a
@@ -38,6 +59,10 @@ struct RefineAreaCard: View {
     let template: Template
     /// The press, in canvas units.
     let at: SIMD2<Float>
+    /// Whether the picker gives the area a paint of its own, else repaints its paint from `from`
+    /// (`RefineAreaPick.isolates`).
+    let isolates: Bool
+    let from: SIMD3<Float>
     /// The area's own new color (OKLab): a paint of its own (`TemplateEditor.Edit.paintArea`).
     let paintArea: (SIMD3<Float>) -> Void
     /// The paint's new color (OKLab), from `from`, when the area is its paint's only one.
@@ -47,10 +72,6 @@ struct RefineAreaCard: View {
 
     @Environment(\.self) private var environment
     @Environment(\.dynamicTypeSize) private var typeSize
-    /// Whether the area shared its paint when the card opened: the picker then gives it a paint of
-    /// its own, else it repaints its paint, from `from`.
-    @State private var isolates: Bool?
-    @State private var from: SIMD3<Float>?
     /// The picker's last color, laid once it has rested a moment or as the card goes.
     @State private var pending = RefinePendingPick()
 
@@ -64,12 +85,12 @@ struct RefineAreaCard: View {
                 header(paint: paint, count: count)
                 ColorPicker(selection: color(paint: paint), supportsOpacity: false) {
                     Label {
-                        if isolates ?? (count > 1) { Text("Only This Area") } else { Text("Color") }
+                        if isolates { Text("Only This Area") } else { Text("Color") }
                     } icon: {
                         Image(systemName: "drop.halffull")
                     }
                 }
-                .accessibilityHint(Text(isolates ?? (count > 1)
+                .accessibilityHint(Text(isolates
                     ? String(localized: "refine.card.only.hint", defaultValue: "Gives this area a color of its own; the other areas of its paint keep theirs.",
                              comment: "Refine screen, an area's card: VoiceOver hint of Only This Area, a color picker that gives the pressed area a paint of its own")
                     : String(localized: "refine.card.color.hint", defaultValue: "Gives this paint a new color.",
@@ -93,7 +114,6 @@ struct RefineAreaCard: View {
         .frame(minWidth: typeSize.isAccessibilitySize ? nil : 300, maxWidth: 420, alignment: .leading)
         .presentationDetents([.medium, .large])
         .presentationCompactAdaptation(.sheet)
-        .onAppear(perform: begin)
         .onDisappear { pending.flush() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-card")
@@ -169,13 +189,6 @@ struct RefineAreaCard: View {
         template.regions.reduce(0) { $0 + (Int($1.colorIndex) == paint ? 1 : 0) }
     }
 
-    private func begin() {
-        guard isolates == nil, let region else { return }
-        let paint = Int(template.regions[region].colorIndex)
-        isolates = Self.areaCount(of: paint, in: template) > 1
-        from = template.palette[paint].oklab
-    }
-
     /// The area's color as the picker shows it; a color picked is laid once the picker rests a
     /// moment (`RefinePendingPick`, Edit Paint's way).
     private func color(paint: Int) -> Binding<Color> {
@@ -184,11 +197,11 @@ struct RefineAreaCard: View {
             set: { color in
                 let resolved = color.resolve(in: environment)
                 let to = ColorScience.linearSRGBToOKLab(SIMD3(resolved.linearRed, resolved.linearGreen, resolved.linearBlue))
-                let isolates = isolates ?? true, from = from
+                let isolates = isolates, from = from
                 pending.pick {
                     if isolates {
                         paintArea(to)
-                    } else if let from {
+                    } else {
                         repaint(from, to)
                     }
                 }
