@@ -214,13 +214,11 @@ struct RefineView: View {
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
-    /// The color the last repaint sent gives its paint, until the edits have all landed: that
-    /// paint is then the current one. Followed from its old color instead, a repaint whose paints
-    /// came out alike (and so were numbered anew) left Edit Paint's open picker on another paint,
-    /// which its next pick recolored; made current as the repaint was sent, before any template
-    /// had it, the paint was none for a moment and the picker's next picks went nowhere (QA,
-    /// October 26).
-    @State private var repainted: SIMD3<Float>?
+    /// The last repaint of the current paint sent, until a template has it (`RefinePalette.landing`):
+    /// its paint is then the current one. Made current as the repaint was sent, before any
+    /// template had it, the paint was none for a moment and the picker's next picks went nowhere
+    /// (QA, October 26).
+    @State private var repainted: RefinePalette.Repainted?
     /// The cell Select picked, by a point in it (canvas units), so it follows its region through
     /// edits.
     @State private var selection: SIMD2<Float>?
@@ -882,13 +880,11 @@ struct RefineView: View {
             }
             tiny = RefineTinyAreas.find(in: preview.template)
             if tinyShown >= tiny.count { tinyShown = -1 }
-            let palette = preview.template.palette
-            if let repainted, let k = RefinePalette.index(of: RefinePalette.snapped(repainted, to: palette), in: palette) {
-                currentPaint = palette[k].oklab
-            } else {
-                currentPaint = RefinePalette.following(currentPaint, from: before, to: palette)
-            }
-            if preview.refinements == model.refinements { repainted = nil }
+            let landed = RefinePalette.landing(
+                currentPaint, from: before, to: preview.template.palette, repainted: repainted,
+                lastEdit: preview.refinements.edits.last)
+            currentPaint = landed.current
+            if !landed.waiting { repainted = nil }
             if cellEdges?.id != preview.id { cellEdges = (preview.id, RefineCellEdges.path(of: preview.template)) }
             #if DEBUG
             if isPractice, !didPickDemoPaint, ShellDemo.current?.opensGuide != nil {
@@ -907,7 +903,7 @@ struct RefineView: View {
                 if demo.selectsCell { selection = at }
                 if demo.opensCard, let at {
                     let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
-                    card = RefineAreaPick(point: point, at: at, screen: onScreen(point), template: template)
+                    card = RefineAreaPick(at: at, screen: onScreen(point), template: template)
                 }
                 didPickDemoPaint = true
             }
@@ -1299,7 +1295,7 @@ struct RefineView: View {
         guard let template = base?.template, model.hasLineArtInput, template.region(at: canvasPoint(point)) != nil else { return }
         endStroke()
         FeedbackEngine.shared.selectionChanged()
-        card = RefineAreaPick(point: point, at: canvasPoint(point), screen: onScreen(point), template: template)
+        card = RefineAreaPick(at: canvasPoint(point), screen: onScreen(point), template: template)
     }
 
     /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.
@@ -1327,7 +1323,7 @@ extension RefineView {
                 guard let selection else { return }
                 FeedbackEngine.shared.selectionChanged()
                 let point = picturePoint(selection)
-                card = RefineAreaPick(point: point, at: selection, screen: onScreen(point), template: template)
+                card = RefineAreaPick(at: selection, screen: onScreen(point), template: template)
             }
             .transition(.opacity)
         }
@@ -1738,11 +1734,14 @@ extension RefineView {
     }
 
     /// Edit Paint's paint, as the colors panel picks it: the current paint.
-    /// Looks and Edit Paint's change. A repaint's paint stays the current paint once it lands, in
-    /// the color the repaint gives it (`repainted`), so a picker still open goes on with it.
+    /// Looks and Edit Paint's change. A repaint of the current paint keeps it the current paint
+    /// once it lands, in the color the repaint gives it (`repainted`), so a picker still open goes
+    /// on with it; a repaint of another (a color still waiting as another paint was chosen) leaves
+    /// the choice alone.
     private func recolor(_ change: RefineColors) {
-        if case .repaint(let from, let to, let family) = change {
-            repainted = TemplateEditor.recolor(from, by: .repaint(from: from, to: to, family: family))
+        if case .repaint(let from, let to, let family) = change, from == currentPaint {
+            let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)
+            repainted = RefinePalette.Repainted(edit: edit, color: TemplateEditor.recolor(from, by: edit), current: currentPaint)
         }
         model.recolor(change)
     }
@@ -1875,7 +1874,7 @@ extension RefineView {
             RefineAreaCard(
                 template: template, at: pick.at, isolates: pick.isolates, from: pick.from,
                 paintArea: { model.paintArea(at: pick.at, color: $0, picking: true) },
-                repaint: { from, to in model.recolor(.repaint(from: from, to: to, family: false)) },
+                repaint: { from, to in recolor(.repaint(from: from, to: to, family: false)) },
                 showPaint: { paint in
                     card = nil
                     currentPaint = template.palette[paint].oklab

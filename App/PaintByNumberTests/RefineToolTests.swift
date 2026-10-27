@@ -144,6 +144,32 @@ struct RefineToolTests {
         #expect(RefinePalette.following(nil, from: nil, to: []) == nil)
     }
 
+    /// A repaint of the current paint keeps its paint current once a template has it last, even
+    /// when paints came out alike and were numbered anew (followed from its old color, the current
+    /// paint went to another); until then the paint follows as ever and the repaint waits, let go
+    /// once another paint is chosen.
+    @Test func aRepaintedPaintStaysCurrentOnceItLands() {
+        let red = SIMD3<Float>(0.6, 0.2, 0.1), teal = SIMD3<Float>(0.6, -0.1, -0.05), green = SIMD3<Float>(0.7, -0.15, 0.1)
+        let before = [red, teal, green].map { PaletteColor(oklab: $0, space: .sRGB) }
+        let edit = TemplateEditor.Edit.repaint(from: red, to: green, family: false)
+        let repainted = RefinePalette.Repainted(edit: edit, color: green, current: red)
+        // Red became green, alike the old green: one paint, numbered anew.
+        let merged = [teal, green].map { PaletteColor(oklab: $0, space: .sRGB) }
+        #expect(RefinePalette.following(red, from: before, to: merged) == teal)
+        let landed = RefinePalette.landing(red, from: before, to: merged, repainted: repainted, lastEdit: edit)
+        #expect(landed.current == green && !landed.waiting)
+
+        // An earlier edit lands first: the paint follows, and the repaint waits.
+        let earlier = RefinePalette.landing(red, from: before, to: before, repainted: repainted, lastEdit: .eraseLine(at: .zero, reach: 8))
+        #expect(earlier.current == red && earlier.waiting)
+        // Another paint was chosen meanwhile: it stays, and the repaint is let go.
+        let chosen = RefinePalette.landing(teal, from: before, to: merged, repainted: repainted, lastEdit: edit)
+        #expect(chosen.current == teal && !chosen.waiting)
+        // No repaint: the paint follows.
+        let none = RefinePalette.landing(red, from: before, to: before, repainted: nil, lastEdit: edit)
+        #expect(none.current == red && !none.waiting)
+    }
+
     /// The Studio's Pen draws ink alone: its line goes as a draw with no paints to give (laid
     /// nudged, no area recolored), unless Color from Photo is on, when the model reads the
     /// photo's colors for it. Other edits pass as they are.

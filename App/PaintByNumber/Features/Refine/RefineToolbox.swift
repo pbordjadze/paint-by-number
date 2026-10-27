@@ -38,6 +38,33 @@ nonisolated enum RefinePalette {
         return after.min { ColorScience.distance($0.oklab, current) < ColorScience.distance($1.oklab, current) }?.oklab
     }
 
+    /// A repaint sent while its paint was the current one: the edit, the color it gives that
+    /// paint (`TemplateEditor.recolor(_:by:)`), and the current paint as it was sent.
+    struct Repainted: Equatable {
+        let edit: TemplateEditor.Edit
+        let color: SIMD3<Float>
+        let current: SIMD3<Float>?
+    }
+
+    /// The current paint once a template lands with `after` (`before` the last's), and whether
+    /// `repainted` still waits. The template whose last edit is the repaint makes its paint the
+    /// current one, so Edit Paint's open picker goes on with it: followed from its old color, a
+    /// repaint whose paints came out alike (and so were numbered anew) left the picker on another
+    /// paint, which its next pick recolored (QA, October 26). Otherwise the current paint follows
+    /// its paint (`following`) and the repaint waits for its template, let go once another paint
+    /// is the current one. One that never lands (declined, replaced) waits harmlessly: only a
+    /// template with it last is its.
+    static func landing(
+        _ current: SIMD3<Float>?, from before: [PaletteColor]?, to after: [PaletteColor],
+        repainted: Repainted?, lastEdit: TemplateEditor.Edit?
+    ) -> (current: SIMD3<Float>?, waiting: Bool) {
+        let followed = following(current, from: before, to: after)
+        guard let repainted, repainted.current == current else { return (followed, false) }
+        guard lastEdit == repainted.edit else { return (followed, true) }
+        guard let k = index(of: snapped(repainted.color, to: after), in: after) else { return (followed, false) }
+        return (after[k].oklab, false)
+    }
+
     /// `lab` as a SwiftUI color, in the template's color space.
     static func color(_ lab: SIMD3<Float>, space: RGBColorSpace) -> Color {
         let rgb = ColorScience.okLabToEncoded(lab, space: space)
@@ -353,9 +380,10 @@ struct RefineHeldNumber: View {
     }
 }
 
-/// The areas' numbers over the drawing in `rect` while Numbers is picked or Paper shows, as the
-/// painting will show them (`LabelSizing`): Move Number has something to take, and Paper is the
-/// page as it will be painted. Over the painting or the photo Refine shows none.
+/// The areas' numbers over the drawing in `rect` while Numbers is picked or Paper shows, as a
+/// page shows them (`LabelSizing`, `TemplateRasterizer`'s size): Move Number has something to
+/// take, and Paper is the page as it will be painted. Over the painting or the photo Refine
+/// shows none.
 struct RefineNumbers: View, Equatable {
     let base: CreateModel.Preview
     let rect: CGRect
@@ -373,10 +401,12 @@ struct RefineNumbers: View, Equatable {
             let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
             // Zoomed in, most numbers are off screen: a frame draws only those it shows (Paper
             // shows them through every zoom and move).
-            let shown = CGRect(origin: .zero, size: area).insetBy(dx: -40, dy: -40)
             // As large as a page draws them (`TemplateRasterizer`): a big area carries several
             // numbers of this size, which unbounded piled up over each other.
             let maximum = LabelSizing.sheetMaximumFraction * Float(max(template.width, template.height))
+            // A number whose centre is just off screen still shows part of itself.
+            let reach = max(40, 1.5 * CGFloat(maximum) * s)
+            let shown = CGRect(origin: .zero, size: area).insetBy(dx: -reach, dy: -reach)
             for label in template.labels {
                 let region = Int(label.region)
                 guard region < template.regions.count else { continue }

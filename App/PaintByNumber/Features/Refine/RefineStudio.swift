@@ -22,9 +22,7 @@ nonisolated enum RefineGroup: Hashable, CaseIterable {
 /// An area a long press picked, for its card (`RefineAreaCard`).
 nonisolated struct RefineAreaPick: Identifiable, Equatable {
     let id = UUID()
-    /// Where the press was, normalized to the picture (0…1).
-    let point: SIMD2<Float>
-    /// The same point in the template's canvas units.
+    /// Where the press was, in the template's canvas units.
     let at: SIMD2<Float>
     /// Where the card points on screen, as the press found it. It stays while the card is open:
     /// a popover whose anchor moves is shown anew, its state and its open color picker lost with
@@ -36,12 +34,11 @@ nonisolated struct RefineAreaPick: Identifiable, Equatable {
     let isolates: Bool
     let from: SIMD3<Float>
 
-    /// The card of the area at `at` (canvas units) of `template`, `point` normalized, pointing at
-    /// `screen`; nil where there is no area.
-    init?(point: SIMD2<Float>, at: SIMD2<Float>, screen: CGPoint, template: Template) {
+    /// The card of the area at `at` (canvas units) of `template`, pointing at `screen`; nil where
+    /// there is no area.
+    init?(at: SIMD2<Float>, screen: CGPoint, template: Template) {
         guard let region = template.region(at: at) else { return nil }
         let paint = Int(template.regions[region].colorIndex)
-        self.point = point
         self.at = at
         anchor = CGRect(x: screen.x - 12, y: screen.y - 12, width: 24, height: 24)
         isolates = RefineAreaCard.areaCount(of: paint, in: template) > 1
@@ -97,10 +94,11 @@ struct RefineAreaCard: View {
                              comment: "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area")))
                 .accessibilityIdentifier("refine-card-color")
                 paints(current: paint)
-                // Kept in its place, hidden, once Only This Area has made the area its paint's
+                // Only for a card that isolates its area (its paint had others as it opened), and
+                // kept in its place, hidden, once Only This Area has made the area its paint's
                 // only one: the card shrank and the color picker beside it moved under the finger
                 // (QA, October 26).
-                if count > 1 || isolates {
+                if isolates {
                     Button {
                         showPaint(paint)
                     } label: {
