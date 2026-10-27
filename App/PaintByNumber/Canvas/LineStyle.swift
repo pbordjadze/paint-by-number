@@ -51,6 +51,8 @@ nonisolated struct DrawableLineArt: Sendable {
     /// Per stroke of `strokes`: whether it is writing over a paint too dark for the sheet's ink
     /// (`Template.writesOnDarkPaint`), which draws in the paper's light tone once painted.
     let lightWriting: [Bool]
+    /// Per stroke of `strokes`: whether it is writing (`TemplateLineArt.writingStrokes`).
+    let writing: [Bool]
     let strokePoints: [SIMD2<Float>]
 
     /// nil for classic templates, and for line art that doesn't match the template's edges.
@@ -60,15 +62,17 @@ nonisolated struct DrawableLineArt: Sendable {
         }
         let maxLayer = LineLayer.color.rawValue
         let points = art.strokePoints.count, regions = t.regions.count
-        var strokes: [InteriorStroke] = [], lightWriting: [Bool] = []
+        var strokes: [InteriorStroke] = [], lightWriting: [Bool] = [], writing: [Bool] = []
         for (k, s) in art.strokes.enumerated()
         where s.pointCount >= 2 && Int(s.pointStart) + Int(s.pointCount) <= points && Int(s.region) < regions && s.layer <= maxLayer {
             strokes.append(s)
             lightWriting.append(t.writesOnDarkPaint(stroke: k))
+            writing.append(art.isWritingStroke(k))
         }
         edgeLayers = art.edgeLayers.map { min($0, maxLayer) }
         self.strokes = strokes
         self.lightWriting = lightWriting
+        self.writing = writing
         strokePoints = art.strokePoints
     }
 

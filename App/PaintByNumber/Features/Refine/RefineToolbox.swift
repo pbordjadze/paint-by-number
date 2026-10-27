@@ -38,6 +38,33 @@ nonisolated enum RefinePalette {
         return after.min { ColorScience.distance($0.oklab, current) < ColorScience.distance($1.oklab, current) }?.oklab
     }
 
+    /// A repaint sent while its paint was the current one: the edit, the color it gives that
+    /// paint (`TemplateEditor.recolor(_:by:)`), and the current paint as it was sent.
+    struct Repainted: Equatable {
+        let edit: TemplateEditor.Edit
+        let color: SIMD3<Float>
+        let current: SIMD3<Float>?
+    }
+
+    /// The current paint once a template lands with `after` (`before` the last's), and whether
+    /// `repainted` still waits. The template whose last edit is the repaint makes its paint the
+    /// current one, so Edit Paint's open picker goes on with it: followed from its old color, a
+    /// repaint whose paints came out alike (and so were numbered anew) left the picker on another
+    /// paint, which its next pick recolored (QA, October 26). Otherwise the current paint follows
+    /// its paint (`following`) and the repaint waits for its template, let go once another paint
+    /// is the current one. One that never lands (declined, replaced) waits harmlessly: only a
+    /// template with it last is its.
+    static func landing(
+        _ current: SIMD3<Float>?, from before: [PaletteColor]?, to after: [PaletteColor],
+        repainted: Repainted?, lastEdit: TemplateEditor.Edit?
+    ) -> (current: SIMD3<Float>?, waiting: Bool) {
+        let followed = following(current, from: before, to: after)
+        guard let repainted, repainted.current == current else { return (followed, false) }
+        guard lastEdit == repainted.edit else { return (followed, true) }
+        guard let k = index(of: snapped(repainted.color, to: after), in: after) else { return (followed, false) }
+        return (after[k].oklab, false)
+    }
+
     /// `lab` as a SwiftUI color, in the template's color space.
     static func color(_ lab: SIMD3<Float>, space: RGBColorSpace) -> Color {
         let rgb = ColorScience.okLabToEncoded(lab, space: space)
@@ -353,8 +380,10 @@ struct RefineHeldNumber: View {
     }
 }
 
-/// The areas' numbers over the drawing in `rect` while Numbers is picked, as the painting will
-/// show them (`LabelSizing`), so Move Number has something to take; Refine shows none otherwise.
+/// The areas' numbers over the drawing in `rect` while Numbers is picked or Paper shows, as a
+/// page shows them (`LabelSizing`, `TemplateRasterizer`'s size): Move Number has something to
+/// take, and Paper is the page as it will be painted. Over the painting or the photo Refine
+/// shows none.
 struct RefineNumbers: View, Equatable {
     let base: CreateModel.Preview
     let rect: CGRect
@@ -366,21 +395,31 @@ struct RefineNumbers: View, Equatable {
     var body: some View {
         let template = base.template, rect = rect
         let size = CGSize(width: template.width, height: template.height)
-        Canvas { context, _ in
+        Canvas { context, area in
             guard size.width > 0, size.height > 0, rect.width > 0 else { return }
             let s = max(rect.width / size.width, rect.height / size.height)
             let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+            // Zoomed in, most numbers are off screen: a frame draws only those it shows (Paper
+            // shows them through every zoom and move).
+            // As large as a page draws them (`TemplateRasterizer`): a big area carries several
+            // numbers of this size, which unbounded piled up over each other.
+            let maximum = LabelSizing.sheetMaximumFraction * Float(max(template.width, template.height))
+            // A number whose centre is just off screen still shows part of itself.
+            let reach = max(40, 1.5 * CGFloat(maximum) * s)
+            let shown = CGRect(origin: .zero, size: area).insetBy(dx: -reach, dy: -reach)
             for label in template.labels {
                 let region = Int(label.region)
                 guard region < template.regions.count else { continue }
                 let paint = template.regions[region].colorIndex
                 let digits = LabelSizing.digitCount(colorIndex: paint)
-                let points = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, detail: template.isDetailRegion(region))) * s
-                guard points >= 4 else { continue }
+                let points = CGFloat(LabelSizing.fontSize(
+                    radius: label.radius, digits: digits, maximum: maximum, detail: template.isDetailRegion(region))) * s
+                let at = CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s)
+                guard points >= 4, shown.contains(at) else { continue }
                 let text = Text(verbatim: "\(paint + 1)")
                     .font(.system(size: points, weight: .semibold, design: .serif))
                     .foregroundStyle(LineArtDrawing.ink.opacity(0.75))
-                context.draw(text, at: CGPoint(x: origin.x + CGFloat(label.position.x) * s, y: origin.y + CGFloat(label.position.y) * s))
+                context.draw(text, at: at)
             }
         }
         .allowsHitTesting(false)

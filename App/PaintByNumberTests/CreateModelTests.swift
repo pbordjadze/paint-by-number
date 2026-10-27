@@ -741,6 +741,138 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A look, a repaint or Only This Area that the editor declines changes nothing, as a declined
+    /// edit does: nothing is kept (no edit, no draft), Undo has no step, and the painter is told.
+    /// The editor declines every edit on a classic template: it has no line art to edit.
+    @Test func aColorChangeTheEditorDeclinesIsNotKept() async throws {
+        let model = CreateModel(lineArt: LineArtSettings(style: .classic))
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        #expect(before.lineArt == nil)
+        let shown = model.preview?.id
+        let from = try #require(before.palette.first?.oklab)
+
+        model.recolor(.look(.moonlit, strength: 1))
+        await model.settled()
+        #expect(model.note?.kind == .notRecolored)
+        model.dismissNote()
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        await model.settled()
+        #expect(model.note?.kind == .notRecolored)
+        model.dismissNote()
+        let point = SIMD2(0.5 * Float(before.width), 0.5 * Float(before.height))
+        try await waitForEdits(model, model.paintArea(at: point, color: SIMD3(0.5, 0.1, -0.1)))
+        #expect(model.note?.kind == .notRecolored)
+
+        #expect(model.refinements.isEmpty && model.draft == nil && !model.canUndo)
+        #expect(model.preview?.id == shown && model.preview?.template == before)
+        model.cancelAll()
+    }
+
+    /// A repaint sent while the template is being made again is kept, as an edit sent then is, and
+    /// laid on the new template before it shows; the picker moving on meanwhile takes its place,
+    /// one step of the history.
+    @Test func aRepaintSentWhileTheTemplateIsMadeAgainLands() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let first = try #require(model.preview?.template)
+        let detail = model.detail
+        // Another template, then back to the first one's settings: it is made again (from the one
+        // kept), and the repaints are of its paints.
+        model.detail = detail < 0.75 ? detail + 0.25 : detail - 0.25
+        model.settingsChanged()
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.template != first)
+        model.detail = detail
+        model.settingsChanged()
+
+        let from = try #require(first.palette.first?.oklab)
+        let moved = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false)
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false))
+        // Sent while the template is being made again (whether they are laid before or after it
+        // comes is the main actor's timing, not something to wait on).
+        #expect(!model.isFinal)
+        try await waitUntil(polling: .milliseconds(2)) { model.refinements.edits == [moved] }
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.refinements.edits == [moved])
+        #expect(model.preview?.template == (try TemplateEditor.apply(moved, to: first).template))
+
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == first && !model.canUndo)
+        model.cancelAll()
+    }
+
+    /// Only This Area picked again for the same area takes the last pick's place, one step of the
+    /// history; picked back to the area's own paint it lays nothing, and the template is the one it
+    /// was.
+    @Test func onlyThisAreaPickedAgainTakesTheLastPicksPlace() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        // The area with the roomiest number, which any paint's number fits.
+        var roomiest: (region: Int, label: PaintCore.Label)?
+        for region in before.regions.indices {
+            for label in before.labels(ofRegion: region) where label.radius > roomiest?.label.radius ?? 0 {
+                roomiest = (region, label)
+            }
+        }
+        let (region, label) = try #require(roomiest)
+        let own = Int(before.regions[region].colorIndex)
+        let others = before.palette.indices.filter { $0 != own }.map { before.palette[$0].oklab }
+        try #require(others.count >= 2)
+        let point = label.position
+
+        try await waitForEdits(model, model.paintArea(at: point, color: others[0], picking: true))
+        #expect(model.refinements.edits == [.paintArea(at: point, color: others[0])])
+        try await waitForEdits(model, model.paintArea(at: point, color: others[1], picking: true))
+        let again = TemplateEditor.Edit.paintArea(at: point, color: others[1])
+        #expect(model.refinements.edits == [again])
+        #expect(model.preview?.template == (try TemplateEditor.apply(again, to: before).template))
+
+        try await waitForEdits(model, model.paintArea(at: point, color: before.palette[own].oklab, picking: true))
+        #expect(model.refinements.edits.count == 1 && model.note == nil)
+        #expect(model.preview?.template == before)
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == before && !model.canUndo)
+
+        // The Bucket's taps are steps of their own, the same point or not.
+        try await waitForEdits(model, model.paintArea(at: point, color: others[0]))
+        try await waitForEdits(model, model.paintArea(at: point, color: others[1]))
+        #expect(model.refinements.edits == [.paintArea(at: point, color: others[0]), again])
+        model.undo()
+        try await waitUntil { model.refinements.edits.count == 1 && model.isFinal }
+        #expect(model.refinements.edits == [.paintArea(at: point, color: others[0])])
+        model.cancelAll()
+    }
+
+    /// Once Refine is cancelled, a color its card or Edit Paint still had waiting as the screen
+    /// went is not laid over what Cancel put back; Refine opened again takes colors again.
+    @Test func aColorSentAfterCancelIsNotLaid() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let from = try #require(before.palette.first?.oklab)
+        let point = SIMD2(0.5 * Float(before.width), 0.5 * Float(before.height))
+        model.beginRefining()
+        model.cancelRefining()
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        model.paintArea(at: point, color: SIMD3(0.5, 0.1, -0.1), picking: true)
+        await model.settled()
+        #expect(model.refinements.isEmpty && model.preview?.template == before)
+
+        model.beginRefining()
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
+        try await waitUntil { !model.refinements.edits.isEmpty && model.isFinal }
+        model.cancelAll()
+    }
+
     /// The sliders make the template again and the edits are laid on the new one, as the editor
     /// lays them: the painter's lines survive.
     @Test func aSliderChangeLaysTheEditsOnTheNewTemplate() async throws {

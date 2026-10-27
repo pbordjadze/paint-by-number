@@ -98,7 +98,7 @@ extension EditWork {
             let pts = lattice(of: e)
             for j in 0..<(pts.count - 1) { offer(Lattice.nearest(to: p, on: pts[j], pts[j + 1]), edge: e, stroke: nil, segment: j) }
         }
-        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue && !splitting {
+        for (i, stroke) in strokes.enumerated() where stroke.joinsLines && !splitting {
             let pts = stroke.points.map(Lattice.point)
             for j in 0..<(pts.count - 1) { offer(Lattice.nearest(to: p, on: pts[j], pts[j + 1]), edge: nil, stroke: i, segment: j) }
         }
@@ -185,8 +185,8 @@ extension EditWork {
 
     /// Lays one polyline, wholly on the canvas, on the template. Its ends meet the ink they are
     /// near; it is cut where it meets the drawing (the edges, itself, and the strokes it touches,
-    /// `node`) into chains; each chain, with the outline of the region it lies in, either closes
-    /// off part of the region (`splitRegion`) or is a stroke.
+    /// `node`; never writing, `WorkStroke.joinsLines`) into chains; each chain, with the outline of
+    /// the region it lies in, either closes off part of the region (`splitRegion`) or is a stroke.
     mutating func drawRun(_ input: [LatticePoint], nudging: Bool = false) throws {
         var run = Self.dedupe(input)
         guard run.count >= 2 else { return }
@@ -211,7 +211,7 @@ extension EditWork {
         for p in run { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
         var candidates: [(index: Int, points: [LatticePoint])] = []
         // A split divides paint, not ink: the drawing's strokes are no part of it.
-        for (i, stroke) in strokes.enumerated() where stroke.alive && stroke.layer != LineLayer.color.rawValue && !splitting {
+        for (i, stroke) in strokes.enumerated() where stroke.joinsLines && !splitting {
             let pts = Self.dedupe(stroke.points.map(Lattice.point))
             guard pts.count >= 2 else { continue }
             var slo = LatticePoint(repeating: .max), shi = LatticePoint(repeating: .min)

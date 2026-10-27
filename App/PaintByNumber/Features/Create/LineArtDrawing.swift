@@ -16,8 +16,10 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
         let bounds: CGRect
         /// Writing over a paint too dark for the ink (`DrawableLineArt.lightWriting`).
         let onDarkPaint: Bool
+        /// Writing (`DrawableLineArt.writing`), which a drawn line's end never joins.
+        let isWriting: Bool
 
-        init?(_ points: ArraySlice<SIMD2<Float>>, onDarkPaint: Bool = false) {
+        init?(_ points: ArraySlice<SIMD2<Float>>, onDarkPaint: Bool = false, isWriting: Bool = false) {
             guard points.count >= 2, let first = points.first else { return nil }
             var low = first, high = first
             for p in points {
@@ -29,6 +31,7 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
                 x: CGFloat(low.x) - 1, y: CGFloat(low.y) - 1, width: CGFloat(high.x - low.x) + 2,
                 height: CGFloat(high.y - low.y) + 2)
             self.onDarkPaint = onDarkPaint
+            self.isWriting = isWriting
         }
     }
 
@@ -57,7 +60,9 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
         }
         if let drawable {
             for (k, stroke) in drawable.strokes.enumerated() where DrawableLineArt.isDrawn(stroke.layer) {
-                if let line = Line(drawable.points(of: stroke), onDarkPaint: drawable.lightWriting[k]) { lines.append(line) }
+                if let line = Line(drawable.points(of: stroke), onDarkPaint: drawable.lightWriting[k], isWriting: drawable.writing[k]) {
+                    lines.append(line)
+                }
             }
         }
         self.lines = lines

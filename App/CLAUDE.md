@@ -546,7 +546,8 @@ Conventions).
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
-  bent back into a hook: `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval, a curve (two
+  bent back into a hook: `PenAssist`, `SnapLines`; never onto writing, which the editor never
+  joins a line to: `RefineGestures.drawingLines(of:writing:)`, `LineArtDrawing.Line.isWriting`), Shapes draws a straight line, a rectangle, an oval, a curve (two
   drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from
   junction to junction (no line under the tools says how they work: each button's
@@ -557,11 +558,14 @@ Conventions).
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
   Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
-  along while Similar Colors Too is on); the picked paint's areas glow (`RefinePaintGlow`).
+  along while Similar Colors Too is on; laid once the picker rests, or as the panel or the
+  area's card goes, `RefinePendingPick`, but never over what Cancel put back,
+  `CreateModel.refiningCancelled`); the picked paint's areas glow (`RefinePaintGlow`).
   `CreateModel.recolor(_:)` makes them edits
   (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
-  of the history); paints made alike merge and a note says so. New colors cross-fade in (none
+  of the history); paints made alike merge and a note says so. They are laid as an edit is
+  (`CreateModel.lay`): one the editor declines is not kept (below). New colors cross-fade in (none
   under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
   12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
   move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
@@ -571,7 +575,8 @@ Conventions).
     with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
     grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
-    (`RefineGroup`: Ink, Cells, Paint, Numbers, See): on iPad a rail along the leading edge holds every tool
+    (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
+    lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
@@ -587,7 +592,8 @@ Conventions).
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
-    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint), the
+    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint,
+    each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
     the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
@@ -595,8 +601,9 @@ Conventions).
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing). The views (Painting, Paper,
-    Photo, Photo Behind, whose slider sets how faint the painting lies over the photo) are in the
-    navigation bar (a menu on compact widths), opening on the painting. Until the first edit a
+    the lines with their numbers, Photo, Photo Behind, whose slider sets how faint the painting
+    lies over the photo) are in the navigation bar (on compact widths a menu under the symbol of
+    the one showing: the bar has no room for its name), opening on the painting. Until the first edit a
     Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
     `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
     canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
@@ -672,9 +679,11 @@ Conventions).
     with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
     paintings and drafts regenerate as they were. A draft (a slider being
     dragged) shows the photo's own drawing, without edits. An edit sent while the base is being
-    made again is kept and laid before the new template shows (`generate`).
+    made again (a look or a repaint too, a look read on the template on screen) is kept and laid
+    before the new template shows (`generate`).
   - **An edit that can't be made** (`EditTrail.Verdict.declined`: a line that doubles back on
-    itself, lines closer than the lattice can tell apart, a fill with no room for its number)
+    itself, lines closer than the lattice can tell apart, a fill with no room for its number, a
+    look, a repaint or Only This Area the template can't take)
     changes nothing, is not kept and takes no step of the history; a toast says so
     (`RefineNote`, `RefineNoteToast`, announced to VoiceOver by `CreateModel.say`, gone after
     `CreateModel.noteDuration`). A shape a line closed with no room for a number is not cut off but
@@ -687,8 +696,10 @@ Conventions).
     drafts refined that way regenerate that way, what they mean never changes, and nothing refines
     by it any more; a fill such a build made is part of the base, and a tap there fills again).
     A `refinements.json` without `edits` decodes as it did; an edit it can't read
-    is left out; at most `maximumEdits` are kept. Drafts, Start (which saves the template on
-    screen, no regeneration) and a refined painting's `refinements.json` carry the edits, and
+    is left out; at most `maximumEdits` are kept. Edits are written with the editor's version
+    (`editorVersion`, PaintCore's `TemplateEditor.version`; edits saved before it read 0).
+    Drafts, Start (which saves the template on screen, no regeneration) and a refined painting's
+    `refinements.json` carry the edits, and
     `Library.regenerate` makes the base and lays them (`ArtworkFactory.laying`). PaintCore's
     `LineEdits` (root `CLAUDE.md` › Line art) stays the way the generator reads `lines`.
 - Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter

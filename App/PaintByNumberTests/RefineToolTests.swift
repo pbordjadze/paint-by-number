@@ -59,6 +59,32 @@ struct RefineToolTests {
         #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
     }
 
+    /// The color picker's last color is laid once the picker rests, in place of the ones before
+    /// it, or at once when its view goes (`flush`), and then only once; one something else took
+    /// the place of is never laid.
+    @MainActor
+    @Test func aPickedColorIsLaidOnceThePickerRestsOrItsViewGoes() async throws {
+        var laid: [Int] = []
+        let pending = RefinePendingPick()
+        pending.pick { laid.append(1) }
+        pending.pick { laid.append(2) }
+        #expect(laid.isEmpty)
+        try await waitUntil(polling: .milliseconds(10)) { !laid.isEmpty }
+        #expect(laid == [2])
+
+        pending.pick { laid.append(3) }
+        pending.flush()
+        #expect(laid == [2, 3])
+        pending.flush()
+        try await Task.sleep(for: RefinePendingPick.rest * 3)
+        #expect(laid == [2, 3], "A color laid as its view went was laid again")
+
+        pending.pick { laid.append(4) }
+        pending.drop()
+        try await Task.sleep(for: RefinePendingPick.rest * 3)
+        #expect(laid == [2, 3])
+    }
+
     /// A picked paint glows in every area that uses it, including separated areas.
     @Test func aPickedPaintFindsExactlyItsAreas() {
         var template = Fixtures.stripes(count: 4)
@@ -77,13 +103,10 @@ struct RefineToolTests {
         #expect(Set(all).count == all.count)
         #expect(RefineGroup.allCases.allSatisfy { !$0.tools.isEmpty && $0.tools.count <= 5 })
         #expect(RefineGroup.ink.tools.first == .pen)
-        let tools: [RefineTool] = [
-            .pen, .shape, .eraser, .smartEraser, .text, .select, .cellEdge, .merge, .fill, .bucket, .brush, .eyedropper, .editPaint,
-            .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
-        ]
-        for tool in tools {
-            #expect(all.contains(tool), "\(tool) is in no group")
-        }
+        #expect(all == RefineTool.allCases, "every tool stands in its group, in the order declared")
+        #expect(RefineGroup.ink.tools == [.pen, .shape, .bendLine, .eraser, .smartEraser])
+        #expect(RefineGroup.cells.tools == [.select, .cellEdge, .merge, .moveEdge, .fill])
+        #expect(RefineGroup.paint.tools == [.bucket, .brush, .eyedropper, .editPaint, .looks])
         #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
         #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
         #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
@@ -119,6 +142,32 @@ struct RefineToolTests {
         #expect(RefinePalette.following(second, from: palette, to: merged) == merged[0].oklab)
         #expect(RefinePalette.following(nil, from: nil, to: palette) == palette[0].oklab)
         #expect(RefinePalette.following(nil, from: nil, to: []) == nil)
+    }
+
+    /// A repaint of the current paint keeps its paint current once a template has it last, even
+    /// when paints came out alike and were numbered anew (followed from its old color, the current
+    /// paint went to another); until then the paint follows as ever and the repaint waits, let go
+    /// once another paint is chosen.
+    @Test func aRepaintedPaintStaysCurrentOnceItLands() {
+        let red = SIMD3<Float>(0.6, 0.2, 0.1), teal = SIMD3<Float>(0.6, -0.1, -0.05), green = SIMD3<Float>(0.7, -0.15, 0.1)
+        let before = [red, teal, green].map { PaletteColor(oklab: $0, space: .sRGB) }
+        let edit = TemplateEditor.Edit.repaint(from: red, to: green, family: false)
+        let repainted = RefinePalette.Repainted(edit: edit, color: green, current: red)
+        // Red became green, alike the old green: one paint, numbered anew.
+        let merged = [teal, green].map { PaletteColor(oklab: $0, space: .sRGB) }
+        #expect(RefinePalette.following(red, from: before, to: merged) == teal)
+        let landed = RefinePalette.landing(red, from: before, to: merged, repainted: repainted, lastEdit: edit)
+        #expect(landed.current == green && !landed.waiting)
+
+        // An earlier edit lands first: the paint follows, and the repaint waits.
+        let earlier = RefinePalette.landing(red, from: before, to: before, repainted: repainted, lastEdit: .eraseLine(at: .zero, reach: 8))
+        #expect(earlier.current == red && earlier.waiting)
+        // Another paint was chosen meanwhile: it stays, and the repaint is let go.
+        let chosen = RefinePalette.landing(teal, from: before, to: merged, repainted: repainted, lastEdit: edit)
+        #expect(chosen.current == teal && !chosen.waiting)
+        // No repaint: the paint follows.
+        let none = RefinePalette.landing(red, from: before, to: before, repainted: nil, lastEdit: edit)
+        #expect(none.current == red && !none.waiting)
     }
 
     /// The Studio's Pen draws ink alone: its line goes as a draw with no paints to give (laid

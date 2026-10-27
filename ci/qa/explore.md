@@ -64,6 +64,11 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
   - A screenshot comes after a swipe has ended: what shows only while a finger is down (Refine's
     Merge lighting the cells it will join, Move Edge's preview) can't be seen; list it under Not
     tested.
+  - Refine's canvas doesn't zoom with a double tap, and Maestro has no pinch: its tiny-numbers
+    badge zooms to a number (about 10×) with no way back but a pinch (October 26), so look at
+    the whole picture first and zoom last. Refine's area card (a long press) is missing from
+    `inspect_screen`'s elements: tap its controls by point, and while the system color picker is
+    open only the picker is listed.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -133,6 +138,12 @@ Report these only if they look wrong in another way:
 - The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
   took over 2.5 s to draw, usual on this runner; judge the screen.
 - The release build has no Refine (the debug build does): it is left out of the first release.
+- In Refine (debug build): Cancel puts back what Refine opened with, at once and without asking;
+  a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
+  them back); the picker of an area's card is one step of the history however many colors it
+  picks, while Edit Paint's are a step each; and the canvas keeps the room of the tallest panel
+  it has had below it, so the picture never moves under a finger as tools change. Each is a
+  design question for later (painting-company row 143), not a bug of the screen.
 - The debug build only (features not yet released): after the first fill the painting's top bar
   fades to Back, the progress ring and Hint; tap the ring (`quiet-ring`) to bring More and Undo
   back. A finished painting there grows dark for a few seconds, a moon rising over it.

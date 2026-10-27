@@ -1,0 +1,17 @@
+[
+{"kind": "draw", "points": [[0.5, 22], [22, 0.5]], "closed": false, "paints": [{"at": [6, 6], "color": [0.625, 0.125, -0.078125]}]},
+{"kind": "draw", "points": [[28, 80], [60, 80.5], [92, 80]], "closed": false, "paints": []},
+{"kind": "draw", "points": [[140, 100], [150, 100], [150, 110], [140, 110]], "closed": true},
+{"kind": "split", "points": [[180, 74.5], [180, 120.5]], "closed": false, "paints": [{"at": [186, 100], "color": [0.5, -0.125, 0.125]}]},
+{"kind": "cellEdge", "points": [[96, 120.75], [96, 143.5]], "closed": false},
+{"kind": "merge", "points": [[60, 90], [60, 110]]},
+{"kind": "brush", "points": [[130, 18], [160, 18]], "radius": 5, "color": [0.84375, -0.0078125, 0.15625]},
+{"kind": "reshape", "points": [[100, 30], [100, 36]], "reach": 8, "target": "ink"},
+{"kind": "moveLabel", "points": [[144, 69], [150, 60]], "reach": 8},
+{"kind": "erase", "points": [[70, 66]], "radius": 2},
+{"kind": "eraseLine", "points": [[30, 80]], "reach": 4},
+{"kind": "fill", "points": [[40, 132]], "color": [0.3125, 0.09375, -0.09375]},
+{"kind": "paintArea", "points": [[130, 85]], "color": [0.78125, -0.03125, -0.0625]},
+{"kind": "repaint", "points": [], "from": [0.625, 0.125, -0.078125], "color": [0.5625, 0.15625, -0.125], "family": true},
+{"kind": "look", "points": [], "look": "starryNight", "strength": 0.75, "lightness": [0.421875, 0.421875, 0.5, 0.625, 0.625, 0.6875, 0.78125, 0.78125, 0.84375]}
+]

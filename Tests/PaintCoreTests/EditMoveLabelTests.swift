@@ -35,6 +35,9 @@ struct EditMoveLabelTests {
         #expect(moved.position == to)
         #expect(abs(moved.radius - (hypot(30, 42) - 27)) < 0.6, "the disc's outline is nearest: \(moved.radius)")
         #expect(moved.radius <= label.radius + 0.5, "never more than the cell's best spot holds")
+        // Exactly the room at the point, to the outline (the sky has no stroke to keep off).
+        let outline = EditWork.flatPolygon(u.polygons(ofRegion: sky).map { $0.map(Lattice.point) })
+        #expect(moved.radius == Float(outline.signedDistance(30, 30)))
         #expect(u.labels(ofRegion: sky).count == t.labels(ofRegion: sky).count)
         #expect(u.polygons(ofRegion: sky) == t.polygons(ofRegion: sky) && u.mesh == t.mesh && u.regionMap == t.regionMap)
         #expect(u.regions[sky].inscribedRadius == moved.radius)

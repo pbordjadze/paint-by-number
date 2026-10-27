@@ -319,6 +319,11 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   which becomes a vertex of that ink), an end near the other end closes the line. The line is cut
   at every point it meets the drawing (edges, itself, the strokes it touches: a stroke is ink for
   the next line, so a shape drawn in two strokes closes) and each stretch between is a *chain*.
+  Writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins a letter and no
+  letter is cut into chains, so none bounds a cell; where the line cuts a region, the letters it
+  crosses are cut with it, each piece still writing (`EditWork.reassign`). Until October 26 a
+  line that met a letter took it in: the "o" of a note closed into a cell, and the pieces lost
+  their mark, so they stopped reading over dark paint.
   The chains in a region, with its outline, cut it exactly where they close off part of it
   (`EditWork.splitRegion`: the faces of the planar graph, traced at each vertex along the sharpest
   turn toward the region, as `BoundaryGraph` does on the lattice): each piece keeps the region's
@@ -333,7 +338,9 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
 - **The tiny-piece rule.** A piece gets the numbers `LabelSizing` asks of its paint (the label
   search of the pipeline, `PolyLabel`, kept where the old number still has 85% of the room, away
   from the lines it left inside). A piece with room for a detail area's number
-  (`LabelSizing.detailMinimumRadius`) and not for the usual one becomes a detail area
+  (`LabelSizing.detailMinimumRadius`) and not for the usual one, measured finely (the coarse
+  search can find up to a quarter unit less than there is: until October 26 a piece that fit its
+  2- or 3-digit number could be found short of it and made a detail area), becomes a detail area
   (`Template.detailRegions`); one with less is not cut off: the chains round it go back to being
   strokes and the cell stays as it was (`Outcome.tooSmall` says where). A line through a crowd
   cuts what it can. The app says a shape is too small only when its line cut nothing off
@@ -526,9 +533,10 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   where the finger lifts when that is inside its own region (not on its outline) and a number of
   its digits fits there: the room there, measured to the outline and to the strokes in the
   region (`LabelKeepOut`, as numbers are kept off ink elsewhere), at least the usual floor or, in
-  a detail area, a detail area's. Its radius is that room, never more than the region's roomiest
-  spot gives (`PolyLabel` over the region with the same keep-out), so a number dragged into open
-  space doesn't grow huge. It must keep clear of the region's other numbers: a move whose circle
+  a detail area, a detail area's. Its radius is that room (which no spot of the region exceeds:
+  until October 26 a search for the roomiest spot, seeded at the point, capped it and so never
+  changed it); a number dragged into open space is drawn up to the renderers' cap, as any
+  number is. It must keep clear of the region's other numbers: a move whose circle
   there overlaps another's is declined, each circle the disc its digits are drawn in: its room,
   but no more than a number at the largest size a renderer draws fills (`largestNumberFraction`,
   the canvas's cap, 4.5% of the shorter side). A circle as large as the room alone would decline

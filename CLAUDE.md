@@ -90,7 +90,8 @@ before planning app work).
   `fields-small.json` by `tools/tests/test_making_of_fields.py --write-goldens`. `python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'` (numpy,
   Pillow; CI `core`) fails when a committed fixture is not what the Python makes now.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
-  `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
+  `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data), and so is
+  `edits-v1.json` (every kind of edit, as `refinements.json` keeps them: `EditGoldenTests`);
   `layered-photo.ppm`, `layered-edges.pgm` and `shapes.ppm` are inputs that tests and the line
   fixtures' recorded commands read (edit them and those recipes stop reproducing);
   `auto-parrots.json` + `auto-parrots-draft.ppm` pin one Auto decision (the draft is also a test
@@ -263,6 +264,9 @@ Saved paintings must open in every later build. The format history is documented
   itself changes.
 - Bump `TemplateGenerator.pipelineVersion` in the same commit as any change that alters generated
   output for identical inputs and settings; templates record it.
+- Bump `TemplateEditor.version` in the same commit as any change to what a list of edits makes on
+  a given template, and pin its digest (`EditGoldenTests`, never editing a pin or `edits-v1.json`);
+  a refined painting's `refinements.json` records it (`TemplateRefinements.editorVersion`).
 - Decoders treat files as hostile: check every count against the bytes left before allocating, and
   every span, reference and coordinate (inside the canvas) in `Int` arithmetic before anything
   indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a silent

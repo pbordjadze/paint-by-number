@@ -53,12 +53,13 @@ extension EditWork {
     }
 
     /// Where the numbers of a region with these `rings` go. The first label is the most
-    /// spacious spot of the outline (`PolyLabel`, measured as the vectorizer does), kept where it
-    /// was (`hints`, the labels of the regions this one replaces, best first) while that spot
-    /// still has most of the room, and clear of `keepOut`, the lines this edit left inside the
-    /// region, where the room there still holds a legible number (`LabelKeepOut`). Hints that
-    /// are far enough from the others and still roomy stay as further labels. Nil when no
-    /// spot holds even a detail area's number.
+    /// spacious spot of the outline (`PolyLabel`, measured as the vectorizer does, and finely
+    /// wherever the room found is short of the usual number's), kept where it was (`hints`, the
+    /// labels of the regions this one replaces, best first) while that spot still has most of
+    /// the room, and clear of `keepOut`, the lines this edit left inside the region, where the
+    /// room there still holds a legible number (`LabelKeepOut`). Hints that are far enough from
+    /// the others and still roomy stay as further labels. Nil when no spot holds even a detail
+    /// area's number.
     func labelPlan(
         rings: [[LatticePoint]], color: UInt32, detail: Bool, hints: [Label], region: Int, keepOut lines: [[SIMD2<Float>]]
     ) -> LabelPlan? {
@@ -74,9 +75,14 @@ extension EditWork {
         seed /= Double(outer)
         if let hint = hints.first { seed = SIMD2(Double(hint.position.x), Double(hint.position.y)) }
 
+        // The coarse search finds a spot up to its precision short of the best, so room found
+        // below the usual floor is measured again finely before the piece is made a detail
+        // area: a 2- or 3-digit number's floor (3.17, 4.39) is above the vectorizer's
+        // `smallRegionRadius`, under which alone it measures finely.
+        let finelyBelow = max(Double(Vectorizer.smallRegionRadius), usual)
         func pole(_ keepOut: LabelKeepOut, seed: SIMD2<Double>) -> (position: SIMD2<Double>, distance: Double) {
             var found = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: seed, keepOut: keepOut)
-            if found.distance < Double(Vectorizer.smallRegionRadius) {
+            if found.distance < finelyBelow {
                 found = PolyLabel.find(poly, precision: Vectorizer.smallRegionLabelPrecision, seed: seed, keepOut: keepOut)
             }
             return found
@@ -128,11 +134,11 @@ extension EditWork {
     /// kept off the strokes drawn in the region as numbers are (`LabelKeepOut`) and clear of the
     /// region's other numbers: no two of their circles overlap, each circle its radius but at
     /// most what a number drawn at the largest size (`largestNumberFraction`) fills. Its radius
-    /// is the room there, never
-    /// more than the region's roomiest spot gives (`PolyLabel`). The region's other numbers, its
-    /// outline and fill stay as they were. A later edit that plans the region's numbers again (a
-    /// cut, a join, a repaint, a reshape of its outline) keeps it there while it keeps most of the
-    /// room, as it keeps any number (`labelPlan`), and may move it otherwise.
+    /// is the room there, measured exactly at the point, which no spot of the region exceeds
+    /// (a search for the roomiest, seeded there, finds at least as much). The region's other
+    /// numbers, its outline and fill stay as they were. A later edit that plans the region's
+    /// numbers again (a cut, a join, a repaint, a reshape of its outline) keeps it there while it
+    /// keeps most of the room, as it keeps any number (`labelPlan`), and may move it otherwise.
     mutating func moveLabel(from: SIMD2<Float>, to: LatticePoint, reach: Float) throws {
         let alive = t.regions.indices.filter { regionAlive[$0] }
         guard let nearest = TemplateEditor.nearestLabel(
@@ -147,11 +153,7 @@ extension EditWork {
         let inked = strokes.filter { $0.alive && $0.region == r && $0.layer != LineLayer.color.rawValue }
         let keepOut = LabelKeepOut(rects: [], lines: inked.map { LabelKeepOut.Line($0.points) })
         let p = Lattice.double(to)
-        var best = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: p, keepOut: keepOut)
-        if best.distance < Double(Vectorizer.smallRegionRadius) {
-            best = PolyLabel.find(poly, precision: Vectorizer.smallRegionLabelPrecision, seed: p, keepOut: keepOut)
-        }
-        let room = min(poly.signedDistance(p.x, p.y), keepOut.distance(p.x, p.y), best.distance)
+        let room = min(poly.signedDistance(p.x, p.y), keepOut.distance(p.x, p.y))
         let digits = LabelSizing.digitCount(colorIndex: t.regions[r].colorIndex)
         guard room >= Double(LabelSizing.minimumRadius(digits: digits, detail: regionDetail[r])) else {
             throw EditFailure.invalid("there is no room for the number there")

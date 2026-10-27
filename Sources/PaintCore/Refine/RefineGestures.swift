@@ -310,8 +310,10 @@ public enum RefineGestures {
     /// The lines of a template's drawing, canvas units, as Refine shows them (the app's
     /// `LineArtDrawing`): each drawn edge (`LineLayer` other than `color`) inside the canvas, then
     /// each well-formed interior stroke of a drawn layer. A template without line art draws every
-    /// edge inside the canvas.
-    public static func drawingLines(of t: Template) -> [[CGPoint]] {
+    /// edge inside the canvas. Without `writing`, the strokes of its writing are left out: the
+    /// lines a drawn line's ends may join (`snapLines`), since the editor never joins one to a
+    /// letter.
+    public static func drawingLines(of t: Template, writing: Bool = true) -> [[CGPoint]] {
         let art = t.lineArt.flatMap { $0.edgeLayers.count == t.edges.count && $0.edgeWeights.count == t.edges.count ? $0 : nil }
         func points(_ slice: some Collection<SIMD2<Float>>) -> [CGPoint] { slice.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) } }
         var lines: [[CGPoint]] = []
@@ -321,9 +323,9 @@ public enum RefineGestures {
             if line.count >= 2 { lines.append(line) }
         }
         guard let art else { return lines }
-        for s in art.strokes
+        for (k, s) in art.strokes.enumerated()
         where s.pointCount >= 2 && Int(s.pointStart) + Int(s.pointCount) <= art.strokePoints.count
-            && Int(s.region) < t.regions.count && LineLayer.isDrawn(s.layer) {
+            && Int(s.region) < t.regions.count && LineLayer.isDrawn(s.layer) && (writing || !art.isWritingStroke(k)) {
             lines.append(points(art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]))
         }
         return lines
