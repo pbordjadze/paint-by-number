@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 123,
+ "duration_ms": 986685,
+ "total_cost_usd": 3.4945678,
+ "result": "Both Refine rechecks passed every run, and nothing failed. The report is at `/Users/runner/work/_temp/qa/report.md`.\n\n**(1) Edit Paint, 6 of 6 runs passed** (3 with Similar colors too OFF, 3 with it ON). Every pick recolored the selected paint and each run ended in its 3rd color. The bar kept naming that paint throughout, including after paints merged and were renumbered. No pick was ignored, and no other paint became the one the picker edits.\n\n**(2) Area card, 3 of 3 runs passed.** In each run the picker had the same bounds before and after pick A:\n- run 1: `[425,678][813,1200]`\n- run 2: `[513,508][901,1030]`\n- run 3: `[371,368][746,903]`\n\nThe area ended in color B each time, and the card kept saying \"Only This Area\".\n\n**Suspicions, each seen once:**\n- **Undo moved the selection:** three Undos after editing Paint 3 restored the colors but selected Paint 17 instead.\n- **Odd log lines:** each of those Undos also logged a New Painting preview tip line (\"offer in preview\") while Refine was open; no tip appeared.\n- **Similar colors grows with each pick:** with the switch ON, paints that weren't similar at the start (the cyan sky band) got pulled in on later picks. The brief says this group is by design, so I've noted it only as hard to predict.\n- **Shifted layout:** one screenshot caught the colors bar and picker drawn about 135 pt to the left, probably mid-animation.\n- **Unresponsive switch:** \"Similar colors too\" needed three taps the first time I turned it off; that may have been Maestro's taps.\n\n**Automation problems:** tapping beside the picker didn't close it, and the next palette and well taps didn't land. Tapping its dismiss region by id closed Edit Paint's picker, but for the area card's picker that tap's centre falls inside the popover, so I tapped the canvas instead.\n\nThere were no crashes. I didn't try Done or Cancel, Show Its Other Areas, the Spectrum or Sliders tabs, or anything outside Refine. Evidence is in `shots/`; the report names the files for each run.",
+ "usage": {
+  "input_tokens": 116,
+  "cache_creation_input_tokens": 258247,
+  "cache_read_input_tokens": 8289244,
+  "output_tokens": 27251,
+  "output_tokens_details": {
+   "thinking_tokens": 6593
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 258247
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 23,
+  "Read": 24,
+  "mcp__maestro__run": 35,
+  "mcp__maestro__inspect_screen": 17,
+  "Write": 3
+ },
+ "images_received": 43
+}
