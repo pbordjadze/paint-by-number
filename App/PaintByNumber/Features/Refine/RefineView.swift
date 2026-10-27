@@ -214,6 +214,13 @@ struct RefineView: View {
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
+    /// The color the last repaint sent gives its paint, until the edits have all landed: that
+    /// paint is then the current one. Followed from its old color instead, a repaint whose paints
+    /// came out alike (and so were numbered anew) left Edit Paint's open picker on another paint,
+    /// which its next pick recolored; made current as the repaint was sent, before any template
+    /// had it, the paint was none for a moment and the picker's next picks went nowhere (QA,
+    /// October 26).
+    @State private var repainted: SIMD3<Float>?
     /// The cell Select picked, by a point in it (canvas units), so it follows its region through
     /// edits.
     @State private var selection: SIMD2<Float>?
@@ -875,7 +882,13 @@ struct RefineView: View {
             }
             tiny = RefineTinyAreas.find(in: preview.template)
             if tinyShown >= tiny.count { tinyShown = -1 }
-            currentPaint = RefinePalette.following(currentPaint, from: before, to: preview.template.palette)
+            let palette = preview.template.palette
+            if let repainted, let k = RefinePalette.index(of: RefinePalette.snapped(repainted, to: palette), in: palette) {
+                currentPaint = palette[k].oklab
+            } else {
+                currentPaint = RefinePalette.following(currentPaint, from: before, to: palette)
+            }
+            if preview.refinements == model.refinements { repainted = nil }
             if cellEdges?.id != preview.id { cellEdges = (preview.id, RefineCellEdges.path(of: preview.template)) }
             #if DEBUG
             if isPractice, !didPickDemoPaint, ShellDemo.current?.opensGuide != nil {
@@ -1066,13 +1079,7 @@ struct RefineView: View {
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
         }
-        if sizeClass == .regular {
-            ToolbarItem(placement: .principal) { backdropPicker }
-        } else {
-            // In the middle, a phone's bar moved the menu sideways as its symbol's width changed
-            // (QA, October 26): it stands with the leading buttons.
-            ToolbarItem(placement: .topBarLeading) { backdropPicker }
-        }
+        ToolbarItem(placement: .principal) { backdropPicker }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
                 .tint(Theme.signature)
@@ -1637,7 +1644,9 @@ extension RefineView {
                 }
                 .pickerStyle(.inline)
             } label: {
-                Label { Text("Show") } icon: { Image(systemName: Self.backdropSymbol(backdrop)) }
+                // One width for every view's symbol: a phone's bar placed the menu elsewhere as the
+                // symbol's width changed (QA, October 26).
+                Label { Text("Show") } icon: { Image(systemName: Self.backdropSymbol(backdrop)).frame(width: 30) }
                     .labelStyle(.iconOnly)
             }
             .accessibilityValue(Self.backdropName(backdrop))
@@ -1729,13 +1738,11 @@ extension RefineView {
     }
 
     /// Edit Paint's paint, as the colors panel picks it: the current paint.
-    /// Looks and Edit Paint's change. The paint repainted stays the current paint, in the color
-    /// the repaint gives it, so a picker still open goes on with it: followed from its old color,
-    /// a repaint whose paints came out alike (and so were numbered anew) sent it to another paint,
-    /// which the next pick then recolored (QA, October 26).
+    /// Looks and Edit Paint's change. A repaint's paint stays the current paint once it lands, in
+    /// the color the repaint gives it (`repainted`), so a picker still open goes on with it.
     private func recolor(_ change: RefineColors) {
         if case .repaint(let from, let to, let family) = change {
-            currentPaint = TemplateEditor.recolor(from, by: .repaint(from: from, to: to, family: family))
+            repainted = TemplateEditor.recolor(from, by: .repaint(from: from, to: to, family: family))
         }
         model.recolor(change)
     }

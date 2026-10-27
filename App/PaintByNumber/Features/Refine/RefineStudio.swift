@@ -97,7 +97,10 @@ struct RefineAreaCard: View {
                              comment: "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area")))
                 .accessibilityIdentifier("refine-card-color")
                 paints(current: paint)
-                if count > 1 {
+                // Kept in its place, hidden, once Only This Area has made the area its paint's
+                // only one: the card shrank and the color picker beside it moved under the finger
+                // (QA, October 26).
+                if count > 1 || isolates {
                     Button {
                         showPaint(paint)
                     } label: {
@@ -107,6 +110,9 @@ struct RefineAreaCard: View {
                         localized: "refine.card.others.hint", defaultValue: "Shows every area of this paint, glowing, in Edit Paint.",
                         comment: "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens the Edit Paint tool with the area's paint picked")))
                     .accessibilityIdentifier("refine-card-others")
+                    .opacity(count > 1 ? 1 : 0)
+                    .disabled(count <= 1)
+                    .accessibilityHidden(count <= 1)
                 }
             }
         }
