@@ -312,8 +312,12 @@ final class RefineUITests: XCTestCase {
         let button = app.buttons["refine-tool-\(id)"]
         if !button.exists { app.buttons[group].tap() }
         XCTAssertTrue(button.waitForExistence(timeout: 5), "Refine has no \(id)")
+        let selected = NSPredicate(format: "isSelected == true")
         button.tap()
-        XCTAssertTrue(waitFor(button, toMatch: NSPredicate(format: "isSelected == true")), "\(id) didn't become the tool")
+        // A tap CI's simulator lost (October 28, Writing's): picking the tool again changes
+        // nothing if the first tap landed after all.
+        if !waitFor(button, toMatch: selected) { retapIfLost(id) { button.tap() } }
+        XCTAssertTrue(waitFor(button, toMatch: selected, timeout: 5), "\(id) didn't become the tool")
         return button
     }
 

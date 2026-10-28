@@ -430,6 +430,20 @@ enum RefinePencilAction {
     }
 }
 
+/// A key of a hardware keyboard on the Refine screen (`RefineView.keys`): what it is, its name in
+/// the list holding ⌘ shows, and what it does.
+struct RefineKey: Equatable {
+    enum Action: Equatable {
+        case tool(RefineTool)
+        case smaller, larger, fit, fullScreen, undo, redo
+    }
+
+    let input: String
+    let modifiers: UIKeyModifierFlags
+    let title: String
+    let action: Action
+}
+
 /// The refine canvas's touches, the gestures of iPad drawing apps: an invisible scroll view zooms
 /// and moves the picture with two fingers, with the system's feel (the painting canvas's way),
 /// while one finger draws or taps; a tap of two fingers undoes and of three redoes, two or three
@@ -466,6 +480,9 @@ struct RefineTouchSurface: UIViewRepresentable {
     /// it leaves or lands.
     var onDropHover: (SIMD2<Float>?) -> Bool = { _ in false }
     var onFullScreen: () -> Void = {}
+    /// A hardware keyboard's keys, and what one pressed asks for.
+    var keys: [RefineKey] = []
+    var onKey: (RefineKey.Action) -> Void = { _ in }
     var focus: RefineFocus?
 
     func makeUIView(context: Context) -> RefineSurfaceView { RefineSurfaceView() }
@@ -484,6 +501,8 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onDrop = onDrop
         view.onDropHover = onDropHover
         view.onFullScreen = onFullScreen
+        view.keys = keys
+        view.onKey = onKey
         view.aspectRatio = aspectRatio
         // Zooming reports the layout, which sets state: never within SwiftUI's update.
         if let focus, focus.id != view.focusedRequest {
@@ -510,6 +529,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onDrop: ((String, SIMD2<Float>) -> Void)?
     var onDropHover: ((SIMD2<Float>?) -> Bool)?
     var onFullScreen: (() -> Void)?
+    var keys: [RefineKey] = []
+    var onKey: ((RefineKey.Action) -> Void)?
 
     /// The Pencil draws and fingers only move the picture: Only Draw with Apple Pencil is on (nil
     /// until the surface has read it).
@@ -636,6 +657,34 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// No system editing gestures over the picture: three fingers redo here, and never show
     /// iPadOS's undo bar.
     override var editingInteractionConfiguration: UIEditingInteractionConfiguration { .none }
+
+    // MARK: Keys
+
+    /// First responder while on screen (the painting canvas's way), so its keys come before the
+    /// menu bar's, which the Paint menu shares some of, and VoiceOver meets no stand-ins for them.
+    override var canBecomeFirstResponder: Bool { true }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard window != nil else { return }
+        Task { @MainActor [weak self] in _ = self?.becomeFirstResponder() }
+    }
+
+    override var keyCommands: [UIKeyCommand]? {
+        keys.indices.map { index in
+            let key = keys[index]
+            let command = UIKeyCommand(
+                title: key.title, action: #selector(handleKey(_:)), input: key.input, modifierFlags: key.modifiers,
+                propertyList: index)
+            command.wantsPriorityOverSystemBehavior = true
+            return command
+        }
+    }
+
+    @objc private func handleKey(_ command: UIKeyCommand) {
+        guard let index = command.propertyList as? Int, keys.indices.contains(index) else { return }
+        onKey?(keys[index].action)
+    }
 
     /// Only Draw with Apple Pencil may have changed in Settings while the app was away.
     @objc private func appBecameActive() { applyDrawingPolicy() }

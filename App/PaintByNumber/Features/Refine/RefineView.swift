@@ -2,6 +2,7 @@ import Accessibility
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// What one finger (or the Pencil) does on the Refine screen.
 nonisolated enum RefineTool: Hashable, CaseIterable {
@@ -365,7 +366,6 @@ struct RefineView: View {
                     if usesRail, !fullScreen { toolRail }
                 }
                 .background(Theme.paper)
-                .background { keyCommands }
                 .navigationTitle("Refine")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
@@ -503,7 +503,7 @@ struct RefineView: View {
                 },
                 onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
                 onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
-                onFullScreen: { if !isPractice { toggleFullScreen() } }, focus: focus)
+                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, focus: focus)
             if let hold, let space = base?.template.colorSpace {
                 RefineLoupe(
                     picked: hold.color.map { RefinePalette.color($0, space: space) },
@@ -1151,7 +1151,6 @@ struct RefineView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel", systemImage: "xmark", action: askToCancel)
-                // Escape leaves the full screen there (`keyCommands`).
                 .keyboardShortcut(isCovered || fullScreen ? nil : .cancelAction)
                 .accessibilityIdentifier("refine-cancel")
                 .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
@@ -1172,7 +1171,7 @@ struct RefineView: View {
             .accessibilityIdentifier("refine-guide")
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            // In the full screen, the hidden bar's keys are `keyCommands`'.
+            // In the full screen, the hidden bar's keys are the canvas's (`keys`).
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
                 .disabled(!model.canUndo)
                 .keyboardShortcut(fullScreen ? nil : KeyboardShortcut("z"))
@@ -1594,25 +1593,30 @@ extension RefineView {
     }
 
     static func toolName(_ kind: RefineTool) -> Text {
+        Text(toolTitle(kind))
+    }
+
+    /// A tool's name, as the rail, VoiceOver, the Tool Guide and a key's name in the ⌘ list say it.
+    static func toolTitle(_ kind: RefineTool) -> String {
         switch kind {
-        case .pen: Text("Pen")
-        case .shape: Text("Shapes")
-        case .eraser: Text("Eraser")
-        case .smartEraser: Text("Line Eraser")
-        case .text: Text("Writing")
-        case .select: Text("Select")
-        case .cellEdge: Text("Cell Edge")
-        case .merge: Text("Merge")
-        case .fill: Text("Make Cell")
-        case .brush: Text("Paint Brush")
-        case .bucket: Text("Bucket")
-        case .eyedropper: Text("Eyedropper")
-        case .editPaint: Text("Edit Paint")
-        case .looks: Text("Looks")
-        case .bendLine: Text("Bend Line")
-        case .moveEdge: Text("Move Edge")
-        case .moveNumber: Text("Move Number")
-        case .tryPainting: Text("Try Painting")
+        case .pen: String(localized: "Pen")
+        case .shape: String(localized: "Shapes")
+        case .eraser: String(localized: "Eraser")
+        case .smartEraser: String(localized: "Line Eraser")
+        case .text: String(localized: "Writing")
+        case .select: String(localized: "Select")
+        case .cellEdge: String(localized: "Cell Edge")
+        case .merge: String(localized: "Merge")
+        case .fill: String(localized: "Make Cell")
+        case .brush: String(localized: "Paint Brush")
+        case .bucket: String(localized: "Bucket")
+        case .eyedropper: String(localized: "Eyedropper")
+        case .editPaint: String(localized: "Edit Paint")
+        case .looks: String(localized: "Looks")
+        case .bendLine: String(localized: "Bend Line")
+        case .moveEdge: String(localized: "Move Edge")
+        case .moveNumber: String(localized: "Move Number")
+        case .tryPainting: String(localized: "Try Painting")
         }
     }
 
@@ -1828,47 +1832,50 @@ extension RefineView {
 
     // MARK: Keys
 
-    /// A hardware keyboard's keys (their names show while ⌘ is held): a tool each, as drawing apps
-    /// letter them (P Pen, E Eraser, B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the
-    /// size, ⌘0 to fit the picture and ⌃⌘F for full screen. Undo, Redo, Done (Return) and Cancel
-    /// (Escape) are on their buttons.
-    private var keyCommands: some View {
-        ZStack {
-            ForEach(Self.toolKeys.indices, id: \.self) { index in
-                let key = Self.toolKeys[index]
-                Button { toolTapped(key.tool) } label: { Self.toolName(key.tool) }
-                    .keyboardShortcut(key.key, modifiers: key.modifiers)
-            }
-            Button { resize(by: -2) } label: { Text("Smaller") }
-                .keyboardShortcut("[", modifiers: [])
-            Button { resize(by: 2) } label: { Text("Larger") }
-                .keyboardShortcut("]", modifiers: [])
-            Button(action: fit) { Text("Fit to Screen") }
-                .keyboardShortcut("0")
-            Button(action: toggleFullScreen) { fullScreen ? Text("Exit Full Screen") : Text("Full Screen") }
-                .keyboardShortcut("f", modifiers: [.command, .control])
-            // The bar's keys while it is hidden, and Escape out of the full screen.
-            if fullScreen {
-                Button("Undo", action: undo)
-                    .keyboardShortcut("z")
-                Button("Redo", action: redo)
-                    .keyboardShortcut("z", modifiers: [.command, .shift])
-                Button(action: toggleFullScreen) { Text("Exit Full Screen") }
-                    .keyboardShortcut(.cancelAction)
-            }
+    /// A hardware keyboard's keys (their names show while ⌘ is held), the canvas's
+    /// (`RefineSurfaceView.keyCommands`): a tool each, as drawing apps letter them (P Pen, E Eraser,
+    /// B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the size, ⌘0 to fit the picture and
+    /// ⌃⌘F for full screen, where the hidden bar's Undo and Redo join them. Done (Return) and
+    /// Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
+    /// Try Painting, which have keys of their own.
+    private var keys: [RefineKey] {
+        guard !isPractice, !isCovered, model.hasLineArtInput else { return [] }
+        var keys = Self.toolKeys.map { RefineKey(input: $0.key, modifiers: $0.modifiers, title: Self.toolTitle($0.tool), action: .tool($0.tool)) }
+        keys += [
+            RefineKey(input: "[", modifiers: [], title: String(localized: "Smaller"), action: .smaller),
+            RefineKey(input: "]", modifiers: [], title: String(localized: "Larger"), action: .larger),
+            RefineKey(input: "0", modifiers: .command, title: String(localized: "Fit to Screen"), action: .fit),
+            RefineKey(
+                input: "f", modifiers: [.command, .control],
+                title: fullScreen ? String(localized: "Exit Full Screen") : String(localized: "Full Screen"), action: .fullScreen),
+        ]
+        if fullScreen {
+            keys += [
+                RefineKey(input: "z", modifiers: .command, title: String(localized: "Undo"), action: .undo),
+                RefineKey(input: "z", modifiers: [.command, .shift], title: String(localized: "Redo"), action: .redo),
+            ]
         }
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
-        // Not under the Tool Guide or Try Painting, which have keys of their own.
-        .disabled(!model.hasLineArtInput || isCovered)
+        return keys
+    }
+
+    /// What a key asks for.
+    private func pressed(_ action: RefineKey.Action) {
+        switch action {
+        case .tool(let tool): toolTapped(tool)
+        case .smaller: resize(by: -2)
+        case .larger: resize(by: 2)
+        case .fit: fit()
+        case .fullScreen: toggleFullScreen()
+        case .undo: undo()
+        case .redo: redo()
+        }
     }
 
     /// The Tool Guide or Try Painting covers the screen.
     private var isCovered: Bool { guide != nil || trial != nil }
 
     /// The tools a key picks.
-    static let toolKeys: [(tool: RefineTool, key: KeyEquivalent, modifiers: EventModifiers)] = [
+    static let toolKeys: [(tool: RefineTool, key: String, modifiers: UIKeyModifierFlags)] = [
         (.pen, "p", []), (.shape, "u", []), (.eraser, "e", []), (.smartEraser, "e", .shift), (.select, "v", []),
         (.merge, "m", []), (.bucket, "g", []), (.brush, "b", []), (.eyedropper, "i", []), (.moveNumber, "n", []),
     ]

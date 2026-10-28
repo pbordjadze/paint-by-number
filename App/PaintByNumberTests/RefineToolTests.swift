@@ -349,7 +349,7 @@ struct RefineFamiliarTests {
     @Test func eachKeyPicksOneTool() {
         let keys = RefineView.toolKeys
         #expect(Set(keys.map(\.tool)).count == keys.count)
-        #expect(Set(keys.map { "\($0.key.character)\($0.modifiers.rawValue)" }).count == keys.count)
+        #expect(Set(keys.map { "\($0.key)\($0.modifiers.rawValue)" }).count == keys.count)
         #expect(keys.allSatisfy { $0.tool != .tryPainting })
     }
 }
