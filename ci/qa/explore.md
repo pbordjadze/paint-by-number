@@ -85,10 +85,9 @@ HTTP.
     loupe shows only while the finger is down. Refine's area card (from Select's Change Color)
     is a popover on iPad, missing from `inspect_screen`'s elements (tap its controls by point);
     on iPhone it opens in Select's bar, in the palette's place, and Change Color reads Close.
-    While the system color picker is open only the picker is listed. With a cell tool (Select,
-    Bucket, Eyedropper, Edit Paint, Make Cell, Merge, Move Number) the debug build lists up to
-    40 elements `refine-cell-<n>` over the picture: VoiceOver's cells, not drawn, each at its
-    cell's number; a tap on one is a tap on the picture there.
+    While the system color picker is open only the picker is listed. VoiceOver's cells over
+    Refine's picture (`refine-cell-<n>`, with a cell tool) exist only with VoiceOver or Switch
+    Control on, or in a `-demo` launch: a run without them sees none and taps by point.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
