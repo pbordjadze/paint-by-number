@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 172,
+ "duration_ms": 1062855,
+ "total_cost_usd": 4.3717558000000025,
+ "result": "I found two bugs that happened twice each. Most of Refine's new controls work on a phone's width, and no painting progress was lost through the gallery round-trip or a quit and relaunch. The full report is in `/Users/runner/work/_temp/qa/report.md`, with screenshots in `shots/`. There are no crash reports.\n\n**Bugs seen twice:**\n1. **Refine: the picture jumps 13 pt the first time you change tool group.** Refine opens on Ink \u203a Pen. Switching to Paint moves the picture down from y=253 to y=266, and switching back to Ink moves it back up. After that it stays put. It happened on the first opening and again after Done and reopening (2 of 2). This goes against the rule that the picture never moves as tools change.\n2. **The new painting opened on swatch 14 (Flint), not on swatch 1.** It did this right after Start Painting and again when reopened from the gallery, with swatches 1\u20137 scrolled out of view (2 of 2). After Home and relaunch it opened correctly on swatch 1. Nothing in `app.log` explains where 14 comes from.\n\n**Suspicions (seen once, or possibly intended):**\n- **Top bar:** all six controls fit, but the \"Refine\" title is cut to \"R\u2026\".\n- **Area card (Select \u2192 Change Color):** it covers most of the area you're recolouring, so the change is hard to see until you close it.\n- **Renumbering:** recolouring a paint's only area removed that paint and shifted every later number down by one across the picture. Undo put it all back.\n- **Selection panel:** it read \"Paint 2 \u00b7 2 areas \u00b7 5.4% of the picture\", where 5.4% was the one area I had changed, not all of paint 2.\n- **Refine's palette:** after switching groups it scrolled back to the start, hiding the selected paint.\n- **Tool Guide \u203a Layers:** its \"Try This\" says the photo shows under the paint at half strength, but the practice photo looks the same as the painting, so nothing visibly changes.\n- **Zoomed in:** the painting screen reported \"No areas of 1 \u2026 in view\" while a hatched area of that colour still showed at the screen's edge.\n\n**Working as described:**\n- **Layers:** the popover fits, its switches and opacity sliders work, and it marks the right layer for each tool.\n- **Holding still on the picture:** picks that cell's paint with the Bucket, the Pen and in the guide's practice, without drawing or changing the tool.\n- **Change Color:** picking a paint in the card worked, and the change carried into the painting.\n- **Pen and Eraser options:** they fit the width.\n- **Cancel:** it asks before discarding changes, and leaves without asking when nothing changed.\n- **Tool Guide:** the Layers and Coming from Procreate pages read clearly and match the app.\n- **Painting:** fills land in the right colour where tapped, both fitted and zoomed in via Hint. Progress matched in the painting and the gallery (1%, then 2%) before and after relaunch.\n\n**Not tested:**\n- Using Make Cell: it needs a closed loop drawn with a held finger, which Maestro can't do.\n- Tapping Discard Changes.\n- Drag painting.\n- Multi-finger gestures and pinch.\n- Dragging a swatch onto a cell.\n- Anything shown only while a finger is down.\n- Settings and the gallery's menus.\n\nDouble-tap zoom didn't work through Maestro, as earlier sessions found, so I used Hint and Fit to Screen instead.",
+ "usage": {
+  "input_tokens": 184,
+  "cache_creation_input_tokens": 243917,
+  "cache_read_input_tokens": 11541874,
+  "output_tokens": 42153,
+  "output_tokens_details": {
+   "thinking_tokens": 9207
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 243917
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 6,
+  "Read": 28,
+  "mcp__maestro__run": 61,
+  "mcp__maestro__inspect_screen": 49,
+  "Write": 4
+ },
+ "images_received": 29
+}
