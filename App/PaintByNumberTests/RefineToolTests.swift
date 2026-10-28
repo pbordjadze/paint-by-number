@@ -1,7 +1,9 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import SwiftUI
 import Testing
+import UIKit
 @testable import PaintByNumber
 
 /// Refine's tools: the Pencil's double tap, and what a tap of Fill does. Its geometry and
@@ -259,5 +261,95 @@ struct RefineToolTests {
         #expect(EditFills.cleared(by: SIMD2(10, 20), edits: edits, on: t).isEmpty)
         #expect(EditFills.cleared(by: SIMD2(36, 36), edits: [onLeft, drawn], on: t).isEmpty)
         #expect(EditFills.cleared(by: SIMD2(-5, 99), edits: edits, on: t).isEmpty)
+    }
+}
+
+/// Phase 2 of Refine's road to release (painting-company row 143): the Layers panel's stack, what
+/// the Pencil's settings ask, the palette's drags and the Eyedropper's loupe.
+@MainActor
+struct RefineFamiliarTests {
+    /// The layers' presets: the painting (Refine opens on it), the paper with its numbers, the
+    /// photo, and the painting at half over the photo for tracing; the Eyedropper reads the photo
+    /// only where the photo shows more than the paint over it.
+    @Test func theLayersShowWhatTheViewsShowed() {
+        let painting = RefineLayers.painting
+        #expect(painting.ink && painting.paint && !painting.photo && !painting.numbers && painting.paintOpacity == 1)
+        #expect(!painting.photoReads)
+        #expect(RefineLayers.paper.numbers && !RefineLayers.paper.paint && !RefineLayers.paper.photoReads)
+        #expect(RefineLayers.photograph.photoReads && RefineLayers.photograph.photoStrength == 1)
+        #expect(!RefineLayers.tracing.photoReads, "half and half reads the paint, as Photo Behind's middle did")
+        var tracing = RefineLayers.tracing
+        tracing.paintOpacity = 0.3
+        #expect(tracing.photoReads)
+        tracing.photo = false
+        #expect(!tracing.photoReads && tracing.photoStrength == 0)
+
+        var layers = RefineLayers.painting
+        for layer in RefineLayers.Layer.allCases {
+            layers.set(layer, shown: false)
+            #expect(!layers.shows(layer), "\(layer)")
+            layers.set(layer, shown: true)
+            #expect(layers.shows(layer), "\(layer)")
+        }
+        #expect(RefineLayers.Layer.allCases == [.numbers, .ink, .paint, .photo], "the stack from the top")
+    }
+
+    /// Each tool's layer: the Ink group's the ink, the Cells' and the Paint's the paint, Move
+    /// Number the numbers, Writing and Try Painting none.
+    @Test func eachToolWorksOnALayer() {
+        for tool in RefineTool.allCases {
+            switch tool.group {
+            case .ink: #expect(tool.layer == .ink, "\(tool)")
+            case .cells, .paint: #expect(tool.layer == .paint, "\(tool)")
+            case .numbers: #expect(tool.layer == .numbers, "\(tool)")
+            case .see: #expect(tool.layer == nil, "\(tool)")
+            }
+        }
+    }
+
+    /// The Pencil's double tap and squeeze do what iPadOS's Apple Pencil settings ask: the eraser,
+    /// the last tool, or the tools and palette; nothing for Ignore or a system shortcut.
+    @Test func thePencilFollowsItsSettings() {
+        #expect(RefinePencilAction(.switchEraser) == .switchEraser)
+        #expect(RefinePencilAction(.switchPrevious) == .switchPrevious)
+        #expect(RefinePencilAction(.showColorPalette) == .showPalette)
+        #expect(RefinePencilAction(.showInkAttributes) == .showPalette)
+        #expect(RefinePencilAction(.showContextualPalette) == .showPalette)
+        #expect(RefinePencilAction(.ignore) == nil)
+        #expect(RefinePencilAction(.runSystemShortcut) == nil)
+    }
+
+    /// A swatch's drag carries its paint, and the new paint's its color exactly; other text, and
+    /// a paint the painting doesn't have, carry nothing.
+    @Test func aSwatchsDragCarriesItsPaint() {
+        let template = Fixtures.stripes()
+        for index in template.palette.indices {
+            #expect(RefinePaletteBar.color(of: RefinePaletteBar.dragPrefix + String(index), in: template) == template.palette[index].oklab)
+        }
+        let color = SIMD3<Float>(0.6123457, -0.0412, 0.1873)
+        #expect(RefinePaletteBar.color(of: RefinePaletteBar.payload(of: color), in: template) == color)
+        #expect(RefinePaletteBar.color(of: RefinePaletteBar.dragPrefix + String(template.palette.count), in: template) == nil)
+        #expect(RefinePaletteBar.color(of: "3", in: template) == nil)
+        #expect(RefinePaletteBar.color(of: RefinePaletteBar.colorPrefix + "0.5,nan,0", in: template) == nil)
+        #expect(RefinePaletteBar.color(of: RefinePaletteBar.colorPrefix + "0.5,0", in: template) == nil)
+    }
+
+    /// The loupe sits above the finger, below it near the top, and never past the canvas's sides.
+    @Test func theLoupeStaysInSightOfTheFinger() {
+        let size = CGSize(width: 400, height: 600)
+        let middle = RefineLoupe.position(over: CGPoint(x: 200, y: 300), in: size)
+        #expect(middle.x == 200 && middle.y == 300 - RefineLoupe.lift)
+        #expect(RefineLoupe.position(over: CGPoint(x: 200, y: 20), in: size).y == 20 + RefineLoupe.lift)
+        let corner = RefineLoupe.position(over: CGPoint(x: 2, y: 300), in: size)
+        #expect(corner.x >= RefineLoupe.diameter / 2)
+        #expect(RefineLoupe.position(over: CGPoint(x: 399, y: 300), in: size).x <= 400 - RefineLoupe.diameter / 2)
+    }
+
+    /// The keys pick tools of the Toolbox, each key once.
+    @Test func eachKeyPicksOneTool() {
+        let keys = RefineView.toolKeys
+        #expect(Set(keys.map(\.tool)).count == keys.count)
+        #expect(Set(keys.map { "\($0.key.character)\($0.modifiers.rawValue)" }).count == keys.count)
+        #expect(keys.allSatisfy { $0.tool != .tryPainting })
     }
 }
