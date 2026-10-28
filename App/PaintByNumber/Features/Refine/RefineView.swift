@@ -966,6 +966,10 @@ struct RefineView: View {
                     currentPaint = counts.indices.max { counts[$0] < counts[$1] }.map { template.palette[$0].oklab }
                 }
                 if demo.selectsCell { selection = at }
+                if demo.opensLayers {
+                    layers = .tracing
+                    showsLayers = true
+                }
                 if demo.opensCard, let at {
                     let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
                     card = RefineAreaPick(at: at, screen: onScreen(point), template: template)

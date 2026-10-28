@@ -41,7 +41,10 @@ import PaintCore
 /// - `create-refine-colors-picked`, `create-refine-colors-picked-dark`: Edit Paint with the paint
 ///   used by the most areas the current paint, all of those areas glowing (`RefinePaintGlow`).
 /// - `create-refine-card`, `create-refine-card-dark`: the Studio with the card of the largest
-///   area open, as a long press opens it (`RefineAreaCard`), its paint's areas glowing.
+///   area open, as Select's Change Color opens it (`RefineAreaCard`), its paint's areas glowing.
+/// - `create-refine-layers`, `create-refine-layers-dark`: the Studio with the Layers panel open
+///   (`RefineLayersPanel`), the photo on under the painting at half, for tracing, the Pen's Ink
+///   marked.
 /// - `create-refine-select`, `create-refine-select-dark`: the Toolbox on Select with the largest
 ///   area selected: its outline, its bar (`RefineSelectionBar`), the palette and the cells' undrawn
 ///   edges.
@@ -87,8 +90,8 @@ import PaintCore
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineSelect, createRefineGuide, createSuggested, createCustom, createFromFile,
-         createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createSuggested,
+         createCustom, createFromFile, createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
@@ -118,6 +121,7 @@ enum ShellDemo: Equatable {
         case "create-refine-colors", "create-refine-colors-dark": .createRefineColors
         case "create-refine-colors-picked", "create-refine-colors-picked-dark": .createRefineColorsPicked
         case "create-refine-card", "create-refine-card-dark": .createRefineCard
+        case "create-refine-layers", "create-refine-layers-dark": .createRefineLayers
         case "create-refine-select", "create-refine-select-dark": .createRefineSelect
         case "create-refine-guide", "create-refine-guide-dark", "create-refine-guide-long-text": .createRefineGuide
         case "create-suggested": .createSuggested
@@ -205,8 +209,8 @@ enum ShellDemo: Equatable {
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
-        case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect,
-             .createRefineGuide:
+        case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
+             .createRefineSelect, .createRefineGuide:
             pictures.first
         default: nil
         }
@@ -223,10 +227,14 @@ enum ShellDemo: Equatable {
 
     /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
     /// and shows the Refine screen.
-    var refines: Bool { self == .createRefine || opensColors || opensCard || selectsCell || opensGuide != nil }
+    var refines: Bool { self == .createRefine || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil }
 
     /// Refine opens the card of its largest area once its edits have landed.
     var opensCard: Bool { self == .createRefineCard }
+
+    /// Refine opens the Layers panel, tracing (the photo under the painting at half), once its
+    /// edits have landed.
+    var opensLayers: Bool { self == .createRefineLayers }
 
     /// Refine opens the Tool Guide on this page, ready once its practice canvas shows
     /// (`RefineView.land`).
@@ -345,7 +353,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         }
