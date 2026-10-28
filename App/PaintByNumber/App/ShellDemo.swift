@@ -33,15 +33,16 @@ import PaintCore
 /// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
 /// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
 ///   beside the photo.
-/// - `create-refine`, `create-refine-dark`: The Great Wave's Refine screen, refined as a painter
+/// - `create-refine`, `-dark`, `-long-text`: The Great Wave's Refine screen, refined as a painter
 ///   might (`refinements(canvas:)`, edits made to the template by hand): the big cloud's edge drawn
 ///   in, exactly as drawn, the spray off the wave's crest rubbed out.
 /// - `create-refine-colors`, `create-refine-colors-dark`: the same, in Starry Night, with Refine's
 ///   Looks open over the painting (`RefineColorsPanel`).
 /// - `create-refine-colors-picked`, `create-refine-colors-picked-dark`: Edit Paint with the paint
 ///   used by the most areas the current paint, all of those areas glowing (`RefinePaintGlow`).
-/// - `create-refine-card`, `create-refine-card-dark`: the Studio with the card of the largest
-///   area open, as Select's Change Color opens it (`RefineAreaCard`), its paint's areas glowing.
+/// - `create-refine-card`, `-dark`, `-long-text`: Select with the largest area selected and its
+///   card open, as Change Color opens it (`RefineAreaCard`: beside the area on iPad, in Select's
+///   band on iPhone), its paint's areas glowing.
 /// - `create-refine-layers`, `create-refine-layers-dark`: the Studio with the Layers panel open
 ///   (`RefineLayersPanel`), the photo on under the painting at half, for tracing, the Pen's Ink
 ///   marked.
@@ -117,10 +118,10 @@ enum ShellDemo: Equatable {
         case "create-samples-photographs": .createSamplesPhotographs
         case "create-preview", "create-preview-dark": .createPreview
         case "create-line-art": .createLineArt
-        case "create-refine", "create-refine-dark": .createRefine
+        case "create-refine", "create-refine-dark", "create-refine-long-text": .createRefine
         case "create-refine-colors", "create-refine-colors-dark": .createRefineColors
         case "create-refine-colors-picked", "create-refine-colors-picked-dark": .createRefineColorsPicked
-        case "create-refine-card", "create-refine-card-dark": .createRefineCard
+        case "create-refine-card", "create-refine-card-dark", "create-refine-card-long-text": .createRefineCard
         case "create-refine-layers", "create-refine-layers-dark": .createRefineLayers
         case "create-refine-select", "create-refine-select-dark": .createRefineSelect
         case "create-refine-guide", "create-refine-guide-dark", "create-refine-guide-long-text": .createRefineGuide

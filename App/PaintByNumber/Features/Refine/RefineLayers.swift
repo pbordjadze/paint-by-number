@@ -84,12 +84,6 @@ struct RefineLayersPanel: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 4)
             ForEach(RefineLayers.Layer.allCases, id: \.self) { row($0) }
-            Text("Layers change only what you see, never the picture.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 10)
-                .padding(.top, 4)
         }
         .padding(12)
         .frame(width: 320)
@@ -108,18 +102,12 @@ struct RefineLayersPanel: View {
                     .foregroundStyle(isWorking ? Theme.signature : Color.secondary)
                     .frame(width: 24)
                     .accessibilityHidden(true)
-                Toggle(isOn: shown(layer)) {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Self.name(layer)
-                        if isWorking {
-                            Text("Your tool’s layer")
-                                .font(.caption)
-                                .foregroundStyle(Theme.signature)
-                        }
-                    }
-                }
+                // The row's highlight marks the tool's layer; VoiceOver says it (row 19's fewer
+                // words, the Lamplit Table, October 28).
+                Toggle(isOn: shown(layer)) { Self.name(layer) }
                 .toggleStyle(.switch)
                 .tint(Theme.signature)
+                .accessibilityHint(isWorking ? Text("Your tool’s layer") : Text(verbatim: ""))
                 .accessibilityIdentifier("refine-layer-\(layer)")
             }
             if let opacity = opacity(layer) {

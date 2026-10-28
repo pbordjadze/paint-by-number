@@ -50,8 +50,10 @@ nonisolated struct RefineAreaPick: Identifiable, Equatable {
 /// Eyedropper): its paint, how many areas share it, a
 /// new color for this area alone (Only This Area: the eyes the generator gave the sky's blue, in a
 /// blue of their own while the sky stays), or another of the painting's paints for it, and the
-/// other areas of its paint, glowing (`RefinePaintGlow`). A popover beside the area on iPad, a
-/// sheet on iPhone, as the Lamplit Table read its split vote (`factory/pieces/refine-studio`).
+/// other areas of its paint, glowing (`RefinePaintGlow`). A popover beside the area on iPad, as
+/// the Lamplit Table read its split vote (`factory/pieces/refine-studio`); on iPhone it opens in
+/// Select's bar (`inBar`), in the palette's place, so nothing covers the picture (the Table,
+/// October 28, `factory/pieces/refine-phase3`: the sheet hid the area it was about).
 struct RefineAreaCard: View {
     /// The template on screen.
     let template: Template
@@ -67,6 +69,9 @@ struct RefineAreaCard: View {
     let repaint: (_ from: SIMD3<Float>, _ to: SIMD3<Float>) -> Void
     /// Shows every area of a paint (Edit Paint, with it the current paint).
     let showPaint: (Int) -> Void
+    /// Whether it is laid out in Select's bar, under the area's paint the bar names, rather than as
+    /// a popover with that paint at its head.
+    var inBar = false
 
     @Environment(\.self) private var environment
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -76,52 +81,82 @@ struct RefineAreaCard: View {
     private var region: Int? { template.region(at: at) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        Group {
             if let region {
                 let paint = Int(template.regions[region].colorIndex)
                 let count = Self.areaCount(of: paint, in: template)
-                header(paint: paint, count: count)
-                ColorPicker(selection: color(paint: paint), supportsOpacity: false) {
-                    Label {
-                        if isolates { Text("Only This Area") } else { Text("Color") }
-                    } icon: {
-                        Image(systemName: "drop.halffull")
+                if inBar {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 16) {
+                                picker(paint: paint).fixedSize()
+                                Spacer(minLength: 0)
+                                others(paint: paint, count: count)
+                            }
+                            VStack(alignment: .leading, spacing: 8) {
+                                picker(paint: paint)
+                                others(paint: paint, count: count)
+                            }
+                        }
+                        paints(current: paint)
                     }
-                }
-                .accessibilityHint(Text(isolates
-                    ? String(localized: "refine.card.only.hint", defaultValue: "Gives this area a color of its own; the other areas of its paint keep theirs.",
-                             comment: "Refine screen, an area's card: VoiceOver hint of Only This Area, a color picker that gives the pressed area a paint of its own")
-                    : String(localized: "refine.card.color.hint", defaultValue: "Gives this paint a new color.",
-                             comment: "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area")))
-                .accessibilityIdentifier("refine-card-color")
-                paints(current: paint)
-                // Only for a card that isolates its area (its paint had others as it opened), and
-                // kept in its place, hidden, once Only This Area has made the area its paint's
-                // only one: the card shrank and the color picker beside it moved under the finger
-                // (QA, October 26).
-                if isolates {
-                    Button {
-                        showPaint(paint)
-                    } label: {
-                        Label { Text("Show Its Other Areas") } icon: { Image(systemName: "sparkle.magnifyingglass") }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 4)
+                    .padding(.bottom, 8)
+                } else {
+                    VStack(alignment: .leading, spacing: 16) {
+                        header(paint: paint, count: count)
+                        picker(paint: paint)
+                        paints(current: paint)
+                        others(paint: paint, count: count)
                     }
-                    .accessibilityHint(Text(String(
-                        localized: "refine.card.others.hint", defaultValue: "Shows every area of this paint, glowing, in Edit Paint.",
-                        comment: "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens the Edit Paint tool with the area's paint picked")))
-                    .accessibilityIdentifier("refine-card-others")
-                    .opacity(count > 1 ? 1 : 0)
-                    .disabled(count <= 1)
-                    .accessibilityHidden(count <= 1)
+                    .padding(20)
+                    .frame(minWidth: typeSize.isAccessibilitySize ? nil : 300, maxWidth: 420, alignment: .leading)
                 }
             }
         }
-        .padding(20)
-        .frame(minWidth: typeSize.isAccessibilitySize ? nil : 300, maxWidth: 420, alignment: .leading)
-        .presentationDetents([.medium, .large])
-        .presentationCompactAdaptation(.sheet)
         .onDisappear { pending.flush() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-card")
+    }
+
+    /// Only This Area, or Color for an area that is its paint's only one: the system picker.
+    private func picker(paint: Int) -> some View {
+        ColorPicker(selection: color(paint: paint), supportsOpacity: false) {
+            Label {
+                if isolates { Text("Only This Area") } else { Text("Color") }
+            } icon: {
+                Image(systemName: "drop.halffull")
+            }
+        }
+        .accessibilityHint(Text(isolates
+            ? String(localized: "refine.card.only.hint", defaultValue: "Gives this area a color of its own; the other areas of its paint keep theirs.",
+                     comment: "Refine screen, an area's card: VoiceOver hint of Only This Area, a color picker that gives the pressed area a paint of its own")
+            : String(localized: "refine.card.color.hint", defaultValue: "Gives this paint a new color.",
+                     comment: "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area")))
+        .accessibilityIdentifier("refine-card-color")
+    }
+
+    /// Show Its Other Areas, only for a card that isolates its area (its paint had others as it
+    /// opened), and kept in its place, hidden, once Only This Area has made the area its paint's
+    /// only one: the card shrank and the color picker beside it moved under the finger (QA,
+    /// October 26).
+    @ViewBuilder
+    private func others(paint: Int, count: Int) -> some View {
+        if isolates {
+            Button {
+                showPaint(paint)
+            } label: {
+                Label { Text("Show Its Other Areas") } icon: { Image(systemName: "sparkle.magnifyingglass") }
+            }
+            .accessibilityHint(Text(String(
+                localized: "refine.card.others.hint", defaultValue: "Shows every area of this paint, glowing, in Edit Paint.",
+                comment: "Refine screen, an area's card: VoiceOver hint of Show Its Other Areas, which opens the Edit Paint tool with the area's paint picked")))
+            .accessibilityIdentifier("refine-card-others")
+            .opacity(count > 1 ? 1 : 0)
+            .disabled(count <= 1)
+            .accessibilityHidden(count <= 1)
+        }
     }
 
     private func header(paint: Int, count: Int) -> some View {

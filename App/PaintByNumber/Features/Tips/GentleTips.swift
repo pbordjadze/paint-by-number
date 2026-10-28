@@ -192,7 +192,7 @@ nonisolated struct NewPaintingRefineTip: Tip {
 nonisolated struct RefineDrawTip: Tip {
     var id: String { PaintTips.scoped("tip.refineDraw") }
     var title: Text { Text("Draw Your Own Lines") }
-    var message: Text? { Text("Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes.") }
+    var message: Text? { Text("Two fingers zoom and move. Tap with two to undo.") }
     var image: Image? { Image(systemName: "pencil.tip") }
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }

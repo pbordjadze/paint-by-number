@@ -597,15 +597,15 @@ Conventions).
     Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied`;
     `SettingsKey.refineSnaps`/`refinePenColors`/`refinePenSmoothing`), Shapes (its figures and Snap
     above the tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`: a drag moves the line under it, bending it near
-    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
-    share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
+    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint and area count in
+    `RefineSelectionBar`, one band with the palette, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
     drag joins the cells it crosses into the first, boundaries and ink between them gone; the cells
     it will join glow while the finger is down, found off the main actor as the editor finds them,
     `TemplateEditor.MergeProbe`; one that stays in one area says it is one area already), Move Edge
     (`.reshape` on a cell's boundary, inked or not), Make Cell; while
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
-    (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
+    (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
     which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint,
     each tap a step of its own; only the card's picker takes its last pick's place), the
@@ -626,15 +626,20 @@ Conventions).
     `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
     canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
     `refinements.json`, a step of the history, and no making-of show). Select's Change Color opens
-    an area's card (`RefineAreaCard`, a popover beside it, a sheet on iPhone; a long press opened
-    it until October 28, when the hold became the Eyedropper): its paint and how many areas
+    an area's card (`RefineAreaCard`, a popover beside it; on iPhone in Select's band, in the
+    palette's place, so nothing covers the picture, the Lamplit Table's `factory/pieces/refine-phase3`;
+    a long press opened it until October 28, when the hold became the Eyedropper): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
     `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
     Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
-    each (`RefineFocus`). `create-refine-card` (with `-dark`) opens the largest area's card,
-    `create-refine-select` (with `-dark`) selects it. Refine's files compile only where
+    each (`RefineFocus`). `create-refine-card` (with `-dark`, `-long-text`) selects the largest
+    area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
+    is the screen with doubled strings. With VoiceOver or Switch Control (and in demo launches, for
+    the UI tests) a cell tool's cells in view are elements over the picture (`RefineCellElements`,
+    `refine-cell-<region>`, PaintCore's `RefineCells`): activating one is the tool's tap, Merge
+    offers Merge with each neighbour, Move Number moves its number a step four ways. Refine's files compile only where
     `UNRELEASED` is (above), so nothing in them is gated again: the first release's one row of
     buttons went on October 23, with the Color Splitter's button and Tool Guide page (Paul's yes,
     backlog row 100).

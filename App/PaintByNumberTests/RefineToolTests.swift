@@ -191,13 +191,6 @@ struct RefineToolTests {
         #expect(RefineShape.polygon.isClosed && RefineShape.star.isClosed)
     }
 
-    /// Select's bar names the area's paint, how many areas share it and its share of the picture.
-    @Test func theSelectionBarSaysHowMuchOfThePicture() {
-        var template = Fixtures.stripes(count: 4)
-        template.regions[3].colorIndex = 1
-        #expect(RefineSelectionBar.subtitle(region: 1, in: template) == "Paint 2 · 2 areas · 25% of the picture")
-    }
-
     /// Only a coloring book's undrawn edges between cells show as cell edges: none for a classic
     /// template, whose every edge is drawn, and none along the frame.
     @Test func cellEdgesAreTheUndrawnOnes() {
