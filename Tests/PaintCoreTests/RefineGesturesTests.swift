@@ -66,6 +66,42 @@ struct RefineGesturesTests {
         #expect(try end(short: 4).map { abs($0.y - 99.2) < 0.1 } == true)
     }
 
+    /// The Pen's smoothing at 0 leaves its line as it was. At 1 a wobble of 1 to 4 points across a
+    /// long stroke hardly reaches the line (`steadyString`): it strays under a point from the
+    /// stroke's line where at 0 it strays over two, on a tenth of the points, from the same start
+    /// to the same end. The line shown while the finger moves (`steadied`) is steadied alike.
+    @Test func thePensSmoothingSteadiesItsLine() throws {
+        let joining = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
+        #expect(RefineGestures.pen(joining, on: Self.screen, snapping: Self.lines, smoothing: 0)
+            == RefineGestures.pen(joining, on: Self.screen, snapping: Self.lines))
+
+        var rng = SplitMix64(seed: 143)
+        let samples = RefineGestures.trace((0...375).map { k -> SIMD2<Float> in
+            let wobble = 0.2 + 0.6 * rng.nextFloat()  // canvas units, 5 points each
+            return Self.p(20 + 0.4 * Float(k), k == 0 ? 30 : 30 + (k % 2 == 0 ? wobble : -wobble))
+        }, on: Self.screen)
+        #expect(RefineGestures.pen(samples, on: Self.screen, snapping: nil, smoothing: 0)
+            == RefineGestures.pen(samples, on: Self.screen, snapping: nil))
+        func line(_ smoothing: CGFloat) throws -> [SIMD2<Float>] {
+            let edit = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: nil, smoothing: smoothing))
+            guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return [] }
+            return points
+        }
+        /// How far a line strays from y = 30 between its ends (the last string's catch-up left out).
+        func strays(_ points: [SIMD2<Float>]) -> Float { points.filter { $0.x > 25 && $0.x < 160 }.map { abs($0.y - 30) }.max() ?? 0 }
+        let shaky = try line(0), steady = try line(1)
+        #expect(strays(steady) < 0.2 && strays(shaky) > 0.4, "\(strays(steady)) and \(strays(shaky)) units")
+        #expect(steady.count * 10 < shaky.count)
+        let start = SIMD2<Float>(20, 30), end = SIMD2(samples[samples.count - 1].x * 192, samples[samples.count - 1].y * 144)
+        #expect(simdLength(steady[0] - start) < 1e-3 && simdLength(steady[steady.count - 1] - end) < 1e-3)
+        #expect(try line(3) == steady, "smoothing tops out at 1")
+
+        #expect(RefineGestures.steadied(samples, smoothing: 0, on: Self.screen) == samples)
+        let live = RefineGestures.steadied(samples, smoothing: 1, on: Self.screen)
+        #expect(live.first == samples.first && live.last == samples.last && live.count < samples.count)
+        #expect(live.dropFirst().dropLast().allSatisfy { abs($0.y * 144 - 30) < 0.2 })
+    }
+
     /// The Color Splitter's stroke is the Pen's line, as a split.
     @Test func theSplitterIsThePensLineAsASplit() throws {
         let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
@@ -123,6 +159,22 @@ struct RefineGesturesTests {
         let edit = try #require(RefineGestures.eraser([Self.p(50, 72)], on: Self.screen))
         guard case .erase(let path, let radius) = edit else { Issue.record("\(edit)"); return }
         #expect(path == [SIMD2(50, 72)] && abs(radius - 4) < 1e-4, "20 points at 5 to a unit")
+    }
+
+    /// An eraser given its Size reaches that many points on screen: size / the picture's long
+    /// side × the canvas's, half as far on the canvas zoomed in twice. Without one it reaches as
+    /// it always has.
+    @Test func theEraserReachesTheSizeItIsGiven() throws {
+        let dab = [Self.p(50, 72)]
+        #expect(RefineGestures.eraser(dab, on: Self.screen, size: nil) == RefineGestures.eraser(dab, on: Self.screen))
+        #expect(abs(Self.screen.eraserRadius(size: 30) - 30 / 960) < 1e-7)
+        let edit = try #require(RefineGestures.eraser(dab, on: Self.screen, size: 30))
+        guard case .erase(let path, let radius) = edit else { Issue.record("\(edit)"); return }
+        #expect(path == [SIMD2(50, 72)] && abs(radius - 30 / 960 * 192) < 1e-4, "30 points at 5 to a unit")
+        var zoomed = Self.screen
+        zoomed.picture = CGSize(width: 1920, height: 1440)
+        guard case .erase(_, let finer)? = RefineGestures.eraser(dab, on: zoomed, size: 30) else { Issue.record("no erase"); return }
+        #expect(abs(finer - 3) < 1e-4, "30 points at 10 to a unit")
     }
 
     /// A tap of the Line Eraser beside a line takes it out from junction to junction, within a

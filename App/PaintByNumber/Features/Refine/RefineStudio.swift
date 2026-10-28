@@ -19,7 +19,7 @@ nonisolated enum RefineGroup: Hashable, CaseIterable {
     static func of(_ tool: RefineTool) -> RefineGroup { tool.group }
 }
 
-/// An area a long press picked, for its card (`RefineAreaCard`).
+/// An area Select picked, for its card (`RefineAreaCard`).
 nonisolated struct RefineAreaPick: Identifiable, Equatable {
     let id = UUID()
     /// Where the press was, in the template's canvas units.
@@ -46,7 +46,8 @@ nonisolated struct RefineAreaPick: Identifiable, Equatable {
     }
 }
 
-/// An area's card, from a long press on it with any tool: its paint, how many areas share it, a
+/// An area's card, from Select's Change Color (a long press opened it until the hold became the
+/// Eyedropper): its paint, how many areas share it, a
 /// new color for this area alone (Only This Area: the eyes the generator gave the sky's blue, in a
 /// blue of their own while the sky stays), or another of the painting's paints for it, and the
 /// other areas of its paint, glowing (`RefinePaintGlow`). A popover beside the area on iPad, a

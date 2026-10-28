@@ -2,6 +2,7 @@ import Accessibility
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// What one finger (or the Pencil) does on the Refine screen.
 nonisolated enum RefineTool: Hashable, CaseIterable {
@@ -67,7 +68,8 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
         }
     }
 
-    /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
+    /// The tool the Pencil's Switch Between Current Tool and Eraser picks: a drawing tool's
+    /// eraser, an eraser's pen.
     var pencilPartner: RefineTool? {
         switch self {
         case .pen, .shape: .eraser
@@ -88,19 +90,6 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
     }
 
     var erases: Bool { self == .eraser || self == .smartEraser }
-}
-
-/// What shows beneath the drawing on the Refine screen.
-nonisolated enum RefineBackdrop: Hashable {
-    /// The drawing's paper.
-    case paper
-    /// The photo.
-    case photo
-    /// The template painted, every area in its paint: the picture once it's finished.
-    case painting
-    /// The photo, with the painting over it as faint as the Toolbox's slider makes it, for
-    /// tracing (`RefineView.photoShows`).
-    case photoBehind
 }
 
 /// The create flow's optional Refine step (`TemplateRefinements`): the drawing large, on its
@@ -128,12 +117,17 @@ nonisolated enum RefineBackdrop: Hashable {
 /// An edit the template can't take (a line that doubles back on itself) changes nothing and says
 /// so, in a toast VoiceOver announces; so does a shape a line closed that has no room for a
 /// number (the line stays).
-/// Once an Apple Pencil touches the canvas (or with Only Draw with Apple Pencil on), the Pencil
-/// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
-/// switches between drawing and the Eraser. Photo and Painting show the photo, or the template
-/// painted (every area in its paint, `TemplateRasterizer.Style.paintedAreas`), beneath the
-/// drawing: the painting the changes make, once the template has them. Text corrects the text the
-/// app found (a tap turns a found line off or on again, a drag across a line marks it).
+/// The gestures are iPad drawing apps' (`RefineTouchSurface`): two fingers tap to undo and three
+/// to redo, held to keep going; a quick pinch fits the picture; four fingers tap for the full
+/// screen; a touch held still is the Eyedropper, its loupe under the finger, with any tool; a
+/// palette swatch dropped on a cell pours its paint. With Only Draw with Apple Pencil on, the Pencil
+/// draws and taps and one finger moves the picture; otherwise fingers draw too. The Pencil's
+/// double tap and squeeze do what iPadOS's settings ask (`RefinePencilAction`), and its hover shows
+/// the tool's reach. The Layers panel (`RefineLayers`) shows or hides the numbers, the ink, the
+/// paint (the template painted, every area in its paint, `TemplateRasterizer.Style.paintedAreas`:
+/// the painting the changes make, once the template has them) and the photo, the paint and the
+/// photo at an opacity of their own. Text corrects the text the app found (a tap turns a found
+/// line off or on again, a drag across a line marks it).
 ///
 /// An edit lands in a few hundredths of a second, off the main actor, and the screen then shows
 /// the new template with no crossfade; until it does, the edit shows over the last template in the
@@ -143,7 +137,8 @@ nonisolated enum RefineBackdrop: Hashable {
 /// The text corrections still make the template again, as the sliders do, and the edits are laid
 /// on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
 /// (`CreateModel.history`; an edit taken back or put back comes at once from the templates kept),
-/// Cancel puts back what the screen opened with, Done keeps them.
+/// Cancel puts back what the screen opened with (asking first when there are changes), Done keeps
+/// them.
 ///
 /// The tools are laid out as the Toolbox, a drawing app's:
 /// Ink, Cells, Paint, Numbers and See, every tool in a rail on iPad and in group tabs on iPhone; a
@@ -151,8 +146,9 @@ nonisolated enum RefineBackdrop: Hashable {
 /// a palette with a current paint, the Bucket, the Paint Brush, the Eyedropper, Edit Paint and
 /// Looks, Move Number, Try Painting; Start From until the first edit
 /// (the generator's template, or the photo as one area to draw and paint everything on); an area's
-/// card on a long press, sparkles where a line closes off an area and a badge for numbers near their
-/// floor (`RefineStudio.swift`, `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The Toolbox).
+/// card from Select's Change Color, sparkles where a line closes off an area and a badge for numbers
+/// near their floor (`RefineStudio.swift`, `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The
+/// Toolbox), and keys for the tools ([ and ] for a size, ⌘0 to fit, ⌃⌘F for the full screen).
 struct RefineView: View {
     let model: CreateModel
 
@@ -162,9 +158,14 @@ struct RefineView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @State private var tool: RefineTool
+    /// The tool picked before this one, for the Pencil's Switch to Previous Tool.
+    @State private var previousTool: RefineTool?
     @State private var shape = RefineShape.line
-    @State private var backdrop = RefineBackdrop.paper
-    /// The template on screen painted, for `RefineBackdrop.painting`, with its preview's id.
+    /// What shows: the numbers, the ink, the paint and the photo (`RefineLayers`).
+    @State private var layers = RefineLayers.painting
+    /// The Layers panel is open.
+    @State private var showsLayers = false
+    /// The template on screen painted, for the paint layer, with its preview's id.
     @State private var painting: (preview: UUID, image: CGImage)?
     /// The template the screen draws over: the newest at full resolution.
     @State private var base: CreateModel.Preview?
@@ -191,6 +192,8 @@ struct RefineView: View {
     /// the picture neither moves under the finger nor loses its zoom (the exploratory QA of
     /// October 21 tapped where it had been).
     @State private var toolsHeight: CGFloat = 0
+    /// The tools' own height now, which another width starts the room from.
+    @State private var toolsMeasured: CGFloat = 0
     /// Edit Paint's family follows the current paint while it is on.
     @State private var colorFamily = true
     /// A part of the picture the touch surface is to bring up close.
@@ -201,8 +204,22 @@ struct RefineView: View {
     #endif
     /// The screen has begun refining (`CreateModel.beginRefining`), once.
     @State private var opened = false
-    /// How plainly the photo shows through the painting in Photo Behind: 0 the painting, 1 the photo.
-    @State private var photoShows = 0.5
+    /// The Eyedropper's hold under the finger: where it is and the color it would pick.
+    @State private var hold: RefineHold?
+    /// What the Pencil's hover shows for the tool in hand (`hoverMark(at:)`), and the cell a
+    /// swatch's drag is over: kept only as they change, so a hover's every move doesn't lay the
+    /// screen out again.
+    @State private var hovering: RefineHoverMark.Mark?
+    @State private var dropCell: Int?
+    /// The tools, bars and palette are hidden (a four-finger tap), the picture alone on screen.
+    @State private var fullScreen = false
+    /// Counts the full screen's comings and goings, after which the canvas takes the keys again.
+    @State private var keysRequest = 0
+    /// Where the Pencil asked for the tools and the palette (its double tap or squeeze), in the
+    /// canvas's coordinates.
+    @State private var pencilPalette: CGRect?
+    /// Cancel asks first when there are changes to lose.
+    @State private var confirmsCancel = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// Whether a line's ends join the lines their ink touches (`PenAssist`): the Toolbox's Snap.
     @AppStorage(SettingsKey.refineSnaps) private var snaps = SettingsDefault.refineSnaps
@@ -211,6 +228,10 @@ struct RefineView: View {
     @AppStorage(SettingsKey.refinePenColors) private var penColors = SettingsDefault.refinePenColors
     /// The Paint Brush's Size: its radius on screen, in points.
     @AppStorage(SettingsKey.refineBrushSize) private var brushSize = SettingsDefault.refineBrushSize
+    /// The Eraser's and the Line Eraser's Size: their radius on screen, in points.
+    @AppStorage(SettingsKey.refineEraserSize) private var eraserSize = SettingsDefault.refineEraserSize
+    /// The Pen's Smoothing, 0 to 1 (`RefineGestures.steadied`, Procreate's StreamLine).
+    @AppStorage(SettingsKey.refinePenSmoothing) private var penSmoothing = SettingsDefault.refinePenSmoothing
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
@@ -229,7 +250,7 @@ struct RefineView: View {
     /// The Studio's group on screen (`RefineGroup`), and the tool last picked in each.
     @State private var group = RefineGroup.ink
     @State private var lastTool: [RefineGroup: RefineTool] = [:]
-    /// The area a long press opened the card of (`RefineAreaCard`).
+    /// The area whose card Select's Change Color opened (`RefineAreaCard`).
     @State private var card: RefineAreaPick?
     /// The sparkles where a line closed off an area last: the line's number, where its ends met
     /// on screen, and the shape's smaller side on screen.
@@ -247,7 +268,7 @@ struct RefineView: View {
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
-    /// practice picture, with Undo, Redo, the views and Reset above it in place of the screen's
+    /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
     private let practice: RefinePracticeSetup?
     /// Reset on a practice canvas: the page makes the canvas again, from the picture.
@@ -269,7 +290,6 @@ struct RefineView: View {
         _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
         _tool = State(initialValue: .pen)
         // The Studio opens on the painting in its paints (the Lamplit Table, 6 to 0).
-        _backdrop = State(initialValue: .painting)
         if let practice {
             // A practice's switches are its own, from the painter's: the Pen's page turning Color
             // from Photo on leaves Refine's Pen as it was.
@@ -277,9 +297,12 @@ struct RefineView: View {
             _snaps = AppStorage(wrappedValue: SettingsDefault.refineSnaps, SettingsKey.refineSnaps, store: store)
             _penColors = AppStorage(wrappedValue: SettingsDefault.refinePenColors, SettingsKey.refinePenColors, store: store)
             _brushSize = AppStorage(wrappedValue: SettingsDefault.refineBrushSize, SettingsKey.refineBrushSize, store: store)
+            _eraserSize = AppStorage(wrappedValue: SettingsDefault.refineEraserSize, SettingsKey.refineEraserSize, store: store)
+            _penSmoothing = AppStorage(
+                wrappedValue: SettingsDefault.refinePenSmoothing, SettingsKey.refinePenSmoothing, store: store)
             _tool = State(initialValue: practice.tool)
             _group = State(initialValue: RefineGroup.of(practice.tool))
-            _backdrop = State(initialValue: practice.backdrop)
+            _layers = State(initialValue: practice.layers)
             if let shape = practice.shape { _shape = State(initialValue: shape) }
             return
         }
@@ -340,14 +363,19 @@ struct RefineView: View {
     private var refineScreen: some View {
         NavigationStack {
             canvas
-                .safeAreaInset(edge: .bottom, spacing: 0) { reservedTools }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if !fullScreen { reservedTools }
+                }
                 .safeAreaInset(edge: .leading, alignment: .top, spacing: 0) {
-                    if usesRail { toolRail }
+                    if usesRail, !fullScreen { toolRail }
                 }
                 .background(Theme.paper)
                 .navigationTitle("Refine")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
+                .toolbarVisibility(fullScreen ? .hidden : .visible, for: .navigationBar)
+                .statusBarHidden(fullScreen)
+                .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
     }
@@ -384,15 +412,24 @@ struct RefineView: View {
                     .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
                     .frame(width: picture.width, height: picture.height)
                     .position(x: picture.midX, y: picture.midY)
-                let showsPhoto = backdrop == .photo || backdrop == .photoBehind || base == nil
+                // The photo shows through what lies over it; under opaque paint the lines are drawn
+                // as over the paint.
+                let showsPhoto = base == nil || layers.photoStrength > 0
                 let painted = showsPainting && base != nil && painting?.preview == base?.id ? painting?.image : nil
                 ZStack {
-                    if showsPhoto {
+                    // The paper, beneath every layer: it shows where the paint and the photo are
+                    // hidden or faint.
+                    Rectangle()
+                        .fill(LineArtDrawing.paper)
+                        .frame(width: picture.width, height: picture.height)
+                        .position(x: picture.midX, y: picture.midY)
+                    if layers.photo || base == nil {
                         Image(decorative: photo, scale: 1)
                             .resizable()
                             .interpolation(.high)
                             .frame(width: picture.width, height: picture.height)
                             .position(x: picture.midX, y: picture.midY)
+                            .opacity(base == nil ? 1 : layers.photoOpacity)
                     }
                     if let painted {
                         Image(decorative: painted, scale: 1)
@@ -400,7 +437,7 @@ struct RefineView: View {
                             .interpolation(.high)
                             .frame(width: picture.width, height: picture.height)
                             .position(x: picture.midX, y: picture.midY)
-                            .opacity(backdrop == .photoBehind ? 1 - photoShows : 1)
+                            .opacity(layers.paintOpacity)
                             // New colors cross-fade in (`land`).
                             .id(painting?.preview)
                             .transition(.opacity)
@@ -410,7 +447,7 @@ struct RefineView: View {
                     RefineInkLayer(
                         lines: [], trace: nil, traceIsDrawn: false, erasing: false, brushes: brushes,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth, beneath: nil, halo: false)
-                    if let base {
+                    if let base, layers.ink {
                         LineArtLayer(
                             drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto,
                             overPaint: painted != nil && !showsPhoto)
@@ -430,14 +467,14 @@ struct RefineView: View {
                     }
                     let figure = shapeTrace
                     RefineInkLayer(
-                        lines: pending, trace: tool == .shape ? figure : tool.drags || tool == .brush ? nil : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
-                        dashed: tool == .cellEdge, merging: tool == .merge,
+                        lines: layers.ink ? pending : [], trace: tool == .shape ? figure : tool.drags || tool == .brush ? nil : penTrace,
+                        traceIsDrawn: tool == .shape, erasing: tool.erases, dashed: tool == .cellEdge, merging: tool == .merge,
                         eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
                         beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     if let bend {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
-                    if group == .numbers || backdrop == .paper, let base {
+                    if layers.numbers || group == .numbers, let base {
                         RefineNumbers(base: base, rect: picture)
                             .equatable()
                     }
@@ -451,6 +488,9 @@ struct RefineView: View {
                     RefineMarks(
                         refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
                         emphasizesText: tool == .text)
+                    if let mark = dropCell.map(RefineHoverMark.Mark.cell) ?? (hold == nil && trace == nil ? hovering : nil) {
+                        RefineHoverMark(mark: mark, base: base, rect: picture)
+                    }
                 }
                 // Drawing past the picture's edge stays on the picture.
                 .mask {
@@ -465,7 +505,16 @@ struct RefineView: View {
                     picture = rect
                     self.zoom = zoom
                 },
-                onDraw: draw, onTap: tap, onUndo: undo, onPencilTap: pencilTap, onLongPress: openCard, focus: focus)
+                onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
+                onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
+                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
+                focus: focus)
+            if let hold, let space = base?.template.colorSpace {
+                RefineLoupe(
+                    picked: hold.color.map { RefinePalette.color($0, space: space) },
+                    current: currentPaint.map { RefinePalette.color($0, space: space) })
+                    .position(RefineLoupe.position(over: onScreen(hold.at), in: canvasSize))
+            }
             if let sparkles {
                 RefineSparkles(point: sparkles.point, extent: sparkles.extent, stars: Sky.current() == .moon)
                     .id(sparkles.id)
@@ -482,11 +531,17 @@ struct RefineView: View {
             localized: "refine.canvas", defaultValue: "Painting to refine",
             comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
         .accessibilityValue(Self.changes(model.refinements.changeCount))
+        .accessibilityActions {
+            if model.canRedo { Button("Redo", action: redo) }
+            if !isPractice {
+                Button(action: toggleFullScreen) { fullScreen ? Text("Exit Full Screen") : Text("Full Screen") }
+            }
+        }
         .accessibilityIdentifier("refine-canvas")
         // After the picture's own accessibility, which ignores its children: Start From and the
         // badge are controls of their own.
         .overlay(alignment: .top) {
-            if !isPractice { topControls.padding(12) }
+            if !isPractice, !fullScreen { topControls.padding(12) }
         }
         // A draft that couldn't be saved, with its Retry, under the note (a practice canvas keeps
         // no draft).
@@ -500,13 +555,24 @@ struct RefineView: View {
                 .animation(reduceMotion ? nil : .snappy, value: model.note)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            if fullScreen { exitFullScreen.padding(12) }
+        }
         .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in areaCard(pick) }
+        // Its own view, so the card's popover and this one don't share an anchor.
+        .background {
+            Color.clear
+                .popover(
+                    isPresented: Binding(get: { pencilPalette != nil }, set: { if !$0 { pencilPalette = nil } }),
+                    attachmentAnchor: .rect(.rect(pencilPalette ?? .zero))
+                ) { pencilPaletteView }
+        }
     }
 
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 
-    /// Whether the painting shows beneath the drawing: on its own, or over the photo.
-    private var showsPainting: Bool { backdrop == .painting || backdrop == .photoBehind }
+    /// Whether the painting shows beneath the drawing: its layer is on.
+    private var showsPainting: Bool { layers.paint }
 
     /// The template's canvas, in canvas units (zero before there is a template).
     private var templateSize: CGSize { base?.drawing.size ?? .zero }
@@ -578,8 +644,8 @@ struct RefineView: View {
         (base?.drawing ?? model.preview?.drawing)?.lineWidth(scale: zoom, weight: lineWeight) ?? 1.5
     }
 
-    /// The eraser keeps its size on screen, so zoomed in it erases finer (`RefineScreen.eraserRadius`).
-    private var eraserRadius: Float { screen.eraserRadius }
+    /// The eraser keeps its Size on screen, so zoomed in it erases finer (`RefineScreen.eraserRadius(size:)`).
+    private var eraserRadius: Float { screen.eraserRadius(size: CGFloat(eraserSize)) }
 
     /// The screen as the gestures see it (`RefineGestures`, which `pbn refine` replays too).
     private var screen: RefineScreen {
@@ -605,6 +671,7 @@ struct RefineView: View {
     // MARK: Touches
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
+        if touch == .began { revealLayer() }
         switch tool {
         case .pen, .cellEdge, .merge, .brush, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
@@ -681,14 +748,21 @@ struct RefineView: View {
         return .draw(points: points, closed: closed, paints: [])
     }
 
-    /// A pen's line from its samples (`RefineGestures.pen`).
+    /// A pen's line from its samples (`RefineGestures.pen`), steadied by its Smoothing.
     private func penEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
-        RefineGestures.pen(points, on: screen, snapping: snapLines)
+        RefineGestures.pen(points, on: screen, snapping: snapLines, smoothing: tool == .pen ? CGFloat(penSmoothing) : 0)
     }
 
-    /// The eraser's pass as an edit (`RefineGestures.eraser`).
+    /// The stroke under the finger as it shows: the Pen's steadied by its Smoothing, as it will be
+    /// laid (`RefineGestures.steadied`); the others as drawn.
+    private var penTrace: [SIMD2<Float>]? {
+        guard let trace, tool == .pen, penSmoothing > 0 else { return trace }
+        return RefineGestures.steadied(trace, smoothing: CGFloat(penSmoothing), on: screen)
+    }
+
+    /// The eraser's pass as an edit, at its Size (`RefineGestures.eraser`).
     private func eraserEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
-        RefineGestures.eraser(points, on: screen)
+        RefineGestures.eraser(points, on: screen, size: CGFloat(eraserSize))
     }
 
     /// Bend Line, Move Edge and Move Number follow the drag from where it began to the finger
@@ -901,6 +975,10 @@ struct RefineView: View {
                     currentPaint = counts.indices.max { counts[$0] < counts[$1] }.map { template.palette[$0].oklab }
                 }
                 if demo.selectsCell { selection = at }
+                if demo.opensLayers {
+                    layers = .tracing
+                    showsLayers = true
+                }
                 if demo.opensCard, let at {
                     let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
                     card = RefineAreaPick(at: at, screen: onScreen(point), template: template)
@@ -930,6 +1008,7 @@ struct RefineView: View {
     }
 
     private func tap(at point: SIMD2<Float>) {
+        revealLayer()
         switch tool {
         case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
             break
@@ -1024,6 +1103,32 @@ struct RefineView: View {
         model.undo()
     }
 
+    private func redo() {
+        model.redo()
+    }
+
+    /// Cancel: at once with nothing to lose, else once the painter says to discard the changes
+    /// (an edit still on its way counts: it isn't in the history yet).
+    private func askToCancel() {
+        if model.canUndo || !submitted.isEmpty { confirmsCancel = true } else { cancel() }
+    }
+
+    /// A step of held fingers' undo or redo, once the last has landed and shows (a step that makes
+    /// the template again, a text correction's, shows only once it's made); false when there's
+    /// none left to take.
+    private func repeatStep(redo: Bool) -> Bool {
+        guard model.historySteps == 0, base?.id == model.preview?.id, model.preview?.refinements == model.refinements
+        else { return true }
+        if redo {
+            guard model.canRedo else { return false }
+            self.redo()
+        } else {
+            guard model.canUndo || curve != nil else { return false }
+            undo()
+        }
+        return true
+    }
+
     private func cancel() {
         model.cancelRefining()
         dismiss()
@@ -1052,8 +1157,15 @@ struct RefineView: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", action: cancel)
+            Button("Cancel", systemImage: "xmark", action: askToCancel)
+                .keyboardShortcut(isCovered || fullScreen ? nil : .cancelAction)
                 .accessibilityIdentifier("refine-cancel")
+                .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
+                    Button("Discard Changes", role: .destructive, action: cancel)
+                    Button("Keep Refining", role: .cancel) {}
+                } message: {
+                    Text("Refine goes back to how it was when you opened it.")
+                }
         }
         ToolbarItem(placement: .topBarLeading) {
             Button("Tool Guide", systemImage: "questionmark.circle") {
@@ -1066,19 +1178,27 @@ struct RefineView: View {
             .accessibilityIdentifier("refine-guide")
         }
         ToolbarItemGroup(placement: .primaryAction) {
+            // ⌘Z and ⇧⌘Z are the canvas's (`keys`), the full screen's too, where this bar hides.
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
                 .disabled(!model.canUndo)
-                .keyboardShortcut("z")
                 .accessibilityIdentifier("refine-undo")
-            Button("Redo", systemImage: "arrow.uturn.forward", action: model.redo)
+            Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
                 .disabled(!model.canRedo)
-                .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
+            layersButton
         }
-        ToolbarItem(placement: .principal) { backdropPicker }
+        // A phone's bar has room for its six controls but not the title, which showed as "R…"
+        // (QA, October 28): its middle is left empty there, as the views' menu once filled it.
+        if !usesRail {
+            ToolbarItem(placement: .principal) {
+                Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
+            }
+            .sharedBackgroundVisibility(.hidden)
+        }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
                 .tint(Theme.signature)
+                .keyboardShortcut(isCovered ? nil : .defaultAction)
                 .accessibilityIdentifier("refine-done")
         }
     }
@@ -1087,11 +1207,14 @@ struct RefineView: View {
     private var reservedTools: some View {
         tools
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                toolsMeasured = height
                 if height > toolsHeight { toolsHeight = height }
             }
             .frame(minHeight: toolsHeight, alignment: .bottom)
             // Another width (a rotation, a resized window) lays the tools out anew: measured again.
-            .onChange(of: canvasSize.width) { toolsHeight = 0 }
+            // The tools as they are now count, though their height doesn't change with the width
+            // (the picture jumped at the first change of group, QA, October 28).
+            .onChange(of: canvasSize.width) { toolsHeight = toolsMeasured }
     }
 
     /// What the finger does, along the bottom (`studioBar`): the picked tool's options and, on
@@ -1126,7 +1249,7 @@ struct RefineView: View {
         switch tool {
         case .pen:
             String(localized: "refine.hint.pen",
-                   defaultValue: "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes.",
+                   defaultValue: "Draw lines just where you draw them. Two fingers zoom and move, and a two‑finger tap undoes.",
                    comment: "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), read by VoiceOver as the hint of its button")
         case .shape:
             switch shape {
@@ -1209,8 +1332,8 @@ struct RefineView: View {
                    comment: "Refine screen: how the Bucket works (a tap gives the area under it the paint picked in the palette), read by VoiceOver as the hint of its button")
         case .eyedropper:
             String(localized: "refine.hint.eyedropper",
-                   defaultValue: "Tap an area to make its paint the current paint. Over the photo, tap to pick the photo’s color.",
-                   comment: "Refine screen: how the Eyedropper works (a tap picks the paint of the area under it, or the photo's color there when the photo shows), read by VoiceOver as the hint of its button")
+                   defaultValue: "Tap an area to make its paint the current paint, or touch and hold with any tool. Where the photo shows, it picks the photo’s color.",
+                   comment: "Refine screen: how the Eyedropper works (a tap, or a touch and hold with any tool, picks the paint of the area under it, or the photo's color where the photo shows most), read by VoiceOver as the hint of its button")
         case .editPaint:
             String(localized: "refine.hint.editPaint",
                    defaultValue: "Give the current paint a new color everywhere it’s used. Tap an area to pick its paint.",
@@ -1267,6 +1390,8 @@ struct RefineView: View {
     }
 
     private func pick(_ tool: RefineTool) {
+        pencilPalette = nil
+        hovering = nil
         guard tool != self.tool else { return }
         // A practice canvas keeps the tool its page teaches (the card's link, the Pencil's double tap).
         if let practice, tool != practice.tool { return }
@@ -1274,11 +1399,26 @@ struct RefineView: View {
         // A stroke under way was the other tool's, and a curve waiting to be bent stays straight.
         endStroke()
         finishCurve()
+        previousTool = self.tool
         self.tool = tool
         if tool != .select { selection = nil }
         group = RefineGroup.of(tool)
-        // A cell edge and the paint tools show only in the painting: it shows beneath them.
-        if tool.paints, base != nil, !showsPainting { backdrop = .painting }
+        // What the tool works on shows: a cell edge and the paint tools the paint, Move Number the
+        // numbers.
+        if base != nil { revealLayer() }
+    }
+
+    /// The layer the tool changes, shown if it was hidden, so nothing it does goes unseen. Select and
+    /// the Eyedropper change nothing (the Eyedropper over the photo alone picks the photo's
+    /// colors), and Move Number's numbers show while it is picked.
+    private func revealLayer() {
+        guard tool != .select, tool != .eyedropper, let layer = tool.layer, layer != .numbers else { return }
+        show(layer)
+    }
+
+    private func show(_ layer: RefineLayers.Layer) {
+        guard !layers.shows(layer) else { return }
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { layers.set(layer, shown: true) }
     }
 
     /// A tool's button: picks it; Try Painting opens the painting screen instead.
@@ -1290,18 +1430,23 @@ struct RefineView: View {
         pick(tool)
     }
 
-    /// A long press on an area opens its card.
-    private func openCard(at point: SIMD2<Float>) {
-        guard let template = base?.template, model.hasLineArtInput, template.region(at: canvasPoint(point)) != nil else { return }
-        endStroke()
-        FeedbackEngine.shared.selectionChanged()
-        card = RefineAreaPick(at: canvasPoint(point), screen: onScreen(point), template: template)
-    }
-
-    /// The Pencil's double tap: a pen's eraser, or an eraser's pen, of the same kind.
-    private func pencilTap() {
-        guard model.hasLineArtInput, let partner = tool.pencilPartner else { return }
-        pick(partner)
+    /// The Pencil's double tap or squeeze, as iPadOS's Apple Pencil settings ask: a pen's eraser
+    /// or an eraser's pen, the tool before, or the tools and the palette beside the Pencil
+    /// (`location`, where it hovers; else the picture's middle).
+    private func pencil(_ action: RefinePencilAction, at location: CGPoint?) {
+        guard model.hasLineArtInput else { return }
+        switch action {
+        case .switchEraser:
+            if let partner = tool.pencilPartner { pick(partner) }
+        case .switchPrevious:
+            if let previousTool { pick(previousTool) }
+        case .showPalette:
+            // A practice canvas has its one tool.
+            guard !isPractice else { return }
+            FeedbackEngine.shared.selectionChanged()
+            let at = location ?? CGPoint(x: picture.midX, y: picture.midY)
+            pencilPalette = CGRect(x: at.x - 12, y: at.y - 12, width: 24, height: 24)
+        }
     }
 }
 
@@ -1312,11 +1457,10 @@ extension RefineView {
     /// over a row of the group's tools (iPhone).
     private var usesRail: Bool { sizeClass == .regular }
 
-    /// The Studio's bottom: Photo Behind's slider, the picked tool's options, the cell Select
-    /// picked, the palette (in Cells and Paint), and on iPhone the groups and the group's tools.
+    /// The Studio's bottom: the picked tool's options, the cell Select picked, the palette (in
+    /// Cells and Paint), and on iPhone the groups and the group's tools.
     @ViewBuilder
     private var studioBar: some View {
-        photoSlider
         toolOptions
         if tool == .select, let template = base?.template, let region = selectedRegion {
             RefineSelectionBar(template: template, region: region) {
@@ -1465,25 +1609,30 @@ extension RefineView {
     }
 
     static func toolName(_ kind: RefineTool) -> Text {
+        Text(toolTitle(kind))
+    }
+
+    /// A tool's name, as the rail, VoiceOver, the Tool Guide and a key's name in the ⌘ list say it.
+    static func toolTitle(_ kind: RefineTool) -> String {
         switch kind {
-        case .pen: Text("Pen")
-        case .shape: Text("Shapes")
-        case .eraser: Text("Eraser")
-        case .smartEraser: Text("Line Eraser")
-        case .text: Text("Writing")
-        case .select: Text("Select")
-        case .cellEdge: Text("Cell Edge")
-        case .merge: Text("Merge")
-        case .fill: Text("Fill Shape")
-        case .brush: Text("Paint Brush")
-        case .bucket: Text("Bucket")
-        case .eyedropper: Text("Eyedropper")
-        case .editPaint: Text("Edit Paint")
-        case .looks: Text("Looks")
-        case .bendLine: Text("Bend Line")
-        case .moveEdge: Text("Move Edge")
-        case .moveNumber: Text("Move Number")
-        case .tryPainting: Text("Try Painting")
+        case .pen: String(localized: "Pen")
+        case .shape: String(localized: "Shapes")
+        case .eraser: String(localized: "Eraser")
+        case .smartEraser: String(localized: "Line Eraser")
+        case .text: String(localized: "Writing")
+        case .select: String(localized: "Select")
+        case .cellEdge: String(localized: "Cell Edge")
+        case .merge: String(localized: "Merge")
+        case .fill: String(localized: "Make Cell")
+        case .brush: String(localized: "Paint Brush")
+        case .bucket: String(localized: "Bucket")
+        case .eyedropper: String(localized: "Eyedropper")
+        case .editPaint: String(localized: "Edit Paint")
+        case .looks: String(localized: "Looks")
+        case .bendLine: String(localized: "Bend Line")
+        case .moveEdge: String(localized: "Move Edge")
+        case .moveNumber: String(localized: "Move Number")
+        case .tryPainting: String(localized: "Try Painting")
         }
     }
 
@@ -1536,6 +1685,16 @@ extension RefineView {
                         localized: "refine.penColors.hint", defaultValue: "Gives the areas a line divides the photo’s colors there.",
                         comment: "Refine screen, the Pen's options: VoiceOver hint of Color from Photo, which makes each part of an area a drawn line divides take the photo's color there")))
                     .accessibilityIdentifier("refine-pen-colors")
+            } more: {
+                Text("Smoothing")
+                Slider(value: $penSmoothing, in: 0...1)
+                    .frame(width: 140)
+                    .accessibilityLabel(Text("Smoothing"))
+                    .accessibilityValue(Text(penSmoothing.formatted(.percent.precision(.fractionLength(0)))))
+                    .accessibilityHint(Text(String(
+                        localized: "refine.smoothing.hint", defaultValue: "Evens out a wobbly line: the line trails your finger a little. Off draws exactly as you draw.",
+                        comment: "Refine screen, the Pen's options: VoiceOver hint of Smoothing, a slider from off to full (Procreate calls it StreamLine)")))
+                    .accessibilityIdentifier("refine-pen-smoothing")
             }
         case .shape:
             optionBar {
@@ -1547,16 +1706,9 @@ extension RefineView {
         case .cellEdge:
             optionBar { snapToggle }
         case .brush:
-            optionBar {
-                Text("Size")
-                Slider(value: $brushSize, in: 4...48)
-                    .frame(width: 160)
-                    .accessibilityLabel(Text("Size"))
-                    .accessibilityValue(Text(String(
-                        localized: "refine.brush.size", defaultValue: "\(Int(brushSize.rounded())) points",
-                        comment: "Refine screen, the Paint Brush's options: VoiceOver value of its Size slider, the brush's radius on screen in points; the argument is the number")))
-                    .accessibilityIdentifier("refine-brush-size")
-            }
+            optionBar { sizeSlider($brushSize, id: "refine-brush-size") }
+        case .eraser, .smartEraser:
+            optionBar { sizeSlider($eraserSize, id: "refine-eraser-size") }
         case .looks, .editPaint:
             if let base {
                 RefineColorsPanel(
@@ -1571,16 +1723,48 @@ extension RefineView {
         }
     }
 
+    /// The tool's options in a capsule.
     private func optionBar<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: 16) { content() }
-            .font(.footnote)
-            .toggleStyle(.switch)
-            .tint(Theme.signature)
+        optionBar(content, more: { EmptyView() })
+    }
+
+    /// The tool's options in a capsule; `more` beside them where the width holds both, else under them.
+    private func optionBar<Content: View, More: View>(
+        @ViewBuilder _ content: () -> Content, @ViewBuilder more: () -> More
+    ) -> some View {
+        let content = content(), more = more()
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 16) {
+                content
+                more
+            }
             .fixedSize()
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .glassEffect(.regular, in: .capsule)
-            .disabled(!model.hasLineArtInput)
+            VStack(spacing: 8) {
+                HStack(spacing: 16) { content }
+                HStack(spacing: 10) { more }
+            }
+            .fixedSize()
+        }
+        .font(.footnote)
+        .toggleStyle(.switch)
+        .tint(Theme.signature)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        .disabled(!model.hasLineArtInput)
+    }
+
+    /// A brush's or an eraser's Size: its radius on screen, in points ([ and ] step it too).
+    @ViewBuilder
+    private func sizeSlider(_ size: Binding<Double>, id: String) -> some View {
+        Text("Size")
+        Slider(value: size, in: Self.sizes)
+            .frame(width: 160)
+            .accessibilityLabel(Text("Size"))
+            .accessibilityValue(Text(String(
+                localized: "refine.brush.size", defaultValue: "\(Int(size.wrappedValue.rounded())) points",
+                comment: "Refine screen, the Paint Brush's and the Eraser's options: VoiceOver value of their Size slider, the radius on screen in points; the argument is the number")))
+            .accessibilityIdentifier(id)
     }
 
     private var snapToggle: some View {
@@ -1624,84 +1808,216 @@ extension RefineView {
         group = next
     }
 
-    /// What shows beneath the drawing: a segmented control in the bar where there is room, else a
-    /// menu under the symbol of the view showing (a phone's bar has no room for its name, which
-    /// wrapped onto two lines); Photo Behind adds its slider.
-    @ViewBuilder
-    private var backdropPicker: some View {
-        if sizeClass == .regular {
-            backdropChoice.pickerStyle(.segmented).fixedSize()
-        } else {
-            Menu {
-                Picker("Show", selection: $backdrop) {
-                    ForEach(Self.backdrops, id: \.self) { kind in
-                        Label { Self.backdropName(kind) } icon: { Image(systemName: Self.backdropSymbol(kind)) }.tag(kind)
+    /// The Layers button and its panel (`RefineLayersPanel`), the picked tool's layer marked.
+    private var layersButton: some View {
+        Button("Layers", systemImage: "square.3.layers.3d") {
+            FeedbackEngine.shared.selectionChanged()
+            showsLayers = true
+        }
+        .accessibilityHint(Text(String(
+            localized: "refine.layers.hint", defaultValue: "Shows or hides the numbers, the ink, the paint and the photo.",
+            comment: "Refine screen: VoiceOver hint of the Layers button, which opens a panel of what shows (numbers, ink, paint, photo)")))
+        .accessibilityIdentifier("refine-layers")
+        .popover(isPresented: $showsLayers) {
+            RefineLayersPanel(layers: $layers, working: tool.layer)
+                .presentationCompactAdaptation(.popover)
+        }
+    }
+
+    // MARK: Full screen
+
+    /// The picture alone on screen (a four-finger tap, ⌃⌘F), or the tools and bars back.
+    private func toggleFullScreen() {
+        FeedbackEngine.shared.selectionChanged()
+        withAnimation(reduceMotion ? nil : .snappy) { fullScreen.toggle() }
+        keysRequest += 1
+    }
+
+    /// The way back from full screen, in the corner.
+    private var exitFullScreen: some View {
+        Button(action: toggleFullScreen) {
+            Label { Text("Exit Full Screen") } icon: { Image(systemName: "arrow.down.right.and.arrow.up.left") }
+                .labelStyle(.iconOnly)
+                .font(.body.weight(.semibold))
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .accessibilityIdentifier("refine-exit-full-screen")
+        .transition(.opacity)
+    }
+
+    // MARK: Keys
+
+    /// A hardware keyboard's keys (their names show while ⌘ is held), the canvas's
+    /// (`RefineSurfaceView.keyCommands`): a tool each, as drawing apps letter them (P Pen, E Eraser,
+    /// B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the size, ⌘0 to fit the picture, ⌃⌘F
+    /// for the full screen, ⌘Z and ⇧⌘Z, the same keys whatever shows: keys a first responder adds
+    /// later went unheard (Escape and ⌘Z in the full screen, CI, October 28). Done (Return) and
+    /// Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
+    /// Try Painting, which have keys of their own.
+    private var keys: [RefineKey] {
+        guard !isPractice, !isCovered, model.hasLineArtInput else { return [] }
+        var keys = Self.toolKeys.map { RefineKey(input: $0.key, modifiers: $0.modifiers, title: Self.toolTitle($0.tool), action: .tool($0.tool)) }
+        keys += [
+            RefineKey(input: "[", modifiers: [], title: String(localized: "Smaller"), action: .smaller),
+            RefineKey(input: "]", modifiers: [], title: String(localized: "Larger"), action: .larger),
+            RefineKey(input: "0", modifiers: .command, title: String(localized: "Fit to Screen"), action: .fit),
+            RefineKey(input: "f", modifiers: [.command, .control], title: String(localized: "Full Screen"), action: .fullScreen),
+            RefineKey(input: "z", modifiers: .command, title: String(localized: "Undo"), action: .undo),
+            RefineKey(input: "z", modifiers: [.command, .shift], title: String(localized: "Redo"), action: .redo),
+        ]
+        return keys
+    }
+
+    /// What a key asks for.
+    private func pressed(_ action: RefineKey.Action) {
+        switch action {
+        case .tool(let tool): toolTapped(tool)
+        case .smaller: resize(by: -2)
+        case .larger: resize(by: 2)
+        case .fit: fit()
+        case .fullScreen: toggleFullScreen()
+        case .undo: undo()
+        case .redo: redo()
+        }
+    }
+
+    /// The Tool Guide or Try Painting covers the screen.
+    private var isCovered: Bool { guide != nil || trial != nil }
+
+    /// The tools a key picks.
+    static let toolKeys: [(tool: RefineTool, key: String, modifiers: UIKeyModifierFlags)] = [
+        (.pen, "p", []), (.shape, "u", []), (.eraser, "e", []), (.smartEraser, "e", .shift), (.select, "v", []),
+        (.merge, "m", []), (.bucket, "g", []), (.brush, "b", []), (.eyedropper, "i", []), (.moveNumber, "n", []),
+    ]
+
+    /// [ and ]: the Paint Brush's or the Eraser's Size, a step smaller or larger.
+    private func resize(by step: Double) {
+        switch tool {
+        case .brush: brushSize = min(max(brushSize + step, Self.sizes.lowerBound), Self.sizes.upperBound)
+        case .eraser, .smartEraser: eraserSize = min(max(eraserSize + step, Self.sizes.lowerBound), Self.sizes.upperBound)
+        default: return
+        }
+        FeedbackEngine.shared.selectionChanged()
+    }
+
+    /// The sizes a brush or an eraser can be, in points on screen.
+    static let sizes: ClosedRange<Double> = 4...48
+
+    /// The whole picture on screen (⌘0), as a quick pinch in fits it.
+    private func fit() {
+        focus = RefineFocus(id: (focus?.id ?? 0) + 1, rect: CGRect(x: 0, y: 0, width: 1, height: 1), animated: !reduceMotion)
+    }
+
+    // MARK: The Pencil's palette
+
+    /// The tools, a row per group, and the palette in Cells and Paint: beside the Pencil when its
+    /// double tap or squeeze asks for them.
+    private var pencilPaletteView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(RefineGroup.allCases, id: \.self) { kind in
+                HStack(spacing: 8) {
+                    Self.groupName(kind)
+                        .font(.caption.weight(.semibold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 72, alignment: .leading)
+                        .accessibilityAddTraits(.isHeader)
+                    GlassEffectContainer(spacing: 8) {
+                        HStack(spacing: 6) {
+                            ForEach(kind.tools, id: \.self) { studioButton($0) }
+                        }
                     }
                 }
-                .pickerStyle(.inline)
-            } label: {
-                // One width for every view's symbol: a phone's bar placed the menu elsewhere as the
-                // symbol's width changed (QA, October 26).
-                Label { Text("Show") } icon: { Image(systemName: Self.backdropSymbol(backdrop)).frame(width: 30) }
-                    .labelStyle(.iconOnly)
             }
-            .accessibilityValue(Self.backdropName(backdrop))
-            .accessibilityIdentifier("refine-backdrop")
-        }
-    }
-
-    private var backdropChoice: some View {
-        Picker("Show", selection: $backdrop) {
-            ForEach(Self.backdrops, id: \.self) { kind in Self.backdropName(kind).tag(kind) }
-        }
-        .accessibilityIdentifier("refine-backdrop")
-    }
-
-    /// The views, in the order they are offered.
-    static let backdrops: [RefineBackdrop] = [.painting, .paper, .photo, .photoBehind]
-
-    static func backdropName(_ kind: RefineBackdrop) -> Text {
-        switch kind {
-        case .painting: Text("Painting")
-        case .paper: Text("Paper")
-        case .photo: Text("Photo")
-        case .photoBehind: Text("Photo Behind")
-        }
-    }
-
-    /// A view's symbol: the iPhone's menu shows the one showing.
-    static func backdropSymbol(_ kind: RefineBackdrop) -> String {
-        switch kind {
-        case .painting: "paintpalette"
-        case .paper: "doc"
-        case .photo: "photo"
-        case .photoBehind: "square.2.layers.3d"
-        }
-    }
-
-    /// Photo Behind's slider: how plainly the photo shows through the painting.
-    @ViewBuilder
-    private var photoSlider: some View {
-        if backdrop == .photoBehind {
-            HStack(spacing: 10) {
-                Image(systemName: "paintpalette")
-                    .accessibilityHidden(true)
-                Slider(value: $photoShows, in: 0...1)
-                    .frame(width: 180)
-                    .tint(Theme.signature)
-                    .accessibilityLabel(Text("Photo"))
-                    .accessibilityValue(Text(photoShows.formatted(.percent.precision(.fractionLength(0)))))
-                    .accessibilityIdentifier("refine-photo-behind")
-                Image(systemName: "photo")
-                    .accessibilityHidden(true)
+            if group == .cells || group == .paint, let template = base?.template {
+                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
             }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .glassEffect(.regular, in: .capsule)
-            .transition(.opacity)
         }
+        .padding(16)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .presentationCompactAdaptation(.popover)
+        .accessibilityIdentifier("refine-pencil-palette")
+    }
+
+    // MARK: Holding, hovering and dropping
+
+    /// The Eyedropper's hold, with any tool: a loupe shows the color under the finger over the
+    /// current paint while it holds and moves, and lifting makes that color the current paint.
+    private func held(_ touch: RefineTouch, at point: SIMD2<Float>) {
+        guard base != nil, model.hasLineArtInput else {
+            hold = nil
+            return
+        }
+        switch touch {
+        case .began:
+            endStroke()
+            FeedbackEngine.shared.selectionChanged()
+            hold = RefineHold(at: point, color: sampled(at: point))
+        case .moved:
+            hold = RefineHold(at: point, color: sampled(at: point))
+        case .ended:
+            let color = sampled(at: point)
+            hold = nil
+            guard let color, let template = base?.template else { return }
+            currentPaint = color
+            FeedbackEngine.shared.selectionChanged()
+            announceCurrentPaint(in: template)
+        case .cancelled:
+            hold = nil
+        }
+    }
+
+    /// The color the Eyedropper picks at `point`: the photo's (or the paint within a just-noticeable
+    /// difference of it) where the photo is what shows most, else the paint of the cell there.
+    private func sampled(at point: SIMD2<Float>) -> SIMD3<Float>? {
+        guard let template = base?.template else { return nil }
+        if layers.photoReads, let photo = model.source?.image {
+            return RefinePalette.snapped(LineEdit.photoColor(at: point, in: photo), to: template.palette)
+        }
+        guard let region = template.region(at: canvasPoint(point)) else { return nil }
+        return template.palette[Int(template.regions[region].colorIndex)].oklab
+    }
+
+    /// The Pencil's hover over the picture (nil once it leaves), kept as what it shows.
+    private func hovered(_ point: SIMD2<Float>?) {
+        let mark = point.flatMap(hoverMark(at:))
+        if mark != hovering { hovering = mark }
+    }
+
+    /// What the Pencil's hover at `point` shows for the tool in hand: the Eraser's and the Brush's
+    /// reach, or the cell a tap would take.
+    private func hoverMark(at point: SIMD2<Float>) -> RefineHoverMark.Mark? {
+        switch tool {
+        case .eraser, .smartEraser: RefineHoverMark.Mark.ring(at: point, radius: eraserRadius)
+        case .brush: RefineHoverMark.Mark.ring(at: point, radius: screen.brushRadius(size: CGFloat(brushSize)))
+        case .bucket, .fill, .select, .eyedropper, .editPaint: base?.template.region(at: canvasPoint(point)).map(RefineHoverMark.Mark.cell)
+        default: nil
+        }
+    }
+
+    /// A swatch dragged over the picture: the cell it would paint is outlined, and only a cell
+    /// takes it.
+    private func dropHovered(_ point: SIMD2<Float>?) -> Bool {
+        let cell = point.flatMap { model.hasLineArtInput ? base?.template.region(at: canvasPoint($0)) : nil }
+        if cell != dropCell { dropCell = cell }
+        return cell != nil
+    }
+
+    /// A swatch dropped on a cell pours its paint there, as the Bucket does, and becomes the
+    /// current paint (Procreate's ColorDrop); the paint shows if it was hidden.
+    private func dropped(_ payload: String, at point: SIMD2<Float>) {
+        dropCell = nil
+        guard let template = base?.template, model.hasLineArtInput, let color = RefinePaletteBar.color(of: payload, in: template),
+              template.region(at: canvasPoint(point)) != nil
+        else { return }
+        FeedbackEngine.shared.selectionChanged()
+        currentPaint = color
+        show(.paint)
+        let at = canvasPoint(point)
+        submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
+        if !isPractice { PaintTips.refineEdited() }
     }
 
     // MARK: Cells and paint
@@ -1820,14 +2136,8 @@ extension RefineView {
             submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
             if !isPractice { PaintTips.refineEdited() }
         case .eyedropper:
-            // The photo where it is what shows: on its own, or more than the painting over it.
-            if backdrop == .photo || (backdrop == .photoBehind && photoShows > 0.5), let photo = model.source?.image {
-                currentPaint = RefinePalette.snapped(LineEdit.photoColor(at: point, in: photo), to: template.palette)
-            } else if let region {
-                currentPaint = template.palette[Int(template.regions[region].colorIndex)].oklab
-            } else {
-                return
-            }
+            guard let color = sampled(at: point) else { return }
+            currentPaint = color
             FeedbackEngine.shared.selectionChanged()
             announceCurrentPaint(in: template)
         case .editPaint:
@@ -1971,7 +2281,7 @@ extension RefineView {
 
 extension RefineView {
     /// A Tool Guide page's practice canvas: the canvas, the tool's options (and the palette, in
-    /// Cells and Paint) below it, and above it Undo, Redo, the views and Reset.
+    /// Cells and Paint) below it, and above it Undo, Redo, Layers and Reset.
     fileprivate var practiceScreen: some View {
         canvas
             .safeAreaInset(edge: .top, spacing: 0) { practiceBar }
@@ -1979,19 +2289,8 @@ extension RefineView {
             .background(Theme.paper)
     }
 
-    /// Undo and Redo, the views (a segmented control where it fits, else a menu) and Reset.
+    /// Undo, Redo, Layers and Reset.
     private var practiceBar: some View {
-        ViewThatFits(in: .horizontal) {
-            practiceBarRow { backdropChoice.pickerStyle(.segmented).fixedSize() }
-            practiceBarRow { backdropChoice.pickerStyle(.menu) }
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 10)
-        .padding(.bottom, 4)
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-    }
-
-    private func practiceBarRow<Views: View>(@ViewBuilder views: () -> Views) -> some View {
         HStack(spacing: 10) {
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
@@ -1999,17 +2298,16 @@ extension RefineView {
                         .disabled(!model.canUndo)
                         .keyboardShortcut("z")
                         .accessibilityIdentifier("refine-undo")
-                    Button("Redo", systemImage: "arrow.uturn.forward", action: model.redo)
+                    Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
                         .disabled(!model.canRedo)
                         .keyboardShortcut("z", modifiers: [.command, .shift])
                         .accessibilityIdentifier("refine-redo")
+                    layersButton
                 }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
             }
-            Spacer(minLength: 0)
-            views()
             Spacer(minLength: 0)
             Button("Reset", systemImage: "arrow.counterclockwise", action: resetPractice)
                 .buttonStyle(.glass)
@@ -2019,6 +2317,10 @@ extension RefineView {
                     comment: "Tool Guide: VoiceOver hint of Reset above a tool's practice canvas, which undoes everything tried on it")))
                 .accessibilityIdentifier("refine-practice-reset")
         }
+        .padding(.horizontal, 12)
+        .padding(.top, 10)
+        .padding(.bottom, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     /// Reset: the practice picture as the page opened it, with the canvas made again (its tool's

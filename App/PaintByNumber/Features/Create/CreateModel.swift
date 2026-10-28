@@ -1038,7 +1038,9 @@ final class CreateModel {
 
     /// Takes back the newest change, in its turn.
     func undo() {
+        historySteps += 1
         enqueue { [self] in
+            defer { historySteps = max(0, historySteps - 1) }
             guard let previous = history.undo.popLast() else { return }
             history.redo.append(refinements)
             await settle(on: previous)
@@ -1047,12 +1049,18 @@ final class CreateModel {
 
     /// Puts back the change taken back last.
     func redo() {
+        historySteps += 1
         enqueue { [self] in
+            defer { historySteps = max(0, historySteps - 1) }
             guard let next = history.redo.popLast() else { return }
             history.undo.append(refinements)
             await settle(on: next)
         }
     }
+
+    /// Undo and Redo steps sent and not yet taken: Refine's held fingers step again only once the
+    /// last has landed, so they never run on past what the painter saw.
+    private(set) var historySteps = 0
 
     var canUndo: Bool { !history.undo.isEmpty }
     var canRedo: Bool { !history.redo.isEmpty }
@@ -1115,6 +1123,7 @@ final class CreateModel {
         trail = nil
         trailKey = nil
         history = RefineHistory()
+        historySteps = 0
         sentEdits = 0
         handledEdits = 0
         leftOutEdits = 0

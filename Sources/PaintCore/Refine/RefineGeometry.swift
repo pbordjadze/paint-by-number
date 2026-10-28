@@ -3,10 +3,33 @@ import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it 
 #endif
 import Foundation
 
-/// The pen's line as Refine keeps it: a finger's samples smoothed into curves (quadratics
-/// through the midpoints between samples, so the corners of a shaky hand round off the way they
-/// do on the screen while it draws) and thinned to the points that shape them.
+/// The pen's line as Refine keeps it: a finger's samples, steadied when the painter asks
+/// (`steadied`), smoothed into curves (quadratics through the midpoints between samples, so the
+/// corners of a shaky hand round off the way they do on the screen while it draws) and thinned to
+/// the points that shape them.
 public enum PenPath {
+    /// `points` as a tip pulled on a string `string` long draws them (a lazy brush): the tip
+    /// stays put while the finger moves within the string and, once it pulls the string taut,
+    /// follows straight toward the finger, the string's length behind it, so a wobble smaller
+    /// than the string only turns it a little. The line starts at the first sample and ends where
+    /// the finger lifted, so one ended on another line still meets it. One pass over the samples:
+    /// the screen redraws it from all of them while the finger moves.
+    public static func steadied(_ points: [CGPoint], string: CGFloat) -> [CGPoint] {
+        guard string > 0, let first = points.first, let last = points.last else { return points }
+        var out = [first]
+        var tip = first
+        for p in points.dropFirst() {
+            let dx = p.x - tip.x, dy = p.y - tip.y
+            let d = (dx * dx + dy * dy).squareRoot()
+            guard d > string else { continue }
+            let pull = (d - string) / d
+            tip = CGPoint(x: tip.x + dx * pull, y: tip.y + dy * pull)
+            out.append(tip)
+        }
+        if out[out.count - 1] != last { out.append(last) }
+        return out
+    }
+
     /// The smoothed path through `points`, sampled every `spacing` (the points' units).
     public static func smoothed(_ points: [CGPoint], spacing: CGFloat) -> [CGPoint] {
         guard points.count > 2, spacing > 0 else { return points }

@@ -15,7 +15,7 @@ struct PreferencesTests {
             SettingsKey.paletteRows, SettingsKey.paletteOrder, SettingsKey.lineWeight,
             SettingsKey.previewStyle, SettingsKey.playsMakingOf, SettingsKey.tipsEnabled,
             SettingsKey.previewShowsSettings, SettingsKey.refineSnaps, SettingsKey.refinePenColors,
-            SettingsKey.refineBrushSize,
+            SettingsKey.refineBrushSize, SettingsKey.refineEraserSize, SettingsKey.refinePenSmoothing,
         ]
         #expect(keys == [
             "hapticsEnabled", "soundsEnabled", "sky", "autoAdvanceColors",
@@ -23,7 +23,7 @@ struct PreferencesTests {
             "paletteRows", "paletteOrder", "lineWeight",
             "previewStyle", "playsMakingOf", "tipsEnabled",
             "previewShowsSettings", "refineSnaps", "refinePenColors",
-            "refineBrushSize",
+            "refineBrushSize", "refineEraserSize", "refinePenSmoothing",
         ])
         // No retired key comes back as a current one: launch would remove the painter's choice.
         #expect(Set(keys).isDisjoint(with: Preferences.retiredKeys))
@@ -31,14 +31,17 @@ struct PreferencesTests {
     }
 
     /// What each switch is until the painter sets it: haptics, sounds, Advance to Next Color,
-    /// Tips and Refine's Snap on; Zen Mode, the Making-of, the preview's settings and Color from
-    /// Photo off. The code reading `UserDefaults` itself agrees with the `@AppStorage` views.
+    /// Tips and Refine's Snap on; Zen Mode, the Making-of, the preview's settings, Color from
+    /// Photo and the Pen's Smoothing off; the Eraser about the size it had before it had a Size.
+    /// The code reading `UserDefaults` itself agrees with the `@AppStorage` views.
     @Test func settingDefaults() throws {
         #expect(SettingsDefault.haptics && SettingsDefault.sounds && SettingsDefault.autoAdvance)
         #expect(SettingsDefault.tipsEnabled && SettingsDefault.refineSnaps)
         #expect(!SettingsDefault.zenMode && !SettingsDefault.playsMakingOf)
         #expect(!SettingsDefault.previewShowsSettings && !SettingsDefault.refinePenColors)
         #expect(SettingsDefault.refineBrushSize == Double(RefineGestures.brushSize))
+        #expect(SettingsDefault.refinePenSmoothing == 0)
+        #expect((10...20).contains(SettingsDefault.refineEraserSize))
 
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

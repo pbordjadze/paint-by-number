@@ -204,8 +204,8 @@ nonisolated struct RefineDrawTip: Tip {
 nonisolated struct RefineFillTip: Tip {
     var id: String { PaintTips.scoped("tip.refineFill") }
     var title: Text { Text("Make a Shape Its Own") }
-    var message: Text? { Text("Draw a closed shape, then fill it to make it an area with its own number.") }
-    var image: Image? { Image(systemName: "drop.fill") }
+    var message: Text? { Text("Draw a closed shape, then tap inside it with Make Cell to give it a number of its own.") }
+    var image: Image? { Image(systemName: "circle.inset.filled") }
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.linesDrawn) { $0.donations.count >= 1 }
