@@ -70,7 +70,7 @@ class Maestro:
         self.next_id = 0
         self.server = self.request("initialize", {
             "protocolVersion": "2025-06-18", "capabilities": {},
-            "clientInfo": {"name": "paint-by-moonlight-qa", "version": "1"}}, 180)
+            "clientInfo": {"name": "qa-explore", "version": "1"}}, 180)
         self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
         self.tools = self.request("tools/list", {}, 60).get("tools", [])
         self.schemas = {t["name"]: t.get("inputSchema", {}) for t in self.tools}

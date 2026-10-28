@@ -113,11 +113,13 @@ before planning app work).
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
   `feedback-relay/` (see below); `.github/workflows/qa-explore.yml`, exploratory QA on request: an
   agent uses the app in a simulator through Maestro's MCP server and reports what it finds
-  (`ci/qa/`: `explore.md` its brief, `qa.py` the probe, relay and report tools; the workflow's
-  header is the manual). Each device and build has one queue (relay runs share one), and a new
+  (`ci/qa/`: `explore.md` its brief, `qa.py` the probe, relay and report tools, `prepare.sh` the
+  feedback host's block and the photo; the workflow's header is the manual). The workflow and
+  `ci/qa/` are generated from the copy all the apps share (painting-company row 152): change them
+  there and sync, never here. Each device and build has one queue (relay runs share one), and a new
   dispatch cancels the run waiting in it: look first, and give the run a `label`. Every run holds
   a macOS runner for up to two hours, out of the five CI shares. What a session taught goes into
-  the brief (its By design list, its tools' notes) for the next.
+  the brief (its By design list, its tools' notes) for the next, in the shared copy.
   `.github/workflows/store-screenshots.yml` puts the App Store screenshots on the version being
   prepared (`ci/store_screenshots_upload.py`), reading them from the private feedback
   repository's `store-slides` branch, since the slides show the painter's own photos;

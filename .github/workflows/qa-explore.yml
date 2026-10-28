@@ -1,12 +1,17 @@
 name: QA explore
 run-name: "QA explore: ${{ inputs.mode }}, ${{ inputs.build }}, ${{ inputs.device }}${{ inputs.label != '' && format(' · {0}', inputs.label) || '' }}"
 
-# An exploratory QA pass: the app built from source on one iOS simulator (`build`: release, what
-# the App Store gets, as ci.yml's Release check builds it; or debug, CI's Debug build with the
-# UNRELEASED features SideStore has), used through Maestro's MCP server (`maestro mcp`: screenshots, the screen's elements, flows of taps,
-# swipes and text) by an agent that is given goals, not a script. Manual only (Actions › QA explore
-# › Run workflow, or the API), in concurrency groups of its own (below) that cancel no running
-# run; it leaves ci.yml, its reports (refs/ci-shots/*) and main alone.
+# Generated from the shared QA explore (painting-company row 152): change it there and
+# sync; an edit here is overwritten.
+#
+# An exploratory QA pass of Paint by Moonlight: the app built from source on one iOS simulator
+# (`build`: its Release or Debug configuration, as the input says) and used through Maestro's MCP
+# server (`maestro mcp`: screenshots, the screen's elements, flows of taps, swipes and text) by an
+# agent that is given goals, not a script. Manual only (Actions › QA explore › Run workflow, or the
+# API), in concurrency groups of its own (below) that cancel no running run; it leaves ci.yml, its
+# reports (refs/ci-shots/*) and main alone. The app's own steps before its first launch (hosts to
+# block, media, a location) are ci/qa/prepare.sh's, when there is one; `launch_args` go to that
+# launch.
 #
 # Modes:
 #   agent  Claude Code runs on the runner beside the simulator: ci/qa/explore.md is its brief (the
@@ -23,9 +28,6 @@ run-name: "QA explore: ${{ inputs.mode }}, ${{ inputs.build }}, ${{ inputs.devic
 #          `ci/qa/qa.py relay` runs the Maestro calls it commits to `relay_branch` (`qa.py send`;
 #          each commit `[skip ci]`, so no workflow runs on it) and publishes every result. Uses no
 #          model on the runner. The branch is deleted when the run ends.
-# Give Feedback's Send is the one thing the app sends off the device, and a Release build sends it
-# for real: every run points the feedback relay's host (FeedbackUploader.endpoint) at nowhere on
-# the runner first, and the brief says never to send.
 # Every run first probes the toolchain (`qa.py probe`: Maestro's tools, a screenshot, the screen's
 # elements), so a broken simulator or Maestro fails before any model is used. The report (STATUS.md,
 # the agent's report.md and transcript, the probe, screenshots, the app's log, crash reports) is the
@@ -69,6 +71,9 @@ on:
       relay_branch:
         description: 'relay: the branch the agent commits its calls to (claude/qa-relay…)'
         default: 'claude/qa-relay'
+      launch_args:
+        description: "Arguments for the app's first launch, e.g. a debug build's scenario (optional)"
+        required: false
       label:
         description: 'Who asked and why, shown in the run list (optional)'
         required: false
@@ -87,7 +92,9 @@ concurrency:
 env:
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
+  PRODUCT: PaintByNumber
   BUNDLE_ID: com.pbordjadze.paintbynumber
+  LOG_SUBSYSTEM: com.pbordjadze.paintbynumber
   MAESTRO_VERSION: '2.11.0'
   CLAUDE_CODE_VERSION: '2.1.301'
   MAESTRO_CLI_NO_ANALYTICS: '1'
@@ -102,6 +109,7 @@ env:
   MODEL: ${{ inputs.model }}
   FOCUS: ${{ inputs.focus }}
   RELAY_BRANCH: ${{ inputs.relay_branch }}
+  LAUNCH_ARGS: ${{ inputs.launch_args }}
 
 jobs:
   explore:
@@ -123,6 +131,7 @@ jobs:
           [[ "$TURNS" =~ ^[0-9]+$ && "$TURNS" -ge 1 ]] || fail "max_turns: a whole number"
           [[ "$BUDGET" =~ ^[0-9]+(\.[0-9]+)?$ ]] || fail "max_budget_usd: a number"
           [[ "$MODEL" =~ ^[a-z0-9.-]+$ ]] || fail "model: a model id or alias"
+          [[ "$LAUNCH_ARGS" =~ ^[A-Za-z0-9\ ._:/=,@+-]*$ ]] || fail "launch_args: letters, digits, spaces and ._:/=,@+- only"
           # The run deletes this branch at its end: only a relay branch.
           [[ "$RELAY_BRANCH" =~ ^claude/qa-relay[A-Za-z0-9._-]*$ ]] || fail "relay_branch: claude/qa-relay…"
           if [[ "$MODE" == agent ]]; then
@@ -133,7 +142,7 @@ jobs:
           WORK="$RUNNER_TEMP/qa"
           mkdir -p out "$WORK/shots" "$WORK/crashes" "$RUNNER_TEMP/qa-video" "$RUNNER_TEMP/qa-tools"
           # What runs later with the push token, copied before anything else runs.
-          cp ci/qa/qa.py ci/collect.sh "$RUNNER_TEMP/qa-tools/"
+          cp ci/qa/qa.py ci/qa/collect.sh "$RUNNER_TEMP/qa-tools/"
           echo "WORK=$WORK" >> "$GITHUB_ENV"
           echo "TOOLS=$RUNNER_TEMP/qa-tools" >> "$GITHUB_ENV"
           echo "$MODE on $DEVICE for $MINUTES min (agent: $MODEL, $TURNS turns, \$$BUDGET)"
@@ -154,7 +163,7 @@ jobs:
           xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -80
-          echo "APP=build/dd/Build/Products/$CONFIG-iphonesimulator/PaintByNumber.app" >> "$GITHUB_ENV"
+          echo "APP=build/dd/Build/Products/$CONFIG-iphonesimulator/$PRODUCT.app" >> "$GITHUB_ENV"
       - name: Install Maestro
         run: |
           set -o pipefail
@@ -172,39 +181,31 @@ jobs:
       - name: Prepare the simulator
         id: prepare
         run: |
-          # No feedback reaches the developers from a test session: the relay's host resolves to
-          # nowhere on this runner, whose resolver the simulator shares. Found in the source, so a
-          # moved endpoint stops the run instead of slipping past.
-          HOST=$(sed -n 's#.*static let endpoint = URL(string: "https://\([^/"]*\).*#\1#p' \
-            App/PaintByNumber/Features/Feedback/FeedbackUploader.swift)
-          if [[ -z "$HOST" ]]; then echo "::error::no host in FeedbackUploader.endpoint to block"; exit 1; fi
-          printf '127.0.0.1 %s\n::1 %s\n' "$HOST" "$HOST" | sudo tee -a /etc/hosts > /dev/null
-          sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
-          if curl -s -m 10 -o /dev/null "https://$HOST/"; then echo "::error::$HOST still answers"; exit 1; fi
-          echo "feedback relay blocked: $HOST"
           xcrun simctl bootstatus "$UDID" -b > /dev/null
           xcrun simctl install "$UDID" "$APP"
-          # A photo for the create flow's picker.
-          xcrun simctl addmedia "$UDID" Tests/Corpus/parrots.jpg
+          # The app's own preparation, before its first launch.
+          if [[ -f ci/qa/prepare.sh ]]; then bash ci/qa/prepare.sh "$UDID"; fi
           # The app's live log and crash reports, which the agent can read, and the screen's recording.
           nohup xcrun simctl spawn "$UDID" log stream --level info --style compact \
-            --predicate 'subsystem == "com.pbordjadze.paintbynumber"' > "$WORK/app.log" 2>&1 &
+            --predicate "subsystem == \"$LOG_SUBSYSTEM\"" > "$WORK/app.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/log.pid"
           # The agent can't list a folder: crashes.txt names what crashes/ holds (empty: none).
           # shellcheck disable=SC2016
-          nohup bash -c 'while true; do cp -n ~/Library/Logs/DiagnosticReports/PaintByNumber* "$0/" 2>/dev/null; ls -1 "$0" > "$0.tmp" && mv "$0.tmp" "$0.txt"; sleep 5; done' \
-            "$WORK/crashes" > /dev/null 2>&1 &
+          nohup bash -c 'while true; do cp -n ~/Library/Logs/DiagnosticReports/"$1"* "$0/" 2>/dev/null; ls -1 "$0" > "$0.tmp" && mv "$0.tmp" "$0.txt"; sleep 5; done' \
+            "$WORK/crashes" "$PRODUCT" > /dev/null 2>&1 &
           echo $! > "$RUNNER_TEMP/crashes.pid"
           nohup xcrun simctl io "$UDID" recordVideo --codec=h264 --force "$RUNNER_TEMP/qa-video/session.mp4" \
             > "$RUNNER_TEMP/qa-video/record.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/video.pid"
-          xcrun simctl launch "$UDID" "$BUNDLE_ID"
-          # The first launch prepares two starter paintings, minutes of CPU on a 3-core runner, and
-          # Maestro's driver started beside that came up broken (run 39551789796): wait, up to 5
-          # minutes, until the app has been quiet for 15 s.
+          # Split into words on purpose: the arguments, checked above.
+          # shellcheck disable=SC2086
+          xcrun simctl launch "$UDID" "$BUNDLE_ID" $LAUNCH_ARGS
+          # A first launch can be minutes of CPU on a 3-core runner (Paint by Moonlight's starter
+          # paintings), and Maestro's driver started beside that came up broken (paint-by-number run
+          # 39551789796): wait, up to 5 minutes, until the app has been quiet for 15 s.
           quiet=0
           for _ in $(seq 1 60); do
-            pid=$(pgrep -x PaintByNumber | head -1)
+            pid=$(pgrep -x "$PRODUCT" | head -1)
             if [[ -z "$pid" ]]; then echo "the app isn't running"; break; fi
             cpu=$(ps -o %cpu= -p "$pid" | tr -d ' ' | cut -d. -f1)
             if [[ -n "$cpu" && "$cpu" -lt 15 ]]; then quiet=$((quiet + 1)); else quiet=0; fi
@@ -248,7 +249,11 @@ jobs:
           [[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]] || unset CLAUDE_CODE_OAUTH_TOKEN
           sed -e "s#{{DIR}}#$WORK#g" -e "s#{{UDID}}#$UDID#g" -e "s#{{BUILD}}#$BUILD#g" -e "s#{{DEVICE}}#$(cat out/simulator.txt | cut -d' ' -f1 | tr _ ' ')#g" \
             -e "s#{{MINUTES}}#$MINUTES#g" -e "s#{{TURNS}}#$TURNS#g" ci/qa/explore.md > "$WORK/brief.md"
-          if [[ -n "$FOCUS" ]]; then printf '\n## This session\n\n%s\n' "$FOCUS" >> "$WORK/brief.md"; fi
+          if [[ -n "$FOCUS" || -n "$LAUNCH_ARGS" ]]; then
+            printf '\n## This session\n\n' >> "$WORK/brief.md"
+            if [[ -n "$LAUNCH_ARGS" ]]; then printf 'The app was first launched with `%s`. A plain `launchApp` goes without them; to keep them, give `launchApp` its `arguments:` (`cheat_sheet`).\n\n' "$LAUNCH_ARGS" >> "$WORK/brief.md"; fi
+            if [[ -n "$FOCUS" ]]; then printf '%s\n' "$FOCUS" >> "$WORK/brief.md"; fi
+          fi
           # Claude Code hands its own environment to Maestro: env takes the secrets out.
           python3 - "$RUNNER_TEMP/qa-mcp.json" <<'PY'
           import json, os, sys
@@ -302,7 +307,7 @@ jobs:
           [[ -f "$RUNNER_TEMP/crashes.pid" ]] && kill "$(cat "$RUNNER_TEMP/crashes.pid")" 2>/dev/null || true
           for _ in $(seq 1 30); do pgrep -f "simctl io .* recordVideo" > /dev/null || break; sleep 0.5; done
           # CI's own collection: crash reports, the app's log of the run, the build's errors.
-          [[ -n "${UDID:-}" && -n "${TOOLS:-}" ]] && "$TOOLS/collect.sh" "$UDID"
+          [[ -n "${UDID:-}" && -n "${TOOLS:-}" ]] && "$TOOLS/collect.sh" "$UDID" "$PRODUCT" "$LOG_SUBSYSTEM"
           # Maestro's own logs (its driver's too), for automation failures.
           [[ -d ~/.maestro/tests ]] && mkdir -p out/maestro && cp -R ~/.maestro/tests/ out/maestro/
           if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
@@ -314,6 +319,7 @@ jobs:
             echo "# QA explore: $MODE, $BUILD build, on $(cat out/simulator.txt 2>/dev/null)"
             echo
             echo "- commit: $GITHUB_SHA"
+            [[ -n "$LAUNCH_ARGS" ]] && echo "- launch arguments: $LAUNCH_ARGS"
             echo "- run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "- steps: $OUTCOMES"
             echo "- Maestro $MAESTRO_VERSION$( [[ "$MODE" == agent ]] && echo ", Claude Code $CLAUDE_CODE_VERSION, $MODEL, $MINUTES min, $TURNS turns, \$$BUDGET")"
