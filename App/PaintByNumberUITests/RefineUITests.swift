@@ -399,7 +399,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(shapes, toMatch: NSPredicate(format: "value == %@", "Curve")), "Curve didn't become the figure")
         drag(on: canvas, from: onPicture(canvas, 0.69, 0.48), to: onPicture(canvas, 0.76, 0.48))
         XCTAssertTrue(app.staticTexts["refine-hint"].waitForExistence(timeout: 5), "The curve doesn't say it waits to be bent")
-        drag(on: canvas, from: onPicture(canvas, 0.725, 0.48), to: onPicture(canvas, 0.725, 0.43))
+        drag(on: canvas, from: onPicture(canvas, 0.725, 0.48), to: onPicture(canvas, 0.725, 0.45))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The curve didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-shapes")
@@ -439,12 +439,20 @@ final class RefineUITests: XCTestCase {
         pickTool("editPaint", in: "Paint", of: app)
         let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
         XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
+        let swatches = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@ AND identifier != %@", "refine-paint-", "refine-paint-new"))
+        let paints = swatches.count
         let dragged = { from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0) }
         dragged()
         // A drag CI's simulator lost while Refine was still opening (October 28): the palette as it
-        // was, and the second drag merged the two.
-        if !waitFor(canvas, toMatch: changes("1 change")) { retapIfLost("swatch drag", dragged) }
+        // was, and the second drag merged the two. Dragged again only if nothing changed at all.
+        if !waitFor(canvas, toMatch: changes("1 change"), timeout: 20), canvas.value as? String == "No changes" {
+            retapIfLost("swatch drag", dragged)
+        }
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Merging two paints didn't count: \(canvas.value ?? "")")
+        // The change is the merge, not paint poured on the picture: one paint fewer.
+        let merged = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == %@", NSNumber(value: paints - 1)), object: swatches)
+        XCTAssertEqual(XCTWaiter.wait(for: [merged], timeout: 10), .completed, "The palette still has \(swatches.count) paints of \(paints)")
         attachScreenshot(of: app, named: "refine-edit-paint-merged")
     }
 

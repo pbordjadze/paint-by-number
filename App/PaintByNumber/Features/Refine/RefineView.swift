@@ -355,7 +355,11 @@ struct RefineView: View {
         }
         #if DEBUG
         .onChange(of: picture) {
-            guard let at = demoCardAt, card != nil, let template = base?.template else { return }
+            guard let at = demoCardAt, let template = base?.template else { return }
+            guard card != nil else {
+                demoCardAt = nil
+                return
+            }
             card = RefineAreaPick(at: at, screen: onScreen(picturePoint(at)), template: template)
         }
         #endif
@@ -1141,9 +1145,12 @@ struct RefineView: View {
         }
     }
 
-    /// Marks the line dragged out from `a` to `b`, unless the drag was too small to hold one.
+    /// Marks the line dragged out from `a` to `b`. A drag too small to hold one is a tap that
+    /// slid (a stroke and a tap exclude each other): it toggles the line under it, as a tap does.
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
-        guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
+        guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else {
+            return toggleText(at: a)
+        }
         model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
         if !isPractice { PaintTips.refineEdited() }
     }
