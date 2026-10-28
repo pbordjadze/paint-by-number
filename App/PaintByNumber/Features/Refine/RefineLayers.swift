@@ -93,7 +93,7 @@ struct RefineLayersPanel: View {
         }
         .padding(12)
         .frame(width: 320)
-        // As Refine's other bars: larger sizes reach it through the Large Content Viewer.
+        // As Refine's other bars, its text grows no further than this.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-layers-panel")

@@ -1110,10 +1110,12 @@ struct RefineView: View {
         if model.canUndo || !submitted.isEmpty { confirmsCancel = true } else { cancel() }
     }
 
-    /// A step of held fingers' undo or redo, once the last has landed; false when there's none
-    /// left to take.
+    /// A step of held fingers' undo or redo, once the last has landed and shows (a step that makes
+    /// the template again, a text correction's, shows only once it's made); false when there's
+    /// none left to take.
     private func repeatStep(redo: Bool) -> Bool {
-        guard model.historySteps == 0 else { return true }
+        guard model.historySteps == 0, base?.id == model.preview?.id, model.preview?.refinements == model.refinements
+        else { return true }
         if redo {
             guard model.canRedo else { return false }
             self.redo()
@@ -1190,6 +1192,7 @@ struct RefineView: View {
             ToolbarItem(placement: .principal) {
                 Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
@@ -1847,8 +1850,8 @@ extension RefineView {
     /// A hardware keyboard's keys (their names show while ⌘ is held), the canvas's
     /// (`RefineSurfaceView.keyCommands`): a tool each, as drawing apps letter them (P Pen, E Eraser,
     /// B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the size, ⌘0 to fit the picture and
-    /// ⌃⌘F for full screen, where the hidden bar's Undo and Redo join them. Done (Return) and
-    /// Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
+    /// ⌃⌘F for full screen, where the hidden bar's Undo and Redo join them and Escape leaves it.
+    /// Done (Return) and Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
     /// Try Painting, which have keys of their own.
     private var keys: [RefineKey] {
         guard !isPractice, !isCovered, model.hasLineArtInput else { return [] }
@@ -1865,6 +1868,7 @@ extension RefineView {
             keys += [
                 RefineKey(input: "z", modifiers: .command, title: String(localized: "Undo"), action: .undo),
                 RefineKey(input: "z", modifiers: [.command, .shift], title: String(localized: "Redo"), action: .redo),
+                RefineKey(input: UIKeyCommand.inputEscape, modifiers: [], title: String(localized: "Exit Full Screen"), action: .fullScreen),
             ]
         }
         return keys

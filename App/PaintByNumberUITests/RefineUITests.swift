@@ -49,7 +49,9 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(app.buttons["refine-tool-smartEraser"].exists, "Refine has no Smart Eraser")
         let eraser = app.buttons["refine-tool-eraser"]
         XCTAssertTrue(eraser.exists, "Refine has no eraser")
-        eraser.tap()
+        // On iPad a keyboard's E picks it (the canvas's keys); elsewhere its button.
+        let keyboard = UIDevice.current.userInterfaceIdiom == .pad
+        if keyboard { app.typeKey("e", modifierFlags: []) } else { eraser.tap() }
         XCTAssertTrue(waitFor(eraser, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
         XCTAssertTrue(app.sliders["refine-eraser-size"].waitForExistence(timeout: 5), "The eraser has no Size")
         // Across the line just drawn, which runs from (0.25, 0.4) to (0.7, 0.45): rubbing bare paper
@@ -82,7 +84,8 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(app.buttons["refine-done"], toMatch: NSPredicate(format: "exists == false")), "The bar still shows in full screen")
         attachScreenshot(of: app, named: "refine-full-screen")
-        exit.tap()
+        // Escape leaves it on a keyboard; the corner button does too.
+        if keyboard { app.typeKey(XCUIKeyboardKey.escape.rawValue, modifierFlags: []) } else { exit.tap() }
         XCTAssertTrue(app.buttons["refine-done"].waitForExistence(timeout: 5), "The bar didn't come back")
 
         app.buttons["refine-done"].tap()

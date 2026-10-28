@@ -793,7 +793,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         cancelDrawing()
         stopRepeating()
-        beforeFit = nil
+        // A move of the picture forgets the way back from a quick pinch; a pinch's own drift
+        // doesn't.
+        if pinchStart == nil, !scrollView.isZooming { beforeFit = nil }
     }
 
     func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
@@ -820,6 +822,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         let location = recognizer.location(in: content)
         switch recognizer.state {
         case .began:
+            // The keys again, if another view (a color picker's field) took them meanwhile.
+            if !isFirstResponder { _ = becomeFirstResponder() }
             if pencilStroke { holdPicture(true) }
             // The stroke starts where the finger came down, before the pan's slop (a stroke's
             // first ten points or so were lost, so a shape drawn in strokes didn't close).
@@ -888,6 +892,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
             repeatStart = at
             startRepeating(redo: recognizer === redoHold)
         case .changed:
+            if scrollView.isZooming { stopRepeating() }
             if let start = repeatStart, hypot(at.x - start.x, at.y - start.y) > Self.repeatMovement { stopRepeating() }
         default:
             stopRepeating()
@@ -978,6 +983,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         if gestureRecognizer === brush { return press.state != .began && press.state != .changed }
         if gestureRecognizer === press { return holdPicks && brush.state != .began && brush.state != .changed }
+        // Fingers held still step, not fingers zooming or moving the picture, nor a third finger
+        // joining two that already step.
+        if gestureRecognizer === undoHold || gestureRecognizer === redoHold {
+            return !scrollView.isZooming && !scrollView.isDragging && repeating == nil
+        }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
     }
 
