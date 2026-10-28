@@ -65,10 +65,16 @@ anything online. Flows use Maestro's commands only: no `runScript`, `evalScript`
     Merge lighting the cells it will join, Move Edge's preview) can't be seen; list it under Not
     tested.
   - Refine's canvas doesn't zoom with a double tap, and Maestro has no pinch: its tiny-numbers
-    badge zooms to a number (about 10×) with no way back but a pinch (October 26), so look at
-    the whole picture first and zoom last. Refine's area card (a long press) is missing from
-    `inspect_screen`'s elements: tap its controls by point, and while the system color picker is
-    open only the picker is listed.
+    badge zooms to a number (about 10×) with no way back but a pinch (a quick pinch in fits the
+    picture), so look at the whole picture first and zoom last. Maestro has no taps of several
+    fingers either, no Apple Pencil (its hover, double tap, squeeze) and no drag that waits to
+    lift a palette swatch onto a cell: Refine's two-finger undo, three-finger redo, held undo
+    and redo, four-finger full screen, the Pencil and dropping a swatch go under Not tested
+    (CI's UI tests tap with several fingers). A touch held still on Refine's canvas is the
+    Eyedropper: `longPressOn` there picks the paint under it (the palette's ring moves), and its
+    loupe shows only while the finger is down. Refine's area card (from Select's Change Color)
+    is missing from `inspect_screen`'s elements: tap its controls by point, and while the system
+    color picker is open only the picker is listed.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -138,7 +144,7 @@ Report these only if they look wrong in another way:
 - The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
   took over 2.5 s to draw, usual on this runner; judge the screen.
 - The release build has no Refine (the debug build does): it is left out of the first release.
-- In Refine (debug build): Cancel puts back what Refine opened with, at once and without asking;
+- In Refine (debug build): Cancel with changes asks before putting back what Refine opened with;
   a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
   them back); the picker of an area's card is one step of the history however many colors it
   picks, while Edit Paint's are a step each; and the canvas keeps the room of the tallest panel
