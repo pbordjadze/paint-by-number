@@ -404,15 +404,18 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The curve didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-shapes")
 
-        // The Pen's line, then Bend Line bends it.
+        // The Pen's line in the open sky under the crest, then Bend Line moves it, free at both
+        // ends and short, whole to the right, clear of any ink there too. From x 0.50 the move
+        // laid it across the crest's spray, which the editor declines (CI run 649).
         pickTool("pen", in: "Ink", of: app)
-        drag(on: canvas, from: onPicture(canvas, 0.50, 0.42), to: onPicture(canvas, 0.50, 0.52))
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The line didn't count: \(canvas.value ?? "")")
         pickTool("bendLine", in: "Ink", of: app)
-        drag(on: canvas, from: onPicture(canvas, 0.50, 0.47), to: onPicture(canvas, 0.53, 0.47))
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.47, 0.48))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-bend")
 
         // A look over every paint.
         pickTool("looks", in: "Paint", of: app)
