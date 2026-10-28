@@ -64,11 +64,11 @@ public struct RefineScreen: Sendable, Equatable {
 
     /// The eraser's reach, a fraction of the picture's long side: a thirtieth of the view's short
     /// side, between 10 and 20 points, so zoomed in it erases finer.
-    public var eraserRadius: Float {
-        let long = max(picture.width, picture.height)
-        let points = min(max(0.033 * min(view.width, view.height), 10), 20)
-        return long > 0 ? Float(points / long) : 0.02
-    }
+    public var eraserRadius: Float { eraserRadius(size: min(max(0.033 * min(view.width, view.height), 10), 20)) }
+
+    /// An eraser of radius `size` points on screen (the app's Size) as a fraction of the picture's
+    /// long side, as a brush's is (`brushRadius(size:)`).
+    public func eraserRadius(size: CGFloat) -> Float { brushRadius(size: size) }
 
     /// The Paint Brush's reach, a fraction of the picture's long side: `RefineGestures.brushSize`
     /// on screen at any zoom, so zoomed in it paints finer, as the eraser erases.
@@ -119,6 +119,12 @@ public enum RefineGestures {
     /// The Paint Brush's radius on screen, in points: about half a fingertip, so the paint is the
     /// width of the finger that lays it, at any zoom.
     public static let brushSize: CGFloat = 12
+    /// The string the Pen's line is pulled on at full smoothing, points on screen
+    /// (`PenPath.steadied`): several times the few points a slow hand wobbles, so the wobble hardly
+    /// reaches the line, yet only 3 to 4 mm, inside the pad of the finger, so the line's tip trails
+    /// out of sight beneath it. The lag a painter notices starts where the tip shows behind the
+    /// finger.
+    public static let steadyString: CGFloat = 20
 
     /// A finger's samples as the screen keeps them while it moves: a sample closer than a point
     /// to the last kept adds nothing the line shows; the last, where the finger lifts, is kept.
@@ -130,14 +136,25 @@ public enum RefineGestures {
         return kept
     }
 
-    /// A pen's line from its samples (`trace`): smoothed and thinned on screen's terms as it
-    /// showed, its ends moved onto a line their ink touches (`touchFloor`). Nil for a touch too
-    /// short to be a line, on screen or in the template.
-    public static func pen(_ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?) -> TemplateEditor.Edit? {
-        let line = points.map(screen.onScreen)
+    /// A pen's line from its samples (`trace`): steadied by the painter's `smoothing` (0…1, the
+    /// Pen's slider: `steadied`), smoothed and thinned on screen's terms as it showed, its ends
+    /// moved onto a line their ink touches (`touchFloor`). Nil for a touch too short to be a line,
+    /// on screen or in the template.
+    public static func pen(
+        _ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?, smoothing: CGFloat = 0
+    ) -> TemplateEditor.Edit? {
+        let line = PenPath.steadied(points.map(screen.onScreen), string: string(for: smoothing))
         guard screen.picture.width > 0, PenPath.length(line) >= screen.shortestOnScreen else { return nil }
         let smooth = PenPath.simplified(PenPath.smoothed(line, spacing: 2), tolerance: 0.3)
         return drawEdit(touching(smooth, straight: false, on: screen, snapping: lines), on: screen)
+    }
+
+    /// A pen's samples (`trace`) as its line shows under the finger while it moves, steadied by
+    /// the painter's `smoothing` as `pen` steadies them: unchanged at 0.
+    public static func steadied(_ samples: [SIMD2<Float>], smoothing: CGFloat, on screen: RefineScreen) -> [SIMD2<Float>] {
+        let length = string(for: smoothing)
+        guard length > 0, screen.picture.width > 0, screen.picture.height > 0 else { return samples }
+        return PenPath.steadied(samples.map(screen.onScreen), string: length).map(screen.picturePoint)
     }
 
     /// The Color Splitter's stroke: the Pen's line (`pen`), as a split, which divides the paint and
@@ -155,12 +172,14 @@ public enum RefineGestures {
     }
 
     /// The eraser's pass as an edit: its path in canvas units, and its reach there, the radius it
-    /// has on screen. A dab is one point.
-    public static func eraser(_ points: [SIMD2<Float>], on screen: RefineScreen) -> TemplateEditor.Edit? {
-        let size = screen.canvas
-        guard size.width > 0, size.height > 0 else { return nil }
+    /// has on screen: `size` points (the app's Size), or without one the automatic
+    /// (`RefineScreen.eraserRadius`). A dab is one point.
+    public static func eraser(_ points: [SIMD2<Float>], on screen: RefineScreen, size: CGFloat? = nil) -> TemplateEditor.Edit? {
+        let canvas = screen.canvas
+        guard canvas.width > 0, canvas.height > 0 else { return nil }
         let path = simplified(points, tolerance: 0.5, on: screen).map(screen.canvasPoint)
-        return .erase(path: path, radius: screen.eraserRadius * Float(max(size.width, size.height)))
+        let radius = size.map { screen.eraserRadius(size: $0) } ?? screen.eraserRadius
+        return .erase(path: path, radius: radius * Float(max(canvas.width, canvas.height)))
     }
 
     /// The Merge's drag as an edit: its path in canvas units, thinned as the eraser's is. Nil for
@@ -332,6 +351,10 @@ public enum RefineGestures {
     }
 
     // MARK: - Helpers
+
+    /// The string a pen's `smoothing` pulls its line on, points on screen: none at 0,
+    /// `steadyString` at 1.
+    static func string(for smoothing: CGFloat) -> CGFloat { min(max(smoothing, 0), 1) * steadyString }
 
     /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
     static func touching(_ line: [CGPoint], straight: Bool, on screen: RefineScreen, snapping lines: SnapLines?) -> [CGPoint] {
