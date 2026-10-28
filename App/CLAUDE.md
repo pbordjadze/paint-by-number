@@ -552,7 +552,7 @@ Conventions).
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from
   junction to junction (no line under the tools says how they work: each button's
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
-  what comes next); Fill's tap makes the closed shape under it an area of its own in the photo's color
+  what comes next); Make Cell's tap (`RefineTool.fill`) makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
   out (`EditFills`). Looks and Edit Paint (backlog row 38) show the painting and `RefineColorsPanel`: a row of looks (Photo, then the
   five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
@@ -567,10 +567,24 @@ Conventions).
   of the history); paints made alike merge and a note says so. They are laid as an edit is
   (`CreateModel.lay`): one the editor declines is not kept (below). New colors cross-fade in (none
   under Reduce Motion). `create-refine-colors` (with `-dark`) is its screenshot. Refine zooms to
-  12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
-  move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
-  once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
-  tap switches between drawing and the Eraser.
+  12× (`RefineSurfaceView.maximumZoom`). Its gestures are iPad drawing apps' (painting-company
+  row 143, Paul's choices of October 28: familiar to people coming from Procreate;
+  `RefineTouchSurface`, an invisible scroll view, the canvas's way): two fingers zoom and move,
+  a tap of two undoes and of three redoes, two or three held keep going (`repeatDelay`), a quick
+  pinch in fits the picture and one out right after goes back (`quickPinch`), a tap of four shows
+  the picture alone (the tools, bars, palette and status bar hidden; a corner button and ⌃⌘F
+  bring them back; a zoomed picture keeps its part on screen through the resize), a touch held
+  still (`pressDuration`) is the Eyedropper with any tool (`RefineLoupe` shows the color under
+  the finger over the current paint; lifting picks it, the tool unchanged), and a palette swatch
+  dragged onto a cell pours its paint (`RefinePaletteBar.color(of:in:)`, the canvas's
+  `UIDropInteraction`, the cell outlined as it goes). Fingers draw unless iPadOS's Only Draw with
+  Apple Pencil is on (read again whenever the app comes back), when the Pencil draws and one
+  finger moves the picture; a Pencil's stroke holds the picture still. The Pencil's double tap and
+  squeeze do what iPadOS's Apple Pencil settings ask (`RefinePencilAction`: the Pen's Eraser and
+  back, the last tool, or the tools and palette beside the Pencil), and its hover shows the
+  Eraser's and Brush's reach or the cell a tap would take (`RefineHoverMark`). Keys: P U E ⇧E V M
+  G B I N for tools, [ and ] for a size, ⌘0 fits, Return is Done, Escape Cancel, which asks
+  before discarding changes.
   - **The Toolbox** (Paul, October 21: "a drawing app
     with the tools to make a paint by number", the design claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH,
     grown from the Studio, claude.ai/artifact/X2d1aeYEUYHHRxdMQZFXPE, `factory/pieces/refine-studio`):
@@ -579,16 +593,17 @@ Conventions).
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
-    options Snap, `PenAssist`'s end join, on by default, and Color from Photo, off,
-    `SettingsKey.refineSnaps`/`refinePenColors`), Shapes (its figures and Snap above the tools), the
-    Eraser, the Line Eraser, Bend Line (`.reshape`: a drag moves the line under it, bending it near
+    options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
+    Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied`;
+    `SettingsKey.refineSnaps`/`refinePenColors`/`refinePenSmoothing`), Shapes (its figures and Snap
+    above the tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`: a drag moves the line under it, bending it near
     the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint, area count and
     share of the picture in `RefineSelectionBar`, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
     drag joins the cells it crosses into the first, boundaries and ink between them gone; the cells
     it will join glow while the finger is down, found off the main actor as the editor finds them,
     `TemplateEditor.MergeProbe`; one that stays in one area says it is one area already), Move Edge
-    (`.reshape` on a cell's boundary, inked or not), Fill Shape; while
+    (`.reshape` on a cell's boundary, inked or not), Make Cell; while
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
@@ -596,20 +611,23 @@ Conventions).
     each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
-    the Eyedropper (a cell's paint, or over the photo the photo's color), Edit Paint and Looks
+    the Eyedropper (a cell's paint, or where the photo shows more than the paint the photo's color,
+    `RefineLayers.photoReads`; a touch held does the same with any tool), Edit Paint and Looks
     (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
-    screen on the template as it stands, `RefineTrial`, saving nothing). The views (Painting, Paper,
-    the lines with their numbers, Photo, Photo Behind, whose slider sets how faint the painting
-    lies over the photo) are in the navigation bar (on compact widths a menu under the symbol of
-    the one showing: the bar has no room for its name), opening on the painting. Until the first edit a
+    screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
+    top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
+    28, in place of the views): the stack from the top, Numbers, Ink, Paint, Photo, over the
+    paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
+    the picked tool's layer is marked (`RefineTool.layer`), and a tool that changes a hidden layer
+    shows it again. `create-refine-layers` (with `-dark`) opens it, tracing. Until the first edit a
     Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
     `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
     canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
-    `refinements.json`, a step of the history, and no making-of show). A long press
-    (`RefineSurfaceView.pressDuration`, any tool) opens an area's card
-    (`RefineAreaCard`, a popover beside it, a sheet on iPhone): its paint and how many areas
+    `refinements.json`, a step of the history, and no making-of show). Select's Change Color opens
+    an area's card (`RefineAreaCard`, a popover beside it, a sheet on iPhone; a long press opened
+    it until October 28, when the hold became the Eyedropper): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
     `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
     Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends

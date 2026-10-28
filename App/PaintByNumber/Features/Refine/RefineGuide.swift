@@ -149,7 +149,7 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.layers.step1", defaultValue: "Tap Layers at the top of Refine.",
                            comment: "Tool Guide, Layers: a step of How to Use It (Layers is the button that opens the panel)"),
                     String(localized: "refine.guide.layers.step2",
-                           defaultValue: "Tap a layer’s checkbox to show or hide it. Refine opens with Ink and Paint showing, the picture as it will look finished.",
+                           defaultValue: "Turn a layer’s switch off to hide it, and on to show it. Refine opens with Ink and Paint showing, the picture as it will look finished.",
                            comment: "Tool Guide, Layers: a step of How to Use It"),
                     String(localized: "refine.guide.layers.step3",
                            defaultValue: "Slide the opacity of Paint or Photo to let what’s beneath show through. Photo on, with Paint at half, is good for tracing.",
@@ -168,7 +168,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Layers: a note under Good to Know"),
                 ],
                 inProcreate: String(localized: "refine.guide.layers.procreate",
-                                    defaultValue: "As in Procreate’s Layers panel, a checkbox shows or hides each layer. Here the four are always there, in this order, with none to add or move.",
+                                    defaultValue: "As in Procreate’s Layers panel, each layer can be shown or hidden. Here the four are always there, in this order, with none to add or move.",
                                     comment: "Tool Guide, Layers: the line under In Procreate, comparing it with the drawing app Procreate (keep Procreate's own name for its Layers panel)"),
                 related: [.pen, .eyedropper, .moveNumber],
                 practice: RefinePracticeSetup(scene: .inked, tool: .pen, layers: .tracing))
