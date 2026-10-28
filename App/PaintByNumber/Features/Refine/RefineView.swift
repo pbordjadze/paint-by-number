@@ -192,6 +192,8 @@ struct RefineView: View {
     /// the picture neither moves under the finger nor loses its zoom (the exploratory QA of
     /// October 21 tapped where it had been).
     @State private var toolsHeight: CGFloat = 0
+    /// The tools' own height now, which another width starts the room from.
+    @State private var toolsMeasured: CGFloat = 0
     /// Edit Paint's family follows the current paint while it is on.
     @State private var colorFamily = true
     /// A part of the picture the touch surface is to bring up close.
@@ -1182,6 +1184,13 @@ struct RefineView: View {
                 .accessibilityIdentifier("refine-redo")
             layersButton
         }
+        // A phone's bar has room for its six controls but not the title, which showed as "R…"
+        // (QA, October 28): its middle is left empty there, as the views' menu once filled it.
+        if !usesRail {
+            ToolbarItem(placement: .principal) {
+                Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
+            }
+        }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
                 .tint(Theme.signature)
@@ -1194,11 +1203,14 @@ struct RefineView: View {
     private var reservedTools: some View {
         tools
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                toolsMeasured = height
                 if height > toolsHeight { toolsHeight = height }
             }
             .frame(minHeight: toolsHeight, alignment: .bottom)
             // Another width (a rotation, a resized window) lays the tools out anew: measured again.
-            .onChange(of: canvasSize.width) { toolsHeight = 0 }
+            // The tools as they are now count, though their height doesn't change with the width
+            // (the picture jumped at the first change of group, QA, October 28).
+            .onChange(of: canvasSize.width) { toolsHeight = toolsMeasured }
     }
 
     /// What the finger does, along the bottom (`studioBar`): the picked tool's options and, on

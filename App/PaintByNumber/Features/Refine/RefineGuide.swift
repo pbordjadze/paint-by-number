@@ -159,7 +159,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Layers: a step of How to Use It (Ink, Cells and Paint are groups of tools; Move Number is a tool)"),
                 ],
                 tryThis: String(localized: "refine.guide.layers.try",
-                                defaultValue: "Here the photo shows under Paint at half. In Layers, fade Paint further, then trace the peach glow above the far hills with the Pen.",
+                                defaultValue: "Here the photo shows under Paint at half. In Layers, turn Photo off to see the paint alone, then on again, fade Paint further and trace the peach glow above the far hills with the Pen.",
                                 comment: "Tool Guide, Layers: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)"),
                 notes: [
                     String(localized: "refine.guide.layers.note1", defaultValue: "Hide Paint and show Numbers to see the page as it looks before it’s painted.",

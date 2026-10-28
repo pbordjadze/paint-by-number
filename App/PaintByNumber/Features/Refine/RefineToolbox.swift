@@ -105,6 +105,8 @@ struct RefinePaletteBar: View {
                     guard let index else { return }
                     withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo(index) }
                 }
+                // Back in Cells or Paint, the current paint in view (QA, October 28).
+                .onAppear { if let selected { reader.scrollTo(selected) } }
             }
             ColorPicker(selection: picked, supportsOpacity: false) { Text("New Paint") }
                 .labelsHidden()
