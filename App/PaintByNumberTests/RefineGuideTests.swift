@@ -7,11 +7,14 @@ import Testing
 /// practice picture its canvases refine.
 @MainActor
 struct RefineGuideTests {
-    /// The guide lists The Basics and Views, then every tool the Toolbox offers, each once, and
-    /// every page has words; a practice's finger tool is one of the listed tools, never an action.
+    /// The guide lists The Basics, Layers and Coming from Procreate, then every tool the Toolbox
+    /// offers, each once, and every page has words; a practice's finger tool is one of the listed
+    /// tools, never an action.
     @Test func everyToolTheToolboxOffersHasAPage() {
         let listed = RefineGuideTopic.sections.flatMap(\.topics)
-        #expect(Array(listed.prefix(2)) == [.basics, .views])
+        let start = RefineGuideTopic.sections[0]
+        #expect(start.group == nil)
+        #expect(start.topics == [.basics, .layers, .procreate])
         #expect(Set(listed).count == listed.count, "a page listed twice")
         for tool in RefineGroup.allCases.flatMap(\.tools) {
             #expect(listed.contains(.tool(tool)), "\(tool) has no page")
@@ -27,6 +30,29 @@ struct RefineGuideTests {
         // Writing works on the text found in the painter's photo: the practice picture has none.
         #expect(RefineGuidePage.of(.tool(.text)).practice == nil)
         #expect(RefineGuidePage.of(.tool(.tryPainting)).practice?.teaches == .tryPainting)
+    }
+
+    /// Every tool's page says what it is in Procreate, or what it does that Procreate's pixels
+    /// can't, for whoever comes from there or goes on to it.
+    @Test func everyToolPageSaysWhatItIsInProcreate() {
+        for tool in RefineGroup.allCases.flatMap(\.tools) {
+            let line = RefineGuidePage.of(.tool(tool)).inProcreate ?? ""
+            #expect(!line.isEmpty, "\(tool)'s page has no In Procreate line")
+        }
+        // The Procreate page is the comparison itself, practised with the Bucket: touch and hold
+        // picks a paint, and a swatch dragged onto a cell pours it.
+        let procreate = RefineGuidePage.of(.procreate)
+        #expect(procreate.inProcreate == nil && !procreate.notes.isEmpty)
+        #expect(procreate.practice == RefinePracticeSetup(scene: .inked, tool: .bucket))
+    }
+
+    /// The pages that start the guide: their identifiers (after `refine-guide-topic-`, which UI
+    /// tests read), and Layers' practice traces the photo under the paint at half.
+    @Test func theStartPagesAreNamed() {
+        #expect(RefineGuideTopic.basics.identifier == "basics")
+        #expect(RefineGuideTopic.layers.identifier == "layers")
+        #expect(RefineGuideTopic.procreate.identifier == "procreate")
+        #expect(RefineGuidePage.of(.layers).practice?.layers == .tracing)
     }
 
     /// A practice canvas's switches are its own: the painter's are their start, and a change on a

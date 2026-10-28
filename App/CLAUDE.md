@@ -623,14 +623,17 @@ Conventions).
   - **The Tool Guide** (`RefineGuide.swift`; Paul, October 21:
     "each tool with a scenario that you can play with and reset easily", built for painters who
     will use Refine seriously, with tweaks, new tools and retired ones to come). Refine's toolbar
-    opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; moving around) and
-    Views, then a page per tool the Toolbox offers, listed from `RefineGroup`, so a tool the Toolbox
-    stops offering leaves the guide with it. A page's words are `RefineGuidePage.of(_:)`, one
-    exhaustive switch over `RefineTool` (a new tool doesn't compile without its page): what it does,
-    How to Use It, Try This (on the practice picture), Good to Know and Goes Well With (links to
-    other pages); `RefineGuideTests` checks every listed tool has one. Beside the words (above them
+    opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; moving around),
+    Layers and Coming from Procreate (painting-company row 143: Procreate's gestures and ideas, for
+    whoever comes from it or goes on to it), then a page per tool the Toolbox offers, listed from
+    `RefineGroup`, so a tool the Toolbox stops offering leaves the guide with it. A page's words are
+    `RefineGuidePage.of(_:)`, one exhaustive switch over `RefineTool` (a new tool doesn't compile
+    without its page): what it does, How to Use It, Try This (on the practice picture), Good to
+    Know, In Procreate (`inProcreate`: Procreate's tool for it, or what Refine does that pixels
+    can't) and Goes Well With (links to other pages); `RefineGuideTests` checks every listed tool
+    has one, with an In Procreate line. Beside the words (above them
     on narrow widths) is the practice canvas: `RefineView` in practice mode
-    (`RefinePracticeSetup`: the tool alone, its options and palette, Undo, Redo, the views and
+    (`RefinePracticeSetup`: the tool alone, its options and palette, Undo, Redo, the layers and
     Reset; no rail, no Start From, no tips, nothing saved; the tool stays the page's, and Snap,
     Color from Photo and Size live in `RefinePracticeSetup.settings`, seeded from the painter's as
     the guide opens, so a page leaves Refine's as they were) on a `CreateModel` of its own
