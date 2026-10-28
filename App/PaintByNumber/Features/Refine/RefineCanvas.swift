@@ -1,4 +1,5 @@
 import PaintCore
+import QuartzCore
 import SwiftUI
 import UIKit
 

@@ -56,7 +56,7 @@ nonisolated struct RefineLayers: Hashable {
     var photoReads: Bool { photoStrength > paintStrength }
 }
 
-extension RefineTool {
+nonisolated extension RefineTool {
     /// The layer the tool works on, which the Layers panel marks: the ink's tools the ink, the
     /// cells' and the paint's the paint, Move Number the numbers; Writing and Try Painting none.
     var layer: RefineLayers.Layer? {

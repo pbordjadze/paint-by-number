@@ -500,10 +500,10 @@ struct RefineView: View {
                 onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onPencil: pencil, onHold: held,
                 onHover: { hover = $0 }, onDrop: dropped, onDropHover: { dropTarget = $0 },
                 onFullScreen: { if !isPractice { toggleFullScreen() } }, focus: focus)
-            if let hold {
+            if let hold, let space = base?.template.colorSpace {
                 RefineLoupe(
-                    picked: hold.color.flatMap { base.map { base in RefinePalette.color($0, space: base.template.colorSpace) } },
-                    current: currentPaint.flatMap { color in base.map { RefinePalette.color(color, space: $0.template.colorSpace) } })
+                    picked: hold.color.map { RefinePalette.color($0, space: space) },
+                    current: currentPaint.map { RefinePalette.color($0, space: space) })
                     .position(RefineLoupe.position(over: onScreen(hold.at), in: canvasSize))
             }
             if let sparkles {
@@ -1675,9 +1675,14 @@ extension RefineView {
         }
     }
 
+    /// The tool's options in a capsule.
+    private func optionBar<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        optionBar(content, more: { EmptyView() })
+    }
+
     /// The tool's options in a capsule; `more` beside them where the width holds both, else under them.
     private func optionBar<Content: View, More: View>(
-        @ViewBuilder _ content: () -> Content, @ViewBuilder more: () -> More = { EmptyView() }
+        @ViewBuilder _ content: () -> Content, @ViewBuilder more: () -> More
     ) -> some View {
         let content = content(), more = more()
         return ViewThatFits(in: .horizontal) {
