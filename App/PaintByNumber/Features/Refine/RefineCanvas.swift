@@ -483,6 +483,8 @@ struct RefineTouchSurface: UIViewRepresentable {
     /// A hardware keyboard's keys, and what one pressed asks for.
     var keys: [RefineKey] = []
     var onKey: (RefineKey.Action) -> Void = { _ in }
+    /// Changed, the canvas takes the keys again (after the full screen lays it out anew).
+    var keysRequest = 0
     var focus: RefineFocus?
 
     func makeUIView(context: Context) -> RefineSurfaceView { RefineSurfaceView() }
@@ -503,6 +505,10 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onFullScreen = onFullScreen
         view.keys = keys
         view.onKey = onKey
+        if view.keysRequest != keysRequest {
+            view.keysRequest = keysRequest
+            Task { @MainActor in if !view.isFirstResponder { _ = view.becomeFirstResponder() } }
+        }
         view.aspectRatio = aspectRatio
         // Zooming reports the layout, which sets state: never within SwiftUI's update.
         if let focus, focus.id != view.focusedRequest {
@@ -531,6 +537,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onFullScreen: (() -> Void)?
     var keys: [RefineKey] = []
     var onKey: ((RefineKey.Action) -> Void)?
+    var keysRequest = 0
 
     /// The Pencil draws and fingers only move the picture: Only Draw with Apple Pencil is on (nil
     /// until the surface has read it).

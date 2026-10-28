@@ -84,8 +84,14 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(app.buttons["refine-done"], toMatch: NSPredicate(format: "exists == false")), "The bar still shows in full screen")
         attachScreenshot(of: app, named: "refine-full-screen")
-        // Escape leaves it on a keyboard; the corner button does too.
-        if keyboard { app.typeKey(XCUIKeyboardKey.escape.rawValue, modifierFlags: []) } else { exit.tap() }
+        // In the full screen the bar's Undo is the canvas's ⌘Z (on iPad, a keyboard's).
+        if keyboard {
+            app.typeKey("z", modifierFlags: .command)
+            XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "⌘Z didn't undo in the full screen")
+            app.typeKey("z", modifierFlags: [.command, .shift])
+            XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "⇧⌘Z didn't redo in the full screen")
+        }
+        exit.tap()
         XCTAssertTrue(app.buttons["refine-done"].waitForExistence(timeout: 5), "The bar didn't come back")
 
         app.buttons["refine-done"].tap()

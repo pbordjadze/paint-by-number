@@ -213,6 +213,8 @@ struct RefineView: View {
     @State private var dropCell: Int?
     /// The tools, bars and palette are hidden (a four-finger tap), the picture alone on screen.
     @State private var fullScreen = false
+    /// Counts the full screen's comings and goings, after which the canvas takes the keys again.
+    @State private var keysRequest = 0
     /// Where the Pencil asked for the tools and the palette (its double tap or squeeze), in the
     /// canvas's coordinates.
     @State private var pencilPalette: CGRect?
@@ -505,7 +507,8 @@ struct RefineView: View {
                 },
                 onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
                 onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
-                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, focus: focus)
+                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
+                focus: focus)
             if let hold, let space = base?.template.colorSpace {
                 RefineLoupe(
                     picked: hold.color.map { RefinePalette.color($0, space: space) },
@@ -1175,14 +1178,12 @@ struct RefineView: View {
             .accessibilityIdentifier("refine-guide")
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            // In the full screen, the hidden bar's keys are the canvas's (`keys`).
+            // ⌘Z and ⇧⌘Z are the canvas's (`keys`), the full screen's too, where this bar hides.
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
                 .disabled(!model.canUndo)
-                .keyboardShortcut(fullScreen ? nil : KeyboardShortcut("z"))
                 .accessibilityIdentifier("refine-undo")
             Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
                 .disabled(!model.canRedo)
-                .keyboardShortcut(fullScreen ? nil : KeyboardShortcut("z", modifiers: [.command, .shift]))
                 .accessibilityIdentifier("refine-redo")
             layersButton
         }
@@ -1829,6 +1830,7 @@ extension RefineView {
     private func toggleFullScreen() {
         FeedbackEngine.shared.selectionChanged()
         withAnimation(reduceMotion ? nil : .snappy) { fullScreen.toggle() }
+        keysRequest += 1
     }
 
     /// The way back from full screen, in the corner.
@@ -1849,9 +1851,10 @@ extension RefineView {
 
     /// A hardware keyboard's keys (their names show while ⌘ is held), the canvas's
     /// (`RefineSurfaceView.keyCommands`): a tool each, as drawing apps letter them (P Pen, E Eraser,
-    /// B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the size, ⌘0 to fit the picture and
-    /// ⌃⌘F for full screen, where the hidden bar's Undo and Redo join them and Escape leaves it.
-    /// Done (Return) and Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
+    /// B Brush, I Eyedropper, G Bucket, V Select), [ and ] for the size, ⌘0 to fit the picture, ⌃⌘F
+    /// for the full screen, ⌘Z and ⇧⌘Z, the same keys whatever shows: keys a first responder adds
+    /// later went unheard (Escape and ⌘Z in the full screen, CI, October 28). Done (Return) and
+    /// Cancel (Escape) are their buttons'. None on a practice canvas, nor under the Tool Guide or
     /// Try Painting, which have keys of their own.
     private var keys: [RefineKey] {
         guard !isPractice, !isCovered, model.hasLineArtInput else { return [] }
@@ -1860,17 +1863,10 @@ extension RefineView {
             RefineKey(input: "[", modifiers: [], title: String(localized: "Smaller"), action: .smaller),
             RefineKey(input: "]", modifiers: [], title: String(localized: "Larger"), action: .larger),
             RefineKey(input: "0", modifiers: .command, title: String(localized: "Fit to Screen"), action: .fit),
-            RefineKey(
-                input: "f", modifiers: [.command, .control],
-                title: fullScreen ? String(localized: "Exit Full Screen") : String(localized: "Full Screen"), action: .fullScreen),
+            RefineKey(input: "f", modifiers: [.command, .control], title: String(localized: "Full Screen"), action: .fullScreen),
+            RefineKey(input: "z", modifiers: .command, title: String(localized: "Undo"), action: .undo),
+            RefineKey(input: "z", modifiers: [.command, .shift], title: String(localized: "Redo"), action: .redo),
         ]
-        if fullScreen {
-            keys += [
-                RefineKey(input: "z", modifiers: .command, title: String(localized: "Undo"), action: .undo),
-                RefineKey(input: "z", modifiers: [.command, .shift], title: String(localized: "Redo"), action: .redo),
-                RefineKey(input: UIKeyCommand.inputEscape, modifiers: [], title: String(localized: "Exit Full Screen"), action: .fullScreen),
-            ]
-        }
         return keys
     }
 
