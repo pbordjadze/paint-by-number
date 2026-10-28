@@ -385,12 +385,15 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   and its paint), the stretches of that boundary the eraser left are strokes in the merged
   region, and the undrawn edges between them are nothing. Undrawn (paint) edges are never drawn
   and never merge regions: only broken ink does. A tapped line (`eraseLine`) goes from junction to
-  junction (`LineChains`, on the template's drawn edges and strokes) and merges the same way.
+  junction (`LineChains`, on the template's drawn edges and strokes) and merges the same way. A
+  paint left with no area leaves the palette, the numbers after it closing up (`dropPaints`,
+  editor version 2): before, the numbers skipped it.
 - **Fill.** The shape under the point is flooded across undrawn edges and stopped by ink (the
   tapped region alone if the flood reaches the frame: a fill never runs into the background); its
   regions become one, painted with the nearest paint within `SegmentationParameters.jnd`, else a
   new paint appended last (the palette is never reordered), and a detail area, kept whatever its
-  size, as `CellMap.fill` made it.
+  size, as `CellMap.fill` made it. A paint it leaves with no area leaves the palette as the
+  eraser's does (editor version 2; QA found a Make Cell's skipped number).
 - **Paint one area** (`paintArea`, Refine's Only This Area). The generator often gives two things
   one paint (a husky's eyes took the sky's blue); the painter wants the one area another paint
   and the rest left as they are. The region under the point alone, with no flood, takes its paint

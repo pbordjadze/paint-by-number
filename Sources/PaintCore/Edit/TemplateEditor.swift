@@ -85,12 +85,13 @@ import Foundation
 /// - **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach.
 ///   Ink between two regions that this breaks lets their paint through: the regions merge (the
 ///   larger keeps its index and its paint) and the ink left of that boundary stays as strokes.
-///   Undrawn (paint) edges are never touched.
+///   A paint left with no area leaves the palette. Undrawn (paint) edges are never touched.
 /// - **Erase line.** The line under a point is taken out from junction to junction, the regions
 ///   it kept apart merging as above.
 /// - **Fill.** The closed shape under the point, bounded by ink (the tapped region alone if it
 ///   reaches the canvas frame), becomes one detail area painted with the paint within a
-///   just-noticeable difference of the color, else a new paint added last.
+///   just-noticeable difference of the color, else a new paint added last. A paint left with no
+///   area leaves the palette as Only This Area's does.
 /// - **Paint one area.** Refine's Only This Area: the region under the point alone, flooding
 ///   nothing, takes the paint a fill would; no other region's paint changes. It stays a detail
 ///   area or not as it was, its numbers sized for the new paint's digits (an area without room
@@ -112,8 +113,9 @@ public enum TemplateEditor {
     /// judged on (a draft refined on in a later build keeps its first; regeneration lays them
     /// with the editor of its own build). 1 is the editor from October 26, 2026, which
     /// keeps writing out of drawn lines and measures a piece short of its number finely; edits
-    /// saved before it record none.
-    public static let version = 1
+    /// saved before it record none. 2 (October 28, 2026): a fill or an erasure that leaves a
+    /// paint with no area drops it from the palette, as Merge and Only This Area do.
+    public static let version = 2
 
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"

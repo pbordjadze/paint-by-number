@@ -155,17 +155,20 @@ extension EditWork {
                 }
             }
         }
-        let used = Set(t.regions.indices.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex })
+        let used = livePaints
         try merge(
             members, keep: first, color: t.regions[first].colorIndex, detail: regionDetail[first], inheritingDetail: false,
             surviving: between)
         try dropPaints(emptiedFrom: used)
     }
 
+    /// The paints some area has.
+    var livePaints: Set<UInt32> { Set(t.regions.indices.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex }) }
+
     /// Paints of `used` that no area has now leave the palette, the numbers after them closing
     /// up (`renumberPaints`: a number only loses digits).
     mutating func dropPaints(emptiedFrom used: Set<UInt32>) throws {
-        let now = Set(t.regions.indices.filter { regionAlive[$0] }.map { t.regions[$0].colorIndex })
+        let now = livePaints
         let emptied = used.subtracting(now)
         guard !emptied.isEmpty, let survivor = now.min() else { return }
         var target = Array(t.palette.indices)

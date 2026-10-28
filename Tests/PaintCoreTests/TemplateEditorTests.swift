@@ -174,7 +174,19 @@ struct TemplateEditorTests {
             let same = snapshot(old, r) == snapshot(new, outcome.continued[r])
             #expect(same || mayDiffer.contains(r), "region \(r) changed but was not touched or beside a touched region", sourceLocation: sourceLocation)
         }
-        #expect(Array(new.palette.prefix(old.palette.count)) == old.palette, sourceLocation: sourceLocation)
+        #expect(Self.keepsPaints(old.palette, new.palette, dropping: outcome.paintsMerged), sourceLocation: sourceLocation)
+    }
+
+    /// Whether `new` is `old` with `dropping` of its paints gone (those an edit left with no
+    /// area, or made alike), the rest in their order, and any added after them.
+    static func keepsPaints(_ old: [PaletteColor], _ new: [PaletteColor], dropping: Int) -> Bool {
+        guard dropping <= old.count, new.count >= old.count - dropping else { return false }
+        var rest = old[...]
+        for paint in new.prefix(old.count - dropping) {
+            guard let k = rest.firstIndex(of: paint) else { return false }
+            rest = rest[(k + 1)...]
+        }
+        return true
     }
 
     // MARK: - The lattice
@@ -454,7 +466,7 @@ struct TemplateEditorTests {
         let merged = try Self.region(u, 100, 20)
         let top = try Self.region(u, 60, 60), bottom = try Self.region(u, 60, 90)
         #expect(merged == top && merged == bottom, "the whole disc joins the sky")
-        #expect(u.regions[merged].colorIndex == t.regions[sky].colorIndex, "the larger keeps its paint")
+        #expect(u.palette[Int(u.regions[merged].colorIndex)] == t.palette[Int(t.regions[sky].colorIndex)], "the larger keeps its paint")
         #expect(abs(u.regions[merged].area - (t.regions[sky].area + t.regions[disc].area)) < 0.05)
         #expect(outcome.continued[disc] == merged && outcome.continued[sky] == merged)
         // The disc's outline against the ground is the boundary of what it joined.
@@ -580,7 +592,7 @@ struct TemplateEditorTests {
         let merged = try Self.region(u, 100, 20)
         let upper = try Self.region(u, 140, 55), lower = try Self.region(u, 140, 85)
         #expect(merged == upper && merged == lower && outcome.continued[square] == merged)
-        #expect(u.regions[merged].colorIndex == t.regions[sky].colorIndex)
+        #expect(u.palette[Int(u.regions[merged].colorIndex)] == t.palette[Int(t.regions[sky].colorIndex)])
         // The line was one chain of the drawing: no stroke is left of it, and its edge is gone.
         #expect(u.lineArt!.strokePoints == t.lineArt!.strokePoints && u.lineArt!.strokes.count == t.lineArt!.strokes.count)
         #expect(Self.ink(u).count == Self.ink(t).count - 1)
@@ -645,15 +657,22 @@ struct TemplateEditorTests {
         #expect(u.regions.count == t.regions.count)
         Self.expectOthersUnchanged(t, u, outcome)
 
-        // A color far from every paint is a new one, last, so no other number changes. The sky
-        // reaches the frame: only the cell tapped is filled, not the background it joins.
+        // A color far from every paint is a new one, last. The sky reaches the frame: only the
+        // cell tapped is filled, not the background it joins. It was its paint's one area, so that
+        // paint leaves the palette, the numbers after it closing up; no other area's paint changes.
         let magenta = SIMD3<Float>(0.62, 0.2, -0.1)
+        let skyPaint = Int(t.regions[try Self.region(t, 100, 20)].colorIndex)
+        try #require(t.regions.filter { Int($0.colorIndex) == skyPaint }.count == 1)
         let (v, added) = try Self.apply(.fill(at: SIMD2(100, 20), color: magenta), to: t)
-        #expect(added.paintsAdded == 1 && v.palette.count == t.palette.count + 1)
-        #expect(Array(v.palette.dropLast()) == t.palette && v.palette.last!.oklab == magenta)
+        #expect(added.paintsAdded == 1 && added.paintsMerged == 1 && v.palette.count == t.palette.count)
+        var rest = t.palette
+        rest.remove(at: skyPaint)
+        #expect(Array(v.palette.dropLast()) == rest && v.palette.last!.oklab == magenta)
         let sky = try Self.region(v, 100, 20)
-        #expect(Int(v.regions[sky].colorIndex) == t.palette.count && v.isDetailRegion(sky) && v.regions.count == t.regions.count)
-        #expect(v.regions.enumerated().allSatisfy { $0.offset == sky || $0.element.colorIndex == t.regions[$0.offset].colorIndex })
+        #expect(Int(v.regions[sky].colorIndex) == v.palette.count - 1 && v.isDetailRegion(sky) && v.regions.count == t.regions.count)
+        #expect(v.regions.enumerated().allSatisfy {
+            $0.offset == sky || v.palette[Int($0.element.colorIndex)] == t.palette[Int(t.regions[$0.offset].colorIndex)]
+        })
         Self.expectOthersUnchanged(t, v, added)
     }
 
@@ -780,12 +799,12 @@ struct TemplateEditorTests {
 
     /// Random drawing, erasing and filling, in any order, over a crowded template: valid after every
     /// edit (an edit the exact arithmetic cannot make is declined, never made wrong), the paints
-    /// only added to, every region numbered legibly.
+    /// kept in their order, added to or dropping one left with no area, every region numbered
+    /// legibly and no paint without an area.
     @Test func randomEditsKeepTheTemplateValid() throws {
         var made = 0, declined = 0
         for seed in [13, 14] as [UInt64] {
             var t = try Self.richBook(seed: seed)
-            let palette = t.palette
             var rng = SplitMix64(seed: seed &* 7919)
             for step in 0..<70 {
                 let edit = Self.randomEdit(t, &rng)
@@ -801,7 +820,8 @@ struct TemplateEditorTests {
                 }
                 let report = next.validate(minLabelRadius: LabelSizing.minimumRadius)
                 #expect(report.isValid, "seed \(seed) step \(step): \(edit) -> \(report)")
-                #expect(Array(next.palette.prefix(palette.count)) == palette)
+                #expect(Self.keepsPaints(t.palette, next.palette, dropping: outcome.paintsMerged))
+                #expect(Set(next.regions.map(\.colorIndex)).count == next.palette.count, "seed \(seed) step \(step): a paint with no area")
                 t = next
             }
             #expect(try Template(encoded: t.encoded()) == t)

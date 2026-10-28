@@ -176,7 +176,8 @@ extension EditWork {
     /// The eraser dragged along `path`: the ink it reaches is taken out, cut exactly at the edge
     /// of its reach. Ink between two regions that it breaks lets the paint through: the regions
     /// become one (the larger keeps its paint) and the ink of that boundary it left stays as
-    /// strokes. Undrawn edges are never touched.
+    /// strokes. Undrawn edges are never touched. A paint left with no area leaves the palette
+    /// (editor version 2), as Merge's does.
     mutating func erase(path: [LatticePoint], radius: Double) throws {
         guard !path.isEmpty else { return }
         let rub = Rub(path: path, radius: radius)
@@ -204,13 +205,16 @@ extension EditWork {
                     writing: stroke.writing))
             }
         }
+        let used = livePaints
         try mergeGroups(groups.groups(), surviving: surviving)
+        try dropPaints(emptiedFrom: used)
         summary.erased += surviving.count + reached
     }
 
     /// The line under `p`, from junction to junction (`LineChains`): the drawn line nearest
     /// within `reach`, continued through every vertex where exactly one other drawn line ends.
-    /// It is taken out whole, and the regions it kept apart become one as for `erase`.
+    /// It is taken out whole, and the regions it kept apart become one as for `erase`, a paint
+    /// left with no area leaving the palette.
     mutating func eraseLine(near p: LatticePoint, reach: Int64) throws {
         enum Line: Hashable { case edge(Int), stroke(Int) }
         var lines: [Line] = []
@@ -269,7 +273,9 @@ extension EditWork {
                 summary.touched.insert(strokes[i].region)
             }
         }
+        let used = livePaints
         try mergeGroups(groups.groups(), surviving: surviving)
+        try dropPaints(emptiedFrom: used)
         summary.erased += chain.count
     }
 }
