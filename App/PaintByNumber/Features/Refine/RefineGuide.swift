@@ -49,7 +49,7 @@ nonisolated struct RefinePracticeSetup: Hashable {
     var scene: RefinePractice.Scene
     /// The finger's tool.
     var tool: RefineTool
-    var backdrop: RefineBackdrop = .painting
+    var layers = RefineLayers.painting
     var shape: RefineShape?
     /// The tool the page teaches when it is an action, not the finger's (Try Painting).
     var teaches: RefineTool?
@@ -147,7 +147,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Views: a note under Good to Know"),
                 ],
                 related: [.pen, .eyedropper],
-                practice: RefinePracticeSetup(scene: .inked, tool: .pen, backdrop: .photoBehind))
+                practice: RefinePracticeSetup(scene: .inked, tool: .pen, layers: .tracing))
         case .tool(let tool):
             page(of: tool)
         }

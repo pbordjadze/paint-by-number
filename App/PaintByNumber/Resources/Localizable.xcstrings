@@ -69,10 +69,6 @@
       "comment" : "Refine screen: the tool whose tap picks an area's paint, or the photo's color, as the current paint; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
-    "Fill Shape" : {
-      "comment" : "Refine screen: the tool whose tap makes a closed shape of the drawing an area of its own; its name in the tool rail and its VoiceOver label",
-      "extractionState" : "manual"
-    },
     "Generated" : {
       "comment" : "Refine screen, Start From: the template the app made from the photo (the default)",
       "extractionState" : "manual"
@@ -99,6 +95,10 @@
     },
     "Line Eraser" : {
       "comment" : "Refine screen: the tool that rubs lines out, or takes a whole line out with a tap; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Make Cell" : {
+      "comment" : "Refine screen: the tool whose tap makes a closed shape of the drawing a cell (an area with its own number) of its own; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
     "Merge" : {
@@ -3441,8 +3441,8 @@
       "comment" : "Message of the tip titled Compare Photo and Page, at the divider between the photo and the page in the New Painting preview",
       "extractionState" : "manual"
     },
-    "Draw a closed shape, then fill it to make it an area with its own number." : {
-      "comment" : "Message of the tip titled Make a Shape Its Own, about Refine’s Fill tool",
+    "Draw a closed shape, then tap inside it with Make Cell to give it a number of its own." : {
+      "comment" : "Message of the tip titled Make a Shape Its Own, about Refine’s Make Cell tool",
       "extractionState" : "manual"
     },
     "Draw on the painting, pinch to zoom" : {

@@ -1474,7 +1474,7 @@ extension RefineView {
         case .select: Text("Select")
         case .cellEdge: Text("Cell Edge")
         case .merge: Text("Merge")
-        case .fill: Text("Fill Shape")
+        case .fill: Text("Make Cell")
         case .brush: Text("Paint Brush")
         case .bucket: Text("Bucket")
         case .eyedropper: Text("Eyedropper")
