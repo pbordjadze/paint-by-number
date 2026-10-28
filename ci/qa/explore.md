@@ -133,7 +133,8 @@ Report these only if they look wrong in another way:
   palette scrolling it into view if it was out of it, and the tapped number grows for a moment,
   unless an unpainted area of the selected color lies within about 14 points, which the tap
   paints instead. Colors are picked from the palette.
-- A painting opens on the palette's first swatch, not the color last used. Finishing the
+- A painting opens on the palette's first swatch, not the color last used; in the debug build a
+  painting not yet begun opens on its largest area's color instead. Finishing the
   selected color selects the next color along the palette with areas left, coming round past
   its end.
 - The New Painting preview is one picture split at its handle: the photo to the left, the
@@ -154,6 +155,10 @@ Report these only if they look wrong in another way:
 - The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
   took over 2.5 s to draw, usual on this runner; judge the screen.
 - The release build has no Refine (the debug build does): it is left out of the first release.
+- In Refine (debug build): a touch held on the picture picks the photo's color, not the cell's
+  paint, where the photo shows more than the paint (Photo on, Paint under half its opacity), as
+  the Eyedropper does. A known bug, to be fixed: a paint that Make Cell takes every area from
+  stays in the palette, so the painting's numbers skip it (painting-company row 143).
 - In Refine (debug build): Cancel with changes asks before putting back what Refine opened with;
   a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
   them back); the picker of an area's card is one step of the history however many colors it
