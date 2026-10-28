@@ -85,6 +85,14 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
     /// The tool drags something already there (a line, an edge, a number), drawing no ink.
     var drags: Bool { self == .bendLine || self == .moveEdge || self == .moveNumber }
 
+    /// A one-finger drag does something with the tool (`RefineView.draw`); the others only tap.
+    var strokes: Bool {
+        switch self {
+        case .pen, .shape, .bendLine, .eraser, .smartEraser, .cellEdge, .merge, .moveEdge, .brush, .moveNumber, .text: true
+        case .select, .fill, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: false
+        }
+    }
+
     var paints: Bool {
         self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
     }
@@ -520,6 +528,7 @@ struct RefineView: View {
                     self.zoom = zoom
                 },
                 onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
+                strokes: tool.strokes,
                 onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
                 onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
                 focus: focus)
