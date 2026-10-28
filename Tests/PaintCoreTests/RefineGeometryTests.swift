@@ -20,6 +20,54 @@ struct RefineGeometryTests {
         #expect(abs(PenPath.length(straight) - hypot(60, 40)) < 1e-6)
     }
 
+    /// A steadied line starts at the first sample, trails the finger by the string once it pulls
+    /// it taut and ends where the finger lifted, even a finger that never pulled it; no string
+    /// leaves the samples bit for bit.
+    @Test func aSteadiedLineTrailsTheFingerByItsString() {
+        let stroke = (0...40).map { CGPoint(x: CGFloat($0) * 5, y: 0) }
+        let steady = PenPath.steadied(stroke, string: 20)
+        #expect(steady.count == 38 && steady.first == stroke.first && steady.last == stroke.last)
+        for (k, p) in steady.dropFirst().dropLast().enumerated() { #expect(abs(p.x - CGFloat(5 + 5 * k)) < 1e-9, "\(p)") }
+
+        let tap = [CGPoint(x: 10, y: 10), CGPoint(x: 13, y: 11), CGPoint(x: 12, y: 14)]
+        #expect(PenPath.steadied(tap, string: 20) == [tap[0], tap[2]])
+        #expect(PenPath.steadied(Array(tap.prefix(1)), string: 20) == Array(tap.prefix(1)))
+        let shaky = (0...40).map { CGPoint(x: CGFloat($0) * 5 + 0.1, y: $0 % 2 == 0 ? 0.3 : 1.7) }
+        #expect(PenPath.steadied(shaky, string: 0) == shaky && PenPath.steadied(shaky, string: -2) == shaky)
+    }
+
+    /// A shaky hand's wobble, a zigzag of 1 to 4 points across a long straight stroke, hardly
+    /// reaches a line steadied on a 20-point string: it strays from the stroke's line under a fifth
+    /// as far as the samples did, and never a point.
+    @Test func aSteadiedLineLeavesTheWobbleOut() {
+        var rng = SplitMix64(seed: 143)
+        let stroke = (0...200).map { k -> CGPoint in
+            let wobble = 1 + 3 * CGFloat(rng.nextFloat())
+            return CGPoint(x: CGFloat(k) * 2, y: k == 0 ? 100 : 100 + (k % 2 == 0 ? wobble : -wobble))
+        }
+        /// How far a line's points stray from y = 100 (root mean square) and at most, its ends left out.
+        func strays(_ line: [CGPoint]) -> (typical: CGFloat, most: CGFloat) {
+            let off = line.dropFirst().dropLast().map { abs($0.y - 100) }
+            return ((off.reduce(0) { $0 + $1 * $1 } / CGFloat(off.count)).squareRoot(), off.max() ?? 0)
+        }
+        let before = strays(stroke), after = strays(PenPath.steadied(stroke, string: 20))
+        #expect(after.typical < before.typical / 5 && after.most < 1, "\(after) from \(before)")
+    }
+
+    /// A long smooth curve keeps its shape: steadied on a 20-point string, an arc of radius 200
+    /// cuts inside itself by about string² / 2r, a point, and every point of each lies that near
+    /// the other.
+    @Test func aSteadiedCurveKeepsItsShape() {
+        let centre = CGPoint(x: 300, y: 300)
+        let arc = (0...600).map { k -> CGPoint in
+            let angle = CGFloat(k) / 600 * 1.5 * .pi
+            return CGPoint(x: centre.x + 200 * cos(angle), y: centre.y + 200 * sin(angle))
+        }
+        let steady = PenPath.steadied(arc, string: 20)
+        #expect(steady.allSatisfy { abs(PenPath.distance($0, centre) - 200) < 1.5 })
+        #expect(arc.allSatisfy { p in zip(steady, steady.dropFirst()).contains { PenPath.segmentDistance(p, $0, $1) < 1.5 } })
+    }
+
     /// A tap takes the line under it on through every joint where just one other line goes on,
     /// and stops where three lines meet or a line ends; a loop comes back to where it started;
     /// nothing is taken where no line is near.

@@ -6,14 +6,15 @@ import PaintCore
 ///
 ///     {"screen": {"width": 960, "zoom": 1},
 ///      "gestures": [
-///        {"tool": "pen", "points": [[x, y], ...], "inked": true},   a finger's samples; `inked`: ink alone
+///        {"tool": "pen", "points": [[x, y], ...], "inked": true, "smoothing": 0.5},
+///                                                                   a finger's samples; `inked`: ink alone
 ///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "cellEdge", "points": [[x, y], ...]},             the Cell Edge's
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval" | "polygon" | "star", "from": [x, y], "to": [x, y]},
 ///        {"tool": "shape", "shape": "curve", "from": [x, y], "to": [x, y], "bend": [x, y]},
-///        {"tool": "eraser", "points": [[x, y], ...]},               one point is a dab
+///        {"tool": "eraser", "points": [[x, y], ...], "size": 20},   one point is a dab
 ///        {"tool": "merge", "points": [[x, y], ...]},                the Merge's drag
-///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "rgb": [r, g, b] | "paint": n},
+///        {"tool": "brush", "points": [[x, y], ...], "color": [L, a, b] | "rgb": [r, g, b] | "paint": n, "size": 12},
 ///                                                                   the Paint Brush's stroke
 ///        {"tool": "bucket", "at": [x, y], "color" | "rgb" | "paint"},  the Bucket
 ///        {"tool": "repaint", "paint": n | "fromRgb": [r, g, b], "color" | "rgb", "family": true},
@@ -27,6 +28,10 @@ import PaintCore
 ///
 /// `screen.width` is the picture's width on screen fitted (points; 960 by default, about a 13"
 /// iPad's Refine), `zoom` how far it is zoomed in (1 to 12); a gesture may give its own `zoom`.
+/// A pen's `smoothing` is the Pen's Smoothing (0 to 1: its line steadied on a string of up to
+/// `RefineGestures.steadyString` points); an eraser's or a brush's `size` is its Size, its radius
+/// on screen in points. Without them a pen is not steadied, an eraser's radius follows the view
+/// (`RefineScreen.eraserRadius`) and a brush's is `RefineGestures.brushSize`.
 /// A curve without `bend` is laid straight. A reshape without `target` grabs any line (an edge,
 /// drawn or not, or a stroke); Bend Line's is `ink`, Move Edge's `edge`. Reshape and Move Number
 /// reach a finger's width on screen (`RefineGestures.fingerReach`). A paint is `color` (OKLab), `rgb` (sRGB, 0…1, as
@@ -58,6 +63,10 @@ struct RefineScript: Decodable {
         /// A pen's line as the Toolbox's Pen draws it with Color from Photo off (its default): ink
         /// alone, the pieces it cuts keeping their paint (`RefineView.inked`).
         var inked: Bool?
+        /// A pen's Smoothing, 0...1.
+        var smoothing: Double?
+        /// An eraser's or a brush's Size: its radius on screen, points.
+        var size: Double?
         var zoom: Double?
         var caption: String?
         var target: String?
@@ -181,6 +190,18 @@ func runRefine(_ options: Options) throws {
         }
         return nil
     }
+    /// A pen's `smoothing`, 0 without one.
+    func smoothing(of g: RefineScript.Gesture, _ k: Int) -> CGFloat {
+        guard let s = g.smoothing else { return 0 }
+        guard (0...1).contains(s) else { fail("gesture \(k + 1): smoothing is 0...1") }
+        return CGFloat(s)
+    }
+    /// An eraser's or a brush's `size`, points on screen.
+    func size(of g: RefineScript.Gesture, _ k: Int) -> CGFloat? {
+        guard let s = g.size else { return nil }
+        guard s > 0, s.isFinite else { fail("gesture \(k + 1): size is a radius on screen, points above 0") }
+        return CGFloat(s)
+    }
     for (k, g) in script.gestures.enumerated() {
         let began = ContinuousClock.now
         let t = trail.template
@@ -195,14 +216,15 @@ func runRefine(_ options: Options) throws {
 
         switch g.tool {
         case "pen":
-            edit = RefineGestures.pen(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
+            edit = RefineGestures.pen(
+                RefineGestures.trace(samples, on: screen), on: screen, snapping: lines, smoothing: smoothing(of: g, k))
             if g.inked == true, case .draw(let points, let closed, nil)? = edit { edit = .draw(points: points, closed: closed, paints: []) }
         case "splitter":
             edit = RefineGestures.splitter(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "cellEdge":
             edit = RefineGestures.cellEdge(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "eraser":
-            edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen)
+            edit = RefineGestures.eraser(RefineGestures.trace(samples, on: screen), on: screen, size: size(of: g, k))
         case "merge":
             edit = RefineGestures.merge(RefineGestures.trace(samples, on: screen), on: screen)
             if case .merge(let path)? = edit { step.lit = (try? TemplateEditor.MergeProbe(t))?.areas(along: path).count }
@@ -215,7 +237,8 @@ func runRefine(_ options: Options) throws {
             } else {
                 fail("gesture \(k + 1): a brush needs points")
             }
-            edit = RefineGestures.brush(RefineGestures.trace(samples, on: screen), on: screen, color: color)
+            edit = RefineGestures.brush(
+                RefineGestures.trace(samples, on: screen), on: screen, color: color, size: size(of: g, k) ?? RefineGestures.brushSize)
         case "reshape":
             guard samples.count == 2 else { fail("gesture \(k + 1): a reshape's points are [from, to]") }
             edit = RefineGestures.reshape(
