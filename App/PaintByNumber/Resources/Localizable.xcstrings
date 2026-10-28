@@ -53,6 +53,14 @@
       "comment" : "Refine screen, the Pen's options: a switch; when on, the parts of an area a drawn line divides take the photo's colors there",
       "extractionState" : "manual"
     },
+    "Discard Changes" : {
+      "comment" : "Refine screen, the dialog Cancel opens: the destructive button that takes back every change since Refine opened and closes it",
+      "extractionState" : "manual"
+    },
+    "Discard Your Changes?" : {
+      "comment" : "Refine screen: title of the dialog Cancel opens when there are changes, which Cancel would take back",
+      "extractionState" : "manual"
+    },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
@@ -65,8 +73,16 @@
       "comment" : "Refine screen: the tool that gives the current paint a new color everywhere it is used; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "Exit Full Screen" : {
+      "comment" : "Refine screen: brings the tools, the bars and the palette back after Full Screen (the button in the corner, a VoiceOver action and a keyboard shortcut's name)",
+      "extractionState" : "manual"
+    },
     "Eyedropper" : {
       "comment" : "Refine screen: the tool whose tap picks an area's paint, or the photo's color, as the current paint; its name in the tool rail and its VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Full Screen" : {
+      "comment" : "Refine screen: hides the tools, the bars and the palette, the picture alone on screen (a four-finger tap; a VoiceOver action of the picture and a keyboard shortcut's name)",
       "extractionState" : "manual"
     },
     "Generated" : {
@@ -90,7 +106,23 @@
       "extractionState" : "manual"
     },
     "Ink" : {
-      "comment" : "Refine screen: the group of tools that draw and erase the lines the painter sees (Pen, Shapes, Eraser, Line Eraser); a section of the tool rail on iPad, a tab above the tools on iPhone",
+      "comment" : "Refine screen: the group of tools that draw and erase the lines the painter sees (Pen, Shapes, Eraser, Line Eraser), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of those lines",
+      "extractionState" : "manual"
+    },
+    "Keep Refining" : {
+      "comment" : "Refine screen, the dialog Cancel opens: the button that closes the dialog and stays in Refine",
+      "extractionState" : "manual"
+    },
+    "Larger" : {
+      "comment" : "Refine screen: the name of the keyboard shortcut ] that makes the Paint Brush or the Eraser larger (shown while ⌘ is held)",
+      "extractionState" : "manual"
+    },
+    "Layers" : {
+      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title",
+      "extractionState" : "manual"
+    },
+    "Layers change only what you see, never the picture." : {
+      "comment" : "Refine screen, the Layers panel: the note under the layers (hiding a layer or fading it changes nothing in the template)",
       "extractionState" : "manual"
     },
     "Line Eraser" : {
@@ -122,7 +154,7 @@
       "extractionState" : "manual"
     },
     "Numbers" : {
-      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number); a section of the tool rail on iPad, a tab above the tools on iPhone",
+      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of the numbers",
       "extractionState" : "manual"
     },
     "Only This Area" : {
@@ -137,8 +169,12 @@
       "comment" : "Refine screen: the tool that paints the current paint where it is dragged, making or growing areas; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
-    "Photo Behind" : {
-      "comment" : "Refine screen: what shows beneath the drawing, one of Painting, Paper, Photo and Photo Behind (the photo with the painting faint over it, for tracing); a slider sets how faint",
+    "Paint Opacity" : {
+      "comment" : "Refine screen, the Layers panel: VoiceOver label of the slider that sets how opaque the paint layer is",
+      "extractionState" : "manual"
+    },
+    "Photo Opacity" : {
+      "comment" : "Refine screen, the Layers panel: VoiceOver label of the slider that sets how opaque the photo layer is",
       "extractionState" : "manual"
     },
     "Pick a paint in the palette, or tap an area." : {
@@ -147,6 +183,10 @@
     },
     "Practice" : {
       "comment" : "Tool Guide: VoiceOver label of a page's practice canvas, where the tool can be tried on a practice picture",
+      "extractionState" : "manual"
+    },
+    "Refine goes back to how it was when you opened it." : {
+      "comment" : "Refine screen, the dialog Cancel opens: its message, what discarding does",
       "extractionState" : "manual"
     },
     "refine.areaMade" : {
@@ -162,7 +202,7 @@
       }
     },
     "refine.brush.size" : {
-      "comment" : "Refine screen, the Paint Brush's options: VoiceOver value of its Size slider, the brush's radius on screen in points; the argument is the number",
+      "comment" : "Refine screen, the Paint Brush's and the Eraser's options: VoiceOver value of their Size slider, the radius on screen in points; the argument is the number",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2118,13 +2158,13 @@
       }
     },
     "refine.hint.eyedropper" : {
-      "comment" : "Refine screen: how the Eyedropper works (a tap picks the paint of the area under it, or the photo's color there when the photo shows), read by VoiceOver as the hint of its button",
+      "comment" : "Refine screen: how the Eyedropper works (a tap, or a touch and hold with any tool, picks the paint of the area under it, or the photo's color where the photo shows most), read by VoiceOver as the hint of its button",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap an area to make its paint the current paint. Over the photo, tap to pick the photo’s color."
+            "value" : "Tap an area to make its paint the current paint, or touch and hold with any tool. Where the photo shows, it picks the photo’s color."
           }
         }
       }
@@ -2221,6 +2261,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paints the template as it is now, to try it. Nothing is saved."
+          }
+        }
+      }
+    },
+    "refine.layers.hint" : {
+      "comment" : "Refine screen: VoiceOver hint of the Layers button, which opens a panel of what shows (numbers, ink, paint, photo)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides the numbers, the ink, the paint and the photo."
           }
         }
       }
@@ -2401,6 +2453,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paint %1$@ · %2$@ · %3$@ of the picture"
+          }
+        }
+      }
+    },
+    "refine.smoothing.hint" : {
+      "comment" : "Refine screen, the Pen's options: VoiceOver hint of Smoothing, a slider from off to full (Procreate calls it StreamLine)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evens out a wobbly line: the line trails your finger a little. Off draws exactly as you draw."
           }
         }
       }
@@ -3626,7 +3690,7 @@
       "extractionState" : "manual"
     },
     "Fit to Screen" : {
-      "comment" : "Menu item on the painting screen: zoom to show the whole painting",
+      "comment" : "Menu item on the painting screen: zoom to show the whole painting; on the Refine screen, the name of the keyboard shortcut ⌘0 that shows the whole picture",
       "extractionState" : "manual"
     },
     "gallery.card.finishedAfter" : {
@@ -4617,6 +4681,14 @@
       "comment" : "Button over the making-of show that ends it and opens the new painting",
       "extractionState" : "manual"
     },
+    "Smaller" : {
+      "comment" : "Refine screen: the name of the keyboard shortcut [ that makes the Paint Brush or the Eraser smaller (shown while ⌘ is held)",
+      "extractionState" : "manual"
+    },
+    "Smoothing" : {
+      "comment" : "Refine screen, the Pen's options: the slider that evens out a wobbly line (the line trails the finger a little; Procreate calls it StreamLine), its name and VoiceOver label",
+      "extractionState" : "manual"
+    },
     "Snap" : {
       "comment" : "Refine screen, a drawing tool's options: a switch; when on, a drawn line's end moves onto a line its ink touches",
       "extractionState" : "manual"
@@ -4822,7 +4894,7 @@
       "extractionState" : "manual"
     },
     "Paint" : {
-      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area; on the Refine screen, the group of tools that give areas their paint (a section of the tool rail on iPad, a tab on iPhone)",
+      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area; on the Refine screen, the group of tools that give areas their paint (a section of the tool rail on iPad, a tab on iPhone) and the Layers panel's layer of the paint",
       "extractionState" : "manual"
     },
     "Paint by Moonlight" : {
@@ -5326,7 +5398,7 @@
       }
     },
     "Painting" : {
-      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the item of the Refine screen's Show menu that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
+      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
     "Painting Length" : {
@@ -5502,7 +5574,7 @@
       }
     },
     "Paper" : {
-      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic); also the value of Refine's Show button when neither the photo nor the painting shows beneath the drawing",
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
     },
     "paper.automatic" : {
@@ -5618,7 +5690,7 @@
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the item of the Refine screen's Show menu that shows the photo beneath the drawing",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's Layers panel's layer of the photo",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -5674,7 +5746,7 @@
       "extractionState" : "manual"
     },
     "Redo" : {
-      "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone; the Refine screen's redo",
+      "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone; the Refine screen's redo (its button and a VoiceOver action of the picture)",
       "extractionState" : "manual"
     },
     "Reference" : {
@@ -6626,7 +6698,7 @@
       "extractionState" : "manual"
     },
     "Show" : {
-      "comment" : "Accessibility label of four controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), Settings › Advanced's choice between the preview's template and its painted picture, and Refine's button that holds Photo and Painting (what shows beneath the drawing; its value names which, or Paper for neither)",
+      "comment" : "Accessibility label of three controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), and Settings › Advanced's choice between the preview's template and its painted picture",
       "extractionState" : "manual"
     },
     "Show Color Details" : {
@@ -7171,6 +7243,10 @@
     },
     "Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking." : {
       "comment" : "Footer of the About section in Settings: the privacy statement",
+      "extractionState" : "manual"
+    },
+    "Your tool’s layer" : {
+      "comment" : "Refine screen, the Layers panel: under a layer's name, marking the layer the picked tool works on",
       "extractionState" : "manual"
     },
     "Zen Mode" : {

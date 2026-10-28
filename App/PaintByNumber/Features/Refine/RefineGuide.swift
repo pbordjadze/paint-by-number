@@ -56,14 +56,17 @@ nonisolated struct RefinePracticeSetup: Hashable {
 }
 
 extension RefinePracticeSetup {
-    /// Where a practice canvas keeps Snap, Color from Photo and the brush's Size: its own, seeded
-    /// from the painter's as the guide opens (`seedSettings`), so trying a switch on a page
+    /// Where a practice canvas keeps Snap, Color from Photo, Smoothing and the sizes: its own,
+    /// seeded from the painter's as the guide opens (`seedSettings`), so trying a switch on a page
     /// leaves Refine's as it was.
     @MainActor static let settings = UserDefaults(suiteName: "RefinePractice") ?? UserDefaults()
 
-    /// The painter's Snap, Color from Photo and Size, as the practice canvases' start.
+    /// The painter's Snap, Color from Photo, Smoothing and sizes, as the practice canvases' start.
     @MainActor static func seedSettings() {
-        for key in [SettingsKey.refineSnaps, SettingsKey.refinePenColors, SettingsKey.refineBrushSize] {
+        for key in [
+            SettingsKey.refineSnaps, SettingsKey.refinePenColors, SettingsKey.refineBrushSize, SettingsKey.refineEraserSize,
+            SettingsKey.refinePenSmoothing,
+        ] {
             settings.set(UserDefaults.standard.object(forKey: key), forKey: key)
         }
     }

@@ -74,8 +74,9 @@ nonisolated enum RefinePalette {
 
 /// The painting's paints in a row, in Cells and Paint, the current one ringed; a color no paint
 /// has yet shows after them, and the system color picker at the end picks any color as the
-/// current paint. With `merge` (Edit Paint), a paint dragged onto another becomes it, and
-/// VoiceOver offers the same on each paint (into the current one).
+/// current paint. A swatch dragged onto a cell of the picture pours its paint there (the canvas
+/// takes the drop, `color(of:in:)`). With `merge` (Edit Paint), a paint dragged onto another
+/// becomes it, and VoiceOver offers the same on each paint (into the current one).
 struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
@@ -150,9 +151,30 @@ struct RefinePaletteBar: View {
     }
 
     /// What a swatch's drag carries before its paint's index.
-    static let dragPrefix = "refine-paint:"
+    nonisolated static let dragPrefix = "refine-paint:"
+    /// What the new paint's drag carries before its color (OKLab, three numbers).
+    nonisolated static let colorPrefix = "refine-color:"
 
-    /// A swatch Edit Paint can drag onto another, and drop another onto.
+    /// The color a swatch's drag carries (`dragPrefix`, `colorPrefix`), as `template` has it; nil
+    /// for any other text.
+    nonisolated static func color(of payload: String, in template: Template) -> SIMD3<Float>? {
+        if payload.hasPrefix(dragPrefix), let index = Int(payload.dropFirst(dragPrefix.count)),
+           template.palette.indices.contains(index) {
+            return template.palette[index].oklab
+        }
+        guard payload.hasPrefix(colorPrefix) else { return nil }
+        let parts = payload.dropFirst(colorPrefix.count).split(separator: ",").compactMap { Float($0) }
+        guard parts.count == 3, parts.allSatisfy(\.isFinite) else { return nil }
+        return SIMD3(parts[0], parts[1], parts[2])
+    }
+
+    /// The new paint's drag: its color, exactly.
+    nonisolated static func payload(of color: SIMD3<Float>) -> String {
+        colorPrefix + [color.x, color.y, color.z].map { "\($0)" }.joined(separator: ",")
+    }
+
+    /// A swatch dragged onto the picture, and in Edit Paint onto another swatch, which takes
+    /// another's drop.
     @ViewBuilder
     private func mergeable(_ swatch: some View, _ index: Int, current: Int?) -> some View {
         if let merge {
@@ -176,7 +198,7 @@ struct RefinePaletteBar: View {
                     }
                 }
         } else {
-            swatch
+            swatch.draggable(Self.dragPrefix + String(index))
         }
     }
 
@@ -191,6 +213,7 @@ struct RefinePaletteBar: View {
             .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
             .padding(3)
             .overlay { Circle().stroke(Theme.signature, lineWidth: 2.5) }
+            .draggable(Self.payload(of: color))
             .accessibilityElement()
             .accessibilityLabel(Text("New Paint"))
             .accessibilityAddTraits(.isSelected)

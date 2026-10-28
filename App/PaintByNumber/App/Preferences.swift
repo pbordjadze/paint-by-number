@@ -36,6 +36,11 @@ enum SettingsKey {
     static let refinePenColors = "refinePenColors"
     /// Refine's Paint Brush's Size: its radius on screen, in points (`RefineGestures.brushSize` unless set).
     static let refineBrushSize = "refineBrushSize"
+    /// Refine's Eraser's Size: its radius on screen, in points.
+    static let refineEraserSize = "refineEraserSize"
+    /// Refine's Pen's Smoothing, 0 to 1: how far its line trails the finger to even out wobbles
+    /// (`RefineGestures.steadied`, Procreate's StreamLine).
+    static let refinePenSmoothing = "refinePenSmoothing"
 }
 
 /// What each switch of `SettingsKey` is until the painter sets it, written once: the `@AppStorage`
@@ -54,6 +59,9 @@ nonisolated enum SettingsDefault {
     static let refineSnaps = true
     static let refinePenColors = false
     static let refineBrushSize = Double(RefineGestures.brushSize)
+    /// About what the Eraser's size was before it had one: 10 to 20 points, by the screen.
+    static let refineEraserSize = 16.0
+    static let refinePenSmoothing = 0.0
 }
 
 /// The preferences that code outside views reads (the create flow), with their defaults; views
