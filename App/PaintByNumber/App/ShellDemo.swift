@@ -183,7 +183,8 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
-            || opensColors || opensCard || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom || self == .createTip
+            || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
+            || self == .createTip
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).

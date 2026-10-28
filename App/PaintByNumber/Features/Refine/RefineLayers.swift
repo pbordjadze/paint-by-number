@@ -76,8 +76,6 @@ struct RefineLayersPanel: View {
     /// The layer the picked tool works on.
     let working: RefineLayers.Layer?
 
-    @Environment(\.dynamicTypeSize) private var typeSize
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Layers")
@@ -94,7 +92,9 @@ struct RefineLayersPanel: View {
                 .padding(.top, 4)
         }
         .padding(12)
-        .frame(width: typeSize.isAccessibilitySize ? nil : 320)
+        .frame(width: 320)
+        // As Refine's other bars: larger sizes reach it through the Large Content Viewer.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-layers-panel")
     }

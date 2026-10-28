@@ -70,11 +70,9 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-painting")
         let paint = layerSwitch("paint", in: app)
         XCTAssertEqual(paint.value as? String, "1", "Refine didn't open with the paint showing")
-        paint.tap()
-        XCTAssertTrue(waitFor(paint, toMatch: NSPredicate(format: "value == %@", "0")), "The paint layer didn't hide")
+        XCTAssertTrue(flip(paint, on: false), "The paint layer didn't hide")
         attachScreenshot(of: app, named: "refine-layers")
-        paint.tap()
-        XCTAssertTrue(waitFor(paint, toMatch: NSPredicate(format: "value == %@", "1")), "The paint layer didn't show again")
+        XCTAssertTrue(flip(paint, on: true), "The paint layer didn't show again")
         closeLayers(in: app)
 
         // Four fingers: the picture alone, then the tools again from the corner.
@@ -258,8 +256,7 @@ final class RefineUITests: XCTestCase {
         // The photo under the painting, for tracing: its layer on, its opacity a slider.
         let photo = layerSwitch("photo", in: app)
         XCTAssertEqual(photo.value as? String, "0", "Refine opened with the photo showing")
-        photo.tap()
-        XCTAssertTrue(waitFor(photo, toMatch: NSPredicate(format: "value == %@", "1")), "The photo layer didn't show")
+        XCTAssertTrue(flip(photo, on: true), "The photo layer didn't show")
         XCTAssertTrue(app.sliders["refine-layer-paint-opacity"].exists, "The paint layer has no opacity")
         XCTAssertTrue(app.sliders["refine-layer-photo-opacity"].isEnabled, "The photo layer's opacity is off")
         attachScreenshot(of: app, named: "refine-photo-behind")

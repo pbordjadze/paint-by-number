@@ -449,6 +449,12 @@ struct RefineTouchSurface: UIViewRepresentable {
     var onTap: (SIMD2<Float>) -> Void
     var onUndo: () -> Void
     var onRedo: () -> Void = {}
+    /// A step of held fingers' undo (false) or redo (true); false back once there's nothing more
+    /// to step, which ends the hold's steps.
+    var onRepeat: (Bool) -> Bool = { _ in false }
+    /// A hold picks a color (the Eyedropper's); off, a touch held still before a drag is the
+    /// drag's (Bend Line, Move Edge, Move Number).
+    var holdPicks = true
     /// The Pencil's double tap or squeeze, and where it hovers then (the view's coordinates).
     var onPencil: (RefinePencilAction, CGPoint?) -> Void = { _, _ in }
     var onHold: (RefineTouch, SIMD2<Float>) -> Void = { _, _ in }
@@ -456,8 +462,9 @@ struct RefineTouchSurface: UIViewRepresentable {
     var onHover: (SIMD2<Float>?) -> Void = { _ in }
     /// A swatch's drag (its text) dropped on the picture, and where.
     var onDrop: (String, SIMD2<Float>) -> Void = { _, _ in }
-    /// Where a swatch's drag is over the picture; nil once it leaves or lands.
-    var onDropHover: (SIMD2<Float>?) -> Void = { _ in }
+    /// Where a swatch's drag is over the picture, and whether a cell there would take it; nil once
+    /// it leaves or lands.
+    var onDropHover: (SIMD2<Float>?) -> Bool = { _ in false }
     var onFullScreen: () -> Void = {}
     var focus: RefineFocus?
 
@@ -469,6 +476,8 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onTap = onTap
         view.onUndo = onUndo
         view.onRedo = onRedo
+        view.onRepeat = onRepeat
+        view.holdPicks = holdPicks
         view.onPencil = onPencil
         view.onHold = onHold
         view.onHover = onHover
@@ -493,11 +502,13 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onTap: ((SIMD2<Float>) -> Void)?
     var onUndo: (() -> Void)?
     var onRedo: (() -> Void)?
+    var onRepeat: ((Bool) -> Bool)?
+    var holdPicks = true
     var onPencil: ((RefinePencilAction, CGPoint?) -> Void)?
     var onHold: ((RefineTouch, SIMD2<Float>) -> Void)?
     var onHover: ((SIMD2<Float>?) -> Void)?
     var onDrop: ((String, SIMD2<Float>) -> Void)?
-    var onDropHover: ((SIMD2<Float>?) -> Void)?
+    var onDropHover: ((SIMD2<Float>?) -> Bool)?
     var onFullScreen: (() -> Void)?
 
     /// The Pencil draws and fingers only move the picture: Only Draw with Apple Pencil is on (nil
@@ -512,9 +523,10 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// may wander meanwhile: little, so a slow, careful stroke still draws.
     static let pressDuration: TimeInterval = 0.5
     static let pressMovement: CGFloat = 4
-    /// How long two or three fingers are held before they keep undoing or redoing, and how often
-    /// they then step: faster the longer they're held, down to `fastestRepeat`.
-    static let repeatDelay: TimeInterval = 0.4
+    /// How long two or three fingers are held before they keep undoing or redoing (a pinch that
+    /// waits this long before it moves takes one step), and how often they then step: faster the
+    /// longer they're held, down to `fastestRepeat`, each step once the last has landed.
+    static let repeatDelay: TimeInterval = 0.5
     static let firstRepeat: TimeInterval = 0.25
     static let fastestRepeat: TimeInterval = 0.07
     /// A pinch over within this long is a quick pinch, when it at least halves or doubles the
@@ -542,8 +554,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     private var touchDown: CGPoint?
     /// The stroke under way is the Pencil's: the picture holds still under it.
     private var pencilStroke = false
-    /// Undo or Redo, stepping while their fingers are held.
+    /// Undo or Redo, stepping while their fingers are held, and where the fingers came down.
     private var repeating: Task<Void, Never>?
+    private var repeatStart: CGPoint?
     /// When a pinch began, at what zoom, and the part of the picture then on screen (normalized).
     private var pinchStart: (time: TimeInterval, zoom: CGFloat, visible: CGRect)?
     /// The part of the picture on screen before a quick pinch fitted it, for a quick pinch out.
@@ -594,7 +607,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         for (recognizer, touches) in [(undoHold, 2), (redoHold, 3)] {
             recognizer.numberOfTouchesRequired = touches
             recognizer.minimumPressDuration = Self.repeatDelay
-            recognizer.allowableMovement = 10
+            recognizer.allowableMovement = Self.repeatMovement
+            // Beside the scroll view's pan and pinch: fingers that move go on to move the picture.
+            recognizer.delegate = self
             recognizer.addTarget(self, action: #selector(handleRepeat(_:)))
             scrollView.addGestureRecognizer(recognizer)
         }
@@ -614,6 +629,13 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// How far held fingers may move before they are moving the picture, not stepping.
+    static let repeatMovement: CGFloat = 10
+
+    /// No system editing gestures over the picture: three fingers redo here, and never show
+    /// iPadOS's undo bar.
+    override var editingInteractionConfiguration: UIEditingInteractionConfiguration { .none }
 
     /// Only Draw with Apple Pencil may have changed in Settings while the app was away.
     @objc private func appBecameActive() { applyDrawingPolicy() }
@@ -647,11 +669,13 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         isLayingOut = true
         defer { isLayingOut = false }
         super.layoutSubviews()
+        // Zoomed in, the same part of the picture stays on screen (full screen, a rotation): what
+        // the frame showed before it changes.
+        let shown = fittedSize.width > 0 && scrollView.zoomScale > 1.01 ? visiblePart() : nil
         scrollView.frame = bounds
         let fitted = CompareView.fitted(aspectRatio, in: bounds.insetBy(dx: Self.margin, dy: Self.margin).size)
         if fitted != fittedSize {
-            // Zoomed in, the same part of the picture stays on screen (full screen, a rotation).
-            let kept = fittedSize.width > 0 && scrollView.zoomScale > 1.01 ? visiblePart() : nil
+            let kept = shown
             fittedSize = fitted
             scrollView.zoomScale = 1
             content.frame = CGRect(origin: .zero, size: fitted)
@@ -694,6 +718,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// Zooms in on `focus.rect` (normalized to the picture); the whole picture fits it.
     func focus(on focus: RefineFocus) {
         focusedRequest = focus.id
+        beforeFit = nil
         guard fittedSize.width > 0, fittedSize.height > 0 else { return }
         scrollView.zoom(to: onContent(focus.rect), animated: focus.animated)
     }
@@ -719,6 +744,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         cancelDrawing()
         stopRepeating()
+        beforeFit = nil
     }
 
     func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
@@ -803,40 +829,42 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         }
     }
 
-    /// Two fingers held keep undoing, three keep redoing, until they lift or move the picture.
+    /// Two fingers held keep undoing, three keep redoing, until they lift, run out of steps or
+    /// move the picture.
     @objc private func handleRepeat(_ recognizer: UILongPressGestureRecognizer) {
+        let at = recognizer.location(in: self)
         switch recognizer.state {
         case .began:
             cancelDrawing()
+            repeatStart = at
             startRepeating(redo: recognizer === redoHold)
         case .changed:
-            break
+            if let start = repeatStart, hypot(at.x - start.x, at.y - start.y) > Self.repeatMovement { stopRepeating() }
         default:
             stopRepeating()
         }
     }
 
+    /// Steps at once, then again and again, faster the longer the fingers stay, each step waiting
+    /// for the last to land (`onRepeat` says when there's none left).
     private func startRepeating(redo: Bool) {
         stopRepeating()
-        step(redo: redo)
+        guard onRepeat?(redo) == true else { return }
         repeating = Task { @MainActor [weak self] in
             var interval = RefineSurfaceView.firstRepeat
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled, let self else { return }
-                self.step(redo: redo)
+                guard self.onRepeat?(redo) == true else { return }
                 interval = max(RefineSurfaceView.fastestRepeat, interval * 0.85)
             }
         }
     }
 
-    private func step(redo: Bool) {
-        if redo { onRedo?() } else { onUndo?() }
-    }
-
     private func stopRepeating() {
         repeating?.cancel()
         repeating = nil
+        repeatStart = nil
     }
 
     /// A quick pinch in fits the picture to the screen; a quick pinch out right after goes back to
@@ -848,19 +876,23 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         case .ended:
             guard let start = pinchStart, CACurrentMediaTime() - start.time < Self.quickPinch else {
                 pinchStart = nil
+                beforeFit = nil
                 return
             }
             pinchStart = nil
+            let animated = !UIAccessibility.isReduceMotionEnabled
             if pinch.scale < Self.quickIn, start.zoom > 1.01 {
                 beforeFit = start.visible
                 // After the scroll view's own end of the pinch.
-                Task { @MainActor [weak self] in self?.scrollView.setZoomScale(1, animated: true) }
+                Task { @MainActor [weak self] in self?.scrollView.setZoomScale(1, animated: animated) }
             } else if pinch.scale > Self.quickOut, start.zoom < 1.01, let back = beforeFit {
                 beforeFit = nil
                 Task { @MainActor [weak self] in
                     guard let self else { return }
-                    self.scrollView.zoom(to: self.onContent(back), animated: true)
+                    self.scrollView.zoom(to: self.onContent(back), animated: animated)
                 }
+            } else {
+                beforeFit = nil
             }
         case .cancelled, .failed:
             pinchStart = nil
@@ -892,10 +924,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         !(gestureRecognizer === press && other === brush) && !(gestureRecognizer === brush && other === press)
     }
 
-    /// A stroke can't begin under a hold that has begun, nor a hold under a stroke.
+    /// A stroke can't begin under a hold that has begun, nor a hold under a stroke; with a tool
+    /// that drags, a touch held still waits for its drag.
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         if gestureRecognizer === brush { return press.state != .began && press.state != .changed }
-        if gestureRecognizer === press { return brush.state != .began && brush.state != .changed }
+        if gestureRecognizer === press { return holdPicks && brush.state != .began && brush.state != .changed }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
     }
 
@@ -932,16 +965,16 @@ extension RefineSurfaceView: UIDropInteractionDelegate {
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
-        onDropHover?(normalized(session.location(in: content)))
-        return UIDropProposal(operation: .copy)
+        let takes = onDropHover?(normalized(session.location(in: content))) ?? false
+        return UIDropProposal(operation: takes ? .copy : .forbidden)
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidExit session: UIDropSession) {
-        onDropHover?(nil)
+        _ = onDropHover?(nil)
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnd session: UIDropSession) {
-        onDropHover?(nil)
+        _ = onDropHover?(nil)
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
@@ -976,7 +1009,8 @@ struct RefineLoupe: View {
 
     /// Where the loupe goes for a finger at `point`, within a canvas of `size`.
     static func position(over point: CGPoint, in size: CGSize) -> CGPoint {
-        let half = diameter / 2 + 4
+        // Its outer ring's reach, and a little room.
+        let half = (diameter + ring) / 2 + 4
         let y = point.y - lift < half ? point.y + lift : point.y - lift
         return CGPoint(x: min(max(point.x, half), max(half, size.width - half)), y: y)
     }
