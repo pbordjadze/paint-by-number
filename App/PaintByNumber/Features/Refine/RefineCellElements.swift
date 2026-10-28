@@ -1,6 +1,7 @@
 import CoreGraphics
 import PaintCore
 import SwiftUI
+import simd
 
 /// Refine's cells as VoiceOver and Switch Control elements over the picture, while a cell tool is
 /// picked (painting-company row 143): the cells whose numbers are in view, at most
@@ -53,12 +54,21 @@ struct RefineCellElements: View {
         let shown = CGRect(
             x: (inner.minX - picture.minX) * s.width, y: (inner.minY - picture.minY) * s.height,
             width: inner.width * s.width, height: inner.height * s.height)
+        let center = SIMD2(Float(shown.midX), Float(shown.midY)), rowHeight = Float(44 * s.height)
         var cells = CanvasAccessibility.visibleAreas(
-            Array(template.regions.indices), anchors: anchors, visible: shown,
-            center: SIMD2(Float(shown.midX), Float(shown.midY)), rowHeight: Float(44 * s.height))
+            Array(template.regions.indices), anchors: anchors, visible: shown, center: center, rowHeight: rowHeight)
         if let selected, !cells.contains(selected), anchors.indices.contains(selected),
            shown.contains(CGPoint(x: CGFloat(anchors[selected].x), y: CGFloat(anchors[selected].y))) {
+            // In the place of the farthest from the middle, in reading order.
+            if cells.count >= CanvasAccessibility.limit,
+               let farthest = cells.max(by: { simd_distance_squared(anchors[$0], center) < simd_distance_squared(anchors[$1], center) }) {
+                cells.removeAll { $0 == farthest }
+            }
             cells.append(selected)
+            cells.sort {
+                CanvasAccessibility.key($0, anchor: anchors[$0], rowHeight: rowHeight)
+                    < CanvasAccessibility.key($1, anchor: anchors[$1], rowHeight: rowHeight)
+            }
         }
         return cells
     }

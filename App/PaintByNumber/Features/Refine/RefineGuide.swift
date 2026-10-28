@@ -830,7 +830,8 @@ struct RefineGuideView: View {
                 ForEach(RefineGuideTopic.sections) { section in
                     Section {
                         ForEach(section.topics) { topic in
-                            RefineGuideRow(topic: topic).tag(topic)
+                            // The guide's own width: its sidebar column is compact on iPad too.
+                            RefineGuideRow(topic: topic, showsSummary: sizeClass == .compact).tag(topic)
                         }
                     } header: {
                         if let group = section.group { RefineView.groupName(group) } else { Text("Start Here") }
@@ -875,14 +876,13 @@ struct RefineGuideView: View {
 /// Lamplit Table, October 28).
 private struct RefineGuideRow: View {
     let topic: RefineGuideTopic
-
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    let showsSummary: Bool
 
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
                 RefineGuidePageView.title(topic)
-                if sizeClass != .regular {
+                if showsSummary {
                     Text(RefineGuidePage.of(topic).summary)
                         .font(.footnote)
                         .foregroundStyle(.secondary)

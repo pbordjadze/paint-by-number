@@ -61,8 +61,8 @@ struct RefineCellsTests {
         #expect(RefineCells.merge(apart.0, with: apart.1, in: t, probe: probe) == nil)
     }
 
-    /// Move Number moves the cell's roomiest number the way asked, inside the cell; the editor
-    /// decides whether it fits there.
+    /// Move Number moves the cell's roomiest number the way asked, inside the cell, a step the
+    /// editor makes.
     @Test func moveNumberStepsTheNumberTheWayAsked() throws {
         let t = Self.scene
         let sky = try TemplateEditorTests.region(t, 100, 20)
@@ -86,7 +86,17 @@ struct RefineCellsTests {
                 moved += 1
             }
         }
-        #expect(moved >= 1, "the sky's number moved no way")
+        #expect(moved == RefineCells.Direction.allCases.count, "the sky's number moved \(moved) ways of four")
         #expect(RefineCells.moveNumber(of: t.regions.count, .up, in: t) == nil)
+    }
+
+    /// On a crowded book nearly every cell's number moves some way (a step sized by the number's
+    /// room: one as wide as the number left a third of the cells unmovable, the review found).
+    @Test func moveNumberMovesNearlyEveryCellsNumber() throws {
+        let t = try TemplateEditorTests.richBook()
+        let movable = t.regions.indices.filter { r in
+            RefineCells.Direction.allCases.contains { RefineCells.moveNumber(of: r, $0, in: t) != nil }
+        }
+        #expect(movable.count * 10 >= t.regions.count * 9, "\(movable.count) of \(t.regions.count) cells' numbers move")
     }
 }

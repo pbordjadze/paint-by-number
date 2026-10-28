@@ -74,19 +74,20 @@ public enum RefineCells {
         }
     }
 
-    /// Move Number for cell `region`'s roomiest number, a step `direction`: as far as the number is
-    /// wide, else half as far again or half as far, the first of them that lies in the cell (the
-    /// editor declines one with no room there, and says why). Nil for a cell with no number, or
-    /// none of the three in it.
+    /// Move Number for cell `region`'s roomiest number, a step `direction`: half its room (the
+    /// free space round it, `Label.radius`), else a quarter, at least a unit, the first the editor
+    /// makes. Nil for a cell with no number, or no room either way: Refine says it couldn't move.
+    /// Each try lays the edit once, unchecked, on `t` (a VoiceOver action's cost, not a drag's).
     public static func moveNumber(of region: Int, _ direction: Direction, in t: Template) -> TemplateEditor.Edit? {
         guard t.regions.indices.contains(region),
               let label = t.labels(ofRegion: region).max(by: { ($0.radius, $1.position.x) < ($1.radius, $0.position.x) })
         else { return nil }
-        let width = max(2 * label.radius, 3)
-        for distance in [width, 1.5 * width, 0.5 * width] {
-            let to = label.position + direction.step * distance
+        for fraction: Float in [0.5, 0.25] {
+            let to = label.position + direction.step * max(fraction * label.radius, 1)
             guard to.x >= 0, to.y >= 0, to.x <= Float(t.width), to.y <= Float(t.height), t.region(at: to) == region else { continue }
-            return .moveLabel(from: label.position, to: to, reach: max(label.radius, TemplateEditor.tapReach))
+            let edit = TemplateEditor.Edit.moveLabel(from: label.position, to: to, reach: max(label.radius, TemplateEditor.tapReach))
+            guard let (_, outcome) = try? TemplateEditor.apply(edit, to: t, verify: false) else { continue }
+            if outcome.declined == nil, outcome.labelsMoved == 1 { return edit }
         }
         return nil
     }

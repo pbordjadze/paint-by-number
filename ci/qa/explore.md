@@ -83,8 +83,12 @@ HTTP.
     (CI's UI tests tap with several fingers). A touch held still on Refine's canvas is the
     Eyedropper: `longPressOn` there picks the paint under it (the palette's ring moves), and its
     loupe shows only while the finger is down. Refine's area card (from Select's Change Color)
-    is missing from `inspect_screen`'s elements: tap its controls by point, and while the system
-    color picker is open only the picker is listed.
+    is a popover on iPad, missing from `inspect_screen`'s elements (tap its controls by point);
+    on iPhone it opens in Select's bar, in the palette's place, and Change Color reads Close.
+    While the system color picker is open only the picker is listed. With a cell tool (Select,
+    Bucket, Eyedropper, Edit Paint, Make Cell, Merge, Move Number) the debug build lists up to
+    40 elements `refine-cell-<n>` over the picture: VoiceOver's cells, not drawn, each at its
+    cell's number; a tap on one is a tap on the picture there.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -157,8 +161,8 @@ Report these only if they look wrong in another way:
 - The release build has no Refine (the debug build does): it is left out of the first release.
 - In Refine (debug build): a touch held on the picture picks the photo's color, not the cell's
   paint, where the photo shows more than the paint (Photo on, Paint under half its opacity), as
-  the Eyedropper does. A known bug, to be fixed: a paint that Make Cell takes every area from
-  stays in the palette, so the painting's numbers skip it (painting-company row 143).
+  the Eyedropper does. A paint that Make Cell, the Eraser or the Line Eraser takes every area
+  from leaves the palette, the numbers after it closing up, as Merge's does.
 - In Refine (debug build): Cancel with changes asks before putting back what Refine opened with;
   a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
   them back); the picker of an area's card is one step of the history however many colors it

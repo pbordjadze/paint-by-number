@@ -317,8 +317,7 @@ final class RefineUITests: XCTestCase {
     /// painting-company row 143): VoiceOver's cells (the cells in view, each its paint's number and
     /// name, the selected one marked), the Eyedropper's tap, Move Number, Cell Edge then Move Edge
     /// on it, every figure of Shapes (the curve bent by a second drag), the Pen's line then Bend
-    /// Line on it, a look, and on iPad Edit Paint's swatch dragged onto another; each a change,
-    /// and Done keeps them.
+    /// Line on it, and a look; each a change, and Done keeps them.
     @MainActor
     func testEveryOtherToolChangesThePicture() throws {
         let app = launchPreview()
@@ -366,7 +365,7 @@ final class RefineUITests: XCTestCase {
         pickTool("moveNumber", in: "Numbers", of: app)
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: number.x, dy: number.y))
-            .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: number.x - 24, dy: number.y)))
+            .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: number.x - 12, dy: number.y)))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Move Number didn't count: \(canvas.value ?? "")")
 
         // Cell Edge down through the cloud and the open sky below it, then Move Edge bends it to the right.
@@ -424,19 +423,25 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The look didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-look")
 
-        // Edit Paint: a swatch dragged onto another makes them one paint (the system's drag and
-        // drop, which synthesized touches drive on iPad).
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            pickTool("editPaint", in: "Paint", of: app)
-            let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
-            XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
-            from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0)
-            count += 1
-            XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Merging two paints didn't count: \(canvas.value ?? "")")
-        }
-
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("\(count) changes")), "Done didn't keep the changes")
+    }
+
+    /// Edit Paint: a swatch dragged onto another makes the two one paint (a change). iPad only:
+    /// the system's drag and drop, which synthesized touches drive there.
+    @MainActor
+    func testEditPaintMergesASwatchIntoAnother() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "A swatch's drag and drop is driven on iPad")
+        let app = launchPreview()
+        app.buttons["refine"].tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+        pickTool("editPaint", in: "Paint", of: app)
+        let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
+        XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
+        from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0)
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Merging two paints didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-edit-paint-merged")
     }
 
     // MARK: - Helpers

@@ -203,6 +203,9 @@ struct RefineView: View {
     #if DEBUG
     /// The demo's paint, cell or card is picked once its edits have landed.
     @State private var didPickDemoPaint = false
+    /// Where the demo's card points (canvas units): the band Select's cell brings moves the
+    /// picture after the card opened, so the card points again where the picture lands.
+    @State private var demoCardAt: SIMD2<Float>?
     #endif
     /// The screen has begun refining (`CreateModel.beginRefining`), once.
     @State private var opened = false
@@ -342,6 +345,12 @@ struct RefineView: View {
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
+        #if DEBUG
+        .onChange(of: picture) {
+            guard let at = demoCardAt, card != nil, let template = base?.template else { return }
+            card = RefineAreaPick(at: at, screen: onScreen(picturePoint(at)), template: template)
+        }
+        #endif
         .fullScreenCover(item: $trial) { trial in
             PaintView(session: trial.session, title: String(localized: "Try Painting"), onClose: { self.trial = nil })
         }
@@ -564,7 +573,12 @@ struct RefineView: View {
         .overlay(alignment: .topTrailing) {
             if fullScreen { exitFullScreen.padding(12) }
         }
-        .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in areaCard(pick) }
+        .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in
+            // A sheet where a popover can't be (a wide iPhone in landscape uses the rail).
+            areaCard(pick)
+                .presentationDetents([.medium, .large])
+                .presentationCompactAdaptation(.sheet)
+        }
         // Its own view, so the card's popover and this one don't share an anchor.
         .background {
             Color.clear
@@ -1019,6 +1033,7 @@ struct RefineView: View {
                     let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
                     if usesRail {
                         card = RefineAreaPick(at: at, screen: onScreen(point), template: template)
+                        demoCardAt = at
                     } else {
                         barCard = RefineAreaPick(at: at, screen: .zero, template: template)
                     }
@@ -2244,10 +2259,13 @@ extension RefineView {
             RefineSelectionBar(template: template, region: region, cardOpen: barCard != nil) {
                 guard let selection else { return }
                 FeedbackEngine.shared.selectionChanged()
-                if usesRail {
+                // Close closes, whatever the width has become since the card opened.
+                if barCard != nil {
+                    barCard = nil
+                } else if usesRail {
                     card = RefineAreaPick(at: selection, screen: onScreen(picturePoint(selection)), template: template)
                 } else {
-                    barCard = barCard == nil ? RefineAreaPick(at: selection, screen: .zero, template: template) : nil
+                    barCard = RefineAreaPick(at: selection, screen: .zero, template: template)
                 }
             }
             if let barCard {
