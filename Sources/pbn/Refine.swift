@@ -6,8 +6,9 @@ import PaintCore
 ///
 ///     {"screen": {"width": 960, "zoom": 1},
 ///      "gestures": [
-///        {"tool": "pen", "points": [[x, y], ...], "inked": true, "smoothing": 0.5},
-///                                                                   a finger's samples; `inked`: ink alone
+///        {"tool": "pen", "points": [[x, y], ...], "inked": true, "smoothing": 0.5, "snap": false},
+///                                                                   a finger's samples; `inked`: ink alone;
+///                                                                   `snap`: the Toolbox's Snap (on unless false)
 ///        {"tool": "splitter", "points": [[x, y], ...]},             the Color Splitter's
 ///        {"tool": "cellEdge", "points": [[x, y], ...]},             the Cell Edge's
 ///        {"tool": "shape", "shape": "line" | "rectangle" | "oval" | "polygon" | "star", "from": [x, y], "to": [x, y]},
@@ -65,6 +66,9 @@ struct RefineScript: Decodable {
         var inked: Bool?
         /// A pen's Smoothing, 0...1.
         var smoothing: Double?
+        /// The Toolbox's Snap, on unless false: a pen's, a cell edge's or a shape's ends join the
+        /// lines their ink touches.
+        var snap: Bool?
         /// An eraser's or a brush's Size: its radius on screen, points.
         var size: Double?
         var zoom: Double?
@@ -207,7 +211,8 @@ func runRefine(_ options: Options) throws {
         let t = trail.template
         let screen = refineScreen(for: t, width: width, zoom: g.zoom ?? script.screen?.zoom ?? 1)
         let drawing = RefineGestures.drawingLines(of: t)
-        let lines = RefineGestures.snapLines(drawing: RefineGestures.drawingLines(of: t, writing: false), canvas: screen.canvas, pending: [])
+        // The Toolbox's Snap: off, the ends stay where the finger left them.
+        let lines = g.snap == false ? nil : RefineGestures.snapLines(drawing: RefineGestures.drawingLines(of: t, writing: false), canvas: screen.canvas, pending: [])
         let samples = (g.points ?? []).enumerated().map { point($0.element, "points[\($0.offset)]", k) }
         var marks: [[SIMD2<Float>]] = [samples]
         var edit: TemplateEditor.Edit?
