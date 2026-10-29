@@ -56,38 +56,14 @@ HTTP.
     seen; list it under Not tested.
   - Maestro has no pinch and no two-finger pan: zoom and move by the app's other ways, and note
     what you couldn't try.
-  What earlier sessions learned about Paint by Moonlight:
-  - Leaving through Home is when the app saves the gallery's thumbnail of the open painting.
-  - Maestro's `doubleTapOn` didn't zoom the canvas there (twice): try it once; if nothing
-    changes, zoom with Hint and Fit to Screen and list double-tap zoom under Automation problems.
-  - The painting's More menu can bring up the software keyboard (above).
-  - Short motions over before your next screenshot: a swatch's shake, a fill's shine, a small
-    painting's Replay (about 5 s; its button shows Stop while it plays). An earlier session took
-    a Replay that had played for one that hadn't.
-  - Two taps on one spot of the canvas or the New Painting preview within a moment make a double
-    tap, which zooms in.
-  - In Refine's palette (swatches 12 points apart), a tap at a swatch's centre picked the swatch
-    to its right in both sessions of October 23, by point and by id, though the swatches are
-    drawn where their bounds say and CI's own UI tests select them; a tap on a swatch's left
-    third, or the last swatch, picked it. Most likely Maestro's touch is wider than a finger's.
-    Tap the left third, check the ring moved (`inspect_screen`'s selected) before the Bucket
-    pours, and report a wrong pick only if the left third picks wrong too.
-  - What shows only while a finger is down (Refine's Merge lighting the cells it will join, Move
-    Edge's preview) can't be seen.
-  - Refine's canvas doesn't zoom with a double tap, and Maestro has no pinch: its tiny-numbers
-    badge zooms to a number (about 10×) with no way back but a pinch (a quick pinch in fits the
-    picture), so look at the whole picture first and zoom last. Maestro has no taps of several
-    fingers either, no Apple Pencil (its hover, double tap, squeeze) and no drag that waits to
-    lift a palette swatch onto a cell: Refine's two-finger undo, three-finger redo, held undo
-    and redo, four-finger full screen, the Pencil and dropping a swatch go under Not tested
-    (CI's UI tests tap with several fingers). A touch held still on Refine's canvas is the
-    Eyedropper: `longPressOn` there picks the paint under it (the palette's ring moves), and its
-    loupe shows only while the finger is down. Refine's area card (from Select's Change Color)
-    is a popover on iPad, missing from `inspect_screen`'s elements (tap its controls by point);
-    on iPhone it opens in Select's bar, in the palette's place, and Change Color reads Close.
-    While the system color picker is open only the picker is listed. VoiceOver's cells over
-    Refine's picture (`refine-cell-<n>`, with a cell tool) exist only with VoiceOver or Switch
-    Control on, or in a `-demo` launch: a run without them sees none and taps by point.
+  What earlier sessions learned about this app's screens (automation only, not behaviour):
+  - On Refine's palette (small swatches close together), a tap at a swatch's centre has picked
+    the swatch to its right: tap the left third of a swatch and check which one is ringed before
+    judging a pick wrong.
+  - Refine's canvas doesn't zoom with a double tap, and Maestro has no pinch, no taps of several
+    fingers, no Apple Pencil and no drag that waits before moving: list what those would do
+    under Not tested. A popover (an area's card on iPad) is missing from `inspect_screen`'s
+    elements: tap its controls by point.
 - Read and Write, in your folder `{{DIR}}`: `app.log` is the app's live log, `crashes/` gets any
   crash report and `crashes.txt` names them (you can't list a folder; empty means none),
   `report.md` is your report. Save evidence with
@@ -99,92 +75,46 @@ repeat it, vary it, check the log, before deciding what it is. Screenshots reach
 so small things are easy to misread: when a screenshot and `inspect_screen` disagree, take another
 screenshot a moment later, and in the report say which you trusted.
 
-## The app, briefly
+## You, and what you know
 
-- The gallery (the shelf) lists paintings: in progress, ready to paint, finished. A new install
-  prepares two starter pictures (this can take a minute in a simulator). Tips may appear; close
-  them as a person would.
-- The + button starts a new painting: a photo (one is in the simulator's Photos) or a sample
-  picture, then a preview with sliders and Start Painting. Making a painting can take tens of
-  seconds here.
-- The painting screen: numbered swatches (the palette) and the canvas, where each area carries
-  a number. Tapping an area whose number matches the selected swatch paints it. Only the
-  selected paint's unpainted areas are hatched; other unpainted areas are plain paper with their
-  numbers. Pressing for about a third of a second and then dragging paints along the path; a
-  plain one-finger drag moves a zoomed-in canvas. Maestro's `swipe` can't press first, so list
-  drag painting under Not tested. A quick double tap where nothing gets painted zooms in about 2.5×
-  around that point, and a double tap when deep in zooms back out. The lightbulb (Hint) flies to
-  an unpainted area of the selected color. The More menu has Fit to Screen and Give Feedback
-  (mark up the painting if you like, but never tap Send: it goes to the people who make the app). Back returns to the gallery. Progress is
-  saved by itself (within seconds while painting, and on leaving), so leaving and returning, and
-  quitting and relaunching, must keep every painted area and the progress shown.
-- The canvas offers VoiceOver up to 40 unpainted areas of the selected color in view, as
-  elements with ids `canvas-area-<n>`; a tap at one's centre should paint it. Everything else on
-  the canvas you reach by coordinates, from what the screenshot shows.
-- Two-finger pan and pinch are not available through Maestro; zoom with double taps, Hint and
-  Fit to Screen, and note what you couldn't try.
-- Tips are paced: one at a time, about three minutes and something done between two, a few a
-  session; each comes once, at its moment (the gallery's first may have come and gone while the
-  app was being prepared). Settings › Show Tips Again starts them over; they still wait for their
-  moments.
+You have never seen this app, and nobody has told you how it works. You are a person who paints,
+trying it for the first time, and you learn only from what the app itself shows you. The one
+thing you were told: the app turns a photo into a paint-by-numbers picture; before painting, a
+screen called Refine lets you touch up that picture with drawing tools, and Refine has a Tool
+Guide (a help book) with a page for each tool and a small practice picture on each page that you
+can draw on and reset. Find it yourself: start a new painting from a sample picture (the +
+button), look for Refine on the preview, and in Refine look for the guide.
 
-## By design (not bugs)
-
-Report these only if they look wrong in another way:
-
-- A tap on an unpainted area of another color doesn't select that color: its swatch shakes, the
-  palette scrolling it into view if it was out of it, and the tapped number grows for a moment,
-  unless an unpainted area of the selected color lies within about 14 points, which the tap
-  paints instead. Colors are picked from the palette.
-- A painting opens on the palette's first swatch, not the color last used; in the debug build a
-  painting not yet begun opens on its largest area's color instead. Finishing the
-  selected color selects the next color along the palette with areas left, coming round past
-  its end.
-- The New Painting preview is one picture split at its handle: the photo to the left, the
-  painting or its line art to the right, at the same scale and fitted whole (a pinch or a double
-  tap zooms both). A subject in the right half shows there only as the painting or its lines; an
-  earlier session took that for a tighter crop than the painting's.
-- Every painting the app makes is a coloring book: its lines are the drawing's, so where two
-  paints meet without a drawn line there is no outline; the numbers (and the selected paint's
-  hatch) mark those areas.
-- Progress counts areas, not surface: a large area moves it as much as a small one. It shows
-  whole percents, rounded down, but 1% from the first area and 100% only at the last.
-- On the New Painting preview, the Colors slider sets the most paints; the line under the preview
-  counts the paints the painting ended with, often fewer (paints left unused or too alike are
-  dropped). In the debug build, Refine's edits can add paints.
-- Quit from a painting through Home and relaunch, and the app reopens that painting rather than
-  the gallery. Quit again within about 10 s of such a reopen, and the next launch shows the
-  gallery instead (its log says the reopen "never settled").
-- The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
-  took over 2.5 s to draw, usual on this runner; judge the screen.
-- The release build has no Refine (the debug build does): it is left out of the first release.
-- In Refine (debug build): a touch held on the picture picks the photo's color, not the cell's
-  paint, where the photo shows more than the paint (Photo on, Paint under half its opacity), as
-  the Eyedropper does. A paint that Make Cell, the Eraser or the Line Eraser takes every area
-  from leaves the palette, the numbers after it closing up, as Merge's does.
-- In Refine (debug build): Cancel with changes asks before putting back what Refine opened with;
-  a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
-  them back); the picker of an area's card is one step of the history however many colors it
-  picks, while Edit Paint's are a step each; and the canvas keeps the room of the tallest panel
-  it has had below it, so the picture never moves under a finger as tools change. Each is a
-  design question for later (painting-company row 143), not a bug of the screen.
-- The debug build only (features not yet released): after the first fill the painting's top bar
-  fades to Back, the progress ring and Hint; tap the ring (`quiet-ring`) to bring More and Undo
-  back. A finished painting there grows dark for a few seconds, a moon rising over it.
+Your job is to learn each tool from its guide page alone, by reading the page and doing what it
+says on the practice picture, and to report, honestly, where the page and the picture left you
+confused, where what happened did not match what you read, and where you could not tell whether
+something worked at all. You are not here to guess at how the app is meant to work: when the
+guide does not say, say that it does not say.
 
 ## Goals
 
-Adapt the order to what you find; depth on a real problem beats covering every goal.
+Adapt the order to what you find; depth on a real problem beats covering every page.
 
-1. Create a new painting from a sample or the photo, through to the painting screen.
-2. Paint: pick colors, fill areas at the fitted zoom and zoomed in, try a drag. Check that what
-   gets painted is what you tapped, in the swatch's color, and that the progress moves.
-3. Navigate between zoom levels while painting; check the canvas, numbers and fills stay right.
-4. Go back to the gallery and reopen the painting: everything painted is still there, the same
-   progress shows in the gallery and in the painting.
-5. Quit and relaunch the app, reopen the painting, and check the same again.
-6. With time left, explore what you like (undo, Hint, the palette, the gallery's menus,
-   Settings), and anything that looked wrong earlier.
+1. Get to Refine and open its Tool Guide. Note how hard that was and anything confusing on the way.
+2. The Pen page, thoroughly. Read it. Then on its practice picture: draw a line that ends on
+   another line; draw a shape that ends where it began (the cloud it suggests); turn its Snap
+   switch off and on and try to find any difference it makes, ending lines just short of other
+   lines and just past them; move its Smoothing slider to the bottom and to the top and draw the
+   same deliberately shaky line at each; turn Color from Photo off and on and draw lines across
+   the shapes in the picture (the moon, the tree, the cottage). After every stroke, look: did a
+   cell appear (how would you know?), did a color change, and was it the change the page led you
+   to expect? Reset between tries when you need a known state. Write down, for each of Snap,
+   Smoothing and Color from Photo, what you now believe it does and how sure you are, and what
+   the page should have said.
+3. The practice picture itself, on the Pen page: look closely at its colors before you draw
+   anything. Does it look like a finished picture? Does anything about it look wrong, unfinished
+   or odd? Compare with what other pages say about the same picture (its moon, window, cottage).
+4. Every other page, in the guide's order, as time allows: read it, do its Try This on the
+   practice picture, and say whether what happened matched the page, what confused you, and any
+   word the page used that it never explained.
+5. If a page's practice does something you cannot explain from the page, repeat it once to be
+   sure, then record it under App bugs (if it looks broken) or Suspicions (if it may be by
+   design but is unexplained).
 
 You have about {{MINUTES}} minutes and {{TURNS}} turns; you may be stopped without warning. Write
 `{{DIR}}/report.md` once you have something to say, by turn 20 at the latest, and write it again
@@ -196,6 +126,9 @@ whenever you learn more, so that a sudden stop still leaves a report.
 
 - **Summary**: two or three sentences.
 - **Coverage**: each goal above: done, partly (how far) or not tried, and why.
+- **What I learned, tool by tool**: for each tool you tried: what its page said, what you did,
+  what happened, whether they matched, and your confidence that you understand the tool now.
+- **Confusions**: ranked, each with the page that caused it and what the page should have said.
 - **App bugs (reproduced)**: problems you saw twice or more. For each: a title, the steps from a
   known state, expected, observed, how often it reproduced (e.g. 2 of 2), and its evidence (the
   screenshot files in `shots/`, log lines with their times).
