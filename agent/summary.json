@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 117,
+ "duration_ms": 1365847,
+ "total_cost_usd": 3.0807098,
+ "result": "I finished the Pen page and three more guide pages (The Basics, Layers, Coming from Procreate) before running out of time. I didn't reach Shapes, Bend Line, Eraser, Line Eraser or anything after them. The report is at `/Users/runner/work/_temp/qa/report.md`, with screenshots in `shots/`. No crashes were recorded (`crashes.txt` is empty).\n\nGetting there was easy: Home \u2192 + \u2192 Samples \u2192 Red Fuji \u2192 Refine \u2192 \"?\". The guide opens straight onto the Pen page.\n\n**Main findings:**\n\n1. **The practice picture isn't the same on every page (seen on 3 of 3 pages).**\n   - On Pen, Layers and Coming from Procreate, the moon, tree and cottage are outlined but painted the color of the sky or grass. Only 3 paints exist (moon = 2, same as the sky; everything else = 1, same as the grass).\n   - The photo underneath, and The Basics' version of the picture, have the real colors: cream moon, red roof, yellow window, and 9 paints in all.\n   - The Basics' Try This depends on that yellow window, and the Layers page calls the 3-paint version \"the picture as it will look finished\".\n   - The blank version may be deliberate, for practising, but no page says so.\n2. **Pen: you can't see that a new cell was made.** With Color from Photo off, closing a shape changes nothing visible. You only see it with Layers \u2192 Numbers on, which the page never mentions. And the new cell's \"own number\" turned out to be the same number as the area around it.\n3. **Pen: Snap reaches only about 3 pt.**\n   - A line ending 3 pt short of another line joined it with Snap on, but not with Snap off. At 5 pt and 7 pt short it didn't join, even with Snap on.\n   - A line ending past another line closes the shape either way, and the tail sticking out stays.\n   - Nothing on screen shows when it snaps.\n   - I tried each distance once, so I'm only moderately sure.\n4. **Color from Photo works as the page says.** With it on, the moon halves turned cream, the tree dark green, the walls cream and the door brown. With it off, the roof stayed green. One oddity, seen once: the two tree halves look identical but got different numbers (5 and 6).\n5. **Reset also turns Layers switches back off (Numbers and Photo), seen 2 of 2 times,** but Smoothing kept its setting across pages. The page only says Reset \"puts the picture back\".\n6. **Smaller points:** two palette swatches are both named \"Light beige\". The preview tip says \"page\" where the label says \"Painting\".\n\n**Not tested, because of Maestro's limits:**\n- Smoothing: Maestro only draws straight lines, so I couldn't draw a shaky one. Straight lines looked the same at 0%, about 70% and 100%.\n- Pinch zoom and the multi-finger taps.\n- The magnifier you see while holding a finger down.\n- Dragging a swatch onto a cell: my drag didn't land, probably because it needs a pause before moving.\n\nOne automation snag: tapping the Color from Photo control by its id hit the label and didn't flip the switch. Tapping the switch itself worked.\n\nI also saved these automation tips (switch and Layers tap points, turning on Numbers) to memory for future sessions.",
+ "usage": {
+  "input_tokens": 124,
+  "cache_creation_input_tokens": 201318,
+  "cache_read_input_tokens": 6481119,
+  "output_tokens": 38870,
+  "output_tokens_details": {
+   "thinking_tokens": 8322
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 201318
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 44,
+  "mcp__maestro__inspect_screen": 13,
+  "mcp__maestro__run": 51,
+  "Read": 2,
+  "Write": 6
+ },
+ "images_received": 44
+}

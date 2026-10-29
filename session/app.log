@@ -1,0 +1,28 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "subsystem == "com.pbordjadze.paintbynumber""
+Timestamp               Ty Process[PID:TID]
+2026-10-29 05:44:41.291 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-10-29 05:44:42.672 Df PaintByNumber[21662:fc12] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.383395416 seconds
+2026-10-29 05:45:11.526 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 29.770350958999998 seconds
+2026-10-29 05:45:11.710 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-10-29 05:45:41.621 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 30.093931 seconds
+2026-10-29 05:45:41.641 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-10-29 05:45:42.101 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-10-29 05:46:27.185 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+2026-10-29 05:48:31.871 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted
+2026-10-29 05:49:09.601 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Draft #1 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-10-29 05:49:10.101 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-10-29 05:49:10.119 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-10-29 05:49:12.628 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-10-29 05:49:12.653 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted newPaintingDivider, newPaintingSliders, newPaintingRefine
+2026-10-29 05:49:13.096 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn: newPaintingDivider
+2026-10-29 05:49:27.942 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn over: newPaintingDivider
+2026-10-29 05:49:33.254 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-10-29 05:49:34.571 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted refineDraw
+2026-10-29 05:49:37.036 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+2026-10-29 05:49:56.326 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:tips] turn over: refineDraw
+2026-10-29 05:50:09.103 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: pen
+2026-10-29 06:02:11.376 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: basics
+2026-10-29 06:03:43.079 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: layers
+2026-10-29 06:06:26.187 Df PaintByNumber[21662:fba0] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: procreate
+Child process terminated with signal 15: Terminated
