@@ -8,7 +8,7 @@
 # Polls every 30 s for up to 180 min (a full run takes 30 on idle runners, up to 100 under load;
 # main's iPhone job may run 160). Run it in the background and read the report when done.
 set -euo pipefail
-SHA="${1:-$(git rev-parse HEAD)}"
+SHA="$(git rev-parse "${1:-HEAD}")"
 OUT="${2:-ci-report}"
 BRANCH="${CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 REF="refs/ci-shots/${BRANCH}"
