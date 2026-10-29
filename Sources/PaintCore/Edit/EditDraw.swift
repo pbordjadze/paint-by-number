@@ -410,7 +410,7 @@ extension EditWork {
                         for l in (a == b ? k + 1 : 0)..<max(pb.count - 1, a == b ? k + 1 : 0) {
                             let c = Lattice.contact(pa[k], pa[k + 1], pb[l], pb[l + 1])
                             if a == b, l == k + 1 || (closed && k == 0 && l == pa.count - 2) {
-                                if case .overlap = c { throw EditFailure.degenerate("the line doubles back on itself") }
+                                if case .overlap = c { throw EditFailure.degenerate(TemplateEditor.lineDoublesBack) }
                                 continue
                             }
                             switch c {

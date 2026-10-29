@@ -143,7 +143,7 @@ extension EditWork {
         let alive = t.regions.indices.filter { regionAlive[$0] }
         guard let nearest = TemplateEditor.nearestLabel(
             in: alive, labels: { labels[$0] ?? Array(t.labels(ofRegion: $0)) }, at: from, reach: reach)
-        else { throw EditFailure.invalid("no number is near enough to move") }
+        else { throw EditFailure.invalid(TemplateEditor.noNumberNear) }
         let r = nearest.region
         var own = labels[r] ?? Array(t.labels(ofRegion: r))
         let position = Lattice.position(to)

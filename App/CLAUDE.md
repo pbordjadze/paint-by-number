@@ -545,8 +545,11 @@ Conventions).
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
-  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks, never
-  bent back into a hook: `PenAssist`, `SnapLines`; never onto writing, which the editor never
+  drawn (with Snap, an end within a fingertip of a line, 10 points on screen, moves onto it, a
+  loop's own start included, and an end that ran on past a crossing or round past that start is
+  cut back to where it met the line, so the cell closes as the painter meant, never bent back
+  into a hook: `PenAssist`, `RefineGestures.snapReach`, `SnapLines`; until October 29 the reach
+  was the ink's width and Snap on or off was the same, painting-company row 175; never onto writing, which the editor never
   joins a line to: `RefineGestures.drawingLines(of:writing:)`, `LineArtDrawing.Line.isWriting`), Shapes draws a straight line, a rectangle, an oval, a curve (two
   drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from
@@ -594,9 +597,11 @@ Conventions).
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
     group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
-    Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied`;
-    `SettingsKey.refineSnaps`/`refinePenColors`/`refinePenSmoothing`), Shapes (its figures and Snap
-    above the tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`: a drag moves the line under it, bending it near
+    Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied` on a string of
+    `steadyString` points at full, 48 since October 29 (at 20 a painter saw nothing);
+    `SettingsKey.refineSnaps`/`refinePenColors`/`refinePenSmoothing`), Shapes (its figures, Snap
+    and Color from Photo, the Pen's switch, which a figure's pieces take as a line's do, above the
+    tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`: a drag moves the line under it, bending it near
     the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint and area count in
     `RefineSelectionBar`, one band with the palette, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
@@ -663,8 +668,10 @@ Conventions).
     (`CreateModel.practice(_:scene:)`: the photo and base given, final at once, never generated, so
     no text corrections or sliders are offered). The picture is PaintCore's `RefinePractice`, a
     drawn moonlit evening made a template by the editor's own draws (`painted`: every shape in the
-    photo's colors; `inked`: outlines over the hills' paints, for Fill, the Bucket and Color from
-    Photo), made once a launch off the main actor (`RefinePracticePicture`). Reset is Cancel's
+    photo's colors, every page's but two; `inked`: outlines over the hills' paints, the moon in
+    the sky's and the cottage in the hill's, for Make Cell and the Bucket, whose pages say to tap
+    inside the moon and pour into the roof; the Pen's page used it until October 29, and painters
+    took its colors for a fault, painting-company row 175), made once a launch off the main actor (`RefinePracticePicture`). Reset is Cancel's
     way back (`cancelRefining`) and the canvas made again (`.id`). Writing has no practice (the
     picture has no text). `create-refine-guide` (with `-dark`, `-long-text`) opens it on Merge;
     `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.

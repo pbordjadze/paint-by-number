@@ -193,7 +193,7 @@ extension EditWork {
                 if hit.distanceSquared <= r2, grab == nil || hit.distanceSquared < grab!.d2 { grab = (nil, i, j, hit.point, hit.distanceSquared) }
             }
         }
-        guard let grab else { throw EditFailure.invalid("no line is near enough to move") }
+        guard let grab else { throw EditFailure.invalid(TemplateEditor.noLineNear) }
 
         var plan = Reshape()
         plan.grabbed = grab.point

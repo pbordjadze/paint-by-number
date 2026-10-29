@@ -320,7 +320,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each with its own number. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line."
+            "value" : "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each numbered by its paint. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line."
           }
         }
       }
@@ -1100,7 +1100,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rub out the cross in the cottage’s window, so its four panes become one."
+            "value" : "Tap the middle of the cross in the cottage’s window, so its four panes become one."
           }
         }
       }
@@ -1856,7 +1856,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell with its own number. Lines leave the colors alone, unless Color from Photo is on."
+            "value" : "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell, numbered by its paint. Lines leave the colors alone, unless Color from Photo is on."
           }
         }
       }
@@ -1880,7 +1880,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A shape too small for a number stays a line, and doesn’t become a cell."
+            "value" : "A line that ends on nothing stays as ink and divides nothing."
           }
         }
       }
@@ -1916,7 +1916,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "End a line on another line to close a shape. With Snap on, an end that touches a line joins it."
+            "value" : "End a line on another line, or back where you began, to close a shape; sparkles mark the join. With Snap on, an end a little short of a line, or a little past it, is moved onto it."
           }
         }
       }
@@ -1928,7 +1928,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn on Color from Photo to give each new cell the photo’s color there."
+            "value" : "Turn on Color from Photo and every piece a line cuts off takes the photo’s color under it."
           }
         }
       }
@@ -1964,7 +1964,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw a cloud in the sky, ending where you began. Then turn on Color from Photo and draw a line across the moon."
+            "value" : "Draw a cloud low in the sky, ending where you began. Then turn on Color from Photo and draw another: it takes the glow’s color there."
           }
         }
       }
@@ -2288,7 +2288,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With Snap on, a line’s ends join the lines they touch."
+            "value" : "Snap and Color from Photo work here as with the Pen."
           }
         }
       }
@@ -2312,7 +2312,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pick a figure above the tools."
+            "value" : "Pick a figure in the Shapes bar."
           }
         }
       }
@@ -2396,7 +2396,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The cells the line kept apart become one."
+            "value" : "The cells the line kept apart become one, in the paint of the larger."
           }
         }
       }
@@ -2432,7 +2432,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag to rub out what you touch."
+            "value" : "Drag to rub out what you touch, at the Eraser’s Size."
           }
         }
       }
@@ -2905,6 +2905,18 @@
         }
       }
     },
+    "refine.note.tapLine" : {
+      "comment" : "Refine screen toast: a Line Eraser tap landed on no line, so nothing was erased",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a line to erase it."
+          }
+        }
+      }
+    },
     "refine.note.notMoved" : {
       "comment" : "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed",
       "extractionState" : "manual",
@@ -3002,13 +3014,13 @@
       }
     },
     "refine.snap.hint" : {
-      "comment" : "Refine screen, a drawing tool's options: VoiceOver hint of Snap, which moves a drawn line's end onto a line its ink touches",
+      "comment" : "Refine screen, a drawing tool's options: VoiceOver hint of Snap, which moves a drawn line's end onto a line it lands within a fingertip of",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Joins the end of a line to a line it touches."
+            "value" : "Moves the end of a line onto a line it lands near."
           }
         }
       }
@@ -5041,6 +5053,18 @@
         }
       }
     },
+    "refine.note.doublesBack" : {
+      "comment" : "Refine screen toast: a line drawn with the Pen turned back along its own path, which can't be drawn; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That line doubles back on itself."
+          }
+        }
+      }
+    },
     "refine.note.notRecolored" : {
       "comment" : "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed",
       "extractionState" : "manual",
@@ -5222,7 +5246,7 @@
       "extractionState" : "manual"
     },
     "Snap" : {
-      "comment" : "Refine screen, a drawing tool's options: a switch; when on, a drawn line's end moves onto a line its ink touches",
+      "comment" : "Refine screen, a drawing tool's options: a switch; when on, a drawn line's end moves onto a line it lands within a fingertip of",
       "extractionState" : "manual"
     },
     "Star" : {
