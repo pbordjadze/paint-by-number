@@ -117,7 +117,31 @@ struct RefineGeometryTests {
         let joined = PenAssist.joined(curve, to: lines, reach: 16, straight: false)
         let end = try #require(joined.last)
         #expect(Self.near(end, CGPoint(x: 110, y: 12.1), within: 1e-9), "\(end)")
-        #expect(Array(joined.dropLast()) == Array(curve.prefix(12)))
+        #expect(Array(joined.dropLast()) == Array(curve.prefix(11)))
+        // A tail of two reaches is a finger's overshoot and is cut; a longer one is drawn.
+        let far = curve + [CGPoint(x: 130, y: 17), CGPoint(x: 141, y: 20)]
+        #expect(PenAssist.joined(far, to: lines, reach: 16, straight: false).last.map { Self.near($0, end, within: 1e-9) } == true)
+        let farther = far + [CGPoint(x: 150, y: 24)]
+        #expect(PenAssist.joined(farther, to: lines, reach: 16, straight: false) == farther)
+    }
+
+    /// An end that met a line and ran on along it (a finger's overshoot) is cut back to where
+    /// it met the line: a stroke that crossed a line and followed it for two reaches ends at the
+    /// crossing; one that ran beside the line all along, never on it, keeps its length and its
+    /// end eases onto the line.
+    @Test func anEndThatRanAlongALineIsCutBackToWhereItMetIt() throws {
+        let lines = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 300, y: 0)]])
+        // Down to the line at x = 100, then along it, half a point above, to x = 130.
+        let down = (0...60).map { CGPoint(x: 40 + CGFloat($0), y: 60 - CGFloat($0)) }
+        let along = (1...6).map { CGPoint(x: 100 + CGFloat($0) * 5, y: 0.5) }
+        let joined = PenAssist.joined(down + along, to: lines, reach: 10, straight: false)
+        let end = try #require(joined.last)
+        #expect(Self.near(end, CGPoint(x: 100, y: 0), within: 1e-6) && joined.count <= down.count + 1, "\(joined)")
+        #expect(joined[0] == down[0])
+        let beside = (0...40).map { CGPoint(x: CGFloat($0) * 5, y: 3) }
+        let eased = PenAssist.joined(beside, to: lines, reach: 10, straight: false)
+        #expect(eased.count >= beside.count && Self.near(eased.last, CGPoint(x: 200, y: 0)))
+        #expect(eased.filter { $0.y > 2.5 }.count >= beside.count / 2, "\(eased)")
     }
 
     /// Paul's wedge (October 18): a stroke meeting another at a slant, its end just short of it.
@@ -168,6 +192,26 @@ struct RefineGeometryTests {
         #expect(Self.near(closed.last, loop[0], within: 1e-9) && closed.first == loop[0])
         let short = [CGPoint(x: 0, y: 0), CGPoint(x: 5, y: 2), CGPoint(x: 1, y: 1)]
         #expect(PenAssist.joined(short, to: SnapLines([]), reach: 4, straight: false) == short)
+    }
+
+    /// A loop whose end went round past its own start (a finger's overshoot, up to a few
+    /// reaches) is cut back to the start and closes on it, with nothing left past it; one that
+    /// stops a reach short of the start closes too, and one two reaches short stays open.
+    @Test func aLoopThatRanPastItsStartClosesOnIt() throws {
+        func loop(_ turns: CGFloat) -> [CGPoint] {
+            (0...Int(60 * turns)).map { k -> CGPoint in
+                let a = CGFloat(k) / 60 * 2 * .pi
+                return CGPoint(x: 100 + 40 * cos(a), y: 100 + 40 * sin(a))
+            }
+        }
+        // A 251-point loop; each step is 4.2 points, so 1.1 turns run 25 past the start.
+        let past = PenAssist.joined(loop(1.1), to: SnapLines([]), reach: 10, straight: false)
+        #expect(Self.near(past.last, CGPoint(x: 140, y: 100), within: 1e-9) && past.count <= 62, "\(past.count)")
+        #expect(past.dropLast().allSatisfy { PenPath.distance($0, CGPoint(x: 100, y: 100)) > 30 })
+        let short = Array(loop(1).dropLast(2))
+        #expect(Self.near(PenAssist.joined(short, to: SnapLines([]), reach: 10, straight: false).last, CGPoint(x: 140, y: 100), within: 1e-9))
+        let open = Array(loop(1).dropLast(6))
+        #expect(PenAssist.joined(open, to: SnapLines([]), reach: 10, straight: false) == open)
     }
 
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out
