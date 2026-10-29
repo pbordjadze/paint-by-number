@@ -106,7 +106,7 @@ public enum PenAssist {
     /// past its own start: a finger's overshoot) is cut where it met the line (`runCut`); one that
     /// crossed a line within `reach` of it ends at the crossing, its tail cut off; one heading at
     /// a line it would meet within `reach` goes straight on to it; otherwise it moves to the
-    /// nearest point within `reach`, a straight line moving just that end and any other easing
+    /// nearest point within half a reach, a straight line moving just that end and any other easing
     /// the move in over `easing` reaches of the line (half the line, if shorter), which the rest
     /// keeps. A move toward the nearest point alone, eased over one reach, bent a line meeting
     /// another at a slant into a hook. A line the changes would fold to under half its length
@@ -131,7 +131,9 @@ public enum PenAssist {
             if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
                 return straight ? Array(points.dropLast()) + [hit] : points + [hit]
             }
-            guard let target = lines.nearestPoint(to: end, within: reach) else { return nil }
+            // Sideways, half a reach: farther, a stroke drawn beside a line had both ends pulled
+            // onto it and closed a sliver.
+            guard let target = lines.nearestPoint(to: end, within: reach / 2) else { return nil }
             return move(points, to: target)
         }
         func move(_ points: [CGPoint], to target: CGPoint) -> [CGPoint] {
@@ -159,7 +161,13 @@ public enum PenAssist {
             guard PenPath.distance(cut[cut.count - 1], points[0]) <= reach else { return nil }
             return move(cut, to: points[0])
         }
-        if let joined = closedOnItself(out) ?? joinEnd(out, tail: tailLimit) {
+        // An end on a line of the drawing, or run past or along one, joins it, so a narrow arch
+        // standing on a line keeps both feet on it; otherwise a loop closes on its own start.
+        let end = out[out.count - 1]
+        let onLine = lines.nearestPoint(to: end, within: touch) != nil
+            || runCut(out, along: lines, reach: reach, touch: touch, within: runLimit) != nil
+            || trimmed(out, at: lines, within: tailLimit) != nil
+        if let joined = onLine ? joinEnd(out, tail: tailLimit) : closedOnItself(out) ?? joinEnd(out, tail: tailLimit) {
             out = joined
             if PenPath.length(out) < length / 2 { out = started }
         }
@@ -428,7 +436,9 @@ public struct SnapLines: Sendable {
     /// The point on a line nearest `p`, if one lies within `reach`.
     public func nearestPoint(to p: CGPoint, within reach: CGFloat) -> CGPoint? {
         var best: (point: CGPoint, distance: CGFloat)?
-        for line in lines where line.bounds.insetBy(dx: -reach, dy: -reach).contains(p) {
+        // A hair past the reach: a rect's far edges are outside it, and a point exactly a reach
+        // from a straight line's box fell out.
+        for line in lines where line.bounds.insetBy(dx: -reach - 1e-6, dy: -reach - 1e-6).contains(p) {
             for (a, b) in zip(line.points, line.points.dropFirst()) {
                 let q = Self.closest(p, a, b)
                 let d = PenPath.distance(p, q)

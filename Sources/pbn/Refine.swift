@@ -66,8 +66,8 @@ struct RefineScript: Decodable {
         var inked: Bool?
         /// A pen's Smoothing, 0...1.
         var smoothing: Double?
-        /// The Toolbox's Snap, on unless false: a pen's, a cell edge's or a shape's ends join the
-        /// lines their ink touches.
+        /// The Toolbox's Snap, on unless false: a pen's, a cell edge's or a shape's ends move onto
+        /// the lines they land near.
         var snap: Bool?
         /// An eraser's or a brush's Size: its radius on screen, points.
         var size: Double?
@@ -352,14 +352,16 @@ func runRefine(_ options: Options) throws {
                 step.verdict = "declined"
                 step.declined = why
                 switch painted {
-                case .draw: step.toast = "That line couldn’t be drawn there."
+                case .draw: step.toast = why == TemplateEditor.lineDoublesBack ? "That line doubles back on itself." : "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
                 case .merge:
                     step.toast = why == TemplateEditor.mergeStaysInOneArea ? "That’s already one area." : "Those areas couldn’t be joined."
                 case .brush: step.toast = "That couldn’t be painted there."
-                case .reshape: step.toast = "That line couldn’t be moved there."
-                case .moveLabel: step.toast = "There’s no room for that number there."
+                case .reshape(_, _, _, let target):
+                    step.toast = why != TemplateEditor.noLineNear ? "That line couldn’t be moved there."
+                        : target == .edge ? "Start the drag on the border between two cells." : "Start the drag on a line."
+                case .moveLabel: step.toast = why == TemplateEditor.noNumberNear ? "Start the drag on a number." : "There’s no room for that number there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
                 case .paintArea, .look: step.toast = "Those colors couldn’t be changed."

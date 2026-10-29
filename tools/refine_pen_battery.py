@@ -7,8 +7,8 @@ Writes the Tool Guide's practice picture (`pbn practice`) and replays batteries 
 on it with `pbn refine` (Sources/pbn/Refine.swift's gestures.json): a cloud ending 0 to 20 points
 short of its start and past it, Snap on and off; a chord of the moon ending short of and past its
 outline; a wobbly stroke at Smoothing 0, 0.5 and 1 (then measures how far each line strays); a
-line that doubles back, a figure eight, tiny loops, a line edge to edge, Paul's line of October
-29 through the tree and the roof, and the Pen page's Try This. Prints what each gesture made
+line that doubles back, a figure eight, tiny loops, a line edge to edge, a line edge to edge
+through the tree and the roof (painting-company row 175), and the Pen page's Try This. Prints what each gesture made
 (cells cut, strokes left, pieces recolored, the note). Written for the second Refine audit
 (painting-company row 175), where it showed Snap's reach at 3 points and Smoothing at 20 doing
 nothing a finger could see; run it after a change to PenAssist, RefineGestures or the editor's
@@ -84,9 +84,9 @@ g=[
  {"tool":"undo"},
  {"tool":"pen","points":line(0,120,960,100),"caption":"edge to edge across the sky, Color from Photo"},
  {"tool":"undo"},
- {"tool":"pen","points":line(0,520,220,480)+line(220,480,420,540)[1:]+line(420,540,650,540)[1:]+line(650,540,760,560)[1:],"snap":False,"caption":"Paul's line: left edge, through the crown, across the roof, ending in grass; Color from Photo"},
+ {"tool":"pen","points":line(0,520,220,480)+line(220,480,420,540)[1:]+line(420,540,650,540)[1:]+line(650,540,760,560)[1:],"snap":False,"caption":"from the left edge through the crown and across the roof, ending in grass; Color from Photo"},
  {"tool":"undo"},
- {"tool":"pen","points":line(0,520,220,480)+line(220,480,420,540)[1:]+line(420,540,650,540)[1:]+line(650,540,760,560)[1:],"snap":False,"inked":True,"caption":"Paul's line, ink only"},
+ {"tool":"pen","points":line(0,520,220,480)+line(220,480,420,540)[1:]+line(420,540,650,540)[1:]+line(650,540,760,560)[1:],"snap":False,"inked":True,"caption":"the same line, ink only"},
  {"tool":"undo"},
  {"tool":"pen","points":line(700,100,800,190),"caption":"across the moon, Color from Photo (the page's Try This)"},
  {"tool":"undo"},

@@ -98,8 +98,8 @@ nonisolated struct RefineHistory: Equatable, Sendable {
 /// no longer fit a template made again.
 nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     nonisolated enum Kind: Equatable, Sendable {
-        /// A line the template could not take (it doubled back on itself, or lay too close to
-        /// others): nothing changed.
+        /// A line the template could not take (it lay too close to others; one that doubled back
+        /// on itself has its own note): nothing changed.
         case notDrawn
         /// An erasure that could not be made.
         case notErased
@@ -147,7 +147,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             case .cellEdge: self = .notDivided
             case .merge: self = reason == TemplateEditor.mergeStaysInOneArea ? .oneArea : .notMerged
             case .brush: self = .notPainted
-            case .reshape: self = reason == TemplateEditor.noLineNear ? .grabLine : .notReshaped
+            case .reshape(_, _, _, let target):
+                self = reason == TemplateEditor.noLineNear ? (target == .edge ? .grabEdge : .grabLine) : .notReshaped
             case .moveLabel: self = reason == TemplateEditor.noNumberNear ? .grabNumber : .notMoved
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
@@ -227,10 +228,10 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
-        case .grabNumber, .grabLine, .grabEdge: "hand.point.up.left"
+        case .grabNumber, .grabLine, .grabEdge, .tapLine: "hand.point.up.left"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped, .notMoved,
-             .notRecolored, .left, .full:
+        case .notDrawn, .doublesBack, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped,
+             .notMoved, .notRecolored, .left, .full:
             "exclamationmark.circle"
         }
     }

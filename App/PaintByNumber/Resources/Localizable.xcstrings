@@ -1100,7 +1100,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the middle of the cross in the cottage’s window, so its four panes become one."
+            "value" : "Zoom in on the window, then tap the middle of its cross, so its four panes become one."
           }
         }
       }
@@ -1880,7 +1880,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A line that ends on nothing stays as ink and divides nothing."
+            "value" : "Where a line closes nothing off, it stays as ink and divides nothing."
           }
         }
       }
@@ -2000,7 +2000,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Snap joins a line’s end to the line it touches, closing the tiny gaps a ColorDrop would leak through."
+            "value" : "Snap moves a line’s end onto a line it lands near, closing the gaps a ColorDrop would leak through."
           }
         }
       }
@@ -2138,7 +2138,7 @@
       }
     },
     "refine.guide.procreate.try" : {
-      "comment" : "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket (on it the roof and the moon are outlined only, in the paint around them)",
+      "comment" : "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2288,7 +2288,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Snap and Color from Photo work here as with the Pen."
+            "value" : "With Snap on, a Line’s or a Curve’s ends join lines as the Pen’s do; Color from Photo works as with the Pen."
           }
         }
       }
@@ -6502,7 +6502,7 @@
       }
     },
     "refine.note.notDrawn" : {
-      "comment" : "Refine screen toast: a line the painter drew could not be added to the drawing (it doubled back on itself, or lay too close to other lines); nothing changed",
+      "comment" : "Refine screen toast: a line the painter drew could not be added to the drawing (it lay too close to other lines; a line that doubles back on itself has its own note); nothing changed",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

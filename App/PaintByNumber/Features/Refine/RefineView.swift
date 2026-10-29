@@ -106,13 +106,13 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
 /// undoes. What the painter does is made by hand to the template (PaintCore's `TemplateEditor`,
 /// `CreateModel.edit(_:)`): no image processing, no new template. A line is the line drawn, as the
 /// outline of the areas it closes too, and nothing the painter didn't touch changes:
-/// - the Pen draws a line as drawn (smoothed as it showed); only an end whose ink touches a
-///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks
-///   (`PenAssist`); the sides of the areas it cuts that the photo tells apart take their own
+/// - the Pen draws a line as drawn (smoothed as it showed); with Snap, an end within a fingertip
+///   of a line moves onto it and an overshoot past or along one is cut back, so the cell closes
+///   as the painter meant (`PenAssist`); the sides of the areas it cuts that the photo tells apart take their own
 ///   paints;
 /// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
 ///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
-///   curve's ends move onto a line their ink touches, as the Pen's do;
+///   curve's ends move onto a line they land near, as the Pen's do;
 /// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
 ///   tap takes out a dab;
 /// - the Line Eraser rubs too, and a tap takes the line out from junction to junction;
@@ -234,7 +234,7 @@ struct RefineView: View {
     /// Cancel asks first when there are changes to lose.
     @State private var confirmsCancel = false
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// Whether a line's ends join the lines their ink touches (`PenAssist`): the Toolbox's Snap.
+    /// Whether a line's ends join the lines they land near (`PenAssist`): the Toolbox's Snap.
     @AppStorage(SettingsKey.refineSnaps) private var snaps = SettingsDefault.refineSnaps
     /// Whether a drawn line gives the pieces it cuts the photo's colors (`TemplateEditor.painted`):
     /// the Toolbox's Color from Photo, off, so the Pen draws ink alone.
@@ -359,8 +359,8 @@ struct RefineView: View {
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
-        #if DEBUG
         .onChange(of: layers) { layersChanged?(layers) }
+        #if DEBUG
         .onChange(of: picture) {
             guard let at = demoCardAt, card != nil, let template = base?.template else { return }
             card = RefineAreaPick(at: at, screen: onScreen(picturePoint(at)), template: template)
@@ -802,7 +802,7 @@ struct RefineView: View {
         mergeWanted = nil
     }
 
-    /// Whether a line's ends join the lines their ink touches: the Toolbox's Snap.
+    /// Whether a line's ends join the lines they land near: the Toolbox's Snap.
     private var snapsOn: Bool { snaps }
 
     /// A drawn line as the Studio lays it: ink alone (a draw with no paints to give, which lays
@@ -1112,7 +1112,8 @@ struct RefineView: View {
     private func eraseLine(at point: SIMD2<Float>) {
         guard let drawing = base?.drawing else { return }
         guard let erased = RefineGestures.lineEraser(at: point, on: screen, chains: LineChains(drawing)) else {
-            say(.tapLine)
+            // A line drawn a moment ago isn't in the drawing yet: no word while edits are on their way.
+            if submitted.isEmpty { model.tell(.tapLine) }
             return
         }
         let normalized = erased.chain
@@ -1785,6 +1786,7 @@ extension RefineView {
                 HStack(spacing: 6) {
                     ForEach(RefineShape.allCases, id: \.self) { shapeOption($0) }
                 }
+            } more: {
                 snapToggle
                 penColorsToggle
             }

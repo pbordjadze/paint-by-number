@@ -358,7 +358,8 @@ public enum RefineGestures {
     /// `steadyString` at 1.
     static func string(for smoothing: CGFloat) -> CGFloat { min(max(smoothing, 0), 1) * steadyString }
 
-    /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
+    /// `line` (points on screen) with its ends moved onto a line of the drawing they land within
+    /// `snapReach` of (`PenAssist.joined`).
     static func touching(_ line: [CGPoint], straight: Bool, on screen: RefineScreen, snapping lines: SnapLines?) -> [CGPoint] {
         let units = screen.unitsPerPoint
         guard let lines, units > 0 else { return line }
