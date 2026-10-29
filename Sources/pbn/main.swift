@@ -77,7 +77,7 @@
 //   pbn refine <photo> <gestures.json> --out <dir> [--template t.pbnt | --blank | --edges map.pgm [--lines drawing.pgm]]
 //       [--no-steps] [generate options]
 //       replays Refine's gestures as the app makes them (RefineGestures: the Pen's smoothing and
-//       its ends joining the lines they touch, the retired Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Line
+//       its ends joining the lines they land near, the retired Color Splitter, the Cell Edge, Shapes (a line, rectangle, oval, hexagon, star or curve), the Eraser's reach on screen, the Merge, the Paint Brush, Bend Line and Move Edge, Move Number, the Line
 //       Eraser's line from junction to junction, Fill with the photo's color there, the Bucket
 //       (`bucket`: a paint by number, OKLab `color` or the picker's sRGB `rgb`, else the photo's
 //       color there), Edit Paint (`repaint`: paint `paint` to `color` or `rgb`, `family`), Undo,
@@ -93,6 +93,9 @@
 //       (`lit`); tools/refine_sheet.py lays them out in one picture. --no-steps
 //       writes no step pictures (a long script's would fill the disk: 70 MB a gesture at the
 //       largest canvas), and refine.json's `picture` and `touches` are empty
+//   pbn practice painted|inked --out <dir>
+//       writes the Tool Guide's practice picture (RefinePractice) for pbn refine: photo.ppm,
+//       template.pbnt (its scene, for --template) and painting.ppm (as the page shows it)
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -128,13 +131,14 @@
 //       its canonical anchors. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|edit|refine|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
 case "generate": try runGenerate(options)
 case "edit": try runEdit(options)
 case "refine": try runRefine(options)
+case "practice": try runPractice(options)
 case "suggest": try runSuggest(options)
 case "trace": try runTrace(options)
 case "check": try runCheck(options)

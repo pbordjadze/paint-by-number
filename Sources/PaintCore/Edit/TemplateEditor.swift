@@ -119,6 +119,12 @@ public enum TemplateEditor {
 
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"
+    /// A Move Number drag that began on no number, and a Bend Line's or Move Edge's on no line
+    /// (Refine says to start the drag on one).
+    public static let noNumberNear = "no number is near enough to move"
+    public static let noLineNear = "no line is near enough to move"
+    /// A drawn line that turns back along itself (Refine says so).
+    public static let lineDoublesBack = "the line doubles back on itself"
 
     public enum Edit: Sendable, Equatable {
         /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's

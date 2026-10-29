@@ -43,7 +43,7 @@ struct RefineGuideTests {
         // picks a paint, and a swatch dragged onto a cell pours it.
         let procreate = RefineGuidePage.of(.procreate)
         #expect(procreate.inProcreate == nil && !procreate.notes.isEmpty)
-        #expect(procreate.practice == RefinePracticeSetup(scene: .inked, tool: .bucket))
+        #expect(procreate.practice == RefinePracticeSetup(scene: .painted, tool: .bucket))
     }
 
     /// The pages that start the guide: their identifiers (after `refine-guide-topic-`, which UI

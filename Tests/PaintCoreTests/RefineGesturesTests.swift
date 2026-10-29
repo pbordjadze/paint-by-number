@@ -37,7 +37,7 @@ struct RefineGesturesTests {
         #expect(kept == [0, 3, 6, 9, 10].map { samples[$0] }, "every third is a point on, and the last")
     }
 
-    /// A pen line whose end comes within its ink of a line ends on it; one shorter than a
+    /// A pen line whose end comes within a fingertip of a line ends on it; one shorter than a
     /// fingertip's slip is no line.
     @Test func thePenEndsOnTheLineItTouches() throws {
         // The horizon runs at y ≈ 72 left of the disc; a line from the sky down to 0.2 above it.
@@ -51,9 +51,9 @@ struct RefineGesturesTests {
         #expect(laid.outcome.joins >= 1 && laid.outcome.declined == nil)
     }
 
-    /// An end whose ink only seems to touch a line, 2.5 points short of it at an ink of 1.5,
-    /// ends on it (`touchFloor`); one 4 points short stays where it was drawn.
-    @Test func thePenJoinsALineItsInkSeemsToTouch() throws {
+    /// An end within a fingertip's slip of a line, 8 points short of it, ends on it
+    /// (`snapReach`); one 14 points short stays where it was drawn.
+    @Test func thePenJoinsALineWithinAFingertip() throws {
         let frame = RefineGestures.snapLines(
             drawing: [], canvas: Self.screen.canvas, pending: [(.draw(points: [SIMD2(10, 100), SIMD2(180, 100)]), nil)])
         func end(short points: Float) throws -> SIMD2<Float>? {
@@ -62,8 +62,8 @@ struct RefineGesturesTests {
             guard case .draw(let line, false, nil) = edit else { return nil }
             return line.last
         }
-        #expect(try end(short: 2.5).map { abs($0.y - 100) < 1e-3 } == true)
-        #expect(try end(short: 4).map { abs($0.y - 99.2) < 0.1 } == true)
+        #expect(try end(short: 8).map { abs($0.y - 100) < 1e-3 } == true)
+        #expect(try end(short: 14).map { abs($0.y - 97.2) < 0.1 } == true)
     }
 
     /// The Pen's smoothing at 0 leaves its line as it was. At 1 a wobble of 1 to 4 points across a

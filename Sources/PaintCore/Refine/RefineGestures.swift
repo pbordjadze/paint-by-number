@@ -109,22 +109,24 @@ public enum RefineGestures {
     /// The shortest line the pen draws, in the template's canvas units: a touch shorter than a
     /// fingertip's slip is no line.
     public static let shortestLine: CGFloat = 8
-    /// The Pen's ends move onto a line whose ink theirs touches: within one ink width (half of
-    /// each), and at least this many points, so an end whose ink only seems to touch on screen
-    /// joins too. At 2, a grid's lines that met its frame on screen ended 2 points short of it,
-    /// and its tiles ran into each other with no word (QA, October 23).
-    public static let touchFloor: CGFloat = 3
+    /// How near a line, in points on screen, the Pen's and Shapes' ends move onto it (the
+    /// Toolbox's Snap, `PenAssist`): a fingertip's slip, so a shape a finger closes closes. Until
+    /// October 29 it was the ink's width, about 3 points: a careful finger lands 5 to 8 off, so a
+    /// cloud "ending where you began" stayed open with no word, and Snap on or off was the same
+    /// (QA, painting-company row 175). Measured on screen, so zoomed in it reaches finer.
+    public static let snapReach: CGFloat = 10
     /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
     public static let fingerReach: CGFloat = 16
     /// The Paint Brush's radius on screen, in points: about half a fingertip, so the paint is the
     /// width of the finger that lays it, at any zoom.
     public static let brushSize: CGFloat = 12
     /// The string the Pen's line is pulled on at full smoothing, points on screen
-    /// (`PenPath.steadied`): several times the few points a slow hand wobbles, so the wobble hardly
-    /// reaches the line, yet only 3 to 4 mm, inside the pad of the finger, so the line's tip trails
-    /// out of sight beneath it. The lag a painter notices starts where the tip shows behind the
-    /// finger.
-    public static let steadyString: CGFloat = 20
+    /// (`PenPath.steadied`): many times the few points a slow hand wobbles, so a wobble of 3 to 4
+    /// points hardly reaches the line, and the tip trails visibly behind the finger, as
+    /// Procreate's StreamLine does at its top. At 20 (until October 29) the tip hid under the
+    /// finger's pad, but a 4-point wobble kept 4 points and a painter saw no change
+    /// (painting-company row 175).
+    public static let steadyString: CGFloat = 48
 
     /// A finger's samples as the screen keeps them while it moves: a sample closer than a point
     /// to the last kept adds nothing the line shows; the last, where the finger lifts, is kept.
@@ -138,8 +140,8 @@ public enum RefineGestures {
 
     /// A pen's line from its samples (`trace`): steadied by the painter's `smoothing` (0…1, the
     /// Pen's slider: `steadied`), smoothed and thinned on screen's terms as it showed, its ends
-    /// moved onto a line their ink touches (`touchFloor`). Nil for a touch too short to be a line,
-    /// on screen or in the template.
+    /// moved onto a line within a fingertip's slip (`snapReach`) when `lines` is given (Snap on).
+    /// Nil for a touch too short to be a line, on screen or in the template.
     public static func pen(
         _ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?, smoothing: CGFloat = 0
     ) -> TemplateEditor.Edit? {
@@ -356,11 +358,12 @@ public enum RefineGestures {
     /// `steadyString` at 1.
     static func string(for smoothing: CGFloat) -> CGFloat { min(max(smoothing, 0), 1) * steadyString }
 
-    /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
+    /// `line` (points on screen) with its ends moved onto a line of the drawing they land within
+    /// `snapReach` of (`PenAssist.joined`).
     static func touching(_ line: [CGPoint], straight: Bool, on screen: RefineScreen, snapping lines: SnapLines?) -> [CGPoint] {
         let units = screen.unitsPerPoint
         guard let lines, units > 0 else { return line }
-        let reach = max(screen.lineWidth, touchFloor) * units
+        let reach = snapReach * units
         let inCanvas = line.map { CGPoint(x: $0.x * units, y: $0.y * units) }
         return PenAssist.joined(inCanvas, to: lines, reach: reach, straight: straight)
             .map { CGPoint(x: $0.x / units, y: $0.y / units) }

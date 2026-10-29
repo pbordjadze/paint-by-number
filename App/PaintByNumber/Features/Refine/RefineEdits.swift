@@ -98,8 +98,8 @@ nonisolated struct RefineHistory: Equatable, Sendable {
 /// no longer fit a template made again.
 nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     nonisolated enum Kind: Equatable, Sendable {
-        /// A line the template could not take (it doubled back on itself, or lay too close to
-        /// others): nothing changed.
+        /// A line the template could not take (it lay too close to others; one that doubled back
+        /// on itself has its own note): nothing changed.
         case notDrawn
         /// An erasure that could not be made.
         case notErased
@@ -122,6 +122,10 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case notMoved
         /// A Move Number, Bend Line or Move Edge drag that began on no number, line or edge.
         case grabNumber, grabLine, grabEdge
+        /// A drawn line that turned back along itself.
+        case doublesBack
+        /// A Line Eraser tap on no line.
+        case tapLine
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -138,13 +142,14 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// What to say of an edit that was declined, and why the editor declined it.
         init(declined edit: TemplateEditor.Edit, because reason: String = "") {
             switch edit {
-            case .draw: self = .notDrawn
+            case .draw: self = reason == TemplateEditor.lineDoublesBack ? .doublesBack : .notDrawn
             case .split: self = .notSplit
             case .cellEdge: self = .notDivided
             case .merge: self = reason == TemplateEditor.mergeStaysInOneArea ? .oneArea : .notMerged
             case .brush: self = .notPainted
-            case .reshape: self = .notReshaped
-            case .moveLabel: self = .notMoved
+            case .reshape(_, _, _, let target):
+                self = reason == TemplateEditor.noLineNear ? (target == .edge ? .grabEdge : .grabLine) : .notReshaped
+            case .moveLabel: self = reason == TemplateEditor.noNumberNear ? .grabNumber : .notMoved
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             case .look, .repaint, .paintArea: self = .notRecolored
@@ -196,6 +201,12 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .grabEdge:
             String(localized: "refine.note.grabEdge", defaultValue: "Start the drag on the border between two cells.",
                    comment: "Refine screen toast: a Move Edge drag began where no border between cells was (or where borders meet), so nothing moved")
+        case .doublesBack:
+            String(localized: "refine.note.doublesBack", defaultValue: "That line doubles back on itself.",
+                   comment: "Refine screen toast: a line drawn with the Pen turned back along its own path, which can't be drawn; nothing changed")
+        case .tapLine:
+            String(localized: "refine.note.tapLine", defaultValue: "Tap a line to erase it.",
+                   comment: "Refine screen toast: a Line Eraser tap landed on no line, so nothing was erased")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -217,10 +228,10 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
-        case .grabNumber, .grabLine, .grabEdge: "hand.point.up.left"
+        case .grabNumber, .grabLine, .grabEdge, .tapLine: "hand.point.up.left"
         case .alike: "swatchpalette"
-        case .notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped, .notMoved,
-             .notRecolored, .left, .full:
+        case .notDrawn, .doublesBack, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped,
+             .notMoved, .notRecolored, .left, .full:
             "exclamationmark.circle"
         }
     }

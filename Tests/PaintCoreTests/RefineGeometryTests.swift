@@ -117,7 +117,31 @@ struct RefineGeometryTests {
         let joined = PenAssist.joined(curve, to: lines, reach: 16, straight: false)
         let end = try #require(joined.last)
         #expect(Self.near(end, CGPoint(x: 110, y: 12.1), within: 1e-9), "\(end)")
-        #expect(Array(joined.dropLast()) == Array(curve.prefix(12)))
+        #expect(Array(joined.dropLast()) == Array(curve.prefix(11)))
+        // A tail of two reaches is a finger's overshoot and is cut; a longer one is drawn.
+        let far = curve + [CGPoint(x: 130, y: 17), CGPoint(x: 141, y: 20)]
+        #expect(PenAssist.joined(far, to: lines, reach: 16, straight: false).last.map { Self.near($0, end, within: 1e-9) } == true)
+        let farther = far + [CGPoint(x: 150, y: 24)]
+        #expect(PenAssist.joined(farther, to: lines, reach: 16, straight: false) == farther)
+    }
+
+    /// An end that met a line and ran on along it (a finger's overshoot) is cut back to where
+    /// it met the line: a stroke that crossed a line and followed it for two reaches ends at the
+    /// crossing; one that ran beside the line all along, never on it, keeps its length and its
+    /// end eases onto the line.
+    @Test func anEndThatRanAlongALineIsCutBackToWhereItMetIt() throws {
+        let lines = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 300, y: 0)]])
+        // Down to the line at x = 100, then along it, half a point above, to x = 130.
+        let down = (0...60).map { CGPoint(x: 40 + CGFloat($0), y: 60 - CGFloat($0)) }
+        let along = (1...6).map { CGPoint(x: 100 + CGFloat($0) * 5, y: 0.5) }
+        let joined = PenAssist.joined(down + along, to: lines, reach: 10, straight: false)
+        let end = try #require(joined.last)
+        #expect(Self.near(end, CGPoint(x: 100, y: 0), within: 1e-6) && joined.count <= down.count + 1, "\(joined)")
+        #expect(joined[0] == down[0])
+        let beside = (0...40).map { CGPoint(x: CGFloat($0) * 5, y: 3) }
+        let eased = PenAssist.joined(beside, to: lines, reach: 10, straight: false)
+        #expect(eased.count >= beside.count && Self.near(eased.last, CGPoint(x: 200, y: 0)))
+        #expect(eased.filter { $0.y > 2.5 }.count >= beside.count / 2, "\(eased)")
     }
 
     /// Paul's wedge (October 18): a stroke meeting another at a slant, its end just short of it.
@@ -138,11 +162,12 @@ struct RefineGeometryTests {
         #expect(zip(joined, joined.dropFirst()).allSatisfy { $0.x <= $1.x && $0.y >= $1.y }, "\(joined)")
         #expect(Array(joined.dropLast()) == stroke)
 
-        // Running alongside, 2 below it: the end can't head at it, so it eases up onto it.
-        let alongside = (0...20).map { CGPoint(x: CGFloat($0) * 5, y: 2) }
+        // Running alongside, 1.5 below it (within half a reach): the end can't head at it, so it
+        // eases up onto it.
+        let alongside = (0...20).map { CGPoint(x: CGFloat($0) * 5, y: 1.5) }
         let eased = PenAssist.joined(alongside, to: lines, reach: 4, straight: false)
         #expect(Self.near(eased.last, CGPoint(x: 100, y: 0)))
-        for (p, q) in zip(eased, eased.dropFirst()) { #expect(abs(q.y - p.y) <= 2 / 16 * PenPath.distance(p, q) + 1e-9) }
+        for (p, q) in zip(eased, eased.dropFirst()) { #expect(abs(q.y - p.y) <= 1.5 / 16 * PenPath.distance(p, q) + 1e-9) }
     }
 
     /// The Pen moves an end only onto a line its ink touches: within the reach it's given, onto
@@ -168,6 +193,43 @@ struct RefineGeometryTests {
         #expect(Self.near(closed.last, loop[0], within: 1e-9) && closed.first == loop[0])
         let short = [CGPoint(x: 0, y: 0), CGPoint(x: 5, y: 2), CGPoint(x: 1, y: 1)]
         #expect(PenAssist.joined(short, to: SnapLines([]), reach: 4, straight: false) == short)
+    }
+
+    /// A loop whose end went round past its own start (a finger's overshoot, up to a few
+    /// reaches) is cut back to the start and closes on it, with nothing left past it; one that
+    /// stops a reach short of the start closes too, and one two reaches short stays open.
+    @Test func aLoopThatRanPastItsStartClosesOnIt() throws {
+        func loop(_ turns: CGFloat) -> [CGPoint] {
+            (0...Int(60 * turns)).map { k -> CGPoint in
+                let a = CGFloat(k) / 60 * 2 * .pi
+                return CGPoint(x: 100 + 40 * cos(a), y: 100 + 40 * sin(a))
+            }
+        }
+        // A loop 251 points round in 4.2-point steps, so 1.1 turns run 25 past the start.
+        let past = PenAssist.joined(loop(1.1), to: SnapLines([]), reach: 10, straight: false)
+        #expect(Self.near(past.last, CGPoint(x: 140, y: 100), within: 1e-9) && past.count <= 62, "\(past.count)")
+        // Round once and no further: the angle round the centre only grows until the end.
+        func angle(_ p: CGPoint) -> CGFloat { let a = atan2(p.y - 100, p.x - 100); return a < -1e-9 ? a + 2 * .pi : a }
+        #expect(zip(past.dropFirst().dropLast(), past.dropFirst(2).dropLast()).allSatisfy { angle($0) < angle($1) }, "\(past)")
+        let short = Array(loop(1).dropLast(2))
+        #expect(Self.near(PenAssist.joined(short, to: SnapLines([]), reach: 10, straight: false).last, CGPoint(x: 140, y: 100), within: 1e-9))
+        let open = Array(loop(1).dropLast(6))
+        #expect(PenAssist.joined(open, to: SnapLines([]), reach: 10, straight: false) == open)
+    }
+
+    /// A narrow arch standing on a line keeps both feet on it: an end on a line of the drawing
+    /// joins that line before a loop closes on its own start. A stroke drawn beside a line, more
+    /// than half a reach from it, is left as drawn.
+    @Test func anArchOnALineKeepsItsFeet() throws {
+        let lines = SnapLines([[CGPoint(x: 0, y: 100), CGPoint(x: 300, y: 100)]])
+        let arch = (0...20).map { k -> CGPoint in
+            let a = CGFloat.pi - CGFloat.pi * CGFloat(k) / 20
+            return CGPoint(x: 100 + 4.5 * cos(a), y: 100 - 40 * sin(a))
+        }
+        let joined = PenAssist.joined(arch, to: lines, reach: 10, straight: false)
+        #expect(Self.near(joined.first, CGPoint(x: 95.5, y: 100), within: 1e-6) && Self.near(joined.last, CGPoint(x: 104.5, y: 100), within: 1e-6), "\(joined)")
+        let beside = (0...30).map { CGPoint(x: CGFloat($0) * 5, y: 93) }
+        #expect(PenAssist.joined(beside, to: lines, reach: 10, straight: false) == beside)
     }
 
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out

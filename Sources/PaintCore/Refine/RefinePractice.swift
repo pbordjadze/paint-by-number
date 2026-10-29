@@ -12,7 +12,8 @@ import Foundation
 ///   the picture as the generator might have made it;
 /// - `inked`: the hills' lines give their pieces the photo's colors, the rest is ink alone (a draw
 ///   with no paints), each shape keeping the paint around it: the sky one paint with the moon's
-///   outline in it, the cottage the hill's green. What Fill, the Bucket and Color from Photo are for.
+///   outline in it, the cottage the hill's green. What Make Cell and the Bucket are for, whose
+///   pages say to tap inside the moon and pour into the roof; every other page shows `painted`.
 ///
 /// Same inputs, same bytes: the photo is a function of nothing (each pixel its own, whatever the
 /// bands), the edits are exact.

@@ -65,7 +65,7 @@ before planning app work).
     The app keeps only drawing (`PenPath.path`) and its toolbar.
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
-  `Commands.swift`, `Edit.swift` (`pbn edit`), `Refine.swift` (`pbn refine`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `Commands.swift`, `Edit.swift` (`pbn edit`), `Refine.swift` (`pbn refine`), `Practice.swift` (`pbn practice`, the Tool Guide's picture for it), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
   which plays after Start when Settings › The Making-of is on (off by default): `FieldShow` (its and
@@ -205,7 +205,7 @@ logs the tuned ones.
   they embed (listed on pbn's `Metrics`); a field leaves only with its readers.
   `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0.
 - pbn has no tests: CI runs `generate`, `check` and `bench`; run `suggest`, `trace`, `names`,
-  `edit` and `refine` by hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
+  `edit`, `refine` and `practice` by hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
   entry. `pbn trace`'s `valid` skips the label-room check: run `pbn check`. pbn is classic unless
   `--line-style` says otherwise and reads PPM/PGM (other formats only on Apple platforms);
   `tools/eval.py` needs node (`cd tools && npm ci`) and Pillow, the others Pillow. pbn has no

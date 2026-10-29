@@ -89,14 +89,20 @@ struct RefineEditsTests {
         #expect(RefineNote.Kind(declined: .brush(path: [], radius: 4, color: .zero)) == .notPainted)
         #expect(RefineNote.Kind(declined: .reshape(from: .zero, to: .one)) == .notReshaped)
         #expect(RefineNote.Kind(declined: .moveLabel(from: .zero, to: .one)) == .notMoved)
+        #expect(RefineNote.Kind(declined: .draw(points: []), because: TemplateEditor.lineDoublesBack) == .doublesBack)
+        #expect(RefineNote.Kind(declined: .reshape(from: .zero, to: .one), because: TemplateEditor.noLineNear) == .grabLine)
+        #expect(RefineNote.Kind(declined: .reshape(from: .zero, to: .one, target: .edge), because: TemplateEditor.noLineNear) == .grabEdge)
+        #expect(RefineNote.Kind(declined: .moveLabel(from: .zero, to: .one), because: TemplateEditor.noNumberNear) == .grabNumber)
         #expect(RefineNote.Kind(declined: .paintArea(at: .zero, color: .zero)) == .notRecolored)
         let kinds: [RefineNote.Kind] = [.notDrawn, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .notPainted,
-                                        .notReshaped, .notMoved, .tooSmall, .grabNumber, .grabLine, .grabEdge,
-                                        .left(1), .left(3), .full, .oneArea]
+                                        .notReshaped, .notMoved, .tooSmall, .grabNumber, .grabLine, .grabEdge, .doublesBack,
+                                        .tapLine, .left(1), .left(3), .full, .oneArea]
         let texts = kinds.map { RefineNote(kind: $0).text }
         #expect(texts.allSatisfy { !$0.isEmpty } && Set(texts).count == kinds.count)
         #expect(RefineNote(kind: .tooSmall).text == "That shape is too small for a number.")
         #expect(RefineNote(kind: .grabNumber).text == "Start the drag on a number.")
+        #expect(RefineNote(kind: .doublesBack).text == "That line doubles back on itself.")
+        #expect(RefineNote(kind: .tapLine).text == "Tap a line to erase it.")
         #expect(RefineNote(kind: .left(1)).text.hasPrefix("1 edit no longer fits"))
         #expect(RefineNote(kind: .left(3)).text.hasPrefix("3 edits no longer fit"))
         #expect(RefineNote(kind: .tooSmall) != RefineNote(kind: .tooSmall), "Two notes are one note")

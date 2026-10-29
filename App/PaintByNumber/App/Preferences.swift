@@ -30,7 +30,7 @@ enum SettingsKey {
     /// The create flow's preview shows its settings: its Adjust was opened, and stays so (SideStore
     /// and Debug builds, `TemplatePreviewView.foldsSettings`).
     static let previewShowsSettings = "previewShowsSettings"
-    /// Refine's Snap: a drawn line's ends join the lines their ink touches (on unless switched off).
+    /// Refine's Snap: a drawn line's ends join the lines they land near, a fingertip on screen (on unless switched off).
     static let refineSnaps = "refineSnaps"
     /// Refine's Color from Photo: a drawn line gives the areas it divides the photo's colors (off).
     static let refinePenColors = "refinePenColors"

@@ -103,7 +103,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.basics.summary", defaultValue: "How a picture is made, and how to move around it.",
                                 comment: "Tool Guide, The Basics: one line under its name in the guide's list and atop its page"),
                 about: String(localized: "refine.guide.basics.about",
-                              defaultValue: "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each with its own number. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line.",
+                              defaultValue: "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each numbered by its paint. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line.",
                               comment: "Tool Guide, The Basics: the paragraph that explains what a picture is made of (ink, cells, paint)"),
                 steps: [
                     String(localized: "refine.guide.basics.step1",
@@ -171,7 +171,7 @@ nonisolated struct RefineGuidePage {
                                     defaultValue: "As in Procreate’s Layers panel, each layer can be shown or hidden. Here the four are always there, in this order, with none to add or move.",
                                     comment: "Tool Guide, Layers: the line under In Procreate, comparing it with the drawing app Procreate (keep Procreate's own name for its Layers panel)"),
                 related: [.pen, .eyedropper, .moveNumber],
-                practice: RefinePracticeSetup(scene: .inked, tool: .pen, layers: .tracing))
+                practice: RefinePracticeSetup(scene: .painted, tool: .pen, layers: .tracing))
         case .procreate:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.procreate.summary", defaultValue: "What carries over from Procreate, and what’s new.",
@@ -198,13 +198,13 @@ nonisolated struct RefineGuidePage {
                 ],
                 tryThis: String(localized: "refine.guide.procreate.try",
                                 defaultValue: "Touch and hold the far hills, then lift to pick up their paint, and tap the moon to pour it in. Then drag any swatch from the palette onto the cottage’s roof.",
-                                comment: "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket (on it the roof and the moon are outlined only, in the paint around them)"),
+                                comment: "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket"),
                 notes: [
                     String(localized: "refine.guide.procreate.note1",
                            defaultValue: "Ink is like line art on a layer set as Reference, and Paint like the flats beneath it. The Bucket is ColorDrop with Continue Filling, and it never leaks: a cell ends exactly at its edges.",
                            comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Reference, ColorDrop and Continue Filling are Procreate's names; flats are the flat base colors under line art)"),
                     String(localized: "refine.guide.procreate.note2",
-                           defaultValue: "Snap joins a line’s end to the line it touches, closing the tiny gaps a ColorDrop would leak through.",
+                           defaultValue: "Snap moves a line’s end onto a line it lands near, closing the gaps a ColorDrop would leak through.",
                            comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Snap is the Pen's and Shapes' switch; ColorDrop is Procreate's fill)"),
                     String(localized: "refine.guide.procreate.note3",
                            defaultValue: "The Pen’s Smoothing is StreamLine. The Photo layer is your reference photo, beneath everything, to trace.",
@@ -219,7 +219,7 @@ nonisolated struct RefineGuidePage {
                 ],
                 inProcreate: nil,
                 related: [.bucket, .eyedropper, .pen],
-                practice: RefinePracticeSetup(scene: .inked, tool: .bucket))
+                practice: RefinePracticeSetup(scene: .painted, tool: .bucket))
         case .tool(let tool):
             page(of: tool)
         }
@@ -232,37 +232,37 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.pen.summary", defaultValue: "Draws lines exactly where you draw them.",
                                 comment: "Tool Guide, the Pen: one line under its name in the guide's list and atop its page"),
                 about: String(localized: "refine.guide.pen.about",
-                              defaultValue: "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell with its own number. Lines leave the colors alone, unless Color from Photo is on.",
+                              defaultValue: "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell, numbered by its paint. Lines leave the colors alone, unless Color from Photo is on.",
                               comment: "Tool Guide, the Pen: the paragraph about what it does"),
                 steps: [
                     String(localized: "refine.guide.pen.step1", defaultValue: "Draw with a finger or the Pencil.",
                            comment: "Tool Guide, the Pen: a step of How to Use It"),
                     String(localized: "refine.guide.pen.step2",
-                           defaultValue: "End a line on another line to close a shape. With Snap on, an end that touches a line joins it.",
+                           defaultValue: "End a line on another line, or back where you began, to close a shape; sparkles mark the join. With Snap on, an end a little short of a line, or a little past it, is moved onto it.",
                            comment: "Tool Guide, the Pen: a step of How to Use It"),
                     String(localized: "refine.guide.pen.step3",
-                           defaultValue: "Turn on Color from Photo to give each new cell the photo’s color there.",
+                           defaultValue: "Turn on Color from Photo and every piece a line cuts off takes the photo’s color under it.",
                            comment: "Tool Guide, the Pen: a step of How to Use It"),
                     String(localized: "refine.guide.pen.step4",
                            defaultValue: "Set Smoothing to steady your line: it trails your finger a little and evens out wobbles. All the way down, the Pen draws exactly as you draw.",
                            comment: "Tool Guide, the Pen: a step of How to Use It (Smoothing is the Pen's slider)"),
                 ],
                 tryThis: String(localized: "refine.guide.pen.try",
-                                defaultValue: "Draw a cloud in the sky, ending where you began. Then turn on Color from Photo and draw a line across the moon.",
+                                defaultValue: "Draw a cloud low in the sky, ending where you began. Then turn on Color from Photo and draw another: it takes the glow’s color there.",
                                 comment: "Tool Guide, the Pen: Try This, something to do on the practice picture"),
                 notes: [
                     String(localized: "refine.guide.pen.note1",
                            defaultValue: "A line that doubles back on itself can’t be drawn; a note says so.",
                            comment: "Tool Guide, the Pen: a note under Good to Know"),
                     String(localized: "refine.guide.pen.note2",
-                           defaultValue: "A shape too small for a number stays a line, and doesn’t become a cell.",
+                           defaultValue: "Where a line closes nothing off, it stays as ink and divides nothing.",
                            comment: "Tool Guide, the Pen: a note under Good to Know"),
                 ],
                 inProcreate: String(localized: "refine.guide.pen.procreate",
                                     defaultValue: "Like inking line art with Studio Pen. Smoothing does what StreamLine does, and a shape you close becomes a cell at once, ready for paint.",
                                     comment: "Tool Guide, the Pen: the line under In Procreate, comparing it with the drawing app Procreate (Studio Pen is one of its brushes, StreamLine its smoothing: keep Procreate's own names)"),
                 related: [.shape, .eraser, .bendLine, .cellEdge],
-                practice: RefinePracticeSetup(scene: .inked, tool: .pen))
+                practice: RefinePracticeSetup(scene: .painted, tool: .pen))
         case .shape:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.shape.summary", defaultValue: "Draws straight lines, rectangles, ovals, curves, hexagons and stars.",
@@ -271,7 +271,7 @@ nonisolated struct RefineGuidePage {
                               defaultValue: "Shapes draws a clean figure across a drag. Like the Pen, it draws ink, and a closed figure becomes a cell of its own.",
                               comment: "Tool Guide, Shapes: the paragraph about what it does"),
                 steps: [
-                    String(localized: "refine.guide.shape.step1", defaultValue: "Pick a figure above the tools.",
+                    String(localized: "refine.guide.shape.step1", defaultValue: "Pick a figure in the Shapes bar.",
                            comment: "Tool Guide, Shapes: a step of How to Use It"),
                     String(localized: "refine.guide.shape.step2",
                            defaultValue: "Drag from one corner to the opposite one, or from one end of a line to the other.",
@@ -287,14 +287,14 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.shape.note1",
                            defaultValue: "The figure shows as it will be while your finger is down, so you can adjust it before you let go.",
                            comment: "Tool Guide, Shapes: a note under Good to Know"),
-                    String(localized: "refine.guide.shape.note2", defaultValue: "With Snap on, a line’s ends join the lines they touch.",
+                    String(localized: "refine.guide.shape.note2", defaultValue: "With Snap on, a Line’s or a Curve’s ends join lines as the Pen’s do; Color from Photo works as with the Pen.",
                            comment: "Tool Guide, Shapes: a note under Good to Know"),
                 ],
                 inProcreate: String(localized: "refine.guide.shape.procreate",
                                     defaultValue: "Procreate’s QuickShape turns a stroke into a figure when you hold at its end. Here you pick the figure first and drag it out, and a closed one is a cell at once.",
                                     comment: "Tool Guide, Shapes: the line under In Procreate, comparing it with the drawing app Procreate (QuickShape is its feature: keep Procreate's own name)"),
                 related: [.pen, .fill, .eraser],
-                practice: RefinePracticeSetup(scene: .inked, tool: .shape, shape: .star))
+                practice: RefinePracticeSetup(scene: .painted, tool: .shape, shape: .star))
         case .eraser:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.eraser.summary", defaultValue: "Rubs out the ink it touches.",
@@ -312,7 +312,7 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, the Eraser: a step of How to Use It (Size is the Eraser's slider)"),
                 ],
                 tryThis: String(localized: "refine.guide.eraser.try",
-                                defaultValue: "Rub out the cross in the cottage’s window, so its four panes become one.",
+                                defaultValue: "Zoom in on the window, then tap the middle of its cross, so its four panes become one.",
                                 comment: "Tool Guide, the Eraser: Try This, something to do on the practice picture"),
                 notes: [
                     String(localized: "refine.guide.eraser.note1",
@@ -337,7 +337,7 @@ nonisolated struct RefineGuidePage {
                 steps: [
                     String(localized: "refine.guide.smartEraser.step1", defaultValue: "Tap a line to take it out, junction to junction.",
                            comment: "Tool Guide, the Line Eraser: a step of How to Use It"),
-                    String(localized: "refine.guide.smartEraser.step2", defaultValue: "Drag to rub out what you touch.",
+                    String(localized: "refine.guide.smartEraser.step2", defaultValue: "Drag to rub out what you touch, at the Eraser’s Size.",
                            comment: "Tool Guide, the Line Eraser: a step of How to Use It"),
                 ],
                 tryThis: String(localized: "refine.guide.smartEraser.try", defaultValue: "Tap the line around the moon, then the cottage’s door.",
@@ -346,7 +346,7 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.smartEraser.note1",
                            defaultValue: "The stretch flashes as it goes, so you can see what the tap took.",
                            comment: "Tool Guide, the Line Eraser: a note under Good to Know"),
-                    String(localized: "refine.guide.smartEraser.note2", defaultValue: "The cells the line kept apart become one.",
+                    String(localized: "refine.guide.smartEraser.note2", defaultValue: "The cells the line kept apart become one, in the paint of the larger.",
                            comment: "Tool Guide, the Line Eraser: a note under Good to Know"),
                 ],
                 inProcreate: String(localized: "refine.guide.smartEraser.procreate",
@@ -764,7 +764,7 @@ nonisolated struct RefineGuidePage {
                                     defaultValue: "In Procreate, a picture is done when you stop drawing. Here someone will paint it by number, and Try Painting lets you be that painter first.",
                                     comment: "Tool Guide, Try Painting: the line under In Procreate, saying what it does that the drawing app Procreate has no need of"),
                 related: [.pen, .moveNumber],
-                practice: RefinePracticeSetup(scene: .inked, tool: .pen, teaches: .tryPainting))
+                practice: RefinePracticeSetup(scene: .painted, tool: .pen, teaches: .tryPainting))
         }
     }
 }
@@ -909,6 +909,9 @@ struct RefineGuidePageView: View {
     @State private var model: CreateModel?
     /// Reset's count: the canvas is made again each time.
     @State private var resets = 0
+    /// The layers as the painter set them on this page: Reset puts the picture back, not these
+    /// (Numbers turned on to see the cells stayed on through a Reset; QA, October 29).
+    @State private var practiceLayers: RefineLayers?
     /// The cover (or, on iPhone, the page's push) has finished coming in. The practice canvas waits
     /// for it: as the guide opened, CI's simulators stopped answering UI tests for 20 to 40 s
     /// (main's runs 559 and 561), as the painting screen did while it was laid out at every frame
@@ -977,7 +980,12 @@ struct RefineGuidePageView: View {
         Group {
             // Once the picture is on it: a stroke before would have nothing to lay on.
             if hasLanded, let model, model.phase == .ready {
-                RefineView(model: model, practice: practice) { resets += 1 }
+                let setup = practiceLayers.map { layers in
+                    var kept = practice
+                    kept.layers = layers
+                    return kept
+                } ?? practice
+                RefineView(model: model, practice: setup, onReset: { resets += 1 }, layersChanged: { practiceLayers = $0 })
                     .id(resets)
             } else if failed {
                 ContentUnavailableView {
