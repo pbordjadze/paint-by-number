@@ -469,7 +469,8 @@ any port of it, when changing the fitter: work from the paper.
    A UI test's quick try: `[test RefineUITests]` (several classes, or `Class/testMethod`; a run
    started by hand takes `tests`) runs only those UI tests, on the iPad after the Debug build
    (`test` in STATUS.md, instead of every other entry, `[iphone]`'s too; no screenshots, no
-   Release; on a cache miss the warm-up first), on one runner like `[compile]`. A name the
+   Release; on a cache miss the warm-up first), on one runner like `[compile]`: 17 min for two
+   small classes on an idle runner, 12 of them the build (October 29, run 653). A name the
    sources lack fails its Plan step at once (`test/errors.txt` says why), and so does a choice that
    ran no test. The full run still comes before a merge.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
