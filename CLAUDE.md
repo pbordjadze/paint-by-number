@@ -471,8 +471,8 @@ any port of it, when changing the fitter: work from the paper.
    (`test` in STATUS.md, instead of every other entry, `[iphone]`'s too; no screenshots, no
    Release; on a cache miss the warm-up first), on one runner like `[compile]`: 17 min for two
    small classes on an idle runner, 12 of them the build (October 29, run 653). A name the
-   sources lack fails its Plan step at once (`test/errors.txt` says why), and so does a choice that
-   ran no test. The full run still comes before a merge.
+   sources lack fails its Plan step at once (`test/errors.txt` says why); a choice that still ran
+   no test fails its Test step. The full run still comes before a merge.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
    with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the

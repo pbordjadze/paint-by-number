@@ -148,6 +148,7 @@ jobs:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
       - name: Xcode
+        id: xcode
         run: ci/xcode.sh
       - name: Plan
         # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
@@ -276,10 +277,11 @@ jobs:
             -retry-tests-on-failure -test-iterations 2 -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
           if [[ "${{ matrix.job }}" == test ]]; then
-            # The Plan step's check has a backstop: chosen tests that ran nothing fail, not pass.
+            # The Plan step's check has a backstop: chosen tests that ran nothing (or a count that
+            # can't be read) fail, not pass.
             ran="$(xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact \
               | python3 -c 'import json, sys; print(json.load(sys.stdin).get("totalTestCount", ""))' || true)"
-            [[ "$ran" != 0 ]] || { echo "error: no test ran of $ONLY" | tee -a out/app-test.log; exit 1; }
+            [[ "$ran" =~ ^[1-9][0-9]*$ ]] || { echo "error: no test ran of $ONLY (count: ${ran:-unreadable})" | tee -a out/app-test.log; exit 1; }
           fi
       - name: Release build
         id: release
@@ -362,7 +364,7 @@ jobs:
         if: always()
         env:
           OUTCOMES: >-
-            plan=${{ steps.plan.outcome }} simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
+            xcode=${{ steps.xcode.outcome }} plan=${{ steps.plan.outcome }} simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
             screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
             release=${{ steps.release.outcome }} sidestore=${{ steps.sidestore.outcome }} warnings=${{ steps.warnings.outcome }}
             nickname-v2=${{ steps.nickname.outcome }}
