@@ -60,7 +60,8 @@ before planning app work).
   - `Refine/`: what Refine's screen makes of a gesture, shared by the app's `RefineView` and
     `pbn refine` (`RefineGestures` with `RefineScreen`: the Pen, Shapes, the Eraser, the Line
     Eraser, Fill's taps; `RefineGeometry.swift`: `PenPath`, `PenAssist`, `ShapePath`, `SnapLines`,
-    `LineChains`; `RefinePractice`, the Tool Guide's practice picture, drawn and laid as edits).
+    `LineChains`; `RefinePractice`, the Tool Guide's practice picture, drawn and laid as edits; `RefineCells`,
+    the cells VoiceOver offers and its actions' edits).
     The app keeps only drawing (`PenPath.path`) and its toolbar.
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,

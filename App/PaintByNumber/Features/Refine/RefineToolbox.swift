@@ -82,13 +82,26 @@ struct RefinePaletteBar: View {
     @Binding var current: SIMD3<Float>?
     /// Makes paint `from` the paint `into` (both indices of the palette).
     var merge: ((_ from: Int, _ into: Int) -> Void)?
+    /// Whether it stands in glass of its own, else in a band that holds it with Select's bar
+    /// (one band, not two strips: Rikyū, `factory/pieces/refine-phase3`).
+    var glass = true
 
     @Environment(\.self) private var environment
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        Group {
+            if glass { row.glassEffect(.regular, in: .capsule) } else { row }
+        }
+        .frame(maxWidth: 720)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Palette"))
+        .accessibilityIdentifier("refine-palette")
+    }
+
+    private var row: some View {
         let selected = RefinePalette.index(of: current, in: template.palette)
-        HStack(spacing: 10) {
+        return HStack(spacing: 10) {
             ScrollViewReader { reader in
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
@@ -118,11 +131,6 @@ struct RefinePaletteBar: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .glassEffect(.regular, in: .capsule)
-        .frame(maxWidth: 720)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(Text("Palette"))
-        .accessibilityIdentifier("refine-palette")
     }
 
     private func swatch(_ index: Int, selected: Bool) -> some View {
@@ -235,11 +243,15 @@ struct RefinePaletteBar: View {
     }
 }
 
-/// The cell Select picked: its paint, how many areas share it and how much of the picture it
-/// covers, and Change Color, which opens its card (`RefineAreaCard`).
+/// The cell Select picked: its paint and how many areas share it, and Change Color, which opens
+/// its card (`RefineAreaCard`). It once said how much of the picture the cell covers too, which
+/// read as the paint's (the Lamplit Table, October 28: the cell's outline shows it). It sits in
+/// one band with the palette, or on iPhone with the card that takes the palette's place.
 struct RefineSelectionBar: View {
     let template: Template
     let region: Int
+    /// Whether the card is open in the band (iPhone): Change Color is then Close.
+    var cardOpen = false
     let changeColor: () -> Void
 
     var body: some View {
@@ -257,7 +269,7 @@ struct RefineSelectionBar: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(ColorNameText.title(template.palette[paint].colorName))
                         .font(.subheadline.weight(.semibold))
-                    Text(Self.subtitle(region: region, in: template))
+                    Text(RefineAreaCard.subtitle(paint: paint, count: RefineAreaCard.areaCount(of: paint, in: template)))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -265,8 +277,14 @@ struct RefineSelectionBar: View {
             .accessibilityElement(children: .combine)
             Spacer(minLength: 8)
             Button(action: changeColor) {
-                Label { Text("Change Color") } icon: { Image(systemName: "drop.halffull") }
-                    .font(.footnote.weight(.semibold))
+                Group {
+                    if cardOpen {
+                        Label { Text("Close") } icon: { Image(systemName: "xmark") }
+                    } else {
+                        Label { Text("Change Color") } icon: { Image(systemName: "drop.halffull") }
+                    }
+                }
+                .font(.footnote.weight(.semibold))
             }
             .buttonStyle(.glass)
             .accessibilityIdentifier("refine-selection-color")
@@ -274,22 +292,8 @@ struct RefineSelectionBar: View {
         .padding(.leading, 10)
         .padding(.trailing, 8)
         .padding(.vertical, 6)
-        .glassEffect(.regular, in: .capsule)
-        .frame(maxWidth: 560)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-selection")
-    }
-
-    /// "Paint 6 · 4 areas · 2% of the picture".
-    nonisolated static func subtitle(region: Int, in template: Template) -> String {
-        let paint = Int(template.regions[region].colorIndex)
-        let number = (paint + 1).formatted()
-        let areas = TemplateCounts.areas(RefineAreaCard.areaCount(of: paint, in: template))
-        let share = (Double(template.regions[region].area) / Double(max(template.width * template.height, 1)))
-            .formatted(.percent.precision(.significantDigits(1...2)))
-        return String(
-            localized: "refine.selection", defaultValue: "Paint \(number) · \(areas) · \(share) of the picture",
-            comment: "Refine screen, Select's bar: the selected area's paint number (formatted), how many areas have that paint (\"3 areas\"), and how much of the picture the area covers (a formatted percentage)")
     }
 }
 

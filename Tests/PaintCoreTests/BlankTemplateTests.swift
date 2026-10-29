@@ -110,13 +110,42 @@ struct BlankTemplateTests {
         #expect(ColorScience.distance(Self.paint(of: inside, in: u), Self.lab(Self.blue)) <= SegmentationParameters.jnd)
     }
 
-    /// The other tools work on a blank too: a fill makes the area a detail area, a look recolors
-    /// its paint, and the erasers find no ink to take out.
+    /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
+    /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
+    /// paint, which leaves the palette, so the painting's numbers skip none.
+    @Test func aPaintLeftWithNoAreaLeavesThePalette() throws {
+        let t = try Self.blank()
+        let loop: [SIMD2<Float>] = [SIMD2(105, 45), SIMD2(135, 45), SIMD2(135, 75), SIMD2(105, 75)]
+        let (cut, _) = try TemplateEditorTests.apply(TemplateEditor.painted(.draw(points: loop, closed: true), on: t, photo: Self.photo()), to: t)
+        let inside = try TemplateEditorTests.region(cut, 120, 60), around = try TemplateEditorTests.region(cut, 20, 20)
+        try #require(cut.palette.count == 2 && cut.regions[inside].colorIndex != cut.regions[around].colorIndex)
+        let aroundPaint = Self.paint(of: around, in: cut)
+
+        // Make Cell in the loop with the color around it: the loop's paint goes, both areas one paint.
+        let (filled, fill) = try TemplateEditorTests.apply(.fill(at: SIMD2(120, 60), color: aroundPaint), to: cut)
+        #expect(fill.fills == 1 && fill.paintsAdded == 0 && fill.paintsMerged == 1)
+        #expect(filled.palette.map(\.oklab) == [aroundPaint] && filled.regions.allSatisfy { $0.colorIndex == 0 })
+        expectValid(filled)
+
+        // The eraser and the Line Eraser across the loop: the area around keeps its paint, the
+        // loop's leaves.
+        for edit in [Edit.erase(path: [SIMD2(100, 60), SIMD2(140, 60)], radius: 3), .eraseLine(at: SIMD2(120, 45))] {
+            let (opened, outcome) = try TemplateEditorTests.apply(edit, to: cut)
+            #expect(outcome.regionsMerged == 1 && outcome.paintsMerged == 1, "\(edit)")
+            #expect(opened.regions.count == 1 && opened.palette.map(\.oklab) == [aroundPaint], "\(edit)")
+            expectValid(opened)
+        }
+    }
+
+    /// The other tools work on a blank too: a fill makes the area a detail area (the photo's
+    /// paint, left with no area, leaving the palette), a look recolors its paint, and the erasers
+    /// find no ink to take out.
     @Test func aFillAndALookApplyAndTheErasersFindNothing() throws {
         let t = try Self.blank()
         let green = SIMD3<Float>(0.6, -0.15, 0.1)
         let (filled, fill) = try TemplateEditorTests.apply(.fill(at: SIMD2(40, 60), color: green), to: t)
-        #expect(fill.fills == 1 && filled.detailRegions == [0] && filled.palette.count == 2)
+        #expect(fill.fills == 1 && fill.paintsAdded == 1 && fill.paintsMerged == 1)
+        #expect(filled.detailRegions == [0] && filled.palette.count == 1 && filled.regions[0].colorIndex == 0)
         #expect(ColorScience.distance(Self.paint(of: 0, in: filled), green) < 1e-6)
         let (looked, look) = try TemplateEditorTests.apply(TemplateEditor.look(.moonlit, strength: 1, on: t), to: t)
         #expect(look.changed && look.paintsChanged == 1 && looked.palette != t.palette && looked.regions == t.regions)

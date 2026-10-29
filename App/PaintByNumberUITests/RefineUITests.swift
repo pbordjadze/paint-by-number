@@ -4,7 +4,7 @@ import XCTest
 /// Ink, Cells, Paint, Numbers, See; a rail of every tool on iPad, tabs on iPhone): the pens, the eraser and
 /// Make Cell, Writing's text marks, Select, Cell Edge and the Bucket, an area's card, the
 /// Eyedropper's hold, the Layers panel, Undo and Redo (the buttons and two- and three-finger taps),
-/// full screen, Done and Cancel.
+/// full screen, Done and Cancel; and every other tool, with VoiceOver's cells.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// and a three-finger tap redoes too, the eraser (with its Size) rubs across it (another change:
@@ -171,7 +171,7 @@ final class RefineUITests: XCTestCase {
         pickTool("select", in: "Cells", of: app)
         canvas.coordinate(withNormalizedOffset: skyPoint).tap()
         let info = app.descendants(matching: .any)["refine-selection"].descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "of the picture")).firstMatch
+            .matching(NSPredicate(format: "label CONTAINS %@", "Paint ")).firstMatch
         XCTAssertTrue(info.waitForExistence(timeout: 10), "Select didn't show the sky's paint")
         let sky = try XCTUnwrap(paintNumber(in: info.label), "Select's bar names no paint: \(info.label)")
 
@@ -201,9 +201,10 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(paint.waitForExistence(timeout: 5), "The card offers no other paint")
         paint.tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The paint didn't count: \(canvas.value ?? "")")
-        // Away from the card: a popover's dismissal region on iPad, the sheet swiped down on iPhone.
+        // Away from the card: a popover's dismissal region on iPad; on iPhone, where it opens in
+        // Select's bar over nothing of the picture, the bar's Close.
         let outside = app.otherElements["PopoverDismissRegion"]
-        if outside.exists { outside.tap() } else { card.swipeDown() }
+        if outside.exists { outside.tap() } else { change.tap() }
         XCTAssertTrue(waitFor(card, toMatch: NSPredicate(format: "exists == false")), "The card didn't close")
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("1 change")), "Done didn't keep the change")
@@ -226,7 +227,7 @@ final class RefineUITests: XCTestCase {
         let selection = app.descendants(matching: .any)["refine-selection"]
         XCTAssertTrue(selection.waitForExistence(timeout: 10), "Select didn't show the area")
         let info = selection.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "of the picture")).firstMatch
+            .matching(NSPredicate(format: "label CONTAINS %@", "Paint ")).firstMatch
         XCTAssertTrue(info.waitForExistence(timeout: 5), "Select's bar doesn't say the area's paint")
         let sky = paintNumber(in: info.label)
         XCTAssertNotNil(sky, "Select's bar names no paint: \(info.label)")
@@ -312,6 +313,152 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("No changes")), "The practice changed the painting: \(canvas.value ?? "")")
     }
 
+    /// The tools no other test reaches, each on The Great Wave's open sky (phase 3 of
+    /// painting-company row 143): VoiceOver's cells (the cells in view, each its paint's number and
+    /// name, the selected one marked), the Eyedropper's tap, Move Number, Cell Edge then Move Edge
+    /// on it, every figure of Shapes (the curve bent by a second drag), the Pen's line then Bend
+    /// Line on it, and a look; each a change, and Done keeps them.
+    @MainActor
+    func testEveryOtherToolChangesThePicture() throws {
+        let app = launchPreview()
+        let refine = app.buttons["refine"]
+        refine.tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+        let sky = onPicture(canvas, 0.637, 0.06)
+
+        // VoiceOver's cells: with a cell tool, the cells in view, at most 40.
+        pickTool("select", in: "Cells", of: app)
+        let cells = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "refine-cell-"))
+        XCTAssertTrue(cells.firstMatch.waitForExistence(timeout: 10), "Select offers VoiceOver no cells")
+        XCTAssertLessThanOrEqual(cells.count, 40, "VoiceOver is offered more cells than it can swipe through")
+        let first = cells.firstMatch
+        XCTAssertNotNil(first.label.range(of: #"^\d+ · "#, options: .regularExpression), "A cell doesn't say its paint: \(first.label)")
+        XCTAssertFalse((first.value as? String ?? "").isEmpty, "A cell doesn't say where it is")
+        canvas.coordinate(withNormalizedOffset: sky).tap()
+        let info = app.descendants(matching: .any)["refine-selection"].descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "Paint ")).firstMatch
+        XCTAssertTrue(info.waitForExistence(timeout: 10), "Select didn't show the sky's paint")
+        let skyPaint = try XCTUnwrap(paintNumber(in: info.label), "Select's bar names no paint: \(info.label)")
+        let chosen = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@ AND isSelected == true", "refine-cell-")).firstMatch
+        XCTAssertTrue(chosen.waitForExistence(timeout: 5), "VoiceOver's cells don't mark the selected one")
+        XCTAssertTrue(chosen.label.hasPrefix("\(skyPaint) · "), "The selected cell says another paint: \(chosen.label)")
+        // The cell's element is at its roomiest number.
+        let number = CGPoint(x: chosen.frame.midX, y: chosen.frame.midY)
+        attachScreenshot(of: app, named: "refine-select-sky")
+
+        // The Eyedropper's tap: the sky's paint becomes the current one, nothing changes.
+        pickTool("bucket", in: "Paint", of: app)
+        let other = app.buttons["refine-paint-\(skyPaint == 1 ? 2 : 1)"]
+        XCTAssertTrue(other.waitForExistence(timeout: 5), "The palette has no other paint")
+        other.tap()
+        XCTAssertTrue(waitFor(other, toMatch: NSPredicate(format: "isSelected == true")), "The paint didn't become current")
+        pickTool("eyedropper", in: "Paint", of: app)
+        canvas.coordinate(withNormalizedOffset: sky).tap()
+        XCTAssertTrue(
+            waitFor(app.buttons["refine-paint-\(skyPaint)"], toMatch: NSPredicate(format: "isSelected == true")),
+            "The Eyedropper's tap didn't pick the sky's paint")
+        XCTAssertEqual(canvas.value as? String, "No changes", "The Eyedropper changed the picture")
+
+        // Move Number: the sky's number a little to the left.
+        pickTool("moveNumber", in: "Numbers", of: app)
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        origin.withOffset(CGVector(dx: number.x, dy: number.y))
+            .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: number.x - 12, dy: number.y)))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Move Number didn't count: \(canvas.value ?? "")")
+
+        // Cell Edge down through the cloud and the open sky below it, then Move Edge bends it to the right.
+        pickTool("cellEdge", in: "Cells", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.80, 0.06), to: onPicture(canvas, 0.80, 0.675))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "The cell edge didn't count: \(canvas.value ?? "")")
+        pickTool("moveEdge", in: "Cells", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.80, 0.45), to: onPicture(canvas, 0.83, 0.45))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "Move Edge didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-move-edge")
+
+        // Every figure of Shapes, in the open sky between the wave and the cell edge.
+        let shapes = pickTool("shapes", in: "Ink", of: app)
+        let figures: [(name: String, from: (CGFloat, CGFloat), to: (CGFloat, CGFloat))] = [
+            ("Line", (0.62, 0.40), (0.68, 0.40)), ("Oval", (0.70, 0.38), (0.75, 0.44)),
+            ("Hexagon", (0.55, 0.44), (0.60, 0.50)), ("Star", (0.62, 0.44), (0.67, 0.50)),
+        ]
+        var count = 3
+        for figure in figures {
+            let button = app.buttons[figure.name]
+            XCTAssertTrue(button.waitForExistence(timeout: 5), "Shapes offers no \(figure.name)")
+            button.tap()
+            XCTAssertTrue(
+                waitFor(shapes, toMatch: NSPredicate(format: "value == %@", figure.name)), "\(figure.name) didn't become the figure")
+            drag(on: canvas, from: onPicture(canvas, figure.from.0, figure.from.1), to: onPicture(canvas, figure.to.0, figure.to.1))
+            count += 1
+            XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The \(figure.name) didn't count: \(canvas.value ?? "")")
+        }
+        // A curve: a drag for its ends, a second to bend it.
+        app.buttons["Curve"].tap()
+        XCTAssertTrue(waitFor(shapes, toMatch: NSPredicate(format: "value == %@", "Curve")), "Curve didn't become the figure")
+        drag(on: canvas, from: onPicture(canvas, 0.69, 0.48), to: onPicture(canvas, 0.76, 0.48))
+        XCTAssertTrue(app.staticTexts["refine-hint"].waitForExistence(timeout: 5), "The curve doesn't say it waits to be bent")
+        drag(on: canvas, from: onPicture(canvas, 0.725, 0.48), to: onPicture(canvas, 0.725, 0.45))
+        count += 1
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The curve didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-shapes")
+
+        // The Pen's line in the open sky under the crest, then Bend Line moves it, free at both
+        // ends and short, whole to the right, clear of any ink there too. From x 0.50 the move
+        // laid it across the crest's spray, which the editor declines (CI run 649).
+        pickTool("pen", in: "Ink", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
+        count += 1
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The line didn't count: \(canvas.value ?? "")")
+        pickTool("bendLine", in: "Ink", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.47, 0.48))
+        count += 1
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-bend")
+
+        // A look over every paint.
+        pickTool("looks", in: "Paint", of: app)
+        let look = app.buttons["refine-look-moonlit"]
+        XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
+        look.tap()
+        count += 1
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The look didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-look")
+
+        app.buttons["refine-done"].tap()
+        XCTAssertTrue(waitFor(refine, toMatch: changes("\(count) changes")), "Done didn't keep the changes")
+    }
+
+    /// Edit Paint: a swatch dragged onto another makes the two one paint (a change). iPad only:
+    /// the system's drag and drop, which synthesized touches drive there.
+    @MainActor
+    func testEditPaintMergesASwatchIntoAnother() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "A swatch's drag and drop is driven on iPad")
+        let app = launchPreview()
+        app.buttons["refine"].tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+        pickTool("editPaint", in: "Paint", of: app)
+        let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
+        XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
+        let swatches = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@ AND identifier != %@", "refine-paint-", "refine-paint-new"))
+        let paints = swatches.count
+        let dragged = { from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0) }
+        dragged()
+        // A drag CI's simulator lost while Refine was still opening (October 28): the palette as it
+        // was, and the second drag merged the two. Dragged again only if nothing changed at all.
+        if !waitFor(canvas, toMatch: changes("1 change"), timeout: 20), canvas.value as? String == "No changes" {
+            retapIfLost("swatch drag", dragged)
+        }
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "Merging two paints didn't count: \(canvas.value ?? "")")
+        // The change is the merge, not paint poured on the picture: one paint fewer.
+        let merged = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == %@", NSNumber(value: paints - 1)), object: swatches)
+        XCTAssertEqual(XCTWaiter.wait(for: [merged], timeout: 10), .completed, "The palette still has \(swatches.count) paints of \(paints)")
+        attachScreenshot(of: app, named: "refine-edit-paint-merged")
+    }
+
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).
@@ -330,7 +477,7 @@ final class RefineUITests: XCTestCase {
         return button
     }
 
-    /// The paint's number in "…Paint 3 · 2 areas · 40% of the picture".
+    /// The paint's number in "…Paint 3 · 2 areas".
     private func paintNumber(in label: String) -> Int? {
         guard let range = label.range(of: #"Paint (\d+)"#, options: .regularExpression) else { return nil }
         return Int(label[range].dropFirst("Paint ".count))

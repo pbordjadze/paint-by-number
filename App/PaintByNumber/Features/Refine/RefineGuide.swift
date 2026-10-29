@@ -191,8 +191,8 @@ nonisolated struct RefineGuidePage {
                            comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)"),
                     String(localized: "refine.guide.procreate.step5", defaultValue: "Touch and hold: the Eyedropper, with its loupe, whatever tool you hold.",
                            comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate; the loupe is the circle under the finger showing the color)"),
-                    String(localized: "refine.guide.procreate.step6", defaultValue: "Drag a swatch onto a cell: ColorDrop, with any Cells or Paint tool.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; Cells and Paint are groups of tools)"),
+                    String(localized: "refine.guide.procreate.step6", defaultValue: "Drag a swatch onto a cell: ColorDrop, wherever the palette shows.",
+                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; the palette shows with the Cells and Paint tools but Make Cell)"),
                     String(localized: "refine.guide.procreate.step7", defaultValue: "On a keyboard, hold ⌘ to see the shortcuts.",
                            comment: "Tool Guide, Coming from Procreate: a step of How to Use It (⌘ is the Command key)"),
                 ],
@@ -212,6 +212,10 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.procreate.note4",
                            defaultValue: "Procreate has nothing like Cell Edge, Merge, Move Edge or Move Number: they shape cells and their numbers, which pixels don’t have.",
                            comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Cell Edge, Merge, Move Edge and Move Number are Refine's tools)"),
+                    // The Lamplit Table's Originality, October 28 (`factory/pieces/refine-phase3`).
+                    String(localized: "refine.guide.procreate.note5",
+                           defaultValue: "Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.",
+                           comment: "Tool Guide, Coming from Procreate: the last note under Good to Know, whose owner the trademark is (Savage Interactive Pty Ltd is a company's name: keep it as is)"),
                 ],
                 inProcreate: nil,
                 related: [.bucket, .eyedropper, .pen],
@@ -382,10 +386,10 @@ nonisolated struct RefineGuidePage {
                 practice: RefinePracticeSetup(scene: .painted, tool: .bendLine))
         case .select:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell: its paint and how much of the picture it covers.",
+                summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell and its paint.",
                                 comment: "Tool Guide, Select: one line under its name in the guide's list and atop its page"),
                 about: String(localized: "refine.guide.select.about",
-                              defaultValue: "Tap a cell to select it. It glows, and the bar below shows its paint, how many cells use that paint and its share of the picture. Change Color there gives it a new color.",
+                              defaultValue: "Tap a cell to select it. It glows, and the bar below shows its paint and how many cells use it. Change Color there gives it a new color.",
                               comment: "Tool Guide, Select: the paragraph about what it does"),
                 steps: [
                     String(localized: "refine.guide.select.step1", defaultValue: "Tap a cell to select it.",
@@ -395,7 +399,7 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.select.step3", defaultValue: "Tap Change Color to give it a color of its own.",
                            comment: "Tool Guide, Select: a step of How to Use It"),
                 ],
-                tryThis: String(localized: "refine.guide.select.try", defaultValue: "Select the sky, then the moon, and compare how much of the picture each covers.",
+                tryThis: String(localized: "refine.guide.select.try", defaultValue: "Select the sky, then the moon, and see which paint each has.",
                                 comment: "Tool Guide, Select: Try This, something to do on the practice picture"),
                 notes: [
                     String(localized: "refine.guide.select.note1",
@@ -535,8 +539,8 @@ nonisolated struct RefineGuidePage {
                     String(localized: "refine.guide.bucket.step2", defaultValue: "Tap a cell to pour it in.",
                            comment: "Tool Guide, the Bucket: a step of How to Use It"),
                     String(localized: "refine.guide.bucket.step3",
-                           defaultValue: "Or drag a swatch from the palette straight onto a cell. This works with any Cells or Paint tool.",
-                           comment: "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; Cells and Paint are groups of tools)"),
+                           defaultValue: "Or drag a swatch from the palette straight onto a cell, with any tool that shows the palette.",
+                           comment: "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; the palette shows with the Cells and Paint tools but Make Cell)"),
                 ],
                 tryThis: String(localized: "refine.guide.bucket.try",
                                 defaultValue: "Choose a brick red from the color wheel and pour it into the cottage’s roof. Then pick the sky’s paint and pour it into the far hills.",
@@ -826,7 +830,8 @@ struct RefineGuideView: View {
                 ForEach(RefineGuideTopic.sections) { section in
                     Section {
                         ForEach(section.topics) { topic in
-                            RefineGuideRow(topic: topic).tag(topic)
+                            // The guide's own width: its sidebar column is compact on iPad too.
+                            RefineGuideRow(topic: topic, showsSummary: sizeClass == .compact).tag(topic)
                         }
                     } header: {
                         if let group = section.group { RefineView.groupName(group) } else { Text("Start Here") }
@@ -866,18 +871,23 @@ struct RefineGuideView: View {
     }
 }
 
-/// A page in the guide's list: the tool's symbol, name and what it does in a line.
+/// A page in the guide's list: the tool's symbol and name, and on iPhone what it does in a line.
+/// Beside the page (iPad) the line goes, the page opening with it (row 19's fewer words, the
+/// Lamplit Table, October 28).
 private struct RefineGuideRow: View {
     let topic: RefineGuideTopic
+    let showsSummary: Bool
 
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
                 RefineGuidePageView.title(topic)
-                Text(RefineGuidePage.of(topic).summary)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                if showsSummary {
+                    Text(RefineGuidePage.of(topic).summary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
             }
         } icon: {
             Image(systemName: RefineGuidePageView.symbol(topic))
@@ -924,6 +934,11 @@ struct RefineGuidePageView: View {
                             .frame(height: min(max(360, proxy.size.height * 0.58), proxy.size.height * 0.85))
                             .padding(.horizontal, 12)
                             .padding(.top, 8)
+                            .padding(.bottom, 4)
+                            .background(Theme.paper)
+                            // Over the words, which scrolled up showed in a strip under the panel's
+                            // edge (QA, October 28).
+                            .zIndex(1)
                         ScrollView { words }
                     }
                 }

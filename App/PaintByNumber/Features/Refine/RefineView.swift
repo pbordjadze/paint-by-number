@@ -85,6 +85,14 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
     /// The tool drags something already there (a line, an edge, a number), drawing no ink.
     var drags: Bool { self == .bendLine || self == .moveEdge || self == .moveNumber }
 
+    /// A one-finger drag does something with the tool (`RefineView.draw`); the others only tap.
+    var strokes: Bool {
+        switch self {
+        case .pen, .shape, .bendLine, .eraser, .smartEraser, .cellEdge, .merge, .moveEdge, .brush, .moveNumber, .text: true
+        case .select, .fill, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: false
+        }
+    }
+
     var paints: Bool {
         self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
     }
@@ -156,6 +164,8 @@ struct RefineView: View {
     /// For the draft's save toast, which the tiny-numbers badge makes way for.
     @Environment(Library.self) private var library: Library?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+    @Environment(\.accessibilitySwitchControlEnabled) private var switchControlEnabled
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @State private var tool: RefineTool
     /// The tool picked before this one, for the Pencil's Switch to Previous Tool.
@@ -201,6 +211,9 @@ struct RefineView: View {
     #if DEBUG
     /// The demo's paint, cell or card is picked once its edits have landed.
     @State private var didPickDemoPaint = false
+    /// Where the demo's card points (canvas units): the band Select's cell brings moves the
+    /// picture after the card opened, so the card points again where the picture lands.
+    @State private var demoCardAt: SIMD2<Float>?
     #endif
     /// The screen has begun refining (`CreateModel.beginRefining`), once.
     @State private var opened = false
@@ -250,8 +263,10 @@ struct RefineView: View {
     /// The Studio's group on screen (`RefineGroup`), and the tool last picked in each.
     @State private var group = RefineGroup.ink
     @State private var lastTool: [RefineGroup: RefineTool] = [:]
-    /// The area whose card Select's Change Color opened (`RefineAreaCard`).
+    /// The area whose card Select's Change Color opened (`RefineAreaCard`): beside the area on
+    /// iPad, in Select's bar on iPhone (`barCard`), where nothing covers the picture.
     @State private var card: RefineAreaPick?
+    @State private var barCard: RefineAreaPick?
     /// The sparkles where a line closed off an area last: the line's number, where its ends met
     /// on screen, and the shape's smaller side on screen.
     @State private var sparkles: (id: Int, point: CGPoint, extent: CGFloat)?
@@ -308,7 +323,8 @@ struct RefineView: View {
         }
         #if DEBUG
         if let demo = ShellDemo.current {
-            let opens: RefineTool? = demo.picksColorPaint ? .editPaint : demo.opensColors ? .looks : demo.selectsCell ? .select : nil
+            let opens: RefineTool? =
+                demo.picksColorPaint ? .editPaint : demo.opensColors ? .looks : demo.selectsCell || demo.opensCard ? .select : nil
             if let opens {
                 _tool = State(initialValue: opens)
                 _group = State(initialValue: RefineGroup.of(opens))
@@ -337,6 +353,16 @@ struct RefineView: View {
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
+        #if DEBUG
+        .onChange(of: picture) {
+            guard let at = demoCardAt, card != nil, let template = base?.template else { return }
+            card = RefineAreaPick(at: at, screen: onScreen(picturePoint(at)), template: template)
+        }
+        // Once the demo's card closes, a card opened after it stays where it was opened.
+        .onChange(of: card == nil) { _, closed in
+            if closed { demoCardAt = nil }
+        }
+        #endif
         .fullScreenCover(item: $trial) { trial in
             PaintView(session: trial.session, title: String(localized: "Try Painting"), onClose: { self.trial = nil })
         }
@@ -506,6 +532,7 @@ struct RefineView: View {
                     self.zoom = zoom
                 },
                 onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
+                strokes: tool.strokes,
                 onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
                 onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
                 focus: focus)
@@ -538,8 +565,9 @@ struct RefineView: View {
             }
         }
         .accessibilityIdentifier("refine-canvas")
-        // After the picture's own accessibility, which ignores its children: Start From and the
-        // badge are controls of their own.
+        // After the picture's own accessibility, which ignores its children: the cells, Start From
+        // and the badge are elements of their own, the cells beneath the rest.
+        .overlay { cellElements }
         .overlay(alignment: .top) {
             if !isPractice, !fullScreen { topControls.padding(12) }
         }
@@ -558,7 +586,12 @@ struct RefineView: View {
         .overlay(alignment: .topTrailing) {
             if fullScreen { exitFullScreen.padding(12) }
         }
-        .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in areaCard(pick) }
+        .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in
+            // A sheet where a popover can't be (a wide iPhone in landscape uses the rail).
+            areaCard(pick)
+                .presentationDetents([.medium, .large])
+                .presentationCompactAdaptation(.sheet)
+        }
         // Its own view, so the card's popover and this one don't share an anchor.
         .background {
             Color.clear
@@ -570,6 +603,36 @@ struct RefineView: View {
     }
 
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
+
+    /// The cells in view as VoiceOver and Switch Control elements, while a cell tool is picked
+    /// (`RefineCellElements`; demo launches have them too, for the UI tests).
+    @ViewBuilder
+    private var cellElements: some View {
+        if speaksCells, RefineCellElements.tools.contains(tool), model.hasLineArtInput, let template = base?.template {
+            let anchors = RefineCells.anchors(in: template)
+            RefineCellElements(
+                template: template, anchors: anchors, picture: picture, canvas: canvasSize, tool: tool,
+                selected: tool == .select ? selectedRegion : nil,
+                activate: { region in tap(at: picturePoint(anchors[region])) },
+                merge: { region, neighbour in
+                    guard let probe = try? TemplateEditor.MergeProbe(template),
+                          let edit = RefineCells.merge(region, with: neighbour, in: template, probe: probe)
+                    else { return model.tell(.notMerged) }
+                    submit(edit)
+                },
+                moveNumber: { region, direction in
+                    guard let edit = RefineCells.moveNumber(of: region, direction, in: template) else { return model.tell(.notMoved) }
+                    submit(edit)
+                })
+        }
+    }
+
+    private var speaksCells: Bool {
+        #if DEBUG
+        if DemoMode.isActive { return true }
+        #endif
+        return voiceOverEnabled || switchControlEnabled
+    }
 
     /// Whether the painting shows beneath the drawing: its layer is on.
     private var showsPainting: Bool { layers.paint }
@@ -974,14 +1037,19 @@ struct RefineView: View {
                     let counts = template.regionCountsByColor
                     currentPaint = counts.indices.max { counts[$0] < counts[$1] }.map { template.palette[$0].oklab }
                 }
-                if demo.selectsCell { selection = at }
+                if demo.selectsCell || demo.opensCard { selection = at }
                 if demo.opensLayers {
                     layers = .tracing
                     showsLayers = true
                 }
                 if demo.opensCard, let at {
                     let point = SIMD2(at.x / Float(template.width), at.y / Float(template.height))
-                    card = RefineAreaPick(at: at, screen: onScreen(point), template: template)
+                    if usesRail {
+                        card = RefineAreaPick(at: at, screen: onScreen(point), template: template)
+                        demoCardAt = at
+                    } else {
+                        barCard = RefineAreaPick(at: at, screen: .zero, template: template)
+                    }
                 }
                 didPickDemoPaint = true
             }
@@ -1077,9 +1145,15 @@ struct RefineView: View {
         }
     }
 
-    /// Marks the line dragged out from `a` to `b`, unless the drag was too small to hold one.
+    /// Marks the line dragged out from `a` to `b`, unless the drag was too small to hold one. One
+    /// small both ways is a tap that slid (a stroke and a tap exclude each other): it toggles the
+    /// line under it, as a tap does.
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
-        guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
+        let wide = abs(a.x - b.x) * Float(picture.width), tall = abs(a.y - b.y) * Float(picture.height)
+        guard wide >= 12, tall >= 6 else {
+            if wide < 12, tall < 6 { toggleText(at: a) }
+            return
+        }
         model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
         if !isPractice { PaintTips.refineEdited() }
     }
@@ -1163,8 +1237,6 @@ struct RefineView: View {
                 .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
                     Button("Discard Changes", role: .destructive, action: cancel)
                     Button("Keep Refining", role: .cancel) {}
-                } message: {
-                    Text("Refine goes back to how it was when you opened it.")
                 }
         }
         ToolbarItem(placement: .topBarLeading) {
@@ -1401,7 +1473,10 @@ struct RefineView: View {
         finishCurve()
         previousTool = self.tool
         self.tool = tool
-        if tool != .select { selection = nil }
+        if tool != .select {
+            selection = nil
+            barCard = nil
+        }
         group = RefineGroup.of(tool)
         // What the tool works on shows: a cell edge and the paint tools the paint, Move Number the
         // numbers.
@@ -1457,23 +1532,22 @@ extension RefineView {
     /// over a row of the group's tools (iPhone).
     private var usesRail: Bool { sizeClass == .regular }
 
+    /// Whether the palette shows: in Cells and Paint, but for Make Cell, whose cell takes the
+    /// photo's color (QA, October 28: the palette there looked like the color it would use).
+    private var showsPalette: Bool { (group == .cells || group == .paint) && tool != .fill }
+
     /// The Studio's bottom: the picked tool's options, the cell Select picked, the palette (in
     /// Cells and Paint), and on iPhone the groups and the group's tools.
     @ViewBuilder
     private var studioBar: some View {
         toolOptions
-        if tool == .select, let template = base?.template, let region = selectedRegion {
-            RefineSelectionBar(template: template, region: region) {
-                guard let selection else { return }
-                FeedbackEngine.shared.selectionChanged()
-                let point = picturePoint(selection)
-                card = RefineAreaPick(at: selection, screen: onScreen(point), template: template)
+        if showsPalette, let template = base?.template {
+            if tool == .select, let region = selectedRegion {
+                selectionBand(template: template, region: region)
+            } else {
+                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
+                    .disabled(!model.hasLineArtInput)
             }
-            .transition(.opacity)
-        }
-        if group == .cells || group == .paint, let template = base?.template {
-            RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
-                .disabled(!model.hasLineArtInput)
         }
         if practice?.teaches == .tryPainting {
             Button("Try Painting", systemImage: "paintbrush", action: tryPainting)
@@ -2076,7 +2150,7 @@ extension RefineView {
     private var glowAreas: [Int] {
         guard let template = base?.template else { return [] }
         if tool == .merge, trace != nil, let probe = mergeProbe, probe.preview == base?.id { return mergeAreas }
-        if let card, let region = template.region(at: card.at) {
+        if let card = card ?? barCard, let region = template.region(at: card.at) {
             return RefinePaintGlow.areas(of: Int(template.regions[region].colorIndex), in: template)
         }
         if tool == .select, let region = selectedRegion { return [region] }
@@ -2130,6 +2204,7 @@ extension RefineView {
         case .select:
             FeedbackEngine.shared.selectionChanged()
             selection = region != nil && region != selectedRegion ? at : nil
+            barCard = nil
         case .bucket:
             guard region != nil, let color = currentPaint else { return }
             FeedbackEngine.shared.selectionChanged()
@@ -2179,7 +2254,7 @@ extension RefineView {
     }
 
     @ViewBuilder
-    private func areaCard(_ pick: RefineAreaPick) -> some View {
+    private func areaCard(_ pick: RefineAreaPick, inBar: Bool = false) -> some View {
         if let template = base?.template {
             RefineAreaCard(
                 template: template, at: pick.at, isolates: pick.isolates, from: pick.from,
@@ -2187,10 +2262,42 @@ extension RefineView {
                 repaint: { from, to in recolor(.repaint(from: from, to: to, family: false)) },
                 showPaint: { paint in
                     card = nil
+                    barCard = nil
                     currentPaint = template.palette[paint].oklab
                     self.pick(.editPaint)
-                })
+                },
+                inBar: inBar)
         }
+    }
+
+    /// The cell Select picked and the palette, one band (Rikyū, `factory/pieces/refine-phase3`):
+    /// Change Color opens the cell's card beside it on iPad, and on iPhone in the band itself, in
+    /// the palette's place (`barCard`), where nothing covers the picture.
+    private func selectionBand(template: Template, region: Int) -> some View {
+        VStack(spacing: 0) {
+            RefineSelectionBar(template: template, region: region, cardOpen: barCard != nil) {
+                guard let selection else { return }
+                FeedbackEngine.shared.selectionChanged()
+                // Close closes, whatever the width has become since the card opened.
+                if barCard != nil {
+                    barCard = nil
+                } else if usesRail {
+                    card = RefineAreaPick(at: selection, screen: onScreen(picturePoint(selection)), template: template)
+                } else {
+                    barCard = RefineAreaPick(at: selection, screen: .zero, template: template)
+                }
+            }
+            if let barCard {
+                areaCard(barCard, inBar: true)
+            } else {
+                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge, glass: false)
+                    .disabled(!model.hasLineArtInput)
+            }
+        }
+        .padding(.vertical, 2)
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
+        .frame(maxWidth: 720)
+        .transition(.opacity)
     }
 
     /// Start From at the top's leading end and the tiny-numbers badge at its trailing one, clear of

@@ -69,7 +69,7 @@
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
     },
-    "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes." : {
+    "Two fingers zoom and move. Tap with two to undo." : {
       "comment" : "Message of the tip titled Draw Your Own Lines in Refine (the two-finger tap undoes the last change)",
       "extractionState" : "manual"
     },
@@ -127,10 +127,6 @@
     },
     "Layers" : {
       "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel",
-      "extractionState" : "manual"
-    },
-    "Layers change only what you see, never the picture." : {
-      "comment" : "Refine screen, the Layers panel: the note under the layers (hiding a layer or fading it changes nothing in the template)",
       "extractionState" : "manual"
     },
     "Line Eraser" : {
@@ -193,10 +189,6 @@
       "comment" : "Tool Guide: VoiceOver label of a page's practice canvas, where the tool can be tried on a practice picture",
       "extractionState" : "manual"
     },
-    "Refine goes back to how it was when you opened it." : {
-      "comment" : "Refine screen, the dialog Cancel opens: its message, what discarding does",
-      "extractionState" : "manual"
-    },
     "refine.areaMade" : {
       "comment" : "VoiceOver announcement on the Refine screen when a line the painter drew closed off an area of its own",
       "extractionState" : "manual",
@@ -208,6 +200,34 @@
           }
         }
       }
+    },
+    "refine.cell.merge" : {
+      "comment" : "Refine screen, VoiceOver: an action on a cell with Merge picked, which joins a neighbouring cell into it (the neighbour's number and color name, \"3 · Sky blue\")",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge with %@"
+          }
+        }
+      }
+    },
+    "Move Number Up" : {
+      "comment" : "Refine screen, VoiceOver: an action on a cell with Move Number picked, which moves its number up a step",
+      "extractionState" : "manual"
+    },
+    "Move Number Down" : {
+      "comment" : "Refine screen, VoiceOver: an action on a cell with Move Number picked, which moves its number down a step",
+      "extractionState" : "manual"
+    },
+    "Move Number Left" : {
+      "comment" : "Refine screen, VoiceOver: an action on a cell with Move Number picked, which moves its number left a step",
+      "extractionState" : "manual"
+    },
+    "Move Number Right" : {
+      "comment" : "Refine screen, VoiceOver: an action on a cell with Move Number picked, which moves its number right a step",
+      "extractionState" : "manual"
     },
     "refine.brush.size" : {
       "comment" : "Refine screen, the Paint Brush's and the Eraser's options: VoiceOver value of their Size slider, the radius on screen in points; the argument is the number",
@@ -738,13 +758,13 @@
       }
     },
     "refine.guide.bucket.step3" : {
-      "comment" : "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; Cells and Paint are groups of tools)",
+      "comment" : "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; the palette shows with the Cells and Paint tools but Make Cell)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Or drag a swatch from the palette straight onto a cell. This works with any Cells or Paint tool."
+            "value" : "Or drag a swatch from the palette straight onto a cell, with any tool that shows the palette."
           }
         }
       }
@@ -2009,6 +2029,18 @@
         }
       }
     },
+    "refine.guide.procreate.note5" : {
+      "comment" : "Tool Guide, Coming from Procreate: the last note under Good to Know, whose owner the trademark is (Savage Interactive Pty Ltd is a company's name: keep it as is)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it."
+          }
+        }
+      }
+    },
     "refine.guide.procreate.step1" : {
       "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)",
       "extractionState" : "manual",
@@ -2070,13 +2102,13 @@
       }
     },
     "refine.guide.procreate.step6" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; Cells and Paint are groups of tools)",
+      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; the palette shows with the Cells and Paint tools but Make Cell)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag a swatch onto a cell: ColorDrop, with any Cells or Paint tool."
+            "value" : "Drag a swatch onto a cell: ColorDrop, wherever the palette shows."
           }
         }
       }
@@ -2124,7 +2156,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap a cell to select it. It glows, and the bar below shows its paint, how many cells use that paint and its share of the picture. Change Color there gives it a new color."
+            "value" : "Tap a cell to select it. It glows, and the bar below shows its paint and how many cells use it. Change Color there gives it a new color."
           }
         }
       }
@@ -2208,7 +2240,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows a cell: its paint and how much of the picture it covers."
+            "value" : "Shows a cell and its paint."
           }
         }
       }
@@ -2220,7 +2252,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select the sky, then the moon, and compare how much of the picture each covers."
+            "value" : "Select the sky, then the moon, and see which paint each has."
           }
         }
       }
@@ -2957,18 +2989,6 @@
         }
       }
     },
-    "refine.selection" : {
-      "comment" : "Refine screen, Select's bar: the selected area's paint number (formatted), how many areas have that paint (\"3 areas\"), and how much of the picture the area covers (a formatted percentage)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paint %1$@ · %2$@ · %3$@ of the picture"
-          }
-        }
-      }
-    },
     "refine.smoothing.hint" : {
       "comment" : "Refine screen, the Pen's options: VoiceOver hint of Smoothing, a slider from off to full (Procreate calls it StreamLine)",
       "extractionState" : "manual",
@@ -3322,7 +3342,7 @@
       "extractionState" : "manual"
     },
     "Close" : {
-      "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet)",
+      "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet), and in Refine's Select bar on iPhone the area's card open in it",
       "extractionState" : "manual"
     },
     "Color Key" : {
@@ -7754,7 +7774,7 @@
       "extractionState" : "manual"
     },
     "Your tool’s layer" : {
-      "comment" : "Refine screen, the Layers panel: under a layer's name, marking the layer the picked tool works on",
+      "comment" : "Refine screen, the Layers panel: VoiceOver hint of the layer the picked tool works on (its row is highlighted)",
       "extractionState" : "manual"
     },
     "Zen Mode" : {

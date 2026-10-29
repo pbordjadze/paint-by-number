@@ -7,7 +7,9 @@ extension EditWork {
     /// never runs into the background. Its regions become one (any ink between them stays as
     /// strokes), painted the paint nearest `color` within a just-noticeable difference, else a
     /// new paint added last (no other number changes), and it is a detail area, kept whatever
-    /// its size, numbered down to the detail floor, as a fill has always made it.
+    /// its size, numbered down to the detail floor, as a fill has always made it. A paint it
+    /// leaves with no area leaves the palette, the numbers after it closing up, as Merge's
+    /// does (editor version 2: before, the paint stayed, and the painting's numbers skipped it).
     mutating func fill(at p: LatticePoint, color: SIMD3<Float>) throws {
         guard let tapped = locate(p) else { throw EditFailure.invalid("the tap is off the canvas") }
         var members = [tapped]
@@ -34,6 +36,7 @@ extension EditWork {
         if open { members = [tapped] }
         members.sort()
 
+        let used = livePaints
         let color = UInt32(paint(matching: color))
         let keep = members.contains(tapped) ? tapped : members[0]
         if members.count > 1 {
@@ -49,6 +52,7 @@ extension EditWork {
             refreshColorWeights(around: keep)
             summary.touched.insert(keep)
         }
+        try dropPaints(emptiedFrom: used)
         summary.fills += 1
         summary.detailAreas += 1
     }

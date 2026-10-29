@@ -469,6 +469,9 @@ struct RefineTouchSurface: UIViewRepresentable {
     /// A hold picks a color (the Eyedropper's); off, a touch held still before a drag is the
     /// drag's (Bend Line, Move Edge, Move Number).
     var holdPicks = true
+    /// A one-finger drag is the tool's stroke: a touch that becomes one is no tap as well. Off (a
+    /// tool that only taps), a tap that wanders a little is still a tap.
+    var strokes = true
     /// The Pencil's double tap or squeeze, and where it hovers then (the view's coordinates).
     var onPencil: (RefinePencilAction, CGPoint?) -> Void = { _, _ in }
     var onHold: (RefineTouch, SIMD2<Float>) -> Void = { _, _ in }
@@ -497,6 +500,7 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onRedo = onRedo
         view.onRepeat = onRepeat
         view.holdPicks = holdPicks
+        view.strokes = strokes
         view.onPencil = onPencil
         view.onHold = onHold
         view.onHover = onHover
@@ -529,6 +533,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onRedo: (() -> Void)?
     var onRepeat: ((Bool) -> Bool)?
     var holdPicks = true
+    var strokes = true
     var onPencil: ((RefinePencilAction, CGPoint?) -> Void)?
     var onHold: ((RefineTouch, SIMD2<Float>) -> Void)?
     var onHover: ((SIMD2<Float>?) -> Void)?
@@ -981,8 +986,13 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
     ) -> Bool {
-        // A hold and a stroke are one finger's: whichever comes first has it.
-        !(gestureRecognizer === press && other === brush) && !(gestureRecognizer === brush && other === press)
+        // A hold and a stroke are one finger's: whichever comes first has it; and so are a tap and
+        // a stroke, with a tool whose stroke does something: a drag of about ten points was both
+        // (a curve's small bend laid it straight and began another; an eraser's short rub dabbed
+        // too, CI October 28).
+        let pair = Set([ObjectIdentifier(gestureRecognizer), ObjectIdentifier(other)])
+        return pair != Set([ObjectIdentifier(press), ObjectIdentifier(brush)])
+            && !(strokes && pair == Set([ObjectIdentifier(tap), ObjectIdentifier(brush)]))
     }
 
     /// A stroke can't begin under a hold that has begun, nor a hold under a stroke; with a tool
