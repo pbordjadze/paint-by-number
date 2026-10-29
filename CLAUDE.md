@@ -109,7 +109,8 @@ before planning app work).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
-  on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
+  on `main`: `iphone`, all of it; a branch's `[compile]` or `[test …]` runs one entry instead, CI
+  feedback loop), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
   `feedback-relay/` (see below); `.github/workflows/qa-explore.yml`, exploratory QA on request: an
@@ -222,6 +223,9 @@ logs the tuned ones.
 - Scratch output goes outside the repo. Never commit `.build/`, eval output, `tools/node_modules`,
   `.claude/worktrees/` or `.claude/corpus/`. Keep a diff to what the task needs; edits to shared
   files (`Localizable.xcstrings`, `ci/scenarios.txt`) are minimal.
+- A tool you write to check or measure your own work (a harness, a preview, a shim) is committed
+  before you finish, in `tools/` (or painting-company's when it holds anything private), its
+  header saying how to run it: a scratch directory dies with its session (painting-company row 159).
 
 ## Quality gate
 
@@ -432,7 +436,7 @@ any port of it, when changing the fitter: work from the paper.
    that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines
    trimmed), `core/` (tests, strings check, `regression/` with its table and
    `sheets/<regime>/<sample>.jpg`), and per job
-   (`ipad`, `ipad-ui`, `iphone`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
+   (`ipad`, `ipad-ui`, `iphone`, or the one `compile` or `test`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's own log lines
    during the run, every category of `Log`), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
@@ -462,6 +466,13 @@ any port of it, when changing the fitter: work from the paper.
    first, October 18), but it waits for one like any macOS job. Run it before asking
    for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
    run is going (the push cancels it).
+   A UI test's quick try: `[test RefineUITests]` (several classes, or `Class/testMethod`; a run
+   started by hand takes `tests`) runs only those UI tests, on the iPad after the Debug build
+   (`test` in STATUS.md, instead of every other entry, `[iphone]`'s too; no screenshots, no
+   Release; on a cache miss the warm-up first), on one runner like `[compile]`: 17 min for two
+   small classes on an idle runner, 12 of them the build (October 29, run 653). A name the
+   sources lack fails its Plan step at once (`test/errors.txt` says why); a choice that still ran
+   no test fails its Test step. The full run still comes before a merge.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
    with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
@@ -492,7 +503,7 @@ check, and touching different files. A conductor session (on Sonnet) runs `ci/tr
 <branch>…` (merges each into `claude/train-<name>`, fresh from `origin/main`, leaves off one that
 conflicts, and pushes), waits with `CI_BRANCH=claude/train-<name> ci/fetch.sh`, and on green runs
 `ci/train.sh land <name>`: `main` fast-forwards to the train, the one merge of that `main` run (it
-refuses a red, stale or compile-only report, or a `main` that moved: make the train again). On red,
+refuses a red, stale, compile-only or test-only report, or a `main` that moved: make the train again). On red,
 `ci/train.sh who <name> <path>…` names the branch that changed the failing file; the conductor
 makes the train again without it, and that branch goes back to its session. The conductor reports
 each step to the session that started it.
@@ -522,7 +533,7 @@ him itself, with a push notification once he has gone quiet.
   extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
   head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
   `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
-  `[compile]`, `[iphone]` and `[ipa]` the same way on branches.
+  `[compile]`, `[test …]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about
