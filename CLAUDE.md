@@ -222,6 +222,9 @@ logs the tuned ones.
 - Scratch output goes outside the repo. Never commit `.build/`, eval output, `tools/node_modules`,
   `.claude/worktrees/` or `.claude/corpus/`. Keep a diff to what the task needs; edits to shared
   files (`Localizable.xcstrings`, `ci/scenarios.txt`) are minimal.
+- A tool you write to check or measure your own work (a harness, a preview, a shim) is committed
+  before you finish, in `tools/` (or painting-company's when it holds anything private), its
+  header saying how to run it: a scratch directory dies with its session (painting-company row 159).
 
 ## Quality gate
 
