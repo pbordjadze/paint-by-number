@@ -45,7 +45,7 @@ case "$CMD" in
       # train's last merge is the commit CI reads them from.
       notes="$(git log -1 --format=%B "origin/$branch" \
         | sed -E -e 's/\[(compile|iphone|ipa|skip ci|ci skip|no ci|skip actions|actions skip)\]//gI' \
-          -e '/^skip-checks: ?true$/Id')"
+          -e '/^skip-checks: ?true$/Id' | sed -zE 's/\[test [^]]*\]//gI')"
       if git merge -q --no-ff -m "Merge $branch (night train $NAME)"$'\n\n'"$notes" "origin/$branch" > /dev/null 2>&1; then
         on+=("$branch")
       elif git rev-parse -q --verify MERGE_HEAD > /dev/null; then
