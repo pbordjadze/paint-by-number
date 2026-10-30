@@ -58,7 +58,7 @@ struct SegmentationParameters: Sendable {
     var sceneFeatureSmoothing: Float = 0.6
     /// A face (or an animal's head) is smoothed this many times as widely as the rest of the
     /// subject, outside its features: a face reads as a few planes of skin tone, not as patches.
-    var sceneFacePlanes: Float = 1.3
+    var sceneFacePlanes: Float = 1.15
     /// The scene method's band fusion: its tolerance for narrow bands is this many times the
     /// color method's (it still falls with importance, so the subject keeps its tones), and a
     /// band counts as narrow up to this many times the width (a bokeh highlight's rings are
@@ -66,10 +66,6 @@ struct SegmentationParameters: Sendable {
     /// drifts of a snowfield and the shoreline of a beach.
     var sceneBandFusion: Float = 1.2
     var sceneBandWidth: Float = 1.5
-    /// The scene method smooths along the grain before anything else (`OrientedSmoothing`): the
-    /// half-length of the line, as a share of the canvas side (about 11 px on a 1152-px canvas).
-    /// 0 turns it off.
-    var sceneGrainLength: Float = 0.01
     /// The scene method's background outlines are calmed by a second mode filter with this
     /// many times the boundary radius and this many passes, on background pixels farther than
     /// that radius from the silhouette.

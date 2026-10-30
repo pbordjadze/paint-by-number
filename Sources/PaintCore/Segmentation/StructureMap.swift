@@ -54,33 +54,6 @@ struct StructureMap {
         }
     }
 
-    /// How much the gradients around each pixel are texture rather than a contour, 0...1: one
-    /// minus the ratio of the coherent magnitude to the summed magnitudes (the relative total
-    /// variation), where there are gradients at all (below `floor` of summed magnitude, 0).
-    func textureness(floor: Float = 0.02) -> [Float] {
-        var out = [Float](uninitializedCount: width * height)
-        horizontal.withUnsafeBufferPointer { hb in
-            vertical.withUnsafeBufferPointer { vb in
-                out.withUnsafeMutableBufferPointer { ob in
-                    let hp = UncheckedSendable(hb.baseAddress!)
-                    let vp = UncheckedSendable(vb.baseAddress!)
-                    let op = UncheckedSendable(ob.baseAddress!)
-                    Parallel.forEachBand(ob.count, minimumBandSize: 16_384) { range in
-                        for i in range {
-                            var a = hp.value[i], b = vp.value[i]
-                            let total = a.w + b.w
-                            a.w = 0
-                            b.w = 0
-                            let coherent = (a * a).sum().squareRoot() + (b * b).sum().squareRoot()
-                            op.value[i] = total > floor ? max(0, 1 - coherent / total) : 0
-                        }
-                    }
-                }
-            }
-        }
-        return out
-    }
-
     /// Magnitude of the coherent (non-cancelling) gradient: high on contours, low in flat
     /// areas and in texture alike.
     func coherentMagnitude() -> [Float] {

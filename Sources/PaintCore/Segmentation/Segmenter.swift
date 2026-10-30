@@ -62,16 +62,6 @@ enum Segmenter {
         try cancel.throwIfCancelled()
         progress(0.05)
 
-        // The scene method smooths the subject's fur, feathers and hair along their grain first.
-        var source = lab
-        if let layers, p.sceneGrainLength > 0 {
-            source = try clock.measure("segment.grain") {
-                try OrientedSmoothing.apply(
-                    lab, length: p.sceneGrainLength * Float(w * h).squareRoot(), texture: structure.textureness(),
-                    within: layers.isSubject, cancel: cancel)
-            }
-            try cancel.throwIfCancelled()
-        }
         let smooth = try clock.measure("segment.smooth") { () throws -> Grid<SIMD4<Float>> in
             let edgeScale = p.textureFlattening > 0
                 ? try structure.edgeScales(
@@ -80,7 +70,7 @@ enum Segmenter {
             try cancel.throwIfCancelled()
             if let layers {
                 return try DomainTransformFilter.filter(
-                    source, sigmaSpatial: p.smoothSpatial * (layers.hasScene ? p.sceneBackgroundSmoothing : 1), sigmaRange: p.smoothRange,
+                    lab, sigmaSpatial: p.smoothSpatial * (layers.hasScene ? p.sceneBackgroundSmoothing : 1), sigmaRange: p.smoothRange,
                     iterations: p.smoothIterations, edgeScale: edgeScale, stiffness: (layers.stretch, 1),
                     barrier: layers.barrier, cancel: cancel)
             }
