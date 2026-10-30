@@ -36,17 +36,19 @@ public struct DrawingSettings: Sendable, Hashable, Codable {
 
     /// The line art a drawing is traced with: every line of the ink is drawn, and a line
     /// splits the paper on both sides where lines are not crowded (`samePaint:
-    /// .joinAllButOutlines` with the outline threshold at the detail's: a line is an outline
-    /// unless the clutter around it, hatching, fur, a scribbled shadow, lifts the threshold
-    /// out of reach, `LineLayering`; there is one paint until the palette is laid, so the
-    /// crowded lines draw inside the cell around them), as drawn (`lineSmoothing` 0: the lines follow the ink's pixels, the vectorizer's
+    /// .joinAllButOutlines`: the ink's strength, capped at `LayeredLines.Tracing.strengthCap`,
+    /// is above the outline threshold unless the clutter around it, hatching, fur, a scribbled
+    /// shadow, lifts the threshold out of reach, `LineLayering`, and the lines of small
+    /// writing are held at `DrawingGenerator.writingStrength`, between the two thresholds;
+    /// there is one paint until the palette is laid, so the crowded lines and the writing
+    /// draw inside the cell around them), as drawn (`lineSmoothing` 0: the lines follow the ink's pixels, the vectorizer's
     /// curve fit alone evens them), gaps up to `gapBridging` closed along the line's own
     /// direction, strokes shorter than `minimumStrokeLength` (specks of the paper) dropped.
-    /// The thresholds are the ink's strength a pencil's faint stroke still reaches.
+    /// The detail threshold is the ink's strength a pencil's faint stroke still reaches.
     /// Nothing is read from a photo: no eyes, subjects or writing. Public for `pbn`'s report.
     public static var lineArt: LineArtSettings {
         LineArtSettings(
-            style: .coloringBook, detector: .drawing, outlineThreshold: 0.3, detailThreshold: 0.3,
+            style: .coloringBook, detector: .drawing, outlineThreshold: 0.5, detailThreshold: 0.3,
             minimumStrokeLength: 10, gapBridging: 18, lineSmoothing: 0, samePaint: .joinAllButOutlines,
             keepColorEdges: true, outlineEyes: false, outlineObjects: false, keepWriting: false)
     }

@@ -60,6 +60,9 @@ public enum DrawingScan {
     static let solidRadius: Float = 0.005
     static let solidSeed: Float = 1.5
     static let solidPens: Float = 1.1
+    /// The mean strength from which a working pixel is inside a fill: ink all over, where the
+    /// densest hatching still shows paper.
+    static let solidLevel: Float = 0.7
     static let solidDepthShare: Float = 0.25
     /// A compact core (a blob's) has at most this many times its deepest point's depth squared
     /// in area (a disc has π); a thick stroke's thread of a core has many more.
@@ -130,32 +133,42 @@ public enum DrawingScan {
         let paper = try paperEstimate(luma, width: w, height: h, cancel: cancel).blurred
         try cancel.throwIfCancelled()
         let strength = inkStrength(darkness(luma, paper: paper, chroma: chroma))
-        // The strongest pixel under each working pixel.
+        // The strongest pixel under each working pixel (a hair line survives), and the mean (a
+        // fill is ink all over, hatching is not, however dense).
         var pooled = [Float](repeating: 0, count: width * height)
+        var mean = [Float](repeating: 0, count: width * height)
         for y in 0..<height {
             let y0 = y * h / height, y1 = max(y0 + 1, (y + 1) * h / height)
             for x in 0..<width {
                 let x0 = x * w / width, x1 = max(x0 + 1, (x + 1) * w / width)
-                var best: Float = 0
+                var best: Float = 0, sum: Float = 0, count: Float = 0
                 for yy in y0..<min(y1, h) {
                     let row = yy * w
-                    for xx in x0..<min(x1, w) { best = max(best, strength[row + xx]) }
+                    for xx in x0..<min(x1, w) {
+                        let v = strength[row + xx]
+                        best = max(best, v)
+                        sum += v
+                        count += 1
+                    }
                 }
                 pooled[y * width + x] = best
+                mean[y * width + x] = sum / max(count, 1)
             }
         }
         try cancel.throwIfCancelled()
         // Solid fills, from the lines as they are: the inside goes, past the line's width from
         // the edge, and the paper gaps inside become lines.
         let level = inkThreshold
-        let fill = solids(of: pooled, width: width, height: height, threshold: level)
+        let fill = solids(of: mean, width: width, height: height, threshold: solidLevel)
         if fill.contains(true) {
             let r = inkWidth
             let edge = DistanceTransform.squaredEDT(width: width, height: height) { !fill[$0] }.storage
             for i in pooled.indices where fill[i] && edge[i] > Float(r * r) {
-                pooled[i] = pooled[i] >= level ? 0 : 1
+                pooled[i] = mean[i] >= solidLevel ? 0 : 1
             }
         }
+        try cancel.throwIfCancelled()
+        chainDots(&pooled, width: width, height: height, threshold: level)
         try cancel.throwIfCancelled()
         let r = inkWidth / 2
         var widened = pooled
@@ -237,6 +250,81 @@ public enum DrawingScan {
             filled[i] = solid.storage[i] == 1 || (!touchesEdge[g] && !tooDeep[g])
         }
         return filled
+    }
+
+    /// A dotted line's dots joined (`chainDots`): a dot is a piece of ink at most `dotSize` across
+    /// (working pixels at a 1500-px canvas, scaled), its next dot within `dotReach` of it; a dot
+    /// joins the two nearest that lie on opposite sides of it (the angle between them at
+    /// least `dotAngle` degrees), so a dotted outline becomes a line and a stippled field a
+    /// mesh of short lines, drawn as texture.
+    static let dotSize: Float = 7
+    static let dotReach: Float = 16
+    static let dotAngle: Float = 100
+
+    /// Draws a line between the dots of each dotted line in `ink` (above).
+    static func chainDots(_ ink: inout [Float], width w: Int, height h: Int, threshold: Float) {
+        let scale = Float(max(w, h)) / 1500
+        let size = dotSize * scale, reach = dotReach * scale
+        var classes = Grid<UInt32>(width: w, height: h, repeating: 0)
+        for i in classes.storage.indices where ink[i] >= threshold { classes.storage[i] = 1 }
+        let components = ConnectedComponents.label(classes)
+        var bounds = [PixelBounds](repeating: .empty, count: components.count)
+        var sum = [SIMD2<Float>](repeating: .zero, count: components.count)
+        for y in 0..<h {
+            for x in 0..<w {
+                let c = Int(components.labels[x, y])
+                bounds[c].include(x: x, y: y)
+                sum[c] += SIMD2(Float(x), Float(y))
+            }
+        }
+        var dots: [SIMD2<Float>] = []
+        for c in 0..<components.count where components.classOf[c] == 1 {
+            let b = bounds[c]
+            guard Float(b.maxX - b.minX + 1) <= size, Float(b.maxY - b.minY + 1) <= size else { continue }
+            dots.append(sum[c] / Float(components.area[c]))
+        }
+        guard dots.count >= 2 else { return }
+        // Neighbours within reach, through a grid of cells one reach wide.
+        let cell = max(1, Int(reach.rounded(.up)))
+        let gw = (w + cell - 1) / cell, gh = (h + cell - 1) / cell
+        var grid = [[Int]](repeating: [], count: gw * gh)
+        for (k, d) in dots.enumerated() { grid[Int(d.y) / cell * gw + Int(d.x) / cell].append(k) }
+        let cosLimit = Float(cos(Double(dotAngle) * .pi / 180))
+        var links = Set<[Int]>()
+        for (k, d) in dots.enumerated() {
+            var near: [(dot: Int, distance: Float)] = []
+            let gx = Int(d.x) / cell, gy = Int(d.y) / cell
+            for yy in max(0, gy - 1)...min(gh - 1, gy + 1) {
+                for xx in max(0, gx - 1)...min(gw - 1, gx + 1) {
+                    for j in grid[yy * gw + xx] where j != k {
+                        let distance = simdLength(dots[j] - d)
+                        if distance <= reach { near.append((j, distance)) }
+                    }
+                }
+            }
+            near.sort { $0.distance != $1.distance ? $0.distance < $1.distance : $0.dot < $1.dot }
+            guard let first = near.first else { continue }
+            links.insert([min(k, first.dot), max(k, first.dot)])
+            // The second: the nearest on the other side.
+            let u = (dots[first.dot] - d) / first.distance
+            for other in near.dropFirst() {
+                let v = (dots[other.dot] - d) / other.distance
+                if simdDot(u, v) <= cosLimit {
+                    links.insert([min(k, other.dot), max(k, other.dot)])
+                    break
+                }
+            }
+        }
+        for link in links.sorted(by: { $0[0] != $1[0] ? $0[0] < $1[0] : $0[1] < $1[1] }) {
+            let a = dots[link[0]], b = dots[link[1]]
+            let steps = max(1, Int(simdLength(b - a).rounded(.up)))
+            for step in 0...steps {
+                let p = a + (b - a) * (Float(step) / Float(steps))
+                let x = Int(p.x.rounded()), y = Int(p.y.rounded())
+                guard x >= 0, y >= 0, x < w, y < h else { continue }
+                ink[y * w + x] = max(ink[y * w + x], 0.9)
+            }
+        }
     }
 
     // MARK: - Luma and paper

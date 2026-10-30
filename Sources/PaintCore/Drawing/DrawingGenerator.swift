@@ -24,6 +24,10 @@ import Foundation
 /// The template is a coloring book like any other: its lines draw in full ink, Refine edits
 /// it, and nothing in its format says it came from a drawing (its settings do).
 enum DrawingGenerator {
+    /// The ink's strength inside the lines of small writing: detail, drawn inside its cell,
+    /// below `DrawingSettings.lineArt`'s outline threshold and above its detail's.
+    static let writingStrength: Float = 0.4
+
     static func generate(
         from image: RGBAImage, settings: GenerationSettings, drawing: DrawingSettings, cancel: CancellationCheck,
         progress: (@Sendable (Float) -> Void)?, observer: PipelineSnapshot.Observer?
@@ -38,16 +42,30 @@ enum DrawingGenerator {
         if let observer { try observer(SnapshotPictures.working(working, cancel: cancel)) }
         progress?(0.05)
 
-        let ink = try clock.measure("ink") {
+        var ink = try clock.measure("ink") {
             try DrawingScan.ink(of: image, width: size.width, height: size.height, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress?(0.25)
 
         // The lines of small writing are traced finely and drawn legibly, off the paint
-        // (`Writing`, as a photo's text is): a caption stays a caption, never confetti.
+        // (`Writing`, as a photo's text is): a caption stays a caption, never confetti. What
+        // `Writing` leaves of them (a letter it dropped, a row it took for texture) is held at
+        // `writingStrength`, drawn as detail inside its cell, never a wall.
         var writing: Writing?
         let rows = DrawingScan.textRows(in: ink.map)
+        if !rows.isEmpty {
+            let w = size.width, h = size.height
+            let held = UInt8((writingStrength * 255).rounded())
+            for row in rows {
+                let x0 = max(0, Int(row[0].x * Float(w))), x1 = min(w, Int((row[1].x * Float(w)).rounded(.up)))
+                let y0 = max(0, Int(row[0].y * Float(h))), y1 = min(h, Int((row[2].y * Float(h)).rounded(.up)))
+                guard x1 > x0, y1 > y0 else { continue }
+                for y in y0..<y1 {
+                    for x in x0..<x1 where ink.map.values[y * w + x] > held { ink.map.values[y * w + x] = held }
+                }
+            }
+        }
         if !rows.isEmpty {
             let params = SegmentationParameters(settings: settings.normalized, width: size.width, height: size.height)
             writing = try clock.measure("writing") {
