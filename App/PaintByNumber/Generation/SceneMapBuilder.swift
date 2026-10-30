@@ -42,8 +42,7 @@ nonisolated enum SceneMapBuilder {
         // What the scene method will lay the template out by (a QA run reads it off the log).
         let covered = map.subject.reduce(0) { $0 + ($1 >= 128 ? 1 : 0) }
         let share = map.subject.isEmpty ? 0 : covered * 100 / map.subject.count
-        let verdict = map.hasSubject ? "a subject" : "no subject"
-        Log.create.info("Scene: subject \(share, privacy: .public)% of the frame, \(map.faces.count, privacy: .public) faces, \(map.animals.count, privacy: .public) animals, \(map.features.count, privacy: .public) features: \(verdict, privacy: .public)")
+        Log.create.info("Scene: subject \(share, privacy: .public)% of the frame, \(map.faces.count, privacy: .public) faces, \(map.animals.count, privacy: .public) animals, \(map.features.count, privacy: .public) features; hasSubject \(map.hasSubject, privacy: .public)")
         return map
     }
 
