@@ -2,10 +2,10 @@ import Foundation
 import PaintCore
 
 /// `--snapshots`: the making-of pictures written into its directory, at most 1024 px long.
-func snapshotObserver(_ options: Options) -> PipelineSnapshot.Observer? {
+func snapshotObserver(_ options: Options) throws -> PipelineSnapshot.Observer? {
     if let path = options.snapshots {
         let dir = URL(fileURLWithPath: path)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return { snapshot in
             let data: Data
             let ext: String
@@ -36,7 +36,7 @@ func runGenerate(_ options: Options) throws {
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
     // Auto's decision carries the line art and tuning asked for.
     let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
-    let observer = snapshotObserver(options)
+    let observer = try snapshotObserver(options)
     let output: TemplateGenerator.Output
     do {
         output = try generator.generate(
@@ -79,9 +79,10 @@ func runDrawing(_ options: Options) throws {
     settings.drawing = options.drawing
     settings.lineArt = LineArtSettings()
     let generator = TemplateGenerator(settings: settings)
+    let observer = try snapshotObserver(options)
     let output: TemplateGenerator.Output
     do {
-        output = try generator.generate(from: cleaned.picture, cancel: .none, observer: snapshotObserver(options))
+        output = try generator.generate(from: cleaned.picture, cancel: .none, observer: observer)
     } catch { fail("generation failed: \(error)") }
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: cleaned.picture.width, sourceHeight: cleaned.picture.height)

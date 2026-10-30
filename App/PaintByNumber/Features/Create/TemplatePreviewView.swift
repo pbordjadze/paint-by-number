@@ -220,7 +220,7 @@ struct TemplatePreviewView: View {
 
     /// The comparison can fill the page: stacked in a compact window, where the controls leave
     /// it a fraction of the screen.
-    private var offersEnlarging: Bool { isCompact && !isSideBySide }
+    private var offersEnlarging: Bool { isCompact && !isSideBySide && !model.isDrawing }
     private var isEnlarged: Bool { isTuning && !isSideBySide }
 
     #if UNRELEASED

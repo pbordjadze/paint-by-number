@@ -571,6 +571,9 @@ final class CreateModel {
                     if let saved {
                         resume(saved, suggestion: nil)
                     } else {
+                        // Nothing is suggested, and the last photo's sliders mean nothing here:
+                        // the drawing's canvas and curve fit come from the defaults.
+                        apply(GenerationSettings())
                         phase = .ready
                         startGeneration(draftFirst: false)
                     }

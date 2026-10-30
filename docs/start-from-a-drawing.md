@@ -89,6 +89,9 @@ What a painter fixes in Refine: a merged area (the Pen or a Shape closes it), a 
 (Merge), a missing wall (the Pen with Snap), a crease (the Line Eraser), a paint (the Bucket,
 Edit Paint). Refine's Color from Photo and Make Cell read the cleaned sheet, so they give paper
 white: a drawing's new area takes its paint from the palette instead.
+Refine's Text tool reads the generator's writing corrections, which a drawing's path doesn't:
+marking or unmarking text makes the painting again unchanged (a drawing's captions are found
+by `DrawingScan.textRows` alone).
 
 ## Known limits
 

@@ -133,10 +133,6 @@
         }
       }
     },
-    "Palette" : {
-      "comment" : "Picker of the palette set a painting from a drawing takes its paints from, in the create flow's card",
-      "extractionState" : "manual"
-    },
     "Start a painting from a photo of a line drawing on paper" : {
       "comment" : "Help text (pointer hover) of the From a Drawing menu",
       "extractionState" : "manual"
@@ -6082,7 +6078,7 @@
       "extractionState" : "manual"
     },
     "Palette" : {
-      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order; on the Refine screen, VoiceOver label of the row of the painting's paints",
+      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order; on the Refine screen, VoiceOver label of the row of the painting's paints; in the create flow's card, the picker of the palette set a painting from a drawing takes its paints from",
       "extractionState" : "manual"
     },
     "palette.order.darkToLight" : {

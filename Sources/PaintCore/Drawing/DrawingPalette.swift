@@ -60,12 +60,11 @@ public enum DrawingPalette {
         min(available, max(minimumPaints, (areas + areasPerPaint - 1) / areasPerPaint))
     }
 
-    /// The paints laid over the areas of `labels` (above): a palette index per area, and the
-    /// palette of the paints used.
     /// The ink's own paint, for the areas a solid fill makes (`DrawingScan.solids`): a dark
     /// grey, so the drawing's lines still read on it, the last paint of every palette it is in.
     public static let ink = PaletteColor(oklab: ColorScience.encodedToOKLab(SIMD3(0.16, 0.15, 0.17), space: .sRGB), rgb: SIMD3(0.16, 0.15, 0.17))
-    /// `inked`: per area, whether it is a solid fill, painted `ink`.
+    /// The paints laid over the areas of `labels` (above): a palette index per area, and the
+    /// palette of the paints used. `inked`: per area, whether it is a solid fill, painted `ink`.
     static func assign(
         labels: RegionMap, areaCount: Int, set: Set, paints: Int?, seed: UInt64, inked: [Bool] = []
     ) -> (regionColor: [UInt32], palette: [PaletteColor]) {

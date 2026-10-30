@@ -386,8 +386,6 @@ enum ShellDemo: Equatable {
         await library.drafts.flush()
     }
 
-    /// What `gallery-received` opens: the first fixed picture refined as `create-refine` does it,
-    /// written with its photo as Send Template… writes it.
     /// A phone photo of a drawing, made at launch for `create-drawing` (and `DrawingFlowTests`):
     /// a sheet with a house, a sun, a tree and a wavy ground line, a solid black door and a
     /// hatched roof, drawn in ink, laid askew on a dark table under a light that falls off to one
@@ -460,6 +458,8 @@ enum ShellDemo: Equatable {
         return ImageCodec.jpegData(image, quality: 0.85)
     }
 
+    /// What `gallery-received` opens: the first fixed picture refined as `create-refine` does it,
+    /// written with its photo as Send Template… writes it.
     static func sentPaintingFile() async -> URL? {
         guard let sample = fixedPictures.first else { return nil }
         do {
