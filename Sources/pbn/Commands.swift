@@ -87,7 +87,7 @@ func runDrawing(_ options: Options) throws {
     let size = generator.settings.workingSize(sourceWidth: cleaned.picture.width, sourceHeight: cleaned.picture.height)
     let working = Resample.area(cleaned.picture, width: size.width, height: size.height)
     let ink: EdgeMap
-    do { ink = try DrawingScan.ink(of: cleaned.picture, width: size.width, height: size.height) } catch { fail("ink failed: \(error)") }
+    do { ink = try DrawingScan.ink(of: cleaned.picture, width: size.width, height: size.height).map } catch { fail("ink failed: \(error)") }
     let encoded = t.encoded()
     var m = metrics(output, working: working, settings: generator.settings, encodedBytes: encoded.count)
     m.lineArt = LineArtReport(output, settings: DrawingSettings.lineArt, input: LineArtInput(edges: ink))

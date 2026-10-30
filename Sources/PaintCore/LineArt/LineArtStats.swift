@@ -34,6 +34,8 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     public var smallMerged = 0
     /// Cells too small for their number merged across a line.
     public var tinyMerged = 0
+    /// A drawing's hatching: small cells in clusters merged into one (`CellMap.mergeHatchClusters`).
+    public var hatchMerged = 0
     /// Blur strips along a line merged into the paint beside them (`CellMap.mergeBlurStrips`).
     public var blurStripsMerged = 0
     /// Line-free neighbours merged for close paints (`keepColorEdges` off).

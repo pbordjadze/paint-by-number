@@ -137,15 +137,23 @@ enum LayeredLines {
         /// (`SegmentationParameters.minRadius(digits:)`): the strips between hatch strokes
         /// are not areas to paint.
         var roomFloor: Float = 0
+        /// Hatching (`CellMap.mergeHatchClusters`): cells with less room than this (working
+        /// pixels at a 1500-px canvas, scaled) that touch `hatchMembers` or more of each other
+        /// become one cell; 0 leaves hatching alone.
+        var hatchRadius: Float = 0
+        var hatchMembers = 4
 
         /// The learned detectors' maps, as the books were measured.
         static let photo = Tracing()
         /// A drawing's ink (`DrawingScan`): its strokes end where the artist lifted the pen, so
         /// a free end reaches only half the gap bridging for a line to meet (a hatch stroke
         /// ending near an outline stays a stroke; a broken outline closes along its own
-        /// direction in `bridgeGaps`); the spurs thinning leaves at a thick stroke's corners
-        /// go as a photo's do.
-        static let drawing = Tracing(closeReach: [0.5, 0.5, 0.5], skeleton: true, strengthCap: 0.7, clutterGain: 2, clutterDamping: 0.3, roomFloor: 8)
+        /// direction in `bridgeGaps`) and only a stroke that all but touches the frame is led
+        /// to it (a cat's whiskers stay whiskers); the spurs thinning leaves at a thick
+        /// stroke's corners go as a photo's do.
+        static let drawing = Tracing(
+            frameReach: 6, closeReach: [0.5, 0.5, 0.5], skeleton: true, strengthCap: 0.7, clutterGain: 2, clutterDamping: 0.3,
+            roomFloor: 7, hatchRadius: 26, hatchMembers: 5)
     }
 
     /// `photo` is the photo as given (any size), whose color a fill reads.
@@ -244,7 +252,7 @@ enum LayeredLines {
 
         let plan = try Self.plan(
             segmentation, lines: lines, edited: nil, settings: settings, photo: photo, writing: writing, stats: stats,
-            roomFloor: tracing.roomFloor, cancel: cancel, clock: clock)
+            tracing: tracing, cancel: cancel, clock: clock)
         let edits = LineEdits.sanitized(input.edits)
         guard !edits.isEmpty else { return plan }
 
@@ -264,7 +272,7 @@ enum LayeredLines {
         stats.erasures = edited.drawing.erasures
         return try Self.plan(
             segmentation, lines: edited.walls.lines, edited: edited, settings: settings, photo: photo, writing: writing,
-            stats: stats, roomFloor: tracing.roomFloor, cancel: cancel, clock: clock)
+            stats: stats, tracing: tracing, cancel: cancel, clock: clock)
     }
 
     /// The painter's edits applied twice (`LineEdits.apply`): to the lines the drawing was made
@@ -281,7 +289,7 @@ enum LayeredLines {
     /// the template draws exactly (`Plan.exact`), are the edited drawing.
     static func plan(
         _ segmentation: Segmentation, lines: [DrawnLine], edited: Edited?, settings: GenerationSettings,
-        photo: RGBAImage, writing: Writing?, stats: LineArtStats, roomFloor: Float = 0, cancel: CancellationCheck,
+        photo: RGBAImage, writing: Writing?, stats: LineArtStats, tracing: Tracing = .photo, cancel: CancellationCheck,
         clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
@@ -291,7 +299,8 @@ enum LayeredLines {
         var paints = segmentation.palette
         var palette = paints.map(\.oklab)
         let params = SegmentationParameters(settings: settings, width: w, height: h)
-        let floor = roomFloor * Float(max(w, h)) / 1500
+        let scale = Float(max(w, h)) / 1500
+        let floor = tracing.roomFloor * scale
         let need: CellMap.Need = { paint, kept in
             let digits = LabelSizing.digitCount(colorIndex: paint)
             return kept ? SegmentationParameters.detailMinRadius(digits: digits) : max(params.minRadius(digits: digits), floor)
@@ -316,6 +325,12 @@ enum LayeredLines {
             try cancel.throwIfCancelled()
             clock.measure("lineArt.cells.walls") { cells.assignWalls() }
             let near = CellMap.near(walls.layer, width: w, height: h)
+            if tracing.hatchRadius > 0 {
+                stats.hatchMerged = try clock.measure("lineArt.cells.hatching") {
+                    try cells.mergeHatchClusters(
+                        limit: tracing.hatchRadius * scale, minimumMembers: tracing.hatchMembers, near: near, cancel: cancel)
+                }
+            }
             stats.tinyMerged = try clock.measure("lineArt.cells.tiny") {
                 try cells.mergeTiny(need: need, palette: palette, near: near, cancel: cancel)
             }

@@ -610,6 +610,42 @@ struct CellMap {
         return merges
     }
 
+    /// A drawing's hatching (walls assigned): the strips between hatch strokes and the chips
+    /// between crosshatch strokes are small cells (their room under `limit`) in clusters, each
+    /// cell touching other small cells; a small cell on its own (an eye in a face) touches only
+    /// large ones. Every cluster of `minimumMembers` or more becomes one cell, the strokes
+    /// between its members drawn inside it, as a colouring book keeps a shaded patch one area
+    /// with the shading drawn on it. Kept cells (a painter's fills) stay out, and cells of
+    /// different paints never cluster. Returns the cells merged.
+    mutating func mergeHatchClusters(limit: Float, minimumMembers: Int, near: [UInt8], cancel: CancellationCheck) throws -> Int {
+        guard count > 1, limit > 0 else { return 0 }
+        let room = rooms()
+        try cancel.throwIfCancelled()
+        let small = (0..<count).map { room[$0] < limit && !kept[$0] }
+        guard small.contains(true) else { return 0 }
+        var parent = Array(0..<count)
+        for (key, _) in pairs(near: near) {
+            let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
+            guard small[a], small[b], color[a] == color[b] else { continue }
+            let ra = Self.root(a, in: parent), rb = Self.root(b, in: parent)
+            if ra != rb { parent[max(ra, rb)] = min(ra, rb) }
+        }
+        try cancel.throwIfCancelled()
+        var members = [Int](repeating: 0, count: count)
+        for k in 0..<count where small[k] { members[Self.root(k, in: parent)] += 1 }
+        var target = Array(0..<count)
+        var merged = 0
+        for k in 0..<count where small[k] {
+            let r = Self.root(k, in: parent)
+            guard members[r] >= minimumMembers, r != k else { continue }
+            target[k] = r
+            merged += 1
+        }
+        guard merged > 0 else { return 0 }
+        merge(target)
+        return merged
+    }
+
     /// Step 4b (walls assigned): blur strips along a line join the cell beside them. A detector
     /// puts its line on the steepest part of an edge, while the paint changes wherever the colors
     /// cross between palette steps, so the blur of a soft edge (a fox's tail in snow, a lens's

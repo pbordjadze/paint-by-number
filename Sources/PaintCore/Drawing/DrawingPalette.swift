@@ -65,16 +65,13 @@ public enum DrawingPalette {
     /// The ink's own paint, for the areas a solid fill makes (`DrawingScan.solids`): a dark
     /// grey, so the drawing's lines still read on it, the last paint of every palette it is in.
     public static let ink = PaletteColor(oklab: ColorScience.encodedToOKLab(SIMD3(0.16, 0.15, 0.17), space: .sRGB), rgb: SIMD3(0.16, 0.15, 0.17))
-    /// The share of an area's pixels inside a solid fill from which it is painted `ink`.
-    static let solidShare: Float = 0.5
-
+    /// `inked`: per area, whether it is a solid fill, painted `ink`.
     static func assign(
-        labels: RegionMap, areaCount: Int, set: Set, paints: Int?, seed: UInt64, solids: [Bool] = []
+        labels: RegionMap, areaCount: Int, set: Set, paints: Int?, seed: UInt64, inked: [Bool] = []
     ) -> (regionColor: [UInt32], palette: [PaletteColor]) {
         let colors = colors(of: set)
         let w = labels.width, h = labels.height
         var area = [Int](repeating: 0, count: areaCount)
-        var solidArea = [Int](repeating: 0, count: areaCount)
         var neighbours = [Swift.Set<Int32>](repeating: [], count: areaCount)
         labels.storage.withUnsafeBufferPointer { l in
             for y in 0..<h {
@@ -82,7 +79,6 @@ public enum DrawingPalette {
                     let i = y * w + x
                     let a = Int(l[i])
                     area[a] += 1
-                    if !solids.isEmpty && solids[i] { solidArea[a] += 1 }
                     if x + 1 < w, l[i + 1] != l[i] { neighbours[a].insert(Int32(l[i + 1])); neighbours[Int(l[i + 1])].insert(Int32(a)) }
                     if y + 1 < h, l[i + w] != l[i] { neighbours[a].insert(Int32(l[i + w])); neighbours[Int(l[i + w])].insert(Int32(a)) }
                 }
@@ -94,11 +90,11 @@ public enum DrawingPalette {
         var paint = [Int](repeating: -1, count: areaCount)
         var uses = [Int](repeating: 0, count: k + 1)
         // The solid fills take the ink, before any other area is laid.
-        var inked = false
-        for a in order where Float(solidArea[a]) >= solidShare * Float(area[a]) {
+        var anyInked = false
+        for a in order where !inked.isEmpty && inked[a] {
             paint[a] = k
             uses[k] += 1
-            inked = true
+            anyInked = true
         }
         for a in order where paint[a] < 0 {
             var taken = [Bool](repeating: false, count: k)
@@ -131,7 +127,7 @@ public enum DrawingPalette {
             index[c] = palette.count
             palette.append(colors[c])
         }
-        if inked {
+        if anyInked {
             index[k] = palette.count
             palette.append(ink)
         }

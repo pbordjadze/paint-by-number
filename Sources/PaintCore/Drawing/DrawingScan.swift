@@ -19,7 +19,8 @@ import Foundation
 ///    at full strength).
 /// `ink` is the same darkness at the working size, every line at least three pixels wide and
 /// at least as strong as its strongest pixel (a maximum over the pixels each working pixel
-/// covers, so a hair line survives the shrink); the line art thins it to centerlines.
+/// covers, so a hair line survives the shrink), its solid fills found (`solids`); the line
+/// art thins it to centerlines. `textRows` finds the lines of small writing, for `Writing`.
 ///
 /// Everything is sequential or per pixel in fixed order, so the same bytes give the same ink
 /// on every device.
@@ -47,14 +48,26 @@ public enum DrawingScan {
     /// The sheet's hull must fill its quadrilateral this well for the corners to be the sheet's.
     static let quadFill: Float = 0.82
     /// How far inside the sheet's found edge the cleaned picture starts, of its size.
-    static let edgeInset: Float = 0.012
-    /// Width of the lines in the working-size ink map, pixels (odd).
+    static let edgeInset: Float = 0.02
+    /// Width of the lines in the working-size ink map, pixels (odd), and the strength from
+    /// which a pixel is ink there.
     static let inkWidth = 3
-    /// Ink deeper than this (of the working size's long side) that somewhere goes twice as
-    /// deep is a solid fill, not a line: a silhouette, a black ground (`solids`).
-    static let solidRadius: Float = 0.0055
-    /// The share of a fill's core (the ink deeper than `solidRadius`) that is twice as deep.
+    public static let inkThreshold: Float = 0.3
+    /// Ink deeper than this (of the working size's long side) whose core goes `solidSeed`
+    /// times as deep, and `solidPens` of the drawing's own pen widths, over `solidDepthShare`
+    /// of it is a solid fill, not a line: a silhouette, a black ground, a cat's black eye
+    /// (`solids`).
+    static let solidRadius: Float = 0.005
+    static let solidSeed: Float = 1.5
+    static let solidPens: Float = 1.1
     static let solidDepthShare: Float = 0.25
+    /// A compact core (a blob's) has at most this many times its deepest point's depth squared
+    /// in area (a disc has π); a thick stroke's thread of a core has many more.
+    static let solidCompactness: Float = 8
+    /// How much a pixel's colourfulness (its channels' spread) takes off its darkness, per
+    /// its luma: a coloured wash (a print's green dress) is light and colourful and not ink; a
+    /// blue or red pen's line is dark and stays ink.
+    static let washWeight: Float = 1.2
 
     /// The sheet cleaned: `clean`'s picture, with what it did.
     public struct Cleaned: Sendable {
@@ -75,18 +88,18 @@ public enum DrawingScan {
 
     /// The photo's sheet cleaned (above). Any size; the result is at most `scanLongSide` long.
     public static func clean(_ photo: RGBAImage, cancel: CancellationCheck = .none) throws -> Cleaned {
-        let (luma, w, h) = try scanLuma(photo, cancel: cancel)
+        let (luma, chroma, w, h) = try scanLuma(photo, cancel: cancel)
         try cancel.throwIfCancelled()
         let paper = try paperEstimate(luma, width: w, height: h, cancel: cancel)
         try cancel.throwIfCancelled()
-        var picture = (luma: luma, paper: paper.blurred, width: w, height: h)
+        var picture = (luma: luma, paper: paper.blurred, chroma: chroma, width: w, height: h)
         var corners: [SIMD2<Float>] = []
         if let quad = sheet(paper: paper.dilated, width: w, height: h) {
-            picture = rectify(luma: luma, paper: paper.blurred, width: w, height: h, quad: quad)
+            picture = rectify(luma: luma, paper: paper.blurred, chroma: chroma, width: w, height: h, quad: quad)
             corners = quad.map { SIMD2($0.x / Float(w), $0.y / Float(h)) }
         }
         try cancel.throwIfCancelled()
-        let strength = inkStrength(darkness(picture.luma, paper: picture.paper))
+        let strength = inkStrength(darkness(picture.luma, paper: picture.paper, chroma: picture.chroma))
         var pixels = [UInt8](repeating: 255, count: picture.width * picture.height * 4)
         for i in 0..<(picture.width * picture.height) {
             let v = UInt8(((1 - strength[i]) * 255).rounded())
@@ -97,18 +110,27 @@ public enum DrawingScan {
             rectified: !corners.isEmpty, corners: corners)
     }
 
-    /// The drawing's ink at `width` × `height` (the working size), 0 paper … 255 ink: the
-    /// strength under each working pixel, every line at least `inkWidth` wide. The line art
-    /// thins it to centerlines (`LayeredLines.Tracing.skeleton`), so a marker's thick stroke
-    /// and a pen's hair line each give one line.
-    public static func ink(of picture: RGBAImage, width: Int, height: Int, cancel: CancellationCheck = .none) throws -> EdgeMap {
+    /// The drawing's ink at the working size: the map the line art traces, and its solid fills.
+    public struct Ink: Sendable {
+        /// 0 paper … 255 ink: the strength under each working pixel, every line at least
+        /// `inkWidth` wide. The line art thins it to centerlines (`LayeredLines.Tracing.skeleton`),
+        /// so a marker's thick stroke and a pen's hair line each give one line. Inside a solid
+        /// fill only its edge and the paper gaps inside it (a white curl in black hair) are ink,
+        /// so the fill's edge is the line around it and the gaps draw inside.
+        public var map: EdgeMap
+        /// Per working pixel, whether it lies in a solid fill (`solids`), an area of its own.
+        public var solids: [Bool]
+    }
+
+    /// The drawing's ink at `width` × `height` (above).
+    public static func ink(of picture: RGBAImage, width: Int, height: Int, cancel: CancellationCheck = .none) throws -> Ink {
         precondition(width > 0 && height > 0, "ink size")
-        let (luma, w, h) = try scanLuma(picture, cancel: cancel)
+        let (luma, chroma, w, h) = try scanLuma(picture, cancel: cancel)
         try cancel.throwIfCancelled()
         let paper = try paperEstimate(luma, width: w, height: h, cancel: cancel).blurred
         try cancel.throwIfCancelled()
-        let strength = inkStrength(darkness(luma, paper: paper))
-        // The strongest pixel under each working pixel, then the lines widened.
+        let strength = inkStrength(darkness(luma, paper: paper, chroma: chroma))
+        // The strongest pixel under each working pixel.
         var pooled = [Float](repeating: 0, count: width * height)
         for y in 0..<height {
             let y0 = y * h / height, y1 = max(y0 + 1, (y + 1) * h / height)
@@ -120,6 +142,18 @@ public enum DrawingScan {
                     for xx in x0..<min(x1, w) { best = max(best, strength[row + xx]) }
                 }
                 pooled[y * width + x] = best
+            }
+        }
+        try cancel.throwIfCancelled()
+        // Solid fills, from the lines as they are: the inside goes, past the line's width from
+        // the edge, and the paper gaps inside become lines.
+        let level = inkThreshold
+        let fill = solids(of: pooled, width: width, height: height, threshold: level)
+        if fill.contains(true) {
+            let r = inkWidth
+            let edge = DistanceTransform.squaredEDT(width: width, height: height) { !fill[$0] }.storage
+            for i in pooled.indices where fill[i] && edge[i] > Float(r * r) {
+                pooled[i] = pooled[i] >= level ? 0 : 1
             }
         }
         try cancel.throwIfCancelled()
@@ -140,44 +174,76 @@ public enum DrawingScan {
                 widened[y * width + x] = best
             }
         }
-        return EdgeMap(width: width, height: height, values: widened.map { UInt8((min(max($0, 0), 1) * 255).rounded()) })
+        let map = EdgeMap(width: width, height: height, values: widened.map { UInt8((min(max($0, 0), 1) * 255).rounded()) })
+        return Ink(map: map, solids: fill)
     }
 
-    /// Where `ink` is a solid fill (above): the ink deeper than `solidRadius` from the paper
-    /// whose core goes twice as deep over `solidDepthShare` of it (a blob, not a marker's
-    /// thick stroke, deep only where strokes meet), grown back by the radius, so the fill's
-    /// edge is the line around it. Per working pixel.
-    public static func solids(of ink: EdgeMap, threshold: Float = 0.3) -> [Bool] {
-        let w = ink.width, h = ink.height
+    /// Where `ink` (a strength per pixel) is a solid fill: the ink deeper than `solidRadius`
+    /// from the paper whose core goes `solidSeed` times as deep over `solidDepthShare` of it or
+    /// is compact (`solidCompactness`: a blob, not a marker's thick stroke, deep only where
+    /// strokes meet), grown back by the radius, with the paper gaps inside it no deeper than
+    /// the radius (a white curl in black hair, not a white eye in a black cat) filled in.
+    static func solids(of ink: [Float], width w: Int, height h: Int, threshold: Float) -> [Bool] {
         let r = max(2, Int((solidRadius * Float(max(w, h))).rounded()))
-        let r2 = Float(r * r), seed2 = Float(4 * r * r)
-        let level = UInt8((threshold * 255).rounded())
-        let inside = DistanceTransform.squaredEDT(width: w, height: h) { ink.values[$0] < level }.storage
-        // The deep core's components, kept where one holds a pixel twice as deep.
+        let r2 = Float(r * r)
+        let inside = DistanceTransform.squaredEDT(width: w, height: h) { ink[$0] < threshold }.storage
+        // The drawing's own pen: the median depth of its ink, fills aside, doubled. A blob
+        // must go `solidSeed` times the radius deep, and `solidPens` pens: a marker's thick
+        // strokes, blurred wider still by a phone, are no fills.
+        var depths: [Float] = []
+        let fillDepth = 9 * r2
+        for i in inside.indices where inside[i] > 0 && inside[i] <= fillDepth { depths.append(inside[i]) }
+        depths.sort()
+        let pen = depths.isEmpty ? 0 : 2 * depths[depths.count / 2].squareRoot()
+        let seed = max(solidSeed * Float(r), solidPens * pen)
+        let seed2 = seed * seed
         var deep = Grid<UInt32>(width: w, height: h, repeating: 0)
         for i in deep.storage.indices where inside[i] > r2 { deep.storage[i] = 1 }
         let components = ConnectedComponents.label(deep)
-        // A blob is deep over much of its core; a thick stroke's core is a thread, deep only
-        // where strokes meet.
         var deeper = [Int](repeating: 0, count: components.count)
-        for i in inside.indices where inside[i] > seed2 { deeper[Int(components.labels.storage[i])] += 1 }
+        var deepest = [Float](repeating: 0, count: components.count)
+        for i in inside.indices where deep.storage[i] == 1 {
+            let c = Int(components.labels.storage[i])
+            if inside[i] > seed2 { deeper[c] += 1 }
+            deepest[c] = max(deepest[c], inside[i])
+        }
+        // A blob's core goes deep over much of it (a silhouette), or is compact (a cat's black
+        // eye: a disc's area is π times its depth squared) and goes the seed's depth at all; a
+        // thick stroke's core is a thread, deep only where strokes meet and many times longer
+        // than it is wide, or the crumbs of one where the stroke swells a little.
         var blob = [Bool](repeating: false, count: components.count)
-        for c in blob.indices where components.classOf[c] == 1 && Float(deeper[c]) >= solidDepthShare * Float(components.area[c]) {
-            blob[c] = true
+        for c in blob.indices where components.classOf[c] == 1 {
+            let area = Float(components.area[c])
+            blob[c] = Float(deeper[c]) >= solidDepthShare * area || (deepest[c] > seed2 && area <= solidCompactness * deepest[c])
         }
         var core = [Bool](repeating: false, count: w * h)
         for i in core.indices where deep.storage[i] == 1 && blob[Int(components.labels.storage[i])] { core[i] = true }
         guard core.contains(true) else { return core }
         let spread = DistanceTransform.squaredEDT(width: w, height: h) { core[$0] }.storage
-        var solid = [Bool](repeating: false, count: w * h)
-        for i in solid.indices where spread[i] <= r2 && ink.values[i] >= level { solid[i] = true }
-        return solid
+        var solid = Grid<UInt32>(width: w, height: h, repeating: 0)
+        for i in solid.storage.indices where spread[i] <= r2 && ink[i] >= threshold { solid.storage[i] = 1 }
+        // The gaps: components of paper enclosed by the fill (not reaching the picture's
+        // edge) that are nowhere deeper than the radius.
+        let gaps = ConnectedComponents.label(solid)
+        var touchesEdge = [Bool](repeating: false, count: gaps.count)
+        for x in 0..<w { touchesEdge[Int(gaps.labels[x, 0])] = true; touchesEdge[Int(gaps.labels[x, h - 1])] = true }
+        for y in 0..<h { touchesEdge[Int(gaps.labels[0, y])] = true; touchesEdge[Int(gaps.labels[w - 1, y])] = true }
+        let depth = DistanceTransform.squaredEDT(width: w, height: h) { solid.storage[$0] == 1 }.storage
+        var tooDeep = [Bool](repeating: false, count: gaps.count)
+        for i in depth.indices where solid.storage[i] == 0 && depth[i] > r2 { tooDeep[Int(gaps.labels.storage[i])] = true }
+        var filled = [Bool](repeating: false, count: w * h)
+        for i in filled.indices {
+            let g = Int(gaps.labels.storage[i])
+            filled[i] = solid.storage[i] == 1 || (!touchesEdge[g] && !tooDeep[g])
+        }
+        return filled
     }
 
     // MARK: - Luma and paper
 
-    /// The photo's luma (gamma-encoded, 0...1) at the scan size.
-    static func scanLuma(_ photo: RGBAImage, cancel: CancellationCheck) throws -> ([Float], Int, Int) {
+    /// The photo's luma (gamma-encoded, 0...1) and colourfulness (the channels' spread) at
+    /// the scan size.
+    static func scanLuma(_ photo: RGBAImage, cancel: CancellationCheck) throws -> ([Float], [Float], Int, Int) {
         let long = max(photo.width, photo.height)
         let image: RGBAImage
         if long > scanLongSide {
@@ -189,15 +255,16 @@ public enum DrawingScan {
             image = photo
         }
         let w = image.width, h = image.height
-        var luma = [Float](repeating: 0, count: w * h)
+        var luma = [Float](repeating: 0, count: w * h), chroma = [Float](repeating: 0, count: w * h)
         image.pixels.withUnsafeBufferPointer { p in
             for i in 0..<(w * h) {
                 let r = Float(p[i * 4]), g = Float(p[i * 4 + 1]), b = Float(p[i * 4 + 2]), a = Float(p[i * 4 + 3]) / 255
                 // Transparent pixels (a scan with no paper) count as paper.
                 luma[i] = (0.299 * r + 0.587 * g + 0.114 * b) / 255 * a + (1 - a)
+                chroma[i] = (max(r, g, b) - min(r, g, b)) / 255 * a
             }
         }
-        return (luma, w, h)
+        return (luma, chroma, w, h)
     }
 
     /// The paper's brightness under each pixel: a grey closing (a maximum over `paperRadius`,
@@ -251,10 +318,12 @@ public enum DrawingScan {
         return out
     }
 
-    /// How far below its paper each pixel lies, 0...1.
-    static func darkness(_ luma: [Float], paper: [Float]) -> [Float] {
+    /// How far below its paper each pixel lies, 0...1, less for a coloured wash (`washWeight`).
+    static func darkness(_ luma: [Float], paper: [Float], chroma: [Float]) -> [Float] {
         var d = [Float](repeating: 0, count: luma.count)
-        for i in luma.indices { d[i] = min(max(1 - luma[i] / max(paper[i], 0.05), 0), 1) }
+        for i in luma.indices {
+            d[i] = min(max(1 - luma[i] / max(paper[i], 0.05) - washWeight * chroma[i] * luma[i], 0), 1)
+        }
         return d
     }
 
@@ -435,22 +504,25 @@ public enum DrawingScan {
 
     // MARK: - Rectification
 
-    /// `luma` and `paper` resampled so `quad` (clockwise from the top-left) becomes the whole
-    /// picture, of the quadrilateral's own mean width and height.
+    /// `luma`, `paper` and `chroma` resampled so `quad` (clockwise from the top-left) becomes
+    /// the whole picture, of the quadrilateral's own mean width and height.
     static func rectify(
-        luma: [Float], paper: [Float], width w: Int, height h: Int, quad: [SIMD2<Float>]
-    ) -> (luma: [Float], paper: [Float], width: Int, height: Int) {
+        luma: [Float], paper: [Float], chroma: [Float], width w: Int, height h: Int, quad: [SIMD2<Float>]
+    ) -> (luma: [Float], paper: [Float], chroma: [Float], width: Int, height: Int) {
         // Inside the sheet's edge by `edgeInset`: the corners come from a coarse grid, and the
-        // paper's edge, its shadow and a sliver of table lie along them.
+        // paper's edge, its shadow and a sliver of table lie along them. (Nothing is cleared
+        // along the edge afterwards: a drawing that runs to the sheet's edge would lose its
+        // outline there and its areas would run into each other.)
         let centre = (quad[0] + quad[1] + quad[2] + quad[3]) / 4
         let quad = quad.map { $0 + (centre - $0) * edgeInset * 2 }
         let top = simdLength(quad[1] - quad[0]), bottom = simdLength(quad[2] - quad[3])
         let left = simdLength(quad[3] - quad[0]), right = simdLength(quad[2] - quad[1])
         let ow = max(8, Int(((top + bottom) / 2).rounded())), oh = max(8, Int(((left + right) / 2).rounded()))
         guard let hm = homography(from: [SIMD2(0, 0), SIMD2(Float(ow), 0), SIMD2(Float(ow), Float(oh)), SIMD2(0, Float(oh))], to: quad)
-        else { return (luma, paper, w, h) }
+        else { return (luma, paper, chroma, w, h) }
         let h0 = hm[0], h1 = hm[1], h2 = hm[2]
         var outLuma = [Float](repeating: 1, count: ow * oh), outPaper = [Float](repeating: 1, count: ow * oh)
+        var outChroma = [Float](repeating: 0, count: ow * oh)
         @inline(__always) func sample(_ a: [Float], _ x: Float, _ y: Float) -> Float {
             let cx = min(max(x, 0), Float(w - 1)), cy = min(max(y, 0), Float(h - 1))
             let x0 = min(Int(cx), w - 2), y0 = min(Int(cy), h - 2)
@@ -467,9 +539,10 @@ public enum DrawingScan {
                 let sx = Float(q.x / q.z) - 0.5, sy = Float(q.y / q.z) - 0.5
                 outLuma[y * ow + x] = sample(luma, sx, sy)
                 outPaper[y * ow + x] = sample(paper, sx, sy)
+                outChroma[y * ow + x] = sample(chroma, sx, sy)
             }
         }
-        return (outLuma, outPaper, ow, oh)
+        return (outLuma, outPaper, outChroma, ow, oh)
     }
 
     /// The homography taking the four `from` points to the four `to` points, as the three rows
@@ -497,5 +570,89 @@ public enum DrawingScan {
         var hv = [Double](repeating: 0, count: 8)
         for r in 0..<8 { hv[r] = m[r][8] / m[r][r] }
         return [SIMD3(hv[0], hv[1], hv[2]), SIMD3(hv[3], hv[4], hv[5]), SIMD3(hv[6], hv[7], 1)]
+    }
+}
+
+// MARK: - Writing
+
+extension DrawingScan {
+    /// Height of a letter (working pixels, per the long side) from which a row of ink pieces is
+    /// writing; below `Writing.minimumHeight` it is too small to draw legibly either way. Taller
+    /// pieces are drawing (or outline lettering, which is painted).
+    static let textMaximumHeight: Float = 0.035
+    /// A piece of ink is a glyph or a word when it is no wider than this many times its height,
+    /// and a row holds `textMinimumPieces` or more of them, `textGap` heights apart at most,
+    /// their heights within `textHeightSlack` of the row's.
+    static let textMaximumAspect: Float = 12
+    static let textMinimumPieces = 3
+    static let textGap: Float = 2.5
+    static let textHeightSlack: Float = 0.45
+    /// Least length of a row, in its height.
+    static let textMinimumLength: Float = 4
+
+    /// The lines of small writing in `ink` (typeset text, a handwritten caption, a signature):
+    /// rows of pieces of ink of a letter's or a word's size, aligned, as closed quadrilaterals
+    /// normalized to the map (0...1, origin top-left), each a box around its row, in reading
+    /// order. Nothing is read: a row of small drawn things goes to `Writing`, which tells texture
+    /// and pictures from letters itself.
+    public static func textRows(in ink: EdgeMap, threshold: Float = inkThreshold) -> [[SIMD2<Float>]] {
+        let w = ink.width, h = ink.height
+        let level = UInt8((threshold * 255).rounded())
+        var classes = Grid<UInt32>(width: w, height: h, repeating: 0)
+        for i in classes.storage.indices where ink.values[i] >= level { classes.storage[i] = 1 }
+        let components = ConnectedComponents.label(classes)
+        var bounds = [PixelBounds](repeating: .empty, count: components.count)
+        for y in 0..<h {
+            for x in 0..<w { bounds[Int(components.labels[x, y])].include(x: x, y: y) }
+        }
+        let tallest = textMaximumHeight * Float(max(w, h))
+        struct Piece { var x0, y0, x1, y1: Float; var height: Float { y1 - y0 }; var width: Float { x1 - x0 } }
+        var pieces: [Piece] = []
+        for c in 0..<components.count where components.classOf[c] == 1 {
+            let b = bounds[c]
+            let piece = Piece(x0: Float(b.minX), y0: Float(b.minY), x1: Float(b.maxX + 1), y1: Float(b.maxY + 1))
+            guard piece.height >= Writing.minimumHeight * 0.8, piece.height <= tallest,
+                  piece.width <= textMaximumAspect * piece.height, piece.width >= 2 else { continue }
+            pieces.append(piece)
+        }
+        guard pieces.count >= textMinimumPieces else { return [] }
+        pieces.sort { $0.x0 != $1.x0 ? $0.x0 < $1.x0 : $0.y0 < $1.y0 }
+        // Rows grow left to right: a piece joins the row whose band it overlaps most of its
+        // height with, within reach of the row's last piece.
+        struct Row { var pieces: [Piece]; var y0, y1: Float; var last: Float }
+        var rows: [Row] = []
+        for p in pieces {
+            var best: Int?
+            var bestOverlap: Float = 0
+            for (k, row) in rows.enumerated() {
+                let rowHeight = row.y1 - row.y0
+                guard p.x0 - row.last <= textGap * rowHeight, p.x0 >= row.last - rowHeight else { continue }
+                let overlap = min(p.y1, row.y1) - max(p.y0, row.y0)
+                guard overlap >= 0.5 * min(p.height, rowHeight) else { continue }
+                guard abs(p.height - rowHeight) <= textHeightSlack * max(p.height, rowHeight) else { continue }
+                if overlap > bestOverlap { bestOverlap = overlap; best = k }
+            }
+            if let best {
+                rows[best].pieces.append(p)
+                // The band follows the row's typical height, so a tall capital doesn't widen it.
+                let n = Float(rows[best].pieces.count)
+                rows[best].y0 = (rows[best].y0 * (n - 1) + p.y0) / n
+                rows[best].y1 = (rows[best].y1 * (n - 1) + p.y1) / n
+                rows[best].last = max(rows[best].last, p.x1)
+            } else {
+                rows.append(Row(pieces: [p], y0: p.y0, y1: p.y1, last: p.x1))
+            }
+        }
+        var out: [[SIMD2<Float>]] = []
+        for row in rows where row.pieces.count >= textMinimumPieces {
+            var x0 = Float.infinity, y0 = Float.infinity, x1 = -Float.infinity, y1 = -Float.infinity
+            for p in row.pieces { x0 = min(x0, p.x0); y0 = min(y0, p.y0); x1 = max(x1, p.x1); y1 = max(y1, p.y1) }
+            let height = y1 - y0
+            guard x1 - x0 >= textMinimumLength * height else { continue }
+            let fw = Float(w), fh = Float(h)
+            out.append([SIMD2(x0 / fw, y0 / fh), SIMD2(x1 / fw, y0 / fh), SIMD2(x1 / fw, y1 / fh), SIMD2(x0 / fw, y1 / fh)])
+        }
+        out.sort { $0[0].y != $1[0].y ? $0[0].y < $1[0].y : $0[0].x < $1[0].x }
+        return out
     }
 }
