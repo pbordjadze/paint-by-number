@@ -117,6 +117,10 @@ final class CreateModel {
     /// defaults in the app), on top of the suggested or slider settings: every candidate of a
     /// suggestion carries it.
     let baseLineArt: LineArtSettings
+    #if UNRELEASED
+    /// Settings › Scene Method as the flow opened (`sceneMethod`).
+    private let usesSceneMethod: Bool
+    #endif
     /// The Lines slider: 0.5 is the base line art, toward 1 more lines, toward 0 fewer
     /// (`lineArt(_:lines:)`). Classic line art has no lines to tune.
     var lines = 0.5
@@ -190,6 +194,9 @@ final class CreateModel {
     nonisolated static var maxCandidates: Int { ProcessInfo.processInfo.activeProcessorCount < 6 ? 3 : 5 }
 
     @ObservationIgnored private var importance: PaintCore.Grid<Float>?
+    /// What the photo is of (`SceneMapBuilder`), made beside `importance` from the same pass of
+    /// Vision while the scene method is on (`sceneMethod`); nil otherwise.
+    @ObservationIgnored private var scene: SceneMap?
     @ObservationIgnored private var draftImage: RGBAImage?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var fullTask: Task<Void, Never>?
@@ -256,6 +263,9 @@ final class CreateModel {
         self.paintingLength = paintingLength
         self.previewStyle = previewStyle
         self.baseLineArt = lineArt.normalized
+        #if UNRELEASED
+        usesSceneMethod = Preferences().sceneMethod
+        #endif
         let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
         detail = Double(initial.detail)
@@ -263,9 +273,30 @@ final class CreateModel {
     }
 
     var settings: GenerationSettings {
-        GenerationSettings(
-            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt
-        ).normalized
+        var settings = GenerationSettings(
+            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt)
+        if sceneMethod { settings.method = .scene }
+        return settings.normalized
+    }
+
+    /// Settings › Scene Method (`Preferences.sceneMethod`, SideStore and Debug builds): every
+    /// template this flow makes is laid out by the scene (`GenerationSettings.Method.scene`,
+    /// `scene`), and the painting records the method with its settings. Suggestions are still
+    /// chosen on the importance map (`Self.suggest`: Auto's candidates stay the color method's).
+    private var sceneMethod: Bool {
+        #if UNRELEASED
+        usesSceneMethod
+        #else
+        false
+        #endif
+    }
+
+    /// A suggestion's settings as this flow generates them (`settings`: its method on them), what
+    /// the sliders are compared with to say whether they still show the suggestion.
+    private func suggested(_ decision: AutoDecision) -> GenerationSettings {
+        var settings = decision.settings
+        settings.method = self.settings.method
+        return settings
     }
 
     /// The photo's settings are still being chosen: the sliders wait for them.
@@ -441,6 +472,7 @@ final class CreateModel {
         preview = nil
         stats = nil
         importance = nil
+        self.scene = nil
         lineArtInput = nil
         draftImage = nil
         decision = nil
@@ -506,6 +538,7 @@ final class CreateModel {
         preview = nil
         stats = nil
         importance = nil
+        scene = nil
         lineArtInput = nil
         draftImage = nil
         decision = nil
@@ -533,9 +566,10 @@ final class CreateModel {
                 try Task.checkCancellation()
                 source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
                 phase = .analyzing
-                let prepared = try await Self.prepare(decoded, lineArt: lineArt)
+                let prepared = try await Self.prepare(decoded, lineArt: lineArt, scene: sceneMethod)
                 try Task.checkCancellation()
                 importance = prepared.importance
+                scene = prepared.scene
                 lineArtInput = prepared.lineArt
                 draftImage = prepared.draft
                 phase = .suggesting
@@ -585,7 +619,7 @@ final class CreateModel {
         refineAsked = false
         startAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
-        if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
+        if let decision { settingsOrigin = settings == suggested(decision) ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
             scheduleFull(after: Self.restDelay)
@@ -691,7 +725,7 @@ final class CreateModel {
     func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
         guard let source, draft.refinements.start == .generated else { return nil }
         return MakingOfSource(
-            image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
+            image: source.image, importance: importance, lineArt: lineArtInput, scene: scene, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
             seed: ColorNickname.seed(for: artworkID))
     }
@@ -715,7 +749,7 @@ final class CreateModel {
         decision = suggestion
         apply(saved.settings)
         lines = saved.lines
-        if let suggestion { settingsOrigin = settings == suggestion.settings ? .suggested : .custom }
+        if let suggestion { settingsOrigin = settings == suggested(suggestion) ? .suggested : .custom }
         phase = .generating
         startGeneration(draftFirst: false)
     }
@@ -830,7 +864,7 @@ final class CreateModel {
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
                 shown = try await Self.render(
-                    input, importance: importance, lineArt: lineArtInput, refinements: refinements,
+                    input, importance: importance, lineArt: lineArtInput, scene: scene, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
                     isDraft: draft, style: previewStyle, progress: draft ? nil : report)
             }
@@ -1343,6 +1377,9 @@ final class CreateModel {
         var hints: SubjectHints
         var draft: RGBAImage
         var lineArt: LineArtInput?
+        /// The scene for the scene method, from the pass of Vision the importance came from; nil
+        /// unless asked for (`prepare(_:lineArt:scene:)`).
+        var scene: SceneMap?
     }
 
     @concurrent
@@ -1356,13 +1393,17 @@ final class CreateModel {
     }
 
     /// Subject importance and hints, and for a coloring book the edge map and eyes (once per
-    /// photo, side by side), and the reduced photo for drafts and suggestions.
+    /// photo, side by side), the scene map when `scene` asks for one (from the same findings of
+    /// Vision), and the reduced photo for drafts and suggestions.
     @concurrent
-    private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings) async throws -> Prepared {
+    private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings, scene: Bool) async throws -> Prepared {
         async let input = LineArtInputs.forGeneration(of: decoded.preview, settings: lineArt, cached: true)
-        let subject = await SubjectImportance.analyze(decoded.preview)
+        let found = await SubjectVision.findings(in: decoded.preview)
+        let size = SubjectImportance.mapSize(width: decoded.preview.width, height: decoded.preview.height)
+        let subject = SubjectImportance.analysis(of: found, width: size.width, height: size.height)
+        let sceneMap = scene ? SceneMapBuilder.scene(of: found, in: decoded.preview) : nil
         let draft = AutoSettings.draftImage(from: decoded.image)
-        return Prepared(importance: subject.map, hints: subject.hints, draft: draft, lineArt: try await input)
+        return Prepared(importance: subject.map, hints: subject.hints, draft: draft, lineArt: try await input, scene: sceneMap)
     }
 
     /// Chooses settings for the photo on its draft. `sourceSize` is the photo's own size: it
@@ -1412,14 +1453,14 @@ final class CreateModel {
     }
 
     /// The template of `settings` made from the generator inputs of `refinements` (`aspect`: the
-    /// photo's width over height), or for a blank start `image` as one area (`ArtworkFactory.blank`),
-    /// with its edits laid unless it is a draft, its preview recording `recorded` (the sliders'
-    /// settings a draft stands for).
+    /// photo's width over height) and `scene` (the scene method's), or for a blank start `image`
+    /// as one area (`ArtworkFactory.blank`), with its edits laid unless it is a draft, its
+    /// preview recording `recorded` (the sliders' settings a draft stands for).
     @concurrent
     private static func render(
-        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
-        aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
-        progress: (@Sendable (Float) -> Void)?
+        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, scene: SceneMap?,
+        refinements: TemplateRefinements, aspect: Float, settings: GenerationSettings, recorded: GenerationSettings,
+        isDraft: Bool, style: PreviewStyle, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Shown {
         let template: Template
         if refinements.start == .blank {
@@ -1427,7 +1468,9 @@ final class CreateModel {
         } else {
             let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
             template = try TemplateGenerator(settings: settings)
-                .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+                .generate(
+                    from: image, importance: inputs.importance, lineArt: inputs.lineArt, scene: scene, cancel: .task,
+                    progress: progress)
                 .template
         }
         try Task.checkCancellation()

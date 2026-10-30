@@ -30,6 +30,9 @@ public struct TemplateGenerator: Sendable {
     ///   - lineArt: The edge map, eyes, subject silhouettes, contour map and writing
     ///     (`LineArtInput`) a coloring book draws from. Ignored by classic settings; a coloring
     ///     book without it is a classic template over the book's flatter paint.
+    ///   - scene: What the photo is of (`SceneMap`): the scene method
+    ///     (`GenerationSettings.Method.scene`) lays its regions out by it and the template keeps
+    ///     it; without one the photo is all subject. The color method ignores it.
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
     ///   - observer: Synchronous making-of pictures in stage order, at most 1024 px on
@@ -38,6 +41,7 @@ public struct TemplateGenerator: Sendable {
         from image: RGBAImage,
         importance: Grid<Float>? = nil,
         lineArt: LineArtInput? = nil,
+        scene: SceneMap? = nil,
         cancel: CancellationCheck = .task,
         progress: (@Sendable (Float) -> Void)? = nil,
         observer: PipelineSnapshot.Observer? = nil
@@ -70,8 +74,8 @@ public struct TemplateGenerator: Sendable {
         }
         var (segmentation, weights) = try clock.measure("segment") {
             try Segmenter.segment(
-                working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
-                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer)
+                working, importance: importance, scene: settings.method == .scene ? scene : nil, parameters: parameters,
+                cancel: cancel, clock: clock, progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer)
         }
         try cancel.throwIfCancelled()
         progress?(segmentEnd)
@@ -99,6 +103,7 @@ public struct TemplateGenerator: Sendable {
                 guides: plan?.guides ?? [], cancel: cancel, clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
+        if settings.method == .scene { vector.template.scene = scene }
         if let plan {
             try cancel.throwIfCancelled()
             vector.template.lineArt = try clock.measure("lineArt.annotate") {

@@ -11,3 +11,5 @@ tools/node_modules
 ci-report/
 __pycache__/
 .claude/corpus/
+.claude/weights
+Tests/EvalSet/scenes/*/preview.png

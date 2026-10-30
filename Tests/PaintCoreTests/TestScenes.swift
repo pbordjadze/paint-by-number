@@ -82,6 +82,12 @@ enum TestScenes {
     /// `checksRoom: false` where the image is too small to have that guarantee (a 1-px strip
     /// holds no disc) or the test is about something else.
     static func checkInvariants(_ s: Segmentation, settings: GenerationSettings, checksRoom: Bool = true) {
+        checkInvariants(s, settings: settings, checksRoom: checksRoom, samePaintNeighbours: settings.method == .scene)
+    }
+
+    /// `samePaintNeighbours`: two regions of one paint may touch (the scene method keeps its
+    /// subject and background apart), so relabelling by paint components need not reproduce them.
+    static func checkInvariants(_ s: Segmentation, settings: GenerationSettings, checksRoom: Bool, samePaintNeighbours: Bool) {
         let p = SegmentationParameters(settings: settings, width: s.width, height: s.height)
         #expect(p.minPaletteDistance >= SegmentationParameters.jnd)
         let n = s.regionCount
@@ -97,8 +103,15 @@ enum TestScenes {
         #expect(used.allSatisfy { $0 })
         let classes = Grid(width: s.width, height: s.height, storage: s.labels.storage.map { s.regionColor[Int($0)] })
         let cc = ConnectedComponents.label(classes)
-        #expect(cc.count == n)
-        #expect(cc.labels == s.labels)
+        if samePaintNeighbours {
+            // Every region is still one connected piece: the components of the regions' own labels.
+            let own = ConnectedComponents.label(Grid(width: s.width, height: s.height, storage: s.labels.storage))
+            #expect(own.count == n)
+            #expect(own.labels == s.labels)
+        } else {
+            #expect(cc.count == n)
+            #expect(cc.labels == s.labels)
+        }
         // Palette: every region color valid, every paint used, paints distinct.
         #expect(s.regionColor.allSatisfy { Int($0) < s.palette.count })
         var paintUsed = [Bool](repeating: false, count: s.palette.count)

@@ -41,6 +41,12 @@ enum SettingsKey {
     /// Refine's Pen's Smoothing, 0 to 1: how far its line trails the finger to even out wobbles
     /// (`RefineGestures.steadied`, Procreate's StreamLine).
     static let refinePenSmoothing = "refinePenSmoothing"
+    #if UNRELEASED
+    /// Settings › Scene Method: new paintings are made by the scene method
+    /// (`GenerationSettings.Method.scene`, laid out by the subject; `SceneMapBuilder`) instead of
+    /// the color method. Off by default; SideStore and Debug builds only while it is tried.
+    static let sceneMethod = "sceneMethod"
+    #endif
 }
 
 /// What each switch of `SettingsKey` is until the painter sets it, written once: the `@AppStorage`
@@ -62,6 +68,9 @@ nonisolated enum SettingsDefault {
     /// About what the Eraser's size was before it had one: 10 to 20 points, by the screen.
     static let refineEraserSize = 16.0
     static let refinePenSmoothing = 0.0
+    #if UNRELEASED
+    static let sceneMethod = false
+    #endif
 }
 
 /// The preferences that code outside views reads (the create flow), with their defaults; views
@@ -74,6 +83,10 @@ struct Preferences {
     var previewStyle: PreviewStyle
     /// Start Painting plays the making-of show first.
     var playsMakingOf: Bool
+    #if UNRELEASED
+    /// New paintings are made by the scene method (`CreateModel.settings`).
+    var sceneMethod: Bool
+    #endif
 
     init(defaults: UserDefaults = .standard) {
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
@@ -82,6 +95,10 @@ struct Preferences {
         // `bool(forKey:)` reads a launch argument's `YES` too.
         playsMakingOf = defaults.object(forKey: SettingsKey.playsMakingOf) == nil
             ? SettingsDefault.playsMakingOf : defaults.bool(forKey: SettingsKey.playsMakingOf)
+        #if UNRELEASED
+        sceneMethod = defaults.object(forKey: SettingsKey.sceneMethod) == nil
+            ? SettingsDefault.sceneMethod : defaults.bool(forKey: SettingsKey.sceneMethod)
+        #endif
     }
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,

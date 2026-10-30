@@ -23,6 +23,7 @@ enum RegionSimplifier {
         areaScale: [Float],
         palette: [SIMD3<Float>],
         parameters p: SegmentationParameters,
+        calm: (changeable: [Bool], radius: Int, passes: Int)? = nil,
         cancel: CancellationCheck,
         clock: StageClock = StageClock()
     ) throws -> (regions: RegionRuns, adjacency: RegionAdjacency) {
@@ -76,6 +77,16 @@ enum RegionSimplifier {
                         classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
                         radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity,
                         cancel: cancel)
+                }
+            }
+            // The scene method's background outlines, calmed with a wider disc (and less
+            // colour fidelity: a calm shape is worth a little colour there).
+            if round == 0, let calm, calm.passes > 0 {
+                smoothed += try clock.measure("segment.regions.calm") {
+                    try BoundarySmoothing.apply(
+                        classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
+                        radius: calm.radius, passes: calm.passes, fidelity: p.boundaryFidelity * 0.5,
+                        changeable: calm.changeable, cancel: cancel)
                 }
             }
             try cancel.throwIfCancelled()
@@ -219,6 +230,13 @@ enum RegionSimplifier {
         distance + p.mergeShareWeight * (1 - share)
     }
 
+    /// Whether two classes lie on different sides of the scene method's silhouette
+    /// (`SegmentationParameters.sidePaints`); never with the color method.
+    @inline(__always)
+    static func acrossSilhouette(_ a: UInt32, _ b: UInt32, parameters p: SegmentationParameters) -> Bool {
+        p.sidePaints > 0 && (Int(a) >= p.sidePaints) != (Int(b) >= p.sidePaints)
+    }
+
     struct Link {
         var region: Int32
         var length: Int32
@@ -318,6 +336,8 @@ enum RegionSimplifier {
         }
 
         var cls = regions.classOf
+        // Sides, where the classes no longer carry them (after the scene method's fold).
+        let sides = regions.side
         var parent = (0..<n).map { Int32($0) }
         var stamp = [Int32](repeating: 0, count: n)
 
@@ -444,7 +464,11 @@ enum RegionSimplifier {
             var bestCost = Float.infinity
             for l in compacted {
                 let dc = ColorScience.distance(mean, palette[Int(cls[Int(l.region)])])
-                let cost = mergeCost(distance: dc, share: Float(l.length) / Float(perimeter[r]), parameters: p)
+                var cost = mergeCost(distance: dc, share: Float(l.length) / Float(perimeter[r]), parameters: p)
+                if acrossSilhouette(cls[r], cls[Int(l.region)], parameters: p)
+                    || (sides.map { $0[r] != $0[Int(l.region)] } ?? false) {
+                    cost += p.sceneCrossPenalty
+                }
                 if cost < bestCost { bestCost = cost; best = l }
             }
             let target = Int(best.region)

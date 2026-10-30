@@ -39,6 +39,55 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
     return Grid(width: img.width, height: img.height, storage: redChannel(img).map { Float($0) / 255 })
 }
 
+/// The scene map (`--scene scene.json`): `{"subject": "mask.pgm", "saliency": "heat.pgm",
+/// "faces": [[x, y, w, h], ...], "animals": [[x, y, w, h], ...], "features": [{"kind": "eye" |
+/// "nose" | "mouth", "x": x, "y": y, "radius": r}, ...]}`, paths relative to the file, rects and
+/// points normalized to the photo (origin top-left), the radius a share of its long side. Every
+/// key is optional; the maps must share one size (a missing one is all zero).
+func loadScene(_ path: String?) -> SceneMap? {
+    guard let path else { return nil }
+    struct File: Decodable {
+        struct Feature: Decodable {
+            var kind: String
+            var x: Float
+            var y: Float
+            var radius: Float
+        }
+        var subject: String?
+        var saliency: String?
+        var faces: [[Float]]?
+        var animals: [[Float]]?
+        var features: [Feature]?
+    }
+    guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
+    let file: File
+    do { file = try JSONDecoder().decode(File.self, from: data) } catch { fail("cannot decode \(path): \(error)") }
+    let base = URL(fileURLWithPath: path).deletingLastPathComponent()
+    func map(_ name: String?) -> RGBAImage? {
+        name.map { loadImage(URL(fileURLWithPath: $0, relativeTo: base).path) }
+    }
+    let subject = map(file.subject), saliency = map(file.saliency)
+    guard let size = (subject ?? saliency).map({ ($0.width, $0.height) }) else { fail("\(path): a subject or saliency map is needed") }
+    if let subject, let saliency, (subject.width, subject.height) != (saliency.width, saliency.height) {
+        fail("\(path): the subject and saliency maps differ in size")
+    }
+    func rects(_ list: [[Float]]?) -> [NormalizedRect] {
+        (list ?? []).map { r in
+            guard r.count == 4 else { fail("\(path): a rect is [x, y, w, h]") }
+            return NormalizedRect(x: r[0], y: r[1], width: r[2], height: r[3])
+        }
+    }
+    let kinds: [String: SceneMap.Feature.Kind] = ["eye": .eye, "nose": .nose, "mouth": .mouth]
+    let features = (file.features ?? []).map { f -> SceneMap.Feature in
+        guard let kind = kinds[f.kind] else { fail("\(path): feature kind \(f.kind) (eye, nose or mouth)") }
+        return SceneMap.Feature(kind: kind, x: f.x, y: f.y, radius: f.radius)
+    }
+    let zero = [UInt8](repeating: 0, count: size.0 * size.1)
+    return SceneMap(
+        width: size.0, height: size.1, subject: subject.map(redChannel) ?? zero, saliency: saliency.map(redChannel) ?? zero,
+        faces: rects(file.faces), animals: rects(file.animals), features: features)
+}
+
 /// The edge map and eyes a coloring book draws from: `--edges` (a contour
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the

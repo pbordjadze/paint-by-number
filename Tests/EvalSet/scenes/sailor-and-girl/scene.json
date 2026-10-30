@@ -1,0 +1,21 @@
+{
+ "subject": "subject.pgm",
+ "saliency": "saliency.pgm",
+ "faces": [
+  [
+   0.215,
+   0.36,
+   0.065,
+   0.08
+  ]
+ ],
+ "animals": [],
+ "features": [
+  {
+   "kind": "eye",
+   "x": 0.265,
+   "y": 0.395,
+   "radius": 0.006
+  }
+ ]
+}

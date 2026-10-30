@@ -1,0 +1,39 @@
+{
+ "subject": "subject.pgm",
+ "saliency": "saliency.pgm",
+ "faces": [
+  [
+   0.3467,
+   0.2379,
+   0.3143,
+   0.2196
+  ]
+ ],
+ "animals": [],
+ "features": [
+  {
+   "kind": "eye",
+   "x": 0.3991,
+   "y": 0.303,
+   "radius": 0.022
+  },
+  {
+   "kind": "eye",
+   "x": 0.5097,
+   "y": 0.2745,
+   "radius": 0.0272
+  },
+  {
+   "kind": "nose",
+   "x": 0.4385,
+   "y": 0.3448,
+   "radius": 0.031
+  },
+  {
+   "kind": "mouth",
+   "x": 0.458,
+   "y": 0.3902,
+   "radius": 0.0424
+  }
+ ]
+}

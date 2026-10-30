@@ -19,6 +19,11 @@ struct RegionRuns: Sendable {
     /// Per region: paint and pixel count.
     var classOf: [UInt32]
     var area: [Int]
+    /// The scene method's side of the silhouette per region (0 the background, 1 the subject),
+    /// once its classes no longer carry it (`Segmenter`): `merge` never fuses same-paint
+    /// neighbours across sides, and merges carry the side of the region merged into. Nil for
+    /// the color method.
+    var side: [UInt8]? = nil
 
     var count: Int { classOf.count }
 
@@ -245,8 +250,10 @@ struct RegionRuns: Sendable {
 
     /// Applies merges: `roots[r]` is the region old region r was merged into (its own id if
     /// it was not merged) and `paint[roots[r]]` the merged region's paint. Merged regions that
-    /// now touch a region of the same paint fuse with it, as they do in the paint map.
+    /// now touch a region of the same paint fuse with it, as they do in the paint map, unless
+    /// `side` puts them on different sides of the scene method's silhouette.
     mutating func merge(roots: [Int32], paint: [UInt32], adjacency: inout RegionAdjacency, classes: inout [UInt32]) {
+        let apart = side
         let n = count
         var join = (0..<n).map { Int32($0) }
         func find(_ x: Int) -> Int {
@@ -264,6 +271,7 @@ struct RegionRuns: Sendable {
             let (low, high) = RegionAdjacency.regions(of: key)
             let a = Int(roots[low]), b = Int(roots[high])
             guard a != b, paint[a] == paint[b] else { continue }
+            if let apart, apart[a] != apart[b] { continue }
             let ja = find(a), jb = find(b)
             if ja != jb { join[max(ja, jb)] = Int32(min(ja, jb)) }
         }
@@ -272,15 +280,19 @@ struct RegionRuns: Sendable {
         var id = [Int32](repeating: -1, count: n)
         var group = [UInt32](repeating: 0, count: n)
         var newClass: [UInt32] = []
+        var newSide: [UInt8] = []
         for r in 0..<n {
             let g = find(Int(roots[r]))
             if id[g] < 0 {
                 id[g] = Int32(newClass.count)
                 newClass.append(paint[Int(roots[r])])
+                // A merged region takes the side of what it was merged into.
+                if let apart { newSide.append(apart[Int(roots[r])]) }
             }
             group[r] = UInt32(id[g])
         }
         regroup(group, classOf: newClass, classes: &classes)
+        if apart != nil { side = newSide }
         adjacency = adjacency.regrouped(group)
     }
 

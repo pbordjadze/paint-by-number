@@ -49,41 +49,52 @@ nonisolated enum ArtworkFactory {
     /// default) draws from the photo's `LineArtInputs`: the drawing, the contours, the eyes and
     /// the subjects. The painter's `refinements` come with it: the generator's inputs shape the
     /// template (a blank start makes none: `blank`), and the edits are laid on it in order
-    /// (`laying`). Polls task cancellation.
+    /// (`laying`). Settings of the scene method read `scene`, the scene the painting's template
+    /// kept (`Template.scene`), so it is made again as it was; without one Vision finds the scene
+    /// now (`SceneMapBuilder`). Polls task cancellation.
     @concurrent
     static func template(
         from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements = TemplateRefinements(),
-        progress: (@Sendable (Float) -> Void)?
+        scene: SceneMap? = nil, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Template {
         try await template(
-            from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, refinements: refinements, progress: progress)
+            from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, refinements: refinements, scene: scene,
+            progress: progress)
     }
 
     @concurrent
     private static func template(
         from photo: RGBAImage, image: CGImage?, settings: GenerationSettings,
-        refinements: TemplateRefinements = TemplateRefinements(), progress: (@Sendable (Float) -> Void)?
+        refinements: TemplateRefinements = TemplateRefinements(), scene: SceneMap? = nil,
+        progress: (@Sendable (Float) -> Void)?
     ) async throws -> Template {
         // The photo as one area needs neither Vision nor the line-art models.
         if refinements.start == .blank {
             return try laying(refinements.edits, on: blank(from: photo, settings: settings))
         }
         // Side by side, so the line art's eyes and subjects share importance's pass of Vision
-        // (`SubjectVision`).
-        async let importance = Self.importance(of: image)
+        // (`SubjectVision`), and the scene map too.
+        async let found = Self.findings(of: image, scene: settings.method == .scene && scene == nil)
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
+        let (importance, foundScene) = await found
         let inputs = refinements.refining(
-            importance: await importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
+            importance: importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
         let base = try TemplateGenerator(settings: settings)
-            .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+            .generate(
+                from: photo, importance: inputs.importance, lineArt: inputs.lineArt, scene: scene ?? foundScene, cancel: .task,
+                progress: progress)
             .template
         return try laying(refinements.edits, on: base)
     }
 
-    private static func importance(of image: CGImage?) async -> PaintCore.Grid<Float>? {
-        guard let image else { return nil }
-        return await SubjectImportance.map(for: image)
+    /// The importance map of `image`, and with `scene` its scene map, from one pass of Vision.
+    private static func findings(of image: CGImage?, scene: Bool) async -> (PaintCore.Grid<Float>?, SceneMap?) {
+        guard let image else { return (nil, nil) }
+        let found = await SubjectVision.findings(in: image)
+        let size = SubjectImportance.mapSize(width: image.width, height: image.height)
+        let importance = SubjectImportance.analysis(of: found, width: size.width, height: size.height).map
+        return (importance, scene ? SceneMapBuilder.scene(of: found, in: image) : nil)
     }
 
     /// The base of a blank start (`TemplateRefinements.Start.blank`): `photo`, the image the

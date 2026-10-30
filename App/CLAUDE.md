@@ -87,7 +87,9 @@ synchronized folder would bundle it into the app.
   `Background`, `Log` (every logger; CI's `*-app.log`), `UnlimitedPaintings` and `FreePaintings`
   (see Unlimited Paintings); DEBUG `DemoTemplateCache`, `UnlockStoreStub`.
 - `Generation/`: `PhotoLoader`, `SubjectVision` (one Vision pass a photo, shared by the three after
-  it while it runs), `SubjectImportance`, `EdgeDetector`, `EyeFinder`,
+  it while it runs), `SubjectImportance`, `SceneMapBuilder` (the scene method's `SceneMap` from the
+  same findings, plus the faces' landmarks and the animals' body pose for the features; see
+  Settings), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
   `CanvasTypes.swift`, `LineStyle.swift` (`ClassicLook`, `ColoringBookLook`, `DrawableLineArt`),
@@ -885,7 +887,15 @@ sends it, the developers collect nothing).
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
   sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
   (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
-  made.
+  made, but for Settings › Scene Method in SideStore and Debug builds (`#if UNRELEASED`,
+  `SettingsKey.sceneMethod`, off by default; painting-company row 188, `docs/scene-method.md`):
+  read once where the create flow makes its settings (`CreateModel.settings`, `method: .scene`),
+  so the painting records the method and its template keeps its `SceneMap` (built by
+  `SceneMapBuilder` beside the importance map, `CreateModel.prepare`); regeneration
+  (`Library.regenerate` → `ArtworkFactory.template(scene:)`) reads the kept scene, or finds one
+  when the template has none, and the making-of show's base is made with it too. Suggestions stay
+  on the importance map. `SceneMapBuilderTests` and `SceneStandInTests` (the Linux stand-in's
+  masks in `Tests/EvalSet/scenes` against Vision's, read from the checkout) cover it.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning, line appearance and preview
   picture, and its switch per sound, haptic and flourish; the time-lapse's pace; Settings' paper

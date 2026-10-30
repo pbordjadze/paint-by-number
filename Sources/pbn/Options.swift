@@ -12,6 +12,8 @@ struct Options {
     var lineStyle: LineArtSettings.Style?
     var lineArtFields: [String] = []
     var importance: String?
+    /// `--scene scene.json`: the scene map (`SceneMap`) the scene method reads.
+    var scene: String?
     var runs = 3
     var minLabelRadius = LabelSizing.minimumRadius
     var auto = false
@@ -132,6 +134,8 @@ func parse(_ args: ArraySlice<String>) -> Options {
             guard o.vocabulary! >= 1 else { fail("--vocabulary: at least 1") }
         case "--nickname-table": o.nicknameTable = value(a, &it)
         case "--importance": o.importance = value(a, &it)
+        case "--scene": o.scene = value(a, &it)
+        case "--method": o.settings.method = choice(a, value(a, &it))
         case "--runs":
             o.runs = number(a, &it)
             guard o.runs >= 1 else { fail("--runs: at least 1") }

@@ -3,6 +3,7 @@
 // format is read too).
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
+//       [--method color|scene [--scene scene.json]]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
@@ -13,6 +14,13 @@
 //       palette.ppm (palette-colored pixel labels), simplified.ppm (final region paints),
 //       line-art.pgm (books with an edge map), vectorized.pgm (all smoothed boundaries).
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
+//       --method scene lays the regions out by the scene (GenerationSettings.Method: the
+//       subject cut from the background, the background simplified, faces and features given
+//       the detail), read from --scene: {"subject": "mask.pgm", "saliency": "heat.pgm",
+//       "faces": [[x, y, w, h]], "animals": [[x, y, w, h]], "features": [{"kind": "eye",
+//       "x": x, "y": y, "radius": r}]} (paths relative to the file, normalized to the photo;
+//       tools/scene_standin.py writes one), kept in the template (SCEN chunk); without --scene the
+//       photo is all subject;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       a coloring book splits the cells along the edge map's lines
 //       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it

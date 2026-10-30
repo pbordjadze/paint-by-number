@@ -37,6 +37,44 @@ struct SegmentationParameters: Sendable {
 
     var colorCount: Int
     var seed: UInt64
+    /// What the regions follow (`GenerationSettings.Method`).
+    var method: GenerationSettings.Method
+    /// The scene method keeps the subject and the background apart as if painted with two
+    /// kits: pixel classes below this count are the background's paints, those from it on the
+    /// subject's same paints (`class % sidePaints` is the paint). 0 when classes carry no side
+    /// (the color method, and the scene method once its sides are folded back).
+    var sidePaints: Int = 0
+    /// What merging a region into a neighbour across the silhouette costs on top of the
+    /// colour (`RegionSimplifier.mergeCost`, OKLab-distance equivalent): several just-noticeable
+    /// differences, so a region crosses the silhouette only when nothing on its own side comes
+    /// near its colour (a speck the mask put on the wrong side, which would otherwise keep a
+    /// paint of its own there).
+    var sceneCrossPenalty: Float = 0.15
+    /// The scene method's background: smoothed this many times as widely as the color method
+    /// smooths, and its smallest area this many times larger (on top of importance's scaling);
+    /// faces and features are smoothed this fraction as widely as the subject.
+    var sceneBackgroundSmoothing: Float = 1.3
+    var sceneBackgroundArea: Float = 1.6
+    var sceneFeatureSmoothing: Float = 0.6
+    /// A face (or an animal's head) is smoothed this many times as widely as the rest of the
+    /// subject, outside its features: a face reads as a few planes of skin tone, not as patches.
+    var sceneFacePlanes: Float = 1.3
+    /// The scene method's band fusion: its tolerance for narrow bands is this many times the
+    /// color method's (it still falls with importance, so the subject keeps its tones), and a
+    /// band counts as narrow up to this many times the width (a bokeh highlight's rings are
+    /// wide). The tolerance for paints too close to tell apart stays: fusing further loses the
+    /// drifts of a snowfield and the shoreline of a beach.
+    var sceneBandFusion: Float = 1.2
+    var sceneBandWidth: Float = 1.5
+    /// The scene method smooths along the grain before anything else (`OrientedSmoothing`): the
+    /// half-length of the line, as a share of the canvas side (about 11 px on a 1152-px canvas).
+    /// 0 turns it off.
+    var sceneGrainLength: Float = 0.01
+    /// The scene method's background outlines are calmed by a second mode filter with this
+    /// many times the boundary radius and this many passes, on background pixels farther than
+    /// that radius from the silhouette.
+    var sceneCalmRadius: Float = 2
+    var sceneCalmPasses: Int = 2
     /// The pipeline works in OKLab with the chroma axes stretched by this factor, so paints
     /// separate hue/colorfulness (skin vs. warm grey, a grey-blue iris) a little more
     /// eagerly than lightness.
@@ -143,6 +181,7 @@ struct SegmentationParameters: Sendable {
 
         colorCount = s.colorCount
         seed = s.seed
+        method = s.method
         chromaScale = 1.6 * t.colorfulness
 
         smoothSpatial = side * 0.008 * lerp(1.4, 0.7, d) * lerp(0.7, 1.3, sm) * t.smoothing

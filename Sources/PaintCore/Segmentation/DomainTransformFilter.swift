@@ -16,6 +16,9 @@ enum DomainTransformFilter {
     ///   - stiffness: Per-pixel factor `1 + sharpening · importance` (≥ 1) stretching the
     ///     domain there, which shrinks the effective spatial sigma (used to keep detail in
     ///     important areas).
+    ///   - barrier: Optional per-pixel terms added to the horizontal and vertical domain
+    ///     derivatives (the step from the left / upper neighbour) after everything else: a
+    ///     large one stops the diffusion across that step (the scene method's silhouette).
     static func filter(
         _ input: Grid<SIMD4<Float>>,
         sigmaSpatial: Float,
@@ -23,6 +26,7 @@ enum DomainTransformFilter {
         iterations: Int,
         edgeScale: (horizontal: [Float], vertical: [Float])? = nil,
         stiffness: (importance: [Float], sharpening: Float),
+        barrier: (horizontal: [Float], vertical: [Float])? = nil,
         cancel: CancellationCheck
     ) throws -> Grid<SIMD4<Float>> {
         let w = input.width, h = input.height, n = w * h
@@ -38,8 +42,9 @@ enum DomainTransformFilter {
         var out = [SIMD4<Float>](uninitializedCount: n)
         let noScale: [Float] = []
         let eh = edgeScale?.horizontal ?? noScale, ev = edgeScale?.vertical ?? noScale
+        let bh = barrier?.horizontal ?? noScale, bv = barrier?.vertical ?? noScale
         let st = stiffness.importance, sharpening = stiffness.sharpening
-        let scaled = edgeScale != nil
+        let scaled = edgeScale != nil, walled = barrier != nil
         let waveRows = Parallel.waveRows(width: w)
         try input.storage.withUnsafeBufferPointer { g in
             try out.withUnsafeMutableBufferPointer { ob in
@@ -49,10 +54,13 @@ enum DomainTransformFilter {
                         try eh.withUnsafeBufferPointer { ehb in
                             try ev.withUnsafeBufferPointer { evb in
                                 try st.withUnsafeBufferPointer { sb in
+                                  try bh.withUnsafeBufferPointer { bhb in
+                                   try bv.withUnsafeBufferPointer { bvb in
                                     let gp = UncheckedSendable(g.baseAddress!)
                                     let hp = UncheckedSendable(dh.baseAddress!)
                                     let vp = UncheckedSendable(dv.baseAddress!)
                                     let ehp = UncheckedSendable(ehb), evp = UncheckedSendable(evb), sp = UncheckedSendable(sb)
+                                    let bhp = UncheckedSendable(bhb), bvp = UncheckedSendable(bvb)
                                     try Parallel.forEachBand(h, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
                                         for y in rows {
                                             let row = y * w
@@ -82,8 +90,16 @@ enum DomainTransformFilter {
                                                 hp.value[i] *= factor
                                                 vp.value[i] *= factor
                                             }
+                                            if walled {
+                                                for i in row..<(row + w) {
+                                                    hp.value[i] += bhp.value[i]
+                                                    vp.value[i] += bvp.value[i]
+                                                }
+                                            }
                                         }
                                     }
+                                   }
+                                  }
                                 }
                             }
                         }

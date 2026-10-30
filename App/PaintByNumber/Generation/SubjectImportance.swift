@@ -20,11 +20,6 @@ nonisolated enum SubjectImportance {
         var hints: SubjectHints
     }
 
-    /// The importance map alone. Nil when Vision can't help.
-    static func map(for image: CGImage) async -> Grid<Float>? {
-        await analyze(image).map
-    }
-
     /// Hints from Vision's observations: rects (normalized, bottom-left origin, as Vision
     /// reports them) flipped to a top-left origin, clipped to the image and quantized to
     /// hundredths. Quantized and sorted so small differences between devices and OS versions

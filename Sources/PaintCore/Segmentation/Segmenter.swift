@@ -29,6 +29,7 @@ enum Segmenter {
     static func segment(
         _ image: RGBAImage,
         importance: Grid<Float>?,
+        scene: SceneMap? = nil,
         parameters p: SegmentationParameters,
         cancel: CancellationCheck,
         clock: StageClock,
@@ -50,16 +51,39 @@ enum Segmenter {
         }
         try cancel.throwIfCancelled()
         if let observer { try observer(SnapshotPictures.structure(structure)) }
-        let weights = try clock.measure("segment.importance") { try ImportanceMap.make(importance, structure: structure, cancel: cancel) }
+        // The scene method lays the photo out by its scene (`SceneLayers`); the color method
+        // reads the importance map as given, or estimates one.
+        let layers = p.method == .scene
+            ? try clock.measure("segment.scene") { try SceneLayers.make(scene: scene, lab: lab, structure: structure, parameters: p, cancel: cancel) }
+            : nil
+        let weights = try clock.measure("segment.importance") {
+            try layers?.importance ?? ImportanceMap.make(importance, structure: structure, cancel: cancel)
+        }
         try cancel.throwIfCancelled()
         progress(0.05)
 
+        // The scene method smooths the subject's fur, feathers and hair along their grain first.
+        var source = lab
+        if let layers, p.sceneGrainLength > 0 {
+            source = try clock.measure("segment.grain") {
+                try OrientedSmoothing.apply(
+                    lab, length: p.sceneGrainLength * Float(w * h).squareRoot(), texture: structure.textureness(),
+                    within: layers.isSubject, cancel: cancel)
+            }
+            try cancel.throwIfCancelled()
+        }
         let smooth = try clock.measure("segment.smooth") { () throws -> Grid<SIMD4<Float>> in
             let edgeScale = p.textureFlattening > 0
                 ? try structure.edgeScales(
                     importance: weights, strength: p.textureFlattening, exponent: p.structureExponent, cancel: cancel)
                 : nil
             try cancel.throwIfCancelled()
+            if let layers {
+                return try DomainTransformFilter.filter(
+                    source, sigmaSpatial: p.smoothSpatial * (layers.hasScene ? p.sceneBackgroundSmoothing : 1), sigmaRange: p.smoothRange,
+                    iterations: p.smoothIterations, edgeScale: edgeScale, stiffness: (layers.stretch, 1),
+                    barrier: layers.barrier, cancel: cancel)
+            }
             return try DomainTransformFilter.filter(
                 lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange, iterations: p.smoothIterations,
                 edgeScale: edgeScale, stiffness: (weights, p.importanceSharpening), cancel: cancel)
@@ -93,16 +117,35 @@ enum Segmenter {
         }
         progress(0.5)
 
+        // The scene method keeps the two sides of the silhouette apart through region
+        // simplification, band fusion and consolidation as if they were painted with two kits of
+        // the same paints (`SegmentationParameters.sidePaints`): the subject's classes are offset
+        // by the palette's count, `sidePalette` repeats the paints, and merges across the
+        // silhouette pay `sceneCrossPenalty`. The sides fold back before the paints are refitted.
+        var sidePalette = palette
+        var q = p
+        if let layers, layers.hasScene {
+            let k = UInt32(palette.count)
+            for i in classes.indices where layers.isSubject[i] { classes[i] += k }
+            sidePalette = palette + palette
+            q.sidePaints = palette.count
+        }
         var labelling = classes
         let (texture, areaScale) = try clock.measure("segment.texture") { () throws -> ([Float], [Float]) in
             let texture = try TextureMap.boundaryDensity(labelling, width: w, height: h, cancel: cancel)
             var scale = [Float](uninitializedCount: w * h)
+            let factor = layers?.areaFactor ?? []
             weights.withUnsafeBufferPointer { ib in
                 texture.withUnsafeBufferPointer { tb in
                     scale.withUnsafeMutableBufferPointer { sb in
-                        let i = UncheckedSendable(ib), t = UncheckedSendable(tb), s = UncheckedSendable(sb)
-                        Parallel.forEachBand(w * h, minimumBandSize: 16_384) { range in
-                            for k in range { s.value[k] = p.areaScale(importance: i.value[k], texture: t.value[k]) }
+                        factor.withUnsafeBufferPointer { fb in
+                            let i = UncheckedSendable(ib), t = UncheckedSendable(tb), s = UncheckedSendable(sb), f = UncheckedSendable(fb)
+                            Parallel.forEachBand(w * h, minimumBandSize: 16_384) { range in
+                                for k in range {
+                                    s.value[k] = p.areaScale(importance: i.value[k], texture: t.value[k])
+                                    if !f.value.isEmpty { s.value[k] *= f.value[k] }
+                                }
+                            }
                         }
                     }
                 }
@@ -113,26 +156,38 @@ enum Segmenter {
         var (regions, adjacency) = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
-                palette: palette, parameters: p, cancel: cancel, clock: clock)
+                palette: sidePalette, parameters: q,
+                calm: layers.flatMap { $0.hasScene ? ($0.calm, $0.calmRadius, p.sceneCalmPasses) : nil }, cancel: cancel, clock: clock)
         }
         try cancel.throwIfCancelled()
         let metric = SIMD3<Float>(1, 1 / p.chromaScale, 1 / p.chromaScale)
+        let fusion: Float = layers?.hasScene == true ? p.sceneBandFusion : 1
         try clock.measure("segment.bands") {
             try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: smooth.storage,
-                importance: weights, palette: palette, metric: metric,
-                tolerance: (p.bandNearTolerance, p.bandNearImportantTolerance, p.bandTolerance),
-                bandWidth: p.bandWidth, contrast: p.bandContrast, cancel: cancel)
+                importance: weights, palette: sidePalette, metric: metric,
+                tolerance: (p.bandNearTolerance, p.bandNearImportantTolerance, p.bandTolerance * fusion),
+                bandWidth: p.bandWidth * (layers?.hasScene == true ? p.sceneBandWidth : 1), contrast: p.bandContrast,
+                sidePaints: q.sidePaints, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         clock.measure("segment.consolidate") {
             TextureConsolidation.apply(
                 classes: &classes, regions: &regions, adjacency: &adjacency, texture: texture, importance: weights,
-                palette: palette, metric: metric, tolerance: p.consolidationTolerance)
+                palette: sidePalette, metric: metric, tolerance: p.consolidationTolerance, sidePaints: q.sidePaints)
         }
         try cancel.throwIfCancelled()
         progress(0.85)
 
+        // The sides fold back into the regions (`RegionRuns.side`), so regions of one paint on
+        // either side of the silhouette stay two regions through every later fuse and merge.
+        if q.sidePaints > 0 {
+            let k = UInt32(palette.count)
+            regions.side = regions.classOf.map { $0 >= k ? 1 : 0 }
+            regions.classOf = regions.classOf.map { $0 % k }
+            for i in classes.indices { classes[i] %= k }
+            for i in labelling.indices { labelling[i] %= k }
+        }
         var finalPalette = try clock.measure("segment.refine") {
             try PaletteRefiner.refine(
                 classes: &classes, regions: &regions, adjacency: &adjacency, lab: lab.storage, importance: weights,

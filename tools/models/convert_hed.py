@@ -303,7 +303,34 @@ def package_bytes(package):
     return sum(os.path.getsize(os.path.join(d, n)) for d, _, names in os.walk(package) for n in names)
 
 
+def mediapipe_shim():
+    """controlnet_aux's package import reads `mediapipe.solutions` (its face annotator), which
+    mediapipe 0.10.14+ no longer has; a stand-in whose every attribute is another stand-in lets
+    the import through (the HED and line models never touch it)."""
+    import sys
+    import types
+
+    class Anything:
+        def __getattr__(self, name):
+            return Anything()
+
+        def __call__(self, *args, **kwargs):
+            return Anything()
+
+        def __iter__(self):
+            return iter(())
+
+    try:
+        import mediapipe
+    except ImportError:
+        mediapipe = types.ModuleType("mediapipe")
+        sys.modules["mediapipe"] = mediapipe
+    if not hasattr(mediapipe, "solutions"):
+        mediapipe.solutions = Anything()
+
+
 def main(argv):
+    mediapipe_shim()
     import warnings
     warnings.filterwarnings("ignore")
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])

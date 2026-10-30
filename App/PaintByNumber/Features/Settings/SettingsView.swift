@@ -16,6 +16,9 @@ struct SettingsView: View {
     /// On until switched off here (`TipPreference`).
     @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = SettingsDefault.tipsEnabled
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
+    #if UNRELEASED
+    @AppStorage(SettingsKey.sceneMethod) private var sceneMethod = SettingsDefault.sceneMethod
+    #endif
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var path: [Destination] = []
     @State private var isUnlocking = false
@@ -149,6 +152,19 @@ struct SettingsView: View {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")
                     }
+
+                    #if UNRELEASED
+                    // The scene method, while it is tried (painting-company row 188): read where
+                    // the create flow makes its settings (`CreateModel.settings`).
+                    Section {
+                        Toggle(isOn: $sceneMethod) {
+                            SwiftUI.Label("Scene Method", systemImage: "person.and.background.dotted")
+                        }
+                        .accessibilityIdentifier("settings-scene-method")
+                    } footer: {
+                        Text("New paintings are laid out by their subject: a calm background, with the detail on faces and features. Being tried.")
+                    }
+                    #endif
 
                     Section {
                         Toggle(isOn: $playsMakingOf) {

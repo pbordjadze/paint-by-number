@@ -9,6 +9,8 @@ nonisolated struct MakingOfSource: Sendable {
     var image: RGBAImage
     var importance: PaintCore.Grid<Float>?
     var lineArt: LineArtInput?
+    /// The scene the base was made from, for settings of the scene method; nil otherwise.
+    var scene: SceneMap? = nil
     /// The painter's refinements: their generator inputs make the base as the create flow made it.
     var refinements: TemplateRefinements
     var settings: GenerationSettings
@@ -85,7 +87,7 @@ nonisolated struct MakingOfShow: Sendable {
         let recorder = SnapshotRecorder()
         let base = try TemplateGenerator(settings: source.settings)
             .generate(
-                from: source.image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: cancel,
+                from: source.image, importance: inputs.importance, lineArt: inputs.lineArt, scene: source.scene, cancel: cancel,
                 observer: { recorder.receive($0) })
             .template
         return (try ShowPictures(snapshots: recorder.snapshots), base)

@@ -45,6 +45,32 @@ enum ImportanceMap {
         return out
     }
 
+    /// The density of structure, box-blurred over a few percent of the frame, and the reference
+    /// it is normalized by: a high percentile, so a few very sharp edges don't flatten the rest.
+    static func structureDensity(
+        _ structure: [Float], width w: Int, height h: Int, cancel: CancellationCheck
+    ) throws -> (density: [Float], reference: Float) {
+        let n = w * h
+        let side = Float(n).squareRoot()
+        let density = try BoxBlur.apply(structure, width: w, height: h, radius: max(2, Int(side / 30)), passes: 2, cancel: cancel)
+        var sample: [Float] = []
+        let stride = max(1, n / 20_000)
+        var i = 0
+        while i < n { sample.append(density[i]); i += stride }
+        sample.sort()
+        let reference = max(sample[min(sample.count - 1, Int(Float(sample.count) * 0.9))], 1e-4)
+        return (density, reference)
+    }
+
+    /// How busy with structure each pixel's surroundings are, 0...1 (the `busy` term of the
+    /// fallback, without the center bias): the scene method's background keeps the objects in it.
+    static func busyness(structure: [Float], width w: Int, height h: Int, cancel: CancellationCheck = .none) throws -> [Float] {
+        let n = w * h
+        guard n > 0 else { return [] }
+        let (density, reference) = try structureDensity(structure, width: w, height: h, cancel: cancel)
+        return density.map { min($0 / reference, 1) }
+    }
+
     /// Mild center bias plus density of structure — coherent gradients (see `StructureMap`),
     /// averaged over a few percent of the frame and normalized so the busiest contours
     /// approach 1. Texture does not count as structure, so a rushing river or a gravel path
@@ -52,16 +78,7 @@ enum ImportanceMap {
     static func fallback(structure: [Float], width w: Int, height h: Int, cancel: CancellationCheck = .none) throws -> [Float] {
         let n = w * h
         guard n > 0 else { return [] }
-        let side = Float(n).squareRoot()
-        let density = try BoxBlur.apply(structure, width: w, height: h, radius: max(2, Int(side / 30)), passes: 2, cancel: cancel)
-
-        // Normalize by a high percentile so a few very sharp edges don't flatten the rest.
-        var sample: [Float] = []
-        let stride = max(1, n / 20_000)
-        var i = 0
-        while i < n { sample.append(density[i]); i += stride }
-        sample.sort()
-        let reference = max(sample[min(sample.count - 1, Int(Float(sample.count) * 0.9))], 1e-4)
+        let (density, reference) = try structureDensity(structure, width: w, height: h, cancel: cancel)
 
         var out = [Float](uninitializedCount: n)
         try density.withUnsafeBufferPointer { d in

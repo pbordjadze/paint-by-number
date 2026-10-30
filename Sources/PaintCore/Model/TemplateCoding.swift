@@ -59,6 +59,10 @@ import Foundation
 ///   ```
 ///   Readers without it draw the writing like the rest of the drawing, in the one ink: which
 ///   vanishes on a dark paint once it is painted, and the painting is otherwise the same.
+/// - `SCEN` (optional; written only for a template made by the scene method, see
+///   `Template.scene`): a `SceneMap` payload (`SceneMap.encoded`, its own layout). Readers
+///   without it draw the painting the same; only regeneration lacks the scene and finds it
+///   again.
 ///
 /// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
 /// against the bytes left before allocating, and every span, reference and coordinate in
@@ -89,6 +93,7 @@ extension Template {
         static let lines: UInt32 = 0x454E_494C  // "LINE"
         static let detail: UInt32 = 0x4C54_4544  // "DETL"
         static let writing: UInt32 = 0x5449_5257  // "WRIT"
+        static let scene: UInt32 = 0x4E45_4353  // "SCEN"
         static let requiredFlag: UInt32 = 1
         /// Tag, flags and length.
         static let headerSize = 12
@@ -121,6 +126,7 @@ extension Template {
             writing.writeArray(lineArt.writingStrokes)
             chunks.append((Chunk.writing, 0, writing.data))
         }
+        if let scene { chunks.append((Chunk.scene, 0, scene.encoded())) }
         w.write(UInt32(chunks.count))
         for chunk in chunks {
             w.write(chunk.tag)
@@ -321,6 +327,14 @@ extension Template {
                     throw CodingError.corrupt(Chunk.name(tag))
                 }
                 writingStrokes = strokes
+            case Chunk.scene:
+                guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
+                do {
+                    scene = try SceneMap(&payload)
+                } catch let error as CodingError {
+                    if case .corrupt = error { throw error }
+                    throw CodingError.corrupt(Chunk.name(tag))
+                }
             default:
                 if flags & Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
             }

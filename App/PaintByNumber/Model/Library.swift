@@ -531,7 +531,9 @@ final class Library {
             }
             return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), refinements)
         }
-        let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
+        // A scene-method painting reads the scene its template kept, so it is made again as it was.
+        let template = try await ArtworkFactory.template(
+            from: photo, settings: settings, refinements: refinements, scene: old?.scene, progress: report)
         let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)

@@ -16,6 +16,8 @@ enum BoundarySmoothing {
     ///   - radius: Vote disc radius in pixels.
     ///   - fidelity: Weight of the squared color distance (working OKLab) against votes;
     ///     votes are normalized to 1 over the disc.
+    ///   - changeable: Optional per-pixel flags: only pixels flagged may change (the scene
+    ///     method calms its background's outlines with a wider disc, keeping the silhouette).
     /// - Returns: Number of changed pixels over all passes.
     static func apply(
         classes: inout [UInt32],
@@ -25,9 +27,11 @@ enum BoundarySmoothing {
         radius: Int,
         passes: Int,
         fidelity: Float,
+        changeable: [Bool]? = nil,
         cancel: CancellationCheck = .none
     ) throws -> Int {
         guard radius > 0, passes > 0, w > 2, h > 2 else { return 0 }
+        let mask = changeable ?? []
         var offsets: [(dx: Int, dy: Int, weight: Float)] = []
         var total: Float = 0
         let sigma2 = Float(radius * radius) * 0.5
@@ -81,6 +85,9 @@ enum BoundarySmoothing {
                                                         if pass > 0 {
                                                             let flags = nearby.value.baseAddress! + y * w
                                                             for x in 0..<w { b[x] &= flags[x] }
+                                                        }
+                                                        if !mask.isEmpty {
+                                                            for x in 0..<w where !mask[y * w + x] { b[x] = 0 }
                                                         }
                                                         for x in 0..<w where b[x] != 0 {
                                                             let i = y * w + x

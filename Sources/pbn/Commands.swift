@@ -8,6 +8,7 @@ func runGenerate(_ options: Options) throws {
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     let importance = loadImportance(options.importance)
     let lineArtInput = loadLineArt(options)
+    let scene = loadScene(options.scene)
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
     // Auto's decision carries the line art and tuning asked for.
     let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
@@ -37,7 +38,7 @@ func runGenerate(_ options: Options) throws {
     let output: TemplateGenerator.Output
     do {
         output = try generator.generate(
-            from: image, importance: importance, lineArt: lineArtInput, cancel: .none, observer: observer)
+            from: image, importance: importance, lineArt: lineArtInput, scene: scene, cancel: .none, observer: observer)
     } catch { fail("generation failed: \(error)") }
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)

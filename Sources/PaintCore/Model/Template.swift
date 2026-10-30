@@ -68,6 +68,11 @@ public struct Template: Sendable, Equatable {
     /// sizes their labels with `detail: true` (`isDetailRegion`). Empty for most templates.
     public var detailRegions: [UInt32] = []
 
+    /// The scene the template was made from (`GenerationSettings.Method.scene`), kept so that
+    /// regeneration from the same photo and settings reads the same scene and makes the same
+    /// bytes on every device (the `SCEN` chunk). `nil` for templates of the color method.
+    public var scene: SceneMap? = nil
+
     public init(
         width: Int, height: Int, colorSpace: RGBColorSpace,
         palette: [PaletteColor], regions: [Region],

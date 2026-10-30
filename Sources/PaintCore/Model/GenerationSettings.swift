@@ -12,10 +12,25 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var lineArt: LineArtSettings
     /// Expert multipliers on the segmentation's derived knobs (default: none).
     public var tuning: PipelineTuning
+    /// What the regions follow: the photo's colors (`color`, every template so far), or the
+    /// scene (`scene`: the subject, its faces and features, from a `SceneMap`).
+    public var method: Method
+
+    /// How a template's regions are laid out.
+    public enum Method: String, Sendable, Hashable, Codable, CaseIterable {
+        /// Regions follow color: one segmentation of the whole photo, the importance map
+        /// shifting detail toward the subject.
+        case color
+        /// Regions follow the scene: the subject is cut from the background along its
+        /// silhouette, the background simplified into a few calm shapes, faces and features
+        /// given the detail and the paints (`SceneMap`; painting-company row 188). Without a
+        /// scene map the photo is all subject.
+        case scene
+    }
 
     public init(
         colorCount: Int = 24, detail: Float = 0.5, smoothness: Float = 0.5, seed: UInt64 = 0x5eed,
-        lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning()
+        lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning(), method: Method = .color
     ) {
         self.colorCount = colorCount
         self.detail = detail
@@ -23,10 +38,11 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         self.seed = seed
         self.lineArt = lineArt
         self.tuning = tuning
+        self.method = method
     }
 
     private enum CodingKeys: String, CodingKey {
-        case colorCount, detail, smoothness, seed, lineArt, tuning
+        case colorCount, detail, smoothness, seed, lineArt, tuning, method
     }
 
     /// The four original fields are required as before; the later ones default, so settings
@@ -40,6 +56,21 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         seed = try c.decode(UInt64.self, forKey: .seed)
         lineArt = ((try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)) ?? nil) ?? LineArtSettings(style: .classic)
         tuning = (try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)) ?? PipelineTuning()
+        // A method this app doesn't know, or none (every artwork before it), is the color method.
+        method = ((try? c.decodeIfPresent(Method.self, forKey: .method)) ?? nil) ?? .color
+    }
+
+    /// Encodes `method` only when it is not the default, so the settings of a color-method
+    /// painting are written as they always were.
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(colorCount, forKey: .colorCount)
+        try c.encode(detail, forKey: .detail)
+        try c.encode(smoothness, forKey: .smoothness)
+        try c.encode(seed, forKey: .seed)
+        try c.encode(lineArt, forKey: .lineArt)
+        try c.encode(tuning, forKey: .tuning)
+        if method != .color { try c.encode(method, forKey: .method) }
     }
 
     public static let colorCountRange = 6...150

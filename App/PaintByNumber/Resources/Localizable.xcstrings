@@ -153,6 +153,10 @@
       "comment" : "Refine screen: the tool that drags an area's number to another spot in the area; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "New paintings are laid out by their subject: a calm background, with the detail on faces and features. Being tried." : {
+      "comment" : "Footer under the Settings switch Scene Method (off by default): what turning it on does, and that it is still being tried",
+      "extractionState" : "manual"
+    },
     "New Paint" : {
       "comment" : "Refine screen, the palette: VoiceOver label of the color picker at its end, which picks any color as the current paint, and of the swatch of a current color no paint has yet",
       "extractionState" : "manual"
@@ -7151,6 +7155,10 @@
     },
     "Say what looks wrong or right, and why." : {
       "comment" : "Feedback's review sheet: footer under the note field",
+      "extractionState" : "manual"
+    },
+    "Scene Method" : {
+      "comment" : "Settings switch (off by default; SideStore and Debug builds only while it is tried) that makes new paintings by the scene method: laid out by the subject rather than by color alone",
       "extractionState" : "manual"
     },
     "Search paintings" : {

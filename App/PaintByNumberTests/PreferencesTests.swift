@@ -16,6 +16,7 @@ struct PreferencesTests {
             SettingsKey.previewStyle, SettingsKey.playsMakingOf, SettingsKey.tipsEnabled,
             SettingsKey.previewShowsSettings, SettingsKey.refineSnaps, SettingsKey.refinePenColors,
             SettingsKey.refineBrushSize, SettingsKey.refineEraserSize, SettingsKey.refinePenSmoothing,
+            SettingsKey.sceneMethod,
         ]
         #expect(keys == [
             "hapticsEnabled", "soundsEnabled", "sky", "autoAdvanceColors",
@@ -24,6 +25,7 @@ struct PreferencesTests {
             "previewStyle", "playsMakingOf", "tipsEnabled",
             "previewShowsSettings", "refineSnaps", "refinePenColors",
             "refineBrushSize", "refineEraserSize", "refinePenSmoothing",
+            "sceneMethod",
         ])
         // No retired key comes back as a current one: launch would remove the painter's choice.
         #expect(Set(keys).isDisjoint(with: Preferences.retiredKeys))
@@ -32,12 +34,13 @@ struct PreferencesTests {
 
     /// What each switch is until the painter sets it: haptics, sounds, Advance to Next Color,
     /// Tips and Refine's Snap on; Zen Mode, the Making-of, the preview's settings, Color from
-    /// Photo and the Pen's Smoothing off; the Eraser about the size it had before it had a Size.
-    /// The code reading `UserDefaults` itself agrees with the `@AppStorage` views.
+    /// Photo, the Pen's Smoothing and the Scene Method off; the Eraser about the size it had
+    /// before it had a Size. The code reading `UserDefaults` itself agrees with the `@AppStorage`
+    /// views.
     @Test func settingDefaults() throws {
         #expect(SettingsDefault.haptics && SettingsDefault.sounds && SettingsDefault.autoAdvance)
         #expect(SettingsDefault.tipsEnabled && SettingsDefault.refineSnaps)
-        #expect(!SettingsDefault.zenMode && !SettingsDefault.playsMakingOf)
+        #expect(!SettingsDefault.zenMode && !SettingsDefault.playsMakingOf && !SettingsDefault.sceneMethod)
         #expect(!SettingsDefault.previewShowsSettings && !SettingsDefault.refinePenColors)
         #expect(SettingsDefault.refineBrushSize == Double(RefineGestures.brushSize))
         #expect(SettingsDefault.refinePenSmoothing == 0)
@@ -48,6 +51,9 @@ struct PreferencesTests {
         defer { defaults.removePersistentDomain(forName: suite) }
         #expect(TipPreference.isEnabled(in: defaults) == SettingsDefault.tipsEnabled)
         #expect(Preferences(defaults: defaults).playsMakingOf == SettingsDefault.playsMakingOf)
+        #expect(Preferences(defaults: defaults).sceneMethod == SettingsDefault.sceneMethod)
+        defaults.set(true, forKey: SettingsKey.sceneMethod)
+        #expect(Preferences(defaults: defaults).sceneMethod)
     }
 
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments

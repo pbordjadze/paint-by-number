@@ -19,10 +19,16 @@ enum TextureConsolidation {
         importance: [Float],
         palette: [SIMD3<Float>],
         metric: SIMD3<Float>,
-        tolerance: Float
+        tolerance: Float,
+        sidePaints: Int = 0
     ) {
         let n = regions.count
         guard n > 1, tolerance > 0 else { return }
+        // The scene method's two sides never consolidate into one region
+        // (`SegmentationParameters.sidePaints`): the same paint on both sides is distance 0.
+        @inline(__always) func acrossSilhouette(_ a: UInt32, _ b: UInt32) -> Bool {
+            sidePaints > 0 && (Int(a) >= sidePaints) != (Int(b) >= sidePaints)
+        }
         let sums = regions.sums(texture, importance)
         var textureSum = sums.map(\.x)
         var importanceSum = sums.map(\.y)
@@ -38,7 +44,7 @@ enum TextureConsolidation {
         for key in adjacency.pairs {
             let (a, b) = RegionAdjacency.regions(of: key)
             let d = difference(cls[a], cls[b])
-            if d <= tolerance { edges.append((Int32(a), Int32(b), d)) }
+            if d <= tolerance && !acrossSilhouette(cls[a], cls[b]) { edges.append((Int32(a), Int32(b), d)) }
         }
         edges.sort { $0.key < $1.key || ($0.key == $1.key && ($0.a, $0.b) < ($1.a, $1.b)) }
 

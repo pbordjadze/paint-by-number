@@ -42,6 +42,7 @@ enum BandMerging {
         tolerance: (near: Float, nearImportant: Float, band: Float),
         bandWidth: Float,
         contrast: Float,
+        sidePaints: Int = 0,
         cancel: CancellationCheck = .none
     ) throws {
         let n = regions.count
@@ -77,6 +78,8 @@ enum BandMerging {
             perimeter[b] += Int(length)
             let d = distance(cls[a], cls[b])
             guard d <= maxTolerance else { continue }
+            // The scene method's two sides never fuse (`SegmentationParameters.sidePaints`).
+            if sidePaints > 0, (Int(cls[a]) >= sidePaints) != (Int(cls[b]) >= sidePaints) { continue }
             // Steps and the paint difference compared in the same (working) space.
             let difference = ColorScience.distance(palette[Int(cls[a])], palette[Int(cls[b])])
             guard steps[k] <= contrast * difference * Float(length) else { continue }
