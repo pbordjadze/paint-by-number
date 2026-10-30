@@ -55,9 +55,10 @@ enum DrawingGenerator {
         var writing: Writing?
         let rows = DrawingScan.textRows(in: ink.map)
         let params = SegmentationParameters(settings: settings.normalized, width: size.width, height: size.height)
-        // A row's whole box keeps the numbers off, a number's radius around it: `Writing` keeps
+        // A row's whole box keeps the numbers off, padded by a number's radius: `Writing` keeps
         // out each word it traced, and a number between two of a caption's letters read as
-        // part of it.
+        // part of it. A label is moved while its centre is nearer the box than its own radius,
+        // so the pad keeps a number its own width clear of the letters, not merely outside them.
         var rowKeepOut: [SIMD4<Float>] = []
         if !rows.isEmpty {
             let w = size.width, h = size.height

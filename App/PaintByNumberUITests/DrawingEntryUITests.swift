@@ -32,9 +32,23 @@ final class DrawingEntryUITests: XCTestCase {
         if !offered { attachTree(of: app, named: "drawing-entry-menu-tree") }
         XCTAssertTrue(offered, "A long press of the photo button doesn't offer Choose Photo of a Drawing…")
 
-        // A tap away from the menu closes it, and nothing was presented.
-        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
-        XCTAssertTrue(waitUntil(timeout: 5) { !item.exists }, "The menu stayed up after a tap away")
+        // The item presents the system picker: a new Cancel or Close comes up with its sheet
+        // (the way CreateFlowTests tells a sheet). The out-of-process picker's cold start can
+        // swallow a first tap, so one more long press and tap are allowed.
+        let dismissals = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
+        let before = dismissals.count
+        item.tap()
+        var presented = waitUntil(timeout: 15) { dismissals.count > before }
+        if !presented {
+            attachScreenshot(of: app, named: "drawing-entry-tap-missed")
+            attachTree(of: app, named: "drawing-entry-tap-missed-tree")
+            if !item.exists, button.isHittable { button.press(forDuration: 1.2) }
+            if item.waitForExistence(timeout: 5) { item.tap() }
+            presented = waitUntil(timeout: 25) { dismissals.count > before }
+        }
+        attachScreenshot(of: app, named: "drawing-entry-picker")
+        if !presented { attachTree(of: app, named: "drawing-entry-picker-tree") }
+        XCTAssertTrue(presented, "Choose Photo of a Drawing… didn't present the system picker")
         XCTAssertFalse(app.buttons["Start Painting"].exists)
     }
 }

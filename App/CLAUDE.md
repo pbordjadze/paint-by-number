@@ -806,7 +806,7 @@ Conventions).
   PaintCore's `docs/start-from-a-drawing.md`): a long press of the photo step's photo button
   (Browse All… on iPad, a `Menu` with a primary action; Choose Photo on iPhone, a context menu)
   offers Choose Photo of a Drawing… and Photograph a Drawing, kept off the toolbar on purpose
-  (findable, not offered: Paul's word, October 30); they open the step's own picker and camera
+  (findable, not offered; painting-company row 190, October 30); they open the step's own picker and camera
   with `picksDrawing` set, so the pick calls `CreateModel.load(drawing:)` /
   `load(drawingData:)`, which cleans the sheet off the main actor (`DrawingScan.clean`: found,
   pulled square, the paper white) and makes the cleaned sheet the flow's photo, so the

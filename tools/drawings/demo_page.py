@@ -66,10 +66,11 @@ def sheet():
 
 def page():
     table = Image.new("RGB", (W, H), (77, 51, 36))
-    s = sheet().rotate(-0.05 * 180 / math.pi, resample=Image.BICUBIC, expand=True, fillcolor=None)
-    # CG: translate(700, 900), rotate(0.05), translate(-550, -720): the sheet's centre at (700, 900) from the bottom.
+    s = sheet().rotate(0.05 * 180 / math.pi, resample=Image.BICUBIC, expand=True, fillcolor=None)
+    # CG: translate(700, 900), rotate(0.05), translate(-550, -720): the sheet's centre at (700, 900) from the
+    # bottom, turned counter-clockwise on screen (CG's bitmap is y-up, and PIL's positive angle turns the same way).
     cx, cy = 700, H - 900
-    mask = Image.new("L", (SHEET_W, SHEET_H), 255).rotate(-0.05 * 180 / math.pi, resample=Image.BICUBIC, expand=True)
+    mask = Image.new("L", (SHEET_W, SHEET_H), 255).rotate(0.05 * 180 / math.pi, resample=Image.BICUBIC, expand=True)
     table.paste(s, (cx - s.width // 2, cy - s.height // 2), mask)
     return table
 
