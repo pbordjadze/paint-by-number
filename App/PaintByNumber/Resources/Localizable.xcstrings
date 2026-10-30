@@ -46,7 +46,7 @@
       "extractionState" : "manual"
     },
     "Choose Photo of a Drawing…" : {
-      "comment" : "Menu item under From a Drawing: pick a photo of a drawing from the photo library",
+      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): pick a photo of a drawing on paper from the photo library, to start a painting from it",
       "extractionState" : "manual"
     },
     "Color" : {
@@ -133,16 +133,8 @@
         }
       }
     },
-    "Start a painting from a photo of a line drawing on paper" : {
-      "comment" : "Help text (pointer hover) of the From a Drawing menu",
-      "extractionState" : "manual"
-    },
     "Photograph a Drawing" : {
-      "comment" : "Menu item under From a Drawing: take a photo of a drawing with the camera",
-      "extractionState" : "manual"
-    },
-    "From a Drawing" : {
-      "comment" : "Toolbar menu of the create flow's photo step (SideStore and Debug builds): start a painting from a photo of a line drawing on paper",
+      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): take a photo of a drawing on paper with the camera, to start a painting from it",
       "extractionState" : "manual"
     },
     "Two fingers zoom and move. Tap with two to undo." : {

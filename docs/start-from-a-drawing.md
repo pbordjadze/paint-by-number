@@ -5,7 +5,8 @@ pen or pencil sketch, a coloring page, a sketchbook page taken with a phone, bec
 paint-by-number whose areas the drawn lines bound, the way a coloring book works. The code is
 `Sources/PaintCore/Drawing/` (`DrawingScan`, `DrawingGenerator`, `DrawingPalette`),
 `Model/DrawingSettings.swift` and `GenerationSettings.drawing`; `pbn drawing` runs it; the app's
-entry is the create flow's From a Drawing (SideStore and Debug builds, `#if UNRELEASED`). Each
+entry is a long press of the create flow's photo button (Browse All… on iPad, Choose Photo on
+iPhone; SideStore and Debug builds, `#if UNRELEASED`), kept off the toolbar on purpose. Each
 type's doc comment is its reference; this note holds what was measured and decided.
 
 ## How it works, in short
