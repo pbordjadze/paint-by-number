@@ -45,6 +45,10 @@
       "comment" : "Refine screen, Select's bar: a button that opens the selected area's card, where it takes another color or paint",
       "extractionState" : "manual"
     },
+    "Choose Photo of a Drawing…" : {
+      "comment" : "Menu item under From a Drawing: pick a photo of a drawing from the photo library",
+      "extractionState" : "manual"
+    },
     "Color" : {
       "comment" : "Refine screen, Colors: VoiceOver label of the color picker that gives the paint picked a new color",
       "extractionState" : "manual"
@@ -67,6 +71,82 @@
     },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
+      "extractionState" : "manual"
+    },
+    "drawing.palette.garden" : {
+      "comment" : "A palette set for a painting from a drawing: pinks, greens and lilac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garden"
+          }
+        }
+      }
+    },
+    "drawing.palette.sea" : {
+      "comment" : "A palette set for a painting from a drawing: blues, teals and sand",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sea"
+          }
+        }
+      }
+    },
+    "drawing.palette.earth" : {
+      "comment" : "A palette set for a painting from a drawing: ochres, umbers and olive",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earth"
+          }
+        }
+      }
+    },
+    "drawing.palette.pastels" : {
+      "comment" : "A palette set for a painting from a drawing: soft and pale",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastels"
+          }
+        }
+      }
+    },
+    "drawing.palette.crayons" : {
+      "comment" : "A palette set for a painting from a drawing: bright primaries",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crayons"
+          }
+        }
+      }
+    },
+    "Palette" : {
+      "comment" : "Picker of the palette set a painting from a drawing takes its paints from, in the create flow's card",
+      "extractionState" : "manual"
+    },
+    "Start a painting from a photo of a line drawing on paper" : {
+      "comment" : "Help text (pointer hover) of the From a Drawing menu",
+      "extractionState" : "manual"
+    },
+    "Photograph a Drawing" : {
+      "comment" : "Menu item under From a Drawing: take a photo of a drawing with the camera",
+      "extractionState" : "manual"
+    },
+    "From a Drawing" : {
+      "comment" : "Toolbar menu of the create flow's photo step (SideStore and Debug builds): start a painting from a photo of a line drawing on paper",
       "extractionState" : "manual"
     },
     "Two fingers zoom and move. Tap with two to undo." : {

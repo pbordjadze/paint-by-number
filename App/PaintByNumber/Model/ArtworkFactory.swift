@@ -48,8 +48,9 @@ nonisolated enum ArtworkFactory {
     /// from Vision (when available) guides colors and detail, and line art (the coloring book by
     /// default) draws from the photo's `LineArtInputs`: the drawing, the contours, the eyes and
     /// the subjects. The painter's `refinements` come with it: the generator's inputs shape the
-    /// template (a blank start makes none: `blank`), and the edits are laid on it in order
-    /// (`laying`). Polls task cancellation.
+    /// template (a blank start makes none: `blank`; a drawing's painting, `settings.drawing`,
+    /// reads none: its photo is the cleaned sheet, whose ink the generator traces), and the
+    /// edits are laid on it in order (`laying`). Polls task cancellation.
     @concurrent
     static func template(
         from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements = TemplateRefinements(),
@@ -67,6 +68,11 @@ nonisolated enum ArtworkFactory {
         // The photo as one area needs neither Vision nor the line-art models.
         if refinements.start == .blank {
             return try laying(refinements.edits, on: blank(from: photo, settings: settings))
+        }
+        // Nor does a drawing (the cleaned sheet stored as its photo): its own ink is the line art.
+        if settings.drawing != nil {
+            let base = try TemplateGenerator(settings: settings).generate(from: photo, cancel: .task, progress: progress).template
+            return try laying(refinements.edits, on: base)
         }
         // Side by side, so the line art's eyes and subjects share importance's pass of Vision
         // (`SubjectVision`).

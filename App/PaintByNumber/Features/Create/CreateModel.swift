@@ -124,6 +124,14 @@ final class CreateModel {
     var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
+    /// The photo is a line drawing on paper (Start from a Drawing, painting-company row 190):
+    /// its sheet was cleaned on the way in (`DrawingScan.clean`, the cleaned sheet is the
+    /// photo the flow holds), nothing is suggested, the sliders are off, and the painting is
+    /// made by the generator's drawing path (`GenerationSettings.drawing`: the areas the drawn
+    /// lines bound, `drawingPalette`'s paints laid over them).
+    private(set) var isDrawing = false
+    /// The palette set a drawing's paints come from (`DrawingPalette`).
+    var drawingPalette: DrawingPalette.Set = .crayons
     /// The painter's refinements of this photo's template (the optional Refine step): the
     /// generator's inputs apply to every draft and the painting, and the edits are laid on each
     /// full-resolution template. None until refined.
@@ -264,7 +272,8 @@ final class CreateModel {
 
     var settings: GenerationSettings {
         GenerationSettings(
-            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt
+            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt,
+            drawing: isDrawing ? DrawingSettings(palette: drawingPalette) : nil
         ).normalized
     }
 
@@ -346,7 +355,7 @@ final class CreateModel {
     /// Whether the template draws from the line-art inputs, where lines can be drawn and erased
     /// and the text corrections apply; or it is the Tool Guide's practice picture, which is drawn
     /// on alike and has no text.
-    var hasLineArtInput: Bool { lineArtInput != nil || isPractice }
+    var hasLineArtInput: Bool { lineArtInput != nil || isPractice || isDrawing }
 
     /// The flow is a Tool Guide page's practice (`practice(_:scene:)`).
     private(set) var isPractice = false
@@ -412,6 +421,20 @@ final class CreateModel {
         if pickedPhotos.count > Self.pickedPhotosKept { pickedPhotos.removeLast(pickedPhotos.count - Self.pickedPhotosKept) }
     }
 
+    /// A photo of a drawing from the library: the sheet is cleaned and its lines become the
+    /// painting (`isDrawing`).
+    func load(drawing item: PhotosPickerItem) {
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, drawing: true) { [self] in
+            let data = try await photoData(of: item)
+            return try await Self.decode(data: data)
+        }
+    }
+
+    /// A photo of a drawing from the camera or a file (`isDrawing`).
+    func load(drawingData: Data, title: String? = nil) {
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true) { try await Self.decode(data: drawingData) }
+    }
+
     /// `title` names the painting when the photo came with a name (an opened file); without
     /// one, the date does.
     func load(imageData: Data, title: String? = nil) {
@@ -422,7 +445,9 @@ final class CreateModel {
     /// painter left on the sliders. The suggestion is still made, for Reset to Suggested and the
     /// sliders' detents, but the draft's settings are the ones generated.
     func load(draft: CreateDraft, photo: Data, kept: EditTrail.Kept? = nil) {
-        begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept) {
+        // A drawing's draft keeps the cleaned sheet as its photo: nothing to clean again.
+        begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept,
+              drawing: draft.settings.drawing != nil, cleaned: true) {
             try await Self.decode(data: photo)
         }
     }
@@ -435,6 +460,7 @@ final class CreateModel {
     func practice(_ picture: RefinePracticePicture, scene: RefinePractice.Scene) {
         cancelAll()
         isPractice = true
+        isDrawing = false
         defaultTitle = ""
         title = ""
         source = Source(image: picture.photo, preview: picture.preview, sampleName: nil)
@@ -489,12 +515,16 @@ final class CreateModel {
         phase = .failed(error.localizedDescription)
     }
 
+    /// `drawing`: the photo is a drawing on paper (`isDrawing`), cleaned on the way in unless
+    /// `cleaned` already (a draft's photo).
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
-        decode: @escaping () async throws -> Decoded
+        drawing: Bool = false, cleaned: Bool = false, decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
         isPractice = false
+        isDrawing = drawing
+        if let set = saved?.settings.drawing?.palette { drawingPalette = set }
         resumeKept = saved.flatMap { saved in
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
         }
@@ -529,8 +559,23 @@ final class CreateModel {
             previewStyle == .painting && saved == nil ? Self.firstDraftHandler(for: self, load: load) : nil
         loadTask = Task {
             do {
-                let decoded = try await decode()
+                var decoded = try await decode()
                 try Task.checkCancellation()
+                if drawing {
+                    // The sheet cleaned is the photo from here on: the painting's own photo, what
+                    // the comparison and the photo peek show, and what a regeneration reads.
+                    if !cleaned { decoded = try await Self.cleanDrawing(decoded) }
+                    try Task.checkCancellation()
+                    source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
+                    draftImage = nil
+                    if let saved {
+                        resume(saved, suggestion: nil)
+                    } else {
+                        phase = .ready
+                        startGeneration(draftFirst: false)
+                    }
+                    return
+                }
                 source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
                 phase = .analyzing
                 let prepared = try await Self.prepare(decoded, lineArt: lineArt)
@@ -689,7 +734,8 @@ final class CreateModel {
     /// a painting's show is the same each time it is made. None for a blank start: its areas are
     /// the painter's, not the steps the show plays, and the painting opens as it does without one.
     func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
-        guard let source, draft.refinements.start == .generated else { return nil }
+        // A drawing's painting has no steps the show plays either.
+        guard let source, draft.refinements.start == .generated, draft.settings.drawing == nil else { return nil }
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
@@ -715,6 +761,7 @@ final class CreateModel {
         decision = suggestion
         apply(saved.settings)
         lines = saved.lines
+        if let set = saved.settings.drawing?.palette { drawingPalette = set }
         if let suggestion { settingsOrigin = settings == suggestion.settings ? .suggested : .custom }
         phase = .generating
         startGeneration(draftFirst: false)
@@ -1353,6 +1400,15 @@ final class CreateModel {
     @concurrent
     private static func decode(data: Data) async throws -> Decoded {
         try Decoded(PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
+    }
+
+    /// The photo of a drawing cleaned: its sheet found and pulled square, the paper white, the
+    /// ink alone kept (`DrawingScan.clean`).
+    @concurrent
+    private static func cleanDrawing(_ decoded: Decoded) async throws -> Decoded {
+        let cleaned = try DrawingScan.clean(decoded.image, cancel: .task)
+        Log.create.notice("Drawing cleaned: \(cleaned.picture.width)×\(cleaned.picture.height), sheet pulled square \(cleaned.rectified, privacy: .public)")
+        return try Decoded(cleaned.picture)
     }
 
     /// Subject importance and hints, and for a coloring book the edge map and eyes (once per

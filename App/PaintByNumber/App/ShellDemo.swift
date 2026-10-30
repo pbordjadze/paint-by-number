@@ -57,6 +57,10 @@ import PaintCore
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
 ///   suggestion (the chip offers Reset to Suggested); the second with every localized string
 ///   twice as long.
+/// - `create-drawing`, `create-drawing-dark`: the create flow's preview of a drawing (Start from
+///   a Drawing, SideStore and Debug builds): a page of shapes and strokes drawn at launch and
+///   photographed askew on a dark table (`drawingPhoto`), cleaned and made a painting, the
+///   palette set's picker in the card; ready once the painting is final.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
@@ -92,7 +96,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createSuggested,
-         createCustom, createFromFile, createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createCustom, createFromFile, createDrawing, createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
@@ -128,6 +132,7 @@ enum ShellDemo: Equatable {
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
+        case "create-drawing", "create-drawing-dark": .createDrawing
         case "create-unlock", "create-unlock-dark", "create-unlock-long-text": .createUnlock
         case "gallery-tip", "gallery-tip-dark", "gallery-tip-long-text": .galleryTip
         case "gallery-tip-gear": .galleryTipGear
@@ -185,8 +190,11 @@ enum ShellDemo: Equatable {
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
-            || self == .createTip
+            || self == .createTip || self == .createDrawing
     }
+
+    /// The create flow opens on the preview of a drawing (`drawingPhoto`).
+    var opensDrawing: Bool { self == .createDrawing }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
     var opensSamples: Bool { self == .createSamples || self == .createSamplesPaintings || self == .createSamplesPhotographs }
@@ -355,7 +363,7 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createDrawing, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         }
@@ -380,6 +388,78 @@ enum ShellDemo: Equatable {
 
     /// What `gallery-received` opens: the first fixed picture refined as `create-refine` does it,
     /// written with its photo as Send Template… writes it.
+    /// A phone photo of a drawing, made at launch for `create-drawing` (and `DrawingFlowTests`):
+    /// a sheet with a house, a sun, a tree and a wavy ground line, a solid black door and a
+    /// hatched roof, drawn in ink, laid askew on a dark table under a light that falls off to one
+    /// side. JPEG data, as the camera gives it.
+    static func drawingPhoto() -> Data? {
+        let width = 1400, height = 1800
+        guard let context = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(red: 0.3, green: 0.2, blue: 0.14, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        // The sheet, a little askew, with the light falling off toward its bottom-left corner.
+        context.saveGState()
+        context.translateBy(x: 700, y: 900)
+        context.rotate(by: 0.05)
+        context.translateBy(x: -550, y: -720)
+        let sheet = CGRect(x: 0, y: 0, width: 1100, height: 1440)
+        context.clip(to: sheet)
+        let colors = [CGColor(red: 0.97, green: 0.96, blue: 0.93, alpha: 1), CGColor(red: 0.72, green: 0.7, blue: 0.66, alpha: 1)]
+        if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1]) {
+            context.drawLinearGradient(gradient, start: CGPoint(x: 1100, y: 1440), end: CGPoint(x: 0, y: 0), options: [])
+        }
+        context.setStrokeColor(red: 0.08, green: 0.07, blue: 0.09, alpha: 1)
+        context.setFillColor(red: 0.08, green: 0.07, blue: 0.09, alpha: 1)
+        context.setLineWidth(9)
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        // The ground, wavy, then the house, its roof hatched, its door solid, the sun and a tree.
+        let ground = CGMutablePath()
+        ground.move(to: CGPoint(x: 60, y: 420))
+        ground.addCurve(to: CGPoint(x: 1040, y: 400), control1: CGPoint(x: 400, y: 300), control2: CGPoint(x: 700, y: 520))
+        context.addPath(ground)
+        context.strokePath()
+        context.stroke(CGRect(x: 240, y: 420, width: 420, height: 330))
+        let roof = CGMutablePath()
+        roof.move(to: CGPoint(x: 200, y: 750))
+        roof.addLine(to: CGPoint(x: 450, y: 1010))
+        roof.addLine(to: CGPoint(x: 700, y: 750))
+        roof.closeSubpath()
+        context.addPath(roof)
+        context.strokePath()
+        context.setLineWidth(4)
+        for k in 0..<9 {
+            let y = CGFloat(770 + k * 25)
+            let half = (y - 750) * 250 / 260
+            context.move(to: CGPoint(x: 450 - (250 - half), y: y))
+            context.addLine(to: CGPoint(x: 450 + (250 - half), y: y))
+        }
+        context.strokePath()
+        context.setLineWidth(9)
+        context.fill(CGRect(x: 400, y: 420, width: 100, height: 170))
+        context.stroke(CGRect(x: 280, y: 560, width: 90, height: 90))
+        context.strokeEllipse(in: CGRect(x: 800, y: 1080, width: 180, height: 180))
+        for k in 0..<12 {
+            let angle = CGFloat(k) / 12 * 2 * .pi
+            context.move(to: CGPoint(x: 890 + cos(angle) * 110, y: 1170 + sin(angle) * 110))
+            context.addLine(to: CGPoint(x: 890 + cos(angle) * 150, y: 1170 + sin(angle) * 150))
+        }
+        context.strokePath()
+        context.stroke(CGRect(x: 850, y: 420, width: 50, height: 200))
+        context.strokeEllipse(in: CGRect(x: 760, y: 580, width: 230, height: 260))
+        // A caption in short strokes, a row of small loops.
+        for k in 0..<14 {
+            let x = CGFloat(300 + k * 36)
+            context.strokeEllipse(in: CGRect(x: x, y: 200, width: 18, height: 26))
+        }
+        context.restoreGState()
+        guard let image = context.makeImage() else { return nil }
+        return ImageCodec.jpegData(image, quality: 0.85)
+    }
+
     static func sentPaintingFile() async -> URL? {
         guard let sample = fixedPictures.first else { return nil }
         do {

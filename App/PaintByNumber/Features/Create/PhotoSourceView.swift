@@ -35,6 +35,13 @@ struct PhotoSourceView: View {
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
+    #if UNRELEASED
+    /// Start from a Drawing (painting-company row 190): the photo library or the camera for a
+    /// photo of a drawing on paper, which `CreateModel.load(drawing:)` cleans and traces.
+    @State private var isChoosingDrawing = false
+    @State private var drawingItem: PhotosPickerItem?
+    @State private var isPhotographingDrawing = false
+    #endif
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
@@ -90,7 +97,40 @@ struct PhotoSourceView: View {
                     Button("Take Photo", systemImage: "camera") { isShowingCamera = true }
                 }
             }
+            #if UNRELEASED
+            ToolbarItem(placement: .primaryAction) {
+                Menu("From a Drawing", systemImage: "pencil.and.outline") {
+                    Button("Choose Photo of a Drawing…", systemImage: "photo") { isChoosingDrawing = true }
+                    if cameraAvailable {
+                        Button("Photograph a Drawing", systemImage: "camera") { isPhotographingDrawing = true }
+                    }
+                }
+                .help("Start a painting from a photo of a line drawing on paper")
+                .accessibilityIdentifier("from-drawing")
+                .photosPicker(isPresented: $isChoosingDrawing, selection: $drawingItem, matching: .images, preferredItemEncoding: .current)
+            }
+            #endif
         }
+        #if UNRELEASED
+        .onChange(of: drawingItem) { _, item in
+            guard let item else { return }
+            drawingItem = nil
+            PaintTips.photoChosen()
+            model.load(drawing: item)
+            onPicked()
+        }
+        .fullScreenCover(isPresented: $isPhotographingDrawing) {
+            CameraPicker { data in
+                PaintTips.photoChosen()
+                model.load(drawingData: data)
+                onPicked()
+            } onFailure: {
+                model.fail(.cameraCapture)
+                onPicked()
+            }
+            .ignoresSafeArea()
+        }
+        #endif
         .onChange(of: libraryItems) { _, items in
             guard let item = items.first else { return }
             // Clearing the selection lets the same photo be picked again after coming back. The
