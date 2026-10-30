@@ -105,10 +105,53 @@ enum LayeredLines {
         var detailRegions: [UInt32] = []
     }
 
+    /// How the traced centerlines are cleaned and closed (stage 2 and the end of stage 3), in
+    /// working pixels per `unit` and as factors on `gapBridging`: a photo's and a drawing's.
+    struct Tracing {
+        /// `popBubbles`' perimeter, `pruneSpurs`' and `pruneFragments`' lengths, and how far
+        /// an end heading into the frame is led to it, per unit.
+        var bubblePerimeter: Float = 30
+        var spur: Float = 8
+        var fragment: Float = 4
+        var frameReach: Float = 14
+        /// Free-end reach per layer (outline, detail, texture), as a factor on `gapBridging`.
+        var closeReach: [Float] = LayeredLines.closeReach
+        /// The map is ink, not a detector's response: its centerlines are the skeleton of the
+        /// pixels at or above `skeletonThreshold` (thinning), not the ridges of a soft response,
+        /// so a thick stroke and a hair line each give one line, junctions whole.
+        var skeleton = false
+        var skeletonThreshold: Float = 0.3
+        /// Ink is full strength everywhere, so for a drawing the lines' strength is capped at
+        /// `strengthCap` and the clutter (`LineDetection.clutter`) scaled by `clutterGain`:
+        /// hatching, fur and scribbled shadows then lift the outline threshold out of reach
+        /// (`LineLayering.layered`: a line of strength s is an outline where s ≥ t + (1 − t) ×
+        /// clutter) and draw inside the cell around them, while a long stroke stays an outline
+        /// by its length (`LineLayering.longOutline`). A mild `clutterDamping` on the strength
+        /// (× (1 − this × clutter)) sends the merges of cells too small for a number across the
+        /// crowded lines first (`CellMap.mergeTiny` goes across the weakest line).
+        var strengthCap: Float = 1
+        var clutterGain: Float = 1
+        var clutterDamping: Float = 0
+        /// The least room (`interiorDistance`) a cell needs for its number, in working pixels
+        /// at a 1500-px canvas, scaled with it, when more than the segmentation's own
+        /// (`SegmentationParameters.minRadius(digits:)`): the strips between hatch strokes
+        /// are not areas to paint.
+        var roomFloor: Float = 0
+
+        /// The learned detectors' maps, as the books were measured.
+        static let photo = Tracing()
+        /// A drawing's ink (`DrawingScan`): its strokes end where the artist lifted the pen, so
+        /// a free end reaches only half the gap bridging for a line to meet (a hatch stroke
+        /// ending near an outline stays a stroke; a broken outline closes along its own
+        /// direction in `bridgeGaps`); the spurs thinning leaves at a thick stroke's corners
+        /// go as a photo's do.
+        static let drawing = Tracing(closeReach: [0.5, 0.5, 0.5], skeleton: true, strengthCap: 0.7, clutterGain: 2, clutterDamping: 0.3, roomFloor: 8)
+    }
+
     /// `photo` is the photo as given (any size), whose color a fill reads.
     static func apply(
         _ segmentation: Segmentation, input: LineArtInput, importance: [Float]?, settings: GenerationSettings,
-        photo: RGBAImage, writing: Writing? = nil, cancel: CancellationCheck, clock: StageClock
+        photo: RGBAImage, writing: Writing? = nil, tracing: Tracing = .photo, cancel: CancellationCheck, clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
         // A coloring book has no faint lines: nothing is drawn below the detail threshold, so the
@@ -126,6 +169,16 @@ enum LayeredLines {
         let mask = try clock.measure("lineArt.detect") { () throws -> (mask: [Bool], strength: [Float], clutter: [Float]) in
             let strength = LineDetection.strength(input.edges, width: w, height: h)
             try cancel.throwIfCancelled()
+            if tracing.skeleton {
+                var mask = strength.map { $0 >= tracing.skeletonThreshold }
+                Thinning.thin(&mask, width: w, height: h)
+                try cancel.throwIfCancelled()
+                let clutter = try LineDetection.clutter(mask, width: w, height: h, cancel: cancel)
+                var damped = strength, crowded = clutter
+                for i in crowded.indices { crowded[i] = min(1, tracing.clutterGain * clutter[i]) }
+                for i in damped.indices { damped[i] = min(damped[i], tracing.strengthCap) * (1 - tracing.clutterDamping * crowded[i]) }
+                return (mask, damped, crowded)
+            }
             let ridges = try LineDetection.ridges(strength, width: w, height: h, scale: mapScale, cancel: cancel)
             try cancel.throwIfCancelled()
             let mask = try LineDetection.lines(
@@ -149,13 +202,13 @@ enum LayeredLines {
         let strokes = clock.measure("lineArt.trace") { () -> [StrokeGraph.Stroke] in
             var g = StrokeGraph.trace(mask.mask, strength: mask.strength, width: w, height: h)
             g.mergeDegree2()
-            g.popBubbles(perimeter: 30 * unit)
-            g.pruneSpurs(8 * unit)
-            g.pruneFragments(4 * unit)
+            g.popBubbles(perimeter: tracing.bubblePerimeter * unit)
+            g.pruneSpurs(tracing.spur * unit)
+            g.pruneFragments(tracing.fragment * unit)
             g.bridgeGaps(s.gapBridging)
-            g.pruneSpurs(8 * unit, rounds: 1)
+            g.pruneSpurs(tracing.spur * unit, rounds: 1)
             g.pruneFragments(s.minimumStrokeLength)
-            g.extendToFrame(width: w, height: h, reach: 14 * unit)
+            g.extendToFrame(width: w, height: h, reach: tracing.frameReach * unit)
             return g.strokes(sigma: 4 * s.lineSmoothing)
         }
         try cancel.throwIfCancelled()
@@ -183,7 +236,7 @@ enum LayeredLines {
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
             stats.endsClosed = LineLayering.closeFreeEnds(
-                &lines, walls: first, colorEdge: colorEdge, reach: closeReach.map { $0 * s.gapBridging })
+                &lines, walls: first, colorEdge: colorEdge, reach: tracing.closeReach.map { $0 * s.gapBridging })
             return lines
         }
         stats.strokes = lines.count
@@ -191,7 +244,7 @@ enum LayeredLines {
 
         let plan = try Self.plan(
             segmentation, lines: lines, edited: nil, settings: settings, photo: photo, writing: writing, stats: stats,
-            cancel: cancel, clock: clock)
+            roomFloor: tracing.roomFloor, cancel: cancel, clock: clock)
         let edits = LineEdits.sanitized(input.edits)
         guard !edits.isEmpty else { return plan }
 
@@ -211,7 +264,7 @@ enum LayeredLines {
         stats.erasures = edited.drawing.erasures
         return try Self.plan(
             segmentation, lines: edited.walls.lines, edited: edited, settings: settings, photo: photo, writing: writing,
-            stats: stats, cancel: cancel, clock: clock)
+            stats: stats, roomFloor: tracing.roomFloor, cancel: cancel, clock: clock)
     }
 
     /// The painter's edits applied twice (`LineEdits.apply`): to the lines the drawing was made
@@ -228,7 +281,8 @@ enum LayeredLines {
     /// the template draws exactly (`Plan.exact`), are the edited drawing.
     static func plan(
         _ segmentation: Segmentation, lines: [DrawnLine], edited: Edited?, settings: GenerationSettings,
-        photo: RGBAImage, writing: Writing?, stats: LineArtStats, cancel: CancellationCheck, clock: StageClock
+        photo: RGBAImage, writing: Writing?, stats: LineArtStats, roomFloor: Float = 0, cancel: CancellationCheck,
+        clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
         let w = segmentation.width, h = segmentation.height
@@ -237,9 +291,10 @@ enum LayeredLines {
         var paints = segmentation.palette
         var palette = paints.map(\.oklab)
         let params = SegmentationParameters(settings: settings, width: w, height: h)
+        let floor = roomFloor * Float(max(w, h)) / 1500
         let need: CellMap.Need = { paint, kept in
             let digits = LabelSizing.digitCount(colorIndex: paint)
-            return kept ? SegmentationParameters.detailMinRadius(digits: digits) : params.minRadius(digits: digits)
+            return kept ? SegmentationParameters.detailMinRadius(digits: digits) : max(params.minRadius(digits: digits), floor)
         }
         let walls = LineLayering.walls(lines, width: w, height: h)
         var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in

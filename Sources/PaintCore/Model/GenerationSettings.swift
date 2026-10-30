@@ -12,10 +12,15 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var lineArt: LineArtSettings
     /// Expert multipliers on the segmentation's derived knobs (default: none).
     public var tuning: PipelineTuning
+    /// Set, the template is made from a drawing (`DrawingSettings`: the photo is a line drawing
+    /// on paper whose lines bound the areas, and the paints come from a palette set), not from
+    /// a photo's colors. Nil, the default and every photo's, leaves the photo path as it is.
+    public var drawing: DrawingSettings?
 
     public init(
         colorCount: Int = 24, detail: Float = 0.5, smoothness: Float = 0.5, seed: UInt64 = 0x5eed,
-        lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning()
+        lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning(),
+        drawing: DrawingSettings? = nil
     ) {
         self.colorCount = colorCount
         self.detail = detail
@@ -23,10 +28,11 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         self.seed = seed
         self.lineArt = lineArt
         self.tuning = tuning
+        self.drawing = drawing
     }
 
     private enum CodingKeys: String, CodingKey {
-        case colorCount, detail, smoothness, seed, lineArt, tuning
+        case colorCount, detail, smoothness, seed, lineArt, tuning, drawing
     }
 
     /// The four original fields are required as before; the later ones default, so settings
@@ -40,6 +46,13 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         seed = try c.decode(UInt64.self, forKey: .seed)
         lineArt = ((try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)) ?? nil) ?? LineArtSettings(style: .classic)
         tuning = (try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)) ?? PipelineTuning()
+        // A drawing's settings a later app wrote in a way this one can't read still mark the
+        // painting as one from a drawing, at this app's defaults.
+        if c.contains(.drawing) {
+            drawing = (try? c.decodeIfPresent(DrawingSettings.self, forKey: .drawing)) ?? DrawingSettings()
+        } else {
+            drawing = nil
+        }
     }
 
     public static let colorCountRange = 6...150
@@ -62,6 +75,7 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         s.smoothness = smoothness.isFinite ? min(max(smoothness, 0), 1) : GenerationSettings().smoothness
         s.lineArt = lineArt.normalized
         s.tuning = tuning.normalized
+        s.drawing = drawing?.normalized
         return s
     }
 
