@@ -49,6 +49,14 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
+  - `Drawing/`: Start from a Drawing (painting-company row 190; `docs/start-from-a-drawing.md`):
+    `DrawingScan` (a photo of a drawing → the sheet found, pulled square and cleaned, its ink at
+    the working size, its solid fills, the rows of small writing), `DrawingGenerator` (the path
+    `TemplateGenerator.generate` takes for `GenerationSettings.drawing`: the ink thinned and
+    traced by the book's own stages with `LayeredLines.Tracing.drawing`, hatching one area,
+    writing through `Writing`), `DrawingPalette` (the sets and how their paints are laid so
+    neighbours differ); `Model/DrawingSettings.swift` is what a painting records. Nothing
+    changes for a photo: `drawing` is nil and absent from its settings.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished
@@ -100,6 +108,12 @@ before planning app work).
   `AutoSettingsTests.parrotsDecisionIsPinned`, when a change moves that decision.
 - `Tests/Corpus`: the six photos the regression gate and the CI benchmark run on, pinned by name,
   never shipped (provenance and credits in its `README.md`).
+- `Tests/Drawings`: eighteen freely licensed line drawings and a simulated phone photo of each
+  (`tools/drawings/phone_photo.py`), the test set of Start from a Drawing, never shipped
+  (provenance in its `README.md`); `tools/drawings/convert.py` converts them with `pbn drawing`
+  and lays each out for a look (`docs/start-from-a-drawing.md` has the critic rounds);
+  `tools/drawings/demo_page.py` draws the create flow's demo page (`ShellDemo.drawingPhoto`) for
+  `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
   `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
@@ -133,7 +147,8 @@ before planning app work).
   deploy workflow needs the secrets `CLOUDFLARE_API_TOKEN` and `FEEDBACK_GITHUB_TOKEN` and writes
   the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
-  `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
+  `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`,
+  `start-from-a-drawing.md`. Plans, agent briefs and
   per-agent reports are not committed here (they live in painting-company; a commit message says
   what changed and why); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
@@ -197,6 +212,7 @@ logs the tuned ones.
 | Line-art tuning (always) | `tools/eval.py book`: `docs/coloring-book.md` › Measuring a book |
 | Suggested settings | `pbn suggest <image> --out <dir>`, `tools/auto_sheet.py <dir>` |
 | Refine's gestures, off the device | `pbn refine <photo> <gestures.json> --out <dir> --edges … --lines …`, `tools/refine_sheet.py <dir>` |
+| A drawing, and the whole drawing set | `pbn drawing <photo.ppm> <dir> [--palette sea]`; `tools/drawings/convert.py --out <dir>` |
 
 - Look at the PNGs with the Read tool. An eval sheet's second row is the raw region raster, a 2×
   `boundaries.png` (best for judging segmentation shapes) and the palette.
@@ -205,7 +221,7 @@ logs the tuned ones.
   they embed (listed on pbn's `Metrics`); a field leaves only with its readers.
   `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0.
 - pbn has no tests: CI runs `generate`, `check` and `bench`; run `suggest`, `trace`, `names`,
-  `edit`, `refine` and `practice` by hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
+  `edit`, `refine`, `practice` and `drawing` by hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
   entry. `pbn trace`'s `valid` skips the label-room check: run `pbn check`. pbn is classic unless
   `--line-style` says otherwise and reads PPM/PGM (other formats only on Apple platforms);
   `tools/eval.py` needs node (`cd tools && npm ci`) and Pillow, the others Pillow. pbn has no

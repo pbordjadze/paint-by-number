@@ -117,6 +117,12 @@ struct CreateFlowView: View {
             // A dropped photo or demo opens straight on the preview (pushing while the cover
             // is still being presented would stall the presentation).
             guard model.source == nil else { return }
+            #if DEBUG
+            if ShellDemo.current?.opensDrawing == true, let drawing = ShellDemo.drawingPhoto() {
+                model.load(drawingData: drawing)
+                return
+            }
+            #endif
             if let droppedPhoto {
                 model.load(imageData: droppedPhoto, title: droppedTitle)
             } else if let resuming {
@@ -148,7 +154,7 @@ struct CreateFlowView: View {
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).
             if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil)
-                || ShellDemo.current == .createFromFile {
+                || ShellDemo.current == .createFromFile || ShellDemo.current?.opensDrawing == true {
                 DemoMode.markReady()
             }
         }
@@ -184,13 +190,22 @@ struct CreateFlowView: View {
 
     @ViewBuilder
     private var root: some View {
-        if droppedPhoto != nil || openingSample != nil || resuming != nil {
+        if droppedPhoto != nil || openingSample != nil || resuming != nil || opensOnDrawing {
             TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() }, pictureProbe: previewPicture)
         } else {
             PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
                 path = [.preview]
             }
         }
+    }
+
+    /// The `create-drawing` demos open on the drawing's preview.
+    private var opensOnDrawing: Bool {
+        #if DEBUG
+        ShellDemo.current?.opensDrawing == true
+        #else
+        false
+        #endif
     }
 
     /// Settings › Preview, or the scenario's (demo launches).

@@ -35,6 +35,14 @@ struct PhotoSourceView: View {
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
+    #if UNRELEASED
+    /// Start from a Drawing (painting-company row 190): a long press of the photo button
+    /// (Browse All… on iPad, Choose Photo on iPhone) offers the photo library or the camera for
+    /// a photo of a drawing on paper, which `CreateModel.load(drawing:)` cleans and traces. The
+    /// same picker and camera serve both; this says which way the next pick goes, set by
+    /// whichever button opened them. Off the toolbar on purpose: findable, not offered.
+    @State private var picksDrawing = false
+    #endif
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
@@ -78,7 +86,7 @@ struct PhotoSourceView: View {
             // iPhone's Photos pane is Choose Photo, the same picker: no second way to it here.
             if embedsPicker {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
+                    browseAllButton
                         .help("Browse all photos and albums")
                         // Give the full picker its own presenter rather than the inline picker's
                         // ancestor: Browse All once stayed on the photo step with no sheet.
@@ -87,7 +95,7 @@ struct PhotoSourceView: View {
             }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Take Photo", systemImage: "camera") { isShowingCamera = true }
+                    Button("Take Photo", systemImage: "camera") { showCamera() }
                 }
             }
         }
@@ -102,6 +110,14 @@ struct PhotoSourceView: View {
         .onChange(of: browsedItem) { _, item in
             guard let item else { return }
             browsedItem = nil
+            #if UNRELEASED
+            if picksDrawing {
+                PaintTips.photoChosen()
+                model.load(drawing: item)
+                onPicked()
+                return
+            }
+            #endif
             pick(item)
         }
         .onAppear { PaintTips.newPaintingOpened() }
@@ -109,7 +125,11 @@ struct PhotoSourceView: View {
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
+                #if UNRELEASED
+                if picksDrawing { model.load(drawingData: data) } else { model.load(imageData: data) }
+                #else
                 model.load(imageData: data)
+                #endif
                 onPicked()
             } onFailure: {
                 model.fail(.cameraCapture)
@@ -171,11 +191,15 @@ struct PhotoSourceView: View {
                 .font(.system(size: 56, weight: .light))
                 .foregroundStyle(Theme.accent)
                 .accessibilityHidden(true)
-            Button("Choose Photo", systemImage: "photo") { isBrowsingAll = true }
+            Button("Choose Photo", systemImage: "photo") { browseAll() }
                 .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
                 .controlSize(.large)
                 .accessibilityIdentifier("choose-photo")
+                #if UNRELEASED
+                // The drawing's way in, a long press: a context menu keeps the button as it is.
+                .contextMenu { drawingItems }
+                #endif
                 // The full picker's presenter on iPhone, as Browse All's button is on iPad.
                 .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         }
@@ -281,6 +305,58 @@ struct PhotoSourceView: View {
     private var tileWidth: CGFloat {
         let column = (isWide ? samplesWidth : width - 2 * horizontalPadding) - 8
         return column > 0 ? min(tileMinimumWidth, column) : tileMinimumWidth
+    }
+
+    /// iPad's toolbar button for the full picker. A long press offers the drawing's way in
+    /// (SideStore and Debug builds): the same button, with a menu behind it.
+    @ViewBuilder
+    private var browseAllButton: some View {
+        #if UNRELEASED
+        Menu {
+            drawingItems
+        } label: {
+            Label("Browse All…", systemImage: "photo.on.rectangle.angled")
+        } primaryAction: {
+            browseAll()
+        }
+        #else
+        Button("Browse All…", systemImage: "photo.on.rectangle.angled") { browseAll() }
+        #endif
+    }
+
+    #if UNRELEASED
+    /// Start from a Drawing's items, behind a long press of the photo button.
+    @ViewBuilder
+    private var drawingItems: some View {
+        Button("Choose Photo of a Drawing…", systemImage: "photo") {
+            picksDrawing = true
+            isBrowsingAll = true
+        }
+        .accessibilityIdentifier("choose-drawing")
+        if cameraAvailable {
+            Button("Photograph a Drawing", systemImage: "camera") {
+                picksDrawing = true
+                isShowingCamera = true
+            }
+            .accessibilityIdentifier("photograph-drawing")
+        }
+    }
+    #endif
+
+    /// The full picker, for a photo.
+    private func browseAll() {
+        #if UNRELEASED
+        picksDrawing = false
+        #endif
+        isBrowsingAll = true
+    }
+
+    /// The camera, for a photo.
+    private func showCamera() {
+        #if UNRELEASED
+        picksDrawing = false
+        #endif
+        isShowingCamera = true
     }
 
     /// Shared by the inline picker and Browse All.

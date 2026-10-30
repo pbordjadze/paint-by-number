@@ -45,6 +45,10 @@
       "comment" : "Refine screen, Select's bar: a button that opens the selected area's card, where it takes another color or paint",
       "extractionState" : "manual"
     },
+    "Choose Photo of a Drawing…" : {
+      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): pick a photo of a drawing on paper from the photo library, to start a painting from it",
+      "extractionState" : "manual"
+    },
     "Color" : {
       "comment" : "Refine screen, Colors: VoiceOver label of the color picker that gives the paint picked a new color",
       "extractionState" : "manual"
@@ -67,6 +71,70 @@
     },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
+      "extractionState" : "manual"
+    },
+    "drawing.palette.garden" : {
+      "comment" : "A palette set for a painting from a drawing: pinks, greens and lilac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garden"
+          }
+        }
+      }
+    },
+    "drawing.palette.sea" : {
+      "comment" : "A palette set for a painting from a drawing: blues, teals and sand",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sea"
+          }
+        }
+      }
+    },
+    "drawing.palette.earth" : {
+      "comment" : "A palette set for a painting from a drawing: ochres, umbers and olive",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earth"
+          }
+        }
+      }
+    },
+    "drawing.palette.pastels" : {
+      "comment" : "A palette set for a painting from a drawing: soft and pale",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastels"
+          }
+        }
+      }
+    },
+    "drawing.palette.crayons" : {
+      "comment" : "A palette set for a painting from a drawing: bright primaries",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crayons"
+          }
+        }
+      }
+    },
+    "Photograph a Drawing" : {
+      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): take a photo of a drawing on paper with the camera, to start a painting from it",
       "extractionState" : "manual"
     },
     "Two fingers zoom and move. Tap with two to undo." : {
@@ -6002,7 +6070,7 @@
       "extractionState" : "manual"
     },
     "Palette" : {
-      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order; on the Refine screen, VoiceOver label of the row of the painting's paints",
+      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order; on the Refine screen, VoiceOver label of the row of the painting's paints; in the create flow's card, the picker of the palette set a painting from a drawing takes its paints from",
       "extractionState" : "manual"
     },
     "palette.order.darkToLight" : {
@@ -6239,6 +6307,10 @@
     },
     "Pen" : {
       "comment" : "Feedback mode's tools on the painting screen: the pen, for circling and writing on the painting; the Refine screen's pen, which draws lines into a new painting's drawing (button label)",
+      "extractionState" : "manual"
+    },
+    "Drawing" : {
+      "comment" : "Caption of the cleaned sheet in the before/after comparison of a painting from a drawing (Start from a Drawing), in the Photo caption's place",
       "extractionState" : "manual"
     },
     "Photo" : {

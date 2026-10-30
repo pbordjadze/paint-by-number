@@ -220,7 +220,7 @@ struct TemplatePreviewView: View {
 
     /// The comparison can fill the page: stacked in a compact window, where the controls leave
     /// it a fraction of the screen.
-    private var offersEnlarging: Bool { isCompact && !isSideBySide }
+    private var offersEnlarging: Bool { isCompact && !isSideBySide && !model.isDrawing }
     private var isEnlarged: Bool { isTuning && !isSideBySide }
 
     #if UNRELEASED
@@ -348,7 +348,9 @@ struct TemplatePreviewView: View {
             if let source = model.source {
                 CompareView(
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
-                    afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    afterLabel: model.previewStyle.name,
+                    beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
+                    aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }
@@ -421,15 +423,17 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
-            if Self.foldsSettings {
-                HStack(spacing: 12) {
-                    originChip
-                    adjustButton
-                }
+            #if UNRELEASED
+            if model.isDrawing {
+                // A drawing has no settings to suggest or tune: its paints come from a set.
+                palettePicker
             } else {
-                originChip
+                originRow
             }
-            if showsSettings {
+            #else
+            originRow
+            #endif
+            if showsSettings && !model.isDrawing {
                 if isCompact && !isSideBySide {
                     // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
                     // the comparison large and asks one thing at once.
@@ -471,6 +475,58 @@ struct TemplatePreviewView: View {
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
     }
+
+    /// The settings' origin, and in SideStore and Debug builds Adjust beside it (`foldsSettings`).
+    @ViewBuilder
+    private var originRow: some View {
+        if Self.foldsSettings {
+            HStack(spacing: 12) {
+                originChip
+                adjustButton
+            }
+        } else {
+            originChip
+        }
+    }
+
+    #if UNRELEASED
+    /// Start from a Drawing: the palette set the drawing's paints come from (`DrawingPalette`),
+    /// its twelve paints shown as a row of dots, in the sliders' place.
+    private var palettePicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker("Palette", selection: $model.drawingPalette) {
+                ForEach(DrawingPalette.Set.allCases, id: \.self) { set in
+                    Text(Self.paletteName(set)).tag(set)
+                }
+            }
+            .pickerStyle(.menu)
+            .disabled(isStarting)
+            .accessibilityIdentifier("drawing-palette")
+            .onChange(of: model.drawingPalette) { model.settingsChanged() }
+            HStack(spacing: 6) {
+                ForEach(Array(DrawingPalette.colors(of: model.drawingPalette).enumerated()), id: \.offset) { _, paint in
+                    Circle()
+                        .fill(Color(red: Double(paint.rgb.x), green: Double(paint.rgb.y), blue: Double(paint.rgb.z)))
+                        .overlay { Circle().strokeBorder(Theme.hairline, lineWidth: 0.5) }
+                        .frame(width: 16, height: 16)
+                }
+            }
+            .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// A palette set's name.
+    private static func paletteName(_ set: DrawingPalette.Set) -> String {
+        switch set {
+        case .crayons: String(localized: "drawing.palette.crayons", defaultValue: "Crayons", comment: "A palette set for a painting from a drawing: bright primaries")
+        case .pastels: String(localized: "drawing.palette.pastels", defaultValue: "Pastels", comment: "A palette set for a painting from a drawing: soft and pale")
+        case .earth: String(localized: "drawing.palette.earth", defaultValue: "Earth", comment: "A palette set for a painting from a drawing: ochres, umbers and olive")
+        case .sea: String(localized: "drawing.palette.sea", defaultValue: "Sea", comment: "A palette set for a painting from a drawing: blues, teals and sand")
+        case .garden: String(localized: "drawing.palette.garden", defaultValue: "Garden", comment: "A palette set for a painting from a drawing: pinks, greens and lilac")
+        }
+    }
+    #endif
 
     /// The enlarged preview's controls: the slider of one setting, chosen above it, and the
     /// template's summary. Lines comes first, the lines being what a large preview is for.

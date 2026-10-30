@@ -16,6 +16,8 @@ struct CompareView: View {
     let afterID: String
     /// Names the template layer on the trailing side (already localized).
     let afterLabel: String
+    /// The caption of the photo's side: a drawing's cleaned sheet is captioned Drawing.
+    var beforeLabel: String = String(localized: "Photo")
     let aspectRatio: CGFloat
     /// The space the painting screen fits a painting into (the window): line art is drawn as
     /// heavy as the canvas would draw it at the picture's size relative to that.
@@ -321,7 +323,7 @@ struct CompareView: View {
     private func labels(split: CGFloat) -> some View {
         // Tight enough for both words on a tall photo's narrow preview on a phone.
         HStack(spacing: 6) {
-            caption(String(localized: "Photo")).opacity(split > 0.16 ? 1 : 0)
+            caption(beforeLabel).opacity(split > 0.16 ? 1 : 0)
             Spacer(minLength: 0)
             caption(afterLabel).opacity(split < 0.84 ? 1 : 0)
         }

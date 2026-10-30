@@ -1,21 +1,12 @@
 import Foundation
 import PaintCore
 
-func runGenerate(_ options: Options) throws {
-    guard options.positional.count == 2 else { fail("usage: pbn generate <in.ppm> <outdir> [options]") }
-    let image = loadImage(options.positional[0])
-    let outDir = URL(fileURLWithPath: options.positional[1])
-    try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-    let importance = loadImportance(options.importance)
-    let lineArtInput = loadLineArt(options)
-    let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
-    // Auto's decision carries the line art and tuning asked for.
-    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
-    let observer: PipelineSnapshot.Observer?
+/// `--snapshots`: the making-of pictures written into its directory, at most 1024 px long.
+func snapshotObserver(_ options: Options) throws -> PipelineSnapshot.Observer? {
     if let path = options.snapshots {
         let dir = URL(fileURLWithPath: path)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        observer = { snapshot in
+        return { snapshot in
             let data: Data
             let ext: String
             switch snapshot.picture {
@@ -31,9 +22,21 @@ func runGenerate(_ options: Options) throws {
             let name = snapshot.stage == .working ? "working-image" : snapshot.stage.rawValue
             try data.write(to: dir.appendingPathComponent("\(name).\(ext)"))
         }
-    } else {
-        observer = nil
     }
+    return nil
+}
+
+func runGenerate(_ options: Options) throws {
+    guard options.positional.count == 2 else { fail("usage: pbn generate <in.ppm> <outdir> [options]") }
+    let image = loadImage(options.positional[0])
+    let outDir = URL(fileURLWithPath: options.positional[1])
+    try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    let importance = loadImportance(options.importance)
+    let lineArtInput = loadLineArt(options)
+    let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
+    // Auto's decision carries the line art and tuning asked for.
+    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
+    let observer = try snapshotObserver(options)
     let output: TemplateGenerator.Output
     do {
         output = try generator.generate(
@@ -57,6 +60,49 @@ func runGenerate(_ options: Options) throws {
     try writePPM(working, "working.ppm", in: outDir)
     try writePPM(boundaryRaster(t), "boundaries.ppm", in: outDir)
     if t.lineArt != nil { try writePPM(areasRaster(t, openings: m.lineArt?.openings ?? []), "areas.ppm", in: outDir) }
+    try writeSVGs(t, selected: m.lineArt?.selectedColor, to: outDir)
+    print(String(data: json, encoding: .utf8)!)
+}
+
+func runDrawing(_ options: Options) throws {
+    guard options.positional.count == 2 else { fail("usage: pbn drawing <photo.ppm> <outdir> [options]") }
+    let photo = loadImage(options.positional[0])
+    let outDir = URL(fileURLWithPath: options.positional[1])
+    try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    var cleaned: DrawingScan.Cleaned
+    if options.cleaned {
+        cleaned = DrawingScan.Cleaned(picture: photo, rectified: false, corners: [])
+    } else {
+        do { cleaned = try DrawingScan.clean(photo) } catch { fail("cleaning failed: \(error)") }
+    }
+    var settings = options.settings
+    settings.drawing = options.drawing
+    settings.lineArt = LineArtSettings()
+    let generator = TemplateGenerator(settings: settings)
+    let observer = try snapshotObserver(options)
+    let output: TemplateGenerator.Output
+    do {
+        output = try generator.generate(from: cleaned.picture, cancel: .none, observer: observer)
+    } catch { fail("generation failed: \(error)") }
+    let t = output.template
+    let size = generator.settings.workingSize(sourceWidth: cleaned.picture.width, sourceHeight: cleaned.picture.height)
+    let working = Resample.area(cleaned.picture, width: size.width, height: size.height)
+    let ink: EdgeMap
+    do { ink = try DrawingScan.ink(of: cleaned.picture, width: size.width, height: size.height).map } catch { fail("ink failed: \(error)") }
+    let encoded = t.encoded()
+    var m = metrics(output, working: working, settings: generator.settings, encodedBytes: encoded.count)
+    m.lineArt = LineArtReport(output, settings: DrawingSettings.lineArt, input: LineArtInput(edges: ink))
+    m.drawing = DrawingReport(
+        settings: options.drawing, rectified: cleaned.rectified, corners: cleaned.corners.map { [$0.x, $0.y] })
+    let json = try jsonEncoder().encode(m)
+    try json.write(to: outDir.appendingPathComponent("stats.json"))
+    try encoded.write(to: outDir.appendingPathComponent("template.pbnt"))
+    try writePPM(cleaned.picture, "cleaned.ppm", in: outDir)
+    try Netpbm.encodePGM(width: ink.width, height: ink.height, values: ink.values).write(to: outDir.appendingPathComponent("ink.pgm"))
+    try writePPM(paintedRaster(t), "raster.ppm", in: outDir)
+    try writePPM(working, "working.ppm", in: outDir)
+    try writePPM(boundaryRaster(t), "boundaries.ppm", in: outDir)
+    try writePPM(areasRaster(t, openings: m.lineArt?.openings ?? []), "areas.ppm", in: outDir)
     try writeSVGs(t, selected: m.lineArt?.selectedColor, to: outDir)
     print(String(data: json, encoding: .utf8)!)
 }

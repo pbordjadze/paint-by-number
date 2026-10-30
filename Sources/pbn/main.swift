@@ -29,6 +29,17 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
+//   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
+//       [--seed N] [--detail F] [--smooth F] [--cleaned]
+//       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line
+//       drawing on paper is cleaned (DrawingScan.clean: the sheet found and pulled square, the
+//       paper flattened to white, the ink alone kept; --cleaned skips this, for a picture that
+//       is one already) and written as cleaned.ppm, then generated as the app generates it
+//       (the ink traced as the lines, every area bounded by them, the palette set's paints
+//       laid so neighbours differ; --paints caps them, else the number of areas decides):
+//       ink.pgm (the ink at the working size), template.pbnt, the previews generate writes and
+//       stats.json (its `drawing` block: the settings, whether the sheet was pulled square and
+//       its corners)
 //   pbn edit <template.pbnt> <edits.json> --out <dir> [--photo <image>]
 //       applies manual edits to a finished coloring-book template, in order, as the app's Refine
 //       does (TemplateEditor): no edge map, no segmentation. edits.json: [{"kind": "draw",
@@ -131,11 +142,12 @@
 //       its canonical anchors. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|drawing|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
 case "generate": try runGenerate(options)
+case "drawing": try runDrawing(options)
 case "edit": try runEdit(options)
 case "refine": try runRefine(options)
 case "practice": try runPractice(options)

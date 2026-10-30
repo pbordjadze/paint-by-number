@@ -36,6 +36,10 @@ struct Options {
     var steps = true
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
+    /// `pbn drawing`'s settings (`DrawingSettings`): the palette set and how many of its paints.
+    var drawing = DrawingSettings()
+    /// `pbn drawing --cleaned`: the photo is a cleaned sheet already (no sheet is looked for).
+    var cleaned = false
 }
 
 /// `--line-art` and `--tuning` fields by name.
@@ -153,6 +157,9 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--blank": o.blank = true
         case "--no-steps": o.steps = false
         case "--contour-weight": o.contourWeight = number(a, &it)
+        case "--palette": o.drawing.palette = choice(a, value(a, &it))
+        case "--paints": o.drawing.paints = number(a, &it)
+        case "--cleaned": o.cleaned = true
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))
         case "--tuning": setTuning(&o.settings.tuning, value(a, &it))

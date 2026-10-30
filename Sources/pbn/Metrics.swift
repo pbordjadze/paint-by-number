@@ -73,6 +73,17 @@ struct Metrics: Codable {
     /// whose numbers may be as small as `LabelSizing.detailMinimumRadius` allows, so they may
     /// count among `regionsUnderRadius2` and `minLabelFontSize`.
     var detailRegions: Int = 0
+    /// `pbn drawing`: the drawing's settings and what the scan did.
+    var drawing: DrawingReport?
+}
+
+/// `stats.json`'s `drawing`.
+struct DrawingReport: Codable {
+    var settings: DrawingSettings
+    /// Whether `DrawingScan.clean` found a sheet inside the photo and pulled it square, and
+    /// its corners in the photo (normalized, clockwise from the top-left) when it did.
+    var rectified: Bool
+    var corners: [[Float]]
 }
 
 /// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the

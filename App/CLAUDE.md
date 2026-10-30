@@ -802,6 +802,25 @@ Conventions).
   stretches every duration N times for their `Slowed` runs, and `-handoffFallback S` sets the
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
+- Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
+  PaintCore's `docs/start-from-a-drawing.md`): a long press of the photo step's photo button
+  (Browse All… on iPad, a `Menu` with a primary action; Choose Photo on iPhone, a context menu)
+  offers Choose Photo of a Drawing… and Photograph a Drawing, kept off the toolbar on purpose
+  (findable, not offered; painting-company row 190, October 30); they open the step's own picker and camera
+  with `picksDrawing` set, so the pick calls `CreateModel.load(drawing:)` /
+  `load(drawingData:)`, which cleans the sheet off the main actor (`DrawingScan.clean`: found,
+  pulled square, the paper white) and makes the cleaned sheet the flow's photo, so the
+  comparison, the photo peek, Refine's photo layer and `source.jpg` all hold it; nothing is
+  analyzed or suggested (`isDrawing`, `settingsOrigin` nil, no drafts), and the card shows the
+  palette set's picker (`drawingPalette`, `TemplatePreviewView.palettePicker`) in the sliders'
+  place, a change making the painting again. The painting's settings record `drawing`
+  (`GenerationSettings.drawing`), which `ArtworkFactory.template` reads to skip Vision and the
+  line-art models and generate from the cleaned sheet, so regeneration and a resumed draft
+  (`load(draft:)`, cleaned already) come out the same; no making-of show (`makingOfSource`).
+  Refine works as on any book (`hasLineArtInput`); Color from Photo and Make Cell read the
+  cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
+  (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
+  covers the flow and regeneration, `DrawingEntryUITests` the long press and the bare toolbar.
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until

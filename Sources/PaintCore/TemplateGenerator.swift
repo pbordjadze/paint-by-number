@@ -29,7 +29,9 @@ public struct TemplateGenerator: Sendable {
     ///     subject mask from Vision). Important areas receive more colors and detail.
     ///   - lineArt: The edge map, eyes, subject silhouettes, contour map and writing
     ///     (`LineArtInput`) a coloring book draws from. Ignored by classic settings; a coloring
-    ///     book without it is a classic template over the book's flatter paint.
+    ///     book without it is a classic template over the book's flatter paint. Settings with
+    ///     `drawing` read neither it nor `importance`: the image is a drawing on paper, whose
+    ///     own ink is the line art (`DrawingGenerator`).
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
     ///   - observer: Synchronous making-of pictures in stage order, at most 1024 px on
@@ -42,6 +44,10 @@ public struct TemplateGenerator: Sendable {
         progress: (@Sendable (Float) -> Void)? = nil,
         observer: PipelineSnapshot.Observer? = nil
     ) throws -> Output {
+        if let drawing = settings.drawing {
+            return try DrawingGenerator.generate(
+                from: image, settings: settings, drawing: drawing, cancel: cancel, progress: progress, observer: observer)
+        }
         let clock = StageClock()
         progress?(0)
         let size = settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
