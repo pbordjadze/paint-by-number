@@ -1,0 +1,214 @@
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:99DEE653-946C-406D-8E9E-238D1FCE93C9, OS:26.5, name:iPad Pro 13-inch (M5) }
+{ platform:iOS Simulator, arch:x86_64, id:99DEE653-946C-406D-8E9E-238D1FCE93C9, OS:26.5, name:iPad Pro 13-inch (M5) }
+2026-10-30 08:54:30.240 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:54:30.240 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:55:01.885 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:55:01.886 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:55:16.194 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:55:16.194 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:55:31.385 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:55:31.385 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:55:48.263 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:55:48.263 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:56:12.607 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:56:12.607 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:56:46.001 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:56:46.001 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 08:57:17.297 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 08:57:17.297 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:00:39.361 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:00:39.361 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:01:16.921 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:01:16.921 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:01:41.033 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:01:41.033 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:03:11.965 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:03:11.965 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:03:40.529 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:03:40.536 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:04:00.168 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:04:00.169 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:04:44.558 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:04:44.558 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:05:14.332 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:05:14.332 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:06:01.774 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:06:01.774 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:06:37.663 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:06:37.663 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:06:54.145 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:06:54.145 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:07:05.445 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:07:05.445 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:07:14.748 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:07:14.748 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:07:51.981 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:07:51.981 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:08:38.747 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:08:38.747 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:09:05.837 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:09:05.837 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:09:28.408 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:09:28.408 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:09:53.520 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:09:53.520 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:10:31.139 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:10:31.139 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:11:44.063 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:11:44.063 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:12:13.089 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:12:13.089 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:12:55.299 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:12:55.300 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:13:07.003 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:13:07.004 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:13:42.726 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:13:42.726 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:13:57.481 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:13:57.481 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:14:35.716 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:14:35.716 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:15:19.461 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:15:19.461 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:16:06.429 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:16:06.429 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:16:17.948 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:16:17.948 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:16:28.109 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:16:28.109 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:16:45.673 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:16:45.673 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:17:22.890 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:17:22.890 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:17:58.303 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:17:58.303 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:18:26.798 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:18:26.798 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:18:49.378 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:18:49.379 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:19:02.727 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:19:02.733 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:19:29.019 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:19:29.020 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:19:52.996 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:19:52.996 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:20:16.273 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:20:16.273 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:20:47.136 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:20:47.136 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:21:00.586 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:21:00.586 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:21:25.522 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:21:25.522 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:21:43.210 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:21:43.210 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:21:53.244 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:21:53.244 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:22:05.784 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:22:05.784 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:22:17.050 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:22:17.050 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:22:30.205 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:22:30.205 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:23:23.317 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:23:23.318 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:24:04.735 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:24:04.735 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:24:29.977 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:24:29.977 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:24:42.619 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:24:42.620 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:25:05.704 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:25:05.704 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:25:25.283 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:25:25.283 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:25:42.818 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:25:42.818 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:26:15.943 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:26:15.943 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:26:40.265 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:26:40.282 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:27:01.627 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:27:01.627 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:27:28.828 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:27:28.828 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:27:47.906 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:27:47.906 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:28:18.754 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:28:18.754 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:28:32.448 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:28:32.448 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:28:48.421 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:28:48.421 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:29:09.393 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:29:09.393 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:29:26.068 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:29:26.068 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:29:50.338 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:29:50.338 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:30:17.673 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:30:17.673 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:30:48.920 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:30:48.920 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:31:23.818 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:31:23.818 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:31:59.110 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:31:59.110 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:32:16.693 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:32:16.694 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:32:30.635 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:32:30.635 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:32:46.663 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:32:46.663 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:33:08.687 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:33:08.687 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:33:30.293 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:33:30.293 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:34:38.734 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:34:38.735 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:35:31.453 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:35:31.453 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:36:34.860 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:36:34.860 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:37:40.294 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:37:40.294 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:39:33.487 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:39:33.488 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:40:41.168 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:40:41.169 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:43:26.388 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:43:26.389 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:44:35.716 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:44:35.716 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:45:20.541 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:45:20.541 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:47:18.731 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:47:18.731 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:49:05.332 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:49:05.333 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:50:04.445 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:50:04.445 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:50:36.335 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:50:36.335 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:51:39.344 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:51:39.344 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:52:56.818 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:52:56.819 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:53:40.900 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:53:40.901 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:54:22.045 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:54:22.045 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:54:48.302 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:54:48.302 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:55:35.387 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-30 09:55:35.387 xcodebuild[35198:93989] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-30 09:56:55.893 xcodebuild[35198:93989] [MT] IDETestOperationsObserverDebug: 3782.548 elapsed -- Testing started completed.
+2026-10-30 09:56:55.895 xcodebuild[35198:93989] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-30 09:56:55.895 xcodebuild[35198:93989] [MT] IDETestOperationsObserverDebug: 3782.548 sec, +3782.548 sec -- end
+Testing started
