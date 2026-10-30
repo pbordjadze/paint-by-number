@@ -111,7 +111,9 @@ before planning app work).
 - `Tests/Drawings`: eighteen freely licensed line drawings and a simulated phone photo of each
   (`tools/drawings/phone_photo.py`), the test set of Start from a Drawing, never shipped
   (provenance in its `README.md`); `tools/drawings/convert.py` converts them with `pbn drawing`
-  and lays each out for a look (`docs/start-from-a-drawing.md` has the critic rounds).
+  and lays each out for a look (`docs/start-from-a-drawing.md` has the critic rounds);
+  `tools/drawings/demo_page.py` draws the create flow's demo page (`ShellDemo.drawingPhoto`) for
+  `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
   `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.

@@ -37,7 +37,8 @@ type's doc comment is its reference; this note holds what was measured and decid
    it; a long stroke stays an outline by its length. The lines of small writing
    (`DrawingScan.textRows`: rows of pieces of a letter's or a word's size) go through `Writing`
    as a photo's text does, traced finely and drawn legibly off the paint, and what `Writing`
-   leaves of them is held between the thresholds, drawn as detail, never a wall.
+   leaves of them is held between the thresholds, drawn as detail, never a wall; a row's whole
+   box keeps the numbers off, a number's radius around it, so none reads as one of its letters.
 4. **The cells** (`CellMap`). The sheet starts as the paper and its fills, paints of their own.
    Small cells in clusters of five or more (the strips between hatch strokes, the chips of
    crosshatching) become one cell (`mergeHatchClusters`); cells with less room than 6 px at 1500

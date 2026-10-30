@@ -6317,6 +6317,10 @@
       "comment" : "Feedback mode's tools on the painting screen: the pen, for circling and writing on the painting; the Refine screen's pen, which draws lines into a new painting's drawing (button label)",
       "extractionState" : "manual"
     },
+    "Drawing" : {
+      "comment" : "Caption of the cleaned sheet in the before/after comparison of a painting from a drawing (Start from a Drawing), in the Photo caption's place",
+      "extractionState" : "manual"
+    },
     "Photo" : {
       "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's Layers panel's layer of the photo",
       "extractionState" : "manual"

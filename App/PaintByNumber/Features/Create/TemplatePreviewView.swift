@@ -348,7 +348,9 @@ struct TemplatePreviewView: View {
             if let source = model.source {
                 CompareView(
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
-                    afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    afterLabel: model.previewStyle.name,
+                    beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
+                    aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }

@@ -54,6 +54,11 @@ enum DrawingGenerator {
         // `writingStrength`, drawn as detail inside its cell, never a wall.
         var writing: Writing?
         let rows = DrawingScan.textRows(in: ink.map)
+        let params = SegmentationParameters(settings: settings.normalized, width: size.width, height: size.height)
+        // A row's whole box keeps the numbers off, a number's radius around it: `Writing` keeps
+        // out each word it traced, and a number between two of a caption's letters read as
+        // part of it.
+        var rowKeepOut: [SIMD4<Float>] = []
         if !rows.isEmpty {
             let w = size.width, h = size.height
             let held = UInt8((writingStrength * 255).rounded())
@@ -64,10 +69,11 @@ enum DrawingGenerator {
                 for y in y0..<y1 {
                     for x in x0..<x1 where ink.map.values[y * w + x] > held { ink.map.values[y * w + x] = held }
                 }
+                let pad = params.minRadius
+                rowKeepOut.append(SIMD4(Float(x0) - pad, Float(y0) - pad, Float(x1) + pad, Float(y1) + pad))
             }
         }
         if !rows.isEmpty {
-            let params = SegmentationParameters(settings: settings.normalized, width: size.width, height: size.height)
             writing = try clock.measure("writing") {
                 try Writing.find(in: &working, areas: rows, minRadius: params.minRadius, cancel: cancel, clock: clock)
             }
@@ -112,7 +118,7 @@ enum DrawingGenerator {
         if let observer { try observer(SnapshotPictures.lineArt(plan)) }
         progress?(0.65)
 
-        let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [], lines: plan.drawnInterior.map(LabelKeepOut.Line.init))
+        let keepOut = LabelKeepOut(rects: (writing?.keepOut ?? []) + rowKeepOut, lines: plan.drawnInterior.map(LabelKeepOut.Line.init))
         var vector = try clock.measure("vectorize") {
             try Vectorizer.vectorizeWithStats(
                 plan.segmentation, settings: lineSettings, keepOut: keepOut, detailRegions: plan.detailRegions,
