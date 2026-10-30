@@ -36,9 +36,15 @@ nonisolated enum SceneMapBuilder {
     /// its faces and animals (two more requests, run here).
     static func scene(of found: SubjectVision.Findings, in image: CGImage) -> SceneMap {
         let size = SubjectImportance.mapSize(width: image.width, height: image.height)
-        return scene(
+        let map = scene(
             of: found, width: size.width, height: size.height,
             features: features(in: image, faces: found.faces, animals: found.animals))
+        // What the scene method will lay the template out by (a QA run reads it off the log).
+        let covered = map.subject.reduce(0) { $0 + ($1 >= 128 ? 1 : 0) }
+        let share = map.subject.isEmpty ? 0 : covered * 100 / map.subject.count
+        let verdict = map.hasSubject ? "a subject" : "no subject"
+        Log.create.info("Scene: subject \(share, privacy: .public)% of the frame, \(map.faces.count, privacy: .public) faces, \(map.animals.count, privacy: .public) animals, \(map.features.count, privacy: .public) features: \(verdict, privacy: .public)")
+        return map
     }
 
     /// The maps and rects of `found` at `width` × `height` (the maps' own size: one of another

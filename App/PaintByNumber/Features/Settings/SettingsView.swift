@@ -162,7 +162,7 @@ struct SettingsView: View {
                         }
                         .accessibilityIdentifier("settings-scene-method")
                     } footer: {
-                        Text("New paintings are laid out by their subject: a calm background, with the detail on faces and features. Being tried.")
+                        Text("An experiment: new paintings are laid out by their subject, a calm background with the detail on faces and features. Paintings you already have stay as they are.")
                     }
                     #endif
 
