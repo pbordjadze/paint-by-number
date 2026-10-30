@@ -1,0 +1,56 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 88,
+ "duration_ms": 954440,
+ "total_cost_usd": 2.9584180000000004,
+ "result": "I've written the report to `/Users/runner/work/_temp/qa/report.md`, with screenshots in `shots/`. I reproduced no bug twice; everything I found is listed as a suspicion. The main one is that the painting made in the demo session was gone after quitting through Home and relaunching.\n\n**What worked:**\n- **Drawing preview:** the comparison handle and the Palette picker both work. It has five sets, and switching Crayons \u2192 Sea remade the painting in about 3 s.\n- **Painting:** I started painting and filled 9 of the 10 areas, at the fitted zoom and zoomed in. Each fill landed in the area I tapped, in the swatch's colour. Progress went 10 \u2192 40 \u2192 60 \u2192 80 \u2192 90 %.\n- **Zoom and Undo:** Hint, Fit to Screen and Undo work. Tapping the colour that's already selected zooms to its areas; it surprised me at first but looks deliberate.\n- **Gallery:** going back and reopening kept every fill, and the gallery and painting both showed 80 %.\n- **The drawing's lines are respected:** the roof is one area with its strokes drawn over it, and the solid door is its own very dark area.\n- **Refine:** the Pen split the wall and window into new areas, and the Bucket poured into exactly the cell I tapped.\n\n**Suspicions (each seen once, or unclear):**\n1. **Painting lost after quit and relaunch.** I quit at 90 % through Home. A plain relaunch showed only the two starter paintings. A relaunch with the demo arguments showed an empty shelf. The demo session may keep its paintings only until the app quits, which could be intended.\n2. **Starters stuck \"Preparing\u2026\".** After the plain relaunch both starters said \"Preparing\u2026\" for over a minute, while the title said \"2 ready to paint\".\n3. **Numbers over the drawn lines.** Background \"1\"s sit on the drawing's row of \"0\"s and read as \"10\" or \"01\". The roof's \"4\"s are struck through by the roof's strokes and are hard to read.\n4. **Undo left a tint.** After undoing the sun's fill, it stayed grey-green instead of paper colour. A second try came out correct (1 of 2).\n5. **Same VoiceOver name for two paints.** In Refine, paint 5 (the tree's green) and paint 6 (the sun's teal) are both called \"Vivid green\". The painting screen names them differently.\n6. **Minor ones:**\n   - The drawing's ground line disappears into the bottom edge of the house wall.\n   - A Pen stroke in Refine kept a short tail sticking out past the wall.\n   - Outlines look jagged when zoomed in.\n   - The comparison's left label says \"Photo\" over a drawing.\n\n**Not tested:**\n- **From a Drawing with the parrots photo:** the demo launch skips the photo step, and I ran out of time to reach it from a plain launch. So I can't say how the app handles a photo that isn't a drawing.\n- **Rest of Refine:** Merge, Make Cell / Color from Photo, and Refine's Done/Cancel.\n- **Gestures Maestro can't do:** drag painting, pinch, two-finger pan and double-tap zoom.",
+ "usage": {
+  "input_tokens": 116,
+  "cache_creation_input_tokens": 232732,
+  "cache_read_input_tokens": 6342770,
+  "output_tokens": 26287,
+  "output_tokens_details": {
+   "thinking_tokens": 7647
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 232732
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 33,
+  "Read": 4,
+  "mcp__maestro__inspect_screen": 10,
+  "mcp__maestro__run": 36,
+  "Write": 3,
+  "mcp__maestro__cheat_sheet": 1
+ },
+ "images_received": 33
+}
