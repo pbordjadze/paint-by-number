@@ -7,7 +7,8 @@ import Foundation
 /// table. `clean` makes the sheet the picture:
 /// 1. The paper's brightness under every pixel is estimated by a grey closing (a maximum over
 ///    `paperRadius`, wider than any line, then blurred): lines vanish from it, the light's
-///    gradient and the paper's tone stay (`paper`).
+///    gradient and the paper's tone stay (`paper`); it is at least a much wider closing
+///    (`fillRadius`), so a solid fill is not its own paper.
 /// 2. The sheet is what the paper estimate flows over from the picture's middle without a
 ///    step (`sheet`): a lit sheet shades smoothly, its edge against a table or frame is a
 ///    step. Its four corners (the hull's extremes) are pulled square by a homography
@@ -32,6 +33,12 @@ public enum DrawingScan {
     /// up to about 2 % of the sheet's width vanish from the paper estimate.
     static let paperRadius: Float = 0.011
     static let paperBlur: Float = 0.025
+    /// The wider closing a fill can't be its own paper under, as a fraction of the long side,
+    /// taken on a grid of about `coarseLongSide` cells along the long side.
+    static let fillRadius: Float = 0.1
+    static let coarseLongSide = 300
+    /// The closing is the paper unless it falls below this share of the wide closing.
+    static let fillShare: Float = 0.7
     /// Darkest a paper may be (of the photo's brightest): below it a pixel is a table, a frame
     /// or a shadow too deep to read, not paper.
     static let paperFloor: Float = 0.22
@@ -59,10 +66,10 @@ public enum DrawingScan {
     /// (`solids`).
     static let solidRadius: Float = 0.005
     static let solidSeed: Float = 1.5
-    static let solidPens: Float = 1.1
+    static let solidPens: Float = 2
     /// The mean strength from which a working pixel is inside a fill: ink all over, where the
     /// densest hatching still shows paper.
-    static let solidLevel: Float = 0.7
+    static let solidLevel: Float = 0.8
     static let solidDepthShare: Float = 0.25
     /// A compact core (a blob's) has at most this many times its deepest point's depth squared
     /// in area (a disc has π); a thick stroke's thread of a core has many more.
@@ -366,7 +373,41 @@ public enum DrawingScan {
         let dilated = maxFilter(luma, width: w, height: h, radius: r)
         try cancel.throwIfCancelled()
         let blurRadius = max(3, Int((paperBlur * long).rounded()))
-        return (dilated, try BoxBlur.apply(dilated, width: w, height: h, radius: blurRadius, passes: 2, cancel: cancel))
+        var blurred = try BoxBlur.apply(dilated, width: w, height: h, radius: blurRadius, passes: 2, cancel: cancel)
+        try cancel.throwIfCancelled()
+        // A fill wider than the closing (a silhouette, a black ground) would be its own paper
+        // and read as paper: the paper is at least the closing over `fillRadius`, taken on a
+        // coarse grid, which a lit sheet's gradient barely moves across.
+        let k = max(1, Int((long / Float(coarseLongSide)).rounded()))
+        let cw = (w + k - 1) / k, ch = (h + k - 1) / k
+        var coarse = [Float](repeating: 0, count: cw * ch)
+        for cy in 0..<ch {
+            for cx in 0..<cw {
+                var sum: Float = 0, count: Float = 0
+                for y in (cy * k)..<min((cy + 1) * k, h) {
+                    for x in (cx * k)..<min((cx + 1) * k, w) { sum += luma[y * w + x]; count += 1 }
+                }
+                coarse[cy * cw + cx] = sum / max(count, 1)
+            }
+        }
+        let wide = maxFilter(coarse, width: cw, height: ch, radius: max(1, Int((fillRadius * long / Float(k)).rounded())))
+        let wideBlurred = try BoxBlur.apply(wide, width: cw, height: ch, radius: max(1, Int((fillRadius * long / Float(3 * k)).rounded())), passes: 2, cancel: cancel)
+        for y in 0..<h {
+            let fy = min(max((Float(y) + 0.5) / Float(k) - 0.5, 0), Float(ch - 1))
+            let y0 = min(Int(fy), ch - 1), y1 = min(y0 + 1, ch - 1), ty = fy - Float(y0)
+            for x in 0..<w {
+                let fx = min(max((Float(x) + 0.5) / Float(k) - 0.5, 0), Float(cw - 1))
+                let x0 = min(Int(fx), cw - 1), x1 = min(x0 + 1, cw - 1), tx = fx - Float(x0)
+                let top = wideBlurred[y0 * cw + x0] * (1 - tx) + wideBlurred[y0 * cw + x1] * tx
+                let bottom = wideBlurred[y1 * cw + x0] * (1 - tx) + wideBlurred[y1 * cw + x1] * tx
+                let i = y * w + x
+                let wideHere = top * (1 - ty) + bottom * ty
+                // Only where the closing fell well below it, inside a fill: under a lit sheet's
+                // gradient the wide closing overshoots a little, and the closing is the paper.
+                if blurred[i] < fillShare * wideHere { blurred[i] = wideHere }
+            }
+        }
+        return (dilated, blurred)
     }
 
     /// Separable maximum over a (2r+1)² window, the picture's edge clamped.

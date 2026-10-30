@@ -49,7 +49,7 @@ public struct DrawingSettings: Sendable, Hashable, Codable {
     public static var lineArt: LineArtSettings {
         LineArtSettings(
             style: .coloringBook, detector: .drawing, outlineThreshold: 0.5, detailThreshold: 0.3,
-            minimumStrokeLength: 10, gapBridging: 18, lineSmoothing: 0, samePaint: .joinAllButOutlines,
+            minimumStrokeLength: 10, gapBridging: 24, lineSmoothing: 0, samePaint: .joinAllButOutlines,
             keepColorEdges: true, outlineEyes: false, outlineObjects: false, keepWriting: false)
     }
 }

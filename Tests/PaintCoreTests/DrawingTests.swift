@@ -85,6 +85,11 @@ struct DrawingTests {
         try TemplateGenerator(settings: settings).generate(from: image, cancel: .none)
     }
 
+    /// The region under a point of the 600 × 400 sheet (the template's canvas is larger).
+    static func region(of t: Template, _ x: Int, _ y: Int) -> UInt32 {
+        t.regionMap[x * t.width / 600, y * t.height / 400]
+    }
+
     /// Pairs of 4-neighbouring regions.
     static func neighbours(of t: Template) -> Set<[UInt32]> {
         var pairs = Set<[UInt32]>()
@@ -108,17 +113,21 @@ struct DrawingTests {
         // The ground, the largest area, takes the set's first paint; the disc the ink.
         let largest = t.regions.indices.max { t.regions[$0].area < t.regions[$1].area }!
         #expect(t.palette[Int(t.regions[largest].colorIndex)] == DrawingPalette.colors(of: .crayons)[0])
-        let disc = t.regionMap[440, 310]
+        let disc = Self.region(of: t, 440, 310)
         #expect(t.palette[Int(t.regions[Int(disc)].colorIndex)] == DrawingPalette.ink)
-        #expect(t.regions[Int(t.regionMap[440, 310])].area > 5000, "the disc is the whole fill")
         #expect(t.palette.last == DrawingPalette.ink)
+        #expect(t.regions[Int(disc)].area > 10000, "the disc is the whole fill")
+        #expect(Self.region(of: t, 150, 200) != Self.region(of: t, 10, 10), "the rectangle is an area")
+        #expect(Self.region(of: t, 420, 150) != Self.region(of: t, 10, 10), "the circle is an area")
         // Every shape's area is bounded by drawn lines, no two neighbours alike.
         for pair in Self.neighbours(of: t) {
             #expect(t.regions[Int(pair[0])].colorIndex != t.regions[Int(pair[1])].colorIndex)
         }
-        let drawn = t.lineArt!.edgeLayers.filter { $0 != LineLayer.color.rawValue }.count
-        #expect(drawn > 0)
-        #expect(t.lineArt!.edgeLayers.filter { $0 == LineLayer.color.rawValue }.count == 0)
+        // Every edge between two areas runs along a drawn line; only the canvas's frame is none.
+        let layers = t.lineArt!.edgeLayers
+        for (k, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside {
+            #expect(layers[k] != LineLayer.color.rawValue, "edge \(k) is not drawn")
+        }
     }
 
     @Test func theSameDrawingGivesTheSameBytes() throws {
@@ -132,13 +141,14 @@ struct DrawingTests {
         var s = Sheet(width: 600, height: 400)
         s.rectangle(40, 40, 300, 360)
         for k in 0..<20 { s.line(SIMD2(60, Float(60 + k * 14)), SIMD2(280, Float(60 + k * 14))) }
-        // A circle with a gap of about 12 px in its outline.
-        s.circle(SIMD2(450, 200), radius: 90, gap: 0.1...0.23)
+        // A circle with a gap of about 9 px in its outline.
+        s.circle(SIMD2(450, 200), radius: 90, gap: 0.1...0.2)
         let out = try Self.generate(s.image)
         let t = out.template
         expectValid(t)
         #expect(t.regions.count == 3, "the ground, the hatched rectangle and the circle: \(t.regions.count)")
-        #expect(t.regionMap[450, 200] != t.regionMap[10, 10], "the circle closed")
+        #expect(Self.region(of: t, 450, 200) != Self.region(of: t, 10, 10), "the circle closed")
+        #expect(Self.region(of: t, 150, 200) != Self.region(of: t, 10, 10), "the hatched rectangle is one area")
         #expect(t.lineArt!.strokes.count >= 15, "the hatching drawn inside: \(t.lineArt!.strokes.count) strokes")
     }
 
@@ -181,14 +191,17 @@ struct DrawingTests {
             let d = simdLength(found * SIMD2(Float(w), Float(h)) - truth)
             #expect(d < 20, "corner \(found) vs \(truth / SIMD2(Float(w), Float(h)))")
         }
+        // The sheet's proportions as photographed (its real size can't be known): the
+        // quadrilateral's own mean width over its mean height.
         let aspect = Float(cleaned.picture.width) / Float(cleaned.picture.height)
-        #expect(abs(aspect - 1.5) < 0.1, "aspect \(aspect)")
+        #expect(abs(aspect - 1.24) < 0.1, "aspect \(aspect)")
         // Flat paper: the corners of the cleaned sheet are white, and the shapes are there.
         let corner = cleaned.picture[4, 4]
         #expect(corner.x > 240)
         let t = try Self.generate(cleaned.picture).template
         expectValid(t)
         #expect(t.regions.count == 4, "\(t.regions.count) areas")
+        #expect(t.palette.last == DrawingPalette.ink)
     }
 
     @Test func aPlainSheetIsNotRectified() throws {

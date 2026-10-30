@@ -152,8 +152,8 @@ enum LayeredLines {
         /// to it (a cat's whiskers stay whiskers); the spurs thinning leaves at a thick
         /// stroke's corners go as a photo's do.
         static let drawing = Tracing(
-            frameReach: 6, closeReach: [0.5, 0.5, 0.5], skeleton: true, strengthCap: 0.7, clutterGain: 2, clutterDamping: 0.3,
-            roomFloor: 7, hatchRadius: 26, hatchMembers: 5)
+            frameReach: 6, closeReach: [0.5, 0.5, 0.5], skeleton: true, strengthCap: 0.7, clutterGain: 1.5, clutterDamping: 0.3,
+            roomFloor: 6, hatchRadius: 26, hatchMembers: 5)
     }
 
     /// `photo` is the photo as given (any size), whose color a fill reads.
