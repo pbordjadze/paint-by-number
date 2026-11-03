@@ -307,11 +307,15 @@ final class CreateModel {
     private(set) var paintMix: PaintMix? = CreateModel.newPaintMix
     private(set) var tuning: PipelineTuning = CreateModel.newTuning
 
-    /// A suggestion's settings with the paints mixed as the sliders' are: Auto chooses the
-    /// regions, and the mix is laid on its choice.
+    /// A suggestion's settings with the paints mixed and the subject cut as the sliders' are:
+    /// Auto chooses the colours and detail, and a resumed draft's own mix and tuning are laid
+    /// on its choice, so the detents still read as the suggestion.
     func mixed(_ suggested: GenerationSettings) -> GenerationSettings {
         var settings = suggested
-        if settings.drawing == nil { settings.paintMix = paintMix }
+        if settings.drawing == nil {
+            settings.paintMix = paintMix
+            settings.tuning = tuning
+        }
         return settings
     }
 
@@ -578,6 +582,9 @@ final class CreateModel {
         draftImage = nil
         decision = nil
         settingsOrigin = nil
+        // A new photo's mix and tuning, unless it is a draft's (`resume` puts those back).
+        paintMix = Self.newPaintMix
+        tuning = Self.newTuning
         refinements = saved?.refinements ?? TemplateRefinements()
         made = []
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would

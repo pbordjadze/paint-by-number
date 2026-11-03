@@ -51,6 +51,19 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness, subjectCellSize
     }
 
+    /// The original six always; a later factor only when it isn't 1, so settings without it
+    /// (every painting's `meta.json` and every `.moonlight` file before it) encode as they did.
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(smoothing, forKey: .smoothing)
+        try c.encode(textureFlattening, forKey: .textureFlattening)
+        try c.encode(minimumCellSize, forKey: .minimumCellSize)
+        try c.encode(subjectEmphasis, forKey: .subjectEmphasis)
+        try c.encode(accentColors, forKey: .accentColors)
+        try c.encode(colorfulness, forKey: .colorfulness)
+        if subjectCellSize != 1 { try c.encode(subjectCellSize, forKey: .subjectCellSize) }
+    }
+
     /// Tolerant, like `LineArtSettings`.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

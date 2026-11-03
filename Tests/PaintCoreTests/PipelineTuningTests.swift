@@ -63,6 +63,16 @@ struct PipelineTuningTests {
         #expect(abs(body - 2.5) < 1e-4)
     }
 
+    /// A later factor is written only when it is set, so settings without it encode as before.
+    @Test func laterFactorsEncodeOnlyWhenSet() throws {
+        let plain = String(decoding: try JSONEncoder().encode(PipelineTuning()), as: UTF8.self)
+        #expect(!plain.contains("subjectCellSize"))
+        let loose = PipelineTuning(subjectCellSize: 2.5)
+        let data = try JSONEncoder().encode(loose)
+        #expect(String(decoding: data, as: UTF8.self).contains("subjectCellSize"))
+        #expect(try JSONDecoder().decode(PipelineTuning.self, from: data) == loose)
+    }
+
     @Test func coloringBookFlatteningScalesOnlyThePaintKnobs() {
         let settings = GenerationSettings(colorCount: 30, detail: 0.6, smoothness: 0.4)
         let plain = SegmentationParameters(settings: settings, width: 1200, height: 800)
