@@ -114,8 +114,10 @@ public enum TemplateEditor {
     /// with the editor of its own build). 1 is the editor from October 26, 2026, which
     /// keeps writing out of drawn lines and measures a piece short of its number finely; edits
     /// saved before it record none. 2 (October 28, 2026): a fill or an erasure that leaves a
-    /// paint with no area drops it from the palette, as Merge and Only This Area do.
-    public static let version = 2
+    /// paint with no area drops it from the palette, as Merge and Only This Area do. 3 (November
+    /// 3, 2026): a line meets every stroke a chain of strokes it touches runs to, not only those
+    /// inside its own box, so a shape drawn in pieces closes however they lie.
+    public static let version = 3
 
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"

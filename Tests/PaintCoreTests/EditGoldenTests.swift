@@ -29,7 +29,9 @@ import Testing
 struct EditGoldenTests {
     /// The digest of `edits-v1.json` laid on the base, by editor version. 2's is 1's: none of the
     /// fixture's fills or erasures leaves a paint with no area (`BlankTemplateTests` pins that).
-    static let pins: [Int: UInt64] = [1: 0x609c_c372_67f9_af85, 2: 0x609c_c372_67f9_af85]
+    /// 3's is 2's: none of its draws meets a chain of strokes running out of its box
+    /// (`BlankTemplateTests.aShapeDrawnInPiecesCloses` pins that).
+    static let pins: [Int: UInt64] = [1: 0x609c_c372_67f9_af85, 2: 0x609c_c372_67f9_af85, 3: 0x609c_c372_67f9_af85]
 
     /// The kinds of edit, one per case of `TemplateEditor.Edit`.
     enum Kind: CaseIterable {
