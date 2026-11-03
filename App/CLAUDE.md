@@ -689,7 +689,8 @@ Conventions).
     picture has no text). `create-refine-guide` (with `-dark`, `-long-text`) opens it on Merge;
     `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
-    canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
+    canvas units (the Pen's stroke after its smoothing and end assist: `.draw`, its segments no
+    longer than `RefineGestures.longestSegment`, which keeps checking a big Blank in budget; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Line Eraser
     tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; the retired Color Splitter's
     stroke was `.split`, the Pen's line as an undrawn boundary whose sides end with different
