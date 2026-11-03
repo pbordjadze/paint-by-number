@@ -83,12 +83,18 @@ struct KitPaintTests {
     }
 
     @Test func faceShareCountsEachPaintsPixelsOnAFace() {
-        // Four pixels, three regions, two paints: paint 0 has one of its two pixels on a face.
+        // Four pixels, three regions, two paints: paint 0 has one of its two pixels on a face,
+        // the pixel by the eye (a 0.1-wide eye reaches 0.4 of the canvas).
         let labels = RegionMap(width: 2, height: 2, storage: [0, 1, 2, 2])
         let segmentation = Segmentation(
             labels: labels, regionColor: [0, 0, 1], palette: [Self.paint(0.5, 0, 0), Self.paint(0.7, 0, 0)], colorSpace: .sRGB)
-        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75]) == [0.5, 0])
-        #expect(KitPaint.faceShare(segmentation, importance: [1]) == [0, 0])
+        let eye: [SIMD2<Float>] = [SIMD2(0.2, 0.2), SIMD2(0.3, 0.2), SIMD2(0.3, 0.3)]
+        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: [eye]) == [0.5, 0])
+        // A face's importance with no eye near (an animal's box, a busy centre) is no face.
+        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: []) == [0, 0])
+        let far: [SIMD2<Float>] = [SIMD2(10, 10), SIMD2(10.01, 10.01)]
+        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: [far]) == [0, 0])
+        #expect(KitPaint.faceShare(segmentation, importance: [1], eyes: [eye]) == [0, 0])
     }
 
     @Test func kitTemplateKeepsTheRegionsAndMovesOnlyThePaints() throws {

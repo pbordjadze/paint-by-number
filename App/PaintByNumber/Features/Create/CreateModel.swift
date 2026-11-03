@@ -1496,7 +1496,8 @@ final class CreateModel {
                 guard let firstDraft else { return }
                 var template = output.template
                 if Self.newPaintMix == .kit {
-                    // Its paints as the painting's will be; the candidate's own count bounds how close.
+                    // Its paints as the painting's will be, but for faces' skin, which needs the eyes
+                    // a draft has none of (`KitPaint.faceShare`); the candidate's count bounds how close.
                     template.palette = KitPaint.mix(
                         template.palette, space: template.colorSpace,
                         minDistance: GenerationSettings(colorCount: template.palette.count).minPaletteDistance)

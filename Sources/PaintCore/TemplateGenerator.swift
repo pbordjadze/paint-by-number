@@ -96,7 +96,8 @@ public struct TemplateGenerator: Sendable {
             progress?(0.7)
         }
         // Which paints are on a face, for kit paint's skin, while the importance is at hand.
-        let faces = settings.paintMix == .kit ? KitPaint.faceShare(segmentation, importance: weights) : nil
+        let faces = settings.paintMix == .kit
+            ? KitPaint.faceShare(segmentation, importance: weights, eyes: input?.eyes ?? []) : nil
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
@@ -112,6 +113,8 @@ public struct TemplateGenerator: Sendable {
             vector.template.palette = KitPaint.mix(
                 vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
                 faces: faces)
+            // The output's paints are the template's, so pbn's rasters show what is painted.
+            segmentation.palette = vector.template.palette
         }
         if let plan {
             try cancel.throwIfCancelled()

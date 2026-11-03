@@ -27,7 +27,8 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 ///   cells average a face's shadows into its paint, which read khaki beside the photo's peach
 ///   (the round-1 critic, on kodim04 and street-couple). Skin's colour is a fox's, a lion's and
 ///   a loaf's too, so all of this is for paints on a face (`faceShare`: the share of a paint's
-///   pixels where the importance map marks a face), and paints of skin's colour elsewhere are
+///   pixels on a person's face, where the importance map marks a face near an eye Vision
+///   found; its animal boxes raise the map alike, and a ginger cat is no face), and paints of skin's colour elsewhere are
 ///   only held back a little (`elsewhereSkin`: a fox treated as skin turned beige);
 /// - less gain on pale paints (`paleCut`): a wall or a sky boosted outshone the faces;
 ///
@@ -74,10 +75,13 @@ public enum KitPaint {
     static let paleChroma: ClosedRange<Float> = 0.05...0.09
     /// The share of skin's restraint a paint of skin's colour gets off any face.
     static let elsewhereSkin: Float = 0.35
-    /// Importance from which a pixel is on a face (the app's map raises Vision's faces toward
-    /// 1 in an ellipse; the subject sits at 0.75), and the share of a paint's pixels there
-    /// over which it becomes a face's paint.
+    /// Importance from which a pixel is on a face (the app's map raises Vision's faces, and
+    /// its animals, toward 1 in an ellipse; the subject sits at 0.75), within `faceReach` eye
+    /// widths of an eye's centre (eyes come from a person's face landmarks only; the chin is
+    /// about three eye widths below them), and the share of a paint's pixels there over which
+    /// it becomes a face's paint.
     static let faceImportance: Float = 0.9
+    static let faceReach: Float = 4
     static let faceShareRange: ClosedRange<Float> = 0.1...0.3
     /// The strength two paints too close step back by, a round at a time.
     static let backStep: Float = 0.25
@@ -114,11 +118,37 @@ public enum KitPaint {
     }
 
     /// Each paint's share of its pixels on a face: importance at least `faceImportance` in
-    /// `importance` (the segmentation's weights, one per pixel), counted exactly.
-    public static func faceShare(_ segmentation: Segmentation, importance: [Float]) -> [Float] {
-        let n = segmentation.width * segmentation.height
-        guard importance.count == n else { return [Float](repeating: 0, count: segmentation.palette.count) }
+    /// `importance` (the segmentation's weights, one per pixel) near one of `eyes` (closed
+    /// polygons normalized to the photo, `LineArtInput.eyes`), counted exactly. No eyes, no face.
+    public static func faceShare(_ segmentation: Segmentation, importance: [Float], eyes: [[SIMD2<Float>]]) -> [Float] {
+        let w = segmentation.width, h = segmentation.height, n = w * h
         var total = [Int](repeating: 0, count: segmentation.palette.count)
+        guard importance.count == n, !eyes.isEmpty else { return total.map { _ in 0 } }
+        var near = [Bool](repeating: false, count: n)
+        let size = SIMD2(Float(w), Float(h))
+        for eye in eyes where !eye.isEmpty && eye.allSatisfy({ $0.x.isFinite && $0.y.isFinite }) {
+            let points = eye.map { $0 * size }
+            var lo = points[0], hi = points[0], sum = SIMD2<Float>(0, 0)
+            for p in points {
+                lo = pointwiseMin(lo, p)
+                hi = pointwiseMax(hi, p)
+                sum += p
+            }
+            let centre = sum / Float(points.count)
+            let reach = faceReach * max(hi.x - lo.x, hi.y - lo.y)
+            // Bounded before any Int conversion: a coordinate far off the canvas would trap.
+            guard reach > 0, reach < Float(w + h), abs(centre.x) < Float(2 * (w + h)), abs(centre.y) < Float(2 * (w + h))
+            else { continue }
+            let x0 = max(0, Int((centre.x - reach).rounded(.down))), x1 = min(w - 1, Int((centre.x + reach).rounded(.up)))
+            let y0 = max(0, Int((centre.y - reach).rounded(.down))), y1 = min(h - 1, Int((centre.y + reach).rounded(.up)))
+            guard x0 <= x1, y0 <= y1 else { continue }
+            for y in y0...y1 {
+                for x in x0...x1 {
+                    let d = SIMD2(Float(x) + 0.5, Float(y) + 0.5) - centre
+                    if (d * d).sum() <= reach * reach { near[y * w + x] = true }
+                }
+            }
+        }
         var face = total
         for i in 0..<n {
             let region = Int(segmentation.labels.storage[i])
@@ -126,7 +156,7 @@ public enum KitPaint {
             let paint = Int(segmentation.regionColor[region])
             guard paint < total.count else { continue }
             total[paint] += 1
-            if importance[i] >= faceImportance { face[paint] += 1 }
+            if near[i], importance[i] >= faceImportance { face[paint] += 1 }
         }
         return zip(face, total).map { $1 > 0 ? Float($0) / Float($1) : 0 }
     }
