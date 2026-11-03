@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Kit paint, before and after, on the evaluation set (painting-company rows 188 and 191).
 
-    tools/kit_eval.py run --set SET --out DIR [--only id,id] [--jobs N] [-- <pbn options for after>]
+    tools/kit_eval.py run --set SET --out DIR [--only id,id] [--jobs N] [--before "OPTS"] [--both "OPTS"]
+        [-- <pbn options for after>]
     tools/kit_eval.py grid --out DIR [--width 1100]
 
 `SET` is `Tests/EvalSet` of the branch `claude/over-constraint-spike` (row 188's photos, maps and
@@ -12,7 +13,9 @@ repository's, since its manifest names some photos there.
 For every photo `run` makes the coloring book the app would (the set's edge maps, its stand-in
 subject as the silhouette, its eyes, the app's importance map from the scene; 24 paints, detail
 0.5) twice with the same pbn: `before` with the regions' paints, `after` with `--paint-mix kit`
-(and any options after `--`). It writes `DIR/<id>/{before,after}/` (pbn's output, `finished.png`:
+(and any options after `--`); `--before` adds pbn options to `before` alone (a
+round's baseline: `--before "--paint-mix kit"`), `--both` to both (`--auto` lets Auto choose
+the colours and detail, from the scene's importance map, as the app does). It writes `DIR/<id>/{before,after}/` (pbn's output, `finished.png`:
 the finished painting, paint with the drawing in ink over it, from `painted-outlined.svg`, 1280 px
 wide) and `DIR/summary.md`. A painting already in `DIR` is measured again, not made again: give
 each build its own `DIR`.
@@ -26,13 +29,15 @@ chroma over the photo's, `contrast` its lightness spread (5th to 95th percentile
 `grid` writes `DIR/<id>/grid.jpg` (the photo, before, after, side by side at `--width` each) and
 `DIR/grids.jpg` (every photo's row, smaller), to look at with the Read tool.
 
-Requires the release pbn (tools/swift.sh build -c release --static-swift-stdlib, or PBN=...),
+Requires the release pbn (tools/swift.sh build -c release --static-swift-stdlib, or PBN=...;
+PBN_BEFORE=... runs `before` with another build, the last round's),
 node (`cd tools && npm ci`), numpy and Pillow.
 """
 import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -42,6 +47,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PBN = os.environ.get("PBN", os.path.join(ROOT, ".build", "release", "pbn"))
+# `before` from another build (the last round's), to compare rounds: PBN_BEFORE=…/pbn.
+PBN_BEFORE = os.environ.get("PBN_BEFORE", PBN)
 SVG2PNG = os.path.join(ROOT, "tools", "svg2png.mjs")
 
 
@@ -115,7 +122,7 @@ def measures(photo_rgb, painted_rgb, faces):
     return {k: float(v) for k, v in out.items()}
 
 
-def process(photo, set_dir, out_root, after_opts):
+def process(photo, set_dir, out_root, after_opts, before_opts=(), both_opts=()):
     pid = photo["id"]
     out_dir = os.path.join(out_root, pid)
     os.makedirs(out_dir, exist_ok=True)
@@ -134,26 +141,34 @@ def process(photo, set_dir, out_root, after_opts):
     if os.path.exists(eyes) and os.path.getsize(eyes) > 2:
         common += ["--eyes", eyes]
     results = {}
-    for variant, opts in (("before", []), ("after", ["--paint-mix", "kit"] + after_opts)):
+    common += list(both_opts)
+    for variant, opts in (("before", list(before_opts)), ("after", ["--paint-mix", "kit"] + after_opts)):
         out = os.path.join(out_dir, variant)
         png = os.path.join(out, "finished.png")
         if os.path.exists(png):  # made by an earlier run into this DIR: a new build needs a new DIR
             results[variant] = measures(np.asarray(source), np.asarray(Image.open(png).convert("RGB")), scene.get("faces"))
             continue
         os.makedirs(out, exist_ok=True)
-        r = subprocess.run([PBN, "generate", ppm, out] + common + opts, capture_output=True, text=True)
+        pbn = PBN_BEFORE if variant == "before" else PBN
+        r = subprocess.run([pbn, "generate", ppm, out] + common + opts, capture_output=True, text=True)
         if r.returncode != 0:
             print(f"{pid}/{variant}: pbn failed\n{r.stderr[-2000:]}", file=sys.stderr)
             return pid, None
         subprocess.run(["node", SVG2PNG, os.path.join(out, "painted-outlined.svg"), png, "1280"], check=True,
                        cwd=os.path.join(ROOT, "tools"))
         results[variant] = measures(np.asarray(source), np.asarray(Image.open(png).convert("RGB")), scene.get("faces"))
+        with open(os.path.join(out, "stats.json")) as f:
+            stats = json.load(f)
+        results[variant].update(regions=stats["regions"], colors=stats["colors"],
+                                tiny=stats.get("regionsUnderRadius3", 0))
+        if "auto" in stats:
+            results[variant]["detail"] = stats["auto"]["settings"]["detail"]
     with open(os.path.join(out_dir, "kit.json"), "w") as f:
         json.dump(results, f, indent=1)
     return pid, results
 
 
-KEYS = ["chroma", "chroma90", "contrast", "skinC", "skinL", "neon"]
+KEYS = ["chroma", "chroma90", "contrast", "skinC", "skinL", "neon", "regions", "colors", "detail"]
 
 
 def run(args, after_opts):
@@ -163,7 +178,8 @@ def run(args, after_opts):
         wanted = set(args.only.split(","))
         photos = [p for p in photos if p["id"] in wanted]
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        results = [r for r in pool.map(lambda p: process(p, args.set, args.out, after_opts), photos) if r[1]]
+        results = [r for r in pool.map(lambda p: process(p, args.set, args.out, after_opts, shlex.split(args.before),
+                                                   shlex.split(args.both)), photos) if r[1]]
     lines = ["| photo | variant | " + " | ".join(KEYS) + " |", "|" + "---|" * (len(KEYS) + 2)]
     for pid, r in results + [("mean", None)]:
         for v in ("before", "after"):
@@ -175,7 +191,7 @@ def run(args, after_opts):
             lines.append(f"| {pid} | {v} | " + " | ".join(cells) + " |")
     text = "\n".join(lines)
     with open(os.path.join(args.out, "summary.md"), "w") as f:
-        f.write(f"After: --paint-mix kit {' '.join(after_opts)}\n\n{text}\n")
+        f.write(f"Both: {args.both}  Before: {args.before}  After: --paint-mix kit {' '.join(after_opts)}\n\n{text}\n")
     print(text)
 
 
@@ -223,6 +239,8 @@ def main():
     r.add_argument("--out", required=True)
     r.add_argument("--only")
     r.add_argument("--jobs", type=int, default=2)
+    r.add_argument("--before", default="")
+    r.add_argument("--both", default="")
     g = sub.add_parser("grid")
     g.add_argument("--out", required=True)
     g.add_argument("--width", type=int, default=1100)

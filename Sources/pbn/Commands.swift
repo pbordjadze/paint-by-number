@@ -256,7 +256,7 @@ func suggest(_ image: RGBAImage, importance: Grid<Float>?, options: Options,
         let decision = try AutoSettings.choose(
             image: image, importance: importance, hints: loadHints(options.hints), preference: options.length,
             maxCandidates: options.candidates, lineArt: options.settings.lineArt, tuning: options.settings.tuning,
-            cancel: .none, firstDraft: firstDraft)
+            taste: options.taste, cancel: .none, firstDraft: firstDraft)
         return (decision, milliseconds(since: start))
     } catch { fail("suggestion failed: \(error)") }
 }

@@ -27,6 +27,7 @@ struct PipelineTuningTests {
             (\.subjectEmphasis, ["importanceStrength", "importanceSharpening"]),
             (\.accentColors, ["paletteSaliency"]),
             (\.colorfulness, ["chromaScale"]),
+            (\.subjectCellSize, ["subjectCellSize"]),
         ]
         for (path, names) in cases {
             var settings = base
@@ -46,6 +47,20 @@ struct PipelineTuningTests {
             smoothing: 1, textureFlattening: 1, minimumCellSize: 1, subjectEmphasis: 1, accentColors: 1, colorfulness: 1)
         #expect(Self.knobs(SegmentationParameters(settings: spelled, width: 1200, height: 800)) == plain)
         #expect(PipelineTuning().isDefault)
+    }
+
+    /// The subject's cells are loosened on its body only: the background and a face's core
+    /// keep their smallest area.
+    @Test func subjectCellSizeLoosensTheBodyNotTheFace() {
+        var settings = GenerationSettings()
+        let plain = SegmentationParameters(settings: settings, width: 1200, height: 800)
+        settings.tuning.subjectCellSize = 2.5
+        let loose = SegmentationParameters(settings: settings, width: 1200, height: 800)
+        for importance: Float in [0, 0.25, 0.5, 0.97, 1] {
+            #expect(loose.areaScale(importance: importance, texture: 0.3) == plain.areaScale(importance: importance, texture: 0.3))
+        }
+        let body = loose.areaScale(importance: 0.75, texture: 0.3) / plain.areaScale(importance: 0.75, texture: 0.3)
+        #expect(abs(body - 2.5) < 1e-4)
     }
 
     @Test func coloringBookFlatteningScalesOnlyThePaintKnobs() {

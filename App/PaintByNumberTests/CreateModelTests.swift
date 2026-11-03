@@ -79,6 +79,7 @@ struct CreateModelTests {
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
         #expect(model.settings.paintMix == CreateModel.newPaintMix)
+        #expect(model.settings.tuning == CreateModel.newTuning && model.decision?.settings.tuning == CreateModel.newTuning)
         #expect(model.settingsOrigin == .suggested)
         let preview = try #require(model.preview)
         #expect(preview.settings?.paintMix == CreateModel.newPaintMix)
@@ -403,12 +404,13 @@ struct CreateModelTests {
     @Test func createModelMapsSliders() {
         let model = CreateModel()
         // The sliders wait at the generator's defaults until a photo's suggestion moves them.
-        #expect(model.settings == GenerationSettings(paintMix: CreateModel.newPaintMix))
+        #expect(model.settings == GenerationSettings(tuning: CreateModel.newTuning, paintMix: CreateModel.newPaintMix))
         #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
         model.colorCount = 30
         model.detail = 0.25
         model.smoothness = 0.75
-        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75, paintMix: CreateModel.newPaintMix))
+        #expect(model.settings == GenerationSettings(
+            colorCount: 30, detail: 0.25, smoothness: 0.75, tuning: CreateModel.newTuning, paintMix: CreateModel.newPaintMix))
         model.colorCount = 11.6
         #expect(model.settings.colorCount == 12)
         model.colorCount = 999

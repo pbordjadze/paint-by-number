@@ -22,7 +22,11 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 /// - a wider lightness spread (`lightnessSpread`), as a cubic that leaves black and white where
 ///   they are, so the lightest paints never pile up at the paper's white;
 /// - less of both on skin (`skinHue`…, `skinShare`): a sunburnt face is the complaint painters
-///   make most of a kit's paints;
+///   make most of a kit's paints; instead light skin is lifted (`skinLift`, never dark skin)
+///   and turned a little from yellow toward pink (`skinTurn`), since a coloring book's larger
+///   cells average a face's shadows into its paint, which read khaki beside the photo's peach
+///   (the round-1 critic, on kodim04 and street-couple);
+/// - less gain on pale paints (`paleCut`): a wall or a sky boosted outshone the faces;
 ///
 /// then is brought into gamut by chroma alone (`ColorScience.okLabToEncoded`). Two paints the
 /// change brings closer than the template's `minPaletteDistance` both step back toward their
@@ -48,10 +52,19 @@ public enum KitPaint {
     static let skinCosine: ClosedRange<Float> = 0.766...0.906
     /// Skin's chroma: above this range a paint is too vivid to be skin (a fox, a pumpkin).
     static let skinChroma: ClosedRange<Float> = 0.10...0.14
-    /// The share of the gain and spread skin keeps: 1.12× chroma, which brings a face's mean
-    /// chroma back to about the photo's (averaging left it at 89 % over the evaluation set's
-    /// faces), and a gentle spread.
-    static let skinShare: Float = 0.4
+    /// The share of the gain and spread skin keeps: 1.06× chroma and a gentle spread (at 1.12×
+    /// warm faces drifted orange).
+    static let skinShare: Float = 0.2
+    /// Light skin's lift: up to +0.05 lightness, full from L 0.62 to 0.86, none below 0.5 (dark
+    /// skin keeps its depth) nor at the highlights.
+    static let skinLift: Float = 0.05
+    static let lightSkin: ClosedRange<Float> = 0.5...0.62
+    static let skinHighlight: ClosedRange<Float> = 0.86...0.94
+    /// Skin's hue turned toward pink by up to this angle, in radians (5.7°).
+    static let skinTurn: Float = 0.1
+    /// The share of the gain pale paints lose, fading in over `pale` lightness.
+    static let paleCut: Float = 0.4
+    static let pale: ClosedRange<Float> = 0.72...0.9
     /// The strength two paints too close step back by, a round at a time.
     static let backStep: Float = 0.25
 
@@ -92,10 +105,17 @@ public enum KitPaint {
             skin = smoothstep(skinCosine, cosine) * (1 - smoothstep(skinChroma, chroma)) * smoothstep(neutralChroma, chroma)
         }
         let share = strength * (1 - (1 - skinShare) * skin)
-        let gain = 1 + chromaGain * share * smoothstep(neutralChroma, chroma) * (1 - smoothstep(vividChroma, chroma))
         let L = min(max(lab.x, 0), 1)
-        let lightness = L + lightnessSpread * share * (L - 0.5) * 4 * L * (1 - L)
-        let rgb = ColorScience.okLabToEncoded(SIMD3(lightness, lab.y * gain, lab.z * gain), space: space)
+        let gain = 1 + chromaGain * share * smoothstep(neutralChroma, chroma) * (1 - smoothstep(vividChroma, chroma))
+            * (1 - paleCut * smoothstep(pale, L))
+        var lightness = L + lightnessSpread * share * (L - 0.5) * 4 * L * (1 - L)
+        let onSkin = strength * skin
+        lightness += skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
+        // A small turn toward pink, kept to its chroma: (a, b) rotated by −θ to first order.
+        let theta = skinTurn * onSkin
+        let norm = 1 / (1 + theta * theta).squareRoot()
+        let a = (lab.y + theta * lab.z) * norm, b = (lab.z - theta * lab.y) * norm
+        let rgb = ColorScience.okLabToEncoded(SIMD3(lightness, a * gain, b * gain), space: space)
         return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: space), rgb: rgb)
     }
 

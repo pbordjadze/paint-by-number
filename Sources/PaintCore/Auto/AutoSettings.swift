@@ -263,9 +263,10 @@ public enum AutoSettings {
     ///     estimated for it. Nil means the template's own canvas.
     ///   - detail: The detail the template was generated at (the default settings' unless
     ///     given); with `fullSize` it sets how the region count grows to the full canvas.
+    ///   - taste: What the score values (`AutoTaste`).
     public static func score(
         _ output: TemplateGenerator.Output, working: RGBAImage, importance: [Float], preference: PaintingLength,
-        fullSize: (width: Int, height: Int)? = nil, detail: Float = GenerationSettings().detail
+        fullSize: (width: Int, height: Int)? = nil, detail: Float = GenerationSettings().detail, taste: AutoTaste = .fidelity
     ) -> AutoScore {
         let t = output.template
         let w = t.width, h = t.height, n = w * h
@@ -296,10 +297,26 @@ public enum AutoSettings {
             penalty = (above ? bandPenaltyWeight : belowBandWeight) * distance * distance
         }
         let perRegion = 1 / Float(max(regions, 1))
-        let total = fidelity.mean + p95Weight * fidelity.p95 + ringWeight * Float(rings) * perRegion
-            + tinyWeight * Float(tiny) * perRegion + paintWeight * Float(t.palette.count) + penalty
+        var subjectTiny: Int?
+        var crumbCost: Float = 0
+        var fidelityTerms = fidelity.mean + p95Weight * fidelity.p95
+        if taste == .finished {
+            fidelityTerms *= AutoTaste.fidelityShare
+            if seconds < band.lowerBound { penalty = 0 }
+            var count = 0
+            for region in t.regions where region.inscribedRadius < tinyRadius && region.labelCount > 0 {
+                let p = t.labels[Int(region.labelStart)].position
+                let x = min(max(Int(p.x), 0), w - 1), y = min(max(Int(p.y), 0), h - 1)
+                if weights[y * w + x] >= AutoTaste.subjectImportance { count += 1 }
+            }
+            subjectTiny = count
+            crumbCost = AutoTaste.subjectCrumbWeight * Float(count) * perRegion
+        }
+        let total = fidelityTerms + ringWeight * Float(rings) * perRegion
+            + tinyWeight * Float(tiny) * perRegion + paintWeight * Float(t.palette.count) + penalty + crumbCost
         return AutoScore(
-            fidelity: fidelity.mean, fidelityP95: fidelity.p95, regions: regions, tinyRegions: tiny, bandRings: rings,
+            fidelity: fidelity.mean, fidelityP95: fidelity.p95, regions: regions, tinyRegions: tiny,
+            subjectTinyRegions: subjectTiny, bandRings: rings,
             minLabelRoom: room.isFinite ? room : 0, estimatedSeconds: seconds, bandPenalty: penalty, total: total)
     }
 
@@ -399,7 +416,7 @@ public enum AutoSettings {
     public static func choose(
         image: RGBAImage, sourceSize: (width: Int, height: Int)? = nil, importance: Grid<Float>?, hints: SubjectHints?,
         preference: PaintingLength, maxCandidates: Int, lineArt: LineArtSettings? = nil, tuning: PipelineTuning? = nil,
-        cancel: CancellationCheck,
+        taste: AutoTaste = .fidelity, cancel: CancellationCheck,
         firstDraft: (@Sendable (TemplateGenerator.Output) -> Void)?
     ) throws -> AutoDecision {
         // Checks only see task cancellation on the calling thread; once it sees one, the
@@ -428,7 +445,7 @@ public enum AutoSettings {
             let full = settings.workingSize(sourceWidth: source.width, sourceHeight: source.height)
             return Self.score(
                 output, working: working.image, importance: working.weights, preference: preference, fullSize: full,
-                detail: settings.detail)
+                detail: settings.detail, taste: taste)
         }
 
         let center = try generate(candidates[0].settings)
@@ -449,20 +466,25 @@ public enum AutoSettings {
 
         return AutoDecision(
             analysis: analysis, preference: preference, candidates: candidates,
-            winner: winner(of: candidates, preference: preference))
+            winner: winner(of: candidates, preference: preference, taste: taste))
     }
 
     /// The lowest total, with `tieMargin`: the center when its total is within the margin of
     /// the best and its painting time doesn't run over the band; otherwise, of the candidates
     /// within the margin, the estimated painting time nearest the middle of the preference's
     /// band (on a log scale), then the earlier candidate.
-    static func winner(of candidates: [AutoCandidate], preference: PaintingLength) -> Int {
+    /// The finished taste breaks a tie the calm way instead: the fewest regions.
+    static func winner(of candidates: [AutoCandidate], preference: PaintingLength, taste: AutoTaste = .fidelity) -> Int {
         let totals = candidates.map { $0.score?.total ?? .infinity }
         guard let best = totals.min(), best.isFinite else { return 0 }
         let band = preference.timeBand
         if totals[0] <= best + tieMargin, candidates[0].score!.estimatedSeconds <= band.upperBound { return 0 }
         let middle = (band.lowerBound * band.upperBound).squareRoot()
-        func distance(_ i: Int) -> Double { abs(log(max(candidates[i].score!.estimatedSeconds, 1) / middle)) }
+        func distance(_ i: Int) -> Double {
+            taste == .finished
+                ? Double(candidates[i].score!.regions)
+                : abs(log(max(candidates[i].score!.estimatedSeconds, 1) / middle))
+        }
         var winner = -1
         for i in candidates.indices where totals[i] <= best + tieMargin {
             if winner < 0 || distance(i) < distance(winner) { winner = i }

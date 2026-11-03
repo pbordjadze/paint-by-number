@@ -4,7 +4,7 @@
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
 //       [--paint-mix photo|kit]
-//       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
+//       [--auto [--length quick|relaxed|detailed] [--taste fidelity|finished] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
 //        [--line-edits edits.json] [--line-art key=value]...]
@@ -15,7 +15,8 @@
 //       line-art.pgm (books with an edge map), vectorized.pgm (all smoothed boundaries).
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --paint-mix kit mixes the paints as a kit would (KitPaint), the regions unchanged;
-//       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
+//       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`;
+//       --taste finished scores the finished painting, AutoTaste);
 //       a coloring book splits the cells along the edge map's lines
 //       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it
 //       encloses, and selected.svg hatches the cells of the paint with the most of them, as the
@@ -109,7 +110,7 @@
 //   pbn practice painted|inked --out <dir>
 //       writes the Tool Guide's practice picture (RefinePractice) for pbn refine: photo.ppm,
 //       template.pbnt (its scene, for --template) and painting.ppm (as the page shows it)
-//   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
+//   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--taste finished] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
 //       dir, else the current directory); with --out also the draft (draft.ppm), its working

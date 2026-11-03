@@ -318,6 +318,38 @@ struct AutoSettingsTests {
         #expect(AutoSettings.winner(of: [center, short, worse], preference: .detailed) == 1)
     }
 
+    /// The finished taste: a time under the band is free, the colour error counts half,
+    /// crumbs on the subject cost more, and a tie goes to the calmest candidate.
+    @Test func theFinishedTasteValuesTheFinishedPainting() throws {
+        let image = TestScenes.scene(width: 240, height: 160)
+        let output = try TemplateGenerator().generate(from: image, cancel: .none)
+        let t = output.template
+        let working = Resample.area(image, width: t.width, height: t.height)
+        let low = [Float](repeating: 0.25, count: t.width * t.height)
+        let subject = [Float](repeating: 0.75, count: t.width * t.height)
+        // The template's own canvas: far under Detailed's band.
+        let fidelity = AutoSettings.score(output, working: working, importance: low, preference: .detailed)
+        let finished = AutoSettings.score(output, working: working, importance: low, preference: .detailed, taste: .finished)
+        #expect(fidelity.bandPenalty > 0 && finished.bandPenalty == 0)
+        #expect(fidelity.subjectTinyRegions == nil && finished.subjectTinyRegions == 0)
+        #expect(finished.total < fidelity.total)
+        let onSubject = AutoSettings.score(output, working: working, importance: subject, preference: .detailed, taste: .finished)
+        #expect(onSubject.subjectTinyRegions == onSubject.tinyRegions)
+        if onSubject.tinyRegions > 0 { #expect(onSubject.total > finished.total) }
+
+        func candidate(total: Float, regions: Int) -> AutoCandidate {
+            AutoCandidate(settings: GenerationSettings(), score: AutoScore(
+                fidelity: 0.04, fidelityP95: 0.1, regions: regions, tinyRegions: 0, bandRings: 0,
+                minLabelRoom: 3, estimatedSeconds: Double(regions) * 6, bandPenalty: 0, total: total))
+        }
+        let margin = AutoSettings.tieMargin
+        let center = candidate(total: 0.1, regions: 300)
+        let calm = candidate(total: 0.1 - 2 * margin, regions: 200)
+        let busy = candidate(total: 0.1 - 2.5 * margin, regions: 500)
+        #expect(AutoSettings.winner(of: [center, calm, busy], preference: .relaxed, taste: .finished) == 1)
+        #expect(AutoSettings.winner(of: [center, calm, busy], preference: .relaxed) == 2)
+    }
+
     @Test func thresholdsFadeIn() {
         #expect(AutoSettings.ramp(0.025, at: 0.03) == 0 && AutoSettings.ramp(0.036, at: 0.03) == 1)
         #expect(abs(AutoSettings.ramp(0.03, at: 0.03) - 0.5) < 1e-5)

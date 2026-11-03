@@ -11,23 +11,27 @@ struct KitPaintTests {
     static func chroma(_ c: PaletteColor) -> Float { (c.oklab.y * c.oklab.y + c.oklab.z * c.oklab.z).squareRoot() }
 
     @Test func aMutedPaintGetsBolderAndSkinStaysClose() {
-        // A muted blue, a muted green, light skin, medium skin, a near-white grey.
+        // A muted blue, a muted green, light skin, medium skin, a near-white grey, dark skin.
         let palette = [
             Self.paint(0.55, -0.03, -0.06), Self.paint(0.6, -0.06, 0.05), Self.paint(0.837, 0.033, 0.056),
-            Self.paint(0.677, 0.060, 0.070), Self.paint(0.95, 0.002, 0.004),
+            Self.paint(0.677, 0.060, 0.070), Self.paint(0.95, 0.002, 0.004), Self.paint(0.38, 0.037, 0.044),
         ]
         let mixed = KitPaint.mix(palette, space: .sRGB, minDistance: 0.04)
         let gain = zip(palette, mixed).map { Self.chroma($1) / Self.chroma($0) }
         #expect(gain[0] > 1.25 && gain[0] < 1.31)
         #expect(gain[1] > 1.25 && gain[1] < 1.31)
-        #expect(gain[2] > 1.05 && gain[2] < 1.13)
-        #expect(gain[3] > 1.05 && gain[3] < 1.13)
+        #expect(gain[2] > 0.98 && gain[2] < 1.08)  // lifted to the sRGB edge: chroma clipped
+        #expect(gain[3] > 1.03 && gain[3] < 1.08)
         // A near-grey keeps its hue's strength: an off-white never turns pink.
         #expect(abs(Self.chroma(mixed[4]) - Self.chroma(palette[4])) < 0.002)
         // White stays white, the darks go darker and the lights lighter, by a little.
         #expect(abs(mixed[4].oklab.x - palette[4].oklab.x) < 0.02)
         #expect(mixed[0].oklab.x > palette[0].oklab.x)
-        #expect(mixed[2].oklab.x > palette[2].oklab.x && mixed[2].oklab.x - palette[2].oklab.x < 0.02)
+        // Light skin is lifted a little and turned toward pink; the darks of skin are not lifted.
+        #expect(mixed[2].oklab.x - palette[2].oklab.x > 0.03 && mixed[2].oklab.x - palette[2].oklab.x < 0.07)
+        func hue(_ c: PaletteColor) -> Float { atan2(c.oklab.z, c.oklab.y) }
+        #expect(hue(mixed[2]) < hue(palette[2]) - 0.05 && hue(mixed[2]) > hue(palette[2]) - 0.12)
+        #expect(mixed[5].oklab.x <= palette[5].oklab.x + 0.002)
     }
 
     @Test func paintsStayInGamutOrderedAndApart() {
