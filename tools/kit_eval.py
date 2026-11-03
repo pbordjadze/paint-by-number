@@ -99,8 +99,10 @@ def standin_eyes(scene, size):
     long_side = max(w, h)
     polygons = []
     for f in scene.get("features", []):
+        if f["kind"] != "eye":
+            continue
         half = f["radius"] / 1.2 * long_side
-        if f["kind"] != "eye" or 2 * half < 0.012 * long_side:
+        if 2 * half < 0.012 * long_side:
             continue
         cx, cy = f["x"] * w, f["y"] * h
         points = [(cx + half * math.cos(2 * math.pi * i / 16), cy + 0.45 * half * math.sin(2 * math.pi * i / 16))
@@ -162,12 +164,12 @@ def process(photo, set_dir, out_root, after_opts, before_opts=(), both_opts=()):
     eyes = os.path.join(scene_dir, "eyes.json")
     if os.path.exists(eyes) and os.path.getsize(eyes) > 2:
         common += ["--eyes", eyes]
-    elif standin_eyes(scene, source.size):
+    elif marked := standin_eyes(scene, source.size):
         # The stand-in's landmarker missed these faces, whose eyes the set marks by hand
         # (`overrides.json`) and Vision finds on the device: almonds at the marked eyes.
         eyes = os.path.join(out_dir, "eyes.json")
         with open(eyes, "w") as f:
-            json.dump(standin_eyes(scene, source.size), f)
+            json.dump(marked, f)
         common += ["--eyes", eyes]
     results = {}
     common += list(both_opts)

@@ -76,6 +76,25 @@ struct KitPaintTests {
         // The hair is lifted with the cheek, so the two keep apart, and stays blond.
         #expect(abs(hue(pale[2]) - hue(palette[2])) < 1)
         #expect(pale[2].oklab.x > tanned[2].oklab.x)
+        // A darker face's lit paint beside the fair one (chroma 0.08 at L 0.55) keeps its colour.
+        let darker = paint(0.55, 0.08, 55)
+        let faces = KitPaint.Faces(share: [0.6], skinHue: skinHue, skinLightness: 0.52, pallor: 1)
+        let mixed = KitPaint.mix([darker], space: .sRGB, minDistance: 0.02, faces: faces)[0]
+        let unpaled = KitPaint.mix([darker], space: .sRGB, minDistance: 0.02, faces: KitPaint.Faces(
+            share: [0.6], skinHue: skinHue, skinLightness: 0.52, pallor: 0))[0]
+        #expect(ColorScience.distance(mixed.oklab, unpaled.oklab) < 0.002)
+    }
+
+    /// A pale face's lit paints up to its highlights keep their order of lightness.
+    @Test func aPaleFacesPaintsKeepTheirLightnessOrder() {
+        let faces = KitPaint.Faces(share: [0.6], skinHue: SIMD2(0.642_788, 0.766_044), skinLightness: 0.52, pallor: 1)
+        var last: Float = 0
+        for i in 0...60 {
+            let L = 0.4 + 0.01 * Float(i)
+            let mixed = KitPaint.mix([Self.paint(L, 0.032, 0.038)], space: .sRGB, minDistance: 0.02, faces: faces)[0]
+            #expect(mixed.oklab.x > last)
+            last = mixed.oklab.x
+        }
     }
 
     @Test func paintsStayInGamutOrderedAndApart() {

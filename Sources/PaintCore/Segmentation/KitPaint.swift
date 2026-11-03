@@ -16,7 +16,7 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 /// the painting kept 95 % of the photo's top-decile chroma and 96 % of its lightness spread,
 /// while a kit's paints are mixed brighter than the photo. Each paint gets
 ///
-/// - up to `chromaGain` more chroma, fading in over near-greys (`neutralChroma`: an off-white
+/// - up to `chromaGain` more chroma (a pale face's lit side excepted, below), fading in over near-greys (`neutralChroma`: an off-white
 ///   would turn pink) and out over paints already vivid (`vividChroma`: they would clip or turn
 ///   neon);
 /// - a wider lightness spread (`lightnessSpread`), as a cubic that leaves black and white where
@@ -87,11 +87,15 @@ public enum KitPaint {
     /// lightness and none above the upper: fair skin in dim light measures 0.07–0.08 (kodim04,
     /// the astronaut, the street couple), sunburnt children 0.13, tanned and dark skin 0.15–0.16.
     static let pallidRatio: ClosedRange<Float> = 0.09...0.11
-    /// A pale face's lit paints, from `litBelow` under its skin's mean lightness to the mean,
-    /// get up to this much more lightness (fading out over `skinHighlight`) and at least
-    /// `paleFloor` × L chroma: 0.05 at L 0.7, the clean peach of a kit's fair skin.
+    /// A pale face's lit paints that are pale themselves, from `litBelow` under its skin's mean
+    /// lightness to the mean, get up to this much more lightness on top of `skinLift` (fading
+    /// out over `paleHighlight`, after `skinHighlight`: one lift falling at a time, each slower
+    /// than lightness rises, so lighter paints stay lighter) and at least `paleFloor` × L chroma, 0.05 at L 0.7, the clean
+    /// peach of a kit's fair skin, past `chromaGain` where the photo's was grey. The pallor is
+    /// the photo's faces' together, so a fair face beside a darker one gets less of it.
     static let paleLift: Float = 0.06
     static let litBelow: Float = 0.06
+    static let paleHighlight: ClosedRange<Float> = 0.82...0.96
     static let paleFloor: Float = 0.07
     /// …and are turned up to this share of the way to `peach` (45°, a kit's fair-skin mix).
     static let palePink: Float = 0.5
@@ -267,7 +271,7 @@ public enum KitPaint {
             * (1 - paleCut * smoothstep(pale, L) * (1 - smoothstep(paleChroma, chroma)))
         var lightness = L + lightnessSpread * share * (L - 0.5) * 4 * L * (1 - L)
         let onSkin = strength * skin * face
-        lightness += skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
+        var lift = skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
         // A face's paint turned to the face's own hue, kept to its chroma.
         var a = lab.y, b = lab.z
         var near: Float = 0
@@ -284,10 +288,12 @@ public enum KitPaint {
         var scale = gain
         if let pallid, pallid.pallor > 0, pallid.lightness.isFinite, onSkin > 0, chroma > 0 {
             // Hair at skin's hue beside the face is lifted with it, so the two keep apart.
-            let lit = onSkin * pallid.pallor * smoothstep((pallid.lightness - litBelow)...pallid.lightness, L)
-                * (1 - smoothstep(skinHighlight, L))
-            lightness += paleLift * lit
-            scale = max(gain, 1 + lit * (paleFloor * lightness / chroma - 1))
+            // Pale itself too: a darker face beside a fair one keeps its colour.
+            let lit = onSkin * pallid.pallor * (1 - smoothstep(pallidRatio, chroma / max(L, 0.05)))
+                * smoothstep((pallid.lightness - litBelow)...pallid.lightness, L)
+            // Faded out once `skinLift` has, so a lighter paint never ends up darker.
+            lift += paleLift * lit * (1 - smoothstep(paleHighlight, L))
+            scale = max(gain, 1 + lit * (paleFloor * (lightness + lift) / chroma - 1))
             // Turned toward peach, never past it: a yellow cast kept, matched, read khaki.
             // Only paints of the face's own hue: blond hair stays blond.
             let own = SIMD2(a, b) / chroma
@@ -298,6 +304,7 @@ public enum KitPaint {
                 b = turned.y / length * chroma
             }
         }
+        lightness += lift
         let rgb = ColorScience.okLabToEncoded(SIMD3(lightness, a * scale, b * scale), space: space)
         return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: space), rgb: rgb)
     }
