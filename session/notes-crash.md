@@ -1,0 +1,1 @@
+crashes.txt was empty at the end of the session (no crash). app.log confirms the slider swipes that started off the thumb never registered: the first "A slider was touched" is at 10:59:58, after the swipe that started on the thumb.

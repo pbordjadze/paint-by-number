@@ -1,0 +1,105 @@
+Timestamp               Ty Process[PID:TID]
+2026-11-03 10:53:56.251 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-03 10:53:57.784 Df PaintByNumber[21551:ef4e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.537402542 seconds
+2026-11-03 10:54:31.413 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 34.679593292 seconds
+2026-11-03 10:54:31.795 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-03 10:54:50.042 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 18.628388917 seconds
+2026-11-03 10:54:50.063 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-03 10:54:50.529 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-03 10:55:35.800 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+2026-11-03 10:57:48.009 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted
+2026-11-03 10:59:17.491 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-03 10:59:18.040 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-03 10:59:18.056 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 10:59:20.533 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 10:59:20.555 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted newPaintingDivider, newPaintingSliders, newPaintingRefine
+2026-11-03 10:59:20.997 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn: newPaintingDivider
+2026-11-03 10:59:28.722 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn over: newPaintingDivider
+2026-11-03 10:59:58.349 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-03 10:59:58.428 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.7722719, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:58.506 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #3 started for 22 colors, detail 0.7722719, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:58.914 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.64005584, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:58.984 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.27227187, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.032 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.2462011, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.061 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.19405958, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.097 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.1810242, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.129 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.1689199, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.160 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.14471135, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.200 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.122364976, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.236 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.090707615, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.273 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.07208564, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.331 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.05532587, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.417 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.048808176, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.485 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.027338777, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.554 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.016258439, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.614 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.01132381, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.681 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.009040471, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.749 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.0083299335, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.816 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 10:59:59.841 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-03 10:59:59.855 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingReset, wanted
+2026-11-03 10:59:59.905 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #3 cancelled [adjusting false, full under way false, final false, phase ready]
+2026-11-03 10:59:59.939 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #4 started for 22 colors, detail 0.007761622, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 11:00:01.353 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 11:00:01.368 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:00:13.089 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-03 11:00:13.184 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 19 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.204 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #5 started for 19 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.277 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 16 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.355 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 13 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.414 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.473 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 10 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.531 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.575 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.655 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 7 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:13.702 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Settings changed to 6 colors, detail 0.007761622, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-03 11:00:14.020 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-03 11:00:14.034 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingReset, wanted
+2026-11-03 11:00:14.056 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Draft #5 cancelled [adjusting false, full under way false, final false, phase ready]
+2026-11-03 11:00:14.103 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #6 started for 6 colors, detail 0.007761622, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 11:00:15.883 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #6 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 11:00:15.897 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:00:27.471 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-11-03 11:00:28.600 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted refineDraw
+2026-11-03 11:00:29.822 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+2026-11-03 11:00:41.739 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn over: refineDraw
+2026-11-03 11:00:44.110 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #7 started for 6 colors, detail 0.007761622, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 11:00:44.433 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Full #7 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 11:00:44.488 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:01:21.414 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:01:40.672 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:01:44.853 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:02:02.854 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:02:06.173 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:02:09.738 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:02:19.458 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 11:02:30.299 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:02:33.570 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:02:36.730 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:02:54.747 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:02:58.957 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:03:04.973 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:03:21.197 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:03:24.429 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:03:28.006 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:06:06.792 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:07:28.043 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: select
+2026-11-03 11:07:57.171 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: fill
+2026-11-03 11:08:09.622 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: cellEdge
+2026-11-03 11:08:33.488 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 11:09:23.750 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Hand-off: the page is expected at Optional((15.999999999999972, 300.6110108303249, 370.00000000000006, 246.7779783393502))
+2026-11-03 11:09:24.720 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:library] Opened E6D5C431-1AFD-43B0-9918-AF3E256A6E30: 9 regions
+2026-11-03 11:09:25.507 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-03 11:09:26.113 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-03 11:09:26.446 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Painting reports its template at (16.0, 300.6666666666667, 370.00000000000006, 246.77797833935023)
+2026-11-03 11:09:26.467 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:create] Hand-off: the painting drew, its page at (16.0, 300.6666666666667, 370.00000000000006, 246.77797833935023)
+2026-11-03 11:09:26.724 Df PaintByNumber[21551:26218] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.709394 seconds
+2026-11-03 11:09:27.080 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap
+2026-11-03 11:09:27.840 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn: benchTap
+2026-11-03 11:09:45.729 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] turn over: benchTap
+2026-11-03 11:09:47.452 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted
+2026-11-03 11:10:15.980 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in bench: benchShowPhoto, wanted benchShowPhoto
+2026-11-03 11:10:17.610 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] benchShowPhoto refused: tooSoon
+2026-11-03 11:10:23.129 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in bench: benchDrag, wanted benchDrag
+2026-11-03 11:10:26.246 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] nothing was eligible in time: benchDrag pending
+2026-11-03 11:10:58.371 Df PaintByNumber[21551:eee9] [com.pbordjadze.paintbynumber:tips] offer in bench: benchReplay, wanted
