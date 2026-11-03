@@ -39,7 +39,10 @@ before planning app work).
     `enforceLabelRoom` drops unused paints in order and nothing reorders them. `Auto/` reuses
     `WorkingImage`, `StructureMap`, `ImportanceMap`, `BoxBlur`, `PaletteBuilder` and
     `SegmentationParameters`, so a refactor there that keeps templates byte-identical can still move
-    Auto's decisions. `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    Auto's decisions. Kit paint (`KitPaint`, `GenerationSettings.paintMix`, `pbn --paint-mix kit`,
+    `tools/kit_eval.py`): the finished template's paints mixed bolder than the regions' means,
+    nothing else moved; nil is the photo's, and the app asks for it only under `UNRELEASED`
+    (`CreateModel.paintMix`). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline

@@ -34,8 +34,11 @@ func runGenerate(_ options: Options) throws {
     let importance = loadImportance(options.importance)
     let lineArtInput = loadLineArt(options)
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
-    // Auto's decision carries the line art and tuning asked for.
-    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
+    // Auto's decision carries the line art and tuning asked for; it is scored on the regions,
+    // so the paints' mix is laid on its choice, as the app does.
+    var chosen = decision?.0.settings ?? options.settings
+    chosen.paintMix = options.settings.paintMix
+    let generator = TemplateGenerator(settings: chosen)
     let observer = try snapshotObserver(options)
     let output: TemplateGenerator.Output
     do {

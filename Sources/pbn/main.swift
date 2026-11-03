@@ -3,6 +3,7 @@
 // format is read too).
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
+//       [--paint-mix photo|kit]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
@@ -13,6 +14,7 @@
 //       palette.ppm (palette-colored pixel labels), simplified.ppm (final region paints),
 //       line-art.pgm (books with an edge map), vectorized.pgm (all smoothed boundaries).
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
+//       --paint-mix kit mixes the paints as a kit would (KitPaint), the regions unchanged;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       a coloring book splits the cells along the edge map's lines
 //       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it

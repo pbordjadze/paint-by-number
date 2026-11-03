@@ -72,6 +72,19 @@ struct CreateModelTests {
         #expect(model.decision?.candidates.map(\.settings) == decision.candidates.map(\.settings))
     }
 
+    /// In SideStore and Debug builds a photo's painting has a kit's paints (painting-company row
+    /// 191): the regions Auto chose, the paints bolder, and the suggestion still reads as one.
+    @Test func newPaintingsHaveKitPaints() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.settings.paintMix == .kit)
+        #expect(model.settingsOrigin == .suggested)
+        let preview = try #require(model.preview)
+        #expect(preview.settings?.paintMix == .kit)
+        #expect(model.decision?.settings.paintMix == nil)
+    }
+
     /// Starting a painting while settings are still being chosen waits for them.
     @Test func startingWhileChoosingUsesTheSuggestion() async throws {
         let model = CreateModel(paintingLength: .quick)

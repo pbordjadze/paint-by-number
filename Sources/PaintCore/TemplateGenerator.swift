@@ -105,6 +105,11 @@ public struct TemplateGenerator: Sendable {
                 guides: plan?.guides ?? [], cancel: cancel, clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
+        // Before the line art's annotation, which reads the paints' lightness (writing on dark paint).
+        if settings.paintMix == .kit {
+            vector.template.palette = KitPaint.mix(
+                vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance)
+        }
         if let plan {
             try cancel.throwIfCancelled()
             vector.template.lineArt = try clock.measure("lineArt.annotate") {

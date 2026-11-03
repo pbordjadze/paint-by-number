@@ -507,6 +507,11 @@ Conventions).
   waiting Refine is) → the winner's draft (unless it is that candidate
   and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
   (a `withTaskCancellationHandler` flag reaches every candidate's thread).
+- Kit paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 191): a photo's
+  new painting records `paintMix: .kit` (`CreateModel.paintMix`, PaintCore's `KitPaint`), so its
+  paints are a kit's, bolder than the regions' means; Auto chooses the regions on the photo's
+  paints and the mix is laid on its choice (`CreateModel.mixed`, the first draft too). The
+  release, starters and regenerated paintings keep what their settings record.
 - `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`, reported through
   `settingsChanged()`; back on every suggested value, the sliders' detents, it is `.suggested`
   again); `TemplatePreviewView`'s chip offers Reset to Suggested, which restores the kept

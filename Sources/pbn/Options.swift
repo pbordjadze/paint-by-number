@@ -131,6 +131,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--detail": o.settings.detail = number(a, &it)
         case "--smooth": o.settings.smoothness = number(a, &it)
         case "--seed": o.settings.seed = number(a, &it)
+        case "--paint-mix": o.settings.paintMix = choice(a, value(a, &it))
         case "--vocabulary":
             o.vocabulary = number(a, &it)
             guard o.vocabulary! >= 1 else { fail("--vocabulary: at least 1") }

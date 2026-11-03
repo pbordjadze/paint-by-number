@@ -273,8 +273,26 @@ final class CreateModel {
     var settings: GenerationSettings {
         GenerationSettings(
             colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt,
-            drawing: isDrawing ? DrawingSettings(palette: drawingPalette) : nil
+            drawing: isDrawing ? DrawingSettings(palette: drawingPalette) : nil, paintMix: isDrawing ? nil : Self.paintMix
         ).normalized
+    }
+
+    /// How a new painting's paints are mixed: as a kit would mix them (PaintCore's `KitPaint`)
+    /// in SideStore and Debug builds, until Paul has seen it (painting-company row 191); the
+    /// regions' own colors in the release. A drawing's paints come from its palette set. The
+    /// painting records it, so it regenerates as it was made.
+    #if UNRELEASED
+    nonisolated static let paintMix: PaintMix? = .kit
+    #else
+    nonisolated static let paintMix: PaintMix? = nil
+    #endif
+
+    /// A suggestion's settings with the paints mixed as the sliders' are: Auto chooses the
+    /// regions, and the mix is laid on its choice.
+    nonisolated static func mixed(_ suggested: GenerationSettings) -> GenerationSettings {
+        var settings = suggested
+        if settings.drawing == nil { settings.paintMix = paintMix }
+        return settings
     }
 
     /// The photo's settings are still being chosen: the sliders wait for them.
@@ -633,7 +651,7 @@ final class CreateModel {
         refineAsked = false
         startAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
-        if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
+        if let decision { settingsOrigin = settings == Self.mixed(decision.settings) ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
             scheduleFull(after: Self.restDelay)
@@ -765,7 +783,7 @@ final class CreateModel {
         apply(saved.settings)
         lines = saved.lines
         if let set = saved.settings.drawing?.palette { drawingPalette = set }
-        if let suggestion { settingsOrigin = settings == suggestion.settings ? .suggested : .custom }
+        if let suggestion { settingsOrigin = settings == Self.mixed(suggestion.settings) ? .suggested : .custom }
         phase = .generating
         startGeneration(draftFirst: false)
     }
@@ -1443,9 +1461,16 @@ final class CreateModel {
                 cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
-                guard let firstDraft,
-                      let preview = try? Self.makePreview(
-                        output.template, settings: nil, refinements: TemplateRefinements(), isDraft: true, style: .painting)
+                guard let firstDraft else { return }
+                var template = output.template
+                if Self.paintMix == .kit {
+                    // Its paints as the painting's will be; the candidate's own count bounds how close.
+                    template.palette = KitPaint.mix(
+                        template.palette, space: template.colorSpace,
+                        minDistance: GenerationSettings(colorCount: template.palette.count).minPaletteDistance)
+                }
+                guard let preview = try? Self.makePreview(
+                    template, settings: nil, refinements: TemplateRefinements(), isDraft: true, style: .painting)
                 else { return }
                 firstDraft(preview)
             }
