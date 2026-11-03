@@ -17,7 +17,10 @@ struct KitPaintTests {
             Self.paint(0.677, 0.060, 0.070), Self.paint(0.95, 0.002, 0.004), Self.paint(0.38, 0.037, 0.044),
         ]
         // The skins are paints on a face.
-        let mixed = KitPaint.mix(palette, space: .sRGB, minDistance: 0.04, faces: [0, 0, 0.6, 0.6, 0, 0.6])
+        // The photo's skin there at 40°.
+        let skinHue = SIMD2<Float>(0.766_044, 0.642_788)
+        let mixed = KitPaint.mix(
+            palette, space: .sRGB, minDistance: 0.04, faces: KitPaint.Faces(share: [0, 0, 0.6, 0.6, 0, 0.6], skinHue: skinHue))
         let gain = zip(palette, mixed).map { Self.chroma($1) / Self.chroma($0) }
         #expect(gain[0] > 1.25 && gain[0] < 1.31)
         #expect(gain[1] > 1.25 && gain[1] < 1.31)
@@ -28,13 +31,18 @@ struct KitPaintTests {
         // White stays white, the darks go darker and the lights lighter, by a little.
         #expect(abs(mixed[4].oklab.x - palette[4].oklab.x) < 0.02)
         #expect(mixed[0].oklab.x > palette[0].oklab.x)
-        // Medium skin is lifted a little and turned toward pink; pale skin is barely lifted and
-        // dark skin not at all.
+        // Medium skin is lifted a little and turned most of the way to the face's own hue (from
+        // 49° toward 40°); pale skin is barely lifted and dark skin not at all.
         #expect(mixed[3].oklab.x - palette[3].oklab.x > 0.03 && mixed[3].oklab.x - palette[3].oklab.x < 0.08)
         #expect(mixed[2].oklab.x - palette[2].oklab.x < 0.02)
         func hue(_ c: PaletteColor) -> Float { atan2(c.oklab.z, c.oklab.y) }
-        #expect(hue(mixed[3]) < hue(palette[3]) - 0.05 && hue(mixed[3]) > hue(palette[3]) - 0.12)
+        #expect(hue(mixed[3]) < hue(palette[3]) - 0.1 && hue(mixed[3]) > atan2(skinHue.y, skinHue.x) - 0.01)
         #expect(mixed[5].oklab.x <= palette[5].oklab.x + 0.002)
+        // A red by a face of skin at 57°, 30° from the red's hue, keeps its own.
+        let red = Self.paint(0.4, 0.087, 0.05)
+        let face57 = KitPaint.Faces(share: [0.6], skinHue: SIMD2(0.544_639, 0.838_671))
+        let byFace = KitPaint.mix([red], space: .sRGB, minDistance: 0.04, faces: face57)[0]
+        #expect(abs(hue(byFace) - hue(red)) < 0.01)
         // The same tan off any face (a fox's coat) is held back only a little, and not lifted.
         let coat = KitPaint.mix([palette[3]], space: .sRGB, minDistance: 0.04)[0]
         #expect(Self.chroma(coat) / Self.chroma(palette[3]) > 1.15)
@@ -82,19 +90,25 @@ struct KitPaintTests {
         }
     }
 
-    @Test func faceShareCountsEachPaintsPixelsOnAFace() {
+    @Test func facesCountEachPaintsPixelsOnAFaceAndReadItsSkin() throws {
         // Four pixels, three regions, two paints: paint 0 has one of its two pixels on a face,
         // the pixel by the eye (a 0.1-wide eye reaches 0.4 of the canvas).
         let labels = RegionMap(width: 2, height: 2, storage: [0, 1, 2, 2])
         let segmentation = Segmentation(
             labels: labels, regionColor: [0, 0, 1], palette: [Self.paint(0.5, 0, 0), Self.paint(0.7, 0, 0)], colorSpace: .sRGB)
         let eye: [SIMD2<Float>] = [SIMD2(0.2, 0.2), SIMD2(0.3, 0.2), SIMD2(0.3, 0.3)]
-        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: [eye]) == [0.5, 0])
+        // The face's pixel is skin (234, 192, 160: hue 59°), the rest blue.
+        let photo = RGBAImage(width: 2, height: 2, pixels: [234, 192, 160, 255] + [UInt8](repeating: 0, count: 3).flatMap { _ in [40, 60, 200, 255] })
+        let importance: [Float] = [0.95, 0.5, 0.75, 0.75]
+        let faces = KitPaint.faces(of: segmentation, importance: importance, eyes: [eye], photo: photo)
+        #expect(faces.share == [0.5, 0])
+        let hue = try #require(faces.skinHue)
+        #expect(abs(atan2(hue.y, hue.x) * 180 / .pi - 59) < 2)
         // A face's importance with no eye near (an animal's box, a busy centre) is no face.
-        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: []) == [0, 0])
+        #expect(KitPaint.faces(of: segmentation, importance: importance, eyes: [], photo: photo) == KitPaint.Faces(share: [0, 0]))
         let far: [SIMD2<Float>] = [SIMD2(10, 10), SIMD2(10.01, 10.01)]
-        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75], eyes: [far]) == [0, 0])
-        #expect(KitPaint.faceShare(segmentation, importance: [1], eyes: [eye]) == [0, 0])
+        #expect(KitPaint.faces(of: segmentation, importance: importance, eyes: [far], photo: photo).share == [0, 0])
+        #expect(KitPaint.faces(of: segmentation, importance: [1], eyes: [eye], photo: photo).share == [0, 0])
     }
 
     @Test func kitTemplateKeepsTheRegionsAndMovesOnlyThePaints() throws {

@@ -97,7 +97,7 @@ public struct TemplateGenerator: Sendable {
         }
         // Which paints are on a face, for kit paint's skin, while the importance is at hand.
         let faces = settings.paintMix == .kit
-            ? KitPaint.faceShare(segmentation, importance: weights, eyes: input?.eyes ?? []) : nil
+            ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
