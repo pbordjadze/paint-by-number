@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 95,
+ "duration_ms": 940093,
+ "total_cost_usd": 2.2664038,
+ "result": "I drew the sailboat I planned, from a blank canvas in Refine, then painted it to 100%. After quitting through Home and relaunching, the app reopened it finished with every area painted. No crashes. The full report is in `/Users/runner/work/_temp/qa/report.md`.\n\n**The picture:** 7 areas in 6 colours: light-blue sky, yellow sun, red flag, two white triangular sails, brown hull and deep-blue sea. All are closed shapes and match my plan line. The preview read \"6 colors \u00b7 7 areas \u00b7 ~5 min\". The evidence is in `shots/final-refine`, `final-template`, `final-painting` and `final-painting-later`. The first painting shot was taken during the finishing effect, so its colours are dimmed; the later one shows the true colours.\n\n**Finding the blank canvas** was easy: the Refine button on the New Painting preview, then the Generated/Blank switch above the canvas. The Line and Ellipse shapes, Snap, the Bucket, Undo and the painting screen all worked as expected.\n\n**Bug (3 of 3 times at the same spot):** one plain straight line, the mirror of a sail line that had just worked, was refused three times. Twice the screen said \"That line couldn't be drawn there.\" The log said `validation work limit exceeded: geometry bucket entries (limit 10624)`, with all the other checks at 0, on a picture of only about 9 lines. The app gives a newcomer no hint about what to change. Starting the line about 15 points lower on the mast worked on the fourth try.\n\n**Suspicions:**\n- **Colour wheel:** the button that adds a paint showed nothing after two taps, and the log had no entry for them. After a third tap the colour sheet appeared, but only seconds later. After that it opened promptly. I saw this once and didn't re-test it.\n- **Bend Line:** a small drag on a sail's edge gave a wavy S-shape, not the smooth bulge the guide describes. I undid it and kept straight sails.\n- **Name:** a drawing made on Blank still offers the sample's name, \"Red Fuji\", as its default title.\n- **Palette:** on the painting screen, each finished colour's swatch leaves the palette and the rest shift over. Taps aimed from memory then hit the wrong swatch. This may be intended.\n\n**Help:** I used the app's Tool Guide once, to confirm the colour wheel was the right control. It confirmed it, but its back arrow led to the guide's list, where my next tap opened a page I didn't want.\n\n**Automation limits:** freehand curves weren't possible because Maestro's swipes are straight, and `hideKeyboard` failed on the title field. Pinch, two-finger gestures, the Pencil and most of Refine's other tools are listed under Not tested.",
+ "usage": {
+  "input_tokens": 98,
+  "cache_creation_input_tokens": 163968,
+  "cache_read_input_tokens": 4240159,
+  "output_tokens": 29907,
+  "output_tokens_details": {
+   "thinking_tokens": 5912
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 163968
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 39,
+  "mcp__maestro__run": 39,
+  "mcp__maestro__inspect_screen": 9,
+  "Read": 3,
+  "Write": 4
+ },
+ "images_received": 39
+}
