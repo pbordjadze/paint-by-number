@@ -24,8 +24,8 @@ struct CreateModelTests {
         let decision = try #require(model.decision)
         #expect(model.phase == .ready)
         #expect(model.settingsOrigin == .suggested)
-        #expect(model.settings == decision.settings)
-        #expect(model.preview?.settings == decision.settings)
+        #expect(model.settings == model.mixed(decision.settings))
+        #expect(model.preview?.settings == model.mixed(decision.settings))
         #expect(decision.preference == .relaxed)
         #expect((1...CreateModel.maxCandidates).contains(decision.candidates.count))
         #expect(decision.candidates.allSatisfy { $0.score != nil })
@@ -35,7 +35,7 @@ struct CreateModelTests {
         #expect(decision.analysis.sourceWidth == source.image.width && decision.analysis.sourceHeight == source.image.height)
 
         let draft = try await model.makeDraft()
-        #expect(draft.settings == decision.settings)
+        #expect(draft.settings == model.mixed(decision.settings))
         #expect(draft.settingsOrigin == .suggested)
         #expect(draft.paintingLength == .relaxed)
     }
@@ -72,6 +72,20 @@ struct CreateModelTests {
         #expect(model.decision?.candidates.map(\.settings) == decision.candidates.map(\.settings))
     }
 
+    /// In SideStore and Debug builds a photo's painting has a kit's paints (painting-company row
+    /// 191): the regions Auto chose, the paints bolder, and the suggestion still reads as one.
+    @Test func newPaintingsHaveTheBuildsPaints() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.settings.paintMix == CreateModel.newPaintMix)
+        #expect(model.settings.tuning == CreateModel.newTuning && model.decision?.settings.tuning == CreateModel.newTuning)
+        #expect(model.settingsOrigin == .suggested)
+        let preview = try #require(model.preview)
+        #expect(preview.settings?.paintMix == CreateModel.newPaintMix)
+        #expect(model.decision?.settings.paintMix == nil)
+    }
+
     /// Starting a painting while settings are still being chosen waits for them.
     @Test func startingWhileChoosingUsesTheSuggestion() async throws {
         let model = CreateModel(paintingLength: .quick)
@@ -80,7 +94,7 @@ struct CreateModelTests {
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
         #expect(decision.preference == .quick)
-        #expect(draft.settings == decision.settings)
+        #expect(draft.settings == model.mixed(decision.settings))
         #expect(draft.settingsOrigin == .suggested && draft.paintingLength == .quick)
         #expect(PaintingLength.quick.colorBand.contains(draft.settings.colorCount))
     }
@@ -390,12 +404,13 @@ struct CreateModelTests {
     @Test func createModelMapsSliders() {
         let model = CreateModel()
         // The sliders wait at the generator's defaults until a photo's suggestion moves them.
-        #expect(model.settings == GenerationSettings())
+        #expect(model.settings == GenerationSettings(tuning: CreateModel.newTuning, paintMix: CreateModel.newPaintMix))
         #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
         model.colorCount = 30
         model.detail = 0.25
         model.smoothness = 0.75
-        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
+        #expect(model.settings == GenerationSettings(
+            colorCount: 30, detail: 0.25, smoothness: 0.75, tuning: CreateModel.newTuning, paintMix: CreateModel.newPaintMix))
         model.colorCount = 11.6
         #expect(model.settings.colorCount == 12)
         model.colorCount = 999

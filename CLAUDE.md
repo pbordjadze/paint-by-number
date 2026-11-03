@@ -31,7 +31,8 @@ before planning app work).
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
-    for bit; the app sets none, but a painting's recorded tuning regenerates as it was made).
+    for bit; the release sets none, SideStore builds `subjectCellSize` (`CreateModel.newTuning`), and a
+    painting's recorded tuning regenerates as it was made).
   - `Segmentation/`: photo → region label map + palette (`Segmenter.segment`; stages in its doc
     comment). `SegmentationParameters` holds the knobs derived from the settings and canvas size;
     each stage's constants sit beside their use. After `RegionSimplifier.simplify`, later stages
@@ -39,7 +40,11 @@ before planning app work).
     `enforceLabelRoom` drops unused paints in order and nothing reorders them. `Auto/` reuses
     `WorkingImage`, `StructureMap`, `ImportanceMap`, `BoxBlur`, `PaletteBuilder` and
     `SegmentationParameters`, so a refactor there that keeps templates byte-identical can still move
-    Auto's decisions. `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    Auto's decisions. Kit paint (`KitPaint`, `GenerationSettings.paintMix`, `pbn --paint-mix kit`,
+    `tools/kit_eval.py`): the finished template's paints mixed bolder than the regions' means,
+    nothing else moved; nil is the photo's, and the app asks for it only under `UNRELEASED`
+    (`CreateModel.newPaintMix`); with it the subject's body loosened (`subjectCellSize`) and Auto's
+    `AutoTaste.finished`, which values the finished painting over ΔE. `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline

@@ -84,6 +84,8 @@ struct SegmentationParameters: Sendable {
     var importanceStrength: Float
     /// Minimum-area growth in textured, unimportant areas (see `areaScale`).
     var textureStrength: Float
+    /// `PipelineTuning.subjectCellSize`: the factor `areaScale` gives the subject's body.
+    var subjectCellSize: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// A small region whose mean colour lies within this distance (working OKLab) of a
@@ -173,6 +175,7 @@ struct SegmentationParameters: Sendable {
         openingRadiusSquared = d < 0.25 ? 4 : 1
         importanceStrength = 3 * t.subjectEmphasis
         textureStrength = 4
+        subjectCellSize = t.subjectCellSize
         mergeShareWeight = 0.04
         // Full weight from about six just-noticeable differences; at no contrast a crumb needs
         // five times the area (a small eye or highlight against skin stays, feather and fur
@@ -244,9 +247,26 @@ struct SegmentationParameters: Sendable {
     /// Per-pixel multiplier of `minArea`: important areas keep smaller regions; busy
     /// texture (dense label changes, `texture` 0...1) outside important areas needs larger
     /// ones, so knit, foliage or gravel become a few paintable shapes rather than crumbs.
+    /// The subject's body may be loosened where it is busy (`subjectCellSize`: fur, hair,
+    /// foliage on it), never its face nor a smooth part of it, so a small face Vision missed
+    /// (a rider under a hat) keeps its cells.
     @inline(__always)
     func areaScale(importance: Float, texture: Float) -> Float {
-        exp2(importanceStrength * (0.5 - importance)) * (1 + textureStrength * (1 - importance) * texture)
+        let scale = exp2(importanceStrength * (0.5 - importance)) * (1 + textureStrength * (1 - importance) * texture)
+        guard subjectCellSize != 1 else { return scale }
+        return scale * (1 + (subjectCellSize - 1) * Self.subjectBody(importance) * min(1, 2 * max(texture, 0)))
+    }
+
+    /// How much of the subject's body a pixel of this importance is, 0...1: none on the
+    /// background (the app's map: 0.25, saliency up to 0.6), all on the subject (0.75), none
+    /// again on a face's core (its ellipse rises to 1 there; eyes, lips, a glint).
+    @inline(__always)
+    static func subjectBody(_ importance: Float) -> Float {
+        func ramp(_ a: Float, _ b: Float) -> Float {
+            let t = min(max((importance - a) / (b - a), 0), 1)
+            return t * t * (3 - 2 * t)
+        }
+        return ramp(0.6, 0.72) * (1 - ramp(0.85, 0.95))
     }
 }
 

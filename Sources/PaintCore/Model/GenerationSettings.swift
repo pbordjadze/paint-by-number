@@ -16,11 +16,15 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     /// on paper whose lines bound the areas, and the paints come from a palette set), not from
     /// a photo's colors. Nil, the default and every photo's, leaves the photo path as it is.
     public var drawing: DrawingSettings?
+    /// How the paints are mixed from the regions' colors (`PaintMix`, `KitPaint`). Nil, the
+    /// default and every painting's made before kit paint, is `.photo`: the regions' means, so
+    /// such a painting regenerates as it was made.
+    public var paintMix: PaintMix?
 
     public init(
         colorCount: Int = 24, detail: Float = 0.5, smoothness: Float = 0.5, seed: UInt64 = 0x5eed,
         lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning(),
-        drawing: DrawingSettings? = nil
+        drawing: DrawingSettings? = nil, paintMix: PaintMix? = nil
     ) {
         self.colorCount = colorCount
         self.detail = detail
@@ -29,10 +33,11 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         self.lineArt = lineArt
         self.tuning = tuning
         self.drawing = drawing
+        self.paintMix = paintMix
     }
 
     private enum CodingKeys: String, CodingKey {
-        case colorCount, detail, smoothness, seed, lineArt, tuning, drawing
+        case colorCount, detail, smoothness, seed, lineArt, tuning, drawing, paintMix
     }
 
     /// The four original fields are required as before; the later ones default, so settings
@@ -53,6 +58,8 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         } else {
             drawing = nil
         }
+        // A mix a later app added reads as the photo's: the same regions, the paints it knows.
+        paintMix = (try? c.decodeIfPresent(PaintMix.self, forKey: .paintMix)) ?? nil
     }
 
     public static let colorCountRange = 6...150
@@ -76,6 +83,8 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         s.lineArt = lineArt.normalized
         s.tuning = tuning.normalized
         s.drawing = drawing?.normalized
+        // `.photo` and nil make the same template; one spelling keeps settings that do comparing equal.
+        if s.paintMix == .photo { s.paintMix = nil }
         return s
     }
 

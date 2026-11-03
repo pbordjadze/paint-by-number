@@ -27,6 +27,7 @@ struct PipelineTuningTests {
             (\.subjectEmphasis, ["importanceStrength", "importanceSharpening"]),
             (\.accentColors, ["paletteSaliency"]),
             (\.colorfulness, ["chromaScale"]),
+            (\.subjectCellSize, ["subjectCellSize"]),
         ]
         for (path, names) in cases {
             var settings = base
@@ -46,6 +47,32 @@ struct PipelineTuningTests {
             smoothing: 1, textureFlattening: 1, minimumCellSize: 1, subjectEmphasis: 1, accentColors: 1, colorfulness: 1)
         #expect(Self.knobs(SegmentationParameters(settings: spelled, width: 1200, height: 800)) == plain)
         #expect(PipelineTuning().isDefault)
+    }
+
+    /// The subject's cells are loosened on its busy body only: the background, a face's core
+    /// and smooth parts keep their smallest area.
+    @Test func subjectCellSizeLoosensTheBodyNotTheFace() {
+        var settings = GenerationSettings()
+        let plain = SegmentationParameters(settings: settings, width: 1200, height: 800)
+        settings.tuning.subjectCellSize = 2.5
+        let loose = SegmentationParameters(settings: settings, width: 1200, height: 800)
+        for importance: Float in [0, 0.25, 0.5, 0.97, 1] {
+            #expect(loose.areaScale(importance: importance, texture: 0.3) == plain.areaScale(importance: importance, texture: 0.3))
+        }
+        let fur = loose.areaScale(importance: 0.75, texture: 0.6) / plain.areaScale(importance: 0.75, texture: 0.6)
+        #expect(abs(fur - 2.5) < 1e-4)
+        // A smooth part of the subject (a face Vision missed) keeps its cells.
+        #expect(loose.areaScale(importance: 0.75, texture: 0) == plain.areaScale(importance: 0.75, texture: 0))
+    }
+
+    /// A later factor is written only when it is set, so settings without it encode as before.
+    @Test func laterFactorsEncodeOnlyWhenSet() throws {
+        let plain = String(decoding: try JSONEncoder().encode(PipelineTuning()), as: UTF8.self)
+        #expect(!plain.contains("subjectCellSize"))
+        let loose = PipelineTuning(subjectCellSize: 2.5)
+        let data = try JSONEncoder().encode(loose)
+        #expect(String(decoding: data, as: UTF8.self).contains("subjectCellSize"))
+        #expect(try JSONDecoder().decode(PipelineTuning.self, from: data) == loose)
     }
 
     @Test func coloringBookFlatteningScalesOnlyThePaintKnobs() {

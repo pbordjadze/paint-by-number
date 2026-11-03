@@ -54,6 +54,9 @@ public struct AutoScore: Sendable, Codable, Hashable {
     public var regions: Int
     /// Regions under `AutoSettings.tinyRadius`.
     public var tinyRegions: Int
+    /// Of `tinyRegions`, those on the subject (importance at their number from
+    /// `AutoTaste.subjectImportance`); scored by the finished taste only, nil for the other.
+    public var subjectTinyRegions: Int?
     /// Regions bounded mostly by weak boundaries (`BandRings`).
     public var bandRings: Int
     public var minLabelRoom: Float

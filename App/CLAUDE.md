@@ -507,6 +507,14 @@ Conventions).
   waiting Refine is) → the winner's draft (unless it is that candidate
   and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
   (a `withTaskCancellationHandler` flag reaches every candidate's thread).
+- Kit paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 191): a photo's
+  new painting records `paintMix: .kit` (`CreateModel.newPaintMix`, PaintCore's `KitPaint`), so
+  its paints are a kit's, bolder than the regions' means, skin lifted toward peach, and the
+  tuning `subjectCellSize` 2.5 (`CreateModel.newTuning`: the subject's body in fewer, larger
+  cells, the face kept); Auto chooses with that tuning and `AutoTaste.finished` (`newTaste`),
+  and the mix is laid on its choice (`CreateModel.mixed`, the first draft too). A resumed draft
+  keeps the mix and tuning it recorded. The release, starters and regenerated paintings keep
+  what their settings record.
 - `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`, reported through
   `settingsChanged()`; back on every suggested value, the sliders' detents, it is `.suggested`
   again); `TemplatePreviewView`'s chip offers Reset to Suggested, which restores the kept
@@ -903,7 +911,8 @@ sends it, the developers collect nothing).
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
   sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
-  (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
+  (`LineArtSettings()`), with no pipeline tuning in the release (SideStore's: Create flow › Kit
+  paint): nothing in Settings changes how a template is
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning, line appearance and preview

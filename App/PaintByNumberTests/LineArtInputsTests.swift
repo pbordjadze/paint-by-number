@@ -363,13 +363,13 @@ struct LineArtInputsTests {
         model.load(sample: try #require(Sample.named("red-fox")))
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
-        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.book && $0.settings.tuning.isDefault })
-        #expect(model.settings == decision.settings)
+        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.book && $0.settings.tuning == CreateModel.newTuning })
+        #expect(model.settings == model.mixed(decision.settings))
         #expect(model.settingsOrigin == .suggested)
         let input = try #require(model.lineArtInput)
         #expect(max(input.edges.width, input.edges.height) == EdgeDetector.maximumLongSide)
         #expect(draft.settings == model.settings)
-        #expect(draft.settings.lineArt == Self.book && draft.settings.tuning.isDefault)
+        #expect(draft.settings.lineArt == Self.book && draft.settings.tuning == CreateModel.newTuning)
         #expect(draft.template.lineArt?.style == .coloringBook, "The book's template has no line art")
 
         let root = Fixtures.temporaryDirectory()
@@ -382,15 +382,15 @@ struct LineArtInputsTests {
         #expect(json.contains("coloringBook"))
     }
 
-    /// Classic settings compute nothing extra and record the classic line art and default tuning.
+    /// Classic settings compute nothing extra and record the classic line art and the build's tuning.
     @Test func classicCreateFlowComputesNoInputs() async throws {
         let classic = LineArtSettings(style: .classic)
         let model = CreateModel(paintingLength: .quick, lineArt: classic)
         model.load(sample: try #require(Sample.named("morning-glories")))
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
-        #expect(draft.settings.lineArt == classic && draft.settings.tuning == PipelineTuning())
-        #expect(model.decision?.settings == draft.settings)
+        #expect(draft.settings.lineArt == classic && draft.settings.tuning == CreateModel.newTuning)
+        #expect(model.decision.map { model.mixed($0.settings) } == draft.settings)
         #expect(draft.template.lineArt == nil)
     }
 

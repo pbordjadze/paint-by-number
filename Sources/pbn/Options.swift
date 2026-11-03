@@ -16,6 +16,7 @@ struct Options {
     var minLabelRadius = LabelSizing.minimumRadius
     var auto = false
     var length = PaintingLength.relaxed
+    var taste = AutoTaste.fidelity
     var hints: String?
     var candidates = 5
     var out: String?
@@ -54,7 +55,8 @@ enum Fields {
     }
     static var tuning: [String: WritableKeyPath<PipelineTuning, Float>] {
         ["smoothing": \.smoothing, "textureFlattening": \.textureFlattening, "minimumCellSize": \.minimumCellSize,
-         "subjectEmphasis": \.subjectEmphasis, "accentColors": \.accentColors, "colorfulness": \.colorfulness]
+         "subjectEmphasis": \.subjectEmphasis, "accentColors": \.accentColors, "colorfulness": \.colorfulness,
+         "subjectCellSize": \.subjectCellSize]
     }
 }
 
@@ -131,6 +133,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--detail": o.settings.detail = number(a, &it)
         case "--smooth": o.settings.smoothness = number(a, &it)
         case "--seed": o.settings.seed = number(a, &it)
+        case "--paint-mix": o.settings.paintMix = choice(a, value(a, &it))
         case "--vocabulary":
             o.vocabulary = number(a, &it)
             guard o.vocabulary! >= 1 else { fail("--vocabulary: at least 1") }
@@ -142,6 +145,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--min-label-radius": o.minLabelRadius = number(a, &it)
         case "--auto": o.auto = true
         case "--length": o.length = choice(a, value(a, &it))
+        case "--taste": o.taste = choice(a, value(a, &it))
         case "--hints": o.hints = value(a, &it)
         case "--candidates": o.candidates = number(a, &it)
         case "--out": o.out = value(a, &it)

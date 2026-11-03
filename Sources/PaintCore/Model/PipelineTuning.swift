@@ -14,12 +14,18 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
     public var accentColors: Float
     /// How much hue and colorfulness count against lightness when telling paints apart.
     public var colorfulness: Float
+    /// Smallest cell kept on the busy parts of the subject's body (fur, hair, knit: importance
+    /// between the background's and a face's, texture from half its scale), as a factor on
+    /// what importance makes it there. Higher gives fur fewer, larger cells, as a kit paints
+    /// it, while the face (importance near 1: eyes, a glint), smooth parts and the background
+    /// keep theirs (`SegmentationParameters.areaScale`, `subjectBody`).
+    public var subjectCellSize: Float
 
     public static let range: ClosedRange<Float> = 0.25...4
 
     public init(
         smoothing: Float = 1, textureFlattening: Float = 1, minimumCellSize: Float = 1,
-        subjectEmphasis: Float = 1, accentColors: Float = 1, colorfulness: Float = 1
+        subjectEmphasis: Float = 1, accentColors: Float = 1, colorfulness: Float = 1, subjectCellSize: Float = 1
     ) {
         self.smoothing = smoothing
         self.textureFlattening = textureFlattening
@@ -27,6 +33,7 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         self.subjectEmphasis = subjectEmphasis
         self.accentColors = accentColors
         self.colorfulness = colorfulness
+        self.subjectCellSize = subjectCellSize
     }
 
     public var isDefault: Bool { self == PipelineTuning() }
@@ -36,11 +43,25 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         func c(_ x: Float) -> Float { x.isFinite ? min(max(x, Self.range.lowerBound), Self.range.upperBound) : 1 }
         return PipelineTuning(
             smoothing: c(smoothing), textureFlattening: c(textureFlattening), minimumCellSize: c(minimumCellSize),
-            subjectEmphasis: c(subjectEmphasis), accentColors: c(accentColors), colorfulness: c(colorfulness))
+            subjectEmphasis: c(subjectEmphasis), accentColors: c(accentColors), colorfulness: c(colorfulness),
+            subjectCellSize: c(subjectCellSize))
     }
 
     private enum CodingKeys: String, CodingKey {
-        case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness
+        case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness, subjectCellSize
+    }
+
+    /// The original six always; a later factor only when it isn't 1, so settings without it
+    /// (every painting's `meta.json` and every `.moonlight` file before it) encode as they did.
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(smoothing, forKey: .smoothing)
+        try c.encode(textureFlattening, forKey: .textureFlattening)
+        try c.encode(minimumCellSize, forKey: .minimumCellSize)
+        try c.encode(subjectEmphasis, forKey: .subjectEmphasis)
+        try c.encode(accentColors, forKey: .accentColors)
+        try c.encode(colorfulness, forKey: .colorfulness)
+        if subjectCellSize != 1 { try c.encode(subjectCellSize, forKey: .subjectCellSize) }
     }
 
     /// Tolerant, like `LineArtSettings`.
@@ -49,6 +70,7 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         func f(_ key: CodingKeys) -> Float { ((try? c.decodeIfPresent(Float.self, forKey: key)) ?? nil) ?? 1 }
         self.init(
             smoothing: f(.smoothing), textureFlattening: f(.textureFlattening), minimumCellSize: f(.minimumCellSize),
-            subjectEmphasis: f(.subjectEmphasis), accentColors: f(.accentColors), colorfulness: f(.colorfulness))
+            subjectEmphasis: f(.subjectEmphasis), accentColors: f(.accentColors), colorfulness: f(.colorfulness),
+            subjectCellSize: f(.subjectCellSize))
     }
 }

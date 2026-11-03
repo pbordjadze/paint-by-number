@@ -273,8 +273,50 @@ final class CreateModel {
     var settings: GenerationSettings {
         GenerationSettings(
             colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt,
-            drawing: isDrawing ? DrawingSettings(palette: drawingPalette) : nil
+            tuning: isDrawing ? PipelineTuning() : tuning,
+            drawing: isDrawing ? DrawingSettings(palette: drawingPalette) : nil, paintMix: isDrawing ? nil : paintMix
         ).normalized
+    }
+
+    /// How a new painting's paints are mixed: as a kit would mix them (PaintCore's `KitPaint`)
+    /// in SideStore and Debug builds, until Paul has seen it (painting-company row 191); the
+    /// regions' own colors in the release. A drawing's paints come from its palette set. The
+    /// painting records it, so it regenerates as it was made.
+    #if UNRELEASED
+    nonisolated static let newPaintMix: PaintMix? = .kit
+    #else
+    nonisolated static let newPaintMix: PaintMix? = nil
+    #endif
+
+    /// How a new painting's subject is cut and what its suggestion values: in SideStore and
+    /// Debug builds, as the paintings are with kit paint (painting-company row 191), the
+    /// subject's body in fewer, larger cells, the face kept (`PipelineTuning.subjectCellSize`),
+    /// and Auto scoring the finished painting (`AutoTaste.finished`), so its time band doesn't
+    /// buy the detail back; the release's are the defaults. The tuning is recorded with the
+    /// painting like the mix; the taste is in no painting (decisions are never stored).
+    #if UNRELEASED
+    nonisolated static let newTuning = PipelineTuning(subjectCellSize: 2.5)
+    nonisolated static let newTaste = AutoTaste.finished
+    #else
+    nonisolated static let newTuning = PipelineTuning()
+    nonisolated static let newTaste = AutoTaste.fidelity
+    #endif
+
+    /// The mix and tuning of the settings: a new photo's (`newPaintMix`, `newTuning`), or the
+    /// ones a resumed draft recorded, so a draft saved before keeps its kept base and paints.
+    private(set) var paintMix: PaintMix? = CreateModel.newPaintMix
+    private(set) var tuning: PipelineTuning = CreateModel.newTuning
+
+    /// A suggestion's settings with the paints mixed and the subject cut as the sliders' are:
+    /// Auto chooses the colours and detail, and a resumed draft's own mix and tuning are laid
+    /// on its choice, so the detents still read as the suggestion.
+    func mixed(_ suggested: GenerationSettings) -> GenerationSettings {
+        var settings = suggested
+        if settings.drawing == nil {
+            settings.paintMix = paintMix
+            settings.tuning = tuning
+        }
+        return settings
     }
 
     /// The photo's settings are still being chosen: the sliders wait for them.
@@ -540,6 +582,9 @@ final class CreateModel {
         draftImage = nil
         decision = nil
         settingsOrigin = nil
+        // A new photo's mix and tuning, unless it is a draft's (`resume` puts those back).
+        paintMix = Self.newPaintMix
+        tuning = Self.newTuning
         refinements = saved?.refinements ?? TemplateRefinements()
         made = []
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would
@@ -591,7 +636,8 @@ final class CreateModel {
                 do {
                     chosen = try await Self.suggest(
                         prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        lineArt: lineArt, maxCandidates: Self.maxCandidates, firstDraft: firstDraft)
+                        lineArt: lineArt, tuning: Self.newTuning, taste: Self.newTaste, maxCandidates: Self.maxCandidates,
+                        firstDraft: firstDraft)
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch {
@@ -633,7 +679,7 @@ final class CreateModel {
         refineAsked = false
         startAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
-        if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
+        if let decision { settingsOrigin = settings == mixed(decision.settings) ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
             scheduleFull(after: Self.restDelay)
@@ -750,6 +796,8 @@ final class CreateModel {
     /// edge map, so line art other than classic is drafted again), then at full resolution.
     private func adopt(_ decision: AutoDecision) {
         self.decision = decision
+        paintMix = Self.newPaintMix
+        tuning = decision.settings.tuning
         apply(decision.settings)
         settingsOrigin = .suggested
         phase = .generating
@@ -762,10 +810,12 @@ final class CreateModel {
     /// draft's settings are still it.
     private func resume(_ saved: CreateDraft, suggestion: AutoDecision?) {
         decision = suggestion
+        paintMix = saved.settings.paintMix
+        tuning = saved.settings.tuning
         apply(saved.settings)
         lines = saved.lines
         if let set = saved.settings.drawing?.palette { drawingPalette = set }
-        if let suggestion { settingsOrigin = settings == suggestion.settings ? .suggested : .custom }
+        if let suggestion { settingsOrigin = settings == mixed(suggestion.settings) ? .suggested : .custom }
         phase = .generating
         startGeneration(draftFirst: false)
     }
@@ -1430,7 +1480,7 @@ final class CreateModel {
     @concurrent
     private static func suggest(
         _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength,
-        lineArt: LineArtSettings, maxCandidates: Int,
+        lineArt: LineArtSettings, tuning: PipelineTuning, taste: AutoTaste, maxCandidates: Int,
         firstDraft: (@Sendable (Preview) -> Void)?
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
@@ -1439,13 +1489,21 @@ final class CreateModel {
         return try await withTaskCancellationHandler {
             try AutoSettings.choose(
                 image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-                preference: preference, maxCandidates: maxCandidates, lineArt: lineArt,
+                preference: preference, maxCandidates: maxCandidates, lineArt: lineArt, tuning: tuning, taste: taste,
                 cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
-                guard let firstDraft,
-                      let preview = try? Self.makePreview(
-                        output.template, settings: nil, refinements: TemplateRefinements(), isDraft: true, style: .painting)
+                guard let firstDraft else { return }
+                var template = output.template
+                if Self.newPaintMix == .kit {
+                    // Its paints as the painting's will be, but for faces' skin, which needs the eyes
+                    // a draft has none of (`KitPaint.faces(of:…)`); the candidate's count bounds how close.
+                    template.palette = KitPaint.mix(
+                        template.palette, space: template.colorSpace,
+                        minDistance: GenerationSettings(colorCount: template.palette.count).minPaletteDistance)
+                }
+                guard let preview = try? Self.makePreview(
+                    template, settings: nil, refinements: TemplateRefinements(), isDraft: true, style: .painting)
                 else { return }
                 firstDraft(preview)
             }
