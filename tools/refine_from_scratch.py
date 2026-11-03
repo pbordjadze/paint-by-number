@@ -22,8 +22,8 @@ full-size rasters, tens of MB each, are deleted) and a strip `<out>/<hand>.png` 
 subject's first seeds. Written for the from-scratch loop of November 3 (Refine, painting-company
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
 compare. `--qa` replays instead the strokes with which the QA of November 3 failed to close a
-roof (Shapes' Line), a sea under a horizon drawn to the picture's edges, a hull, and a mouth (Pen
-strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
+roof (Shapes' Line), a sea under a horizon drawn to the picture's edges, a hull, a trunk over a
+ground line drawn after it, and a mouth (Pen strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
 """
 import argparse, json, math, os, random, subprocess, sys, zlib
 
@@ -361,6 +361,11 @@ def qa():
         ("line", (3, 418), (399, 418)), ("line", (115, 397), (285, 397)), ("line", (117, 393), (155, 422)),
         ("line", (283, 393), (245, 422)), ("line", (200, 286), (200, 402))], pour=(200, 410), outside=(300, 300),
          paper="paper-wide.ppm")
+    # Round 1's trunk (run 41618590832, iPhone): two Lines from the treetop's oval down to a
+    # point above where the ground line, drawn after them, then passed.
+    case("trunk-iphone", 12.2, 248, 376.5, [
+        ("oval", (255, 325), (345, 420)), ("line", (291, 418), (291, 488)), ("line", (309, 418), (309, 488)),
+        ("line", (13, 489), (389, 489))], pour=(300, 460), outside=(200, 300), paper="paper-wide.ppm")
     case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
          [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
 

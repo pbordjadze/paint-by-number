@@ -200,6 +200,56 @@ public enum PenAssist {
             out = joined
             if PenPath.length(out) < length / 2 { out = started }
         }
+        return throughTips(out, of: lines, within: reach / 2, touch: touch, span: 2 * reach)
+    }
+
+    /// `line` bent through each free tip of `lines` (`SnapLines.tips`) that lies within
+    /// `within` of it away from its ends and whose own line heads at it, so lines drawn first
+    /// and stopped just short of where this one passes meet it: a tree's trunk drawn down to just
+    /// above the ground line drawn after it stayed one with the sky (QA, November 3). The line
+    /// bends to the tip and back over `span` either side (`bent`), never folding; a tip whose
+    /// line runs alongside, as a whisker's may, leaves it as drawn.
+    static func throughTips(_ line: [CGPoint], of lines: SnapLines, within: CGFloat, touch: CGFloat, span: CGFloat) -> [CGPoint] {
+        guard line.count >= 2, within > 0, let first = line.first, let last = line.last else { return line }
+        var out = line, placed: [CGPoint] = []
+        for tip in lines.tips(near: line, within: within, touch: touch)
+        where PenPath.distance(tip.point, first) > within && PenPath.distance(tip.point, last) > within
+            // Two tips closer than a reach would step the line sideways between them: the first stays.
+            && !placed.contains(where: { PenPath.distance($0, tip.point) < 2 * within }) {
+            var best: (segment: Int, point: CGPoint, distance: CGFloat)?
+            for (i, (a, b)) in zip(out, out.dropFirst()).enumerated() {
+                let q = SnapLines.closest(tip.point, a, b)
+                let d = PenPath.distance(tip.point, q)
+                if best == nil || d < best!.distance { best = (i, q, d) }
+            }
+            guard let best, best.distance <= within, best.distance > 1e-9 else { continue }
+            // Its line heads at the line: the way it runs into the tip points within 45° of it.
+            let toLine = CGPoint(x: best.point.x - tip.point.x, y: best.point.y - tip.point.y)
+            guard toLine.x * tip.heading.x + toLine.y * tip.heading.y >= 0.7 * best.distance else { continue }
+            out = bent(out, segment: best.segment, at: best.point, to: tip.point, span: span, pinned: placed)
+            placed.append(tip.point)
+        }
+        return out
+    }
+
+    /// `points` with `at`, a point of segment `segment`, moved to `target`, the move easing out
+    /// over `span` of the line either side (`moving`), never past either end or a `pinned` point
+    /// (a tip it was bent through already), so the rest stays.
+    static func bent(_ points: [CGPoint], segment: Int, at q: CGPoint, to target: CGPoint, span: CGFloat, pinned: [CGPoint] = []) -> [CGPoint] {
+        let before = Array(points[...segment]) + [q], after = [q] + Array(points[(segment + 1)...])
+        /// How far along `side` from its end the move may ease: to its start or its last pinned point.
+        func room(_ side: [CGPoint]) -> CGFloat {
+            var along: CGFloat = 0
+            for i in stride(from: side.count - 1, to: 0, by: -1) {
+                along += PenPath.distance(side[i - 1], side[i])
+                if pinned.contains(where: { PenPath.distance($0, side[i - 1]) < 1e-9 }) { break }
+            }
+            return along
+        }
+        let lead = moving(before, atStart: false, to: target, span: min(span, room(before)))
+        let tail = moving(after, atStart: true, to: target, span: min(span, room(Array(after.reversed()))))
+        var out: [CGPoint] = []
+        for p in lead + tail.dropFirst() where out.last.map({ PenPath.distance($0, p) > 1e-9 }) ?? true { out.append(p) }
         return out
     }
 
@@ -395,6 +445,43 @@ public struct SnapLines: Sendable {
             }
             return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
         }
+    }
+
+    /// The free tips of the lines within `within` of `path`, each with the way its line runs into
+    /// it (a unit vector): an end of a line that isn't closed on itself and that no other line
+    /// comes within `touch` of.
+    public func tips(near path: [CGPoint], within: CGFloat, touch: CGFloat) -> [(point: CGPoint, heading: CGPoint)] {
+        guard path.count >= 2 else { return [] }
+        let xs = path.map(\.x), ys = path.map(\.y)
+        let box = CGRect(x: xs.min()!, y: ys.min()!, width: xs.max()! - xs.min()!, height: ys.max()! - ys.min()!)
+            .insetBy(dx: -within, dy: -within)
+        func near(_ p: CGPoint) -> Bool {
+            box.contains(p) && zip(path, path.dropFirst()).contains { PenPath.distance(p, Self.closest(p, $0, $1)) <= within }
+        }
+        func loose(_ end: CGPoint, of k: Int) -> Bool {
+            !lines.indices.contains { j in
+                j != k && lines[j].bounds.insetBy(dx: -touch - 1e-6, dy: -touch - 1e-6).contains(end)
+                    && zip(lines[j].points, lines[j].points.dropFirst()).contains { PenPath.distance(end, Self.closest(end, $0, $1)) <= touch }
+            }
+        }
+        /// The way `points` runs into its last point, measured over at least `touch`.
+        func heading(_ points: [CGPoint]) -> CGPoint? {
+            let end = points[points.count - 1]
+            guard let from = points.dropLast().last(where: { PenPath.distance($0, end) >= touch }) ?? points.first else { return nil }
+            let d = PenPath.distance(from, end)
+            return d > 1e-9 ? CGPoint(x: (end.x - from.x) / d, y: (end.y - from.y) / d) : nil
+        }
+        var out: [(point: CGPoint, heading: CGPoint)] = []
+        for (k, line) in lines.enumerated() {
+            let b = line.bounds
+            // By coordinates: a straight line's bounds have no width or height.
+            guard b.minX <= box.maxX, b.maxX >= box.minX, b.minY <= box.maxY, b.maxY >= box.minY,
+                  let first = line.points.first, let last = line.points.last, PenPath.distance(first, last) > touch else { continue }
+            for points in [line.points, line.points.reversed()] where near(points[points.count - 1]) && loose(points[points.count - 1], of: k) {
+                if let way = heading(points) { out.append((points[points.count - 1], way)) }
+            }
+        }
+        return out
     }
 
     /// Whether `p` lies on the picture's edge.

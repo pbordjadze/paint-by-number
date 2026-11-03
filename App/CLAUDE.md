@@ -556,6 +556,7 @@ Conventions).
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (with Snap, an end heading at a line within a fingertip of it, 10 points on screen, or
   beside it within half that, moves onto it, a loop's own start and the picture's edge included,
+  a line passing within half that of a line's free tip is bent through it (`PenAssist.throughTips`),
   and an end that ran on past a crossing or round past that start is
   cut back to where it met the line, unless it went on to land on another, so the cell closes as the painter meant, never bent back
   into a hook: `PenAssist`, `RefineGestures.snapReach`, `SnapLines`; until October 29 the reach
@@ -689,7 +690,8 @@ Conventions).
     picture has no text). `create-refine-guide` (with `-dark`, `-long-text`) opens it on Merge;
     `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
-    canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
+    canvas units (the Pen's stroke after its smoothing and end assist: `.draw`, its segments no
+    longer than `RefineGestures.longestSegment`, which keeps checking a big Blank in budget; a rectangle or an
     oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Line Eraser
     tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`; the retired Color Splitter's
     stroke was `.split`, the Pen's line as an undrawn boundary whose sides end with different
