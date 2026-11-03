@@ -239,6 +239,23 @@ struct RefineGesturesTests {
         #expect(erased.nearestPoint(to: CGPoint(x: 101, y: 20), within: 2) == nil)
     }
 
+    /// The picture's edge is a line a pen's end may meet, as the editor's frame is ink: a horizon
+    /// drawn from 7.5 points inside one edge to as far inside the other, on a Blank, cuts it in
+    /// two (QA, November 3: one stopped a point short of an edge and cut nothing off). An eraser
+    /// never takes the edge.
+    @Test func thePictureEdgeIsALineToMeet() throws {
+        let blank = try TemplateEditor.blank(
+            width: 192, height: 144, photo: RGBAImage(width: 192, height: 144, fill: SIMD4(200, 190, 170, 255)), colorSpace: .sRGB)
+        let edges = RefineGestures.snapLines(
+            drawing: RefineGestures.drawingLines(of: blank), canvas: Self.screen.canvas, pending: [(.erase(path: [SIMD2(0, 72)], radius: 5), nil)])
+        let samples = (0...40).map { Self.p(1.5 + Float($0) * 189 / 40, 72) }
+        let edit = try #require(RefineGestures.pen(RefineGestures.trace(samples, on: Self.screen), on: Self.screen, snapping: edges))
+        guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return }
+        #expect(points.first.map { abs($0.x) < 1e-3 } == true && points.last.map { abs($0.x - 192) < 1e-3 } == true, "\(points)")
+        let laid = try TemplateEditor.apply(edit, to: blank)
+        #expect(laid.outcome.regionsSplit == 1 && laid.template.regions.count == 2)
+    }
+
     /// A drawn line's ends may join the drawing's lines but never its writing, which the editor
     /// never joins a line to (an end snapped onto a letter would hang there and close nothing);
     /// the drawing itself still has the letters.

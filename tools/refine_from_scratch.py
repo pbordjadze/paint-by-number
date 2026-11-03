@@ -22,7 +22,8 @@ full-size rasters, tens of MB each, are deleted) and a strip `<out>/<hand>.png` 
 subject's first seeds. Written for the from-scratch loop of November 3 (Refine, painting-company
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
 compare. `--qa` replays instead the strokes with which the QA of November 3 failed to close a
-roof (Shapes' Line) and a mouth (Pen strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
+roof (Shapes' Line), a sea under a horizon drawn to the picture's edges, a hull, and a mouth (Pen
+strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
 """
 import argparse, json, math, os, random, subprocess, sys, zlib
 
@@ -309,12 +310,15 @@ def main():
 # from their screenshots; each case says which pour must stay inside its shape.
 
 def qa():
-    paper = os.path.join(OUT, "paper-square.ppm")
-    with open(paper, "wb") as f:
+    with open(os.path.join(OUT, "paper-square.ppm"), "wb") as f:
         f.write(b"P6 1000 1000 255\n" + bytes([10, 10, 14]) * (1000 * 1000))
-    def case(name, x0, y0, width, steps, pour, outside):
+    with open(os.path.join(OUT, "paper-wide.ppm"), "wb") as f:  # a 3:2-ish photo, as Red Fuji
+        f.write(b"P6 1470 1000 255\n" + bytes([135, 135, 120]) * (1470 * 1000))
+    def case(name, x0, y0, width, steps, pour, outside, paper="paper-square.ppm"):
+        paper = os.path.join(OUT, paper)
+        aspect = 1000 / 1470 if paper.endswith("wide.ppm") else 1.0
         def n(x, y):
-            return [round((x - x0) / width, 5), round((y - y0) / width, 5)]
+            return [round((x - x0) / width, 5), round((y - y0) / (width * aspect), 5)]
         g = []
         for s in steps:
             if s[0] == "pen":
@@ -334,7 +338,7 @@ def qa():
         k = img.width / width
         poured = img.getpixel((int((pour[0] - x0) * k), int((pour[1] - y0) * k)))
         spilled = img.getpixel((int((outside[0] - x0) * k), int((outside[1] - y0) * k)))
-        img.resize((600, 600)).save(os.path.join(d, "after.png"))
+        img.resize((600, int(600 * img.height / img.width))).save(os.path.join(d, "after.png"))
         os.remove(os.path.join(d, "after.ppm"))
         print(f"  {name}: {'closed' if poured != spilled else 'LEAKED (the pour ran outside the shape)'}")
     print("QA replays:")
@@ -345,6 +349,13 @@ def qa():
     # The iPad's mouth: the upper lip a zigzag of four Pen strokes, the middle line, the lower lip three strokes.
     up = [(565, 860), (590, 843), (612, 852), (635, 843), (660, 860)]
     lo = [(565, 860), (592, 882), (635, 882), (660, 860)]
+    # The iPhone's sailboat (run 41588232599): a Pen horizon from a point inside the left edge to the
+    # right one, then the hull's sides (Shapes' Line) ending 5 points above the horizon.
+    case("horizon-iphone", 12.2, 245.8, 376.5, [("pen", (13, 430), (389, 430))], pour=(300, 470), outside=(300, 300),
+         paper="paper-wide.ppm")
+    case("hull-iphone", 12.2, 245.8, 376.5, [
+        ("pen", (13, 430), (389, 430)), ("line", (122, 405), (278, 405)), ("line", (122, 405), (150, 425)),
+        ("line", (278, 405), (250, 425))], pour=(200, 415), outside=(300, 470), paper="paper-wide.ppm")
     case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
          [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
 
