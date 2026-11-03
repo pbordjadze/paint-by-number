@@ -110,6 +110,28 @@ struct BlankTemplateTests {
         #expect(ColorScience.distance(Self.paint(of: inside, in: u), Self.lab(Self.blue)) <= SegmentationParameters.jnd)
     }
 
+    /// A shape drawn in pieces closes however they lie (editor version 3): a lip's zigzag of four
+    /// strokes, its two middle ones wholly above the line drawn last from end to end, is cut off
+    /// by that line, as it is drawn in one stroke. The line looked for strokes to meet only inside
+    /// its own box (QA, November 3), so the lip stayed part of the face.
+    @Test func aShapeDrawnInPiecesCloses() throws {
+        let zigzag: [SIMD2<Float>] = [SIMD2(40, 60), SIMD2(60, 48), SIMD2(80, 54), SIMD2(100, 48), SIMD2(120, 60)]
+        var t = try Self.blank()
+        for (a, b) in zip(zigzag, zigzag.dropFirst()) {
+            let (u, outcome) = try TemplateEditorTests.apply(.draw(points: [a, b], closed: false), to: t)
+            #expect(outcome.regionsSplit == 0)
+            t = u
+        }
+        let (u, outcome) = try TemplateEditorTests.apply(.draw(points: [SIMD2(40, 60), SIMD2(120, 60)], closed: false), to: t)
+        #expect(outcome.regionsSplit == 1 && u.regions.count == 2)
+        expectValid(u)
+        let lip = try TemplateEditorTests.region(u, 80, 57), around = try TemplateEditorTests.region(u, 80, 90)
+        #expect(lip != around)
+        let (whole, _) = try TemplateEditorTests.apply(.draw(points: zigzag, closed: false), to: try Self.blank())
+        let (closed, _) = try TemplateEditorTests.apply(.draw(points: [SIMD2(40, 60), SIMD2(120, 60)], closed: false), to: whole)
+        #expect(abs(u.regions[lip].area - closed.regions[try TemplateEditorTests.region(closed, 80, 57)].area) < 1e-3)
+    }
+
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
     /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
     /// paint, which leaves the palette, so the painting's numbers skip none.

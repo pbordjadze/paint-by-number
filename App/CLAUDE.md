@@ -553,11 +553,15 @@ Conventions).
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
-  drawn (with Snap, an end within a fingertip of a line, 10 points on screen, moves onto it, a
-  loop's own start included, and an end that ran on past a crossing or round past that start is
-  cut back to where it met the line, so the cell closes as the painter meant, never bent back
+  drawn (with Snap, an end heading at a line within a fingertip of it, 10 points on screen, or
+  beside it within half that, moves onto it, a loop's own start and the picture's edge included,
+  and an end that ran on past a crossing or round past that start is
+  cut back to where it met the line, unless it went on to land on another, so the cell closes as the painter meant, never bent back
   into a hook: `PenAssist`, `RefineGestures.snapReach`, `SnapLines`; until October 29 the reach
-  was the ink's width and Snap on or off was the same, painting-company row 175; never onto writing, which the editor never
+  was the ink's width and Snap on or off was the same, painting-company row 175; until November 3
+  a free tip, a corner, the picture's edge or a stroke past a wall's corner kept many a newcomer's
+  shape open, `tools/refine_from_scratch.py`, which also replays that QA with `--qa`; and the
+  editor closes a shape drawn in pieces however they lie, `TemplateEditor.version` 3; never onto writing, which the editor never
   joins a line to: `RefineGestures.drawingLines(of:writing:)`, `LineArtDrawing.Line.isWriting`), Shapes draws a straight line, a rectangle, an oval, a curve (two
   drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from

@@ -303,7 +303,9 @@ public enum RefineGestures {
     /// The lines on screen a pen's end may meet, in canvas units: the template's drawing
     /// (`drawingLines`), the lines drawn since, less what was erased since: `pending`, the edits
     /// sent that the template doesn't show yet, each with the chain a line eraser's tap took
-    /// (normalized).
+    /// (normalized); and the picture's edge, which the editor joins a line to as it joins ink
+    /// (a horizon a finger drew from just inside one edge to just inside the other cut nothing
+    /// off: QA, November 3).
     public static func snapLines(
         drawing: [[CGPoint]], canvas: CGSize, pending: [(edit: TemplateEditor.Edit, chain: [SIMD2<Float>]?)]
     ) -> SnapLines {
@@ -325,7 +327,7 @@ public enum RefineGestures {
                 break
             }
         }
-        return SnapLines(lines)
+        return SnapLines(lines, frame: canvas.width > 0 && canvas.height > 0 ? CGRect(origin: .zero, size: canvas) : nil)
     }
 
     /// The lines of a template's drawing, canvas units, as Refine shows them (the app's

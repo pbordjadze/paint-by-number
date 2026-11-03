@@ -206,24 +206,33 @@ extension EditWork {
         guard run.count >= 2, Set(run).count >= 2 else { return }
         if nudging { run = throughJunctions(run) }
 
-        // The strokes the line might meet: simple ones near it that stay clear of every outline.
+        // The strokes the line might meet: simple ones that stay clear of every outline, those
+        // it touches and those touching them, however far the chain of them runs. Each was
+        // looked for only inside the line's own box, so a lip drawn in pieces, some wholly above
+        // the line that closes it, closed nothing (QA, November 3).
         var lo = LatticePoint(repeating: .max), hi = LatticePoint(repeating: .min)
         for p in run { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
-        var candidates: [(index: Int, points: [LatticePoint])] = []
         // A split divides paint, not ink: the drawing's strokes are no part of it.
-        for (i, stroke) in strokes.enumerated() where stroke.joinsLines && !splitting {
+        let shapes: [(points: [LatticePoint], lo: LatticePoint, hi: LatticePoint)?] = strokes.map { stroke in
+            guard stroke.joinsLines, !splitting else { return nil }
             let pts = Self.dedupe(stroke.points.map(Lattice.point))
-            guard pts.count >= 2 else { continue }
+            guard pts.count >= 2 else { return nil }
             var slo = LatticePoint(repeating: .max), shi = LatticePoint(repeating: .min)
             for p in pts { slo = pointwiseMin(slo, p); shi = pointwiseMax(shi, p) }
-            guard slo.x <= hi.x, shi.x >= lo.x, slo.y <= hi.y, shi.y >= lo.y, Self.isSimple(pts) else { continue }
-            let crossesOutline = contacts(of: pts).contains { c in
+            return (pts, slo, shi)
+        }
+        var judged: [Int: Bool] = [:]
+        func isCandidate(_ i: Int) -> Bool {
+            if let known = judged[i] { return known }
+            let pts = shapes[i]!.points
+            let ok = Self.isSimple(pts) && !contacts(of: pts).contains { c in
                 switch c.contact {
                 case .cross, .overlap: return true
                 default: return false
                 }
             }
-            if !crossesOutline { candidates.append((i, pts)) }
+            judged[i] = ok
+            return ok
         }
         func meet(_ a: [LatticePoint], _ b: [LatticePoint]) -> Bool {
             for k in 0..<(a.count - 1) {
@@ -231,16 +240,22 @@ extension EditWork {
             }
             return false
         }
-        // Those it touches, and those touching them, are part of the drawing's graph.
-        var graph = Set(candidates.indices.filter { meet(run, candidates[$0].points) })
-        var frontier = graph.sorted()
+        func meets(_ i: Int, _ points: [LatticePoint], within lo: LatticePoint, _ hi: LatticePoint) -> Bool {
+            guard let shape = shapes[i], shape.lo.x <= hi.x, shape.hi.x >= lo.x, shape.lo.y <= hi.y, shape.hi.y >= lo.y else { return false }
+            return meet(points, shape.points) && isCandidate(i)
+        }
+        var taken = Set(strokes.indices.filter { meets($0, run, within: lo, hi) })
+        var frontier = taken.sorted()
         while let a = frontier.popLast() {
-            for b in candidates.indices where !graph.contains(b) && meet(candidates[a].points, candidates[b].points) {
-                graph.insert(b)
+            let shape = shapes[a]!
+            for b in strokes.indices where !taken.contains(b) && meets(b, shape.points, within: shape.lo, shape.hi) {
+                taken.insert(b)
                 frontier.append(b)
             }
         }
-        let members = graph.sorted()
+        // In the strokes' order, as they were when the box held them all.
+        let candidates = taken.sorted().map { (index: $0, points: shapes[$0]!.points) }
+        let members = Array(candidates.indices)
 
         var lines = [NodedLine(points: run)] + members.map { NodedLine(points: candidates[$0].points) }
         try node(&lines)
