@@ -274,6 +274,11 @@ struct RefineGeometryTests {
         ])
         let base = [CGPoint(x: 40, y: 0), CGPoint(x: 200, y: 0)]
         #expect(PenAssist.joined(base, to: lines, reach: 10, straight: true) == base)
+        // Past the wall's corner and back onto the same wall, it is cut at the crossing: kept, it
+        // would close a sliver in the corner.
+        let wallOnly = SnapLines([lines.lines[0].points])
+        #expect(Self.near(PenAssist.joined([CGPoint(x: 150, y: -40), CGPoint(x: 189, y: 3)], to: wallOnly, reach: 10, straight: true).last,
+                          CGPoint(x: 186.28, y: 0), within: 0.01))
         // Past the corner into nothing, the tail is still cut at the crossing.
         let over = [CGPoint(x: 40, y: 0), CGPoint(x: 205, y: 0)]
         #expect(Self.near(PenAssist.joined(over, to: SnapLines([lines.lines[0].points]), reach: 10, straight: true).last, CGPoint(x: 190, y: 0), within: 1e-6))

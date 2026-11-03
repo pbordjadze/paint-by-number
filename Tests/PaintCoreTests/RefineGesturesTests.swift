@@ -254,7 +254,19 @@ struct RefineGesturesTests {
         #expect(points.first.map { abs($0.x) < 1e-3 } == true && points.last.map { abs($0.x - 192) < 1e-3 } == true, "\(points)")
         let laid = try TemplateEditor.apply(edit, to: blank)
         #expect(laid.outcome.regionsSplit == 1 && laid.template.regions.count == 2)
+        // Beside the edge, a stroke along it and a loop near it stay as drawn: nothing pulls them
+        // onto it sideways.
+        let along = (0...40).map { CGPoint(x: 20 + CGFloat($0) * 4, y: 0.8) }
+        #expect(PenAssist.joined(along, to: edges, reach: 2, straight: false) == along)
+        let loop = (0...60).map { k -> CGPoint in
+            let a = -CGFloat.pi / 2 + CGFloat(k) / 60 * 1.99 * .pi
+            return CGPoint(x: 96 + 30 * cos(a), y: 30.8 + 30 * sin(a))
+        }
+        let closed = PenAssist.joined(loop, to: edges, reach: 2, straight: false)
+        #expect(closed.first == loop[0] && Self.nearlyEqual(closed.last, loop[0]))
     }
+
+    static func nearlyEqual(_ p: CGPoint?, _ q: CGPoint) -> Bool { p.map { PenPath.distance($0, q) < 1e-6 } ?? false }
 
     /// A drawn line's ends may join the drawing's lines but never its writing, which the editor
     /// never joins a line to (an end snapped onto a letter would hang there and close nothing);

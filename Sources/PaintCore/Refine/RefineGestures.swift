@@ -327,12 +327,7 @@ public enum RefineGestures {
                 break
             }
         }
-        if canvas.width > 0, canvas.height > 0 {
-            lines.append([
-                .zero, CGPoint(x: canvas.width, y: 0), CGPoint(x: canvas.width, y: canvas.height), CGPoint(x: 0, y: canvas.height), .zero,
-            ])
-        }
-        return SnapLines(lines)
+        return SnapLines(lines, frame: canvas.width > 0 && canvas.height > 0 ? CGRect(origin: .zero, size: canvas) : nil)
     }
 
     /// The lines of a template's drawing, canvas units, as Refine shows them (the app's

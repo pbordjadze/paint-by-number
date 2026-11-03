@@ -242,7 +242,7 @@ extension EditWork {
         }
         func meets(_ i: Int, _ points: [LatticePoint], within lo: LatticePoint, _ hi: LatticePoint) -> Bool {
             guard let shape = shapes[i], shape.lo.x <= hi.x, shape.hi.x >= lo.x, shape.lo.y <= hi.y, shape.hi.y >= lo.y else { return false }
-            return isCandidate(i) && meet(points, shape.points)
+            return meet(points, shape.points) && isCandidate(i)
         }
         var taken = Set(strokes.indices.filter { meets($0, run, within: lo, hi) })
         var frontier = taken.sorted()

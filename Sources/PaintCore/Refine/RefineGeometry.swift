@@ -130,12 +130,11 @@ public enum PenAssist {
             let points = runCut(points, along: lines, reach: reach, touch: touch, within: runLimit) ?? points
             let end = points[points.count - 1]
             if let cut = trimmed(points, at: lines, within: tail) {
-                // A tail past a crossing that lands on a line farther on is no overshoot: it was
-                // going there, as a roof's base drawn along a wall's top on to the eaves is (QA,
-                // November 3: cut back to the wall's corners, the roof never closed).
-                guard let on = lines.nearestPoint(to: end, within: touch), PenPath.distance(cut[cut.count - 1], end) > touch else {
-                    return cut
-                }
+                // A tail past a crossing that lands on another line farther on is no overshoot: it
+                // was going there, as a roof's base drawn along a wall's top on to the eaves is (QA,
+                // November 3: cut back to the wall's corners, the roof never closed). One that lands
+                // back on the line it crossed is, and is cut.
+                guard let on = lines.nearestPoint(to: end, within: touch, awayFrom: cut[cut.count - 1]) else { return cut }
                 return PenPath.distance(on, end) > 1e-9 ? move(points, to: on) : points
             }
             if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
@@ -150,7 +149,9 @@ public enum PenAssist {
             }
             // Sideways, half a reach: farther, a stroke drawn beside a line had both ends pulled
             // onto it and closed a sliver.
-            guard let target = lines.nearestPoint(to: end, within: reach / 2) else { return nil }
+            // Never onto the picture's edge: a stroke along it would close a sliver there, and a
+            // loop near it be pinned to it.
+            guard let target = lines.nearestPoint(to: end, within: reach / 2), !lines.isOnFrame(target) else { return nil }
             return move(points, to: target)
         }
         /// Whether `points` ends heading at `target`, a point of `lines`: a reach back along it,
@@ -373,8 +374,19 @@ public struct SnapLines: Sendable {
     }
 
     public let lines: [Line]
+    /// The picture's edge, a line too (the last), which an end heading at it meets but one
+    /// beside it doesn't (`isOnFrame`): a stroke drawn along an edge stays as drawn.
+    public let frame: CGRect?
 
-    public init(_ polylines: [[CGPoint]]) {
+    public init(_ polylines: [[CGPoint]], frame: CGRect? = nil) {
+        var polylines = polylines
+        if let frame {
+            polylines.append([
+                CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.maxY),
+                CGPoint(x: frame.minX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.minY),
+            ])
+        }
+        self.frame = frame
         lines = polylines.filter { $0.count >= 2 }.map { points in
             var low = points[0], high = points[0]
             for p in points {
@@ -383,6 +395,33 @@ public struct SnapLines: Sendable {
             }
             return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
         }
+    }
+
+    /// Whether `p` lies on the picture's edge.
+    public func isOnFrame(_ p: CGPoint) -> Bool {
+        guard let frame else { return false }
+        let tolerance: CGFloat = 1e-6
+        let corners = [
+            CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.maxY),
+            CGPoint(x: frame.minX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.minY),
+        ]
+        return zip(corners, corners.dropFirst()).contains { PenPath.distance(p, Self.closest(p, $0, $1)) <= tolerance }
+    }
+
+    /// The point nearest `p` within `reach` of a line that doesn't pass within `reach` of
+    /// `other`: where an end lands on another line than the one it crossed at `other`.
+    public func nearestPoint(to p: CGPoint, within reach: CGFloat, awayFrom other: CGPoint) -> CGPoint? {
+        var best: (point: CGPoint, distance: CGFloat)?
+        for line in lines where line.bounds.insetBy(dx: -reach - 1e-6, dy: -reach - 1e-6).contains(p) {
+            let passes = zip(line.points, line.points.dropFirst()).contains { PenPath.distance(other, Self.closest(other, $0, $1)) <= reach }
+            guard !passes else { continue }
+            for (a, b) in zip(line.points, line.points.dropFirst()) {
+                let q = Self.closest(p, a, b)
+                let d = PenPath.distance(p, q)
+                if d <= reach, best == nil || d < best!.distance { best = (q, d) }
+            }
+        }
+        return best?.point
     }
 
     /// `polylines` less their points within reach of an erasure (its path and radius), split
