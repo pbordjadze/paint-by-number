@@ -356,6 +356,11 @@ def qa():
     case("hull-iphone", 12.2, 245.8, 376.5, [
         ("pen", (13, 430), (389, 430)), ("line", (122, 405), (278, 405)), ("line", (122, 405), (150, 425)),
         ("line", (278, 405), (250, 425))], pour=(200, 415), outside=(300, 470), paper="paper-wide.ppm")
+    # Its second hull, all Shapes' Lines: sides crossing the hull's top and the horizon both.
+    case("hull-crossing-iphone", 12.2, 245.8, 376.5, [
+        ("line", (3, 418), (399, 418)), ("line", (115, 397), (285, 397)), ("line", (117, 393), (155, 422)),
+        ("line", (283, 393), (245, 422)), ("line", (200, 286), (200, 402))], pour=(200, 410), outside=(300, 300),
+         paper="paper-wide.ppm")
     case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
          [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
 
