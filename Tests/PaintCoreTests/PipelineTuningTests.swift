@@ -28,6 +28,7 @@ struct PipelineTuningTests {
             (\.accentColors, ["paletteSaliency"]),
             (\.colorfulness, ["chromaScale"]),
             (\.subjectCellSize, ["subjectCellSize"]),
+            (\.faceCellSize, ["faceCellSize"]),
         ]
         for (path, names) in cases {
             var settings = base
@@ -47,6 +48,30 @@ struct PipelineTuningTests {
             smoothing: 1, textureFlattening: 1, minimumCellSize: 1, subjectEmphasis: 1, accentColors: 1, colorfulness: 1)
         #expect(Self.knobs(SegmentationParameters(settings: spelled, width: 1200, height: 800)) == plain)
         #expect(PipelineTuning().isDefault)
+    }
+
+    /// A face's smallest cell grows with its eyes' width, near the eyes and on the face only,
+    /// and only when the factor is above 1.
+    @Test func faceCellSizeSizesAFacesCellsByItsEyes() {
+        var settings = GenerationSettings()
+        settings.tuning.faceCellSize = 2
+        var p = SegmentationParameters(settings: settings, width: 1000, height: 1000)
+        // An 80-px eye at (300, 400): 0.08 of the canvas wide.
+        let eye: [SIMD2<Float>] = [SIMD2(0.26, 0.4), SIMD2(0.34, 0.4), SIMD2(0.3, 0.41)]
+        p.sizeFaces(byEyes: [eye], width: 1000, height: 1000)
+        #expect(p.faceCells.count == 1)
+        let scale = p.faceCellScale(x: 300, y: 500, importance: 1)
+        #expect(abs(scale * p.minArea - 80 * 80 / 64) < 1)
+        // On the eye itself, off the face, past three eye widths, or with the factor at 1: nothing.
+        #expect(p.faceCellScale(x: 300, y: 400, importance: 1) == 0)
+        #expect(p.faceCellScale(x: 300, y: 500, importance: 0.75) == 0)
+        #expect(p.faceCellScale(x: 300, y: 700, importance: 1) == 0)
+        var off = SegmentationParameters(settings: GenerationSettings(), width: 1000, height: 1000)
+        off.sizeFaces(byEyes: [eye], width: 1000, height: 1000)
+        #expect(off.faceCells.isEmpty)
+        // Eyes that aren't finite or are far off the canvas are skipped.
+        p.sizeFaces(byEyes: [[SIMD2(.nan, 0.4), SIMD2(0.3, 0.4)], [SIMD2(90, 90), SIMD2(91, 90)]], width: 1000, height: 1000)
+        #expect(p.faceCells.isEmpty)
     }
 
     /// The subject's cells are loosened on its busy body only: the background, a face's core

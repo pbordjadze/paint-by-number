@@ -3,7 +3,7 @@ public struct TemplateGenerator: Sendable {
     /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
     /// commit as any change that alters generated output for identical inputs and settings,
     /// so saved paintings record which pipeline drew them.
-    public static let pipelineVersion: UInt32 = 12
+    public static let pipelineVersion: UInt32 = 13
 
     public var settings: GenerationSettings
 
@@ -65,6 +65,7 @@ public struct TemplateGenerator: Sendable {
         // By the settings, not the edge map, so Auto's drafts (which have none) are scored on
         // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
         if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
+        if let input { parameters.sizeFaces(byEyes: input.eyes, width: working.width, height: working.height) }
         // The writing's ink is traced and painted out first, so the paint ignores the letters.
         var writing: Writing?
         if let input, settings.lineArt.keepWriting, !input.writing.isEmpty {

@@ -20,12 +20,20 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
     /// it, while the face (importance near 1: eyes, a glint), smooth parts and the background
     /// keep theirs (`SegmentationParameters.areaScale`, `subjectBody`).
     public var subjectCellSize: Float
+    /// Smallest cell kept on a person's face whose eyes Vision found (`LineArtInput.eyes`),
+    /// sized by the face: above 1, a cell within three eye widths of an eye is at least
+    /// (factor − 1) / 64 of the eye's width squared, so a large face is painted in a few broad
+    /// tones instead of speckle while a small one keeps its features
+    /// (`SegmentationParameters.faceCellScale`). 1 and below leave faces as importance sizes them.
+    /// Auto's drafts have no eyes, so its choice doesn't see this.
+    public var faceCellSize: Float
 
     public static let range: ClosedRange<Float> = 0.25...4
 
     public init(
         smoothing: Float = 1, textureFlattening: Float = 1, minimumCellSize: Float = 1,
-        subjectEmphasis: Float = 1, accentColors: Float = 1, colorfulness: Float = 1, subjectCellSize: Float = 1
+        subjectEmphasis: Float = 1, accentColors: Float = 1, colorfulness: Float = 1, subjectCellSize: Float = 1,
+        faceCellSize: Float = 1
     ) {
         self.smoothing = smoothing
         self.textureFlattening = textureFlattening
@@ -34,6 +42,7 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         self.accentColors = accentColors
         self.colorfulness = colorfulness
         self.subjectCellSize = subjectCellSize
+        self.faceCellSize = faceCellSize
     }
 
     public var isDefault: Bool { self == PipelineTuning() }
@@ -44,11 +53,12 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         return PipelineTuning(
             smoothing: c(smoothing), textureFlattening: c(textureFlattening), minimumCellSize: c(minimumCellSize),
             subjectEmphasis: c(subjectEmphasis), accentColors: c(accentColors), colorfulness: c(colorfulness),
-            subjectCellSize: c(subjectCellSize))
+            subjectCellSize: c(subjectCellSize), faceCellSize: c(faceCellSize))
     }
 
     private enum CodingKeys: String, CodingKey {
         case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness, subjectCellSize
+        case faceCellSize
     }
 
     /// The original six always; a later factor only when it isn't 1, so settings without it
@@ -62,6 +72,7 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         try c.encode(accentColors, forKey: .accentColors)
         try c.encode(colorfulness, forKey: .colorfulness)
         if subjectCellSize != 1 { try c.encode(subjectCellSize, forKey: .subjectCellSize) }
+        if faceCellSize != 1 { try c.encode(faceCellSize, forKey: .faceCellSize) }
     }
 
     /// Tolerant, like `LineArtSettings`.
@@ -71,6 +82,6 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
         self.init(
             smoothing: f(.smoothing), textureFlattening: f(.textureFlattening), minimumCellSize: f(.minimumCellSize),
             subjectEmphasis: f(.subjectEmphasis), accentColors: f(.accentColors), colorfulness: f(.colorfulness),
-            subjectCellSize: f(.subjectCellSize))
+            subjectCellSize: f(.subjectCellSize), faceCellSize: f(.faceCellSize))
     }
 }

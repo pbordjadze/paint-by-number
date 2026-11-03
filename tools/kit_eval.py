@@ -11,7 +11,8 @@ tar -x -C X`, with `X/Tests/Corpus` and `X/App/PaintByNumber/Resources/Samples` 
 repository's, since its manifest names some photos there.
 
 For every photo `run` makes the coloring book the app would (the set's edge maps, its stand-in
-subject as the silhouette, its eyes, the app's importance map from the scene; 24 paints, detail
+subject as the silhouette, its eyes (where the stand-in's `eyes.json` is empty, almonds at the
+eye features the set marks by hand, `standin_eyes`), the app's importance map from the scene; 24 paints, detail
 0.5) twice with the same pbn: `before` with the regions' paints, `after` with `--paint-mix kit`
 (and any options after `--`); `--before` adds pbn options to `before` alone (a
 round's baseline: `--before "--paint-mix kit"`), `--both` to both (`--auto` lets Auto choose
@@ -88,6 +89,29 @@ def importance_from_scene(scene_dir):
     return m, scene
 
 
+def standin_eyes(scene, size):
+    """Eye polygons for `pbn --eyes` from the scene's eye features, for a scene whose `eyes.json`
+    is empty: an almond as wide as the eye (a feature's radius is 1.2 half-widths of the long
+    side), 0.45 as tall, quantized as `EyeFinder` does. Eyes narrower than its minimum (1.2 % of
+    the long side) are left out, as the app leaves them."""
+    import math
+    w, h = size
+    long_side = max(w, h)
+    polygons = []
+    for f in scene.get("features", []):
+        if f["kind"] != "eye":
+            continue
+        half = f["radius"] / 1.2 * long_side
+        if 2 * half < 0.012 * long_side:
+            continue
+        cx, cy = f["x"] * w, f["y"] * h
+        points = [(cx + half * math.cos(2 * math.pi * i / 16), cy + 0.45 * half * math.sin(2 * math.pi * i / 16))
+                  for i in range(16)]
+        polygons.append([[round(min(max(x / w, 0), 1) * 4096) / 4096, round(min(max(y / h, 0), 1) * 4096) / 4096]
+                         for x, y in points])
+    return polygons
+
+
 def oklab(rgb):
     c = rgb.astype(np.float32) / 255
     lin = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
@@ -139,6 +163,13 @@ def process(photo, set_dir, out_root, after_opts, before_opts=(), both_opts=()):
               "--objects", os.path.join(scene_dir, "subject.pgm"), "--importance", os.path.join(out_dir, "importance.pgm")]
     eyes = os.path.join(scene_dir, "eyes.json")
     if os.path.exists(eyes) and os.path.getsize(eyes) > 2:
+        common += ["--eyes", eyes]
+    elif marked := standin_eyes(scene, source.size):
+        # The stand-in's landmarker missed these faces, whose eyes the set marks by hand
+        # (`overrides.json`) and Vision finds on the device: almonds at the marked eyes.
+        eyes = os.path.join(out_dir, "eyes.json")
+        with open(eyes, "w") as f:
+            json.dump(marked, f)
         common += ["--eyes", eyes]
     results = {}
     common += list(both_opts)

@@ -16,7 +16,7 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 /// the painting kept 95 % of the photo's top-decile chroma and 96 % of its lightness spread,
 /// while a kit's paints are mixed brighter than the photo. Each paint gets
 ///
-/// - up to `chromaGain` more chroma, fading in over near-greys (`neutralChroma`: an off-white
+/// - up to `chromaGain` more chroma (a pale face's lit side excepted, below), fading in over near-greys (`neutralChroma`: an off-white
 ///   would turn pink) and out over paints already vivid (`vividChroma`: they would clip or turn
 ///   neon);
 /// - a wider lightness spread (`lightnessSpread`), as a cubic that leaves black and white where
@@ -31,6 +31,11 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 ///   marks a face near an eye Vision found; its animal boxes raise the map alike, and a
 ///   ginger cat is no face), and paints of skin's colour elsewhere are only held back a
 ///   little (`elsewhereSkin`: a fox treated as skin turned beige);
+/// - on a pale face in dim light (`Faces.pallor`: little chroma for its lightness, kodim04's
+///   fair face at L 0.52, C 0.042), the lit side painted as a kit paints fair skin, lighter
+///   (`paleLift`) and a cleaner, pinker peach (`paleFloor`, `palePink`), its shadows left: matched to the photo,
+///   such a face read muddy grey-brown beside a red hat (the round 4 critic). Tanned, flushed
+///   and dark skin has the chroma for its lightness and is left as above;
 /// - less gain on pale paints (`paleCut`): a wall or a sky boosted outshone the faces;
 ///
 /// then is brought into gamut by chroma alone (`ColorScience.okLabToEncoded`). Two paints the
@@ -78,6 +83,23 @@ public enum KitPaint {
     static let paleCut: Float = 0.4
     static let pale: ClosedRange<Float> = 0.72...0.9
     static let paleChroma: ClosedRange<Float> = 0.05...0.09
+    /// A face's pallor (`Faces.pallor`) is full below the lower ratio of its skin's chroma to its
+    /// lightness and none above the upper: fair skin in dim light measures 0.07–0.08 (kodim04,
+    /// the astronaut, the street couple), sunburnt children 0.13, tanned and dark skin 0.15–0.16.
+    static let pallidRatio: ClosedRange<Float> = 0.09...0.11
+    /// A pale face's lit paints that are pale themselves, from `litBelow` under its skin's mean
+    /// lightness to the mean, get up to this much more lightness on top of `skinLift` (fading
+    /// out over `paleHighlight`, after `skinHighlight`: one lift falling at a time, each slower
+    /// than lightness rises, so lighter paints stay lighter) and at least `paleFloor` × L chroma, 0.05 at L 0.7, the clean
+    /// peach of a kit's fair skin, past `chromaGain` where the photo's was grey. The pallor is
+    /// the photo's faces' together, so a fair face beside a darker one gets less of it.
+    static let paleLift: Float = 0.06
+    static let litBelow: Float = 0.06
+    static let paleHighlight: ClosedRange<Float> = 0.82...0.96
+    static let paleFloor: Float = 0.07
+    /// …and are turned up to this share of the way to `peach` (45°, a kit's fair-skin mix).
+    static let palePink: Float = 0.5
+    static let peach = SIMD2<Float>(0.707_107, 0.707_107)
     /// The share of skin's restraint a paint of skin's colour gets off any face.
     static let elsewhereSkin: Float = 0.35
     /// Importance from which a pixel is on a face (the app's map raises Vision's faces, and
@@ -87,6 +109,9 @@ public enum KitPaint {
     /// it becomes a face's paint.
     static let faceImportance: Float = 0.9
     static let faceReach: Float = 4
+    /// The face's skin is measured within this many eye widths of an eye (cheeks, nose,
+    /// brow): further out, blond hair at skin's hue made kodim04's pale face read tanned.
+    static let skinReach: Float = 2
     /// From 3 % (a face's skin paint is also the neck's, the chest's and the arms').
     static let faceShareRange: ClosedRange<Float> = 0.03...0.12
 
@@ -96,10 +121,16 @@ public enum KitPaint {
     public struct Faces: Sendable, Equatable {
         public var share: [Float]
         public var skinHue: SIMD2<Float>?
+        /// The photo's mean skin lightness on the faces (0 when none shows skin).
+        public var skinLightness: Float
+        /// How pale the faces' skin is for its lightness, 0...1 (`pallidRatio`).
+        public var pallor: Float
 
-        public init(share: [Float], skinHue: SIMD2<Float>? = nil) {
+        public init(share: [Float], skinHue: SIMD2<Float>? = nil, skinLightness: Float = 0, pallor: Float = 0) {
             self.share = share
             self.skinHue = skinHue
+            self.skinLightness = skinLightness
+            self.pallor = pallor
         }
     }
     /// The strength two paints too close step back by, a round at a time.
@@ -116,8 +147,9 @@ public enum KitPaint {
             faces.map { $0.share.count == palette.count ? smoothstep(faceShareRange, $0.share[k]) : 0 } ?? 0
         }
         let anchor = faces?.skinHue
+        let pallid = faces.map { Pallid(lightness: $0.skinLightness, pallor: min(max($0.pallor, 0), 1)) }
         var strength = [Float](repeating: 1, count: palette.count)
-        var mixed = palette.indices.map { mix(palette[$0], strength: 1, face: onFace[$0], skinHue: anchor, space: space) }
+        var mixed = palette.indices.map { mix(palette[$0], strength: 1, face: onFace[$0], skinHue: anchor, pallid: pallid, space: space) }
         // Few paints (at most 150), and rarely more than one round.
         while true {
             var stepped = false
@@ -128,7 +160,7 @@ public enum KitPaint {
                     guard after < minDistance, after < before else { continue }
                     for k in [i, j] where strength[k] > 0 {
                         strength[k] = max(0, strength[k] - backStep)
-                        mixed[k] = mix(palette[k], strength: strength[k], face: onFace[k], skinHue: anchor, space: space)
+                        mixed[k] = mix(palette[k], strength: strength[k], face: onFace[k], skinHue: anchor, pallid: pallid, space: space)
                         stepped = true
                     }
                 }
@@ -141,14 +173,16 @@ public enum KitPaint {
     /// weights, one per pixel) is at least `faceImportance` near one of `eyes` (closed polygons
     /// normalized to the photo, `LineArtInput.eyes`); each paint's share of its pixels there is
     /// counted exactly, and the skin hue is the mean direction of `photo`'s skin-hued pixels
-    /// there (the working image, the segmentation's size). No eyes, no face.
+    /// within `skinReach` (the working image, the segmentation's size), its lightness and
+    /// pallor their mean's. No eyes, no face.
     public static func faces(
         of segmentation: Segmentation, importance: [Float], eyes: [[SIMD2<Float>]], photo: RGBAImage
     ) -> Faces {
         let w = segmentation.width, h = segmentation.height, n = w * h
         var total = [Int](repeating: 0, count: segmentation.palette.count)
         guard importance.count == n, !eyes.isEmpty else { return Faces(share: total.map { _ in 0 }) }
-        var near = [Bool](repeating: false, count: n)
+        // 1 within `faceReach` of an eye, 2 within `skinReach`.
+        var near = [UInt8](repeating: 0, count: n)
         let size = SIMD2(Float(w), Float(h))
         for eye in eyes where !eye.isEmpty && eye.allSatisfy({ $0.x.isFinite && $0.y.isFinite }) {
             let points = eye.map { $0 * size }
@@ -169,22 +203,27 @@ public enum KitPaint {
             for y in y0...y1 {
                 for x in x0...x1 {
                     let d = SIMD2(Float(x) + 0.5, Float(y) + 0.5) - centre
-                    if (d * d).sum() <= reach * reach { near[y * w + x] = true }
+                    let d2 = (d * d).sum(), core = reach * skinReach / faceReach
+                    if d2 <= core * core {
+                        near[y * w + x] = 2
+                    } else if d2 <= reach * reach, near[y * w + x] == 0 {
+                        near[y * w + x] = 1
+                    }
                 }
             }
         }
         var face = total
         let readsPhoto = photo.width == w && photo.height == h
-        var hueSum = SIMD2<Double>(0, 0)
+        var hueSum = SIMD2<Double>(0, 0), skinSum = SIMD2<Double>(0, 0), skinCount = 0
         for i in 0..<n {
             let region = Int(segmentation.labels.storage[i])
             guard region < segmentation.regionColor.count else { continue }
             let paint = Int(segmentation.regionColor[region])
             guard paint < total.count else { continue }
             total[paint] += 1
-            guard near[i], importance[i] >= faceImportance else { continue }
+            guard near[i] > 0, importance[i] >= faceImportance else { continue }
             face[paint] += 1
-            guard readsPhoto else { continue }
+            guard readsPhoto, near[i] == 2 else { continue }
             let rgb = SIMD3(Float(photo.pixels[4 * i]), Float(photo.pixels[4 * i + 1]), Float(photo.pixels[4 * i + 2])) / 255
             let lab = ColorScience.encodedToOKLab(rgb, space: photo.colorSpace)
             let chroma = (lab.y * lab.y + lab.z * lab.z).squareRoot()
@@ -192,17 +231,29 @@ public enum KitPaint {
             guard chroma > neutralChroma.lowerBound, (lab.y * skinHue.x + lab.z * skinHue.y) / chroma > skinCosine.lowerBound
             else { continue }
             hueSum += SIMD2(Double(lab.y / chroma), Double(lab.z / chroma))
+            skinSum += SIMD2(Double(lab.x), Double(chroma))
+            skinCount += 1
         }
         let length = (hueSum * hueSum).sum().squareRoot()
+        let skin = skinCount > 0 ? skinSum / Double(skinCount) : SIMD2(0, 0)
         return Faces(
             share: zip(face, total).map { $1 > 0 ? Float($0) / Float($1) : 0 },
-            skinHue: length > 0 ? SIMD2(Float(hueSum.x / length), Float(hueSum.y / length)) : nil)
+            skinHue: length > 0 ? SIMD2(Float(hueSum.x / length), Float(hueSum.y / length)) : nil,
+            skinLightness: Float(skin.x),
+            pallor: skin.x > 0 ? 1 - smoothstep(pallidRatio, Float(skin.y / skin.x)) : 0)
+    }
+
+    /// A pale face's skin: its mean lightness and its pallor.
+    struct Pallid {
+        var lightness: Float
+        var pallor: Float
     }
 
     /// One paint at a strength (0: the regions' color, 1: the kit's), `face` how much it is a
-    /// face's paint (0...1), `skinHue` the photo's skin there.
+    /// face's paint (0...1), `skinHue` the photo's skin there, `pallid` its pallor.
     static func mix(
-        _ paint: PaletteColor, strength: Float, face: Float = 0, skinHue anchor: SIMD2<Float>? = nil, space: RGBColorSpace
+        _ paint: PaletteColor, strength: Float, face: Float = 0, skinHue anchor: SIMD2<Float>? = nil, pallid: Pallid? = nil,
+        space: RGBColorSpace
     ) -> PaletteColor {
         guard strength > 0 else { return paint }
         let lab = paint.oklab
@@ -220,12 +271,13 @@ public enum KitPaint {
             * (1 - paleCut * smoothstep(pale, L) * (1 - smoothstep(paleChroma, chroma)))
         var lightness = L + lightnessSpread * share * (L - 0.5) * 4 * L * (1 - L)
         let onSkin = strength * skin * face
-        lightness += skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
+        var lift = skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
         // A face's paint turned to the face's own hue, kept to its chroma.
         var a = lab.y, b = lab.z
+        var near: Float = 0
         if let anchor, chroma > 0, onSkin > 0 {
             let own = SIMD2(a, b) / chroma
-            let near = smoothstep(anchorCosine, (own * anchor).sum())
+            near = smoothstep(anchorCosine, (own * anchor).sum())
             let turned = own + skinAnchor * onSkin * near * (anchor - own)
             let length = (turned * turned).sum().squareRoot()
             if length > 1e-4 {
@@ -233,7 +285,27 @@ public enum KitPaint {
                 b = turned.y / length * chroma
             }
         }
-        let rgb = ColorScience.okLabToEncoded(SIMD3(lightness, a * gain, b * gain), space: space)
+        var scale = gain
+        if let pallid, pallid.pallor > 0, pallid.lightness.isFinite, onSkin > 0, chroma > 0 {
+            // Hair at skin's hue beside the face is lifted with it, so the two keep apart.
+            // Pale itself too: a darker face beside a fair one keeps its colour.
+            let lit = onSkin * pallid.pallor * (1 - smoothstep(pallidRatio, chroma / max(L, 0.05)))
+                * smoothstep((pallid.lightness - litBelow)...pallid.lightness, L)
+            // Faded out once `skinLift` has, so a lighter paint never ends up darker.
+            lift += paleLift * lit * (1 - smoothstep(paleHighlight, L))
+            scale = max(gain, 1 + lit * (paleFloor * (lightness + lift) / chroma - 1))
+            // Turned toward peach, never past it: a yellow cast kept, matched, read khaki.
+            // Only paints of the face's own hue: blond hair stays blond.
+            let own = SIMD2(a, b) / chroma
+            if near > 0, own.y > own.x * peach.y / peach.x {
+                let turned = own + palePink * near * lit * (peach - own)
+                let length = (turned * turned).sum().squareRoot()
+                a = turned.x / length * chroma
+                b = turned.y / length * chroma
+            }
+        }
+        lightness += lift
+        let rgb = ColorScience.okLabToEncoded(SIMD3(lightness, a * scale, b * scale), space: space)
         return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: space), rgb: rgb)
     }
 
