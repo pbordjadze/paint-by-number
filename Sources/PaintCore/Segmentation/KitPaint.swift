@@ -38,7 +38,8 @@ public enum KitPaint {
     static let vividChroma: ClosedRange<Float> = 0.12...0.2
     /// The lightness push, `spread · (L − ½) · 4L(1 − L)`: 0 at black, middle grey and white,
     /// about +0.04 at L 0.8 (the spike's linear 1.15× gave +0.045 but clamped the whites
-    /// together). Its slope stays above 1 − 2 · spread, so lightness keeps its order.
+    /// together). Its slope stays above 1 − 2 · spread, so paints mixed alike (the greys, say)
+    /// keep their order of lightness.
     static let lightnessSpread: Float = 0.2
     /// Skin's hue in OKLab, as a unit vector (50°: pale to very dark skin measure 48°–64°, a
     /// flushed cheek 28°), and the cosines of the hue difference where skin fades out (40°) and
@@ -86,7 +87,9 @@ public enum KitPaint {
         var skin: Float = 0
         if chroma > 0 {
             let cosine = (lab.y * skinHue.x + lab.z * skinHue.y) / chroma
-            skin = smoothstep(skinCosine, cosine) * (1 - smoothstep(skinChroma, chroma))
+            // Faded with the gain over near-greys too, so greys are all mixed alike and keep
+            // their order of lightness, a warm one beside a cool one.
+            skin = smoothstep(skinCosine, cosine) * (1 - smoothstep(skinChroma, chroma)) * smoothstep(neutralChroma, chroma)
         }
         let share = strength * (1 - (1 - skinShare) * skin)
         let gain = 1 + chromaGain * share * smoothstep(neutralChroma, chroma) * (1 - smoothstep(vividChroma, chroma))

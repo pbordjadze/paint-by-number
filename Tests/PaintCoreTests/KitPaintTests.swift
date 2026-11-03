@@ -51,11 +51,23 @@ struct KitPaintTests {
             for j in mixed.indices where j > i {
                 let before = ColorScience.distance(palette[i].oklab, palette[j].oklab)
                 #expect(ColorScience.distance(c.oklab, mixed[j].oklab) >= min(before, minDistance) - 1e-4)
-                // Lightness keeps its order (both paints greyish here keep it exactly).
-                if Self.chroma(palette[i]) < 0.01, Self.chroma(palette[j]) < 0.01 {
-                    #expect((palette[i].oklab.x < palette[j].oklab.x) == (c.oklab.x < mixed[j].oklab.x))
-                }
             }
+        }
+    }
+
+    /// A grey scale, warm and cool greys alternating: every grey is mixed alike, so the scale
+    /// keeps its order and nothing bunches up at white.
+    @Test func greysKeepTheirOrder() {
+        var palette: [PaletteColor] = []
+        for i in 0..<18 {
+            let L: Float = 0.08 + 0.05 * Float(i)
+            let tint: SIMD2<Float> = i % 2 == 0 ? SIMD2(0.008, 0.01) : SIMD2(-0.004, -0.008)
+            palette.append(Self.paint(L, tint.x, tint.y))
+        }
+        let mixed = KitPaint.mix(palette, space: .sRGB, minDistance: 0.04)
+        for i in 1..<mixed.count {
+            #expect(mixed[i].oklab.x > mixed[i - 1].oklab.x)
+            #expect(ColorScience.distance(mixed[i].oklab, mixed[i - 1].oklab) >= 0.04)
         }
     }
 

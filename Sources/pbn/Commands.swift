@@ -37,7 +37,7 @@ func runGenerate(_ options: Options) throws {
     // Auto's decision carries the line art and tuning asked for; it is scored on the regions,
     // so the paints' mix is laid on its choice, as the app does.
     var chosen = decision?.0.settings ?? options.settings
-    chosen.paintMix = options.settings.paintMix
+    chosen.paintMix = options.settings.normalized.paintMix
     let generator = TemplateGenerator(settings: chosen)
     let observer = try snapshotObserver(options)
     let output: TemplateGenerator.Output

@@ -364,7 +364,7 @@ struct LineArtInputsTests {
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
         #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.book && $0.settings.tuning.isDefault })
-        #expect(model.settings == decision.settings)
+        #expect(model.settings == model.mixed(decision.settings))
         #expect(model.settingsOrigin == .suggested)
         let input = try #require(model.lineArtInput)
         #expect(max(input.edges.width, input.edges.height) == EdgeDetector.maximumLongSide)
@@ -390,7 +390,7 @@ struct LineArtInputsTests {
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
         #expect(draft.settings.lineArt == classic && draft.settings.tuning == PipelineTuning())
-        #expect(model.decision?.settings == draft.settings)
+        #expect(model.decision.map { model.mixed($0.settings) } == draft.settings)
         #expect(draft.template.lineArt == nil)
     }
 
