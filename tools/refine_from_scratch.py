@@ -17,7 +17,8 @@ It scores what a newcomer would see: a shape is `closed` when its pour colored i
 outside it (the pour's color covers at least 90% of the shape and leaks under 5% of the shape's
 area outside it); otherwise it `leaked` (paint ran out through a gap) or was `split`. Prints a
 table per hand (shapes closed out of shapes drawn, over seeds) and writes, per subject, hand and
-seed, the `pbn refine` folder (`refine.json`, `after.ppm`) and a strip `<out>/<hand>.png` of every
+seed, the `pbn refine` folder (`refine.json`, `gestures.json`, and `after.png` at 1200 wide: its
+full-size rasters, tens of MB each, are deleted) and a strip `<out>/<hand>.png` of every
 subject's first seeds. Written for the from-scratch loop of November 3 (Refine, painting-company
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
 compare. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
@@ -242,6 +243,11 @@ def run(subject, hand, seed):
         sys.exit(f"pbn refine failed on {d}: {r.stderr[-800:]}")
     rep = json.load(open(os.path.join(d, "refine.json")))
     img = Image.open(os.path.join(d, "after.ppm")).convert("RGB")
+    img = img.resize((1200, int(1200 * img.height / img.width)), Image.NEAREST)
+    img.save(os.path.join(d, "after.png"))
+    for f in os.listdir(d):
+        if f.endswith((".ppm", ".pbnt")):
+            os.remove(os.path.join(d, f))
     sx = img.width / W; sy = img.height / H
     px = img.load()
     # Score each shape: the pour's color is the pixel at its pour point (the drawn color in sRGB).
@@ -284,7 +290,7 @@ def main():
             print(f"  {subject:5} seed {seed}: {c}/{t}" + (f"  — {', '.join(bad)}" if bad else "") +
                   (f"  [toasts: {'; '.join(sorted(set(toasts)))}]" if toasts else ""))
         # a strip of each subject's first two seeds
-        tiles = [Image.open(os.path.join(r[6], "after.ppm")).convert("RGB").resize((360, 270)) for r in rows
+        tiles = [Image.open(os.path.join(r[6], "after.png")).convert("RGB").resize((360, 270)) for r in rows
                  if r[1] < 2]
         strip = Image.new("RGB", (360 * len(tiles), 270), "white")
         for k, t in enumerate(tiles):
