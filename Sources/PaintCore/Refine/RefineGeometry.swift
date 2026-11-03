@@ -104,7 +104,8 @@ public enum PenAssist {
     /// October 18: "it's snapping lines a bit, but not really in a way that makes them better"):
     /// one that ran on along a line after meeting it (a tail past a crossing, a loop gone round
     /// past its own start: a finger's overshoot) is cut where it met the line (`runCut`); one that
-    /// crossed a line within `reach` of it ends at the crossing, its tail cut off; one heading at
+    /// crossed a line within `reach` of it ends at the crossing, its tail cut off, unless the tail
+    /// lands on a line; one heading at
     /// a line it would meet within `reach` goes straight on to it; one heading at a line (a
     /// stroke's free tip, a corner) moves to its nearest point within `reach`; otherwise, beside
     /// a line, it moves to the nearest point within half a reach, a straight line moving just that end and any other easing
@@ -127,8 +128,16 @@ public enum PenAssist {
         /// `tail`, or nil when none is near enough.
         func joinEnd(_ points: [CGPoint], tail: CGFloat) -> [CGPoint]? {
             let points = runCut(points, along: lines, reach: reach, touch: touch, within: runLimit) ?? points
-            if let cut = trimmed(points, at: lines, within: tail) { return cut }
             let end = points[points.count - 1]
+            if let cut = trimmed(points, at: lines, within: tail) {
+                // A tail past a crossing that lands on a line farther on is no overshoot: it was
+                // going there, as a roof's base drawn along a wall's top on to the eaves is (QA,
+                // November 3: cut back to the wall's corners, the roof never closed).
+                guard let on = lines.nearestPoint(to: end, within: touch), PenPath.distance(cut[cut.count - 1], end) > touch else {
+                    return cut
+                }
+                return PenPath.distance(on, end) > 1e-9 ? move(points, to: on) : points
+            }
             if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
                 return straight ? Array(points.dropLast()) + [hit] : points + [hit]
             }

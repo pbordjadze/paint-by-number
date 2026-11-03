@@ -264,6 +264,21 @@ struct RefineGeometryTests {
         #expect(PenAssist.joined(beside, to: bar, reach: 10, straight: false) == beside)
     }
 
+    /// A roof's base drawn along a wall's top on to the eaves, where the two slopes end: its
+    /// stretches past the wall's corners land on lines, so they are no overshoot to cut, and the
+    /// roof closes (QA, November 3: cut back to the corners, the roof stayed one with the sky).
+    @Test func aTailThatLandsOnALineIsKept() {
+        let lines = SnapLines([
+            [CGPoint(x: 50, y: 100), CGPoint(x: 50, y: 0), CGPoint(x: 190, y: 0), CGPoint(x: 190, y: 100)],
+            [CGPoint(x: 40, y: 0), CGPoint(x: 120, y: -80)], [CGPoint(x: 120, y: -80), CGPoint(x: 200, y: 0)],
+        ])
+        let base = [CGPoint(x: 40, y: 0), CGPoint(x: 200, y: 0)]
+        #expect(PenAssist.joined(base, to: lines, reach: 10, straight: true) == base)
+        // Past the corner into nothing, the tail is still cut at the crossing.
+        let over = [CGPoint(x: 40, y: 0), CGPoint(x: 205, y: 0)]
+        #expect(Self.near(PenAssist.joined(over, to: SnapLines([lines.lines[0].points]), reach: 10, straight: true).last, CGPoint(x: 190, y: 0), within: 1e-6))
+    }
+
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out
     /// of a line, splitting it, and a line erased whole goes.
     @Test func erasedLinesAreNoTargets() {
