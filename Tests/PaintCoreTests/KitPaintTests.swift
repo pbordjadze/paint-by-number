@@ -49,6 +49,35 @@ struct KitPaintTests {
         #expect(abs(hue(coat) - hue(palette[3])) < 0.01)
     }
 
+    /// kodim04's face: fair skin in dim light, its skin at L 0.52 with chroma 0.042, painted as
+    /// a kit paints fair skin on its lit side, and only on a pale face.
+    @Test func aPaleFacesLitSideIsPaintedLighterAndPeach() {
+        func hue(_ c: PaletteColor) -> Float { atan2(c.oklab.z, c.oklab.y) * 180 / .pi }
+        func paint(_ L: Float, _ chroma: Float, _ degrees: Float) -> PaletteColor {
+            Self.paint(L, chroma * cos(degrees * .pi / 180), chroma * sin(degrees * .pi / 180))
+        }
+        // The lit cheek (64°, yellower than the face), the shadow, blond hair at 77°.
+        let palette = [paint(0.6, 0.037, 64), paint(0.4, 0.045, 56), paint(0.73, 0.035, 77)]
+        let skinHue = SIMD2<Float>(cos(57 * .pi / 180), sin(57 * .pi / 180))
+        let share: [Float] = [0.6, 0.6, 0.6]
+        let pale = KitPaint.mix(
+            palette, space: .sRGB, minDistance: 0.02,
+            faces: KitPaint.Faces(share: share, skinHue: skinHue, skinLightness: 0.52, pallor: 1))
+        let tanned = KitPaint.mix(
+            palette, space: .sRGB, minDistance: 0.02,
+            faces: KitPaint.Faces(share: share, skinHue: skinHue, skinLightness: 0.52, pallor: 0))
+        // The lit cheek: lighter, a cleaner chroma, turned past the face's hue toward peach.
+        #expect(pale[0].oklab.x - tanned[0].oklab.x > 0.04)
+        #expect(Self.chroma(pale[0]) > 0.043)
+        #expect(hue(pale[0]) < 55 && hue(pale[0]) > 45)
+        #expect(hue(tanned[0]) > 56)
+        // The shadow is the tanned face's.
+        #expect(ColorScience.distance(pale[1].oklab, tanned[1].oklab) < 0.002)
+        // The hair is lifted with the cheek, so the two keep apart, and stays blond.
+        #expect(abs(hue(pale[2]) - hue(palette[2])) < 1)
+        #expect(pale[2].oklab.x > tanned[2].oklab.x)
+    }
+
     @Test func paintsStayInGamutOrderedAndApart() {
         var rng = SplitMix64(seed: 11)
         var palette: [PaletteColor] = []
@@ -104,6 +133,9 @@ struct KitPaintTests {
         #expect(faces.share == [0.5, 0])
         let hue = try #require(faces.skinHue)
         #expect(abs(atan2(hue.y, hue.x) * 180 / .pi - 59) < 2)
+        // Fair skin, well lit: chroma 0.06 at lightness 0.82, pale for its lightness.
+        #expect(abs(faces.skinLightness - 0.82) < 0.02)
+        #expect(faces.pallor == 1)
         // A face's importance with no eye near (an animal's box, a busy centre) is no face.
         #expect(KitPaint.faces(of: segmentation, importance: importance, eyes: [], photo: photo) == KitPaint.Faces(share: [0, 0]))
         let far: [SIMD2<Float>] = [SIMD2(10, 10), SIMD2(10.01, 10.01)]
