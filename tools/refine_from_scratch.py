@@ -21,7 +21,8 @@ seed, the `pbn refine` folder (`refine.json`, `gestures.json`, and `after.png` a
 full-size rasters, tens of MB each, are deleted) and a strip `<out>/<hand>.png` of every
 subject's first seeds. Written for the from-scratch loop of November 3 (Refine, painting-company
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
-compare. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
+compare. `--qa` replays instead the strokes with which the QA of November 3 failed to close a
+roof (Shapes' Line) and a mouth (Pen strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
 """
 import argparse, json, math, os, random, subprocess, sys, zlib
 
@@ -34,6 +35,7 @@ ap.add_argument("--seeds", type=int, default=6)
 ap.add_argument("--hands", default="careful,casual,sloppy")
 ap.add_argument("--subjects", default="cat,house,face")
 ap.add_argument("--smoothing", type=float, default=None, help="the Pen's Smoothing, 0...1 (default off)")
+ap.add_argument("--qa", action="store_true", help="replay the QA runs' failures of November 3 instead, and say whether each closes")
 opts = ap.parse_args()
 PBN = os.path.abspath(opts.pbn)
 OUT = os.path.abspath(opts.out)
@@ -301,4 +303,49 @@ def main():
     json.dump({h: [[r[0], r[1], r[2], r[3], r[4]] for r in rows] for h, rows in summary.items()},
               open(os.path.join(OUT, "summary.json"), "w"), indent=1)
 
-main()
+# --- the QA runs' own strokes ------------------------------------------------------------------
+# Shapes and Pen swipes from the exploratory QA of November 3 (qa-explore runs 41579909695, an
+# iPhone, and 41584230981, an iPad), in screen points, with the picture's place on screen measured
+# from their screenshots; each case says which pour must stay inside its shape.
+
+def qa():
+    paper = os.path.join(OUT, "paper-square.ppm")
+    with open(paper, "wb") as f:
+        f.write(b"P6 1000 1000 255\n" + bytes([10, 10, 14]) * (1000 * 1000))
+    def case(name, x0, y0, width, steps, pour, outside):
+        def n(x, y):
+            return [round((x - x0) / width, 5), round((y - y0) / width, 5)]
+        g = []
+        for s in steps:
+            if s[0] == "pen":
+                (ax, ay), (bx, by) = s[1], s[2]
+                g.append({"tool": "pen", "inked": True, "points": [n(ax + (bx - ax) * k / 12, ay + (by - ay) * k / 12) for k in range(13)]})
+            else:
+                g.append({"tool": "shape", "shape": s[0], "from": n(*s[1]), "to": n(*s[2])})
+        g.append({"tool": "bucket", "at": n(*pour), "rgb": [0.9, 0.15, 0.15]})
+        d = os.path.join(OUT, "qa", name)
+        os.makedirs(d, exist_ok=True)
+        json.dump({"screen": {"width": width}, "gestures": g}, open(os.path.join(d, "gestures.json"), "w"))
+        r = subprocess.run([PBN, "refine", paper, os.path.join(d, "gestures.json"), "--out", d, "--blank", "--no-steps"],
+                           capture_output=True, text=True)
+        if r.returncode:
+            sys.exit(f"pbn refine failed on {d}: {r.stderr[-800:]}")
+        img = Image.open(os.path.join(d, "after.ppm")).convert("RGB")
+        k = img.width / width
+        poured = img.getpixel((int((pour[0] - x0) * k), int((pour[1] - y0) * k)))
+        spilled = img.getpixel((int((outside[0] - x0) * k), int((outside[1] - y0) * k)))
+        img.resize((600, 600)).save(os.path.join(d, "after.png"))
+        os.remove(os.path.join(d, "after.ppm"))
+        print(f"  {name}: {'closed' if poured != spilled else 'LEAKED (the pour ran outside the shape)'}")
+    print("QA replays:")
+    # The iPhone's roof: two slopes and a base drawn with Shapes' Line along the wall's top on to the eaves.
+    case("roof-iphone", 12, 185, 378, [
+        ("rectangle", (50, 340), (190, 480)), ("line", (40, 340), (120, 260)), ("line", (120, 260), (200, 340)),
+        ("line", (40, 340), (200, 340)), ("line", (12, 480), (370, 480))], pour=(120, 305), outside=(300, 250))
+    # The iPad's mouth: the upper lip a zigzag of four Pen strokes, the middle line, the lower lip three strokes.
+    up = [(565, 860), (590, 843), (612, 852), (635, 843), (660, 860)]
+    lo = [(565, 860), (592, 882), (635, 882), (660, 860)]
+    case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
+         [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
+
+qa() if opts.qa else main()
