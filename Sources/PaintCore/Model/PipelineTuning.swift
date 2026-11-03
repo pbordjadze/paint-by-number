@@ -14,11 +14,11 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
     public var accentColors: Float
     /// How much hue and colorfulness count against lightness when telling paints apart.
     public var colorfulness: Float
-    /// Smallest cell kept on the subject's body (fur, hair, clothes: importance between the
-    /// background's and a face's), as a factor on what importance makes it there. Higher
-    /// gives the subject fewer, larger cells, as a kit paints it, while the face (importance
-    /// near 1: eyes, a glint) and the background keep theirs
-    /// (`SegmentationParameters.subjectBody`).
+    /// Smallest cell kept on the busy parts of the subject's body (fur, hair, knit: importance
+    /// between the background's and a face's, texture from half its scale), as a factor on
+    /// what importance makes it there. Higher gives fur fewer, larger cells, as a kit paints
+    /// it, while the face (importance near 1: eyes, a glint), smooth parts and the background
+    /// keep theirs (`SegmentationParameters.areaScale`, `subjectBody`).
     public var subjectCellSize: Float
 
     public static let range: ClosedRange<Float> = 0.25...4

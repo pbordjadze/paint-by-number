@@ -10,28 +10,35 @@ struct KitPaintTests {
 
     static func chroma(_ c: PaletteColor) -> Float { (c.oklab.y * c.oklab.y + c.oklab.z * c.oklab.z).squareRoot() }
 
-    @Test func aMutedPaintGetsBolderAndSkinStaysClose() {
+    @Test func aMutedPaintGetsBolderAndAFacesSkinStaysClose() {
         // A muted blue, a muted green, light skin, medium skin, a near-white grey, dark skin.
         let palette = [
             Self.paint(0.55, -0.03, -0.06), Self.paint(0.6, -0.06, 0.05), Self.paint(0.837, 0.033, 0.056),
             Self.paint(0.677, 0.060, 0.070), Self.paint(0.95, 0.002, 0.004), Self.paint(0.38, 0.037, 0.044),
         ]
-        let mixed = KitPaint.mix(palette, space: .sRGB, minDistance: 0.04)
+        // The skins are paints on a face.
+        let mixed = KitPaint.mix(palette, space: .sRGB, minDistance: 0.04, faces: [0, 0, 0.6, 0.6, 0, 0.6])
         let gain = zip(palette, mixed).map { Self.chroma($1) / Self.chroma($0) }
         #expect(gain[0] > 1.25 && gain[0] < 1.31)
         #expect(gain[1] > 1.25 && gain[1] < 1.31)
         #expect(gain[2] > 0.98 && gain[2] < 1.08)  // lifted to the sRGB edge: chroma clipped
-        #expect(gain[3] > 1.03 && gain[3] < 1.08)
+        #expect(gain[3] > 1.0 && gain[3] < 1.08)
         // A near-grey keeps its hue's strength: an off-white never turns pink.
         #expect(abs(Self.chroma(mixed[4]) - Self.chroma(palette[4])) < 0.002)
         // White stays white, the darks go darker and the lights lighter, by a little.
         #expect(abs(mixed[4].oklab.x - palette[4].oklab.x) < 0.02)
         #expect(mixed[0].oklab.x > palette[0].oklab.x)
-        // Light skin is lifted a little and turned toward pink; the darks of skin are not lifted.
-        #expect(mixed[2].oklab.x - palette[2].oklab.x > 0.03 && mixed[2].oklab.x - palette[2].oklab.x < 0.07)
+        // Medium skin is lifted a little and turned toward pink; pale skin is barely lifted and
+        // dark skin not at all.
+        #expect(mixed[3].oklab.x - palette[3].oklab.x > 0.03 && mixed[3].oklab.x - palette[3].oklab.x < 0.08)
+        #expect(mixed[2].oklab.x - palette[2].oklab.x < 0.02)
         func hue(_ c: PaletteColor) -> Float { atan2(c.oklab.z, c.oklab.y) }
-        #expect(hue(mixed[2]) < hue(palette[2]) - 0.05 && hue(mixed[2]) > hue(palette[2]) - 0.12)
+        #expect(hue(mixed[3]) < hue(palette[3]) - 0.05 && hue(mixed[3]) > hue(palette[3]) - 0.12)
         #expect(mixed[5].oklab.x <= palette[5].oklab.x + 0.002)
+        // The same tan off any face (a fox's coat) is held back only a little, and not lifted.
+        let coat = KitPaint.mix([palette[3]], space: .sRGB, minDistance: 0.04)[0]
+        #expect(Self.chroma(coat) / Self.chroma(palette[3]) > 1.15)
+        #expect(abs(hue(coat) - hue(palette[3])) < 0.01)
     }
 
     @Test func paintsStayInGamutOrderedAndApart() {
@@ -73,6 +80,15 @@ struct KitPaintTests {
             #expect(mixed[i].oklab.x > mixed[i - 1].oklab.x)
             #expect(ColorScience.distance(mixed[i].oklab, mixed[i - 1].oklab) >= 0.04)
         }
+    }
+
+    @Test func faceShareCountsEachPaintsPixelsOnAFace() {
+        // Four pixels, three regions, two paints: paint 0 has one of its two pixels on a face.
+        let labels = RegionMap(width: 2, height: 2, storage: [0, 1, 2, 2])
+        let segmentation = Segmentation(
+            labels: labels, regionColor: [0, 0, 1], palette: [Self.paint(0.5, 0, 0), Self.paint(0.7, 0, 0)], colorSpace: .sRGB)
+        #expect(KitPaint.faceShare(segmentation, importance: [0.95, 0.5, 0.75, 0.75]) == [0.5, 0])
+        #expect(KitPaint.faceShare(segmentation, importance: [1]) == [0, 0])
     }
 
     @Test func kitTemplateKeepsTheRegionsAndMovesOnlyThePaints() throws {

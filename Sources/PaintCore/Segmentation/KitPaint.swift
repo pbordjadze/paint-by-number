@@ -25,7 +25,10 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
 ///   make most of a kit's paints; instead light skin is lifted (`skinLift`, never dark skin)
 ///   and turned a little from yellow toward pink (`skinTurn`), since a coloring book's larger
 ///   cells average a face's shadows into its paint, which read khaki beside the photo's peach
-///   (the round-1 critic, on kodim04 and street-couple);
+///   (the round-1 critic, on kodim04 and street-couple). Skin's colour is a fox's, a lion's and
+///   a loaf's too, so all of this is for paints on a face (`faceShare`: the share of a paint's
+///   pixels where the importance map marks a face), and paints of skin's colour elsewhere are
+///   only held back a little (`elsewhereSkin`: a fox treated as skin turned beige);
 /// - less gain on pale paints (`paleCut`): a wall or a sky boosted outshone the faces;
 ///
 /// then is brought into gamut by chroma alone (`ColorScience.okLabToEncoded`). Two paints the
@@ -50,29 +53,47 @@ public enum KitPaint {
     /// is full (25°).
     static let skinHue = SIMD2<Float>(0.642_788, 0.766_044)
     static let skinCosine: ClosedRange<Float> = 0.766...0.906
-    /// Skin's chroma: above this range a paint is too vivid to be skin (a fox, a pumpkin).
-    static let skinChroma: ClosedRange<Float> = 0.10...0.14
+    /// Skin's chroma: above this range a paint is too vivid to be skin (a fox's coat, a
+    /// pumpkin; at 0.10–0.14 a fox's lighter fur was lifted and turned peach). Tan skin measures
+    /// about 0.09.
+    static let skinChroma: ClosedRange<Float> = 0.09...0.12
     /// The share of the gain and spread skin keeps: 1.06× chroma and a gentle spread (at 1.12×
     /// warm faces drifted orange).
     static let skinShare: Float = 0.2
-    /// Light skin's lift: up to +0.05 lightness, full from L 0.62 to 0.86, none below 0.5 (dark
-    /// skin keeps its depth) nor at the highlights.
+    /// Light skin's lift: up to +0.05 lightness, full from L 0.62 to 0.74, none below 0.5 (dark
+    /// skin keeps its depth) nor above 0.84 (pale skin lifted more read bleached).
     static let skinLift: Float = 0.05
     static let lightSkin: ClosedRange<Float> = 0.5...0.62
-    static let skinHighlight: ClosedRange<Float> = 0.86...0.94
+    static let skinHighlight: ClosedRange<Float> = 0.74...0.84
     /// Skin's hue turned toward pink by up to this angle, in radians (5.7°).
     static let skinTurn: Float = 0.1
-    /// The share of the gain pale paints lose, fading in over `pale` lightness.
+    /// The share of the gain pale, soft paints lose, fading in over `pale` lightness and out
+    /// over `paleChroma` (a pale orange fur keeps its gain).
     static let paleCut: Float = 0.4
     static let pale: ClosedRange<Float> = 0.72...0.9
+    static let paleChroma: ClosedRange<Float> = 0.05...0.09
+    /// The share of skin's restraint a paint of skin's colour gets off any face.
+    static let elsewhereSkin: Float = 0.35
+    /// Importance from which a pixel is on a face (the app's map raises Vision's faces toward
+    /// 1 in an ellipse; the subject sits at 0.75), and the share of a paint's pixels there
+    /// over which it becomes a face's paint.
+    static let faceImportance: Float = 0.9
+    static let faceShareRange: ClosedRange<Float> = 0.1...0.3
     /// The strength two paints too close step back by, a round at a time.
     static let backStep: Float = 0.25
 
     /// The palette mixed as a kit would mix it, never closer than `minDistance` where the
-    /// regions' colors weren't. Each paint's `oklab` is its in-gamut color's.
-    public static func mix(_ palette: [PaletteColor], space: RGBColorSpace, minDistance: Float) -> [PaletteColor] {
+    /// regions' colors weren't. Each paint's `oklab` is its in-gamut color's. `faces` is each
+    /// paint's share of pixels on a face (`faceShare`); nil, or a count that isn't the
+    /// palette's, is no face anywhere.
+    public static func mix(
+        _ palette: [PaletteColor], space: RGBColorSpace, minDistance: Float, faces: [Float]? = nil
+    ) -> [PaletteColor] {
+        let onFace = palette.indices.map { k in
+            faces.map { $0.count == palette.count ? smoothstep(faceShareRange, $0[k]) : 0 } ?? 0
+        }
         var strength = [Float](repeating: 1, count: palette.count)
-        var mixed = palette.map { mix($0, strength: 1, space: space) }
+        var mixed = palette.indices.map { mix(palette[$0], strength: 1, face: onFace[$0], space: space) }
         // Few paints (at most 150), and rarely more than one round.
         while true {
             var stepped = false
@@ -83,7 +104,7 @@ public enum KitPaint {
                     guard after < minDistance, after < before else { continue }
                     for k in [i, j] where strength[k] > 0 {
                         strength[k] = max(0, strength[k] - backStep)
-                        mixed[k] = mix(palette[k], strength: strength[k], space: space)
+                        mixed[k] = mix(palette[k], strength: strength[k], face: onFace[k], space: space)
                         stepped = true
                     }
                 }
@@ -92,8 +113,27 @@ public enum KitPaint {
         }
     }
 
-    /// One paint at a strength (0: the regions' color, 1: the kit's).
-    static func mix(_ paint: PaletteColor, strength: Float, space: RGBColorSpace) -> PaletteColor {
+    /// Each paint's share of its pixels on a face: importance at least `faceImportance` in
+    /// `importance` (the segmentation's weights, one per pixel), counted exactly.
+    public static func faceShare(_ segmentation: Segmentation, importance: [Float]) -> [Float] {
+        let n = segmentation.width * segmentation.height
+        guard importance.count == n else { return [Float](repeating: 0, count: segmentation.palette.count) }
+        var total = [Int](repeating: 0, count: segmentation.palette.count)
+        var face = total
+        for i in 0..<n {
+            let region = Int(segmentation.labels.storage[i])
+            guard region < segmentation.regionColor.count else { continue }
+            let paint = Int(segmentation.regionColor[region])
+            guard paint < total.count else { continue }
+            total[paint] += 1
+            if importance[i] >= faceImportance { face[paint] += 1 }
+        }
+        return zip(face, total).map { $1 > 0 ? Float($0) / Float($1) : 0 }
+    }
+
+    /// One paint at a strength (0: the regions' color, 1: the kit's), `face` how much it is a
+    /// face's paint (0...1).
+    static func mix(_ paint: PaletteColor, strength: Float, face: Float = 0, space: RGBColorSpace) -> PaletteColor {
         guard strength > 0 else { return paint }
         let lab = paint.oklab
         let chroma = (lab.y * lab.y + lab.z * lab.z).squareRoot()
@@ -104,12 +144,12 @@ public enum KitPaint {
             // their order of lightness, a warm one beside a cool one.
             skin = smoothstep(skinCosine, cosine) * (1 - smoothstep(skinChroma, chroma)) * smoothstep(neutralChroma, chroma)
         }
-        let share = strength * (1 - (1 - skinShare) * skin)
+        let share = strength * (1 - (1 - skinShare) * skin * (elsewhereSkin + (1 - elsewhereSkin) * face))
         let L = min(max(lab.x, 0), 1)
         let gain = 1 + chromaGain * share * smoothstep(neutralChroma, chroma) * (1 - smoothstep(vividChroma, chroma))
-            * (1 - paleCut * smoothstep(pale, L))
+            * (1 - paleCut * smoothstep(pale, L) * (1 - smoothstep(paleChroma, chroma)))
         var lightness = L + lightnessSpread * share * (L - 0.5) * 4 * L * (1 - L)
-        let onSkin = strength * skin
+        let onSkin = strength * skin * face
         lightness += skinLift * onSkin * smoothstep(lightSkin, L) * (1 - smoothstep(skinHighlight, L))
         // A small turn toward pink, kept to its chroma: (a, b) rotated by −θ to first order.
         let theta = skinTurn * onSkin

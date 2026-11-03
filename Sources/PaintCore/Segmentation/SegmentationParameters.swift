@@ -247,12 +247,14 @@ struct SegmentationParameters: Sendable {
     /// Per-pixel multiplier of `minArea`: important areas keep smaller regions; busy
     /// texture (dense label changes, `texture` 0...1) outside important areas needs larger
     /// ones, so knit, foliage or gravel become a few paintable shapes rather than crumbs.
-    /// The subject's body may be loosened (`subjectCellSize`), never the face.
+    /// The subject's body may be loosened where it is busy (`subjectCellSize`: fur, hair,
+    /// foliage on it), never its face nor a smooth part of it, so a small face Vision missed
+    /// (a rider under a hat) keeps its cells.
     @inline(__always)
     func areaScale(importance: Float, texture: Float) -> Float {
         let scale = exp2(importanceStrength * (0.5 - importance)) * (1 + textureStrength * (1 - importance) * texture)
         guard subjectCellSize != 1 else { return scale }
-        return scale * (1 + (subjectCellSize - 1) * Self.subjectBody(importance))
+        return scale * (1 + (subjectCellSize - 1) * Self.subjectBody(importance) * min(1, 2 * max(texture, 0)))
     }
 
     /// How much of the subject's body a pixel of this importance is, 0...1: none on the

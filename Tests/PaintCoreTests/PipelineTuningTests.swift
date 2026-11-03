@@ -49,8 +49,8 @@ struct PipelineTuningTests {
         #expect(PipelineTuning().isDefault)
     }
 
-    /// The subject's cells are loosened on its body only: the background and a face's core
-    /// keep their smallest area.
+    /// The subject's cells are loosened on its busy body only: the background, a face's core
+    /// and smooth parts keep their smallest area.
     @Test func subjectCellSizeLoosensTheBodyNotTheFace() {
         var settings = GenerationSettings()
         let plain = SegmentationParameters(settings: settings, width: 1200, height: 800)
@@ -59,8 +59,10 @@ struct PipelineTuningTests {
         for importance: Float in [0, 0.25, 0.5, 0.97, 1] {
             #expect(loose.areaScale(importance: importance, texture: 0.3) == plain.areaScale(importance: importance, texture: 0.3))
         }
-        let body = loose.areaScale(importance: 0.75, texture: 0.3) / plain.areaScale(importance: 0.75, texture: 0.3)
-        #expect(abs(body - 2.5) < 1e-4)
+        let fur = loose.areaScale(importance: 0.75, texture: 0.6) / plain.areaScale(importance: 0.75, texture: 0.6)
+        #expect(abs(fur - 2.5) < 1e-4)
+        // A smooth part of the subject (a face Vision missed) keeps its cells.
+        #expect(loose.areaScale(importance: 0.75, texture: 0) == plain.areaScale(importance: 0.75, texture: 0))
     }
 
     /// A later factor is written only when it is set, so settings without it encode as before.

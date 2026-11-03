@@ -95,6 +95,8 @@ public struct TemplateGenerator: Sendable {
             if let observer { try observer(SnapshotPictures.lineArt(result)) }
             progress?(0.7)
         }
+        // Which paints are on a face, for kit paint's skin, while the importance is at hand.
+        let faces = settings.paintMix == .kit ? KitPaint.faceShare(segmentation, importance: weights) : nil
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
@@ -108,7 +110,8 @@ public struct TemplateGenerator: Sendable {
         // Before the line art's annotation, which reads the paints' lightness (writing on dark paint).
         if settings.paintMix == .kit {
             vector.template.palette = KitPaint.mix(
-                vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance)
+                vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
+                faces: faces)
         }
         if let plan {
             try cancel.throwIfCancelled()
