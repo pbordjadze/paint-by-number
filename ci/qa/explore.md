@@ -174,17 +174,34 @@ Report these only if they look wrong in another way:
 
 ## Goals
 
-Adapt the order to what you find; depth on a real problem beats covering every goal.
+This session is about one screen, Refine (debug build only), where a person draws their own
+paint-by-numbers picture. You are a newcomer: nobody has shown you its tools, and you should not
+expect anyone to. Your task, as a person would take it:
 
-1. Create a new painting from a sample or the photo, through to the painting screen.
-2. Paint: pick colors, fill areas at the fitted zoom and zoomed in, try a drag. Check that what
-   gets painted is what you tapped, in the swatch's color, and that the progress moves.
-3. Navigate between zoom levels while painting; check the canvas, numbers and fills stay right.
-4. Go back to the gallery and reopen the painting: everything painted is still there, the same
-   progress shows in the gallery and in the painting.
-5. Quit and relaunch the app, reopen the painting, and check the same again.
-6. With time left, explore what you like (undo, Hint, the palette, the gallery's menus,
-   Settings), and anything that looked wrong earlier.
+**Draw something of your own from scratch in Refine and make it look the way you want.** Your
+subject is given under "This session" below. Get to Refine from the New Painting preview (after
++, choosing the photo or a sample). Start from as empty a canvas as the screen lets you; you
+decide what that means and how to find it. Draw your subject so it would make a good
+paint-by-numbers picture: closed shapes, each its own area, in colors you chose. Then paint it
+on the painting screen.
+
+Before you draw, decide in one line what you want the finished picture to look like (shapes and
+colors), and write it into the report. Judge the result against it.
+
+Automation limits you must work within (not app bugs): Maestro's `swipe` is a straight line from
+start to end (with `duration` in ms; a person's finger wobbles and curves, yours can't), and a
+tap or swipe can miss by a few points as a finger does. Draw curves as several short straight
+swipes, each starting where the last ended, or with whatever the app offers. If you need a
+curve and can't get one, say so: that is a finding.
+
+As you go, keep a log, step by step: what you were trying to do, what you tried, how many tries
+it took, and whether the screen did what you expected. Read the app's own help if you want to,
+but say when you needed it and whether it helped.
+
+Save evidence with `takeScreenshot` in a flow: `shots/plan-<n>` as you go, `shots/final-refine`
+(your drawing in Refine, the whole picture in view, just before you leave it), `shots/final-template`
+(the painting screen before you paint) and `shots/final-painting` (after painting, as far as you
+got; paint it all if it has under about 20 areas).
 
 You have about {{MINUTES}} minutes and {{TURNS}} turns; you may be stopped without warning. Write
 `{{DIR}}/report.md` once you have something to say, by turn 20 at the latest, and write it again
@@ -194,16 +211,20 @@ whenever you learn more, so that a sudden stop still leaves a report.
 
 `{{DIR}}/report.md`, in Markdown:
 
-- **Summary**: two or three sentences.
-- **Coverage**: each goal above: done, partly (how far) or not tried, and why.
-- **App bugs (reproduced)**: problems you saw twice or more. For each: a title, the steps from a
-  known state, expected, observed, how often it reproduced (e.g. 2 of 2), and its evidence (the
-  screenshot files in `shots/`, log lines with their times).
-- **Suspicions**: things that looked wrong once, or that you are unsure are bugs. Same fields, as
-  far as you have them.
-- **Automation problems**: where Maestro, the simulator or your tools got in the way (an action
-  that didn't land, a hierarchy that missed elements, slowness), kept apart from app bugs.
-- **Not tested**: what you couldn't or didn't reach.
+- **Verdict**: one sentence: did you get the picture you wanted? Yes, partly, or no.
+- **What I meant to draw**: your one line.
+- **What I got**: describe the final picture honestly, and name the screenshots.
+- **The steps**: a table: step (e.g. find a blank canvas, draw the head, close the ear, color
+  the body, paint), tries it took, stuck for how long, what finally worked, what you expected
+  instead.
+- **Where I got stuck**: the worst three moments, worst first, each with what you wanted to do
+  and couldn't, and its screenshot.
+- **What I wanted and couldn't do**: a list.
+- **App bugs (reproduced)** and **Suspicions**: as an exploratory tester would (steps, expected,
+  observed, how often, evidence).
+- **Automation problems**: where Maestro, not the app, stood in the way (a straight swipe where
+  you needed a curve counts here and also under what you wanted).
+- **Not tested**.
 
-Be exact and honest: say what you saw, not what you assume, and never call something reproduced
-that you saw once.
+Be exact and honest: say what you saw, not what you assume. A newcomer who couldn't do something
+is a finding about the app; say so plainly.
