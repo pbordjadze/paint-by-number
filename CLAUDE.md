@@ -153,7 +153,7 @@ before planning app work).
   the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`,
-  `start-from-a-drawing.md`. Plans, agent briefs and
+  `start-from-a-drawing.md`, `refine-from-scratch.md` (Refine for a newcomer: the QA, its fixes, what's next). Plans, agent briefs and
   per-agent reports are not committed here (they live in painting-company; a commit message says
   what changed and why); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
