@@ -263,7 +263,7 @@ struct SegmentationParameters: Sendable {
     }
 
     /// Within `faceReach` eye widths of an eye in `faceCells` and on the face (importance from
-    /// `faceImportance`), the least `areaScale` there: a cell at least (`faceCellSize` − 1) / 64
+    /// `faceImportance`), a floor under `areaScale` there (the segmenter takes the larger): a cell at least (`faceCellSize` − 1) / 64
     /// of the largest such eye's width squared; 0 elsewhere. kodim04's face, its eyes 88 px
     /// wide, was speckled in cells from 40 px² (the critic of kit paint's round 5: "a blotchy
     /// patchwork"); a face of 20-px eyes is barely touched. A low-contrast crumb counts a fifth

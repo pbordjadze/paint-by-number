@@ -25,6 +25,7 @@ public struct PipelineTuning: Sendable, Hashable, Codable {
     /// (factor − 1) / 64 of the eye's width squared, so a large face is painted in a few broad
     /// tones instead of speckle while a small one keeps its features
     /// (`SegmentationParameters.faceCellScale`). 1 and below leave faces as importance sizes them.
+    /// Auto's drafts have no eyes, so its choice doesn't see this.
     public var faceCellSize: Float
 
     public static let range: ClosedRange<Float> = 0.25...4

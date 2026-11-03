@@ -510,8 +510,9 @@ Conventions).
 - Kit paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 191): a photo's
   new painting records `paintMix: .kit` (`CreateModel.newPaintMix`, PaintCore's `KitPaint`), so
   its paints are a kit's, bolder than the regions' means, skin lifted toward peach, and the
-  tuning `subjectCellSize` 2.5 (`CreateModel.newTuning`: the subject's body in fewer, larger
-  cells, the face kept); Auto chooses with that tuning and `AutoTaste.finished` (`newTaste`),
+  tuning `subjectCellSize` 2.5 and `faceCellSize` 3 (`CreateModel.newTuning`: the subject's
+  body in fewer, larger cells, the face kept; a large face in broad tones, its eyes kept, which
+  Auto's drafts, having no eyes, don't see); Auto chooses with that tuning and `AutoTaste.finished` (`newTaste`),
   and the mix is laid on its choice (`CreateModel.mixed`, the first draft too). A resumed draft
   keeps the mix and tuning it recorded. The release, starters and regenerated paintings keep
   what their settings record.
