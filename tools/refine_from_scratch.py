@@ -131,7 +131,7 @@ def house():
         ("roof", lambda x, y: inside_poly(*roof)(x, y) and y < 380, (390, 330), (0.75, 0.2, 0.15)),
         ("door", idoor, (390, 560), (0.45, 0.25, 0.1)),
         ("window", iwin, (477, 455), (0.6, 0.8, 0.95)),
-        ("trunk", lambda x, y: itr(x, y) and not icr(x, y), (755, 560), (0.45, 0.3, 0.15)),
+        ("trunk", lambda x, y: itr(x, y) and not icr(x, y), (755, 560), (0.6, 0.4, 0.25)),
         ("crown", icr, (755, 380), (0.2, 0.6, 0.25)),
     ]
     return strokes, shapes
