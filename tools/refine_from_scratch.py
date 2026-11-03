@@ -15,7 +15,7 @@ on a 13" iPad's picture (960 points wide). Then a Bucket pour into each shape, e
 
 It scores what a newcomer would see: a shape is `closed` when its pour colored it and nothing
 outside it (the pour's color covers at least 90% of the shape and leaks under 5% of the shape's
-area outside it); otherwise it `leaked` (paint ran out through a gap) or was `split`. Prints a
+area outside it, both judged 3 points clear of the shape's outline, which a wobble moves); otherwise it `leaked` (paint ran out through a gap) or was `split`. Prints a
 table per hand (shapes closed out of shapes drawn, over seeds) and writes, per subject, hand and
 seed, the `pbn refine` folder (`refine.json`, `gestures.json`, and `after.png` at 1200 wide: its
 full-size rasters, tens of MB each, are deleted) and a strip `<out>/<hand>.png` of every
@@ -113,16 +113,16 @@ def cat():
 
 def house():
     wall = [(250, 380), (530, 380), (530, 620), (250, 620)]
-    roof = [(225, 380), (390, 240), (555, 380)]
+    roof = [(250, 380), (390, 240), (530, 380)]
     door = [(360, 620), (360, 500), (420, 500), (420, 620)]
     win = [(450, 430), (505, 430), (505, 480), (450, 480)]
     trunk = [(735, 620), (735, 470), (775, 470), (775, 620)]
     crown = (755, 400, 90, 85)
     ground = [(80, 620), (900, 620)]
     strokes = [
-        (poly(*ground), "none"), (poly(wall[0], wall[1], wall[2], wall[3], wall[0]), "loop"),
+        (poly(*ground), "none"), (poly(wall[3], wall[0], wall[1], wall[2]), "ends"),
         (poly(*roof), "ends"), (poly(*door), "ends"), (poly(*win, win[0]), "loop"),
-        (poly(*trunk), "ends"), (ellipse(*crown, a0=math.radians(115), a1=math.radians(65) - 2 * math.pi), "ends"),
+        (poly(*trunk), "ends"), (ellipse(*crown), "loop"),
     ]
     iw = inside_poly(*wall); idoor = inside_poly(*door); iwin = inside_poly(*win)
     icr = inside_ellipse(*crown); itr = inside_poly(*trunk)
@@ -238,7 +238,7 @@ def run(subject, hand, seed):
     os.makedirs(d, exist_ok=True)
     gj = os.path.join(d, "gestures.json")
     json.dump({"screen": {"width": W, "zoom": 1}, "gestures": g}, open(gj, "w"))
-    r = subprocess.run([PBN, "refine", PHOTO, gj, "--out", d, "--blank"], capture_output=True, text=True)
+    r = subprocess.run([PBN, "refine", PHOTO, gj, "--out", d, "--blank", "--no-steps"], capture_output=True, text=True)
     if r.returncode:
         sys.exit(f"pbn refine failed on {d}: {r.stderr[-800:]}")
     rep = json.load(open(os.path.join(d, "refine.json")))
@@ -258,12 +258,14 @@ def run(subject, hand, seed):
         def near(q):
             return sum(abs(a - b) for a, b in zip(q, c)) < 30
         tot = hit = out = 0
+        def clear(x, y, want):  # x, y and the points 3 pt round it all inside (want True) or outside
+            return all(inside(x + dx, y + dy) == want for dx, dy in ((0, 0), (3, 0), (-3, 0), (0, 3), (0, -3)))
         for yy in range(0, int(H), step):
             for xx in range(0, int(W), step):
                 q = px[min(int(xx * sx), img.width - 1), min(int(yy * sy), img.height - 1)]
-                if inside(xx, yy):
+                if clear(xx, yy, True):
                     tot += 1; hit += near(q)
-                elif near(q):
+                elif clear(xx, yy, False) and near(q):
                     out += 1
         cover = hit / max(tot, 1); leak = out / max(tot, 1)
         verdict = "closed" if cover >= 0.9 and leak < 0.05 else ("leaked" if leak >= 0.05 else "split")

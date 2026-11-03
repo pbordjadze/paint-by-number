@@ -232,6 +232,36 @@ struct RefineGeometryTests {
         #expect(PenAssist.joined(beside, to: lines, reach: 10, straight: false) == beside)
     }
 
+    /// Two strokes meant to meet end to end (a mouth's lips, a leaf's sides, a corner) meet
+    /// when the second ends heading at the first's free tip within the reach, though no line
+    /// lies ahead of it: a finger misses by 5 to 8 points, and only half a reach was joined
+    /// sideways (QA, November 3). A tip that meets another line is no loose end, and an end
+    /// running beside a line near its tip stays as drawn.
+    @Test func anEndHeadingAtAFreeTipMeetsIt() throws {
+        // The upper lip, its tips at (0, 0) and (160, 0); the lower lip ends about 7 below each.
+        let upper = (0...20).map { k -> CGPoint in
+            let a = CGFloat.pi + CGFloat.pi * CGFloat(k) / 20
+            return CGPoint(x: 80 + 80 * cos(a), y: 18 * sin(a))
+        }
+        let lower = (0...80).map { k -> CGPoint in
+            let a = CGFloat.pi * CGFloat(k) / 80
+            return CGPoint(x: 80 + 80 * cos(a), y: 40 * sin(a))
+        }.filter { $0.y >= 7 }
+        let lines = SnapLines([upper])
+        let joined = PenAssist.joined(lower, to: lines, reach: 10, straight: false)
+        #expect(Self.near(joined.first, CGPoint(x: 160, y: 0), within: 1e-6) && Self.near(joined.last, CGPoint(x: 0, y: 0), within: 1e-6), "\(joined)")
+        // A corner: up to 6 below a bar's tip and 2 past it, so nothing lies ahead.
+        let bar = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0)]])
+        let up = (0...20).map { CGPoint(x: 102, y: 106 - CGFloat($0) * 5) }
+        #expect(Self.near(PenAssist.joined(up, to: bar, reach: 10, straight: true).last, CGPoint(x: 100, y: 0), within: 1e-6))
+        // The bar's tip on a post is no loose end: the end moves only as before, which is not at all.
+        let post = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0)], [CGPoint(x: 100, y: -50), CGPoint(x: 100, y: 0)]])
+        #expect(post.nearestLooseEnd(to: CGPoint(x: 100, y: 6), within: 10, touch: 2.5) == nil)
+        // Beside the bar, 7 below it, from its tip on: left as drawn.
+        let beside = (0...20).map { CGPoint(x: 100 - CGFloat($0) * 5, y: 7) }
+        #expect(PenAssist.joined(beside, to: bar, reach: 10, straight: false) == beside)
+    }
+
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out
     /// of a line, splitting it, and a line erased whole goes.
     @Test func erasedLinesAreNoTargets() {
