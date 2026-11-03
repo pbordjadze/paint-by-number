@@ -1,0 +1,59 @@
+Timestamp               Ty Process[PID:TID]
+2026-11-03 06:22:49.994 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-03 06:22:51.557 Df PaintByNumber[17835:d693] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.566221083 seconds
+2026-11-03 06:23:27.296 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 36.70706125 seconds
+2026-11-03 06:23:27.668 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-03 06:23:54.145 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 26.84826325 seconds
+2026-11-03 06:23:54.224 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-03 06:23:54.890 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-03 06:24:40.041 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+2026-11-03 06:27:12.655 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted newPaintingSamples
+2026-11-03 06:27:14.004 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSamples
+2026-11-03 06:27:21.395 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn over: newPaintingSamples
+2026-11-03 06:28:19.254 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Draft #1 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-03 06:28:19.918 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-03 06:28:19.937 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 06:28:23.585 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 06:28:23.705 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:28:34.239 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-11-03 06:28:35.440 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted refineDraw
+2026-11-03 06:28:37.347 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+2026-11-03 06:28:46.836 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] turn over: refineDraw
+2026-11-03 06:28:55.802 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Full #3 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-03 06:28:56.195 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-03 06:28:56.928 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:29:11.565 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:29:36.105 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:29:50.392 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:29:53.279 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:29:56.845 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:30:00.177 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:30:03.605 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:30:15.575 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:31:23.701 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:31:49.445 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: select
+2026-11-03 06:32:09.343 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: basics
+2026-11-03 06:33:23.758 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:33:51.808 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:33:54.781 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:33:57.569 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:34:00.597 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:34:02.971 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:34:05.784 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:34:08.355 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:34:35.920 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:39.828 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:42.795 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:45.685 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:48.574 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:51.672 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:34:55.263 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:35:54.088 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:35:57.188 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:37:29.072 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:38:51.486 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:39:59.198 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:40:03.838 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:40:08.694 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
+2026-11-03 06:40:55.505 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-03 06:41:06.696 Df PaintByNumber[17835:d63b] [com.pbordjadze.paintbynumber:tips] offer in refine: refineFill, wanted
