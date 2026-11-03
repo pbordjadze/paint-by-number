@@ -284,19 +284,40 @@ struct RefineGeometryTests {
         #expect(Self.near(PenAssist.joined(over, to: SnapLines([lines.lines[0].points]), reach: 10, straight: true).last, CGPoint(x: 190, y: 0), within: 1e-6))
     }
 
-    /// A line passing just beside the free tips of lines drawn before it is bent through them,
-    /// so they meet: a ground line drawn under a tree's trunk, whose two lines stop a point or
-    /// two above it (QA, November 3). A tip farther than half a reach, or one on another line,
-    /// leaves it as drawn.
-    @Test func aLinePassingBesideFreeTipsMeetsThem() {
+    /// A line passing just beside the free tips of lines drawn before it and heading at it is
+    /// bent through them, gently, so they meet: a ground line drawn under a tree's trunk, whose
+    /// two lines stop a point or three above it (QA, November 3). A tip farther than half a
+    /// reach, one on another line, or one whose line runs alongside leaves it as drawn; a tip
+    /// beside one of its corners moves the corner, never folding the line back.
+    @Test func aLinePassingBesideFreeTipsMeetsThem() throws {
         let trunk = SnapLines([[CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 49)], [CGPoint(x: 120, y: 0), CGPoint(x: 120, y: 47)]])
         let ground = [CGPoint(x: 0, y: 50), CGPoint(x: 300, y: 50)]
-        #expect(PenAssist.joined(ground, to: trunk, reach: 10, straight: true)
-            == [CGPoint(x: 0, y: 50), CGPoint(x: 100, y: 49), CGPoint(x: 120, y: 47), CGPoint(x: 300, y: 50)])
+        let met = PenAssist.joined(ground, to: trunk, reach: 10, straight: true)
+        #expect(met.contains(CGPoint(x: 100, y: 49)) && met.contains(CGPoint(x: 120, y: 47)), "\(met)")
+        #expect(met.first == ground[0] && met.last == ground[1])
+        #expect(zip(met, met.dropFirst()).allSatisfy { $0.x < $1.x }, "never back on itself: \(met)")
+        // Gently: no step of the bend climbs more than the tip's distance over a reach.
+        func gentle(_ a: CGPoint, _ b: CGPoint) -> Bool {
+            let rise: CGFloat = abs(b.y - a.y), run: CGFloat = b.x - a.x
+            return rise <= 0.3 * run + 1e-9
+        }
+        #expect(zip(met, met.dropFirst()).allSatisfy(gentle), "\(met)")
         let far = [CGPoint(x: 0, y: 56), CGPoint(x: 300, y: 56)]
         #expect(PenAssist.joined(far, to: trunk, reach: 10, straight: true) == far)
         let posted = SnapLines([[CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 49)], [CGPoint(x: 90, y: 49), CGPoint(x: 110, y: 49)]])
-        #expect(posted.looseEnds(touch: 2.5).allSatisfy { $0 != CGPoint(x: 100, y: 49) })
+        #expect(!posted.tips(near: ground, within: 5, touch: 2.5).contains { $0.point == CGPoint(x: 100, y: 49) })
+        let whisker = SnapLines([[CGPoint(x: 60, y: 47), CGPoint(x: 100, y: 47)]])
+        #expect(PenAssist.joined(ground, to: whisker, reach: 10, straight: true) == ground)
+        // A corner (100, 0) of the stroke beside a tip at (103, 0) heading at it: the corner moves.
+        let corner = [CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 100)]
+        let bent = PenAssist.joined(corner, to: SnapLines([[CGPoint(x: 140, y: 0), CGPoint(x: 103, y: 0)]]), reach: 10, straight: false)
+        #expect(bent.contains(CGPoint(x: 103, y: 0)), "\(bent)")
+        func turnsBack(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Bool {
+            let u = CGPoint(x: b.x - a.x, y: b.y - a.y), v = CGPoint(x: c.x - b.x, y: c.y - b.y)
+            let dot: CGFloat = u.x * v.x + u.y * v.y
+            return dot < -0.5 * PenPath.distance(a, b) * PenPath.distance(b, c)
+        }
+        #expect(bent.indices.dropFirst().dropLast().allSatisfy { !turnsBack(bent[$0 - 1], bent[$0], bent[$0 + 1]) }, "\(bent)")
     }
 
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out
