@@ -31,7 +31,7 @@ before planning app work).
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
-    for bit; the release sets none, SideStore builds `subjectCellSize` (`CreateModel.newTuning`), and a
+    for bit; the release sets none, SideStore builds `subjectCellSize` and `faceCellSize` (`CreateModel.newTuning`), and a
     painting's recorded tuning regenerates as it was made).
   - `Segmentation/`: photo → region label map + palette (`Segmenter.segment`; stages in its doc
     comment). `SegmentationParameters` holds the knobs derived from the settings and canvas size;

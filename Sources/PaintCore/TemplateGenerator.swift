@@ -65,6 +65,7 @@ public struct TemplateGenerator: Sendable {
         // By the settings, not the edge map, so Auto's drafts (which have none) are scored on
         // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
         if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
+        if let input { parameters.sizeFaces(byEyes: input.eyes, width: working.width, height: working.height) }
         // The writing's ink is traced and painted out first, so the paint ignores the letters.
         var writing: Writing?
         if let input, settings.lineArt.keepWriting, !input.writing.isEmpty {

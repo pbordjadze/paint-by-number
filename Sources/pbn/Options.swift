@@ -56,7 +56,7 @@ enum Fields {
     static var tuning: [String: WritableKeyPath<PipelineTuning, Float>] {
         ["smoothing": \.smoothing, "textureFlattening": \.textureFlattening, "minimumCellSize": \.minimumCellSize,
          "subjectEmphasis": \.subjectEmphasis, "accentColors": \.accentColors, "colorfulness": \.colorfulness,
-         "subjectCellSize": \.subjectCellSize]
+         "subjectCellSize": \.subjectCellSize, "faceCellSize": \.faceCellSize]
     }
 }
 

@@ -291,11 +291,11 @@ final class CreateModel {
     /// How a new painting's subject is cut and what its suggestion values: in SideStore and
     /// Debug builds, as the paintings are with kit paint (painting-company row 191), the
     /// subject's body in fewer, larger cells, the face kept (`PipelineTuning.subjectCellSize`),
-    /// and Auto scoring the finished painting (`AutoTaste.finished`), so its time band doesn't
+    /// a large face in broad tones, its eyes kept (`faceCellSize`), and Auto scoring the finished painting (`AutoTaste.finished`), so its time band doesn't
     /// buy the detail back; the release's are the defaults. The tuning is recorded with the
     /// painting like the mix; the taste is in no painting (decisions are never stored).
     #if UNRELEASED
-    nonisolated static let newTuning = PipelineTuning(subjectCellSize: 2.5)
+    nonisolated static let newTuning = PipelineTuning(subjectCellSize: 2.5, faceCellSize: 3)
     nonisolated static let newTaste = AutoTaste.finished
     #else
     nonisolated static let newTuning = PipelineTuning()

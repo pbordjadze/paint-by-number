@@ -102,7 +102,12 @@ enum Segmenter {
                     scale.withUnsafeMutableBufferPointer { sb in
                         let i = UncheckedSendable(ib), t = UncheckedSendable(tb), s = UncheckedSendable(sb)
                         Parallel.forEachBand(w * h, minimumBandSize: 16_384) { range in
-                            for k in range { s.value[k] = p.areaScale(importance: i.value[k], texture: t.value[k]) }
+                            for k in range {
+                                s.value[k] = p.areaScale(importance: i.value[k], texture: t.value[k])
+                                if !p.faceCells.isEmpty {
+                                    s.value[k] = max(s.value[k], p.faceCellScale(x: k % w, y: k / w, importance: i.value[k]))
+                                }
+                            }
                         }
                     }
                 }

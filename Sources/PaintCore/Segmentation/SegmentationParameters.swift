@@ -86,6 +86,10 @@ struct SegmentationParameters: Sendable {
     var textureStrength: Float
     /// `PipelineTuning.subjectCellSize`: the factor `areaScale` gives the subject's body.
     var subjectCellSize: Float
+    /// `PipelineTuning.faceCellSize`, and the eyes it sizes faces by (`faceCells`: centre x, y
+    /// and width in canvas units; empty unless the factor is above 1 and eyes were found).
+    var faceCellSize: Float
+    var faceCells: [SIMD3<Float>] = []
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// A small region whose mean colour lies within this distance (working OKLab) of a
@@ -176,6 +180,7 @@ struct SegmentationParameters: Sendable {
         importanceStrength = 3 * t.subjectEmphasis
         textureStrength = 4
         subjectCellSize = t.subjectCellSize
+        faceCellSize = t.faceCellSize
         mergeShareWeight = 0.04
         // Full weight from about six just-noticeable differences; at no contrast a crumb needs
         // five times the area (a small eye or highlight against skin stays, feather and fur
@@ -255,6 +260,55 @@ struct SegmentationParameters: Sendable {
         let scale = exp2(importanceStrength * (0.5 - importance)) * (1 + textureStrength * (1 - importance) * texture)
         guard subjectCellSize != 1 else { return scale }
         return scale * (1 + (subjectCellSize - 1) * Self.subjectBody(importance) * min(1, 2 * max(texture, 0)))
+    }
+
+    /// Within `faceReach` eye widths of an eye in `faceCells` and on the face (importance from
+    /// `faceImportance`), the least `areaScale` there: a cell at least (`faceCellSize` − 1) / 64
+    /// of the largest such eye's width squared; 0 elsewhere. kodim04's face, its eyes 88 px
+    /// wide, was speckled in cells from 40 px² (the critic of kit paint's round 5: "a blotchy
+    /// patchwork"); a face of 20-px eyes is barely touched. A low-contrast crumb counts a fifth
+    /// of its area (`crumbFloor`), so speckle goes at five times this while a distinct spot (an
+    /// iris, a dot of face paint) stays: at / 16, kodim15's painted dots went. Within
+    /// `eyeReach` eye widths of an eye there's no floor: at 3, eyes lost their glints.
+    @inline(__always)
+    func faceCellScale(x: Int, y: Int, importance: Float) -> Float {
+        guard importance >= Self.faceImportance, minArea > 0 else { return 0 }
+        let p = SIMD2(Float(x) + 0.5, Float(y) + 0.5)
+        var width: Float = 0
+        for eye in faceCells {
+            let d = p - SIMD2(eye.x, eye.y), reach = Self.faceReach * eye.z, d2 = (d * d).sum()
+            // The eye itself keeps every cell: its glint, iris and white.
+            if d2 < Self.eyeReach * Self.eyeReach * eye.z * eye.z { return 0 }
+            if d2 <= reach * reach { width = max(width, eye.z) }
+        }
+        return (faceCellSize - 1) * width * width / 64 / minArea
+    }
+
+    static let faceReach: Float = 3
+    static let eyeReach: Float = 0.7
+    static let faceImportance: Float = 0.85
+
+    /// The eyes `faceCellScale` reads, from eye polygons normalized to a canvas of this size
+    /// (`LineArtInput.eyes`): only when `faceCellSize` is above 1; an eye that isn't finite,
+    /// lies far off the canvas or is wider than a quarter of it is skipped.
+    mutating func sizeFaces(byEyes eyes: [[SIMD2<Float>]], width: Int, height: Int) {
+        guard faceCellSize > 1 else { return }
+        let size = SIMD2(Float(width), Float(height))
+        faceCells = eyes.compactMap { eye in
+            guard !eye.isEmpty, eye.allSatisfy({ $0.x.isFinite && $0.y.isFinite && abs($0.x) < 4 && abs($0.y) < 4 })
+            else { return nil }
+            let points = eye.map { $0 * size }
+            var lo = points[0], hi = points[0], sum = SIMD2<Float>(0, 0)
+            for q in points {
+                lo = pointwiseMin(lo, q)
+                hi = pointwiseMax(hi, q)
+                sum += q
+            }
+            let w = hi.x - lo.x
+            guard w > 0, w < Float(max(width, height)) / 4 else { return nil }
+            let c = sum / Float(points.count)
+            return SIMD3(c.x, c.y, w)
+        }
     }
 
     /// How much of the subject's body a pixel of this importance is, 0...1: none on the
