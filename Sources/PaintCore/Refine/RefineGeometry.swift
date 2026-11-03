@@ -213,7 +213,9 @@ public enum PenAssist {
         guard line.count >= 2, within > 0, let first = line.first, let last = line.last else { return line }
         var out = line, placed: [CGPoint] = []
         for tip in lines.tips(near: line, within: within, touch: touch)
-        where PenPath.distance(tip.point, first) > within && PenPath.distance(tip.point, last) > within {
+        where PenPath.distance(tip.point, first) > within && PenPath.distance(tip.point, last) > within
+            // Two tips closer than a reach would step the line sideways between them: the first stays.
+            && !placed.contains(where: { PenPath.distance($0, tip.point) < 2 * within }) {
             var best: (segment: Int, point: CGPoint, distance: CGFloat)?
             for (i, (a, b)) in zip(out, out.dropFirst()).enumerated() {
                 let q = SnapLines.closest(tip.point, a, b)
