@@ -200,6 +200,40 @@ public enum PenAssist {
             out = joined
             if PenPath.length(out) < length / 2 { out = started }
         }
+        return throughTips(out, of: lines, within: reach / 2, touch: touch)
+    }
+
+    /// `line` bent through each free tip of `lines` (`SnapLines.looseEnds`) that lies within
+    /// `within` of it away from its ends, so lines drawn first and stopped just short of where
+    /// this one passes meet it: a tree's trunk drawn down to just above the ground line drawn
+    /// after it stayed one with the sky (QA, November 3). The line moves only there, by under
+    /// half a fingertip, as the editor moves a line through a junction it passes close by.
+    static func throughTips(_ line: [CGPoint], of lines: SnapLines, within: CGFloat, touch: CGFloat) -> [CGPoint] {
+        guard line.count >= 2, within > 0, let first = line.first, let last = line.last else { return line }
+        var inserts: [(segment: Int, along: CGFloat, tip: CGPoint)] = []
+        let xs = line.map(\.x), ys = line.map(\.y)
+        let box = CGRect(x: xs.min()!, y: ys.min()!, width: xs.max()! - xs.min()!, height: ys.max()! - ys.min()!).insetBy(dx: -within, dy: -within)
+        for tip in lines.looseEnds(touch: touch, in: box) where PenPath.distance(tip, first) > within && PenPath.distance(tip, last) > within {
+            var best: (segment: Int, along: CGFloat, distance: CGFloat)?
+            for (i, (a, b)) in zip(line, line.dropFirst()).enumerated() {
+                let q = SnapLines.closest(tip, a, b)
+                let d = PenPath.distance(tip, q)
+                if best == nil || d < best!.distance { best = (i, PenPath.distance(a, q), d) }
+            }
+            guard let best, best.distance <= within, best.distance > 1e-9 else { continue }
+            inserts.append((best.segment, best.along, tip))
+        }
+        guard !inserts.isEmpty else { return line }
+        inserts.sort { ($0.segment, $0.along) < ($1.segment, $1.along) }
+        var out: [CGPoint] = []
+        var next = 0
+        for (i, p) in line.enumerated() {
+            out.append(p)
+            while next < inserts.count, inserts[next].segment == i {
+                out.append(inserts[next].tip)
+                next += 1
+            }
+        }
         return out
     }
 
@@ -395,6 +429,26 @@ public struct SnapLines: Sendable {
             }
             return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
         }
+    }
+
+    /// The free tips of the lines inside `box` (all of them without one): an end of a line that
+    /// isn't closed on itself and that no other line comes within `touch` of.
+    public func looseEnds(touch: CGFloat, in box: CGRect? = nil) -> [CGPoint] {
+        var out: [CGPoint] = []
+        // By coordinates: a straight line's bounds have no width or height, and an empty rect
+        // intersects nothing.
+        for (k, line) in lines.enumerated() where box.map({
+            line.bounds.minX <= $0.maxX && line.bounds.maxX >= $0.minX && line.bounds.minY <= $0.maxY && line.bounds.maxY >= $0.minY
+        }) ?? true {
+            guard let first = line.points.first, let last = line.points.last, PenPath.distance(first, last) > touch else { continue }
+            for end in [first, last] where box.map({ $0.contains(end) }) ?? true && !lines.indices.contains(where: { j in
+                j != k && lines[j].bounds.insetBy(dx: -touch - 1e-6, dy: -touch - 1e-6).contains(end)
+                    && zip(lines[j].points, lines[j].points.dropFirst()).contains { PenPath.distance(end, Self.closest(end, $0, $1)) <= touch }
+            }) {
+                out.append(end)
+            }
+        }
+        return out
     }
 
     /// Whether `p` lies on the picture's edge.

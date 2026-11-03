@@ -284,6 +284,21 @@ struct RefineGeometryTests {
         #expect(Self.near(PenAssist.joined(over, to: SnapLines([lines.lines[0].points]), reach: 10, straight: true).last, CGPoint(x: 190, y: 0), within: 1e-6))
     }
 
+    /// A line passing just beside the free tips of lines drawn before it is bent through them,
+    /// so they meet: a ground line drawn under a tree's trunk, whose two lines stop a point or
+    /// two above it (QA, November 3). A tip farther than half a reach, or one on another line,
+    /// leaves it as drawn.
+    @Test func aLinePassingBesideFreeTipsMeetsThem() {
+        let trunk = SnapLines([[CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 49)], [CGPoint(x: 120, y: 0), CGPoint(x: 120, y: 47)]])
+        let ground = [CGPoint(x: 0, y: 50), CGPoint(x: 300, y: 50)]
+        #expect(PenAssist.joined(ground, to: trunk, reach: 10, straight: true)
+            == [CGPoint(x: 0, y: 50), CGPoint(x: 100, y: 49), CGPoint(x: 120, y: 47), CGPoint(x: 300, y: 50)])
+        let far = [CGPoint(x: 0, y: 56), CGPoint(x: 300, y: 56)]
+        #expect(PenAssist.joined(far, to: trunk, reach: 10, straight: true) == far)
+        let posted = SnapLines([[CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 49)], [CGPoint(x: 90, y: 49), CGPoint(x: 110, y: 49)]])
+        #expect(posted.looseEnds(touch: 2.5).allSatisfy { $0 != CGPoint(x: 100, y: 49) })
+    }
+
     /// What was erased since the template was made is no line to meet: a dab takes a stretch out
     /// of a line, splitting it, and a line erased whole goes.
     @Test func erasedLinesAreNoTargets() {
