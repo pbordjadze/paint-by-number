@@ -23,7 +23,7 @@ subject's first seeds. Written for the from-scratch loop of November 3 (Refine, 
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
 compare. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
 """
-import argparse, json, math, os, random, subprocess, sys
+import argparse, json, math, os, random, subprocess, sys, zlib
 
 from PIL import Image, ImageDraw
 
@@ -224,7 +224,7 @@ def norm(p):
 
 def run(subject, hand, seed):
     strokes, shapes = SUBJECTS[subject]()
-    rng = random.Random(hash((subject, hand, seed)) & 0xffffffff)
+    rng = random.Random(zlib.crc32(f"{subject}-{hand}-{seed}".encode()))  # the same strokes in every run
     g = []
     for k, (pts, kind) in enumerate(strokes):
         pen = {"tool": "pen", "points": [norm(p) for p in finger(pts, kind, rng, HANDS[hand])], "inked": True,
