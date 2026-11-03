@@ -232,12 +232,12 @@ struct RefineGeometryTests {
         #expect(PenAssist.joined(beside, to: lines, reach: 10, straight: false) == beside)
     }
 
-    /// Two strokes meant to meet end to end (a mouth's lips, a leaf's sides, a corner) meet
-    /// when the second ends heading at the first's free tip within the reach, though no line
-    /// lies ahead of it: a finger misses by 5 to 8 points, and only half a reach was joined
-    /// sideways (QA, November 3). A tip that meets another line is no loose end, and an end
-    /// running beside a line near its tip stays as drawn.
-    @Test func anEndHeadingAtAFreeTipMeetsIt() throws {
+    /// Two strokes meant to meet end to end (a mouth's lips, a leaf's sides) meet when the
+    /// second ends heading at the first's free tip within the reach, though no line lies ahead
+    /// of it, and so does a roof stopping short of a wall's corner: a finger misses by 5 to 8
+    /// points, and only half a reach was joined sideways (QA, November 3). An end running
+    /// beside a line near its tip stays as drawn.
+    @Test func anEndHeadingAtALineMeetsIt() throws {
         // The upper lip, its tips at (0, 0) and (160, 0); the lower lip ends about 7 below each.
         let upper = (0...20).map { k -> CGPoint in
             let a = CGFloat.pi + CGFloat.pi * CGFloat(k) / 20
@@ -254,9 +254,11 @@ struct RefineGeometryTests {
         let bar = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0)]])
         let up = (0...20).map { CGPoint(x: 102, y: 106 - CGFloat($0) * 5) }
         #expect(Self.near(PenAssist.joined(up, to: bar, reach: 10, straight: true).last, CGPoint(x: 100, y: 0), within: 1e-6))
-        // The bar's tip on a post is no loose end: the end moves only as before, which is not at all.
-        let post = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0)], [CGPoint(x: 100, y: -50), CGPoint(x: 100, y: 0)]])
-        #expect(post.nearestLooseEnd(to: CGPoint(x: 100, y: 6), within: 10, touch: 2.5) == nil)
+        // A roof's slope stopping 8 short of a wall's corner, aimed just past it: it meets the
+        // wall's top at the nearest point, closing the roof.
+        let wall = SnapLines([[CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 100)]])
+        let slope = (0...20).map { CGPoint(x: 43 + CGFloat($0) * 2.65, y: -60 + CGFloat($0) * 2.65) }
+        #expect(Self.near(PenAssist.joined(slope, to: wall, reach: 10, straight: true).last, CGPoint(x: 96, y: 0), within: 1e-6))
         // Beside the bar, 7 below it, from its tip on: left as drawn.
         let beside = (0...20).map { CGPoint(x: 100 - CGFloat($0) * 5, y: 7) }
         #expect(PenAssist.joined(beside, to: bar, reach: 10, straight: false) == beside)

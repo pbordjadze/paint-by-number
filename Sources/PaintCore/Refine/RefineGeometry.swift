@@ -105,9 +105,9 @@ public enum PenAssist {
     /// one that ran on along a line after meeting it (a tail past a crossing, a loop gone round
     /// past its own start: a finger's overshoot) is cut where it met the line (`runCut`); one that
     /// crossed a line within `reach` of it ends at the crossing, its tail cut off; one heading at
-    /// a line it would meet within `reach` goes straight on to it; one heading at a line's loose
-    /// end (a stroke's free tip, `SnapLines.nearestLooseEnd`) within `reach` meets it there;
-    /// otherwise it moves to the nearest point within half a reach, a straight line moving just that end and any other easing
+    /// a line it would meet within `reach` goes straight on to it; one heading at a line (a
+    /// stroke's free tip, a corner) moves to its nearest point within `reach`; otherwise, beside
+    /// a line, it moves to the nearest point within half a reach, a straight line moving just that end and any other easing
     /// the move in over `easing` reaches of the line (half the line, if shorter), which the rest
     /// keeps. A move toward the nearest point alone, eased over one reach, bent a line meeting
     /// another at a slant into a hook. A line the changes would fold to under half its length
@@ -132,28 +132,28 @@ public enum PenAssist {
             if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
                 return straight ? Array(points.dropLast()) + [hit] : points + [hit]
             }
-            // A line's loose end (a stroke's free tip) is never ahead of an end heading at it, so
-            // two strokes meant to meet end to end, as a mouth's lips or a leaf's sides do, met
-            // only within half a reach, under a fingertip's miss (QA, November 3): an end heading
-            // at one within the whole reach joins it.
-            if let tip = lines.nearestLooseEnd(to: end, within: reach, touch: touch), heading(points, at: tip) {
-                return move(points, to: tip)
+            // An end heading at a line it won't meet straight on (a stroke's free tip, a corner
+            // it stops short of) joined it only within half a reach, under a fingertip's miss, so
+            // two strokes meant to meet end to end, as a mouth's lips do, stayed apart (QA,
+            // November 3): heading at it, it joins the nearest point within the whole reach.
+            if let target = lines.nearestPoint(to: end, within: reach), heading(points, at: target) {
+                return move(points, to: target)
             }
             // Sideways, half a reach: farther, a stroke drawn beside a line had both ends pulled
             // onto it and closed a sliver.
             guard let target = lines.nearestPoint(to: end, within: reach / 2) else { return nil }
             return move(points, to: target)
         }
-        /// Whether `points` ends heading at `tip`: a reach back along it, every line was farther
-        /// than the end is from `tip` by half a reach. A stroke drawn beside a line is as near it
-        /// there as at its end, and stays as drawn.
-        func heading(_ points: [CGPoint], at tip: CGPoint) -> Bool {
+        /// Whether `points` ends heading at `target`, a point of `lines`: a reach back along it,
+        /// every line was farther than the end is from `target` by half a reach. A stroke drawn
+        /// beside a line is as near it there as at its end, and stays as drawn.
+        func heading(_ points: [CGPoint], at target: CGPoint) -> Bool {
             var back = points.count - 1, along: CGFloat = 0
             while back > 0, along < reach {
                 along += PenPath.distance(points[back - 1], points[back])
                 back -= 1
             }
-            return lines.nearestPoint(to: points[back], within: PenPath.distance(points[points.count - 1], tip) + reach / 2) == nil
+            return lines.nearestPoint(to: points[back], within: PenPath.distance(points[points.count - 1], target) + reach / 2) == nil
         }
         func move(_ points: [CGPoint], to target: CGPoint) -> [CGPoint] {
             guard straight else { return moving(points, atStart: false, to: target, span: span) }
@@ -465,31 +465,6 @@ public struct SnapLines: Sendable {
             }
         }
         return best?.point
-    }
-
-    /// The loose end nearest `p` within `reach`: an end of a line that meets no other line
-    /// within `touch`, as a stroke's free tip does. A line closed on itself has none.
-    public func nearestLooseEnd(to p: CGPoint, within reach: CGFloat, touch: CGFloat) -> CGPoint? {
-        var best: (point: CGPoint, distance: CGFloat)?
-        for (k, line) in lines.enumerated() where line.bounds.insetBy(dx: -reach - 1e-6, dy: -reach - 1e-6).contains(p) {
-            guard let first = line.points.first, let last = line.points.last, PenPath.distance(first, last) > touch else { continue }
-            for end in [first, last] {
-                let d = PenPath.distance(p, end)
-                guard d <= reach, best == nil || d < best!.distance, isLoose(end, of: k, touch: touch) else { continue }
-                best = (end, d)
-            }
-        }
-        return best?.point
-    }
-
-    /// Whether no line but line `k` comes within `touch` of `end`.
-    private func isLoose(_ end: CGPoint, of k: Int, touch: CGFloat) -> Bool {
-        for (j, line) in lines.enumerated() where j != k && line.bounds.insetBy(dx: -touch - 1e-6, dy: -touch - 1e-6).contains(end) {
-            for (a, b) in zip(line.points, line.points.dropFirst()) where PenPath.distance(end, Self.closest(end, a, b)) <= touch {
-                return false
-            }
-        }
-        return true
     }
 
     /// The point of the segment `a`–`b` nearest `p`.
