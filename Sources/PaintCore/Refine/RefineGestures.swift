@@ -371,13 +371,27 @@ public enum RefineGestures {
             .map { CGPoint(x: $0.x / units, y: $0.y / units) }
     }
 
-    /// A line of points on screen as the edit that draws it, in the template's canvas units. A
-    /// closed figure ends where it starts: the edit has that point once and says it is closed.
+    /// The longest segment a drawn line is sent with, canvas units: a longer one goes as points
+    /// this far apart along it. Checking a template charges each segment for every grid cell its
+    /// box covers, against a budget its points set, so on a Blank a few long diagonals (a
+    /// sailboat's sails, drawn with Shapes' Line) ran it out and the next line was declined (QA,
+    /// November 3). The points lie on the segment: the line is the same.
+    public static let longestSegment: Float = 16
+
+    /// A line of points on screen as the edit that draws it, in the template's canvas units, no
+    /// segment longer than `longestSegment`. A closed figure ends where it starts: the edit has
+    /// that point once and says it is closed.
     public static func drawEdit(_ points: [CGPoint], closed: Bool = false, on screen: RefineScreen) -> TemplateEditor.Edit? {
         let units = screen.unitsPerPoint
         guard units > 0 else { return nil }
         let canvas = points.map { SIMD2(Float($0.x * units), Float($0.y * units)) }
-        return .draw(points: closed ? Array(canvas.dropLast()) : canvas, closed: closed)
+        var dense: [SIMD2<Float>] = []
+        for (a, b) in zip(canvas, canvas.dropFirst()) {
+            let pieces = max(1, Int(((((b - a) * (b - a)).sum()).squareRoot() / longestSegment).rounded(.up)))
+            for k in 0..<pieces { dense.append(a + (b - a) * (Float(k) / Float(pieces))) }
+        }
+        if let last = canvas.last { dense.append(last) }
+        return .draw(points: closed ? Array(dense.dropLast()) : dense, closed: closed)
     }
 
     /// `points` thinned to within `tolerance` points on screen.

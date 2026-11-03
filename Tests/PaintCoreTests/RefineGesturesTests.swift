@@ -127,7 +127,9 @@ struct RefineGesturesTests {
     @Test func shapesMakeTheirLines() throws {
         let rect = try #require(RefineGestures.shape(.rectangle, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: Self.lines))
         guard case .draw(let corners, true, nil) = rect else { Issue.record("\(rect)"); return }
-        #expect(corners.count == 4 && abs(corners[2].x - 112) < 1e-3 && abs(corners[2].y - 28) < 1e-3)
+        // Its four corners, with points along its longer sides (`longestSegment`).
+        #expect(corners.count >= 4 && corners.contains { abs($0.x - 112) < 1e-3 && abs($0.y - 28) < 1e-3 })
+        #expect(corners.allSatisfy { abs($0.x - 90) < 1e-3 || abs($0.x - 112) < 1e-3 || abs($0.y - 12) < 1e-3 || abs($0.y - 28) < 1e-3 })
         let oval = try #require(RefineGestures.shape(.oval, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
         guard case .draw(let ring, true, nil) = oval else { Issue.record("\(oval)"); return }
         #expect(ring.count >= 16 && ring.first != ring.last)
@@ -137,7 +139,10 @@ struct RefineGesturesTests {
         let bent = try #require(RefineGestures.shape(.curve, from: Self.p(100, 10), to: Self.p(100, 10), curve: ends, on: Self.screen, snapping: nil))
         guard case .draw(let curve, false, nil) = bent else { Issue.record("\(bent)"); return }
         #expect(curve.contains { simdLength($0 - SIMD2(100, 10)) < 0.5 })
-        #expect(RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) == .draw(points: [SIMD2(80, 20), SIMD2(120, 20)]))
+        guard case .draw(let straight, false, nil)? = RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) else {
+            Issue.record("no straight curve"); return
+        }
+        #expect(straight.first == SIMD2(80, 20) && straight.last == SIMD2(120, 20) && straight.allSatisfy { $0.y == 20 })
     }
 
     /// A polygon and a star are drawn as closed lines across the drag's box; too small, none.
@@ -267,6 +272,32 @@ struct RefineGesturesTests {
     }
 
     static func nearlyEqual(_ p: CGPoint?, _ q: CGPoint) -> Bool { p.map { PenPath.distance($0, q) < 1e-6 } ?? false }
+
+    /// Long straight lines on a large Blank are laid, however many: a line's long segments are
+    /// sent as points a few units apart, so checking the template doesn't run out of work. As one
+    /// segment, a long diagonal charged the check for every grid cell its box covers, and on a
+    /// Blank, whose budget its few points set, the third such line (a sailboat's second sail)
+    /// was declined, "That line couldn't be drawn there" (QA, November 3).
+    @Test func longStraightLinesOnABigBlankAreLaid() throws {
+        var t = try TemplateEditor.blank(
+            width: 2100, height: 1430, photo: RGBAImage(width: 210, height: 143, fill: SIMD4(135, 135, 120, 255)), colorSpace: .sRGB)
+        let screen = RefineScreen(
+            canvas: CGSize(width: 2100, height: 1430), picture: CGSize(width: 378, height: 257.4), view: CGSize(width: 378, height: 257.4),
+            lineWidth: 1.5)
+        let lines: [(CGPoint, CGPoint)] = [
+            (CGPoint(x: 2, y: 184), CGPoint(x: 376, y: 184)), (CGPoint(x: 108, y: 154), CGPoint(x: 288, y: 154)),
+            (CGPoint(x: 198, y: 154), CGPoint(x: 198, y: 32)), (CGPoint(x: 198, y: 46), CGPoint(x: 273, y: 154)),
+            (CGPoint(x: 198, y: 59), CGPoint(x: 138, y: 154)), (CGPoint(x: 10, y: 10), CGPoint(x: 370, y: 250)),
+        ]
+        for (a, b) in lines {
+            let edit = try #require(RefineGestures.drawEdit([a, b], on: screen))
+            guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return }
+            #expect(zip(points, points.dropFirst()).allSatisfy { (($1 - $0) * ($1 - $0)).sum().squareRoot() <= 16.001 })
+            let laid = try TemplateEditor.apply(edit, to: t)
+            #expect(laid.outcome.declined == nil, "\(String(describing: laid.outcome.declined))")
+            t = laid.template
+        }
+    }
 
     /// A drawn line's ends may join the drawing's lines but never its writing, which the editor
     /// never joins a line to (an end snapped onto a letter would hang there and close nothing);
