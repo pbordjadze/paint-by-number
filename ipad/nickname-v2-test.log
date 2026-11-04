@@ -1,0 +1,113 @@
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 271]
+[Planning deferred tasks]
+[67 / 134] PaintCore_MakingOfTests
+[71 / 134] PaintCore_MakingOfTests
+[76 / 134] PaintCore_PaintCoreTests
+[77 / 134]
+[78 / 135] PaintCore
+[82 / 176]
+[87 / 176]
+[88 / 176]
+[90 / 176]
+[93 / 176]
+[95 / 176]
+[96 / 176]
+[97 / 176]
+[100 / 176]
+[101 / 176]
+[103 / 176]
+[104 / 176]
+[106 / 176]
+[109 / 176]
+[111 / 176]
+[112 / 176]
+[113 / 176]
+[117 / 176] PaintCore
+[118 / 176] PaintCore
+[119 / 176] PaintCore
+[125 / 176] PaintCore
+[128 / 176] PaintCoreTests-product
+[131 / 178] MakingOf
+[132 / 223]
+[133 / 227] MakingOf
+[134 / 227]
+[137 / 227] MakingOf
+[143 / 227]
+[144 / 227]
+[146 / 227]
+[148 / 227]
+[149 / 227] MakingOf
+[151 / 227]
+[152 / 227]
+[154 / 227]
+[155 / 227]
+[157 / 227]
+[158 / 227]
+[159 / 227] MakingOfTests-product
+[160 / 227] MakingOfTests-product
+[162 / 227]
+[163 / 227]
+[164 / 227]
+[165 / 227]
+[165 / 227] MakingOf-product
+[166 / 227] MakingOf-product
+[167 / 227] MakingOf-product
+[169 / 227]
+[171 / 227]
+[172 / 227]
+[174 / 227]
+[175 / 227]
+[176 / 227]
+[179 / 227]
+[180 / 227]
+[182 / 227]
+[184 / 227]
+[185 / 227]
+[188 / 227] pbn-product
+[189 / 227] pbn-product
+[190 / 227] pbn-product
+[192 / 227] PaintCore
+[196 / 227] PaintCoreTests-product
+[198 / 228] PaintCoreTests-product
+[198 / 228]
+[202 / 229] MakingOfTests-product
+[204 / 239]
+[205 / 239]
+[208 / 239] PaintCoreTests-product
+[211 / 239] pbn-product
+[212 / 239] MakingOfTests-product
+[217 / 239] PaintCoreTests-product
+[218 / 239] PaintCoreTests-product
+[219 / 239] PaintCoreTests-product
+[220 / 239] PaintCoreTests-product
+[224 / 239] PaintCoreTests-product
+[225 / 239] AllIncludingTests
+[226 / 239] pbn-product
+[227 / 239] PaintCoreTests-product
+[229 / 239] PaintCoreTests-product
+[230 / 239] PaintCoreTests-product
+[231 / 239] PaintCoreTests-product
+[233 / 239] MakingOfTests-product
+[235 / 239] MakingOfTests-product
+[237 / 239] MakingOfTests-product
+Build complete! (251.37 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+◇ Test sharedPlatformPins() started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.019 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.019 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.019 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.019 seconds.
+✔ Test sharedPlatformPins() passed after 0.023 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.094 seconds.
+✔ Suite "ColorNickname v2" passed after 0.094 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.094 seconds.
