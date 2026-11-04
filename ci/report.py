@@ -104,6 +104,9 @@ def screenshot_notes(job_dir):
         unready = re.findall(r"(\S+): no ready marker within (\d+) s", text)
         crashed = re.findall(r"captured (\S+) — CRASH", text)
         on_fold = re.findall(r"^FOLD (\S+): (.*)$", text, re.M)
+        unposed = re.findall(r"duo: unposed (\S+ \S+):", text)
+        if unposed:
+            notes.append("  not carried through every pose (ci/duo.sh): " + ", ".join(unposed))
         if on_fold:
             notes.append(f"  on the fold (ci/duo.sh): {len(on_fold)}: " + "; ".join(f"{p}: {what}" for p, what in on_fold[:6]))
         if unready:

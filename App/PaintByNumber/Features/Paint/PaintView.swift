@@ -52,9 +52,7 @@ struct PaintView: View {
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// The layout's `regularChrome` (a phone's bar on a Duo's book page), which the bar's views are
-    /// sized by: the size class's until the first layout.
-    @State private var chromeIsRegular: Bool?
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -87,11 +85,11 @@ struct PaintView: View {
     private static let topGap = PaintingLayout.topGap
     private static let bottomGap = PaintingLayout.bottomGap
 
-    /// How much bigger the bar's buttons and the swatches are here (`QuietPainting.scale`).
-    private var chromeScale: CGFloat { PaintingLayout.chromeScale(regularWidth: regularChrome) }
+    /// How much bigger the bar's buttons and the swatches are (`QuietPainting.scale`), for the
+    /// layout's `regularChrome`: a regular width's, but for a phone's on a Duo's book page.
+    private func chromeScale(_ regular: Bool) -> CGFloat { PaintingLayout.chromeScale(regularWidth: regular) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.
-    private var barHeight: CGFloat { PaintingLayout.barHeight(regularWidth: regularChrome) }
-    private var regularChrome: Bool { chromeIsRegular ?? (sizeClass == .regular) }
+    private func barHeight(_ regular: Bool) -> CGFloat { PaintingLayout.barHeight(regularWidth: regular) }
     private var chromeScheme: ColorScheme { Self.chromeScheme(paper: paperAppearance, system: colorScheme) }
 
     /// The bars' appearance: dark over dark paper whatever the system's (on a light system the
@@ -262,7 +260,7 @@ struct PaintView: View {
                                 feedback.isReviewing = true
                             })
                     } else {
-                        topBar(width: controlsWidth)
+                        topBar(width: controlsWidth, regular: layout.regularChrome)
                     }
                 }
                 .padding(.horizontal, Self.edge)
@@ -292,7 +290,7 @@ struct PaintView: View {
                     Spacer(minLength: 0)
                     bottomBar(palette)
                         .padding(.trailing, Self.edge)
-                        .padding(.top, sidePaletteTop)
+                        .padding(.top, PaintingLayout.sidePaletteTop(regularWidth: layout.regularChrome))
                         .padding(.bottom, Self.edge)
                         .duoProbe("paint-palette-side")
                 }
@@ -304,7 +302,7 @@ struct PaintView: View {
                 // Below the top bar, like the painting's other toasts, on the controls' page
                 // beside a fold; taps reach the canvas.
                 Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
-                    .padding(.top, Self.topGap + barHeight + 12)
+                    .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
                     .environment(\.colorScheme, chromeScheme)
@@ -322,7 +320,6 @@ struct PaintView: View {
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
         .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
-        .onChange(of: layout.regularChrome, initial: true) { _, regular in chromeIsRegular = regular }
     }
 
     /// The controls' page beside a half-open Duo's fold: the canvas's backdrop, as the paper it
@@ -371,10 +368,10 @@ struct PaintView: View {
         PaintingLayout(PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
-            isComplete: session.isComplete, fold: PaintingLayout.fold(in: geo)))
+            isComplete: session.isComplete,
+            fold: PaintingLayout.fold(in: geo, rightToLeft: layoutDirection == .rightToLeft)))
     }
 
-    private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: regularChrome) }
 
     /// Every color of the palette in its order on screen (finished ones too).
     private var colorOrder: [Int] {
@@ -407,8 +404,8 @@ struct PaintView: View {
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
     /// window: the bar's width would widen the whole screen. Quiet (`QuietPainting`), it fades
     /// to `quietRow`.
-    private func topBar(width: CGFloat) -> some View {
-        let badges = badgeVariants
+    private func topBar(width: CGFloat, regular: Bool) -> some View {
+        let badges = badgeVariants(regular)
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) }
@@ -417,13 +414,13 @@ struct PaintView: View {
         return GlassEffectContainer(spacing: 10) {
             Group {
                 if quiet {
-                    quietRow
+                    quietRow(regular)
                         .transition(.opacity)
                 } else {
                     // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
                     ViewThatFits(in: .horizontal) {
                         ForEach(rows, id: \.self) { row in
-                            topBarRow(badge: row.badge, showsHint: row.showsHint)
+                            topBarRow(badge: row.badge, showsHint: row.showsHint, regular: regular)
                                 .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
                         }
                     }
@@ -432,7 +429,7 @@ struct PaintView: View {
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
         }
-        .environment(\.glassButtonDiameter, barHeight)
+        .environment(\.glassButtonDiameter, barHeight(regular))
         .onPreferenceChange(BadgeTitleKey.self) { shown in
             // Only the row that fit is on screen; were any other heard, the bar names the title.
             MainActor.assumeIsolated { badgeShowsTitle = shown == [true] }
@@ -454,8 +451,9 @@ struct PaintView: View {
 
     /// The quiet bar: Back, the progress ring, which brings the rest back, and Hint.
     /// Spaced and held to their circles as `topBarRow`'s are, so Back stays where it was.
-    private var quietRow: some View {
-        HStack(spacing: 12) {
+    private func quietRow(_ regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
+        return HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
                     .frame(width: barHeight, height: barHeight)
@@ -480,17 +478,18 @@ struct PaintView: View {
         static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool, regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
         // 12 pt between every two shapes, more than the container's 10, so they don't merge. The
         // system glass buttons lay out about 5 pt wider on each side than their circle, Photo and
         // More exactly as wide: held to their circles, the gaps come out even (they were 13 and
         // 18 pt on a phone). Six controls fit a 402 pt phone.
-        HStack(spacing: 12) {
+        return HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
                     .frame(width: barHeight, height: barHeight)
             }
-            progressBadge(badge)
+            progressBadge(badge, regular: regular)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if photoLoader != nil {
                 PhotoPeekButton(peek: $peek)
@@ -504,7 +503,7 @@ struct PaintView: View {
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
-            moreMenu
+            moreMenu(regular)
         }
     }
 
@@ -523,8 +522,8 @@ struct PaintView: View {
 
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
-    private var badgeVariants: [BadgeVariant] {
-        let showsColor = regularChrome && !session.isComplete && session.selectedColor != nil
+    private func badgeVariants(_ regular: Bool) -> [BadgeVariant] {
+        let showsColor = regular && !session.isComplete && session.selectedColor != nil
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))
@@ -532,7 +531,7 @@ struct PaintView: View {
         return variants
     }
 
-    private func progressBadge(_ variant: BadgeVariant) -> some View {
+    private func progressBadge(_ variant: BadgeVariant, regular: Bool) -> some View {
         HStack(spacing: 10) {
             ProgressGroup(session: session, title: title, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
             if variant.showsColor {
@@ -550,13 +549,14 @@ struct PaintView: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: barHeight)
+        .frame(height: barHeight(regular))
         .glassEffect(.regular, in: .capsule)
     }
 
     /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
-    private var moreMenu: some View {
-        Menu {
+    private func moreMenu(_ regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
+        return Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
@@ -575,7 +575,7 @@ struct PaintView: View {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.primary)
-                .imageScale(chromeScale > 1 ? .large : .medium)
+                .imageScale(chromeScale(regular) > 1 ? .large : .medium)
                 .frame(width: barHeight, height: barHeight)
                 .glassEffect(.regular.interactive(), in: .circle)
         }

@@ -49,10 +49,15 @@ final class FoldWatch {
         if found != region { region = found }
     }
 
-    /// The active fold in the coordinates of a view at `frame` in the window (`.global`).
+    /// The active fold in the coordinates of a view at `frame` in the window (`.global`), when it
+    /// runs through that view (not before the view has a frame, nor beside a window in Split View).
     func fold(in frame: CGRect, rightToLeft: Bool) -> ActiveFold? {
-        guard let region, region.isActive else { return nil }
-        return ActiveFold(frame: Self.local(region.frame, in: frame, rightToLeft: rightToLeft))
+        guard let region, region.isActive, frame.width > 0, frame.height > 0 else { return nil }
+        let local = Self.local(region.frame, in: frame, rightToLeft: rightToLeft)
+        let through = region.isUpright
+            ? local.minX > 0 && local.maxX < frame.width
+            : local.minY > 0 && local.maxY < frame.height
+        return through ? ActiveFold(frame: local) : nil
     }
 
     /// Whether a half-open Duo's fold runs down the window like a book's: sheets keep to the

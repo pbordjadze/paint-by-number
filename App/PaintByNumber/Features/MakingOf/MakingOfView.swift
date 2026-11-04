@@ -189,7 +189,7 @@ struct MakingOfView: View {
             let inputs = PaintingLayout.Inputs(
                 size: geometry.size, safe: safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
                 rows: paletteRows, colors: template.map(PaletteBar.visibleColorCount) ?? 1, isComplete: false,
-                fold: PaintingLayout.fold(in: geometry))
+                fold: PaintingLayout.fold(in: geometry, rightToLeft: layoutDirection == .rightToLeft))
             page = PaintingLayout(inputs)
                 .page(of: pictureSize, inputs: inputs, rightToLeft: layoutDirection == .rightToLeft)
                 .offsetBy(dx: -safe.leading, dy: -safe.top)

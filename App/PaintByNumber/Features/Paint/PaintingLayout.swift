@@ -251,14 +251,13 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     }
 
     /// The active fold of a half-open iPhone Duo in the whole screen's coordinates (x from the
-    /// leading edge), from a geometry proxy that stops at the safe area, as `PaintView`'s does:
-    /// its reserved division region, margins included. Nil when the device is flat or closed,
-    /// and on every other device.
+    /// leading edge), for a geometry proxy that stops at the safe area, as `PaintView`'s does: its
+    /// reserved division region, margins included, from the window (`FoldWatch`). Nil when the
+    /// device is flat or closed, and on every other device.
     @MainActor
-    static func fold(in proxy: GeometryProxy) -> CGRect? {
-        guard #available(iOS 27.1, *) else { return nil }
-        guard let region = proxy.reservedRegions(kind: .division).first(where: \.isActive) else { return nil }
-        return region.frame.offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
+    static func fold(in proxy: GeometryProxy, rightToLeft: Bool) -> CGRect? {
+        FoldWatch.shared.fold(in: proxy.frame(in: .global), rightToLeft: rightToLeft)?.frame
+            .offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
     }
 
     /// The same from a window that fills the screen (the create flow's, for a new painting's page):

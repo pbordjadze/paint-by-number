@@ -216,8 +216,9 @@ final class CanvasView: UIView, PaintingCanvas {
         return CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
     }
 
-    /// A zoom this close to the fit counts as fitted when the canvas's room changes (`layoutSubviews`).
-    private static let fittedSlack: CGFloat = 0.01
+    /// A zoom this close to the fit counts as fitted when the canvas's room changes
+    /// (`layoutSubviews`): the band `finish` leaves a painting in as showing all of it.
+    private static var fittedSlack: CGFloat { finishFitSlack }
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 
@@ -406,7 +407,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let center: SIMD2<Float>
         if laidOutSize != .zero {
             let scale = scrollView.zoomScale
-            let fitted = abs(scale / fitZoom - 1) < Self.fittedSlack
+            let fitted = abs(scale / fitZoom - 1) <= Self.fittedSlack
             zoom = { fit in fitted ? fit : scale }
             let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
             center = canvasPoint(forView: CGPoint(x: old.midX, y: old.midY))

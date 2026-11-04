@@ -463,9 +463,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   while flat): 40 pt with its margins down the middle at x 456 held like a book, across at y 456
   like a laptop. `FoldWatch` keeps where it is from UIKit's window (`.watchesTheFold()` on the root)
   and places it in a view by that view's frame in the window: a view's own geometry proxy put it
-  42 pt off, half the system's vertical bar, inside a navigation stack (CI, November 4). The
-  painting screen shares the screen out by it (`PaintingLayout.Mode`, from its own proxy, which has
-  no bar): like a laptop (`easel`), the painting stands on the upper half and the bar and the
+  42 pt off, half the system's vertical bar, inside a navigation stack (CI, November 4); every
+  screen reads it so. The painting screen shares the screen out by it (`PaintingLayout.Mode`): like a laptop (`easel`), the painting stands on the upper half and the bar and the
   whole palette lie on the lower; like a book (`book`), the painting has the leading page and the
   controls the trailing, a phone's width, so a phone's bar and swatches (`regularChrome` false);
   the palette sits in the middle of the room under the bar, on the canvas's backdrop
@@ -477,7 +476,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   a book (`.besideTheFold()`, `presentationPlacement`): the system left them centred on the fold.
   System containers, alerts and menus keep off the fold by themselves; scrolling content needn't.
 - The canvas keeps the painter's place through the change of room (`CanvasView.layoutSubviews`): a
-  fitted painting fits again, a zoomed one keeps its scale and centre.
+  painting within 5% of its fit (the band `finish` leaves it in) fits again, a zoomed one keeps its
+  scale and centre; on every device, a rotation too.
 - `ci/duo.sh` (`[duo]`, root `CLAUDE.md` › CI) carries each of `ci/duo-scenarios.txt` through every
   pose and checks the layout the app reports (DEBUG `DuoLayoutProbe`, `.duoProbe(_:)` on the
   painting screen's bars) against the fold; `DuoLayoutTests` pin the layouts and the camera.

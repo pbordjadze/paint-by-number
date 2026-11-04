@@ -54,13 +54,17 @@ turn() {
     *) name=portraitUpsideDown ;;
   esac
   xcrun devicectl device orientation set "$name" -d "$UDID" -q >/dev/null 2>&1 || true
-  [[ "$(orientation)" == "$want" ]] || step "warning: the orientation is '$(orientation)', not $want"
+  [[ "$(orientation)" == "$want" ]] && return 0
+  step "warning: the orientation is '$(orientation)', not $want"
+  return 1
 }
 # The simulator sometimes takes longer than 4 s to report an angle (once, closing, on CI): once more.
 fold() {
   hinge set "$1" 4 && return 0
   step "warning: the hinge didn't reach ${1}° within 4 s; again"
-  hinge set "$1" 10 || die "the hinge didn't reach ${1}°"
+  hinge set "$1" 10 && return 0
+  step "warning: the hinge didn't reach ${1}°"
+  return 1
 }
 
 # The integrated display the UI is on (devicectl's `active`; its lit backlight when it has no
@@ -107,12 +111,15 @@ POSES=("1-closed 0 portrait" "2-turned 0 landscape-left" "3-open 180 portrait" "
 count_reports() { { ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null || true; } | wc -l | tr -d ' '; }
 seen_reports=$(count_reports)
 on_fold=0
+# A pose the simulator wouldn't take: the rest of its scenario is skipped (its pictures would be
+# named for a pose they aren't), the next scenario goes on, and the step fails at the end.
+unposed=0
 for entry in "${SCENARIOS[@]}"; do
   scenario="${entry%@*}"; delay=8
   [[ "$entry" == *@* ]] && delay="${entry#*@}"
   xcrun simctl ui "$UDID" appearance "$([[ "$scenario" == *dark* ]] && echo dark || echo light)" || true
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-  fold 0; turn portrait; sleep 1
+  fold 0 || true; turn portrait || true; sleep 1
   rm -f "$MARKER" "$LAYOUT"
   launch_args=(-demo "$scenario")
   [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
@@ -129,8 +136,11 @@ for entry in "${SCENARIOS[@]}"; do
     read -r name angle turned <<< "$pose"
     if [[ "$name" != 1-closed ]]; then
       # Turned to the pose's side first, then folded or opened.
-      [[ "$(orientation)" == "$turned" ]] || turn "$turned"
-      fold "$angle"
+      if ! { [[ "$(orientation)" == "$turned" ]] || turn "$turned"; } || ! fold "$angle"; then
+        step "unposed $scenario $name: the simulator didn't take ${angle}° $turned; its other poses skipped"
+        unposed=$((unposed + 1))
+        break
+      fi
       sleep "$POSE_SETTLE"
     fi
     base="$OUT/duo-$scenario-$name"
@@ -143,8 +153,10 @@ for entry in "${SCENARIOS[@]}"; do
   if [[ "$reports" -gt "${seen_reports:-0}" ]]; then step "captured $scenario — CRASH: app crashed (see crashes/)"; fi
   seen_reports=$reports
 done
-fold 0; turn portrait
+fold 0 || true; turn portrait || true
 xcrun simctl ui "$UDID" appearance light || true
 xcrun simctl spawn "$UDID" log show --last 30m --style compact --predicate 'process == "PaintByNumber"' > "$OUT/duo-app.log" 2>/dev/null || true
-[[ $on_fold -eq 0 ]] || die "$on_fold pose(s) with a control on the fold (FOLD lines above)"
+[[ $unposed -eq 0 ]] || step "error: $unposed scenario(s) not carried through every pose (unposed lines above)"
+[[ $on_fold -eq 0 ]] || step "error: $on_fold pose(s) with a control on the fold (FOLD lines above)"
+[[ $unposed -eq 0 && $on_fold -eq 0 ]] || exit 1
 step done

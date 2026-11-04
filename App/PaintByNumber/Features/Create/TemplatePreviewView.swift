@@ -227,7 +227,8 @@ struct TemplatePreviewView: View {
     /// The comparison can fill the page: stacked in a compact window, where the controls leave
     /// it a fraction of the screen.
     private var offersEnlarging: Bool { isCompact && !isSideBySide && !model.isDrawing }
-    private var isEnlarged: Bool { isTuning && !isSideBySide }
+    /// Enlarged, but never beside a half-open Duo's fold, where the picture has its own half.
+    private var isEnlarged: Bool { isTuning && !isSideBySide && fold == nil }
 
     #if UNRELEASED
     /// Refine on the final template, or, while it is being made, as soon as it is.
