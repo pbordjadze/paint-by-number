@@ -163,7 +163,7 @@ nonisolated struct RefineGuidePage {
                     Done, the ✓ at the top, keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.
 
                     ## On the practice picture
-                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like, and clears Undo with it.
+                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Each page of this guide has its own copy of the practice picture, with the layers set for that page. Reset, above it, puts it back as it was whenever you like, and clears Undo with it.
                     """,
                              comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
@@ -183,7 +183,7 @@ nonisolated struct RefineGuidePage {
                     The layer your tool works on is tinted in the panel. If you’ve hidden it, Refine shows it again as soon as you use the tool, so you can see what you’re changing. Select and the Eyedropper only look, so they leave the layers as you set them.
 
                     ## On the practice picture
-                    Here the photo shows under the paint at half. Turn Photo off to see the paint alone, then on again. Bring Paint down to a quarter, and trace the peach glow above the far hills with the Pen.
+                    Here Photo is on, under Paint at half. Turn Photo off to see the paint alone, then on again. Bring Paint down to a quarter and zoom in on the sky until the stars show: they’re in the photo but not in the paint. Draw a small loop around one with the Pen.
                     """,
                              comment: "Tool Guide, Layers: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen, layers: .tracing))
@@ -232,7 +232,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.shape.summary", defaultValue: "Draws lines, rectangles, ovals, curves, hexagons and stars.",
                                 comment: "Tool Guide, Shapes: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.shape.text", defaultValue: """
-                    Pick a figure in the bar above the picture, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Refine opens, the bar starts on Line.
+                    Pick a figure among the tool’s options at the bottom, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Refine opens, the bar starts on Line.
 
                     A closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.
 
@@ -243,7 +243,7 @@ nonisolated struct RefineGuidePage {
                     A drag too small to make a figure does nothing.
 
                     ## On the practice picture
-                    Draw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it.
+                    Draw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it. Its ends land on the tree’s and the cottage’s lines, but the hill runs on beneath both, so the curve closes nothing off: it stays a line of ink, a path drawn on the hill.
                     """,
                              comment: "Tool Guide, Shapes: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .shape, shape: .star))
@@ -277,7 +277,7 @@ nonisolated struct RefineGuidePage {
                     Dragging rubs out ink as the [Eraser](guide:eraser) does, at its Size. With either eraser, the cells the line kept apart become one, in the larger cell’s paint.
 
                     ## On the practice picture
-                    Tap the line around the moon: it goes whole, and the moon takes the sky’s paint. Then tap the outline of the cottage’s door.
+                    Tap the line around the moon: it goes whole, and the moon takes the sky’s paint. Then tap the outline of the cottage’s door: the door joins the wall, in the wall’s paint.
                     """,
                              comment: "Tool Guide, the Line Eraser: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .smartEraser))
@@ -304,7 +304,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell, its paint, and how many cells share it.",
                                 comment: "Tool Guide, Select: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.select.text", defaultValue: """
-                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many areas, as the bar calls cells, use that paint. Tap it again, or tap off the picture, to let it go. Selecting a cell doesn’t change your current paint: the ring in the palette stays where it was.
+                    Tap a cell to select it. It glows, and the bar at the bottom shows its paint’s number and name and how many areas, as the bar calls cells, use that paint. Tap it again, or tap off the picture, to let it go. Selecting a cell doesn’t change your current paint: the ring in the palette stays where it was.
 
                     While any Cells tool is picked, dashed lines show the borders between cells where no line is drawn. They divide the paint, but they won’t be drawn on the finished picture.
 
@@ -349,7 +349,7 @@ nonisolated struct RefineGuidePage {
                     To divide a cell again, draw an edge with [Cell Edge](guide:cellEdge), or a line with the [Pen](guide:pen).
 
                     ## On the practice picture
-                    Drag across the window’s four panes to make one big pane. Then drag from the sky into the moon: the moon disappears into the sky’s paint.
+                    Drag across the window’s four panes to make one big pane: the cross goes too, since Merge takes away the lines between the cells it joins. Then drag from the sky into the moon: the moon disappears into the sky’s paint.
                     """,
                              comment: "Tool Guide, Merge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .merge))
@@ -360,11 +360,11 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.moveEdge.text", defaultValue: """
                     Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint. A border with ink takes its ink along.
 
-                    A border runs from one corner, where three or more borders meet, to the next. The corners stay put, and the border bends between them. Start your drag on the border itself, close to it and away from the corners. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”
+                    A border runs from one corner, where three or more borders meet, to the next. The corners stay put, and the border bends between them. Start your drag on the border itself, within about 16 points of it and away from the corners. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”
 
                     A border can’t cross another, leave the picture, or squeeze a cell until its number no longer fits. If your drag would do one of those, nothing moves, and the note says “That line couldn’t be moved there.” Try a shorter drag.
 
-                    [Bend Line](guide:bendLine) moves inked borders too. Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.
+                    On a border with ink, Move Edge and [Bend Line](guide:bendLine) do the same thing, so use either. Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.
 
                     ## On the practice picture
                     Grab the middle of the border between the two hills and drag it down a little, so the far hills grow taller.
@@ -387,7 +387,7 @@ nonisolated struct RefineGuidePage {
                     If there’s no room even for the smaller number, a note at the top says “That shape couldn’t be filled.” A shape that was too small for the Pen to make a cell isn’t closed off, so a tap inside it fills the cell around it instead.
 
                     ## On the practice picture
-                    Here the moon, the roof and the door are outlined in ink, but have the same paint as what’s around them. Tap inside the moon, then the roof and the door.
+                    This page’s evening differs from the other pages’: the moon, the roof and the door are only outlined in ink, with the same paint as what’s around them. Tap inside the moon, then the roof and the door.
                     """,
                              comment: "Tool Guide, Make Cell: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .inked, tool: .fill))
@@ -398,22 +398,22 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.bucket.text", defaultValue: """
                     Tap a cell and it takes the current paint, the one circled in the palette. Only that cell changes, even when other cells share its old paint. To change every cell of a paint at once, use [Edit Paint](guide:editPaint).
 
-                    Pick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. One very close to a paint you have is poured as that paint.
+                    Pick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. If you choose a color very close to a paint you already have, that paint is poured instead.
 
                     Choose one new color and pour it before you choose the next: picking several new colors in a row keeps only the last.
 
                     You don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.
 
                     ## When more changes color than you meant
-                    The shape you poured into wasn’t closed. Its outline has a gap somewhere, so it was still part of the cell around it, and the paint went everywhere that cell goes. Undo, close the gap with the [Pen](guide:pen) (two gold sparkles tell you a shape has closed), and pour again.
+                    The shape you poured into wasn’t closed. Its outline has a gap somewhere, so it was still part of the cell around it, and the paint filled that whole cell. Undo, close the gap with the [Pen](guide:pen) (two gold sparkles tell you a shape has closed), and pour again.
 
                     ## What else changes
-                    Pouring into the last cell of a paint retires that paint, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint with no line between them, only a dashed edge, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”
+                    Pouring into the last cell of a paint removes that paint from the palette, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint and only a dashed edge lies between them, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”
 
                     If you color in Procreate, this is ColorDrop with your ink as the reference, and no threshold: a cell ends exactly at its edges, so paint spreads further only where an outline has a gap. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
 
                     ## On the practice picture
-                    Here the roof and the moon are outlined, but have the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then pick the sky’s paint and pour it into the far hills.
+                    This page’s evening differs from the other pages’: the roof and the moon are only outlined, with the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then touch and hold the sky to pick up its paint, and tap the far hills to pour it in.
                     """,
                              comment: "Tool Guide, the Bucket: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .inked, tool: .bucket))
@@ -456,7 +456,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.editPaint.summary", defaultValue: "Changes a paint’s color everywhere it’s used.",
                                 comment: "Tool Guide, Edit Paint: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.editPaint.text", defaultValue: """
-                    Edit Paint changes a paint, so every cell with its number changes together. Tap a cell or a swatch to pick a paint. Every cell with that paint glows. Then choose the new color in the color well beside the paint’s number.
+                    Edit Paint changes a paint, so every cell with its number changes together. Tap a cell or a swatch to pick a paint. Every cell with that paint glows. Then tap the color circle beside the paint’s number to choose its new color.
 
                     The Similar colors too switch is on to start with. It moves the paints near this one along with it: paints of about the same hue, or for a gray, the grays close to it. Turn it off to change one paint alone.
 
@@ -476,7 +476,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.looks.summary", defaultValue: "Recolors every paint at once, in a mood.",
                                 comment: "Tool Guide, Looks: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.looks.text", defaultValue: """
-                    A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. Photo goes back to your photo’s own colors.
+                    A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. The Photo choice, beside the looks, goes back to your photo’s own colors.
 
                     You can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while colors you gave single cells, with the Bucket, the Paint Brush or Only This Area, stay. So choose your look first, then adjust single paints.
 
@@ -524,7 +524,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.tryPainting.summary", defaultValue: "Paints the picture as it is now, to see how it feels.",
                                 comment: "Tool Guide, Try Painting: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.tryPainting.text", defaultValue: """
-                    Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells, then close it to come back to Refine. Nothing you paint there is kept.
+                    Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells as you would any painting, then close it to come back to Refine. Nothing you paint there is kept.
 
                     It shows the picture as it was the moment you tapped the button, so a change you made a split second before may not be in it.
 
