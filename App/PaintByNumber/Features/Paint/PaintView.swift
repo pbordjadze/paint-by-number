@@ -8,7 +8,9 @@ import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
-/// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`).
+/// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`). On a
+/// half-open iPhone Duo the painting has a page of its own either side of the fold, and the bars
+/// and the whole palette the other (`PaintingLayout.Mode`).
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
 /// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
@@ -200,7 +202,14 @@ struct PaintView: View {
     /// The Metal canvas with the floating bars over it.
     private func canvasAndChrome(geo: GeometryProxy, layout: PaintingLayout) -> some View {
         let palette = layout.palette
+        // The bars' room within the safe area: all of it, or the controls' page beside a fold.
+        let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
+        let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
         return ZStack {
+            if layout.mode != .whole {
+                // The controls' page, on the painting's own surroundings.
+                backdrop.ignoresSafeArea()
+            }
             PaintCanvas(
                 session: session, controller: controller,
                 chromeInsets: layout.canvasInsets,
@@ -219,6 +228,7 @@ struct PaintView: View {
                 isAnnotating: feedback != nil,
                 watchesFirstFrame: onTemplateFrame != nil)
                 .id(ObjectIdentifier(session))
+                .padding(layout.canvasFrame)
                 .ignoresSafeArea()
 
             if let feedback {
@@ -226,6 +236,7 @@ struct PaintView: View {
                     draft: feedback, controller: controller,
                     canvasSize: CGSize(width: session.template.width, height: session.template.height),
                     isMarking: !feedback.isReviewing && !feedback.isSent, tool: feedback.tool, penColor: feedback.penColor)
+                    .padding(layout.canvasFrame)
                     .ignoresSafeArea()
             }
 
@@ -233,7 +244,7 @@ struct PaintView: View {
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
             if feedback == nil, PaintTips.desk.pageTip != nil {
-                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, insets: layout.canvasInsets)
+                let visiblePadding = layout.visibleCanvasPadding(safe: geo.safeAreaInsets)
                 TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
@@ -250,28 +261,32 @@ struct PaintView: View {
                 Group {
                     if let feedback {
                         FeedbackBar(
-                            draft: feedback, width: max(0, geo.size.width - 2 * Self.edge), onDiscard: endFeedback,
+                            draft: feedback, width: max(0, controlsWidth - 2 * Self.edge), onDiscard: endFeedback,
                             onNext: {
                                 Log.feedback.notice("Next: the review opens")
                                 feedback.isReviewing = true
                             })
                     } else {
-                        topBar(width: geo.size.width)
+                        topBar(width: controlsWidth)
                     }
                 }
                 .padding(.horizontal, Self.edge)
                 .padding(.top, Self.topGap)
+                .duoProbe("paint-top-bar")
                 Spacer(minLength: 0)
                 if let feedback {
                     FeedbackTools(draft: feedback)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
+                        .duoProbe("paint-feedback-tools")
                 } else if !palette.side || session.isComplete {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
+                        .duoProbe("paint-palette")
                 }
             }
+            .padding(controls)
             .environment(\.colorScheme, chromeScheme)
             if feedback == nil && palette.side && !session.isComplete {
                 HStack {
@@ -280,7 +295,9 @@ struct PaintView: View {
                         .padding(.trailing, Self.edge)
                         .padding(.top, sidePaletteTop)
                         .padding(.bottom, Self.edge)
+                        .duoProbe("paint-palette")
                 }
+                .padding(controls)
                 .environment(\.colorScheme, chromeScheme)
             }
 
@@ -294,6 +311,20 @@ struct PaintView: View {
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
         .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
+    }
+
+    /// The controls' page beside a half-open Duo's fold: the canvas's backdrop, as the paper it
+    /// lies on (`CanvasPalette.backdropSRGB`).
+    private var backdrop: Color {
+        let rgb = CanvasPalette.backdropSRGB(paperAppearance, interfaceIsDark: colorScheme == .dark)
+        return Color(.sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
+    }
+
+    /// `insets` from the screen's edges as padding within the safe area.
+    private static func padding(_ insets: EdgeInsets, within safe: EdgeInsets) -> EdgeInsets {
+        EdgeInsets(
+            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
+            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
     }
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
@@ -328,7 +359,7 @@ struct PaintView: View {
         PaintingLayout(PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
-            isComplete: session.isComplete))
+            isComplete: session.isComplete, fold: PaintingLayout.fold(in: geo)))
     }
 
     private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: sizeClass == .regular) }
@@ -352,13 +383,6 @@ struct PaintView: View {
     /// How far into the page the page tips lie, and how wide they grow.
     private static let pageTipDepth: CGFloat = 32
     private static let pageTipWidth: CGFloat = 420
-
-    /// The canvas's visible area within the safe area (the canvas itself ignores it).
-    private func visibleCanvasPadding(safe: EdgeInsets, insets: EdgeInsets) -> EdgeInsets {
-        EdgeInsets(
-            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
-            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
-    }
 
     // MARK: Top bar
 

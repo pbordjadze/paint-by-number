@@ -216,6 +216,8 @@ final class CanvasView: UIView, PaintingCanvas {
         return CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
     }
 
+    /// A zoom this close to the fit counts as fitted when the canvas's room changes (`layoutSubviews`).
+    private static let fittedSlack: CGFloat = 0.01
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 
@@ -395,25 +397,31 @@ final class CanvasView: UIView, PaintingCanvas {
         guard bounds.width > 1, bounds.height > 1 else { return }
         guard bounds.size != laidOutSize || chromeInsets != laidOutInsets else { return }
 
-        // Keep looking at the same place across rotation / chrome changes.
-        let relative: CGFloat
+        // Keep looking at the same place across a rotation, a chrome change, or an iPhone Duo
+        // opening, closing or folding: a painting that was fitted fits its new room, and one zoomed
+        // in keeps its scale (the areas under the finger stay their size, the new room showing
+        // more or less around them), centered where it was. Kept relative to the fit, a zoomed
+        // painting halved as a Duo folded to the page beside its fold.
+        let zoom: (_ fit: CGFloat) -> CGFloat
         let center: SIMD2<Float>
         if laidOutSize != .zero {
-            relative = scrollView.zoomScale / fitZoom
+            let scale = scrollView.zoomScale
+            let fitted = abs(scale / fitZoom - 1) < Self.fittedSlack
+            zoom = { fit in fitted ? fit : scale }
             let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
             center = canvasPoint(forView: CGPoint(x: old.midX, y: old.midY))
         } else if let initial = initialCamera {
-            relative = initial.zoom
+            zoom = { fit in fit * initial.zoom }
             center = initial.center
         } else {
-            relative = 1
+            zoom = { fit in fit }
             center = SIMD2(Float(template.width), Float(template.height)) / 2
         }
         laidOutSize = bounds.size
         laidOutInsets = chromeInsets
         updateZoomLimits()
         restrictNavigationToFingers()
-        let z = clampZoom(fitZoom * relative)
+        let z = clampZoom(zoom(fitZoom))
         let flight = cameraAnimation
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))

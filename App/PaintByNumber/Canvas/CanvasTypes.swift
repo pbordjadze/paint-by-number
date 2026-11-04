@@ -328,22 +328,28 @@ nonisolated struct CanvasPalette: Sendable {
     static let sheetPaperSRGB = SIMD3<Float>(0.957, 0.937, 0.902)
     static let sheetInkSRGB = SIMD3<Float>(0.118, 0.102, 0.133)
 
+    /// The backdrops around the sheet, sRGB-encoded: of light paper on a light and on a dark
+    /// system, and of dark paper.
+    static let lightBackdropSRGB = SIMD3<Float>(0.949, 0.945, 0.957)
+    static let darkBackdropSRGB = SIMD3<Float>(0.078, 0.067, 0.090)
+    static let darkPaperBackdropSRGB = SIMD3<Float>(0.055, 0.047, 0.063)
+
     static let light = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.945, 0.957)),
+        background: CanvasColor.linearP3(sRGB: lightBackdropSRGB),
         paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
         ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
     /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.078, 0.067, 0.090)),
+        background: CanvasColor.linearP3(sRGB: darkBackdropSRGB),
         paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
         ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 
     /// A deep warm grey sheet with a hint of violet and light ink, for painting in the evening.
     static let darkPaper = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.055, 0.047, 0.063)),
+        background: CanvasColor.linearP3(sRGB: darkPaperBackdropSRGB),
         paper: CanvasColor.linearP3(sRGB: SIMD3(0.137, 0.118, 0.133)),
         ink: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)),
         shadowOpacity: 0, outlineOpacity: 0.5,
@@ -353,6 +359,14 @@ nonisolated struct CanvasPalette: Sendable {
     /// The palette for the Paper preference under the system appearance.
     static func resolve(_ paper: PaperAppearance, interfaceIsDark: Bool) -> CanvasPalette {
         paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : interfaceIsDark ? .dark : .light
+    }
+
+    /// The backdrop of `resolve(paper, interfaceIsDark:)`, sRGB-encoded: what the controls' page
+    /// beside a half-open iPhone Duo's fold is laid on (`PaintView`), so it reads as the painting's
+    /// own surroundings.
+    static func backdropSRGB(_ paper: PaperAppearance, interfaceIsDark: Bool) -> SIMD3<Float> {
+        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark)
+            ? darkPaperBackdropSRGB : interfaceIsDark ? darkBackdropSRGB : lightBackdropSRGB
     }
 
     /// The lighter of the paper and the ink: what writing over a dark paint is drawn in
