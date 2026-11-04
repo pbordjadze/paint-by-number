@@ -712,30 +712,43 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   - **The Tool Guide** (`RefineGuide.swift`; Paul, October 21:
     "each tool with a scenario that you can play with and reset easily", built for painters who
     will use Refine seriously, with tweaks, new tools and retired ones to come). Refine's toolbar
-    opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; moving around),
-    Layers and Coming from Procreate (painting-company row 143: Procreate's gestures and ideas, for
-    whoever comes from it or goes on to it), then a page per tool the Toolbox offers, listed from
-    `RefineGroup`, so a tool the Toolbox stops offering leaves the guide with it. A page's words are
+    opens it (`refine-guide`) on the tool in hand: The Basics (ink, cells, paint; the gestures
+    every tool shares) and Layers, then a page per tool the Toolbox offers, listed from
+    `RefineGroup`, so a tool the Toolbox stops offering leaves the guide with it. A page is
     `RefineGuidePage.of(_:)`, one exhaustive switch over `RefineTool` (a new tool doesn't compile
-    without its page): what it does, How to Use It, Try This (on the practice picture), Good to
-    Know, In Procreate (`inProcreate`: Procreate's tool for it, or what Refine does that pixels
-    can't) and Goes Well With (links to other pages); `RefineGuideTests` checks every listed tool
-    has one, with an In Procreate line. Beside the words (above them
-    on narrow widths) is the practice canvas: `RefineView` in practice mode
+    without its page): a list line (iPhone), its words, and its practice. The words are one free
+    piece of prose per page (`RefineGuideText`: paragraphs, `## ` headings in the reader's words,
+    `- ` lists, inline Markdown, `[Merge](guide:merge)` links that open another page), with no
+    fixed sections: each page opens with what a newcomer most needs and most often gets wrong, is
+    as long as its tool needs, quotes Refine's own notes and labels, names places on its practice
+    picture, and mentions Procreate only where that helps someone who knows it (the Pen, the
+    Bucket; the trademark line ends The Basics). Every fact was checked against the code that
+    handles the gesture (painting-company row 230, which replaced the slotted pages and the
+    Coming from Procreate page): a change to a tool's behaviour, defaults or notes changes its
+    page too. `RefineGuideTests` checks every listed tool has a page with words and a practice,
+    and every link opens a listed page. Beside the words (above them on narrow widths) is the
+    practice canvas: `RefineView` in practice mode
     (`RefinePracticeSetup`: the tool alone, its options and palette, Undo, Redo, the layers and
     Reset; no rail, no Start From, no tips, nothing saved; the tool stays the page's, and Snap,
     Color from Photo and Size live in `RefinePracticeSetup.settings`, seeded from the painter's as
     the guide opens, so a page leaves Refine's as they were) on a `CreateModel` of its own
-    (`CreateModel.practice(_:scene:)`: the photo and base given, final at once, never generated, so
-    no text corrections or sliders are offered). The picture is PaintCore's `RefinePractice`, a
-    drawn moonlit evening made a template by the editor's own draws (`painted`: every shape in the
-    photo's colors, every page's but two; `inked`: outlines over the hills' paints, the moon in
+    (`CreateModel.practice(_:scene:)`). Two pictures (`RefinePracticePicture`, made once a launch
+    off the main actor): PaintCore's `RefinePractice`, a drawn moonlit evening made a template by
+    the editor's own draws, final at once and never generated (`painted`: every shape in the
+    photo's colors, every page's but three; `inked`: outlines over the hills' paints, the moon in
     the sky's and the cottage in the hill's, for Make Cell and the Bucket, whose pages say to tap
     inside the moon and pour into the roof; the Pen's page used it until October 29, and painters
-    took its colors for a fault, painting-company row 175), made once a launch off the main actor (`RefinePracticePicture`). Reset is Cancel's
-    way back (`cancelRefining`) and the canvas made again (`.id`). Writing has no practice (the
-    picture has no text). `create-refine-guide` (with `-dark`, `-long-text`) opens it on Merge;
-    `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows a link.
+    took its colors for a fault, painting-company row 175); and for Writing PaintCore's
+    `RefinePracticeNote`, a note on a table ("Back at six", "Soup is hot" in ink, "feed the cat"
+    in faint pencil) beside a jar labelled HONEY, generated as a photo is from the line-art input
+    it brings (an edge map of its outlines, and as found text the inked lines and the label, not
+    the pencil), so Writing's taps and drags make it again as they do a painting
+    (`pbn practice note` writes it for `pbn generate`). The canvas shows once a template is on it
+    and stays while the note is made again. Reset is Cancel's way back (`cancelRefining`) and the
+    canvas made again (`.id`). `create-refine-guide` (with `-dark`, `-long-text`) opens it on
+    Merge, `create-refine-guide-writing` (with `-dark`) on Writing;
+    `RefineUITests.testToolGuidePracticesAndResets` merges, resets and follows Merge's link to
+    Cell Edge.
   - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
     canvas units (the Pen's stroke after its smoothing and end assist: `.draw`, its segments no
     longer than `RefineGestures.longestSegment`, which keeps checking a big Blank in budget; a rectangle or an

@@ -1,17 +1,16 @@
 import CoreGraphics
+import Foundation
 import os
 import PaintCore
 import SwiftUI
 import UIKit
 
-/// A page of Refine's Tool Guide (`RefineGuideView`): the three that start it, or a tool's.
+/// A page of Refine's Tool Guide (`RefineGuideView`): the two that start it, or a tool's.
 nonisolated enum RefineGuideTopic: Hashable, Identifiable {
-    /// How a picture is made (ink, cells, paint) and how to move around it.
+    /// How a picture is made (ink, cells, paint), and the gestures every tool shares.
     case basics
     /// What shows: the Layers panel's stack (`RefineLayers`).
     case layers
-    /// What carries over from Procreate, gesture by gesture, and what is new.
-    case procreate
     case tool(RefineTool)
 
     var id: Self { self }
@@ -19,7 +18,7 @@ nonisolated enum RefineGuideTopic: Hashable, Identifiable {
     /// The guide's sections: Start Here, then a section per group of the Toolbox with the tools it
     /// offers, in their order on screen, so a tool the Toolbox stops offering leaves the guide too.
     static var sections: [RefineGuideSection] {
-        [RefineGuideSection(group: nil, topics: [.basics, .layers, .procreate])]
+        [RefineGuideSection(group: nil, topics: [.basics, .layers])]
             + RefineGroup.allCases.map { group in RefineGuideSection(group: group, topics: group.tools.map { .tool($0) }) }
     }
 
@@ -28,14 +27,22 @@ nonisolated enum RefineGuideTopic: Hashable, Identifiable {
         sections.contains { $0.topics.contains(.tool(tool)) } ? .tool(tool) : .basics
     }
 
-    /// The page's accessibility identifier, after `refine-guide-topic-`.
+    /// The page's accessibility identifier, after `refine-guide-topic-`, and its name in a
+    /// link from another page's words (`guide:<identifier>`).
     var identifier: String {
         switch self {
         case .basics: "basics"
         case .layers: "layers"
-        case .procreate: "procreate"
         case .tool(let tool): RefineView.toolID(tool)
         }
+    }
+
+    /// The listed page a `guide:<identifier>` link opens.
+    init?(link: URL) {
+        guard link.scheme == "guide" else { return nil }
+        let name = String(link.absoluteString.dropFirst("guide:".count))
+        guard let topic = Self.sections.flatMap(\.topics).first(where: { $0.identifier == name }) else { return nil }
+        self = topic
     }
 }
 
@@ -47,9 +54,24 @@ nonisolated struct RefineGuideSection: Identifiable {
     var id: RefineGroup? { group }
 }
 
+/// The picture a page practises on: the evening (`RefinePractice`) painted or inked, or
+/// Writing's note on a table (`RefinePracticeNote`).
+nonisolated enum RefinePracticeScene: Hashable {
+    case painted, inked, note
+
+    /// The evening's scene; nil for the note.
+    var evening: RefinePractice.Scene? {
+        switch self {
+        case .painted: .painted
+        case .inked: .inked
+        case .note: nil
+        }
+    }
+}
+
 /// What a page's practice canvas opens with.
 nonisolated struct RefinePracticeSetup: Hashable {
-    var scene: RefinePractice.Scene
+    var scene: RefinePracticeScene
     /// The finger's tool.
     var tool: RefineTool
     var layers = RefineLayers.painting
@@ -75,151 +97,87 @@ extension RefinePracticeSetup {
     }
 }
 
-/// A Tool Guide page's words and practice: what the tool does, how to use it, something to try on
-/// the practice picture, what is good to know, how it compares with Procreate, and the tools that
-/// go with it. A tool's words live here, in one switch, so a new tool can't reach the Toolbox
-/// without its page, and a tool that changes has its page beside it to change too.
+/// A Tool Guide page: its words, and what its practice canvas opens with. A tool's words live
+/// here, in one switch, so a new tool can't reach the Toolbox without its page, and a tool that
+/// changes has its page beside it to change too.
+///
+/// A page's words are one piece of prose (`RefineGuideText`), with the headings that page needs:
+/// each page opens with what a newcomer to the tool most needs and most often gets wrong, and is
+/// as long as the tool needs (painting-company row 230: fixed sections on every page read as
+/// filled-in forms). Facts in it come from the code that handles the gesture, and its exercises
+/// name places on its practice picture.
 nonisolated struct RefineGuidePage {
-    /// One line: under the tool's name in the guide's list, and atop its page.
+    /// One line under the page's name in the guide's list, on iPhone.
     var summary: String
-    var about: String
-    var steps: [String]
-    /// Something to do on the practice picture.
-    var tryThis: String?
-    var notes: [String]
-    /// A line or two for whoever knows Procreate: its tool that does this, or, where its colors
-    /// being pixels leave it none, what Refine does that pixels can't. Every tool's page has one.
-    var inProcreate: String?
-    var related: [RefineTool]
-    /// None where the practice picture has nothing for the tool (Writing).
-    var practice: RefinePracticeSetup?
+    var text: String
+    var practice: RefinePracticeSetup
 
-    // The practice picture: a moonlit evening with a far hill, a near hill with a tree, a cottage
-    // with a four-paned window, the moon and a few stars (`RefinePractice`).
+    // The practice pictures: a moonlit evening with a far hill, a near hill with a tree, a cottage
+    // with a four-paned window and a door, the moon and a few stars (`RefinePractice`), and for
+    // Writing a note on a table ("Back at six", "Soup is hot", "feed the cat" in pencil) beside a
+    // jar labelled HONEY (`RefinePracticeNote`).
     static func of(_ topic: RefineGuideTopic) -> RefineGuidePage {
         switch topic {
         case .basics:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.basics.summary", defaultValue: "How a picture is made, and how to move around it.",
-                                comment: "Tool Guide, The Basics: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.basics.about",
-                              defaultValue: "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each numbered by its paint. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line.",
-                              comment: "Tool Guide, The Basics: the paragraph that explains what a picture is made of (ink, cells, paint)"),
-                steps: [
-                    String(localized: "refine.guide.basics.step1",
-                           defaultValue: "Pinch to zoom, and drag with two fingers to move around. A quick pinch fits the picture to the screen.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (a quick pinch: two fingers pinched in fast and let go)"),
-                    String(localized: "refine.guide.basics.step2",
-                           defaultValue: "Tap with two fingers to undo, and with three to redo. Hold them down to keep going. Undo and Redo are at the top too.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (holding two or three fingers on the picture keeps undoing or redoing)"),
-                    String(localized: "refine.guide.basics.step3",
-                           defaultValue: "Touch and hold anywhere to pick up a color with the Eyedropper, whatever tool you hold.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (a touch and hold samples the color under the finger, with any tool)"),
-                    String(localized: "refine.guide.basics.step4",
-                           defaultValue: "The Apple Pencil draws, and its double tap or squeeze does what you chose in Settings › Apple Pencil. If Only Draw with Apple Pencil is on there, a finger moves the picture instead.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (Settings › Apple Pencil and Only Draw with Apple Pencil are iPadOS's own names; a squeeze is Apple Pencil Pro's)"),
-                    String(localized: "refine.guide.basics.step5", defaultValue: "Tap with four fingers for full screen, and again to bring the tools back.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (full screen hides the tools, bars and palette)"),
-                    String(localized: "refine.guide.basics.step6",
-                           defaultValue: "With a keyboard, hold ⌘ to see the shortcuts, such as B for the Paint Brush, E for the Eraser, and [ and ] for size.",
-                           comment: "Tool Guide, The Basics: a step of How to Use It (⌘ is the Command key; B and E are those tools' keys, whatever the language; [ and ] are the bracket keys)"),
-                ],
-                tryThis: String(localized: "refine.guide.basics.try",
-                                defaultValue: "Zoom in on the cottage’s window, then touch and hold one of its panes until the loupe shows its yellow. A quick pinch brings the whole picture back.",
-                                comment: "Tool Guide, The Basics: Try This, something to do on the practice picture (an evening with hills, a tree, a cottage with a four-paned window and the moon; the loupe is the Eyedropper's circle under the finger)"),
-                notes: [
-                    String(localized: "refine.guide.basics.note1",
-                           defaultValue: "Nothing is kept until you tap Done. Cancel puts everything back as it was when Refine opened.",
-                           comment: "Tool Guide, The Basics: a note under Good to Know"),
-                    String(localized: "refine.guide.basics.note2",
-                           defaultValue: "When a tool can’t do something, a note at the top says why, and nothing changes.",
-                           comment: "Tool Guide, The Basics: a note under Good to Know"),
-                ],
-                inProcreate: nil,
-                related: [.pen, .select, .eyedropper],
+                summary: String(localized: "refine.guide.basics.summary", defaultValue: "How a picture is made, and the gestures every tool shares.",
+                                comment: "Tool Guide, The Basics: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.basics.text", defaultValue: """
+                    A picture in Refine is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Refine’s own messages say area for a cell.
+
+                    The tools are in five groups named after what they work on: Ink, Cells, Paint, Numbers and See. On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom. Each tool is made for one of the three, though one change can lead to another: erase the line between two cells, and they become one.
+
+                    ## When a change seems to do nothing
+                    It often did something. A line that closes off a shape makes a new cell, but the new cell keeps the paint of the cell it was cut from, so it looks the same until you paint it. Turn on Numbers in [Layers](guide:layers) to see its number.
+
+                    When a tool can’t do something, a note at the top says why, and nothing changes. A few misses say nothing at all, such as a drag too short to count.
+
+                    ## Moving around
+                    Pinch to zoom, and drag with two fingers to move. When you’re zoomed in, a quick pinch inward fits the whole picture to the screen, and a quick pinch outward straight after takes you back.
+
+                    Tap with two fingers to undo and with three to redo. Leave them on the screen to keep going, faster the longer you hold.
+
+                    Touch and hold still for half a second to pick up a color. A loupe appears: its top half is the color under your finger, its bottom half the paint you have now. Slide to another color if you like, and lift to pick it. Your tool stays the same. This works with every tool but Bend Line, Move Edge and Move Number, where holding still is part of the drag.
+
+                    Tap with four fingers to hide the tools and see the picture alone, and again to bring them back.
+
+                    ## Apple Pencil and a keyboard
+                    The Pencil’s double tap or squeeze does what you chose for it in iPadOS Settings › Apple Pencil. If it’s set to switch to the eraser, it takes you from the Pen or Shapes to the Eraser, and from either eraser back to the Pen. With Only Draw with Apple Pencil on, your finger moves the picture and only the Pencil draws.
+
+                    On a keyboard, hold ⌘ to see the shortcuts. Most tools have a letter, such as P for the Pen and B for the Paint Brush, and [ and ] change the size of the brush and the erasers.
+
+                    The practice pictures in this guide answer the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.
+
+                    ## Keeping your changes
+                    Done keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.
+
+                    ## On the practice picture
+                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like.
+
+                    Procreate, mentioned on the Pen’s and the Bucket’s pages, is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
+                    """,
+                             comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
         case .layers:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.layers.summary", defaultValue: "What shows: the numbers, the ink, the paint and your photo.",
-                                comment: "Tool Guide, Layers: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.layers.about",
-                              defaultValue: "The picture shows as a stack of layers over the paper, from the top: Numbers, Ink, Paint and Photo. Layers change only what you see, never the picture.",
-                              comment: "Tool Guide, Layers: the paragraph about the Layers panel (its layers Numbers, Ink, Paint and Photo, top to bottom)"),
-                steps: [
-                    String(localized: "refine.guide.layers.step1", defaultValue: "Tap Layers at the top of Refine.",
-                           comment: "Tool Guide, Layers: a step of How to Use It (Layers is the button that opens the panel)"),
-                    String(localized: "refine.guide.layers.step2",
-                           defaultValue: "Turn a layer’s switch off to hide it, and on to show it. Refine opens with Ink and Paint showing, the picture as it will look finished.",
-                           comment: "Tool Guide, Layers: a step of How to Use It"),
-                    String(localized: "refine.guide.layers.step3",
-                           defaultValue: "Slide the opacity of Paint or Photo to let what’s beneath show through. Photo on, with Paint at half, is good for tracing.",
-                           comment: "Tool Guide, Layers: a step of How to Use It (Paint and Photo each have an opacity slider)"),
-                    String(localized: "refine.guide.layers.step4",
-                           defaultValue: "The layer your tool works on is marked: Ink for the Ink tools, Paint for the Cells and Paint tools, Numbers for Move Number.",
-                           comment: "Tool Guide, Layers: a step of How to Use It (Ink, Cells and Paint are groups of tools; Move Number is a tool)"),
-                ],
-                tryThis: String(localized: "refine.guide.layers.try",
-                                defaultValue: "Here the photo shows under Paint at half. In Layers, turn Photo off to see the paint alone, then on again, fade Paint further and trace the peach glow above the far hills with the Pen.",
-                                comment: "Tool Guide, Layers: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)"),
-                notes: [
-                    String(localized: "refine.guide.layers.note1", defaultValue: "Hide Paint and show Numbers to see the page as it looks before it’s painted.",
-                           comment: "Tool Guide, Layers: a note under Good to Know"),
-                    String(localized: "refine.guide.layers.note2", defaultValue: "When the photo shows more than the paint, the Eyedropper picks the photo’s color.",
-                           comment: "Tool Guide, Layers: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.layers.procreate",
-                                    defaultValue: "As in Procreate’s Layers panel, each layer can be shown or hidden. Here the four are always there, in this order, with none to add or move.",
-                                    comment: "Tool Guide, Layers: the line under In Procreate, comparing it with the drawing app Procreate (keep Procreate's own name for its Layers panel)"),
-                related: [.pen, .eyedropper, .moveNumber],
+                                comment: "Tool Guide, Layers: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.layers.text", defaultValue: """
+                    The Layers panel changes what you see while you work. The picture itself stays as it is. Tap Layers at the top of Refine to open it.
+
+                    It lists four layers, from the top: Numbers, Ink, Paint and Photo. Refine opens with Ink and Paint showing, the picture as it will look finished. Numbers starts off, so a cell you’ve just made shows no number until you turn Numbers on.
+
+                    Paint and Photo each have an opacity slider. With Photo on and Paint turned down, your photo shows through the paint, and you can trace it with the Pen.
+
+                    The Eyedropper picks the color of whichever layer shows more strongly. With Paint at half, the paint still wins, so to pick a color from the photo, turn Paint below half or off.
+
+                    The layer your tool works on is tinted in the panel. If you’ve hidden it, Refine shows it again as soon as you use the tool, so you can see what you’re changing. Select and the Eyedropper only look, so they leave the layers as you set them.
+
+                    ## On the practice picture
+                    Here the photo shows under the paint at half. Turn Photo off to see the paint alone, then on again. Bring Paint down to a quarter, and trace the peach glow above the far hills with the Pen.
+                    """,
+                             comment: "Tool Guide, Layers: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen, layers: .tracing))
-        case .procreate:
-            RefineGuidePage(
-                summary: String(localized: "refine.guide.procreate.summary", defaultValue: "What carries over from Procreate, and what’s new.",
-                                comment: "Tool Guide, Coming from Procreate (the drawing app): one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.procreate.about",
-                              defaultValue: "Most of what your hands know from Procreate works here, and a picture is built the way you’d color line art there: ink on top, paint beneath. What’s new is that colors aren’t pixels. Each is a cell with clean edges and its own number, so the picture can be painted by number.",
-                              comment: "Tool Guide, Coming from Procreate: the paragraph about what carries over from the drawing app Procreate and what differs"),
-                steps: [
-                    String(localized: "refine.guide.procreate.step1", defaultValue: "Two-finger tap: Undo. Hold two fingers down to keep undoing.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)"),
-                    String(localized: "refine.guide.procreate.step2", defaultValue: "Three-finger tap: Redo. Hold three fingers down to keep redoing.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)"),
-                    String(localized: "refine.guide.procreate.step3", defaultValue: "Pinch: zoom. Pinch in quickly and let go to fit the picture to the screen.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)"),
-                    String(localized: "refine.guide.procreate.step4",
-                           defaultValue: "Four-finger tap: full screen. Tap with four fingers again, or the button in the corner, to bring the tools back.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)"),
-                    String(localized: "refine.guide.procreate.step5", defaultValue: "Touch and hold: the Eyedropper, with its loupe, whatever tool you hold.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate; the loupe is the circle under the finger showing the color)"),
-                    String(localized: "refine.guide.procreate.step6", defaultValue: "Drag a swatch onto a cell: ColorDrop, wherever the palette shows.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; the palette shows with the Cells and Paint tools but Make Cell)"),
-                    String(localized: "refine.guide.procreate.step7", defaultValue: "On a keyboard, hold ⌘ to see the shortcuts.",
-                           comment: "Tool Guide, Coming from Procreate: a step of How to Use It (⌘ is the Command key)"),
-                ],
-                tryThis: String(localized: "refine.guide.procreate.try",
-                                defaultValue: "Touch and hold the far hills, then lift to pick up their paint, and tap the moon to pour it in. Then drag any swatch from the palette onto the cottage’s roof.",
-                                comment: "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket"),
-                notes: [
-                    String(localized: "refine.guide.procreate.note1",
-                           defaultValue: "Ink is like line art on a layer set as Reference, and Paint like the flats beneath it. The Bucket is ColorDrop with Continue Filling, and it never leaks: a cell ends exactly at its edges.",
-                           comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Reference, ColorDrop and Continue Filling are Procreate's names; flats are the flat base colors under line art)"),
-                    String(localized: "refine.guide.procreate.note2",
-                           defaultValue: "Snap moves a line’s end onto a line it lands near, closing the gaps a ColorDrop would leak through.",
-                           comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Snap is the Pen's and Shapes' switch; ColorDrop is Procreate's fill)"),
-                    String(localized: "refine.guide.procreate.note3",
-                           defaultValue: "The Pen’s Smoothing is StreamLine. The Photo layer is your reference photo, beneath everything, to trace.",
-                           comment: "Tool Guide, Coming from Procreate: a note under Good to Know (StreamLine is Procreate's name for its brushes' smoothing)"),
-                    String(localized: "refine.guide.procreate.note4",
-                           defaultValue: "Procreate has nothing like Cell Edge, Merge, Move Edge or Move Number: they shape cells and their numbers, which pixels don’t have.",
-                           comment: "Tool Guide, Coming from Procreate: a note under Good to Know (Cell Edge, Merge, Move Edge and Move Number are Refine's tools)"),
-                    // The Lamplit Table's Originality, October 28 (`factory/pieces/refine-phase3`).
-                    String(localized: "refine.guide.procreate.note5",
-                           defaultValue: "Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.",
-                           comment: "Tool Guide, Coming from Procreate: the last note under Good to Know, whose owner the trademark is (Savage Interactive Pty Ltd is a company's name: keep it as is)"),
-                ],
-                inProcreate: nil,
-                related: [.bucket, .eyedropper, .pen],
-                practice: RefinePracticeSetup(scene: .painted, tool: .bucket))
         case .tool(let tool):
             page(of: tool)
         }
@@ -229,553 +187,394 @@ nonisolated struct RefineGuidePage {
         switch tool {
         case .pen:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.pen.summary", defaultValue: "Draws lines exactly where you draw them.",
-                                comment: "Tool Guide, the Pen: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.pen.about",
-                              defaultValue: "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell, numbered by its paint. Lines leave the colors alone, unless Color from Photo is on.",
-                              comment: "Tool Guide, the Pen: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.pen.step1", defaultValue: "Draw with a finger or the Pencil.",
-                           comment: "Tool Guide, the Pen: a step of How to Use It"),
-                    String(localized: "refine.guide.pen.step2",
-                           defaultValue: "End a line on another line, or back where you began, to close a shape; sparkles mark the join. With Snap on, an end a little short of a line, or a little past it, is moved onto it.",
-                           comment: "Tool Guide, the Pen: a step of How to Use It"),
-                    String(localized: "refine.guide.pen.step3",
-                           defaultValue: "Turn on Color from Photo and every piece a line cuts off takes the photo’s color under it.",
-                           comment: "Tool Guide, the Pen: a step of How to Use It"),
-                    String(localized: "refine.guide.pen.step4",
-                           defaultValue: "Set Smoothing to steady your line: it trails your finger a little and evens out wobbles. All the way down, the Pen draws exactly as you draw.",
-                           comment: "Tool Guide, the Pen: a step of How to Use It (Smoothing is the Pen's slider)"),
-                ],
-                tryThis: String(localized: "refine.guide.pen.try",
-                                defaultValue: "Draw a cloud low in the sky, ending where you began. Then turn on Color from Photo and draw another: it takes the glow’s color there.",
-                                comment: "Tool Guide, the Pen: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.pen.note1",
-                           defaultValue: "A line that doubles back on itself can’t be drawn; a note says so.",
-                           comment: "Tool Guide, the Pen: a note under Good to Know"),
-                    String(localized: "refine.guide.pen.note2",
-                           defaultValue: "Where a line closes nothing off, it stays as ink and divides nothing.",
-                           comment: "Tool Guide, the Pen: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.pen.procreate",
-                                    defaultValue: "Like inking line art with Studio Pen. Smoothing does what StreamLine does, and a shape you close becomes a cell at once, ready for paint.",
-                                    comment: "Tool Guide, the Pen: the line under In Procreate, comparing it with the drawing app Procreate (Studio Pen is one of its brushes, StreamLine its smoothing: keep Procreate's own names)"),
-                related: [.shape, .eraser, .bendLine, .cellEdge],
+                summary: String(localized: "refine.guide.pen.summary", defaultValue: "Draws lines, and closes shapes into new cells.",
+                                comment: "Tool Guide, the Pen: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.pen.text", defaultValue: """
+                    ## Your first closed shape may look as if nothing happened
+                    Draw a loop and finish where you began, or end your line on another line. Two gold sparkles where the ends meet mean a new cell was made. It keeps the paint of the cell it was cut from, so it looks the same until you give it a paint of its own with the [Bucket](guide:bucket), or turn on Numbers in [Layers](guide:layers) to see its number.
+
+                    If you’d rather each new piece took its color from your photo, turn on Color from Photo. Every piece a line cuts off then takes the photo’s color under it. If the picture already has a paint close to that color, the piece gets that paint; if not, a new paint is added.
+
+                    A line that doesn’t close anything off stays as ink. It shows in the finished picture, but the paint on both sides of it is still one cell.
+
+                    ## Snap
+                    Snap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom, so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.
+
+                    ## Smoothing
+                    Smoothing steadies a wobbly hand: the line trails a little behind your finger and evens out as it goes. It starts at zero, where the Pen draws exactly where you draw.
+
+                    ## When a line won’t go down
+                    A note at the top of the screen says what went wrong:
+                    - “That line doubles back on itself.” The line ran back along its own path. Draw it again without retracing.
+                    - “That line couldn’t be drawn there.” Usually it came too close to other lines. Try a little farther from them, or zoom in.
+                    - “That shape is too small for a number.” The line stays, but the shape it closed has no room for a number, so it isn’t a cell. Draw it bigger, or erase the line.
+
+                    A very short stroke, a few points on the screen, is ignored, and a tap does nothing.
+
+                    If you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it.
+
+                    ## On the practice picture
+                    Draw a cloud low in the sky and end where you began, then look for the sparkles. Turn on Color from Photo and draw a second cloud: it takes the peach of the glow beneath it.
+                    """,
+                             comment: "Tool Guide, the Pen: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen))
         case .shape:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.shape.summary", defaultValue: "Draws straight lines, rectangles, ovals, curves, hexagons and stars.",
-                                comment: "Tool Guide, Shapes: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.shape.about",
-                              defaultValue: "Shapes draws a clean figure across a drag. Like the Pen, it draws ink, and a closed figure becomes a cell of its own.",
-                              comment: "Tool Guide, Shapes: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.shape.step1", defaultValue: "Pick a figure in the Shapes bar.",
-                           comment: "Tool Guide, Shapes: a step of How to Use It"),
-                    String(localized: "refine.guide.shape.step2",
-                           defaultValue: "Drag from one corner to the opposite one, or from one end of a line to the other.",
-                           comment: "Tool Guide, Shapes: a step of How to Use It"),
-                    String(localized: "refine.guide.shape.step3",
-                           defaultValue: "For a curve, drag its ends first, then drag again to bend it. A tap leaves it straight.",
-                           comment: "Tool Guide, Shapes: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.shape.try",
-                                defaultValue: "Draw a star in the sky. Then pick the curve and give the cottage a path to its door.",
-                                comment: "Tool Guide, Shapes: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.shape.note1",
-                           defaultValue: "The figure shows as it will be while your finger is down, so you can adjust it before you let go.",
-                           comment: "Tool Guide, Shapes: a note under Good to Know"),
-                    String(localized: "refine.guide.shape.note2", defaultValue: "With Snap on, a Line’s or a Curve’s ends join lines as the Pen’s do; Color from Photo works as with the Pen.",
-                           comment: "Tool Guide, Shapes: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.shape.procreate",
-                                    defaultValue: "Procreate’s QuickShape turns a stroke into a figure when you hold at its end. Here you pick the figure first and drag it out, and a closed one is a cell at once.",
-                                    comment: "Tool Guide, Shapes: the line under In Procreate, comparing it with the drawing app Procreate (QuickShape is its feature: keep Procreate's own name)"),
-                related: [.pen, .fill, .eraser],
+                summary: String(localized: "refine.guide.shape.summary", defaultValue: "Draws lines, rectangles, ovals, curves, hexagons and stars.",
+                                comment: "Tool Guide, Shapes: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.shape.text", defaultValue: """
+                    Pick a figure in the bar above the picture, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Refine opens, the bar starts on Line.
+
+                    A closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.
+
+                    A curve takes two drags. The first sets its ends, and the second bends it toward your finger. To leave it straight, tap, or pick another tool. Undo takes the curve away. While a curve waits to be bent, a line under the tools says so.
+
+                    The Snap switch works only on lines and curves: it moves their ends onto lines near them. Rectangles, ovals, hexagons and stars go exactly where you drag them, so draw them clear of other lines or well across them.
+
+                    A drag too small to make a figure does nothing.
+
+                    ## On the practice picture
+                    Draw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it.
+                    """,
+                             comment: "Tool Guide, Shapes: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .shape, shape: .star))
         case .eraser:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.eraser.summary", defaultValue: "Rubs out the ink it touches.",
-                                comment: "Tool Guide, the Eraser: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.eraser.about",
-                              defaultValue: "The Eraser takes out the ink along your stroke, cut cleanly where it stops. Where it breaks a line between two cells, they become one, in the paint of the larger.",
-                              comment: "Tool Guide, the Eraser: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.eraser.step1", defaultValue: "Rub over the lines you want gone.",
-                           comment: "Tool Guide, the Eraser: a step of How to Use It"),
-                    String(localized: "refine.guide.eraser.step2", defaultValue: "Tap to take out a small dab.",
-                           comment: "Tool Guide, the Eraser: a step of How to Use It"),
-                    String(localized: "refine.guide.eraser.step3",
-                           defaultValue: "Set Size for a wider or finer eraser. It’s measured on the screen, so zoomed in, it erases finer.",
-                           comment: "Tool Guide, the Eraser: a step of How to Use It (Size is the Eraser's slider)"),
-                ],
-                tryThis: String(localized: "refine.guide.eraser.try",
-                                defaultValue: "Zoom in on the window, then tap the middle of its cross, so its four panes become one.",
-                                comment: "Tool Guide, the Eraser: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.eraser.note1",
-                           defaultValue: "The Eraser takes ink only. To take away a dashed edge between cells, use Merge.",
-                           comment: "Tool Guide, the Eraser: a note under Good to Know"),
-                    String(localized: "refine.guide.eraser.note2",
-                           defaultValue: "When the Apple Pencil hovers over the picture, the Eraser’s size shows. Its double tap can switch to the Eraser and back, if that’s your choice in Settings › Apple Pencil.",
-                           comment: "Tool Guide, the Eraser: a note under Good to Know (Settings › Apple Pencil is iPadOS's own name)"),
-                ],
-                inProcreate: String(localized: "refine.guide.eraser.procreate",
-                                    defaultValue: "Like erasing on your line art layer, with the paint beneath kept whole: where a line opens, the cells on both sides become one.",
-                                    comment: "Tool Guide, the Eraser: the line under In Procreate, comparing it with erasing in the drawing app Procreate"),
-                related: [.smartEraser, .merge, .pen],
+                                comment: "Tool Guide, the Eraser: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.eraser.text", defaultValue: """
+                    The Eraser takes out ink, the lines you drew and the lines the app drew alike. Where it breaks a line between two cells, even by a small gap, those cells become one, with the paint and number of the larger cell. The rest of the line stays on the picture, so it can look as if nothing changed; turn on Numbers in [Layers](guide:layers) and you’ll see one number where there were two. If two cells joined that you wanted apart, undo, or close the gap again with the Pen.
+
+                    It leaves the edge of the picture alone, and the dashed edges between cells, which have no ink; to take those away, use [Merge](guide:merge). It also erases the letters the app drew where your photo had writing.
+
+                    Size, from 4 to 48 points, is measured on the screen, so the Eraser rubs finer when you zoom in. A tap rubs out one round spot the size of the eraser. With the Apple Pencil hovering over the picture, a ring shows how much it will take.
+
+                    If erasing would leave a cell without room for its number, a note at the top says “That couldn’t be erased.” and nothing changes.
+
+                    ## On the practice picture
+                    Zoom in on the cottage’s window and tap the middle of its cross. The four panes become one, and most of the cross stays.
+                    """,
+                             comment: "Tool Guide, the Eraser: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .eraser))
         case .smartEraser:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.smartEraser.summary", defaultValue: "Takes out a whole line with one tap.",
-                                comment: "Tool Guide, the Line Eraser: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.smartEraser.about",
-                              defaultValue: "Tap a line and the Line Eraser takes it out from one junction to the next, the stretch between the lines it meets. Drag it to rub out what you touch, as the Eraser does.",
-                              comment: "Tool Guide, the Line Eraser: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.smartEraser.step1", defaultValue: "Tap a line to take it out, junction to junction.",
-                           comment: "Tool Guide, the Line Eraser: a step of How to Use It"),
-                    String(localized: "refine.guide.smartEraser.step2", defaultValue: "Drag to rub out what you touch, at the Eraser’s Size.",
-                           comment: "Tool Guide, the Line Eraser: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.smartEraser.try", defaultValue: "Tap the line around the moon, then the cottage’s door.",
-                                comment: "Tool Guide, the Line Eraser: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.smartEraser.note1",
-                           defaultValue: "The stretch flashes as it goes, so you can see what the tap took.",
-                           comment: "Tool Guide, the Line Eraser: a note under Good to Know"),
-                    String(localized: "refine.guide.smartEraser.note2", defaultValue: "The cells the line kept apart become one, in the paint of the larger.",
-                           comment: "Tool Guide, the Line Eraser: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.smartEraser.procreate",
-                                    defaultValue: "Procreate has nothing like it: a line there is pixels, with no ends to stop at. Refine knows where each line meets the others, so one tap takes exactly the stretch between.",
-                                    comment: "Tool Guide, the Line Eraser: the line under In Procreate, saying what it does that the drawing app Procreate, whose lines are pixels, can't"),
-                related: [.eraser, .bendLine, .merge],
+                                comment: "Tool Guide, the Line Eraser: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.smartEraser.text", defaultValue: """
+                    Tap a line and the Line Eraser takes out the stretch you tapped. It stops where three or more lines meet. Where one line just continues into another, it keeps going, so a tap can take more than you expect. A closed loop goes whole. The stretch flashes as it goes, and Undo brings it back.
+
+                    Your tap needs to land on or close to the line; a miss brings a note: “Tap a line to erase it.” A line you’ve only just drawn can’t be erased this way until it has settled into the picture, a moment later.
+
+                    Dragging rubs out ink as the [Eraser](guide:eraser) does, at its Size. With either eraser, the cells the line kept apart become one, in the larger cell’s paint.
+
+                    ## On the practice picture
+                    Tap the line around the moon: it goes whole, and the moon takes the sky’s paint. Then tap the outline of the cottage’s door.
+                    """,
+                             comment: "Tool Guide, the Line Eraser: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .smartEraser))
         case .bendLine:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.bendLine.summary", defaultValue: "Drag a line to reshape it.",
-                                comment: "Tool Guide, Bend Line: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.bendLine.about",
-                              defaultValue: "Grab a line and drag. The spot you grabbed goes where your finger goes, and the line bends smoothly around it, less the farther along. Its ends stay where they meet other lines, and the cells on either side keep their paint and follow the new shape.",
-                              comment: "Tool Guide, Bend Line: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.bendLine.step1", defaultValue: "Put your finger on a line and drag.",
-                           comment: "Tool Guide, Bend Line: a step of How to Use It"),
-                    String(localized: "refine.guide.bendLine.step2", defaultValue: "The line shows where it will lie. Lift your finger to keep it.",
-                           comment: "Tool Guide, Bend Line: a step of How to Use It"),
-                    String(localized: "refine.guide.bendLine.step3", defaultValue: "Drag again to keep shaping.",
-                           comment: "Tool Guide, Bend Line: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.bendLine.try", defaultValue: "Pull the far hills’ line up into a mountain.",
-                                comment: "Tool Guide, Bend Line: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.bendLine.note1",
-                           defaultValue: "A line can’t bend across another line, off the picture, or so far that a cell has no room for its number; a note says so. Try a shorter drag.",
-                           comment: "Tool Guide, Bend Line: a note under Good to Know"),
-                    String(localized: "refine.guide.bendLine.note2",
-                           defaultValue: "Bend Line moves ink. To move a dashed edge between cells, use Move Edge.",
-                           comment: "Tool Guide, Bend Line: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.bendLine.procreate",
-                                    defaultValue: "Like Liquify’s Push, but only the line moves. Its ends stay on the lines they meet, and the cells beside it follow with their paint.",
-                                    comment: "Tool Guide, Bend Line: the line under In Procreate, comparing it with the drawing app Procreate (Liquify and its Push mode are Procreate's: keep its own names)"),
-                related: [.moveEdge, .pen, .smartEraser],
+                                comment: "Tool Guide, Bend Line: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.bendLine.text", defaultValue: """
+                    Put your finger on a line and drag. The spot you grabbed follows your finger, and the line curves smoothly on either side of it, bending less the farther it is from your finger. Its ends stay where they meet other lines, and the cells on both sides keep their paint and follow the new shape. You see where the line will go before you lift your finger.
+
+                    Start the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed at a junction won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”
+
+                    A line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. Then the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
+
+                    Bend Line moves the drawn lines. The dashed edges between cells, which have no ink, move with [Move Edge](guide:moveEdge). With this tool, touching and holding doesn’t pick up a color as it does with most others: you’re holding the line.
+
+                    ## On the practice picture
+                    Grab the far hills’ line near the middle and pull it up into a mountain.
+                    """,
+                             comment: "Tool Guide, Bend Line: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .bendLine))
         case .select:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell and its paint.",
-                                comment: "Tool Guide, Select: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.select.about",
-                              defaultValue: "Tap a cell to select it. It glows, and the bar below shows its paint and how many cells use it. Change Color there gives it a new color.",
-                              comment: "Tool Guide, Select: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.select.step1", defaultValue: "Tap a cell to select it.",
-                           comment: "Tool Guide, Select: a step of How to Use It"),
-                    String(localized: "refine.guide.select.step2", defaultValue: "Tap it again to let it go.",
-                           comment: "Tool Guide, Select: a step of How to Use It"),
-                    String(localized: "refine.guide.select.step3", defaultValue: "Tap Change Color to give it a color of its own.",
-                           comment: "Tool Guide, Select: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.select.try", defaultValue: "Select the sky, then the moon, and see which paint each has.",
-                                comment: "Tool Guide, Select: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.select.note1",
-                           defaultValue: "While a Cells tool is picked, dashed lines show the edges between cells that have no ink. They divide the paint, but won’t be drawn.",
-                           comment: "Tool Guide, Select: a note under Good to Know"),
-                    String(localized: "refine.guide.select.note2",
-                           defaultValue: "Change Color opens the cell’s card: give it a color of its own with Only This Area, or another of the picture’s paints.",
-                           comment: "Tool Guide, Select: a note under Good to Know (Change Color is the button in Select's bar; Only This Area is the card's color picker)"),
-                ],
-                inProcreate: String(localized: "refine.guide.select.procreate",
-                                    defaultValue: "Like Selection › Automatic, a tap picks a whole area. A cell’s edges are exact, so there’s no threshold to slide.",
-                                    comment: "Tool Guide, Select: the line under In Procreate, comparing it with the drawing app Procreate (Selection › Automatic is Procreate's: keep its own names)"),
-                related: [.cellEdge, .merge, .bucket],
+                summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell, its paint, and how many cells share it.",
+                                comment: "Tool Guide, Select: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.select.text", defaultValue: """
+                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many cells use that paint (the bar calls them areas). Tap it again, or tap off the picture, to let it go.
+
+                    While any Cells tool is picked, dashed lines show the edges between cells that have no ink. They divide the paint, but they won’t be drawn on the finished picture.
+
+                    Change Color in the bar opens the cell’s card. If other cells share its paint, the picker there is called Only This Area: it gives this cell a color of its own and leaves the others as they are. If it’s the only cell with that paint, the picker is called Color and changes the paint itself. Under Or Use a Paint, you can give the cell one of the picture’s other paints instead. If you pick a color very close to a paint the picture already has, the cell gets that paint.
+
+                    On the card of a cell that shares its paint, Show Its Other Areas takes you to [Edit Paint](guide:editPaint) with that paint picked and its cells glowing.
+
+                    If you recolor the last cell of a paint, that paint goes, and the paints after it are renumbered.
+
+                    ## On the practice picture
+                    Select the moon and open its card: it’s the only cell of its paint, so the picker is Color. Then select one of the window’s panes, which share one yellow paint: its picker is Only This Area.
+                    """,
+                             comment: "Tool Guide, Select: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
         case .cellEdge:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.cellEdge.summary", defaultValue: "Divides a cell without drawing a line.",
-                                comment: "Tool Guide, Cell Edge: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.cellEdge.about",
-                              defaultValue: "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each is a cell of its own, which you can give another paint.",
-                              comment: "Tool Guide, Cell Edge: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.cellEdge.step1",
-                           defaultValue: "Draw across a cell from one of its edges to another, or draw a loop inside it.",
-                           comment: "Tool Guide, Cell Edge: a step of How to Use It"),
-                    String(localized: "refine.guide.cellEdge.step2",
-                           defaultValue: "Give one side a new paint with the Bucket or the Paint Brush.",
-                           comment: "Tool Guide, Cell Edge: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.cellEdge.try",
-                                defaultValue: "Draw an edge across the near hill. Its two halves keep one paint, each with a number of its own.",
-                                comment: "Tool Guide, Cell Edge: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.cellEdge.note1", defaultValue: "Edges without ink show dashed while a Cells tool is picked.",
-                           comment: "Tool Guide, Cell Edge: a note under Good to Know"),
-                    String(localized: "refine.guide.cellEdge.note2", defaultValue: "To take an edge away again, Merge across it.",
-                           comment: "Tool Guide, Cell Edge: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.cellEdge.procreate",
-                                    defaultValue: "Procreate has nothing like it: there, colors meet wherever the pixels change. Here an edge can divide a color without ink, so one paint can be two cells, each with its own number.",
-                                    comment: "Tool Guide, Cell Edge: the line under In Procreate, saying what it does that the drawing app Procreate, whose colors are pixels, can't"),
-                related: [.merge, .bucket, .pen],
+                                comment: "Tool Guide, Cell Edge: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.cellEdge.text", defaultValue: """
+                    Cell Edge cuts a cell in two without drawing a line. The edge shows dashed while you work, and isn’t drawn on the finished picture. Both halves keep the paint they had, so all you’ll see is the dashed line and sparkles where the ends met; turn on Numbers in [Layers](guide:layers) to see each half’s number. Then give one half another paint with the [Bucket](guide:bucket) or the [Paint Brush](guide:brush).
+
+                    Draw from one edge of the cell to another, or draw a loop inside it. With Snap on, an end near a drawn line moves onto it, and an end that practically touches a dashed edge joins it too. If the edge closes nothing off, doubles back, or runs too close to another line, a note at the top says “That area couldn’t be divided there.”
+
+                    To take an edge away again, drag across it with [Merge](guide:merge). Tapping a half with [Make Cell](guide:fill) also joins them again, since its fill spreads across dashed edges.
+
+                    ## On the practice picture
+                    Draw a loop on the near hill, a pond, ending where you began. Then draw an edge across the far hills, from the line along their top down to the near hill’s line.
+                    """,
+                             comment: "Tool Guide, Cell Edge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .cellEdge))
         case .merge:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.merge.summary", defaultValue: "Joins the cells you drag across into one.",
-                                comment: "Tool Guide, Merge: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.merge.about",
-                              defaultValue: "Drag across neighbouring cells to make them one. The cell you start in keeps its paint and number, and the lines and edges between them go.",
-                              comment: "Tool Guide, Merge: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.merge.step1", defaultValue: "Start in the cell whose paint you want to keep.",
-                           comment: "Tool Guide, Merge: a step of How to Use It"),
-                    String(localized: "refine.guide.merge.step2", defaultValue: "Drag across the cells beside it that should join it.",
-                           comment: "Tool Guide, Merge: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.merge.try", defaultValue: "Drag across the window’s four panes to make one big pane.",
-                                comment: "Tool Guide, Merge: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.merge.note1", defaultValue: "Merge takes away ink between the cells as well as dashed edges.",
-                           comment: "Tool Guide, Merge: a note under Good to Know"),
-                    String(localized: "refine.guide.merge.note2", defaultValue: "A paint left with no cells leaves the palette.",
-                           comment: "Tool Guide, Merge: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.merge.procreate",
-                                    defaultValue: "Not Procreate’s Merge Down, which joins layers: this joins cells. With pixels you’d erase the line and paint over the seam. Here the cells become one, with one number.",
-                                    comment: "Tool Guide, Merge: the line under In Procreate, comparing it with the drawing app Procreate (Merge Down is Procreate's layer command: keep its own name)"),
-                related: [.cellEdge, .eraser, .select],
+                                comment: "Tool Guide, Merge: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.merge.text", defaultValue: """
+                    Start in the cell whose paint you want to keep, and drag across the cells that should join it. The first cell keeps its paint and number. Everything that divided the cells goes: the dashed edges and the drawn lines too. Once your finger has crossed into a second cell, the cells that will join light up.
+
+                    A cell joins only if it touches one that’s already joining. If your drag never leaves the first cell, a note at the top says “That’s already one area.” If none of the cells you crossed could join, for instance because they don’t touch, it says “Those areas couldn’t be joined.”
+
+                    A paint no cell uses any more drops out of the palette, so the paints numbered after it each move down a number.
+
+                    To divide a cell again, draw an edge with [Cell Edge](guide:cellEdge), or a line with the [Pen](guide:pen).
+
+                    ## On the practice picture
+                    Drag across the window’s four panes to make one big pane. Then drag from the sky into the moon.
+                    """,
+                             comment: "Tool Guide, Merge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .merge))
         case .moveEdge:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.moveEdge.summary", defaultValue: "Drag the border between two cells to change their shapes.",
-                                comment: "Tool Guide, Move Edge: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.moveEdge.about",
-                              defaultValue: "Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint.",
-                              comment: "Tool Guide, Move Edge: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.moveEdge.step1", defaultValue: "Put your finger on the border between two cells and drag.",
-                           comment: "Tool Guide, Move Edge: a step of How to Use It"),
-                    String(localized: "refine.guide.moveEdge.step2", defaultValue: "Lift your finger where the border should be.",
-                           comment: "Tool Guide, Move Edge: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.moveEdge.try", defaultValue: "Drag the border between the two hills down a little, between the tree and the cottage, so the far hills grow taller.",
-                                comment: "Tool Guide, Move Edge: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.moveEdge.note1",
-                           defaultValue: "As with Bend Line, a border can’t cross another or leave a cell without room for its number.",
-                           comment: "Tool Guide, Move Edge: a note under Good to Know"),
-                    String(localized: "refine.guide.moveEdge.note2",
-                           defaultValue: "Move Edge grabs the borders between cells. Bend Line grabs any line you drew.",
-                           comment: "Tool Guide, Move Edge: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.moveEdge.procreate",
-                                    defaultValue: "Procreate has no border to grab: you’d paint it again by hand. Here a border is a shape of its own, so you drag it and both cells follow.",
-                                    comment: "Tool Guide, Move Edge: the line under In Procreate, saying what it does that the drawing app Procreate, whose colors are pixels, can't"),
-                related: [.bendLine, .cellEdge],
+                                comment: "Tool Guide, Move Edge: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.moveEdge.text", defaultValue: """
+                    Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint. A border with ink takes its ink along.
+
+                    Where three or more borders meet, the meeting point stays put, and the border bends between those points. Start your drag on the border itself, within about 16 points of it and away from those meeting points. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”
+
+                    A border can’t cross another, leave the picture, or squeeze a cell until its number no longer fits. Then the note says “That line couldn’t be moved there.” Try a shorter drag.
+
+                    [Bend Line](guide:bendLine) moves inked borders too. The difference: Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.
+
+                    ## On the practice picture
+                    Grab the border between the two hills near the middle and drag it down a little, so the far hills grow taller.
+                    """,
+                             comment: "Tool Guide, Move Edge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .moveEdge))
         case .fill:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.fill.summary", defaultValue: "Makes a closed shape a cell of its own, in the photo’s color.",
-                                comment: "Tool Guide, Make Cell: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.fill.about",
-                              defaultValue: "Tap inside a shape outlined in ink and it becomes a cell of its own, painted the photo’s color where you tapped. Even a tiny shape keeps its number, smaller and read zoomed in.",
-                              comment: "Tool Guide, Make Cell: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.fill.step1", defaultValue: "Tap inside a closed shape.",
-                           comment: "Tool Guide, Make Cell: a step of How to Use It"),
-                    String(localized: "refine.guide.fill.step2", defaultValue: "Tap a cell you made to take it out again.",
-                           comment: "Tool Guide, Make Cell: a step of How to Use It (a tap on a cell Make Cell made gives its shape back to the area around it)"),
-                ],
-                tryThis: String(localized: "refine.guide.fill.try", defaultValue: "Tap inside the moon, then the roof and the door.",
-                                comment: "Tool Guide, Make Cell: Try This, something to do on the practice picture (its shapes are outlined in ink, in the paint around them)"),
-                notes: [
-                    String(localized: "refine.guide.fill.note1",
-                           defaultValue: "If the shape isn’t closed, the whole area around it becomes the new cell. Undo takes it back.",
-                           comment: "Tool Guide, Make Cell: a note under Good to Know"),
-                    String(localized: "refine.guide.fill.note2",
-                           defaultValue: "Make Cell takes the photo’s colors. To pour a paint you chose, use the Bucket.",
-                           comment: "Tool Guide, Make Cell: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.fill.procreate",
-                                    defaultValue: "Like picking a color from your photo and ColorDropping it into a closed shape, in one tap. However small, the shape becomes a cell with a number.",
-                                    comment: "Tool Guide, Make Cell: the line under In Procreate, comparing it with the drawing app Procreate (ColorDrop is Procreate's drag-to-fill: keep its own name)"),
-                related: [.bucket, .shape, .pen],
+                summary: String(localized: "refine.guide.fill.summary", defaultValue: "Turns the shape you tap into a cell, in the photo’s color.",
+                                comment: "Tool Guide, Make Cell: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.fill.text", defaultValue: """
+                    Tap inside a shape outlined in ink, and it becomes one cell, painted your photo’s color where you tapped. If that color is close to a paint the picture has, the cell takes that paint; otherwise a new paint is added. It’s the quickest way to color a shape as the photo has it, and it suits small shapes: a cell made this way may have a number about half the usual size, readable when zoomed in.
+
+                    The fill spreads out to the ink around your tap, across any dashed edges (borders between cells that have no ink), and the cells it covers become one. If there’s no ink all the way around, and the fill reaches the edge of the picture, only the cell you tapped changes color.
+
+                    To undo a fill, tap the cell it made: the shape goes back to how it was before. A tap on any other cell makes a new fill.
+
+                    The palette doesn’t show here, because the color comes from your photo. To pour a paint you’ve chosen, use the [Bucket](guide:bucket).
+
+                    If there’s no room even for the smaller number, a note at the top says “That shape couldn’t be filled.” A shape that was too small for the Pen to make a cell isn’t closed off, so a tap inside it fills the cell around it instead.
+
+                    ## On the practice picture
+                    Here the moon, the roof and the door are outlined in ink, but have the same paint as what’s around them. Tap inside the moon, then the roof and the door.
+                    """,
+                             comment: "Tool Guide, Make Cell: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .inked, tool: .fill))
         case .bucket:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.bucket.summary", defaultValue: "Pours the current paint into a cell.",
-                                comment: "Tool Guide, the Bucket: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.bucket.about",
-                              defaultValue: "Tap a cell to give it the current paint, the one marked in the palette. Only that cell changes: the other cells of its old paint keep theirs.",
-                              comment: "Tool Guide, the Bucket: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.bucket.step1",
-                           defaultValue: "Pick a paint in the palette, or tap the color wheel at its end to choose any color.",
-                           comment: "Tool Guide, the Bucket: a step of How to Use It (the palette ends with a system color picker, New Paint)"),
-                    String(localized: "refine.guide.bucket.step2", defaultValue: "Tap a cell to pour it in.",
-                           comment: "Tool Guide, the Bucket: a step of How to Use It"),
-                    String(localized: "refine.guide.bucket.step3",
-                           defaultValue: "Or drag a swatch from the palette straight onto a cell, with any tool that shows the palette.",
-                           comment: "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; the palette shows with the Cells and Paint tools but Make Cell)"),
-                ],
-                tryThis: String(localized: "refine.guide.bucket.try",
-                                defaultValue: "Choose a brick red from the color wheel and pour it into the cottage’s roof. Then pick the sky’s paint and pour it into the far hills.",
-                                comment: "Tool Guide, the Bucket: Try This, something to do on the practice picture (on it the roof and the moon are outlined only, in the paint around them)"),
-                notes: [
-                    String(localized: "refine.guide.bucket.note1",
-                           defaultValue: "A color the picture doesn’t have becomes a paint of its own the first time you pour it.",
-                           comment: "Tool Guide, the Bucket: a note under Good to Know"),
-                    String(localized: "refine.guide.bucket.note2",
-                           defaultValue: "Two cells of one paint with no ink between them become one cell.",
-                           comment: "Tool Guide, the Bucket: a note under Good to Know"),
-                    String(localized: "refine.guide.bucket.note3",
-                           defaultValue: "When the Apple Pencil hovers over the picture, the cell a tap would fill shows.",
-                           comment: "Tool Guide, the Bucket: a note under Good to Know (on iPads where the Pencil can hover)"),
-                ],
-                inProcreate: String(localized: "refine.guide.bucket.procreate",
-                                    defaultValue: "This is ColorDrop with Continue Filling, as if your ink were a Reference layer. A cell ends exactly at its edges, so there’s no threshold to set, and nothing leaks.",
-                                    comment: "Tool Guide, the Bucket: the line under In Procreate, comparing it with the drawing app Procreate (ColorDrop, Continue Filling and Reference are Procreate's: keep its own names)"),
-                related: [.brush, .eyedropper, .editPaint],
+                summary: String(localized: "refine.guide.bucket.summary", defaultValue: "Pours the current paint into one cell.",
+                                comment: "Tool Guide, the Bucket: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.bucket.text", defaultValue: """
+                    Tap a cell and it takes the current paint, the one circled in the palette. Only that cell changes, even when other cells share its old paint. To change every cell of a paint at once, use [Edit Paint](guide:editPaint).
+
+                    Pick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. One very close to a paint you have is poured as that paint.
+
+                    You don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.
+
+                    ## What else can change
+                    Pouring into the last cell of a paint retires that paint, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint with no line between them, only a dashed edge, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”
+
+                    If you color in Procreate, this is ColorDrop that never leaks: a cell ends exactly at its edges.
+
+                    ## On the practice picture
+                    Here the roof and the moon are outlined, but have the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then pick the sky’s paint and pour it into the far hills.
+                    """,
+                             comment: "Tool Guide, the Bucket: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .inked, tool: .bucket))
         case .brush:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.brush.summary", defaultValue: "Paints a stroke in the current paint.",
-                                comment: "Tool Guide, the Paint Brush: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.brush.about",
-                              defaultValue: "Brush across the picture and the stroke takes the current paint, shaping cells as it goes: it joins the cells of that paint it touches, and makes a cell of its own across the others.",
-                              comment: "Tool Guide, the Paint Brush: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.brush.step1", defaultValue: "Pick a paint in the palette.",
-                           comment: "Tool Guide, the Paint Brush: a step of How to Use It"),
-                    String(localized: "refine.guide.brush.step2", defaultValue: "Brush across the picture, or tap for a dab.",
-                           comment: "Tool Guide, the Paint Brush: a step of How to Use It"),
-                    String(localized: "refine.guide.brush.step3", defaultValue: "Set Size for a wider or finer brush, and zoom in for detail.",
-                           comment: "Tool Guide, the Paint Brush: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.brush.try",
-                                defaultValue: "Pick the cottage’s cream and paint a winding path across the near hill.",
-                                comment: "Tool Guide, the Paint Brush: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.brush.note1", defaultValue: "The ink always stays on top: the brush paints under the lines.",
-                           comment: "Tool Guide, the Paint Brush: a note under Good to Know"),
-                    String(localized: "refine.guide.brush.note2", defaultValue: "Size is measured on the screen, so a zoomed-in brush paints finer.",
-                           comment: "Tool Guide, the Paint Brush: a note under Good to Know"),
-                    String(localized: "refine.guide.brush.note3", defaultValue: "When the Apple Pencil hovers over the picture, the brush’s size shows.",
-                           comment: "Tool Guide, the Paint Brush: a note under Good to Know (on iPads where the Pencil can hover)"),
-                ],
-                inProcreate: String(localized: "refine.guide.brush.procreate",
-                                    defaultValue: "Like painting flats with a hard brush under your line art. Here the stroke becomes cells, with clean edges and numbers.",
-                                    comment: "Tool Guide, the Paint Brush: the line under In Procreate, comparing it with painting in the drawing app Procreate (flats are the flat base colors under line art)"),
-                related: [.bucket, .eyedropper, .cellEdge],
+                                comment: "Tool Guide, the Paint Brush: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.brush.text", defaultValue: """
+                    Brush across the picture, and everything under the stroke takes the current paint. The brush cuts new cells out of the cells it crosses, with dashed edges along the sides of the stroke, and any cells of the same paint it touches join up with them. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.
+
+                    Start moving straight away. A finger that rests still for half a second first is a touch and hold, and picks up a color instead.
+
+                    The Size slider sets the brush’s width on the screen, not on the picture, so zoom in to paint finer. A tap paints a single dab. With the Apple Pencil hovering over the picture, a ring shows the brush’s size.
+
+                    A piece too small for a number keeps the paint it had. If nothing under the stroke has room for a number, a note at the top says “That couldn’t be painted there.”
+
+                    ## On the practice picture
+                    Touch and hold the cottage’s wall to pick up its cream, then paint a winding path over the near hill to the door.
+                    """,
+                             comment: "Tool Guide, the Paint Brush: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .brush))
         case .eyedropper:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.eyedropper.summary", defaultValue: "Picks up a paint from the picture.",
-                                comment: "Tool Guide, the Eyedropper: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.eyedropper.about",
-                              defaultValue: "Tap a cell, or touch and hold it with any tool, and its paint becomes the current paint. Where the photo shows more than the paint, it picks the photo’s color instead, or the paint that matches it.",
-                              comment: "Tool Guide, the Eyedropper: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.eyedropper.step1", defaultValue: "Tap a cell to pick up its paint.",
-                           comment: "Tool Guide, the Eyedropper: a step of How to Use It"),
-                    String(localized: "refine.guide.eyedropper.step2",
-                           defaultValue: "With any tool, touch and hold instead. A loupe shows the color under your finger over the current paint: slide to find a color, and lift to pick it.",
-                           comment: "Tool Guide, the Eyedropper: a step of How to Use It (the loupe is the circle under the finger: the color there above, the current paint below)"),
-                    String(localized: "refine.guide.eyedropper.step3", defaultValue: "To pick from the photo, show Photo and hide Paint in Layers.",
-                           comment: "Tool Guide, the Eyedropper: a step of How to Use It (Photo and Paint are layers of the Layers panel)"),
-                    String(localized: "refine.guide.eyedropper.step4", defaultValue: "Then pour it with the Bucket or brush it with the Paint Brush.",
-                           comment: "Tool Guide, the Eyedropper: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.eyedropper.try",
-                                defaultValue: "Touch and hold the window and lift to pick up its yellow. Then show Photo, hide Paint, and pick the peach glow above the hills.",
-                                comment: "Tool Guide, the Eyedropper: Try This, something to do on the practice picture (Photo and Paint are layers of the Layers panel)"),
-                notes: [
-                    String(localized: "refine.guide.eyedropper.note1", defaultValue: "The palette marks the current paint.",
-                           comment: "Tool Guide, the Eyedropper: a note under Good to Know"),
-                    String(localized: "refine.guide.eyedropper.note2", defaultValue: "A touch and hold doesn’t change your tool, so you can hold to pick a paint, then tap with the Bucket to pour it.",
-                           comment: "Tool Guide, the Eyedropper: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.eyedropper.procreate",
-                                    defaultValue: "As in Procreate, touch and hold to sample, and the loupe shows the new color over the current one. Over the paint, it picks the cell’s paint, never one pixel’s shade.",
-                                    comment: "Tool Guide, the Eyedropper: the line under In Procreate, comparing it with the drawing app Procreate's eyedropper"),
-                related: [.bucket, .brush, .editPaint],
+                                comment: "Tool Guide, the Eyedropper: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.eyedropper.text", defaultValue: """
+                    Tap a cell, and its paint becomes the current paint, circled in the palette.
+
+                    You won’t often need to pick the Eyedropper itself. With most tools, touch and hold the picture for half a second, and a loupe appears: its top half is the color under your finger, its bottom half the current paint. Slide to the color you want and lift to pick it; your tool stays the same. Bend Line, Move Edge and Move Number are the exceptions: with them, you hold something to drag it.
+
+                    Where your photo shows through more strongly than the paint, the Eyedropper picks the photo’s color. To pick from the photo, open [Layers](guide:layers), turn Photo on, and turn Paint below half or off. A color from the photo that matches no paint shows as a + swatch after the palette, and becomes a paint once you pour it.
+
+                    ## On the practice picture
+                    Tap the window to pick up its yellow. Then, in Layers, turn Photo on and Paint off, and pick up the peach glow above the hills.
+                    """,
+                             comment: "Tool Guide, the Eyedropper: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .eyedropper))
         case .editPaint:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.editPaint.summary", defaultValue: "Changes a paint’s color everywhere it’s used.",
-                                comment: "Tool Guide, Edit Paint: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.editPaint.about",
-                              defaultValue: "Pick a paint by tapping a cell or its swatch, and give it a new color: every cell of that paint changes together. Drag one swatch onto another to make the two one paint.",
-                              comment: "Tool Guide, Edit Paint: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.editPaint.step1", defaultValue: "Tap a cell or a swatch to pick its paint. Its cells glow.",
-                           comment: "Tool Guide, Edit Paint: a step of How to Use It"),
-                    String(localized: "refine.guide.editPaint.step2", defaultValue: "Choose its new color with Color.",
-                           comment: "Tool Guide, Edit Paint: a step of How to Use It (Color is the panel's color picker)"),
-                    String(localized: "refine.guide.editPaint.step3",
-                           defaultValue: "Turn on Similar colors too to move the paints near it along with it.",
-                           comment: "Tool Guide, Edit Paint: a step of How to Use It (Similar colors too is the panel's switch, in sentence case)"),
-                    String(localized: "refine.guide.editPaint.step4", defaultValue: "Drag a swatch onto another to merge the two paints.",
-                           comment: "Tool Guide, Edit Paint: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.editPaint.try",
-                                defaultValue: "Make the near hill an autumn orange. Then drag the window’s swatch onto the moon’s.",
-                                comment: "Tool Guide, Edit Paint: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.editPaint.note1",
-                           defaultValue: "To change one cell alone, pour it with the Bucket, or select it and tap Change Color.",
-                           comment: "Tool Guide, Edit Paint: a note under Good to Know (select: with the Select tool; Change Color is the button in its bar)"),
-                ],
-                inProcreate: String(localized: "refine.guide.editPaint.procreate",
-                                    defaultValue: "In Procreate, you’d select each area of a color and adjust its Hue, Saturation and Brightness. Here a paint is one color wherever it’s used, so its cells change together.",
-                                    comment: "Tool Guide, Edit Paint: the line under In Procreate, comparing it with the drawing app Procreate (Hue, Saturation, Brightness is its adjustment: keep Procreate's own name)"),
-                related: [.looks, .bucket, .eyedropper],
+                                comment: "Tool Guide, Edit Paint: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.editPaint.text", defaultValue: """
+                    Edit Paint changes a paint, so every cell with its number changes together. Tap a cell or a swatch to pick a paint. Every cell with that paint glows. Then choose the new color in the color well beside the paint’s number.
+
+                    The Similar colors too switch is on to start with. It moves the paints near this one along with it: paints of about the same hue, or for a gray, the grays close to it. Turn it off to change one paint alone.
+
+                    Drag one swatch onto another to make them one paint, in the color of the one you drop it on. A note at the top says “Colors that came out alike share a number now.”
+
+                    To recolor a single cell, use the [Bucket](guide:bucket), or select it with [Select](guide:select) and tap Change Color.
+
+                    Choosing one of the [Looks](guide:looks), or going back to the photo’s colors there, undoes every change made here.
+
+                    ## On the practice picture
+                    Pick the near hill and turn it an autumn orange. Then drag the window’s swatch onto the moon’s.
+                    """,
+                             comment: "Tool Guide, Edit Paint: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .editPaint))
         case .looks:
             RefineGuidePage(
-                summary: String(localized: "refine.guide.looks.summary", defaultValue: "Recolors the whole picture in a mood.",
-                                comment: "Tool Guide, Looks: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.looks.about",
-                              defaultValue: "A look moves every paint together, toward a time of day or a painter’s colors, keeping the picture’s lights and darks. Photo goes back to the photo’s own colors.",
-                              comment: "Tool Guide, Looks: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.looks.step1", defaultValue: "Tap a look.", comment: "Tool Guide, Looks: a step of How to Use It"),
-                    String(localized: "refine.guide.looks.step2", defaultValue: "Slide Strength to set how far it goes.",
-                           comment: "Tool Guide, Looks: a step of How to Use It"),
-                    String(localized: "refine.guide.looks.step3", defaultValue: "Tap Photo to go back to the photo’s colors.",
-                           comment: "Tool Guide, Looks: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.looks.try", defaultValue: "Try each look on the evening, then turn its Strength down halfway.",
-                                comment: "Tool Guide, Looks: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.looks.note1", defaultValue: "One look at a time: a new look takes the place of the last.",
-                           comment: "Tool Guide, Looks: a note under Good to Know"),
-                    String(localized: "refine.guide.looks.note2", defaultValue: "Paints a look makes alike become one paint, and a note says so.",
-                           comment: "Tool Guide, Looks: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.looks.procreate",
-                                    defaultValue: "Close to a Gradient Map over the whole picture: the lights and darks stay where they are, and every paint takes on the mood.",
-                                    comment: "Tool Guide, Looks: the line under In Procreate, comparing it with the drawing app Procreate (Gradient Map is its adjustment: keep Procreate's own name)"),
-                related: [.editPaint, .bucket],
+                summary: String(localized: "refine.guide.looks.summary", defaultValue: "Recolors every paint at once, in a mood.",
+                                comment: "Tool Guide, Looks: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.looks.text", defaultValue: """
+                    A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. Photo goes back to your photo’s own colors.
+
+                    You can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while the colors you poured with the Bucket or brushed on stay. So choose your look first, then adjust single paints.
+
+                    When a look makes two paints too alike, they become one paint, and the note says “Colors that came out alike share a number now.”
+
+                    ## On the practice picture
+                    Try each look on the evening scene, then bring Golden Hour’s Strength down to half.
+                    """,
+                             comment: "Tool Guide, Looks: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .looks))
         case .moveNumber:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.moveNumber.summary", defaultValue: "Moves a number to a better spot in its cell.",
-                                comment: "Tool Guide, Move Number: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.moveNumber.about",
-                              defaultValue: "While Move Number is picked, every cell shows its number. Drag one anywhere in its own cell where it fits, and it’s sized for the room there.",
-                              comment: "Tool Guide, Move Number: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.moveNumber.step1", defaultValue: "Put your finger on a number and drag it.",
-                           comment: "Tool Guide, Move Number: a step of How to Use It"),
-                    String(localized: "refine.guide.moveNumber.step2", defaultValue: "Lift your finger where it should sit.",
-                           comment: "Tool Guide, Move Number: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.moveNumber.try", defaultValue: "Move the sky’s number up beside the moon.",
-                                comment: "Tool Guide, Move Number: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.moveNumber.note1",
-                           defaultValue: "A number stays in its own cell, off the lines and clear of the cell’s other numbers.",
-                           comment: "Tool Guide, Move Number: a note under Good to Know"),
-                    String(localized: "refine.guide.moveNumber.note2",
-                           defaultValue: "In a tight spot it gets smaller, but never smaller than a painter can read.",
-                           comment: "Tool Guide, Move Number: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.moveNumber.procreate",
-                                    defaultValue: "Procreate has no numbers: they’re what make your picture a page to paint. Put each one where a painter will find it.",
-                                    comment: "Tool Guide, Move Number: the line under In Procreate, saying what it does that the drawing app Procreate can't"),
-                related: [.select, .cellEdge],
+                                comment: "Tool Guide, Move Number: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.moveNumber.text", defaultValue: """
+                    While Move Number is picked, the numbers show, whatever Layers says. Put your finger on a number and drag it where it’s easier to spot. It’s sized for the room where you leave it, but never smaller than a painter can read. At this zoom, numbers too small to read aren’t shown; zoom in and they appear.
+
+                    A number stays inside its own cell and off the lines. If you drop it where it has no room, or outside its cell, it goes back to where it was, and a note at the top says “There’s no room for that number there.” If your drag starts away from any number, the note says “Start the drag on a number.”
+
+                    ## On the practice picture
+                    Move the sky’s number up beside the moon.
+                    """,
+                             comment: "Tool Guide, Move Number: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .moveNumber))
         case .text:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.text.summary", defaultValue: "Keeps the words in your photo readable.",
-                                comment: "Tool Guide, Writing: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.text.about",
-                              defaultValue: "When your photo has writing in it, the app finds it and draws its letters so they can be read. Writing shows the lines of words it found: tap one to turn it off or on, or drag across words it missed.",
-                              comment: "Tool Guide, Writing: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.text.step1", defaultValue: "Tap a line of words to turn it off or on.",
-                           comment: "Tool Guide, Writing: a step of How to Use It"),
-                    String(localized: "refine.guide.text.step2", defaultValue: "Drag across a line of words the app missed.",
-                           comment: "Tool Guide, Writing: a step of How to Use It"),
-                ],
-                tryThis: nil,
-                notes: [
-                    String(localized: "refine.guide.text.note1",
-                           defaultValue: "Writing changes how the picture is made, so it’s made again, with your other changes laid on it.",
-                           comment: "Tool Guide, Writing: a note under Good to Know"),
-                    String(localized: "refine.guide.text.note2",
-                           defaultValue: "There’s nothing to practice on here: the practice picture has no writing. Try it on a photo with a sign or a label.",
-                           comment: "Tool Guide, Writing: a note under Good to Know, where other pages have a practice picture"),
-                ],
-                inProcreate: String(localized: "refine.guide.text.procreate",
-                                    defaultValue: "Procreate’s Add Text sets type you write. Writing goes the other way: it keeps the words already in your photo readable.",
-                                    comment: "Tool Guide, Writing: the line under In Procreate, comparing it with the drawing app Procreate (Add Text is its command: keep Procreate's own name)"),
-                related: [.tryPainting],
-                practice: nil)
+                                comment: "Tool Guide, Writing: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.text.text", defaultValue: """
+                    When your photo has writing in it, the app looks for lines of text and draws their letters as fine pen lines, so they can still be read once the picture is painted. While you use Writing, each line it found has a box around it.
+
+                    Tap a box to turn that line off. The box turns dashed, and the writing is painted like the rest of the photo, which tends to lose the small parts of letters: an i’s dot, the inside of an O. Tap it again to turn it back on.
+
+                    If the app missed some writing, drag a box over it from one corner to the opposite one. The box has to be a little taller than a line, so a flat swipe along the words does nothing. Tap a box you drew to take it away.
+
+                    Each change remakes the picture from your photo, which takes a moment, and then redoes your other changes on top. Any that no longer fit the new picture, such as a line that ended on a line that’s gone, are left out, and a note says how many.
+
+                    ## On the practice picture
+                    The two lines written in ink on the paper and the jar’s label were found. The faint pencil line, “feed the cat”, wasn’t, so only pieces of it show. Drag a box over it, corner to corner, and wait for the picture to be remade. Then tap the box around HONEY and look at the O.
+                    """,
+                             comment: "Tool Guide, Writing: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                practice: RefinePracticeSetup(scene: .note, tool: .text))
         case .tryPainting:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.tryPainting.summary", defaultValue: "Paints the picture as it is now, to see how it feels.",
-                                comment: "Tool Guide, Try Painting: one line under its name in the guide's list and atop its page"),
-                about: String(localized: "refine.guide.tryPainting.about",
-                              defaultValue: "Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Nothing you paint there is kept.",
-                              comment: "Tool Guide, Try Painting: the paragraph about what it does"),
-                steps: [
-                    String(localized: "refine.guide.tryPainting.step1", defaultValue: "Make a change, then tap Try Painting.",
-                           comment: "Tool Guide, Try Painting: a step of How to Use It"),
-                    String(localized: "refine.guide.tryPainting.step2", defaultValue: "Paint a few cells.",
-                           comment: "Tool Guide, Try Painting: a step of How to Use It"),
-                    String(localized: "refine.guide.tryPainting.step3", defaultValue: "Close it to come back to Refine.",
-                           comment: "Tool Guide, Try Painting: a step of How to Use It"),
-                ],
-                tryThis: String(localized: "refine.guide.tryPainting.try",
-                                defaultValue: "Draw a line across the sky with the Pen, then tap Try Painting and paint both halves.",
-                                comment: "Tool Guide, Try Painting: Try This, something to do on the practice picture"),
-                notes: [
-                    String(localized: "refine.guide.tryPainting.note1",
-                           defaultValue: "Your painting starts fresh once you tap Done in Refine and start painting it.",
-                           comment: "Tool Guide, Try Painting: a note under Good to Know"),
-                ],
-                inProcreate: String(localized: "refine.guide.tryPainting.procreate",
-                                    defaultValue: "In Procreate, a picture is done when you stop drawing. Here someone will paint it by number, and Try Painting lets you be that painter first.",
-                                    comment: "Tool Guide, Try Painting: the line under In Procreate, saying what it does that the drawing app Procreate has no need of"),
-                related: [.pen, .moveNumber],
+                                comment: "Tool Guide, Try Painting: one line under its name in the guide's list (iPhone)"),
+                text: String(localized: "refine.guide.tryPainting.text", defaultValue: """
+                    Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells, then close it to come back to Refine. Nothing you paint there is kept.
+
+                    It shows the picture as it was the moment you tapped the button, so a change you made a split second before may not be in it.
+
+                    ## On the practice picture
+                    Draw a cloud in the sky with the Pen, ending where you began so it becomes a cell, then tap Try Painting and paint the cloud and the sky around it.
+                    """,
+                             comment: "Tool Guide, Try Painting: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen, teaches: .tryPainting))
         }
     }
 }
 
-/// The Tool Guide's practice picture (PaintCore's `RefinePractice`): its photo and the template
-/// of each scene, made off the main actor the first time a guide opens and kept for the launch.
+/// A page's words as the guide lays them out: paragraphs (a blank line between), headings (a
+/// line starting `## `, its paragraph on the next line) and lists (lines starting `- `), each
+/// with inline Markdown, where a link `guide:<identifier>` opens another page
+/// (`RefineGuideTopic.init(link:)`).
+nonisolated enum RefineGuideText {
+    enum Block: Equatable {
+        case heading(String)
+        case paragraph(String)
+        case list([String])
+    }
+
+    static func blocks(_ text: String) -> [Block] {
+        text.components(separatedBy: "\n\n").flatMap { chunk -> [Block] in
+            var lines = chunk.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            var blocks: [Block] = []
+            // A heading's first paragraph follows it on the next line.
+            if let first = lines.first, first.hasPrefix("## ") {
+                blocks.append(.heading(String(first.dropFirst(3))))
+                lines.removeFirst()
+            }
+            guard !lines.isEmpty else { return blocks }
+            if lines.allSatisfy({ $0.hasPrefix("- ") }) {
+                blocks.append(.list(lines.map { String($0.dropFirst(2)) }))
+            } else {
+                blocks.append(.paragraph(lines.joined(separator: " ")))
+            }
+            return blocks
+        }
+    }
+
+    /// A paragraph's inline Markdown (links, emphasis), or its text as it is if it has none that parses.
+    static func inline(_ text: String) -> AttributedString {
+        (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(text)
+    }
+}
+
+/// The Tool Guide's practice pictures: the evening (PaintCore's `RefinePractice`), its photo and
+/// the template of each scene, and Writing's note (`RefinePracticeNote`), its photo and the
+/// line-art input it is generated from; made off the main actor the first time a guide opens and
+/// kept for the launch.
 nonisolated struct RefinePracticePicture: Sendable {
-    let photo: RGBAImage
-    let preview: CGImage
+    struct Photo: Sendable {
+        let image: RGBAImage
+        let preview: CGImage
+    }
+
+    let evening: Photo
     let painted: Template
     let inked: Template
+    let note: Photo
+    let noteLineArt: LineArtInput
 
     func template(_ scene: RefinePractice.Scene) -> Template {
         switch scene {
@@ -786,14 +585,18 @@ nonisolated struct RefinePracticePicture: Sendable {
 
     @concurrent
     static func make() async throws -> RefinePracticePicture {
-        let photo = RefinePractice.photo()
-        guard let preview = PhotoLoader.cgImage(from: photo) else { throw CreateModel.CreateError.renderFailed }
+        func photo(_ image: RGBAImage) throws -> Photo {
+            guard let preview = PhotoLoader.cgImage(from: image) else { throw CreateModel.CreateError.renderFailed }
+            return Photo(image: image, preview: preview)
+        }
+        let evening = try photo(RefinePractice.photo())
         return RefinePracticePicture(
-            photo: photo, preview: preview, painted: try RefinePractice.template(.painted, photo: photo),
-            inked: try RefinePractice.template(.inked, photo: photo))
+            evening: evening, painted: try RefinePractice.template(.painted, photo: evening.image),
+            inked: try RefinePractice.template(.inked, photo: evening.image), note: try photo(RefinePracticeNote.photo()),
+            noteLineArt: RefinePracticeNote.lineArt())
     }
 
-    /// The picture, made once a launch.
+    /// The pictures, made once a launch.
     @MainActor static func shared() async throws -> RefinePracticePicture {
         if let made { return made }
         let picture = try await make()
@@ -806,9 +609,8 @@ nonisolated struct RefinePracticePicture: Sendable {
 
 /// Refine's Tool Guide (Paul, October 21: "each tool with a scenario that you can play with and
 /// reset easily to get a hang for what that tool does, and a nice description"): a page per tool
-/// of the Toolbox, in its groups, after The Basics, Layers and Coming from Procreate. A page says
-/// what the tool does, how to use it, something to try, what is good to know and what it is in
-/// Procreate (`RefineGuidePage`), beside a practice canvas
+/// of the Toolbox, in its groups, after The Basics and Layers. A page's words (`RefineGuidePage`)
+/// sit beside a practice canvas
 /// (`RefineView`'s practice mode): the real tool, alone, over a practice picture made for it
 /// (`RefinePracticePicture`), with Undo, Redo, the layers and Reset. Opened from Refine's toolbar
 /// on the tool in hand. A sidebar of the pages on iPad, a list that pushes them on iPhone.
@@ -872,8 +674,7 @@ struct RefineGuideView: View {
 }
 
 /// A page in the guide's list: the tool's symbol and name, and on iPhone what it does in a line.
-/// Beside the page (iPad) the line goes, the page opening with it (row 19's fewer words, the
-/// Lamplit Table, October 28).
+/// Beside the page (iPad) the line goes (row 19's fewer words, the Lamplit Table, October 28).
 private struct RefineGuideRow: View {
     let topic: RefineGuideTopic
     let showsSummary: Bool
@@ -903,7 +704,7 @@ struct RefineGuidePageView: View {
     let topic: RefineGuideTopic
     let picture: RefinePracticePicture?
     let failed: Bool
-    /// Opens another page (Goes Well With).
+    /// Opens another page (a link in the words).
     let open: (RefineGuideTopic) -> Void
 
     @State private var model: CreateModel?
@@ -917,39 +718,31 @@ struct RefineGuidePageView: View {
     /// (main's runs 559 and 561), as the painting screen did while it was laid out at every frame
     /// of its push (`ArtworkPaintingView.hasLanded`).
     @State private var hasLanded = false
-    @ScaledMetric(relativeTo: .subheadline) private var stepSize: CGFloat = 26
 
     private var page: RefineGuidePage { .of(topic) }
 
     var body: some View {
         GeometryReader { proxy in
-            if let practice = page.practice {
-                if proxy.size.width >= 760 {
-                    HStack(spacing: 0) {
-                        pad(practice)
-                            .padding(16)
-                        ScrollView { words }
-                            .frame(width: min(420, proxy.size.width * 0.4))
-                    }
-                } else {
-                    VStack(spacing: 0) {
-                        pad(practice)
-                            .frame(height: min(max(360, proxy.size.height * 0.58), proxy.size.height * 0.85))
-                            .padding(.horizontal, 12)
-                            .padding(.top, 8)
-                            .padding(.bottom, 4)
-                            .background(Theme.paper)
-                            // Over the words, which scrolled up showed in a strip under the panel's
-                            // edge (QA, October 28).
-                            .zIndex(1)
-                        ScrollView { words }
-                    }
+            let practice = page.practice
+            if proxy.size.width >= 760 {
+                HStack(spacing: 0) {
+                    pad(practice)
+                        .padding(16)
+                    ScrollView { words }
+                        .frame(width: min(420, proxy.size.width * 0.4))
                 }
             } else {
-                ScrollView {
-                    words
-                        .frame(maxWidth: 640, alignment: .leading)
-                        .frame(maxWidth: .infinity)
+                VStack(spacing: 0) {
+                    pad(practice)
+                        .frame(height: min(max(360, proxy.size.height * 0.58), proxy.size.height * 0.85))
+                        .padding(.horizontal, 12)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
+                        .background(Theme.paper)
+                        // Over the words, which scrolled up showed in a strip under the panel's
+                        // edge (QA, October 28).
+                        .zIndex(1)
+                    ScrollView { words }
                 }
             }
         }
@@ -960,9 +753,9 @@ struct RefineGuidePageView: View {
         .navigationTitle(Self.title(topic))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: picture != nil) {
-            guard let picture, let practice = page.practice, model == nil else { return }
+            guard let picture, model == nil else { return }
             let model = CreateModel(previewStyle: .lineArt)
-            model.practice(picture, scene: practice.scene)
+            model.practice(picture, scene: page.practice.scene)
             self.model = model
         }
     }
@@ -978,8 +771,9 @@ struct RefineGuidePageView: View {
     @ViewBuilder
     private func pad(_ practice: RefinePracticeSetup) -> some View {
         Group {
-            // Once the picture is on it: a stroke before would have nothing to lay on.
-            if hasLanded, let model, model.phase == .ready {
+            // Once the picture is on it: a stroke before would have nothing to lay on. It stays while
+            // Writing's note is made again, as Refine does over the last template.
+            if hasLanded, let model, model.preview != nil {
                 let setup = practiceLayers.map { layers in
                     var kept = practice
                     kept.layers = layers
@@ -1010,76 +804,45 @@ struct RefineGuidePageView: View {
     // MARK: Words
 
     private var words: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 14) {
             header
-            Text(page.about)
-                .fixedSize(horizontal: false, vertical: true)
-            section(Text("How to Use It")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(page.steps.enumerated()), id: \.offset) { index, step in
-                        HStack(alignment: .firstTextBaseline, spacing: 12) {
-                            Text((index + 1).formatted())
-                                .font(.display(.subheadline, weight: .semibold))
-                                .monospacedDigit()
-                                .foregroundStyle(Theme.signature)
-                                .frame(width: stepSize, height: stepSize)
-                                .background(Circle().strokeBorder(Theme.signature.opacity(0.5), lineWidth: 1.5))
-                                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
-                            Text(step)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .accessibilityElement(children: .combine)
-                    }
-                }
-            }
-            if let tryThis = page.tryThis {
-                tryCard(tryThis)
-            }
-            if !page.notes.isEmpty {
-                section(Text("Good to Know")) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(page.notes, id: \.self) { note in
+            ForEach(Array(RefineGuideText.blocks(page.text).enumerated()), id: \.offset) { _, block in
+                switch block {
+                case .heading(let heading):
+                    Text(heading)
+                        .font(.headline)
+                        .padding(.top, 10)
+                        .accessibilityAddTraits(.isHeader)
+                case .paragraph(let paragraph):
+                    Text(RefineGuideText.inline(paragraph))
+                        .fixedSize(horizontal: false, vertical: true)
+                case .list(let items):
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Image(systemName: "circle.fill")
                                     .font(.system(size: 5))
                                     .foregroundStyle(.secondary)
                                     .accessibilityHidden(true)
-                                Text(note)
+                                Text(RefineGuideText.inline(item))
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                        }
-                    }
-                    .font(.subheadline)
-                }
-            }
-            if let inProcreate = page.inProcreate {
-                section(Text("In Procreate")) {
-                    Text(inProcreate)
-                        .font(.subheadline)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            let related = page.related.map { RefineGuideTopic.tool($0) }
-                .filter { topic in RefineGuideTopic.sections.contains { $0.topics.contains(topic) } }
-            if !related.isEmpty {
-                section(Text("Goes Well With")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(related) { topic in
-                            Button {
-                                FeedbackEngine.shared.selectionChanged()
-                                open(topic)
-                            } label: {
-                                Label { Self.title(topic) } icon: { Image(systemName: Self.symbol(topic)) }
-                                    .font(.subheadline.weight(.medium))
-                            }
-                            .buttonStyle(.glass)
-                            .accessibilityIdentifier("refine-guide-related-\(topic.identifier)")
                         }
                     }
                 }
             }
         }
+        .tint(Theme.signature)
+        // A link to another page (`guide:<identifier>`) opens it here.
+        .environment(\.openURL, OpenURLAction { url in
+            guard let topic = RefineGuideTopic(link: url) else { return .systemAction }
+            FeedbackEngine.shared.selectionChanged()
+            open(topic)
+            return .handled
+        })
         .padding(20)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("refine-guide-page")
     }
 
     private var header: some View {
@@ -1090,51 +853,10 @@ struct RefineGuidePageView: View {
                 .frame(width: 52, height: 52)
                 .background(Circle().fill(Theme.signature))
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Self.title(topic)
-                    .font(.display(.title2, weight: .semibold))
-                    .accessibilityAddTraits(.isHeader)
-                Text(page.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private func section<Content: View>(_ title: Text, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            title
-                .font(.headline)
+            Self.title(topic)
+                .font(.display(.title2, weight: .semibold))
                 .accessibilityAddTraits(.isHeader)
-            content()
         }
-    }
-
-    private func tryCard(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label {
-                Text("Try This")
-            } icon: {
-                RefineSparkleShape(star: false)
-                    .fill(Theme.gold)
-                    .frame(width: 16, height: 16)
-            }
-            .font(.headline)
-            .accessibilityAddTraits(.isHeader)
-            Text(text)
-                .fixedSize(horizontal: false, vertical: true)
-            if page.practice != nil {
-                Text("Reset puts the picture back whenever you like.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface, in: .rect(cornerRadius: 18, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("refine-guide-try")
     }
 
     // MARK: Names
@@ -1143,7 +865,6 @@ struct RefineGuidePageView: View {
         switch topic {
         case .basics: Text("The Basics")
         case .layers: Text("Layers")
-        case .procreate: Text("Coming from Procreate")
         case .tool(let tool): RefineView.toolName(tool)
         }
     }
@@ -1152,7 +873,6 @@ struct RefineGuidePageView: View {
         switch topic {
         case .basics: "hand.draw"
         case .layers: "square.3.layers.3d"
-        case .procreate: "paintpalette"
         case .tool(let tool): RefineView.symbol(tool, shape: .star)
         }
     }

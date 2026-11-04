@@ -73,12 +73,13 @@ before planning app work).
   - `Refine/`: what Refine's screen makes of a gesture, shared by the app's `RefineView` and
     `pbn refine` (`RefineGestures` with `RefineScreen`: the Pen, Shapes, the Eraser, the Line
     Eraser, Fill's taps; `RefineGeometry.swift`: `PenPath`, `PenAssist`, `ShapePath`, `SnapLines`,
-    `LineChains`; `RefinePractice`, the Tool Guide's practice picture, drawn and laid as edits; `RefineCells`,
+    `LineChains`; `RefinePractice`, the Tool Guide's practice picture, drawn and laid as edits, and
+    `RefinePracticeNote`, Writing's, generated; `RefineCells`,
     the cells VoiceOver offers and its actions' edits).
     The app keeps only drawing (`PenPath.path`) and its toolbar.
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
-  `Commands.swift`, `Edit.swift` (`pbn edit`), `Refine.swift` (`pbn refine`), `Practice.swift` (`pbn practice`, the Tool Guide's picture for it), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `Commands.swift`, `Edit.swift` (`pbn edit`), `Refine.swift` (`pbn refine`), `Practice.swift` (`pbn practice`, the Tool Guide's pictures), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
   which plays after Start when Settings › The Making-of is on (off by default): `FieldShow` (its and

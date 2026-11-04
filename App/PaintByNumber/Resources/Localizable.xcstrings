@@ -57,10 +57,6 @@
       "comment" : "Refine screen, the Pen's options: a switch; when on, the parts of an area a drawn line divides take the photo's colors there",
       "extractionState" : "manual"
     },
-    "Coming from Procreate" : {
-      "comment" : "Tool Guide: the page's name about what carries over to Refine from the drawing app Procreate, and what is new",
-      "extractionState" : "manual"
-    },
     "Discard Changes" : {
       "comment" : "Refine screen, the dialog Cancel opens: the destructive button that takes back every change since Refine opened and closes it",
       "extractionState" : "manual"
@@ -161,24 +157,8 @@
       "comment" : "Refine screen, Start From: the template the app made from the photo (the default)",
       "extractionState" : "manual"
     },
-    "Goes Well With" : {
-      "comment" : "Tool Guide: heading of a page's buttons to the pages of tools that go with this one",
-      "extractionState" : "manual"
-    },
-    "Good to Know" : {
-      "comment" : "Tool Guide: heading of a page's notes",
-      "extractionState" : "manual"
-    },
     "Hexagon" : {
       "comment" : "Refine screen, Shapes: the figure a drag draws as a six-sided shape",
-      "extractionState" : "manual"
-    },
-    "How to Use It" : {
-      "comment" : "Tool Guide: heading of a page's numbered steps",
-      "extractionState" : "manual"
-    },
-    "In Procreate" : {
-      "comment" : "Tool Guide: heading of a page's line comparing the tool with the drawing app Procreate",
       "extractionState" : "manual"
     },
     "Ink" : {
@@ -381,1112 +361,32 @@
         }
       }
     },
-    "refine.guide.basics.about" : {
-      "comment" : "Tool Guide, The Basics: the paragraph that explains what a picture is made of (ink, cells, paint)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every picture is made of ink, cells and paint. Ink is the lines you see. Cells are the areas the lines and edges make, each numbered by its paint. Paint is the color of each cell. Each tool works on one of them, so drawing a line never changes a color you chose, and painting never moves a line."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.note1" : {
-      "comment" : "Tool Guide, The Basics: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing is kept until you tap Done. Cancel puts everything back as it was when Refine opened."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.note2" : {
-      "comment" : "Tool Guide, The Basics: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When a tool can’t do something, a note at the top says why, and nothing changes."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step1" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (a quick pinch: two fingers pinched in fast and let go)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pinch to zoom, and drag with two fingers to move around. A quick pinch fits the picture to the screen."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step2" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (holding two or three fingers on the picture keeps undoing or redoing)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap with two fingers to undo, and with three to redo. Hold them down to keep going. Undo and Redo are at the top too."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step3" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (a touch and hold samples the color under the finger, with any tool)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touch and hold anywhere to pick up a color with the Eyedropper, whatever tool you hold."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step4" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (Settings › Apple Pencil and Only Draw with Apple Pencil are iPadOS's own names; a squeeze is Apple Pencil Pro's)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Apple Pencil draws, and its double tap or squeeze does what you chose in Settings › Apple Pencil. If Only Draw with Apple Pencil is on there, a finger moves the picture instead."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step5" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (full screen hides the tools, bars and palette)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap with four fingers for full screen, and again to bring the tools back."
-          }
-        }
-      }
-    },
-    "refine.guide.basics.step6" : {
-      "comment" : "Tool Guide, The Basics: a step of How to Use It (⌘ is the Command key; B and E are those tools' keys, whatever the language; [ and ] are the bracket keys)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With a keyboard, hold ⌘ to see the shortcuts, such as B for the Paint Brush, E for the Eraser, and [ and ] for size."
-          }
-        }
-      }
-    },
     "refine.guide.basics.summary" : {
-      "comment" : "Tool Guide, The Basics: one line under its name in the guide's list and atop its page",
+      "comment" : "Tool Guide, The Basics: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How a picture is made, and how to move around it."
+            "value" : "How a picture is made, and the gestures every tool shares."
           }
         }
       }
     },
-    "refine.guide.basics.try" : {
-      "comment" : "Tool Guide, The Basics: Try This, something to do on the practice picture (an evening with hills, a tree, a cottage with a four-paned window and the moon; the loupe is the Eyedropper's circle under the finger)",
+    "refine.guide.basics.text" : {
+      "comment" : "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zoom in on the cottage’s window, then touch and hold one of its panes until the loupe shows its yellow. A quick pinch brings the whole picture back."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.about" : {
-      "comment" : "Tool Guide, Bend Line: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grab a line and drag. The spot you grabbed goes where your finger goes, and the line bends smoothly around it, less the farther along. Its ends stay where they meet other lines, and the cells on either side keep their paint and follow the new shape."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.note1" : {
-      "comment" : "Tool Guide, Bend Line: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A line can’t bend across another line, off the picture, or so far that a cell has no room for its number; a note says so. Try a shorter drag."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.note2" : {
-      "comment" : "Tool Guide, Bend Line: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bend Line moves ink. To move a dashed edge between cells, use Move Edge."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.procreate" : {
-      "comment" : "Tool Guide, Bend Line: the line under In Procreate, comparing it with the drawing app Procreate (Liquify and its Push mode are Procreate's: keep its own names)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like Liquify’s Push, but only the line moves. Its ends stay on the lines they meet, and the cells beside it follow with their paint."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.step1" : {
-      "comment" : "Tool Guide, Bend Line: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Put your finger on a line and drag."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.step2" : {
-      "comment" : "Tool Guide, Bend Line: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The line shows where it will lie. Lift your finger to keep it."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.step3" : {
-      "comment" : "Tool Guide, Bend Line: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag again to keep shaping."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.summary" : {
-      "comment" : "Tool Guide, Bend Line: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag a line to reshape it."
-          }
-        }
-      }
-    },
-    "refine.guide.bendLine.try" : {
-      "comment" : "Tool Guide, Bend Line: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pull the far hills’ line up into a mountain."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.about" : {
-      "comment" : "Tool Guide, the Paint Brush: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush across the picture and the stroke takes the current paint, shaping cells as it goes: it joins the cells of that paint it touches, and makes a cell of its own across the others."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.note1" : {
-      "comment" : "Tool Guide, the Paint Brush: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The ink always stays on top: the brush paints under the lines."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.note2" : {
-      "comment" : "Tool Guide, the Paint Brush: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Size is measured on the screen, so a zoomed-in brush paints finer."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.note3" : {
-      "comment" : "Tool Guide, the Paint Brush: a note under Good to Know (on iPads where the Pencil can hover)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When the Apple Pencil hovers over the picture, the brush’s size shows."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.procreate" : {
-      "comment" : "Tool Guide, the Paint Brush: the line under In Procreate, comparing it with painting in the drawing app Procreate (flats are the flat base colors under line art)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like painting flats with a hard brush under your line art. Here the stroke becomes cells, with clean edges and numbers."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.step1" : {
-      "comment" : "Tool Guide, the Paint Brush: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a paint in the palette."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.step2" : {
-      "comment" : "Tool Guide, the Paint Brush: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush across the picture, or tap for a dab."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.step3" : {
-      "comment" : "Tool Guide, the Paint Brush: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Size for a wider or finer brush, and zoom in for detail."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.summary" : {
-      "comment" : "Tool Guide, the Paint Brush: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paints a stroke in the current paint."
-          }
-        }
-      }
-    },
-    "refine.guide.brush.try" : {
-      "comment" : "Tool Guide, the Paint Brush: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick the cottage’s cream and paint a winding path across the near hill."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.about" : {
-      "comment" : "Tool Guide, the Bucket: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell to give it the current paint, the one marked in the palette. Only that cell changes: the other cells of its old paint keep theirs."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.note1" : {
-      "comment" : "Tool Guide, the Bucket: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A color the picture doesn’t have becomes a paint of its own the first time you pour it."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.note2" : {
-      "comment" : "Tool Guide, the Bucket: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Two cells of one paint with no ink between them become one cell."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.note3" : {
-      "comment" : "Tool Guide, the Bucket: a note under Good to Know (on iPads where the Pencil can hover)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When the Apple Pencil hovers over the picture, the cell a tap would fill shows."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.procreate" : {
-      "comment" : "Tool Guide, the Bucket: the line under In Procreate, comparing it with the drawing app Procreate (ColorDrop, Continue Filling and Reference are Procreate's: keep its own names)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This is ColorDrop with Continue Filling, as if your ink were a Reference layer. A cell ends exactly at its edges, so there’s no threshold to set, and nothing leaks."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.step1" : {
-      "comment" : "Tool Guide, the Bucket: a step of How to Use It (the palette ends with a system color picker, New Paint)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a paint in the palette, or tap the color wheel at its end to choose any color."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.step2" : {
-      "comment" : "Tool Guide, the Bucket: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell to pour it in."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.step3" : {
-      "comment" : "Tool Guide, the Bucket: a step of How to Use It (a swatch dropped on a cell pours its paint there; the palette shows with the Cells and Paint tools but Make Cell)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Or drag a swatch from the palette straight onto a cell, with any tool that shows the palette."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.summary" : {
-      "comment" : "Tool Guide, the Bucket: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pours the current paint into a cell."
-          }
-        }
-      }
-    },
-    "refine.guide.bucket.try" : {
-      "comment" : "Tool Guide, the Bucket: Try This, something to do on the practice picture (on it the roof and the moon are outlined only, in the paint around them)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a brick red from the color wheel and pour it into the cottage’s roof. Then pick the sky’s paint and pour it into the far hills."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.about" : {
-      "comment" : "Tool Guide, Cell Edge: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw across a cell to divide it in two. The new edge has no ink, so it won’t show as a line in the finished picture, and both cells keep their paint. Each is a cell of its own, which you can give another paint."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.note1" : {
-      "comment" : "Tool Guide, Cell Edge: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edges without ink show dashed while a Cells tool is picked."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.note2" : {
-      "comment" : "Tool Guide, Cell Edge: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To take an edge away again, Merge across it."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.procreate" : {
-      "comment" : "Tool Guide, Cell Edge: the line under In Procreate, saying what it does that the drawing app Procreate, whose colors are pixels, can't",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate has nothing like it: there, colors meet wherever the pixels change. Here an edge can divide a color without ink, so one paint can be two cells, each with its own number."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.step1" : {
-      "comment" : "Tool Guide, Cell Edge: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw across a cell from one of its edges to another, or draw a loop inside it."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.step2" : {
-      "comment" : "Tool Guide, Cell Edge: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Give one side a new paint with the Bucket or the Paint Brush."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.summary" : {
-      "comment" : "Tool Guide, Cell Edge: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Divides a cell without drawing a line."
-          }
-        }
-      }
-    },
-    "refine.guide.cellEdge.try" : {
-      "comment" : "Tool Guide, Cell Edge: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw an edge across the near hill. Its two halves keep one paint, each with a number of its own."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.about" : {
-      "comment" : "Tool Guide, Edit Paint: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a paint by tapping a cell or its swatch, and give it a new color: every cell of that paint changes together. Drag one swatch onto another to make the two one paint."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.note1" : {
-      "comment" : "Tool Guide, Edit Paint: a note under Good to Know (select: with the Select tool; Change Color is the button in its bar)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To change one cell alone, pour it with the Bucket, or select it and tap Change Color."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.procreate" : {
-      "comment" : "Tool Guide, Edit Paint: the line under In Procreate, comparing it with the drawing app Procreate (Hue, Saturation, Brightness is its adjustment: keep Procreate's own name)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Procreate, you’d select each area of a color and adjust its Hue, Saturation and Brightness. Here a paint is one color wherever it’s used, so its cells change together."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.step1" : {
-      "comment" : "Tool Guide, Edit Paint: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell or a swatch to pick its paint. Its cells glow."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.step2" : {
-      "comment" : "Tool Guide, Edit Paint: a step of How to Use It (Color is the panel's color picker)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose its new color with Color."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.step3" : {
-      "comment" : "Tool Guide, Edit Paint: a step of How to Use It (Similar colors too is the panel's switch, in sentence case)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn on Similar colors too to move the paints near it along with it."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.step4" : {
-      "comment" : "Tool Guide, Edit Paint: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag a swatch onto another to merge the two paints."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.summary" : {
-      "comment" : "Tool Guide, Edit Paint: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changes a paint’s color everywhere it’s used."
-          }
-        }
-      }
-    },
-    "refine.guide.editPaint.try" : {
-      "comment" : "Tool Guide, Edit Paint: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make the near hill an autumn orange. Then drag the window’s swatch onto the moon’s."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.about" : {
-      "comment" : "Tool Guide, the Eraser: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Eraser takes out the ink along your stroke, cut cleanly where it stops. Where it breaks a line between two cells, they become one, in the paint of the larger."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.note1" : {
-      "comment" : "Tool Guide, the Eraser: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Eraser takes ink only. To take away a dashed edge between cells, use Merge."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.note2" : {
-      "comment" : "Tool Guide, the Eraser: a note under Good to Know (Settings › Apple Pencil is iPadOS's own name)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When the Apple Pencil hovers over the picture, the Eraser’s size shows. Its double tap can switch to the Eraser and back, if that’s your choice in Settings › Apple Pencil."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.procreate" : {
-      "comment" : "Tool Guide, the Eraser: the line under In Procreate, comparing it with erasing in the drawing app Procreate",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like erasing on your line art layer, with the paint beneath kept whole: where a line opens, the cells on both sides become one."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.step1" : {
-      "comment" : "Tool Guide, the Eraser: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rub over the lines you want gone."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.step2" : {
-      "comment" : "Tool Guide, the Eraser: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap to take out a small dab."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.step3" : {
-      "comment" : "Tool Guide, the Eraser: a step of How to Use It (Size is the Eraser's slider)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Size for a wider or finer eraser. It’s measured on the screen, so zoomed in, it erases finer."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.summary" : {
-      "comment" : "Tool Guide, the Eraser: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rubs out the ink it touches."
-          }
-        }
-      }
-    },
-    "refine.guide.eraser.try" : {
-      "comment" : "Tool Guide, the Eraser: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoom in on the window, then tap the middle of its cross, so its four panes become one."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.about" : {
-      "comment" : "Tool Guide, the Eyedropper: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell, or touch and hold it with any tool, and its paint becomes the current paint. Where the photo shows more than the paint, it picks the photo’s color instead, or the paint that matches it."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.note1" : {
-      "comment" : "Tool Guide, the Eyedropper: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The palette marks the current paint."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.note2" : {
-      "comment" : "Tool Guide, the Eyedropper: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A touch and hold doesn’t change your tool, so you can hold to pick a paint, then tap with the Bucket to pour it."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.procreate" : {
-      "comment" : "Tool Guide, the Eyedropper: the line under In Procreate, comparing it with the drawing app Procreate's eyedropper",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As in Procreate, touch and hold to sample, and the loupe shows the new color over the current one. Over the paint, it picks the cell’s paint, never one pixel’s shade."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.step1" : {
-      "comment" : "Tool Guide, the Eyedropper: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell to pick up its paint."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.step2" : {
-      "comment" : "Tool Guide, the Eyedropper: a step of How to Use It (the loupe is the circle under the finger: the color there above, the current paint below)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With any tool, touch and hold instead. A loupe shows the color under your finger over the current paint: slide to find a color, and lift to pick it."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.step3" : {
-      "comment" : "Tool Guide, the Eyedropper: a step of How to Use It (Photo and Paint are layers of the Layers panel)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To pick from the photo, show Photo and hide Paint in Layers."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.step4" : {
-      "comment" : "Tool Guide, the Eyedropper: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Then pour it with the Bucket or brush it with the Paint Brush."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.summary" : {
-      "comment" : "Tool Guide, the Eyedropper: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Picks up a paint from the picture."
-          }
-        }
-      }
-    },
-    "refine.guide.eyedropper.try" : {
-      "comment" : "Tool Guide, the Eyedropper: Try This, something to do on the practice picture (Photo and Paint are layers of the Layers panel)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touch and hold the window and lift to pick up its yellow. Then show Photo, hide Paint, and pick the peach glow above the hills."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.about" : {
-      "comment" : "Tool Guide, Make Cell: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap inside a shape outlined in ink and it becomes a cell of its own, painted the photo’s color where you tapped. Even a tiny shape keeps its number, smaller and read zoomed in."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.note1" : {
-      "comment" : "Tool Guide, Make Cell: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If the shape isn’t closed, the whole area around it becomes the new cell. Undo takes it back."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.note2" : {
-      "comment" : "Tool Guide, Make Cell: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make Cell takes the photo’s colors. To pour a paint you chose, use the Bucket."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.procreate" : {
-      "comment" : "Tool Guide, Make Cell: the line under In Procreate, comparing it with the drawing app Procreate (ColorDrop is Procreate's drag-to-fill: keep its own name)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like picking a color from your photo and ColorDropping it into a closed shape, in one tap. However small, the shape becomes a cell with a number."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.step1" : {
-      "comment" : "Tool Guide, Make Cell: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap inside a closed shape."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.step2" : {
-      "comment" : "Tool Guide, Make Cell: a step of How to Use It (a tap on a cell Make Cell made gives its shape back to the area around it)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell you made to take it out again."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.summary" : {
-      "comment" : "Tool Guide, Make Cell: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Makes a closed shape a cell of its own, in the photo’s color."
-          }
-        }
-      }
-    },
-    "refine.guide.fill.try" : {
-      "comment" : "Tool Guide, Make Cell: Try This, something to do on the practice picture (its shapes are outlined in ink, in the paint around them)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap inside the moon, then the roof and the door."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.about" : {
-      "comment" : "Tool Guide, Layers: the paragraph about the Layers panel (its layers Numbers, Ink, Paint and Photo, top to bottom)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The picture shows as a stack of layers over the paper, from the top: Numbers, Ink, Paint and Photo. Layers change only what you see, never the picture."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.note1" : {
-      "comment" : "Tool Guide, Layers: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide Paint and show Numbers to see the page as it looks before it’s painted."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.note2" : {
-      "comment" : "Tool Guide, Layers: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When the photo shows more than the paint, the Eyedropper picks the photo’s color."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.procreate" : {
-      "comment" : "Tool Guide, Layers: the line under In Procreate, comparing it with the drawing app Procreate (keep Procreate's own name for its Layers panel)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As in Procreate’s Layers panel, each layer can be shown or hidden. Here the four are always there, in this order, with none to add or move."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.step1" : {
-      "comment" : "Tool Guide, Layers: a step of How to Use It (Layers is the button that opens the panel)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap Layers at the top of Refine."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.step2" : {
-      "comment" : "Tool Guide, Layers: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn a layer’s switch off to hide it, and on to show it. Refine opens with Ink and Paint showing, the picture as it will look finished."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.step3" : {
-      "comment" : "Tool Guide, Layers: a step of How to Use It (Paint and Photo each have an opacity slider)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Slide the opacity of Paint or Photo to let what’s beneath show through. Photo on, with Paint at half, is good for tracing."
-          }
-        }
-      }
-    },
-    "refine.guide.layers.step4" : {
-      "comment" : "Tool Guide, Layers: a step of How to Use It (Ink, Cells and Paint are groups of tools; Move Number is a tool)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The layer your tool works on is marked: Ink for the Ink tools, Paint for the Cells and Paint tools, Numbers for Move Number."
+            "value" : "A picture in Refine is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Refine’s own messages say area for a cell.\n\nThe tools are in five groups named after what they work on: Ink, Cells, Paint, Numbers and See. On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom. Each tool is made for one of the three, though one change can lead to another: erase the line between two cells, and they become one.\n\n## When a change seems to do nothing\nIt often did something. A line that closes off a shape makes a new cell, but the new cell keeps the paint of the cell it was cut from, so it looks the same until you paint it. Turn on Numbers in [Layers](guide:layers) to see its number.\n\nWhen a tool can’t do something, a note at the top says why, and nothing changes. A few misses say nothing at all, such as a drag too short to count.\n\n## Moving around\nPinch to zoom, and drag with two fingers to move. When you’re zoomed in, a quick pinch inward fits the whole picture to the screen, and a quick pinch outward straight after takes you back.\n\nTap with two fingers to undo and with three to redo. Leave them on the screen to keep going, faster the longer you hold.\n\nTouch and hold still for half a second to pick up a color. A loupe appears: its top half is the color under your finger, its bottom half the paint you have now. Slide to another color if you like, and lift to pick it. Your tool stays the same. This works with every tool but Bend Line, Move Edge and Move Number, where holding still is part of the drag.\n\nTap with four fingers to hide the tools and see the picture alone, and again to bring them back.\n\n## Apple Pencil and a keyboard\nThe Pencil’s double tap or squeeze does what you chose for it in iPadOS Settings › Apple Pencil. If it’s set to switch to the eraser, it takes you from the Pen or Shapes to the Eraser, and from either eraser back to the Pen. With Only Draw with Apple Pencil on, your finger moves the picture and only the Pencil draws.\n\nOn a keyboard, hold ⌘ to see the shortcuts. Most tools have a letter, such as P for the Pen and B for the Paint Brush, and [ and ] change the size of the brush and the erasers.\n\nThe practice pictures in this guide answer the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.\n\n## Keeping your changes\nDone keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.\n\n## On the practice picture\nZoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like.\n\nProcreate, mentioned on the Pen’s and the Bucket’s pages, is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it."
           }
         }
       }
     },
     "refine.guide.layers.summary" : {
-      "comment" : "Tool Guide, Layers: one line under its name in the guide's list and atop its page",
+      "comment" : "Tool Guide, Layers: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1497,200 +397,188 @@
         }
       }
     },
-    "refine.guide.layers.try" : {
-      "comment" : "Tool Guide, Layers: Try This, something to do on the practice picture (the glow is in the photo, not a cell of its own)",
+    "refine.guide.layers.text" : {
+      "comment" : "Tool Guide, Layers: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Here the photo shows under Paint at half. In Layers, turn Photo off to see the paint alone, then on again, fade Paint further and trace the peach glow above the far hills with the Pen."
+            "value" : "The Layers panel changes what you see while you work. The picture itself stays as it is. Tap Layers at the top of Refine to open it.\n\nIt lists four layers, from the top: Numbers, Ink, Paint and Photo. Refine opens with Ink and Paint showing, the picture as it will look finished. Numbers starts off, so a cell you’ve just made shows no number until you turn Numbers on.\n\nPaint and Photo each have an opacity slider. With Photo on and Paint turned down, your photo shows through the paint, and you can trace it with the Pen.\n\nThe Eyedropper picks the color of whichever layer shows more strongly. With Paint at half, the paint still wins, so to pick a color from the photo, turn Paint below half or off.\n\nThe layer your tool works on is tinted in the panel. If you’ve hidden it, Refine shows it again as soon as you use the tool, so you can see what you’re changing. Select and the Eyedropper only look, so they leave the layers as you set them.\n\n## On the practice picture\nHere the photo shows under the paint at half. Turn Photo off to see the paint alone, then on again. Bring Paint down to a quarter, and trace the peach glow above the far hills with the Pen."
           }
         }
       }
     },
-    "refine.guide.looks.about" : {
-      "comment" : "Tool Guide, Looks: the paragraph about what it does",
+    "refine.guide.pen.summary" : {
+      "comment" : "Tool Guide, the Pen: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A look moves every paint together, toward a time of day or a painter’s colors, keeping the picture’s lights and darks. Photo goes back to the photo’s own colors."
+            "value" : "Draws lines, and closes shapes into new cells."
           }
         }
       }
     },
-    "refine.guide.looks.note1" : {
-      "comment" : "Tool Guide, Looks: a note under Good to Know",
+    "refine.guide.pen.text" : {
+      "comment" : "Tool Guide, the Pen: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "One look at a time: a new look takes the place of the last."
+            "value" : "## Your first closed shape may look as if nothing happened\nDraw a loop and finish where you began, or end your line on another line. Two gold sparkles where the ends meet mean a new cell was made. It keeps the paint of the cell it was cut from, so it looks the same until you give it a paint of its own with the [Bucket](guide:bucket), or turn on Numbers in [Layers](guide:layers) to see its number.\n\nIf you’d rather each new piece took its color from your photo, turn on Color from Photo. Every piece a line cuts off then takes the photo’s color under it. If the picture already has a paint close to that color, the piece gets that paint; if not, a new paint is added.\n\nA line that doesn’t close anything off stays as ink. It shows in the finished picture, but the paint on both sides of it is still one cell.\n\n## Snap\nSnap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom, so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.\n\n## Smoothing\nSmoothing steadies a wobbly hand: the line trails a little behind your finger and evens out as it goes. It starts at zero, where the Pen draws exactly where you draw.\n\n## When a line won’t go down\nA note at the top of the screen says what went wrong:\n- “That line doubles back on itself.” The line ran back along its own path. Draw it again without retracing.\n- “That line couldn’t be drawn there.” Usually it came too close to other lines. Try a little farther from them, or zoom in.\n- “That shape is too small for a number.” The line stays, but the shape it closed has no room for a number, so it isn’t a cell. Draw it bigger, or erase the line.\n\nA very short stroke, a few points on the screen, is ignored, and a tap does nothing.\n\nIf you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it.\n\n## On the practice picture\nDraw a cloud low in the sky and end where you began, then look for the sparkles. Turn on Color from Photo and draw a second cloud: it takes the peach of the glow beneath it."
           }
         }
       }
     },
-    "refine.guide.looks.note2" : {
-      "comment" : "Tool Guide, Looks: a note under Good to Know",
+    "refine.guide.shape.summary" : {
+      "comment" : "Tool Guide, Shapes: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paints a look makes alike become one paint, and a note says so."
+            "value" : "Draws lines, rectangles, ovals, curves, hexagons and stars."
           }
         }
       }
     },
-    "refine.guide.looks.procreate" : {
-      "comment" : "Tool Guide, Looks: the line under In Procreate, comparing it with the drawing app Procreate (Gradient Map is its adjustment: keep Procreate's own name)",
+    "refine.guide.shape.text" : {
+      "comment" : "Tool Guide, Shapes: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close to a Gradient Map over the whole picture: the lights and darks stay where they are, and every paint takes on the mood."
+            "value" : "Pick a figure in the bar above the picture, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Refine opens, the bar starts on Line.\n\nA closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.\n\nA curve takes two drags. The first sets its ends, and the second bends it toward your finger. To leave it straight, tap, or pick another tool. Undo takes the curve away. While a curve waits to be bent, a line under the tools says so.\n\nThe Snap switch works only on lines and curves: it moves their ends onto lines near them. Rectangles, ovals, hexagons and stars go exactly where you drag them, so draw them clear of other lines or well across them.\n\nA drag too small to make a figure does nothing.\n\n## On the practice picture\nDraw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it."
           }
         }
       }
     },
-    "refine.guide.looks.step1" : {
-      "comment" : "Tool Guide, Looks: a step of How to Use It",
+    "refine.guide.eraser.summary" : {
+      "comment" : "Tool Guide, the Eraser: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap a look."
+            "value" : "Rubs out the ink it touches."
           }
         }
       }
     },
-    "refine.guide.looks.step2" : {
-      "comment" : "Tool Guide, Looks: a step of How to Use It",
+    "refine.guide.eraser.text" : {
+      "comment" : "Tool Guide, the Eraser: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slide Strength to set how far it goes."
+            "value" : "The Eraser takes out ink, the lines you drew and the lines the app drew alike. Where it breaks a line between two cells, even by a small gap, those cells become one, with the paint and number of the larger cell. The rest of the line stays on the picture, so it can look as if nothing changed; turn on Numbers in [Layers](guide:layers) and you’ll see one number where there were two. If two cells joined that you wanted apart, undo, or close the gap again with the Pen.\n\nIt leaves the edge of the picture alone, and the dashed edges between cells, which have no ink; to take those away, use [Merge](guide:merge). It also erases the letters the app drew where your photo had writing.\n\nSize, from 4 to 48 points, is measured on the screen, so the Eraser rubs finer when you zoom in. A tap rubs out one round spot the size of the eraser. With the Apple Pencil hovering over the picture, a ring shows how much it will take.\n\nIf erasing would leave a cell without room for its number, a note at the top says “That couldn’t be erased.” and nothing changes.\n\n## On the practice picture\nZoom in on the cottage’s window and tap the middle of its cross. The four panes become one, and most of the cross stays."
           }
         }
       }
     },
-    "refine.guide.looks.step3" : {
-      "comment" : "Tool Guide, Looks: a step of How to Use It",
+    "refine.guide.smartEraser.summary" : {
+      "comment" : "Tool Guide, the Line Eraser: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap Photo to go back to the photo’s colors."
+            "value" : "Takes out a whole line with one tap."
           }
         }
       }
     },
-    "refine.guide.looks.summary" : {
-      "comment" : "Tool Guide, Looks: one line under its name in the guide's list and atop its page",
+    "refine.guide.smartEraser.text" : {
+      "comment" : "Tool Guide, the Line Eraser: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recolors the whole picture in a mood."
+            "value" : "Tap a line and the Line Eraser takes out the stretch you tapped. It stops where three or more lines meet. Where one line just continues into another, it keeps going, so a tap can take more than you expect. A closed loop goes whole. The stretch flashes as it goes, and Undo brings it back.\n\nYour tap needs to land on or close to the line; a miss brings a note: “Tap a line to erase it.” A line you’ve only just drawn can’t be erased this way until it has settled into the picture, a moment later.\n\nDragging rubs out ink as the [Eraser](guide:eraser) does, at its Size. With either eraser, the cells the line kept apart become one, in the larger cell’s paint.\n\n## On the practice picture\nTap the line around the moon: it goes whole, and the moon takes the sky’s paint. Then tap the outline of the cottage’s door."
           }
         }
       }
     },
-    "refine.guide.looks.try" : {
-      "comment" : "Tool Guide, Looks: Try This, something to do on the practice picture",
+    "refine.guide.bendLine.summary" : {
+      "comment" : "Tool Guide, Bend Line: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Try each look on the evening, then turn its Strength down halfway."
+            "value" : "Drag a line to reshape it."
           }
         }
       }
     },
-    "refine.guide.merge.about" : {
-      "comment" : "Tool Guide, Merge: the paragraph about what it does",
+    "refine.guide.bendLine.text" : {
+      "comment" : "Tool Guide, Bend Line: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag across neighbouring cells to make them one. The cell you start in keeps its paint and number, and the lines and edges between them go."
+            "value" : "Put your finger on a line and drag. The spot you grabbed follows your finger, and the line curves smoothly on either side of it, bending less the farther it is from your finger. Its ends stay where they meet other lines, and the cells on both sides keep their paint and follow the new shape. You see where the line will go before you lift your finger.\n\nStart the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed at a junction won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”\n\nA line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. Then the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.\n\nBend Line moves the drawn lines. The dashed edges between cells, which have no ink, move with [Move Edge](guide:moveEdge). With this tool, touching and holding doesn’t pick up a color as it does with most others: you’re holding the line.\n\n## On the practice picture\nGrab the far hills’ line near the middle and pull it up into a mountain."
           }
         }
       }
     },
-    "refine.guide.merge.note1" : {
-      "comment" : "Tool Guide, Merge: a note under Good to Know",
+    "refine.guide.select.summary" : {
+      "comment" : "Tool Guide, Select: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merge takes away ink between the cells as well as dashed edges."
+            "value" : "Shows a cell, its paint, and how many cells share it."
           }
         }
       }
     },
-    "refine.guide.merge.note2" : {
-      "comment" : "Tool Guide, Merge: a note under Good to Know",
+    "refine.guide.select.text" : {
+      "comment" : "Tool Guide, Select: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A paint left with no cells leaves the palette."
+            "value" : "Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many cells use that paint (the bar calls them areas). Tap it again, or tap off the picture, to let it go.\n\nWhile any Cells tool is picked, dashed lines show the edges between cells that have no ink. They divide the paint, but they won’t be drawn on the finished picture.\n\nChange Color in the bar opens the cell’s card. If other cells share its paint, the picker there is called Only This Area: it gives this cell a color of its own and leaves the others as they are. If it’s the only cell with that paint, the picker is called Color and changes the paint itself. Under Or Use a Paint, you can give the cell one of the picture’s other paints instead. If you pick a color very close to a paint the picture already has, the cell gets that paint.\n\nOn the card of a cell that shares its paint, Show Its Other Areas takes you to [Edit Paint](guide:editPaint) with that paint picked and its cells glowing.\n\nIf you recolor the last cell of a paint, that paint goes, and the paints after it are renumbered.\n\n## On the practice picture\nSelect the moon and open its card: it’s the only cell of its paint, so the picker is Color. Then select one of the window’s panes, which share one yellow paint: its picker is Only This Area."
           }
         }
       }
     },
-    "refine.guide.merge.procreate" : {
-      "comment" : "Tool Guide, Merge: the line under In Procreate, comparing it with the drawing app Procreate (Merge Down is Procreate's layer command: keep its own name)",
+    "refine.guide.cellEdge.summary" : {
+      "comment" : "Tool Guide, Cell Edge: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not Procreate’s Merge Down, which joins layers: this joins cells. With pixels you’d erase the line and paint over the seam. Here the cells become one, with one number."
+            "value" : "Divides a cell without drawing a line."
           }
         }
       }
     },
-    "refine.guide.merge.step1" : {
-      "comment" : "Tool Guide, Merge: a step of How to Use It",
+    "refine.guide.cellEdge.text" : {
+      "comment" : "Tool Guide, Cell Edge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start in the cell whose paint you want to keep."
-          }
-        }
-      }
-    },
-    "refine.guide.merge.step2" : {
-      "comment" : "Tool Guide, Merge: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag across the cells beside it that should join it."
+            "value" : "Cell Edge cuts a cell in two without drawing a line. The edge shows dashed while you work, and isn’t drawn on the finished picture. Both halves keep the paint they had, so all you’ll see is the dashed line and sparkles where the ends met; turn on Numbers in [Layers](guide:layers) to see each half’s number. Then give one half another paint with the [Bucket](guide:bucket) or the [Paint Brush](guide:brush).\n\nDraw from one edge of the cell to another, or draw a loop inside it. With Snap on, an end near a drawn line moves onto it, and an end that practically touches a dashed edge joins it too. If the edge closes nothing off, doubles back, or runs too close to another line, a note at the top says “That area couldn’t be divided there.”\n\nTo take an edge away again, drag across it with [Merge](guide:merge). Tapping a half with [Make Cell](guide:fill) also joins them again, since its fill spreads across dashed edges.\n\n## On the practice picture\nDraw a loop on the near hill, a pond, ending where you began. Then draw an edge across the far hills, from the line along their top down to the near hill’s line."
           }
         }
       }
     },
     "refine.guide.merge.summary" : {
-      "comment" : "Tool Guide, Merge: one line under its name in the guide's list and atop its page",
+      "comment" : "Tool Guide, Merge: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1701,92 +589,20 @@
         }
       }
     },
-    "refine.guide.merge.try" : {
-      "comment" : "Tool Guide, Merge: Try This, something to do on the practice picture",
+    "refine.guide.merge.text" : {
+      "comment" : "Tool Guide, Merge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag across the window’s four panes to make one big pane."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.about" : {
-      "comment" : "Tool Guide, Move Edge: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.note1" : {
-      "comment" : "Tool Guide, Move Edge: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As with Bend Line, a border can’t cross another or leave a cell without room for its number."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.note2" : {
-      "comment" : "Tool Guide, Move Edge: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move Edge grabs the borders between cells. Bend Line grabs any line you drew."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.procreate" : {
-      "comment" : "Tool Guide, Move Edge: the line under In Procreate, saying what it does that the drawing app Procreate, whose colors are pixels, can't",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate has no border to grab: you’d paint it again by hand. Here a border is a shape of its own, so you drag it and both cells follow."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.step1" : {
-      "comment" : "Tool Guide, Move Edge: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Put your finger on the border between two cells and drag."
-          }
-        }
-      }
-    },
-    "refine.guide.moveEdge.step2" : {
-      "comment" : "Tool Guide, Move Edge: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lift your finger where the border should be."
+            "value" : "Start in the cell whose paint you want to keep, and drag across the cells that should join it. The first cell keeps its paint and number. Everything that divided the cells goes: the dashed edges and the drawn lines too. Once your finger has crossed into a second cell, the cells that will join light up.\n\nA cell joins only if it touches one that’s already joining. If your drag never leaves the first cell, a note at the top says “That’s already one area.” If none of the cells you crossed could join, for instance because they don’t touch, it says “Those areas couldn’t be joined.”\n\nA paint no cell uses any more drops out of the palette, so the paints numbered after it each move down a number.\n\nTo divide a cell again, draw an edge with [Cell Edge](guide:cellEdge), or a line with the [Pen](guide:pen).\n\n## On the practice picture\nDrag across the window’s four panes to make one big pane. Then drag from the sky into the moon."
           }
         }
       }
     },
     "refine.guide.moveEdge.summary" : {
-      "comment" : "Tool Guide, Move Edge: one line under its name in the guide's list and atop its page",
+      "comment" : "Tool Guide, Move Edge: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1797,92 +613,164 @@
         }
       }
     },
-    "refine.guide.moveEdge.try" : {
-      "comment" : "Tool Guide, Move Edge: Try This, something to do on the practice picture",
+    "refine.guide.moveEdge.text" : {
+      "comment" : "Tool Guide, Move Edge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag the border between the two hills down a little, between the tree and the cottage, so the far hills grow taller."
+            "value" : "Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint. A border with ink takes its ink along.\n\nWhere three or more borders meet, the meeting point stays put, and the border bends between those points. Start your drag on the border itself, within about 16 points of it and away from those meeting points. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”\n\nA border can’t cross another, leave the picture, or squeeze a cell until its number no longer fits. Then the note says “That line couldn’t be moved there.” Try a shorter drag.\n\n[Bend Line](guide:bendLine) moves inked borders too. The difference: Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.\n\n## On the practice picture\nGrab the border between the two hills near the middle and drag it down a little, so the far hills grow taller."
           }
         }
       }
     },
-    "refine.guide.moveNumber.about" : {
-      "comment" : "Tool Guide, Move Number: the paragraph about what it does",
+    "refine.guide.fill.summary" : {
+      "comment" : "Tool Guide, Make Cell: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "While Move Number is picked, every cell shows its number. Drag one anywhere in its own cell where it fits, and it’s sized for the room there."
+            "value" : "Turns the shape you tap into a cell, in the photo’s color."
           }
         }
       }
     },
-    "refine.guide.moveNumber.note1" : {
-      "comment" : "Tool Guide, Move Number: a note under Good to Know",
+    "refine.guide.fill.text" : {
+      "comment" : "Tool Guide, Make Cell: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A number stays in its own cell, off the lines and clear of the cell’s other numbers."
+            "value" : "Tap inside a shape outlined in ink, and it becomes one cell, painted your photo’s color where you tapped. If that color is close to a paint the picture has, the cell takes that paint; otherwise a new paint is added. It’s the quickest way to color a shape as the photo has it, and it suits small shapes: a cell made this way may have a number about half the usual size, readable when zoomed in.\n\nThe fill spreads out to the ink around your tap, across any dashed edges (borders between cells that have no ink), and the cells it covers become one. If there’s no ink all the way around, and the fill reaches the edge of the picture, only the cell you tapped changes color.\n\nTo undo a fill, tap the cell it made: the shape goes back to how it was before. A tap on any other cell makes a new fill.\n\nThe palette doesn’t show here, because the color comes from your photo. To pour a paint you’ve chosen, use the [Bucket](guide:bucket).\n\nIf there’s no room even for the smaller number, a note at the top says “That shape couldn’t be filled.” A shape that was too small for the Pen to make a cell isn’t closed off, so a tap inside it fills the cell around it instead.\n\n## On the practice picture\nHere the moon, the roof and the door are outlined in ink, but have the same paint as what’s around them. Tap inside the moon, then the roof and the door."
           }
         }
       }
     },
-    "refine.guide.moveNumber.note2" : {
-      "comment" : "Tool Guide, Move Number: a note under Good to Know",
+    "refine.guide.bucket.summary" : {
+      "comment" : "Tool Guide, the Bucket: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In a tight spot it gets smaller, but never smaller than a painter can read."
+            "value" : "Pours the current paint into one cell."
           }
         }
       }
     },
-    "refine.guide.moveNumber.procreate" : {
-      "comment" : "Tool Guide, Move Number: the line under In Procreate, saying what it does that the drawing app Procreate can't",
+    "refine.guide.bucket.text" : {
+      "comment" : "Tool Guide, the Bucket: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Procreate has no numbers: they’re what make your picture a page to paint. Put each one where a painter will find it."
+            "value" : "Tap a cell and it takes the current paint, the one circled in the palette. Only that cell changes, even when other cells share its old paint. To change every cell of a paint at once, use [Edit Paint](guide:editPaint).\n\nPick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. One very close to a paint you have is poured as that paint.\n\nYou don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.\n\n## What else can change\nPouring into the last cell of a paint retires that paint, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint with no line between them, only a dashed edge, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”\n\nIf you color in Procreate, this is ColorDrop that never leaks: a cell ends exactly at its edges.\n\n## On the practice picture\nHere the roof and the moon are outlined, but have the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then pick the sky’s paint and pour it into the far hills."
           }
         }
       }
     },
-    "refine.guide.moveNumber.step1" : {
-      "comment" : "Tool Guide, Move Number: a step of How to Use It",
+    "refine.guide.brush.summary" : {
+      "comment" : "Tool Guide, the Paint Brush: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Put your finger on a number and drag it."
+            "value" : "Paints a stroke in the current paint."
           }
         }
       }
     },
-    "refine.guide.moveNumber.step2" : {
-      "comment" : "Tool Guide, Move Number: a step of How to Use It",
+    "refine.guide.brush.text" : {
+      "comment" : "Tool Guide, the Paint Brush: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lift your finger where it should sit."
+            "value" : "Brush across the picture, and everything under the stroke takes the current paint. The brush cuts new cells out of the cells it crosses, with dashed edges along the sides of the stroke, and any cells of the same paint it touches join up with them. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.\n\nStart moving straight away. A finger that rests still for half a second first is a touch and hold, and picks up a color instead.\n\nThe Size slider sets the brush’s width on the screen, not on the picture, so zoom in to paint finer. A tap paints a single dab. With the Apple Pencil hovering over the picture, a ring shows the brush’s size.\n\nA piece too small for a number keeps the paint it had. If nothing under the stroke has room for a number, a note at the top says “That couldn’t be painted there.”\n\n## On the practice picture\nTouch and hold the cottage’s wall to pick up its cream, then paint a winding path over the near hill to the door."
+          }
+        }
+      }
+    },
+    "refine.guide.eyedropper.summary" : {
+      "comment" : "Tool Guide, the Eyedropper: one line under its name in the guide's list (iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picks up a paint from the picture."
+          }
+        }
+      }
+    },
+    "refine.guide.eyedropper.text" : {
+      "comment" : "Tool Guide, the Eyedropper: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a cell, and its paint becomes the current paint, circled in the palette.\n\nYou won’t often need to pick the Eyedropper itself. With most tools, touch and hold the picture for half a second, and a loupe appears: its top half is the color under your finger, its bottom half the current paint. Slide to the color you want and lift to pick it; your tool stays the same. Bend Line, Move Edge and Move Number are the exceptions: with them, you hold something to drag it.\n\nWhere your photo shows through more strongly than the paint, the Eyedropper picks the photo’s color. To pick from the photo, open [Layers](guide:layers), turn Photo on, and turn Paint below half or off. A color from the photo that matches no paint shows as a + swatch after the palette, and becomes a paint once you pour it.\n\n## On the practice picture\nTap the window to pick up its yellow. Then, in Layers, turn Photo on and Paint off, and pick up the peach glow above the hills."
+          }
+        }
+      }
+    },
+    "refine.guide.editPaint.summary" : {
+      "comment" : "Tool Guide, Edit Paint: one line under its name in the guide's list (iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes a paint’s color everywhere it’s used."
+          }
+        }
+      }
+    },
+    "refine.guide.editPaint.text" : {
+      "comment" : "Tool Guide, Edit Paint: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Paint changes a paint, so every cell with its number changes together. Tap a cell or a swatch to pick a paint. Every cell with that paint glows. Then choose the new color in the color well beside the paint’s number.\n\nThe Similar colors too switch is on to start with. It moves the paints near this one along with it: paints of about the same hue, or for a gray, the grays close to it. Turn it off to change one paint alone.\n\nDrag one swatch onto another to make them one paint, in the color of the one you drop it on. A note at the top says “Colors that came out alike share a number now.”\n\nTo recolor a single cell, use the [Bucket](guide:bucket), or select it with [Select](guide:select) and tap Change Color.\n\nChoosing one of the [Looks](guide:looks), or going back to the photo’s colors there, undoes every change made here.\n\n## On the practice picture\nPick the near hill and turn it an autumn orange. Then drag the window’s swatch onto the moon’s."
+          }
+        }
+      }
+    },
+    "refine.guide.looks.summary" : {
+      "comment" : "Tool Guide, Looks: one line under its name in the guide's list (iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recolors every paint at once, in a mood."
+          }
+        }
+      }
+    },
+    "refine.guide.looks.text" : {
+      "comment" : "Tool Guide, Looks: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. Photo goes back to your photo’s own colors.\n\nYou can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while the colors you poured with the Bucket or brushed on stay. So choose your look first, then adjust single paints.\n\nWhen a look makes two paints too alike, they become one paint, and the note says “Colors that came out alike share a number now.”\n\n## On the practice picture\nTry each look on the evening scene, then bring Golden Hour’s Strength down to half."
           }
         }
       }
     },
     "refine.guide.moveNumber.summary" : {
-      "comment" : "Tool Guide, Move Number: one line under its name in the guide's list and atop its page",
+      "comment" : "Tool Guide, Move Number: one line under its name in the guide's list (iPhone)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1893,14 +781,62 @@
         }
       }
     },
-    "refine.guide.moveNumber.try" : {
-      "comment" : "Tool Guide, Move Number: Try This, something to do on the practice picture",
+    "refine.guide.moveNumber.text" : {
+      "comment" : "Tool Guide, Move Number: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move the sky’s number up beside the moon."
+            "value" : "While Move Number is picked, the numbers show, whatever Layers says. Put your finger on a number and drag it where it’s easier to spot. It’s sized for the room where you leave it, but never smaller than a painter can read. At this zoom, numbers too small to read aren’t shown; zoom in and they appear.\n\nA number stays inside its own cell and off the lines. If you drop it where it has no room, or outside its cell, it goes back to where it was, and a note at the top says “There’s no room for that number there.” If your drag starts away from any number, the note says “Start the drag on a number.”\n\n## On the practice picture\nMove the sky’s number up beside the moon."
+          }
+        }
+      }
+    },
+    "refine.guide.text.summary" : {
+      "comment" : "Tool Guide, Writing: one line under its name in the guide's list (iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps the words in your photo readable."
+          }
+        }
+      }
+    },
+    "refine.guide.text.text" : {
+      "comment" : "Tool Guide, Writing: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When your photo has writing in it, the app looks for lines of text and draws their letters as fine pen lines, so they can still be read once the picture is painted. While you use Writing, each line it found has a box around it.\n\nTap a box to turn that line off. The box turns dashed, and the writing is painted like the rest of the photo, which tends to lose the small parts of letters: an i’s dot, the inside of an O. Tap it again to turn it back on.\n\nIf the app missed some writing, drag a box over it from one corner to the opposite one. The box has to be a little taller than a line, so a flat swipe along the words does nothing. Tap a box you drew to take it away.\n\nEach change remakes the picture from your photo, which takes a moment, and then redoes your other changes on top. Any that no longer fit the new picture, such as a line that ended on a line that’s gone, are left out, and a note says how many.\n\n## On the practice picture\nThe two lines written in ink on the paper and the jar’s label were found. The faint pencil line, “feed the cat”, wasn’t, so only pieces of it show. Drag a box over it, corner to corner, and wait for the picture to be remade. Then tap the box around HONEY and look at the O."
+          }
+        }
+      }
+    },
+    "refine.guide.tryPainting.summary" : {
+      "comment" : "Tool Guide, Try Painting: one line under its name in the guide's list (iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paints the picture as it is now, to see how it feels."
+          }
+        }
+      }
+    },
+    "refine.guide.tryPainting.text" : {
+      "comment" : "Tool Guide, Try Painting: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells, then close it to come back to Refine. Nothing you paint there is kept.\n\nIt shows the picture as it was the moment you tapped the button, so a change you made a split second before may not be in it.\n\n## On the practice picture\nDraw a cloud in the sky with the Pen, ending where you began so it becomes a cell, then tap Try Painting and paint the cloud and the sky around it."
           }
         }
       }
@@ -1913,798 +849,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What each tool does, with a picture to try it on."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.about" : {
-      "comment" : "Tool Guide, the Pen: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Pen draws ink: lines that show in the finished picture. A line that closes off a shape makes a new cell, numbered by its paint. Lines leave the colors alone, unless Color from Photo is on."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.note1" : {
-      "comment" : "Tool Guide, the Pen: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A line that doubles back on itself can’t be drawn; a note says so."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.note2" : {
-      "comment" : "Tool Guide, the Pen: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Where a line closes nothing off, it stays as ink and divides nothing."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.procreate" : {
-      "comment" : "Tool Guide, the Pen: the line under In Procreate, comparing it with the drawing app Procreate (Studio Pen is one of its brushes, StreamLine its smoothing: keep Procreate's own names)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like inking line art with Studio Pen. Smoothing does what StreamLine does, and a shape you close becomes a cell at once, ready for paint."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.step1" : {
-      "comment" : "Tool Guide, the Pen: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw with a finger or the Pencil."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.step2" : {
-      "comment" : "Tool Guide, the Pen: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "End a line on another line, or back where you began, to close a shape; sparkles mark the join. With Snap on, an end a little short of a line, or a little past it, is moved onto it."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.step3" : {
-      "comment" : "Tool Guide, the Pen: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn on Color from Photo and every piece a line cuts off takes the photo’s color under it."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.step4" : {
-      "comment" : "Tool Guide, the Pen: a step of How to Use It (Smoothing is the Pen's slider)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Smoothing to steady your line: it trails your finger a little and evens out wobbles. All the way down, the Pen draws exactly as you draw."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.summary" : {
-      "comment" : "Tool Guide, the Pen: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draws lines exactly where you draw them."
-          }
-        }
-      }
-    },
-    "refine.guide.pen.try" : {
-      "comment" : "Tool Guide, the Pen: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw a cloud low in the sky, ending where you began. Then turn on Color from Photo and draw another: it takes the glow’s color there."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.about" : {
-      "comment" : "Tool Guide, Coming from Procreate: the paragraph about what carries over from the drawing app Procreate and what differs",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Most of what your hands know from Procreate works here, and a picture is built the way you’d color line art there: ink on top, paint beneath. What’s new is that colors aren’t pixels. Each is a cell with clean edges and its own number, so the picture can be painted by number."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.note1" : {
-      "comment" : "Tool Guide, Coming from Procreate: a note under Good to Know (Reference, ColorDrop and Continue Filling are Procreate's names; flats are the flat base colors under line art)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ink is like line art on a layer set as Reference, and Paint like the flats beneath it. The Bucket is ColorDrop with Continue Filling, and it never leaks: a cell ends exactly at its edges."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.note2" : {
-      "comment" : "Tool Guide, Coming from Procreate: a note under Good to Know (Snap is the Pen's and Shapes' switch; ColorDrop is Procreate's fill)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Snap moves a line’s end onto a line it lands near, closing the gaps a ColorDrop would leak through."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.note3" : {
-      "comment" : "Tool Guide, Coming from Procreate: a note under Good to Know (StreamLine is Procreate's name for its brushes' smoothing)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Pen’s Smoothing is StreamLine. The Photo layer is your reference photo, beneath everything, to trace."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.note4" : {
-      "comment" : "Tool Guide, Coming from Procreate: a note under Good to Know (Cell Edge, Merge, Move Edge and Move Number are Refine's tools)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate has nothing like Cell Edge, Merge, Move Edge or Move Number: they shape cells and their numbers, which pixels don’t have."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.note5" : {
-      "comment" : "Tool Guide, Coming from Procreate: the last note under Good to Know, whose owner the trademark is (Savage Interactive Pty Ltd is a company's name: keep it as is)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step1" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Two-finger tap: Undo. Hold two fingers down to keep undoing."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step2" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Three-finger tap: Redo. Hold three fingers down to keep redoing."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step3" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pinch: zoom. Pinch in quickly and let go to fit the picture to the screen."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step4" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Four-finger tap: full screen. Tap with four fingers again, or the button in the corner, to bring the tools back."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step5" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (as in Procreate; the loupe is the circle under the finger showing the color)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touch and hold: the Eyedropper, with its loupe, whatever tool you hold."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step6" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It, a gesture and what it does (ColorDrop is Procreate's name for its drag-to-fill; the palette shows with the Cells and Paint tools but Make Cell)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag a swatch onto a cell: ColorDrop, wherever the palette shows."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.step7" : {
-      "comment" : "Tool Guide, Coming from Procreate: a step of How to Use It (⌘ is the Command key)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On a keyboard, hold ⌘ to see the shortcuts."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.summary" : {
-      "comment" : "Tool Guide, Coming from Procreate (the drawing app): one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What carries over from Procreate, and what’s new."
-          }
-        }
-      }
-    },
-    "refine.guide.procreate.try" : {
-      "comment" : "Tool Guide, Coming from Procreate: Try This, something to do on the practice picture with the Bucket",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touch and hold the far hills, then lift to pick up their paint, and tap the moon to pour it in. Then drag any swatch from the palette onto the cottage’s roof."
-          }
-        }
-      }
-    },
-    "refine.guide.select.about" : {
-      "comment" : "Tool Guide, Select: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell to select it. It glows, and the bar below shows its paint and how many cells use it. Change Color there gives it a new color."
-          }
-        }
-      }
-    },
-    "refine.guide.select.note1" : {
-      "comment" : "Tool Guide, Select: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "While a Cells tool is picked, dashed lines show the edges between cells that have no ink. They divide the paint, but won’t be drawn."
-          }
-        }
-      }
-    },
-    "refine.guide.select.note2" : {
-      "comment" : "Tool Guide, Select: a note under Good to Know (Change Color is the button in Select's bar; Only This Area is the card's color picker)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change Color opens the cell’s card: give it a color of its own with Only This Area, or another of the picture’s paints."
-          }
-        }
-      }
-    },
-    "refine.guide.select.procreate" : {
-      "comment" : "Tool Guide, Select: the line under In Procreate, comparing it with the drawing app Procreate (Selection › Automatic is Procreate's: keep its own names)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like Selection › Automatic, a tap picks a whole area. A cell’s edges are exact, so there’s no threshold to slide."
-          }
-        }
-      }
-    },
-    "refine.guide.select.step1" : {
-      "comment" : "Tool Guide, Select: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a cell to select it."
-          }
-        }
-      }
-    },
-    "refine.guide.select.step2" : {
-      "comment" : "Tool Guide, Select: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap it again to let it go."
-          }
-        }
-      }
-    },
-    "refine.guide.select.step3" : {
-      "comment" : "Tool Guide, Select: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap Change Color to give it a color of its own."
-          }
-        }
-      }
-    },
-    "refine.guide.select.summary" : {
-      "comment" : "Tool Guide, Select: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows a cell and its paint."
-          }
-        }
-      }
-    },
-    "refine.guide.select.try" : {
-      "comment" : "Tool Guide, Select: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select the sky, then the moon, and see which paint each has."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.about" : {
-      "comment" : "Tool Guide, Shapes: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shapes draws a clean figure across a drag. Like the Pen, it draws ink, and a closed figure becomes a cell of its own."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.note1" : {
-      "comment" : "Tool Guide, Shapes: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The figure shows as it will be while your finger is down, so you can adjust it before you let go."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.note2" : {
-      "comment" : "Tool Guide, Shapes: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With Snap on, a Line’s or a Curve’s ends join lines as the Pen’s do; Color from Photo works as with the Pen."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.procreate" : {
-      "comment" : "Tool Guide, Shapes: the line under In Procreate, comparing it with the drawing app Procreate (QuickShape is its feature: keep Procreate's own name)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate’s QuickShape turns a stroke into a figure when you hold at its end. Here you pick the figure first and drag it out, and a closed one is a cell at once."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.step1" : {
-      "comment" : "Tool Guide, Shapes: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a figure in the Shapes bar."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.step2" : {
-      "comment" : "Tool Guide, Shapes: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag from one corner to the opposite one, or from one end of a line to the other."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.step3" : {
-      "comment" : "Tool Guide, Shapes: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For a curve, drag its ends first, then drag again to bend it. A tap leaves it straight."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.summary" : {
-      "comment" : "Tool Guide, Shapes: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draws straight lines, rectangles, ovals, curves, hexagons and stars."
-          }
-        }
-      }
-    },
-    "refine.guide.shape.try" : {
-      "comment" : "Tool Guide, Shapes: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw a star in the sky. Then pick the curve and give the cottage a path to its door."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.about" : {
-      "comment" : "Tool Guide, the Line Eraser: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a line and the Line Eraser takes it out from one junction to the next, the stretch between the lines it meets. Drag it to rub out what you touch, as the Eraser does."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.note1" : {
-      "comment" : "Tool Guide, the Line Eraser: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The stretch flashes as it goes, so you can see what the tap took."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.note2" : {
-      "comment" : "Tool Guide, the Line Eraser: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The cells the line kept apart become one, in the paint of the larger."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.procreate" : {
-      "comment" : "Tool Guide, the Line Eraser: the line under In Procreate, saying what it does that the drawing app Procreate, whose lines are pixels, can't",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate has nothing like it: a line there is pixels, with no ends to stop at. Refine knows where each line meets the others, so one tap takes exactly the stretch between."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.step1" : {
-      "comment" : "Tool Guide, the Line Eraser: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a line to take it out, junction to junction."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.step2" : {
-      "comment" : "Tool Guide, the Line Eraser: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag to rub out what you touch, at the Eraser’s Size."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.summary" : {
-      "comment" : "Tool Guide, the Line Eraser: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Takes out a whole line with one tap."
-          }
-        }
-      }
-    },
-    "refine.guide.smartEraser.try" : {
-      "comment" : "Tool Guide, the Line Eraser: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the line around the moon, then the cottage’s door."
-          }
-        }
-      }
-    },
-    "refine.guide.text.about" : {
-      "comment" : "Tool Guide, Writing: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When your photo has writing in it, the app finds it and draws its letters so they can be read. Writing shows the lines of words it found: tap one to turn it off or on, or drag across words it missed."
-          }
-        }
-      }
-    },
-    "refine.guide.text.note1" : {
-      "comment" : "Tool Guide, Writing: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Writing changes how the picture is made, so it’s made again, with your other changes laid on it."
-          }
-        }
-      }
-    },
-    "refine.guide.text.note2" : {
-      "comment" : "Tool Guide, Writing: a note under Good to Know, where other pages have a practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There’s nothing to practice on here: the practice picture has no writing. Try it on a photo with a sign or a label."
-          }
-        }
-      }
-    },
-    "refine.guide.text.procreate" : {
-      "comment" : "Tool Guide, Writing: the line under In Procreate, comparing it with the drawing app Procreate (Add Text is its command: keep Procreate's own name)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procreate’s Add Text sets type you write. Writing goes the other way: it keeps the words already in your photo readable."
-          }
-        }
-      }
-    },
-    "refine.guide.text.step1" : {
-      "comment" : "Tool Guide, Writing: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap a line of words to turn it off or on."
-          }
-        }
-      }
-    },
-    "refine.guide.text.step2" : {
-      "comment" : "Tool Guide, Writing: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag across a line of words the app missed."
-          }
-        }
-      }
-    },
-    "refine.guide.text.summary" : {
-      "comment" : "Tool Guide, Writing: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keeps the words in your photo readable."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.about" : {
-      "comment" : "Tool Guide, Try Painting: the paragraph about what it does",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Nothing you paint there is kept."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.note1" : {
-      "comment" : "Tool Guide, Try Painting: a note under Good to Know",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your painting starts fresh once you tap Done in Refine and start painting it."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.procreate" : {
-      "comment" : "Tool Guide, Try Painting: the line under In Procreate, saying what it does that the drawing app Procreate has no need of",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Procreate, a picture is done when you stop drawing. Here someone will paint it by number, and Try Painting lets you be that painter first."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.step1" : {
-      "comment" : "Tool Guide, Try Painting: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make a change, then tap Try Painting."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.step2" : {
-      "comment" : "Tool Guide, Try Painting: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paint a few cells."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.step3" : {
-      "comment" : "Tool Guide, Try Painting: a step of How to Use It",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close it to come back to Refine."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.summary" : {
-      "comment" : "Tool Guide, Try Painting: one line under its name in the guide's list and atop its page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paints the picture as it is now, to see how it feels."
-          }
-        }
-      }
-    },
-    "refine.guide.tryPainting.try" : {
-      "comment" : "Tool Guide, Try Painting: Try This, something to do on the practice picture",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw a line across the sky with the Pen, then tap Try Painting and paint both halves."
           }
         }
       }
@@ -3131,10 +1275,6 @@
     },
     "Reset" : {
       "comment" : "Tool Guide: the button above a practice canvas that puts the practice picture back",
-      "extractionState" : "manual"
-    },
-    "Reset puts the picture back whenever you like." : {
-      "comment" : "Tool Guide: under Try This, on a page with a practice canvas, whose Reset button puts the practice picture back",
       "extractionState" : "manual"
     },
     "See" : {
@@ -5427,10 +3567,6 @@
     },
     "Try Painting" : {
       "comment" : "Refine screen: the button that opens the painting screen on the template as refined so far, to try painting it without saving; its name in the tool rail, and the painting screen's title then",
-      "extractionState" : "manual"
-    },
-    "Try This" : {
-      "comment" : "Tool Guide: heading of a page's suggestion of something to do on the practice picture",
       "extractionState" : "manual"
     },
     "Watch It Again" : {

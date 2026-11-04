@@ -396,8 +396,8 @@ final class CreateModel {
     var foundText: [[SIMD2<Float>]] { lineArtInput?.writing ?? [] }
 
     /// Whether the template draws from the line-art inputs, where lines can be drawn and erased
-    /// and the text corrections apply; or it is the Tool Guide's practice picture, which is drawn
-    /// on alike and has no text.
+    /// and the text corrections apply; or it is a Tool Guide's practice picture, which is drawn
+    /// on alike (the evening has no text; Writing's note brings its own input).
     var hasLineArtInput: Bool { lineArtInput != nil || isPractice || isDrawing }
 
     /// The flow is a Tool Guide page's practice (`practice(_:scene:)`).
@@ -496,17 +496,20 @@ final class CreateModel {
     }
 
     #if UNRELEASED
-    /// Refine's Tool Guide: the practice picture (PaintCore's `RefinePractice`) as the photo, and
-    /// its template of `scene` as the base, ready to refine at once. Nothing is generated: a
-    /// practice page offers neither Start From nor the text corrections, and has no sliders, so
-    /// the base is never made again. Nothing is saved: the flow is the page's own, no draft's.
-    func practice(_ picture: RefinePracticePicture, scene: RefinePractice.Scene) {
+    /// Refine's Tool Guide: a practice picture as the photo, ready to refine. The evening
+    /// (PaintCore's `RefinePractice`) is its template of `scene` at once, never generated: its
+    /// pages offer neither Start From nor the text corrections, and have no sliders. Writing's
+    /// note (`RefinePracticeNote`) is generated as a photo is, from the line-art input it comes
+    /// with, so its corrections make it again as they do a painting's. Nothing is saved: the
+    /// flow is the page's own, no draft's.
+    func practice(_ picture: RefinePracticePicture, scene: RefinePracticeScene) {
         cancelAll()
         isPractice = true
         isDrawing = false
         defaultTitle = ""
         title = ""
-        source = Source(image: picture.photo, preview: picture.preview, sampleName: nil)
+        let photo = scene == .note ? picture.note : picture.evening
+        source = Source(image: photo.image, preview: photo.preview, sampleName: nil)
         preview = nil
         stats = nil
         importance = nil
@@ -520,9 +523,14 @@ final class CreateModel {
         forgetEdits()
         progress = 0
         phase = .loading
+        guard let evening = scene.evening else {
+            lineArtInput = picture.noteLineArt
+            startGeneration(draftFirst: false)
+            return
+        }
         let load = loadID
         let settings = self.settings, inputs = refinements, style = previewStyle
-        let base = picture.template(scene)
+        let base = picture.template(evening)
         loadTask = Task {
             do {
                 let shown = try await Self.laid(base, settings: settings, refinements: inputs, style: style)
