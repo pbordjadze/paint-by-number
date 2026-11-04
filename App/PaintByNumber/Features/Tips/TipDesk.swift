@@ -423,17 +423,33 @@ private struct GentleTipModifier: ViewModifier {
     let ids: TipSet
     var active: Bool
     var arrowEdge: Edge?
+    /// The tip this view pointed last, still handed to TipKit for a moment after its turn ends.
+    @State private var pointed: TipID?
 
     func body(content: Content) -> some View {
         // Read here, in the body, so the popover follows the desk's turn. Presented by a binding
-        // to it, not by the tip's status alone (`isPresented: nil`): iOS 27's TipKit left the
-        // popover up when its tip was used and the turn went, its tip passed as nil (CI,
-        // November 4: Tap to Paint stayed over the swatch after the fill). Closing it (its ×)
-        // ends the turn.
+        // to it, which closing the popover (its ×, a tap outside) sets, ending the turn. When the
+        // turn ends the binding closes the popover with its tip still attached, and the tip goes a
+        // moment later: iOS 27's TipKit left a presented popover up, its text and all, when its tip
+        // went to nil at once (CI, November 4: Tap to Paint stayed over the swatch after the fill
+        // used it, whether the popover was presented by the tip's status or by this binding).
         let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
         let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
-        content.popoverTip(shown?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+        content
+            .popoverTip((shown ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+            .task(id: shown) {
+                if let shown {
+                    pointed = shown
+                    return
+                }
+                guard pointed != nil else { return }
+                try? await Task.sleep(for: Self.closing)
+                if !Task.isCancelled { pointed = nil }
+            }
     }
+
+    /// Longer than the popover takes to close.
+    private static let closing: Duration = .seconds(1)
 }
 
 extension View {
