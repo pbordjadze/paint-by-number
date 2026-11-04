@@ -123,7 +123,7 @@ for entry in "${SCENARIOS[@]}"; do
   for pose in "${POSES[@]}"; do
     read -r name angle turned <<< "$pose"
     if [[ "$name" != 1-closed ]]; then
-      # Turn upright before unfolding or folding, as hands do, then to the pose's side.
+      # Turned to the pose's side first, then folded or opened.
       [[ "$(orientation)" == "$turned" ]] || turn "$turned"
       fold "$angle"
       sleep "$POSE_SETTLE"
