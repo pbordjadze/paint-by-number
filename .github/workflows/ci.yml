@@ -21,6 +21,12 @@ name: CI
 #            `tests`; never main's), instead of the three above: the Debug build and only those
 #            UI test classes (or Class/testMethod) on the iPad, after the demo caches' warm-up when
 #            they miss; no screenshots, no Release. A UI test's quick try; `core` runs as ever.
+#   duo      `[duo]` in a branch's pushed commit's message (or the hand-started run's `duo`; never
+#            main's), instead of the three above: the Debug build on the iPhone Duo, the foldable,
+#            and ci/duo.sh's screenshots of ci/duo-scenarios.txt in every pose (closed, turned,
+#            open, half open like a book and like a laptop, closed again), each scenario launched
+#            once and carried through them all, with its layout checked against the fold
+#            (`ci/duo.sh`). No tests, no Release. `[compile]` and `[test …]` win over it.
 # iPad is the primary device, its work split in two so a push waits for about half of it. The
 # shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and a
 # SideStore source listing the latest builds (branch `sidestore`).
@@ -40,6 +46,10 @@ on:
       tests:
         description: 'Only these UI test classes or Class/testMethod, on the iPad (space separated; branches only)'
         required: false
+      duo:
+        description: 'Only the iPhone Duo: every pose of ci/duo-scenarios.txt, or of `scenarios` (branches only)'
+        type: boolean
+        default: false
 
 # Read only, but for the two jobs that publish (the IPA's release and the SideStore source; the
 # report's ref): the others build and run code that has no need to push.
@@ -54,6 +64,8 @@ env:
   COMPILE: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '1' || '0' }}
   # The `test` entry alone (the header); `[compile]` wins over it.
   TEST_ONLY: ${{ (github.ref_name != 'main' && !contains(github.event.head_commit.message, '[compile]') && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '1' || '0' }}
+  # The `duo` entry alone (the header); `[compile]` and `[test …]` win over it.
+  DUO_ONLY: ${{ (github.ref_name != 'main' && !contains(github.event.head_commit.message, '[compile]') && !contains(github.event.head_commit.message, '[test ') && !(github.event_name == 'workflow_dispatch' && github.event.inputs.tests != '') && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '1' || '0' }}
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
   APP: build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
@@ -131,8 +143,8 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
-    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen UI tests' || 'iPhone — build, screenshots, tests' }}
-    runs-on: macos-26
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen UI tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || 'iPhone — build, screenshots, tests' }}
+    runs-on: xcode-27
     # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
     # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
     # last green run took 85), and 130 did too (main's run 559, October 22: its tests had passed,
@@ -141,9 +153,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # compile, test and iphone as the header says; the report job asks the same (TEST_ONLY:
-        # env can't be read here).
-        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
+        # compile, test, duo and iphone as the header says; the report job asks the same (TEST_ONLY,
+        # DUO_ONLY: env can't be read here).
+        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
@@ -164,6 +176,7 @@ jobs:
             ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
             iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
             compile) plan=(DEVICE=ipad SHOTS=0 RELEASE=1 ONLY= SKIP=) ;;
+            duo)     plan=(DEVICE=duo SHOTS=0 RELEASE=0 ONLY= SKIP= DUO=1) ;;
             test)
               # The run's `tests`, or every `[test …]` in the message (any case, as `contains` reads
               # it): UI test classes or Class/testMethod. A name the sources don't have fails here
@@ -230,8 +243,9 @@ jobs:
         env:
           INPUTS: ${{ hashFiles('Sources/PaintCore/**', 'App/PaintByNumber/Generation/**', 'App/PaintByNumber/Model/ArtworkFactory.swift', 'App/PaintByNumber/Model/DemoTemplateCache.swift', 'App/PaintByNumber/Model/Library.swift', 'App/PaintByNumber/Model/Sample.swift', 'App/PaintByNumber/Features/Create/CreateModel.swift', 'App/PaintByNumber/Resources/Samples/**', 'App/PaintByNumber/Resources/Models/**') }}
         run: |
-          # `test` borrows ipad-ui's caches (and never saves them: it runs only some of the tests).
-          echo "key=demo-caches-${{ matrix.job == 'test' && 'ipad-ui' || matrix.job }}-${{ steps.sim.outputs.runtime }}-$INPUTS" >> "$GITHUB_OUTPUT"
+          # `test` borrows ipad-ui's caches and `duo` ipad's (and neither saves them: they run only
+          # some of the scenarios).
+          echo "key=demo-caches-${{ matrix.job == 'test' && 'ipad-ui' || matrix.job == 'duo' && 'ipad' || matrix.job }}-${{ steps.sim.outputs.runtime }}-$INPUTS" >> "$GITHUB_OUTPUT"
       - name: Restore demo caches
         id: demo-cache
         if: env.COMPILE != '1'
@@ -253,18 +267,27 @@ jobs:
           # One argument per scenario.
           # shellcheck disable=SC2086
           ci/screenshots.sh "$APP" out/shots "$DEVICE" "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Duo poses
+        id: duo
+        if: env.DUO == '1'
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          # One argument per scenario.
+          # shellcheck disable=SC2086
+          ci/duo.sh "$APP" out/shots "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/duo-scenarios.txt)}
       - name: Warm up demo caches
         id: warmup
         # Without screenshots before them, the UI tests would make the fixed pictures' templates
         # and the previews' maps inside their own waits: on empty caches these scenarios do.
-        if: env.SHOTS == '0' && env.COMPILE != '1' && steps.demo-cache.outputs.cache-hit != 'true'
+        if: env.SHOTS == '0' && env.COMPILE != '1' && env.DUO != '1' && steps.demo-cache.outputs.cache-hit != 'true'
         run: |
           ci/screenshots.sh "$APP" build/warm-up "$DEVICE" "${{ steps.sim.outputs.udid }}" \
             gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180
           cp build/warm-up/*-steps.log out/warm-up-steps.log
       - name: Test
         id: test
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.boot.outcome == 'success' }}
+        if: ${{ !cancelled() && env.DUO != '1' && steps.build.outcome == 'success' && steps.boot.outcome == 'success' }}
         run: |
           # A failed test runs once more and counts as passed if that run passes; the report
           # names it ("passed when run again"), as a flake still needs its cause found.
@@ -349,7 +372,7 @@ jobs:
         # After a full, passing run only: caches a run left half made would be kept as made.
         continue-on-error: true
         if: >-
-          ${{ !cancelled() && matrix.job != 'test' && steps.demo-cache.outputs.cache-hit != 'true' && steps.test.outcome == 'success'
+          ${{ !cancelled() && matrix.job != 'test' && matrix.job != 'duo' && steps.demo-cache.outputs.cache-hit != 'true' && steps.test.outcome == 'success'
           && steps.shots.outcome != 'failure' && steps.warmup.outcome != 'failure' }}
         run: |
           ci/demo_caches.sh out "${{ steps.sim.outputs.udid }}" "$APP" build/demo-caches
@@ -365,7 +388,7 @@ jobs:
         env:
           OUTCOMES: >-
             xcode=${{ steps.xcode.outcome }} plan=${{ steps.plan.outcome }} simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
-            screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
+            screenshots=${{ steps.shots.outcome }} duo-poses=${{ steps.duo.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
             release=${{ steps.release.outcome }} sidestore=${{ steps.sidestore.outcome }} warnings=${{ steps.warnings.outcome }}
             nickname-v2=${{ steps.nickname.outcome }}
             benchmark=${{ steps.bench.outcome }}
@@ -383,7 +406,7 @@ jobs:
     if: github.ref_name == 'main' || contains(github.event.head_commit.message, '[ipa]')
     permissions:
       contents: write
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 30
     env:
       BUILD: ${{ github.run_number }}
@@ -489,6 +512,8 @@ jobs:
               JOBS=(compile=${{ needs.apple.result }})
             elif [[ "$TEST_ONLY" == 1 ]]; then
               JOBS=(test=${{ needs.apple.result }})
+            elif [[ "$DUO_ONLY" == 1 ]]; then
+              JOBS=(duo=${{ needs.apple.result }})
             else
               JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE")
             fi

@@ -103,6 +103,9 @@ def screenshot_notes(job_dir):
             text = f.read()
         unready = re.findall(r"(\S+): no ready marker within (\d+) s", text)
         crashed = re.findall(r"captured (\S+) — CRASH", text)
+        on_fold = re.findall(r"^FOLD (\S+): (.*)$", text, re.M)
+        if on_fold:
+            notes.append(f"  on the fold (ci/duo.sh): {len(on_fold)}: " + "; ".join(f"{p}: {what}" for p, what in on_fold[:6]))
         if unready:
             notes.append("  no ready marker (taken at the timeout): " + ", ".join(f"{s} ({t} s)" for s, t in unready))
         if crashed:
@@ -201,7 +204,7 @@ def main(argv):
     for job, result in jobs:
         job_dir = os.path.join(report, job)
         steps = outcomes(job_dir)
-        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "compile", "test"):
+        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "compile", "test", "duo"):
             # A matrix job that left no artifact: planned but lost, or not planned at all.
             head.append(f"{job}: {job_result(None, result)}")
             continue
