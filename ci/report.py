@@ -30,6 +30,10 @@ def outcomes(job_dir):
 def job_result(steps, matrix_result):
     """A simulator job's result from its steps; the matrix's when it left no outcomes."""
     if steps is None:
+        if matrix_result == "abandoned":
+            # GitHub found no runner for it within about 15 minutes ("not acquired by Runner of
+            # type hosted"): nothing ran, and re-running the job is all it needs.
+            return "no report (abandoned: never got a runner; re-run the job)"
         return "cancelled" if matrix_result == "cancelled" else f"no report ({matrix_result})"
     states = {outcome for _, outcome in steps}
     for state in ("failure", "cancelled"):
@@ -259,6 +263,7 @@ def self_test():
     assert job_result([("build", "success"), ("tests", "failure")], "failure") == "failure"
     assert job_result([("build", "success"), ("tests", "success"), ("release", "skipped")], "failure") == "success"
     assert job_result(None, "cancelled") == "cancelled"
+    assert job_result(None, "abandoned").startswith("no report (abandoned: never got a runner")
     log = "2026-10-07 11:55:06.6 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo] Main thread {} ({}), 3 frames:"
     assert stalls([
         log.format("stuck for 2.25 seconds", "stall 1"), log.format("stuck for 7.3 seconds", "stall 1"),

@@ -119,7 +119,10 @@ for entry in "${SCENARIOS[@]}"; do
   [[ "$entry" == *@* ]] && delay="${entry#*@}"
   xcrun simctl ui "$UDID" appearance "$([[ "$scenario" == *dark* ]] && echo dark || echo light)" || true
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-  fold 0 || true; turn portrait || true; sleep 1
+  # Closed and upright to start; a simulator that won't is a pose not taken, like any other.
+  started_closed=1
+  fold 0 && { [[ "$(orientation)" == portrait ]] || turn portrait; } || started_closed=0
+  sleep 1
   rm -f "$MARKER" "$LAYOUT"
   launch_args=(-demo "$scenario")
   [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
@@ -134,7 +137,11 @@ for entry in "${SCENARIOS[@]}"; do
   fi
   for pose in "${POSES[@]}"; do
     read -r name angle turned <<< "$pose"
-    if [[ "$name" != 1-closed ]]; then
+    if [[ "$name" == 1-closed && $started_closed == 0 ]]; then
+      step "unposed $scenario $name: the simulator didn't close upright; its poses skipped"
+      unposed=$((unposed + 1))
+      break
+    elif [[ "$name" != 1-closed ]]; then
       # Turned to the pose's side first, then folded or opened.
       if ! { [[ "$(orientation)" == "$turned" ]] || turn "$turned"; } || ! fold "$angle"; then
         step "unposed $scenario $name: the simulator didn't take ${angle}° $turned; its other poses skipped"

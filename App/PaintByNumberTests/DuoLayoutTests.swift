@@ -182,6 +182,22 @@ struct DuoLayoutTests {
         #expect(screen == CGRect(x: 456, y: 24, width: 40, height: 669))
     }
 
+    /// Until a screen's own reader has the fold, it lays out by the window's (`FoldWatch`): the
+    /// same frame from the leading edge, and nothing while the Duo lies flat.
+    @Test func aScreenFirstLaysOutByTheWindowsFold() {
+        let book = FoldWatch.Signal(
+            frame: CGRect(x: 400, y: 0, width: 40, height: 669), isActive: true, size: Self.onItsSide)
+        #expect(FoldWatch.fold(of: book, rightToLeft: false) == CGRect(x: 400, y: 0, width: 40, height: 669))
+        #expect(FoldWatch.fold(of: book, rightToLeft: true) == CGRect(x: 511, y: 0, width: 40, height: 669))
+        var flat = book
+        flat.isActive = false
+        #expect(FoldWatch.fold(of: flat, rightToLeft: false) == nil)
+        #expect(FoldWatch.fold(of: FoldWatch.Signal(), rightToLeft: false) == nil)
+        let laptop = FoldWatch.Signal(
+            frame: CGRect(x: 0, y: 455.5, width: 669, height: 40), isActive: true, size: CGSize(width: 669, height: 951))
+        #expect(FoldWatch.fold(of: laptop, rightToLeft: true) == CGRect(x: 0, y: 455.5, width: 669, height: 40))
+    }
+
     private func inputs(_ screen: CGSize, fold: CGRect?, colors: Int = 24) -> PaintingLayout.Inputs {
         let safe = EdgeInsets(top: 24, leading: 0, bottom: 20, trailing: 0)
         return PaintingLayout.Inputs(

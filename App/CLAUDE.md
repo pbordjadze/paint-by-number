@@ -465,14 +465,19 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `UIView.reservedRegions` in its own coordinates, `FoldPlace`), read again as the window's fold
   changes (`FoldWatch`, refreshed from the root by `.watchesTheFold()`): inside a navigation stack
   with the Duo's vertical bar, SwiftUI's geometry proxies and its global space both put it 42 pt
-  off, half the bar (CI, November 4); the layout probe measures in UIKit's window too.
+  off, half the bar (CI, November 4); the layout probe measures in UIKit's window too. Until its
+  reader has, a screen that fills the window lays out by the window's fold
+  (`FoldWatch.windowFold`), so one opened half open isn't laid out across the fold first; a view
+  the keyboard shrinks reads it where the keyboard doesn't reach (the create flow's preview), or a
+  keyboard up to the fold would take it away.
 - The painting screen shares the screen out by the fold (`PaintingLayout.Mode`): like a laptop
   (`easel`), the painting stands on the upper half and the bar and the whole palette lie on the
   lower; like a book (`book`), the painting has the leading page and the controls the trailing, a
   phone's width, so a phone's bar and swatches (`regularChrome` false), the two together in the
   page's middle (the Lamplit Table's `factory/pieces/iphone-duo`); like a laptop, the palette in
-  the middle of the room under the bar; on the canvas's backdrop (`CanvasPalette.backdropSRGB`),
-  and the painting's toasts keep to that page. The create flow's hand-off and the making-of show read
+  the middle of the room under the bar; on the canvas's backdrop (`CanvasPalette.backdropSRGB`).
+  The painting's toasts keep to the painting's page or half, at its top: the bar stands wherever
+  the palette leaves it on the controls'. The create flow's hand-off and the making-of show read
   the same layout (`PaintingLayout.fold`, from a `FoldPlace` or the window); its preview puts the
   picture and the card either side of the fold. The gallery keeps an even number of columns while
   a fold runs down it, flat or not, its middle gutter on the fold (`GalleryView.Fold`). The app's

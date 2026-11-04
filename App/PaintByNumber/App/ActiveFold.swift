@@ -115,14 +115,28 @@ final class FoldWatch {
 
     private(set) var signal = Signal()
 
-    /// The window's fold, as UIKit has it in the window: what changes when it moves or folds.
+    /// The window's fold, as UIKit has it in the window, and the window's size: what changes when
+    /// it moves, folds or turns.
     nonisolated struct Signal: Equatable, Sendable {
         var frame: CGRect?
         var isActive = false
+        var size: CGSize = .zero
     }
 
     /// A half-open Duo's fold runs down the window like a book's.
     var isBookFold: Bool { signal.isActive && (signal.frame.map { $0.height > $0.width } ?? false) }
+
+    /// The window's fold while it is folded, x from the leading edge, in the window's points (the
+    /// screen's): what a screen that fills the window lays out by until its own `FoldReader` has
+    /// read the fold, so a painting opened on a half-open Duo isn't first laid out across it.
+    func windowFold(rightToLeft: Bool) -> CGRect? {
+        Self.fold(of: signal, rightToLeft: rightToLeft)
+    }
+
+    nonisolated static func fold(of signal: Signal, rightToLeft: Bool) -> CGRect? {
+        guard let frame = signal.frame else { return nil }
+        return FoldPlace(frame: frame, isActive: signal.isActive, size: signal.size).active(rightToLeft: rightToLeft)?.frame
+    }
 
     func refresh() {
         let window = UIApplication.shared.connectedScenes
@@ -131,7 +145,7 @@ final class FoldWatch {
             .first(where: \.isKeyWindow)
         var found = Signal()
         if let window, let place = FoldPlace.of(window) {
-            found = Signal(frame: place.frame, isActive: place.isActive)
+            found = Signal(frame: place.frame, isActive: place.isActive, size: place.size)
         }
         if found != signal { signal = found }
     }

@@ -103,11 +103,13 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .readsTheFold { foldPlace = $0 }
         .background {
+            // The room the keyboard doesn't take, where the fold is read too: a keyboard reaching
+            // the fold would take it away and switch layouts under the title being edited.
             Color.clear
                 .ignoresSafeArea(.keyboard)
                 .onGeometryChange(for: CGSize.self) { $0.size } action: { roomSize = $0 }
+                .readsTheFold { foldPlace = $0 }
         }
         .onChange(of: titleFocused) { _, focused in
             editingLayout = focused ? (size.width, chosenLayout) : nil

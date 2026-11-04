@@ -314,15 +314,16 @@ struct PaintView: View {
             }
 
             if let thanks {
-                // Below the top bar, like the painting's other toasts, on the controls' page
-                // beside a fold; taps reach the canvas.
+                // Below the top bar, like the painting's other toasts (`ArtworkPaintingView`); beside
+                // a fold, at the top of the painting's page, never over the controls' page, whose
+                // bar may stand anywhere on it. Taps reach the canvas.
                 Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
                     .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
                     .environment(\.colorScheme, chromeScheme)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .padding(controls)
+                    .padding(layout.mode == .whole ? controls : Self.padding(layout.canvasFrame, within: geo.safeAreaInsets))
             }
 
             // The capture's flash as feedback starts.
@@ -384,7 +385,9 @@ struct PaintView: View {
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
             isComplete: session.isComplete,
-            fold: PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
+            fold: foldPlace == nil
+                ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
+                : PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
     }
 
 
