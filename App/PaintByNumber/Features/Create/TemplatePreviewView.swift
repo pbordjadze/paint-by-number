@@ -20,9 +20,9 @@ struct TemplatePreviewView: View {
     var pictureProbe: PreviewPictureProbe?
 
     @State private var size: CGSize = .zero
-    /// The preview's frame in the window: where a half-open iPhone Duo's fold lies across it
-    /// (`FoldWatch`), the picture keeping to one side of it.
-    @State private var frameInWindow: CGRect = .zero
+    /// Where a half-open iPhone Duo's fold lies across the preview (`FoldPlace`): the picture keeps
+    /// to one side of it.
+    @State private var foldPlace: FoldPlace?
     @Environment(\.layoutDirection) private var layoutDirection
     /// `size` with the keyboard's room given back: what the layout is chosen for.
     @State private var roomSize: CGSize = .zero
@@ -103,7 +103,7 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frameInWindow = $0 }
+        .readsTheFold { foldPlace = $0 }
         .background {
             Color.clear
                 .ignoresSafeArea(.keyboard)
@@ -188,9 +188,7 @@ struct TemplatePreviewView: View {
     /// because measuring it would feed back into the choice of layout. The choice ignores the
     /// keyboard (`roomSize`) and holds while the title is edited: switching layouts then would
     /// rebuild the title field and drop its focus, and the keyboard with it.
-    private var fold: ActiveFold? {
-        FoldWatch.shared.fold(in: frameInWindow, rightToLeft: layoutDirection == .rightToLeft)
-    }
+    private var fold: ActiveFold? { foldPlace?.active(rightToLeft: layoutDirection == .rightToLeft) }
 
     private var isSideBySide: Bool {
         // Half open, the fold decides: the picture beside the card like a book's two pages, or

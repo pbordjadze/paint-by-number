@@ -4,8 +4,8 @@ import SwiftUI
 import UIKit
 
 /// An iPhone Duo's fold while it is half open: its active reserved region (`.division`, iOS 27.1;
-/// inactive and zero-wide while the Duo lies flat), margins included, in the coordinates of a view
-/// (`FoldWatch.fold(in:rightToLeft:)`, x from the leading edge). Nil when flat or closed, and on every
+/// inactive and zero-wide while the Duo lies flat), margins included, in a view's coordinates, x
+/// from the leading edge (`FoldPlace.active(rightToLeft:)`). Nil when flat or closed, and on every
 /// other device.
 nonisolated struct ActiveFold: Equatable, Sendable {
     var frame: CGRect
@@ -13,61 +13,127 @@ nonisolated struct ActiveFold: Equatable, Sendable {
     var isUpright: Bool { frame.height > frame.width }
 }
 
-/// Where the iPhone Duo's fold is in the window, kept for every view: read from UIKit's window
-/// (`UIView.reservedRegions`), which puts it where the display folds, and placed in a view by that
-/// view's frame in the window. A view's own geometry proxy put it 42 pt off, half the system's
-/// vertical bar, inside a navigation stack (CI's Duo simulator, November 4, 2026); the painting
-/// screen, which has no bar, reads its own proxy (`PaintingLayout.fold(in:)`). `RootView` refreshes
-/// it as the window's geometry changes (`watchesTheFold`).
+/// An iPhone Duo's fold where a view is, as UIKit has it in that view's own coordinates (left to
+/// right, `UIView.reservedRegions`), active or not, with the view's size and side safe areas.
+/// Read by `FoldReader`: SwiftUI's geometry proxies and its global space put the fold 42 pt off,
+/// half the system's vertical bar, inside a navigation stack (CI's Duo simulator, November 4,
+/// 2026), while UIKit's view measures what is on the screen.
+nonisolated struct FoldPlace: Equatable, Sendable {
+    var frame: CGRect
+    var isActive: Bool
+    var size: CGSize
+    var safeLeft: CGFloat = 0
+    var safeRight: CGFloat = 0
+
+    /// Down the view, like a book's (an inactive one is zero-wide and full height).
+    var isUpright: Bool { frame.height > frame.width }
+
+    /// `frame` from the leading edge.
+    func leadingFrame(rightToLeft: Bool) -> CGRect {
+        guard rightToLeft else { return frame }
+        return CGRect(x: size.width - frame.maxX, y: frame.minY, width: frame.width, height: frame.height)
+    }
+
+    /// The fold while it is folded and runs through the view, x from its leading edge.
+    func active(rightToLeft: Bool) -> ActiveFold? {
+        guard isActive, size.width > 0, size.height > 0 else { return nil }
+        let through = isUpright
+            ? frame.minX > 0 && frame.maxX < size.width
+            : frame.minY > 0 && frame.maxY < size.height
+        return through ? ActiveFold(frame: leadingFrame(rightToLeft: rightToLeft)) : nil
+    }
+
+    @MainActor
+    static func of(_ view: UIView) -> FoldPlace? {
+        guard #available(iOS 27.1, *) else { return nil }
+        let regions = view.reservedRegions(kind: .division, options: .includeInactive)
+        guard let region = regions.first(where: \.isActive) ?? regions.first else { return nil }
+        return FoldPlace(
+            frame: region.frame, isActive: region.isActive, size: view.bounds.size,
+            safeLeft: view.safeAreaInsets.left, safeRight: view.safeAreaInsets.right)
+    }
+}
+
+/// Tells `onChange` where an iPhone Duo's fold is in the view it is the background of
+/// (`FoldPlace`), whenever that view's room changes or the window's fold does (`trigger`, the
+/// root's `FoldWatch`). Nil without a fold there.
+struct FoldReader: UIViewRepresentable {
+    var trigger: FoldWatch.Signal
+    var onChange: (FoldPlace?) -> Void
+
+    func makeUIView(context: Context) -> ReaderView {
+        let view = ReaderView()
+        view.isUserInteractionEnabled = false
+        view.onChange = onChange
+        return view
+    }
+
+    func updateUIView(_ view: ReaderView, context: Context) {
+        view.onChange = onChange
+        view.read()
+    }
+
+    final class ReaderView: UIView {
+        var onChange: ((FoldPlace?) -> Void)?
+        private var reported: FoldPlace??
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            read()
+        }
+
+        override func safeAreaInsetsDidChange() {
+            super.safeAreaInsetsDidChange()
+            read()
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            read()
+        }
+
+        /// Reports a change, after the update or layout under way (state changes inside one are
+        /// lost or warned about).
+        func read() {
+            guard window != nil else { return }
+            let place = FoldPlace.of(self)
+            guard reported != .some(place) else { return }
+            reported = .some(place)
+            let onChange = onChange
+            Task { @MainActor in onChange?(place) }
+        }
+    }
+}
+
+/// Whether the window has a fold, and where, kept for every view: refreshed from the root
+/// (`watchesTheFold`), so the views that place things by it (`FoldReader`) read it again as the
+/// Duo opens, closes, folds or turns; and whether it runs down the window like a book's, for the
+/// sheets (`besideTheFold`).
 @MainActor @Observable
 final class FoldWatch {
     static let shared = FoldWatch()
 
-    /// The fold in window coordinates, active or not (an open Duo's while it lies flat), and
-    /// whether it is active; nil without one in the window.
-    private(set) var region: Region?
+    private(set) var signal = Signal()
 
-    nonisolated struct Region: Equatable, Sendable {
-        var frame: CGRect
-        var isActive: Bool
-        var windowWidth: CGFloat
-        var isUpright: Bool { frame.height > frame.width }
+    /// The window's fold, as UIKit has it in the window: what changes when it moves or folds.
+    nonisolated struct Signal: Equatable, Sendable {
+        var frame: CGRect?
+        var isActive = false
     }
+
+    /// A half-open Duo's fold runs down the window like a book's.
+    var isBookFold: Bool { signal.isActive && (signal.frame.map { $0.height > $0.width } ?? false) }
 
     func refresh() {
         let window = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first(where: \.isKeyWindow)
-        var found: Region?
-        if #available(iOS 27.1, *), let window {
-            let regions = window.reservedRegions(kind: .division, options: .includeInactive)
-            if let region = regions.first(where: \.isActive) ?? regions.first {
-                found = Region(frame: region.frame, isActive: region.isActive, windowWidth: window.bounds.width)
-            }
+        var found = Signal()
+        if let window, let place = FoldPlace.of(window) {
+            found = Signal(frame: place.frame, isActive: place.isActive)
         }
-        if found != region { region = found }
-    }
-
-    /// The active fold in the coordinates of a view at `frame` in the window (`.global`), when it
-    /// runs through that view (not before the view has a frame, nor beside a window in Split View).
-    func fold(in frame: CGRect, rightToLeft: Bool) -> ActiveFold? {
-        guard let region, region.isActive, frame.width > 0, frame.height > 0 else { return nil }
-        let local = Self.local(region.frame, in: frame, rightToLeft: rightToLeft)
-        let through = region.isUpright
-            ? local.minX > 0 && local.maxX < frame.width
-            : local.minY > 0 && local.maxY < frame.height
-        return through ? ActiveFold(frame: local) : nil
-    }
-
-    /// Whether a half-open Duo's fold runs down the window like a book's: sheets keep to the
-    /// trailing page then (`besideTheFold`).
-    var isBookFold: Bool { region.map { $0.isActive && $0.isUpright } ?? false }
-
-    /// `rect` (window coordinates) in a view at `frame`, x from its leading edge.
-    nonisolated static func local(_ rect: CGRect, in frame: CGRect, rightToLeft: Bool) -> CGRect {
-        let x = rightToLeft ? frame.maxX - rect.maxX : rect.minX - frame.minX
-        return CGRect(x: x, y: rect.minY - frame.minY, width: rect.width, height: rect.height)
+        if found != signal { signal = found }
     }
 }
 
@@ -91,6 +157,11 @@ extension View {
             FoldWatch.shared.refresh()
         }
         .onAppear { FoldWatch.shared.refresh() }
+    }
+
+    /// Where an iPhone Duo's fold is in this view (`FoldPlace`), told to `onChange` as it moves.
+    func readsTheFold(_ onChange: @escaping (FoldPlace?) -> Void) -> some View {
+        background { FoldReader(trigger: FoldWatch.shared.signal, onChange: onChange) }
     }
 
     /// A sheet's placement on an iPhone Duo half open like a book: the trailing page, off the fold,

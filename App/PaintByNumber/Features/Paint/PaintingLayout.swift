@@ -48,7 +48,8 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         var isComplete: Bool
         /// The fold of a half-open iPhone Duo, where it is active: its reserved region (margins
         /// included) in the whole screen's coordinates, x from the leading edge
-        /// (`PaintingLayout.fold(in:)`). Nil when flat, closed, or on any other device.
+        /// (`PaintingLayout.fold(_:rightToLeft:safe:)`, or a window's `fold(in:rightToLeft:)`). Nil when
+        /// flat, closed, or on any other device.
         var fold: CGRect? = nil
     }
 
@@ -251,13 +252,10 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     }
 
     /// The active fold of a half-open iPhone Duo in the whole screen's coordinates (x from the
-    /// leading edge), for a geometry proxy that stops at the safe area, as `PaintView`'s does: its
-    /// reserved division region, margins included, from the window (`FoldWatch`). Nil when the
-    /// device is flat or closed, and on every other device.
-    @MainActor
-    static func fold(in proxy: GeometryProxy, rightToLeft: Bool) -> CGRect? {
-        FoldWatch.shared.fold(in: proxy.frame(in: .global), rightToLeft: rightToLeft)?.frame
-            .offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
+    /// leading edge), from where it is in a view that stops at the safe area (`FoldPlace`, as
+    /// `PaintView` reads it). Nil when the device is flat or closed, and on every other device.
+    static func fold(_ place: FoldPlace?, rightToLeft: Bool, safe: EdgeInsets) -> CGRect? {
+        place?.active(rightToLeft: rightToLeft)?.frame.offsetBy(dx: safe.leading, dy: safe.top)
     }
 
     /// The same from a window that fills the screen (the create flow's, for a new painting's page):

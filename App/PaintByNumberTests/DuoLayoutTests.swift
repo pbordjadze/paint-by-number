@@ -143,23 +143,43 @@ struct DuoLayoutTests {
     }
 
     /// The gallery's middle gutter goes on the fold, flat or half open, mirrored right to left: the
-    /// pages' room ends at the system's vertical bar, 84 pt down the right side.
+    /// pages' room ends at the system's vertical bar, 84 pt down the right side (UIKit's safe area
+    /// of the pages, as `FoldReader` reads it with the fold).
     @Test func theGallerysMiddleGutterLiesOnTheFold() throws {
-        let room = GalleryView.Room(
-            frame: CGRect(origin: .zero, size: Self.onItsSide), safe: EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 84))
-        let flat = FoldWatch.Region(frame: CGRect(x: 476, y: 0, width: 0, height: 669), isActive: false, windowWidth: 951)
-        let gallery = try #require(GalleryView.Fold.of(flat, in: room, rightToLeft: false))
+        let flat = FoldPlace(
+            frame: CGRect(x: 476, y: 0, width: 0, height: 669), isActive: false, size: Self.onItsSide, safeRight: 84)
+        let gallery = try #require(GalleryView.Fold.of(flat, rightToLeft: false))
         #expect(abs(gallery.offset - 42.5) < 0.01)
         #expect(gallery.width == 0)
-        let halfOpen = FoldWatch.Region(frame: CGRect(x: 456, y: 0, width: 40, height: 669), isActive: true, windowWidth: 951)
-        #expect(GalleryView.Fold.of(halfOpen, in: room, rightToLeft: false)?.width == 40)
-        let mirroredRoom = GalleryView.Room(frame: room.frame, safe: EdgeInsets(top: 0, leading: 84, bottom: 0, trailing: 0))
-        let mirrored = try #require(GalleryView.Fold.of(flat, in: mirroredRoom, rightToLeft: true))
+        var halfOpen = flat
+        halfOpen.frame = CGRect(x: 456, y: 0, width: 40, height: 669)
+        halfOpen.isActive = true
+        #expect(GalleryView.Fold.of(halfOpen, rightToLeft: false)?.width == 40)
+        let mirrored = try #require(GalleryView.Fold.of(flat, rightToLeft: true))
         #expect(abs(mirrored.offset + 42.5) < 0.01)
         // A fold across the pages (a laptop's), or none: no gutter to keep.
-        let across = FoldWatch.Region(frame: CGRect(x: 0, y: 456, width: 669, height: 40), isActive: true, windowWidth: 669)
-        #expect(GalleryView.Fold.of(across, in: room, rightToLeft: false) == nil)
-        #expect(GalleryView.Fold.of(nil, in: room, rightToLeft: false) == nil)
+        let across = FoldPlace(
+            frame: CGRect(x: 0, y: 456, width: 669, height: 40), isActive: true, size: Self.upright)
+        #expect(GalleryView.Fold.of(across, rightToLeft: false) == nil)
+        #expect(GalleryView.Fold.of(nil, rightToLeft: false) == nil)
+    }
+
+    /// A fold placed in a view from the leading edge, and only while it is folded and runs
+    /// through the view (`FoldPlace.active`).
+    @Test func aFoldIsPlacedFromTheLeadingEdge() throws {
+        let place = FoldPlace(
+            frame: CGRect(x: 456, y: 0, width: 40, height: 669), isActive: true, size: Self.onItsSide)
+        #expect(place.active(rightToLeft: false)?.frame.minX == 456)
+        #expect(place.active(rightToLeft: true)?.frame.minX == 455)
+        #expect(try #require(place.active(rightToLeft: false)).isUpright)
+        var flat = place
+        flat.isActive = false
+        #expect(flat.active(rightToLeft: false) == nil)
+        var beside = place
+        beside.size = CGSize(width: 400, height: 669)
+        #expect(beside.active(rightToLeft: false) == nil)
+        let screen = PaintingLayout.fold(place, rightToLeft: false, safe: EdgeInsets(top: 24, leading: 0, bottom: 20, trailing: 0))
+        #expect(screen == CGRect(x: 456, y: 24, width: 40, height: 669))
     }
 
     private func inputs(_ screen: CGSize, fold: CGRect?, colors: Int = 24) -> PaintingLayout.Inputs {

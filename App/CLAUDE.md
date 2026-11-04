@@ -461,20 +461,23 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   by its own inset.
 - Half open, the fold is an active reserved region (`.division`, iOS 27.1; inactive and zero-wide
   while flat): 40 pt with its margins down the middle at x 456 held like a book, across at y 456
-  like a laptop. `FoldWatch` keeps where it is from UIKit's window (`.watchesTheFold()` on the root)
-  and places it in a view by that view's frame in the window: a view's own geometry proxy put it
-  42 pt off, half the system's vertical bar, inside a navigation stack (CI, November 4); every
-  screen reads it so. The painting screen shares the screen out by it (`PaintingLayout.Mode`): like a laptop (`easel`), the painting stands on the upper half and the bar and the
-  whole palette lie on the lower; like a book (`book`), the painting has the leading page and the
-  controls the trailing, a phone's width, so a phone's bar and swatches (`regularChrome` false);
-  the palette sits in the middle of the room under the bar, on the canvas's backdrop
-  (`CanvasPalette.backdropSRGB`), and the painting's toasts keep to that page. The create flow's
-  hand-off and the making-of show read the same layout (`PaintingLayout.fold(in:)`, a proxy's or
-  a window's); its preview puts the picture and the card either side of the fold. The gallery keeps
-  an even number of columns while a fold runs down it, flat or not, its middle gutter on the fold
-  (`GalleryView.Fold`). The app's sheets keep to the trailing page while the Duo is half open like
-  a book (`.besideTheFold()`, `presentationPlacement`): the system left them centred on the fold.
-  System containers, alerts and menus keep off the fold by themselves; scrolling content needn't.
+  like a laptop. A view learns where it is from UIKit (`.readsTheFold`, a `FoldReader` behind it:
+  `UIView.reservedRegions` in its own coordinates, `FoldPlace`), read again as the window's fold
+  changes (`FoldWatch`, refreshed from the root by `.watchesTheFold()`): inside a navigation stack
+  with the Duo's vertical bar, SwiftUI's geometry proxies and its global space both put it 42 pt
+  off, half the bar (CI, November 4); the layout probe measures in UIKit's window too.
+- The painting screen shares the screen out by the fold (`PaintingLayout.Mode`): like a laptop
+  (`easel`), the painting stands on the upper half and the bar and the whole palette lie on the
+  lower; like a book (`book`), the painting has the leading page and the controls the trailing, a
+  phone's width, so a phone's bar and swatches (`regularChrome` false); the palette sits in the
+  middle of the room under the bar, on the canvas's backdrop (`CanvasPalette.backdropSRGB`), and
+  the painting's toasts keep to that page. The create flow's hand-off and the making-of show read
+  the same layout (`PaintingLayout.fold`, from a `FoldPlace` or the window); its preview puts the
+  picture and the card either side of the fold. The gallery keeps an even number of columns while
+  a fold runs down it, flat or not, its middle gutter on the fold (`GalleryView.Fold`). The app's
+  sheets keep to the trailing page while the Duo is half open like a book (`.besideTheFold()`,
+  `presentationPlacement`): the system left them centred on the fold. System containers, alerts
+  and menus keep off the fold by themselves; scrolling content needn't.
 - The canvas keeps the painter's place through the change of room (`CanvasView.layoutSubviews`): a
   painting within 5% of its fit (the band `finish` leaves it in) fits again, a zoomed one keeps its
   scale and centre; on every device, a rotation too.

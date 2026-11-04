@@ -62,6 +62,8 @@ struct MakingOfView: View {
     @State private var player = MakingOfPlayer()
     /// The show has come in: its picture and its paper have faded in.
     @State private var shown = false
+    /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`), for the page's place.
+    @State private var foldPlace: FoldPlace?
 
     /// Room at the top for Skip.
     private static let top: CGFloat = 64
@@ -106,6 +108,7 @@ struct MakingOfView: View {
                 .opacity(showsPaper ? 1 : 0)
                 .animation(paperAnimation, value: showsPaper)
         }
+        .readsTheFold { foldPlace = $0 }
         .contentShape(.rect)
         .onTapGesture { player.skip() }
         .overlay(alignment: .topTrailing) {
@@ -189,7 +192,7 @@ struct MakingOfView: View {
             let inputs = PaintingLayout.Inputs(
                 size: geometry.size, safe: safe, regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize,
                 rows: paletteRows, colors: template.map(PaletteBar.visibleColorCount) ?? 1, isComplete: false,
-                fold: PaintingLayout.fold(in: geometry, rightToLeft: layoutDirection == .rightToLeft))
+                fold: PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: safe))
             page = PaintingLayout(inputs)
                 .page(of: pictureSize, inputs: inputs, rightToLeft: layoutDirection == .rightToLeft)
                 .offsetBy(dx: -safe.leading, dy: -safe.top)

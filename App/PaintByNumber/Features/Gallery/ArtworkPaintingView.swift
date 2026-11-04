@@ -34,12 +34,12 @@ struct ArtworkPaintingView: View {
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
     @State private var notice: ShownNotice?
-    /// The screen's frame in the window: a half-open iPhone Duo's fold (`FoldWatch`) lies in it,
-    /// the toasts keeping to the controls' page beside it.
-    @State private var frameInWindow: CGRect = .zero
+    /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`): the toasts keep to
+    /// the controls' page beside it.
+    @State private var foldPlace: FoldPlace?
     @Environment(\.layoutDirection) private var layoutDirection
     private var bookFold: ActiveFold? {
-        FoldWatch.shared.fold(in: frameInWindow, rightToLeft: layoutDirection == .rightToLeft).flatMap { $0.isUpright ? $0 : nil }
+        foldPlace?.active(rightToLeft: layoutDirection == .rightToLeft).flatMap { $0.isUpright ? $0 : nil }
     }
 
     private struct ShownNotice: Equatable {
@@ -138,7 +138,7 @@ struct ArtworkPaintingView: View {
             // Over the painting, like its bars.
             .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frameInWindow = $0 }
+        .readsTheFold { foldPlace = $0 }
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in

@@ -53,6 +53,8 @@ struct PaintView: View {
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.layoutDirection) private var layoutDirection
+    /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`), in the safe area.
+    @State private var foldPlace: FoldPlace?
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -122,6 +124,7 @@ struct PaintView: View {
                 canvasAndChrome(geo: geo, layout: layout(in: geo))
             }
         }
+        .readsTheFold { foldPlace = $0 }
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
         // canvas where it is.
         .ignoresSafeArea(.keyboard)
@@ -369,7 +372,7 @@ struct PaintView: View {
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
             isComplete: session.isComplete,
-            fold: PaintingLayout.fold(in: geo, rightToLeft: layoutDirection == .rightToLeft)))
+            fold: PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
     }
 
 
