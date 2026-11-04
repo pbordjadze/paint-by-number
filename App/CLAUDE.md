@@ -447,6 +447,34 @@ Conventions).
   `LineArtFixture.pgm`, written by the conversion scripts; at most 2 levels apart), eyes on
   `FaceFixture.jpg`.
 
+## iPhone Duo
+
+The foldable (painting-company row 212): an outer display (466 × 678 pt upright, compact width,
+compact both ways on its side) and, opened, an inner one (951 × 669 pt held like a book, 669 × 951
+turned; regular both ways, as an iPad), its status bar, Dynamic Island and the system's bars down
+the right side but for the inner display upright. The app moves between them in place: one scene,
+resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLAUDE.md` › App rules).
+
+- Layout follows size classes and the window, never the device: the three idiom checks left
+  (`embedsPicker`, `pageSizedOnPad`, `statusBarSetsTheTop`) are about what an iPhone's or an iPad's
+  system does, and hold for the Duo as an iPhone. Safe areas are uneven there: lay out each edge
+  by its own inset.
+- Half open, the fold is an active reserved region (`.division`, iOS 27.1; inactive and zero-wide
+  while flat). The painting screen shares the screen out by it (`PaintingLayout.Mode`): like a
+  laptop (`easel`), the painting stands on the upper half and the bar and the whole palette lie on
+  the lower; like a book (`book`), the painting has the leading page and the controls the
+  trailing; the controls' page is the canvas's backdrop (`CanvasPalette.backdropSRGB`). The
+  create flow's hand-off and the making-of show read the same layout, with the fold
+  (`PaintingLayout.fold(in:)`, a proxy's or a window's). The gallery keeps an even number of
+  columns while a fold runs down it, flat or not, its middle gutter on the fold (`GalleryView.Fold`).
+  System containers, sheets, alerts and menus keep off the fold by themselves; scrolling content
+  needn't.
+- The canvas keeps the painter's place through the change of room (`CanvasView.layoutSubviews`): a
+  fitted painting fits again, a zoomed one keeps its scale and centre.
+- `ci/duo.sh` (`[duo]`, root `CLAUDE.md` › CI) carries each of `ci/duo-scenarios.txt` through every
+  pose and checks the layout the app reports (DEBUG `DuoLayoutProbe`, `.duoProbe(_:)` on the
+  painting screen's bars) against the fold; `DuoLayoutTests` pin the layouts and the camera.
+
 ## Library and saving
 
 - `Library` (@Observable) keeps `Artwork` metadata in memory; `ArtworkStore` does the file IO

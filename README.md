@@ -76,8 +76,8 @@ its accessibility notes are in [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
 ## Building
 
-Open `App/PaintByNumber.xcodeproj` in Xcode 26 and run the `PaintByNumber` scheme
-(iOS 26 deployment target). The PaintCore package also builds and tests with plain SwiftPM:
+Open `App/PaintByNumber.xcodeproj` in Xcode 27.1 or later and run the `PaintByNumber` scheme
+(iOS 26 deployment target; the iOS 27.1 SDK is what the iPhone Duo needs to run it edge to edge). The PaintCore package also builds and tests with plain SwiftPM:
 
 ```sh
 swift test

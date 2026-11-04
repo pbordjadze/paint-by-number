@@ -24,12 +24,15 @@ struct DuoLayoutTests {
         let layout = PaintingLayout(inputs)
         #expect(layout.mode == .easel)
         let canvas = layout.canvasRect(inputs: inputs, rightToLeft: false)
-        #expect(canvas.minY == 0 && canvas.maxY == fold.minY && canvas.width == Self.upright.width)
+        #expect(canvas.minY == 0)
+        #expect(canvas.maxY == fold.minY)
+        #expect(canvas.width == Self.upright.width)
         let page = layout.page(of: Self.picture, inputs: inputs, rightToLeft: false)
-        #expect(page.minY >= inputs.safe.top && page.maxY <= fold.minY)
+        #expect(page.minY >= inputs.safe.top)
+        #expect(page.maxY <= fold.minY)
         #expect(layout.controls.top == fold.maxY)
         // The bar and the palette fit the half below the fold, the palette every color at once.
-        let bars = PaintingLayout.topGap + PaintingLayout.barHeight(regularWidth: true) + PaintingLayout.canvasGap
+        let bars: CGFloat = PaintingLayout.topGap + PaintingLayout.barHeight(regularWidth: true) + PaintingLayout.canvasGap
             + layout.palette.thickness + PaintingLayout.bottomGap
         #expect(fold.maxY + bars <= Self.upright.height - inputs.safe.bottom)
         #expect(!layout.palette.side)
@@ -45,13 +48,17 @@ struct DuoLayoutTests {
         let layout = PaintingLayout(inputs)
         #expect(layout.mode == .book)
         let canvas = layout.canvasRect(inputs: inputs, rightToLeft: false)
-        #expect(canvas.minX == 0 && canvas.maxX == fold.minX && canvas.height == Self.onItsSide.height)
+        #expect(canvas.minX == 0)
+        #expect(canvas.maxX == fold.minX)
+        #expect(canvas.height == Self.onItsSide.height)
         let page = layout.page(of: Self.picture, inputs: inputs, rightToLeft: false)
-        #expect(page.maxX <= fold.minX && page.minY >= inputs.safe.top)
+        #expect(page.maxX <= fold.minX)
+        #expect(page.minY >= inputs.safe.top)
         #expect(layout.controls.leading == fold.maxX)
 
         let mirrored = layout.canvasRect(inputs: inputs, rightToLeft: true)
-        #expect(mirrored.minX == Self.onItsSide.width - fold.minX && mirrored.maxX == Self.onItsSide.width)
+        #expect(mirrored.minX == Self.onItsSide.width - fold.minX)
+        #expect(mirrored.maxX == Self.onItsSide.width)
         let mirroredPage = layout.page(of: Self.picture, inputs: inputs, rightToLeft: true)
         #expect(mirroredPage.minX >= Self.onItsSide.width - fold.minX)
     }
@@ -62,7 +69,8 @@ struct DuoLayoutTests {
         let flat = inputs(Self.onItsSide, fold: nil)
         let whole = PaintingLayout(flat)
         #expect(whole.mode == .whole)
-        #expect(whole.canvasFrame == EdgeInsets() && whole.controls == flat.safe)
+        #expect(whole.canvasFrame == EdgeInsets())
+        #expect(whole.controls == flat.safe)
         #expect(whole.palette.side)
         for fold in [
             CGRect(x: 0, y: 100, width: 669, height: 32),  // too near the top for a page above it
@@ -115,8 +123,11 @@ struct DuoLayoutTests {
             canvas.frame = frame
             canvas.chromeInsets = insets
             canvas.layoutIfNeeded()
-            #expect(abs(canvas.templateFrame.width / CGFloat(template.width) - scale) < 0.001, "\(frame)")
-            #expect(abs(canvas.camera.center.x - center.x) < 1 && abs(canvas.camera.center.y - center.y) < 1, "\(frame)")
+            let shownScale: CGFloat = canvas.templateFrame.width / CGFloat(template.width)
+            #expect(abs(shownScale - scale) < 0.001, "\(frame)")
+            let shift: SIMD2<Float> = canvas.camera.center - center
+            #expect(abs(shift.x) < 1, "\(frame)")
+            #expect(abs(shift.y) < 1, "\(frame)")
         }
 
         canvas.zoomToFit(animated: false)

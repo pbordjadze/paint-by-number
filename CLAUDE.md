@@ -334,8 +334,10 @@ Saved paintings must open in every later build. The format history is documented
 
 ## App rules
 
-- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI; named once, in `ci/xcode.sh`, and
-  the simulators run its SDK's iOS). Swift 6 with
+- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 27.1 (CI, on GitHub's `xcode-27`
+  runners; named once, in `ci/xcode.sh`, and the simulators run its SDK's iOS): the iOS 27.1 SDK is
+  the first an iPhone Duo runs edge to edge on both its displays (App/CLAUDE.md › iPhone Duo; an
+  older SDK's build is letterboxed there). APIs newer than iOS 26 sit behind `#available`. Swift 6 with
   `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are MainActor
   by default; mark pure/background helpers `nonisolated` and CPU-heavy async work `@concurrent`.
   PaintCore is a separate module (nonisolated). The test targets have neither setting: their suites
@@ -457,7 +459,7 @@ any port of it, when changing the fitter: work from the paper.
    that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines
    trimmed), `core/` (tests, strings check, `regression/` with its table and
    `sheets/<regime>/<sample>.jpg`), and per job
-   (`ipad`, `ipad-ui`, `iphone`, or the one `compile` or `test`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
+   (`ipad`, `ipad-ui`, `iphone`, or the one `compile`, `test` or `duo`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's own log lines
    during the run, every category of `Log`), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
@@ -494,6 +496,13 @@ any port of it, when changing the fitter: work from the paper.
    small classes on an idle runner, 12 of them the build (October 29, run 653). A name the
    sources lack fails its Plan step at once (`test/errors.txt` says why); a choice that still ran
    no test fails its Test step. The full run still comes before a merge.
+   The iPhone Duo, the foldable: `[duo]` (a run started by hand takes `duo`) builds Debug and runs
+   `ci/duo.sh` on `ci/duo-scenarios.txt` (or the run's `scenarios`) on the Duo simulator, one
+   runner, instead of every other entry: each scenario launched once and carried through every
+   pose, closed, turned, open, half open like a book and like a laptop, and closed again
+   (`duo/shots/duo-<scenario>-<n>-<pose>.png`, with the layout the app reported as `.json` beside
+   each), failing when a control lies on the fold (`ci/duo/check.py`; "on the fold" in STATUS.md).
+   About 25 min. Run it after touching a screen's layout; it never runs on `main`.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
    with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the

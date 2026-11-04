@@ -22,6 +22,8 @@ struct GalleryView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
+    /// A fold running down the pages (an open iPhone Duo's, flat or not): the middle gutter lies on it.
+    @State private var fold: Fold?
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
@@ -72,7 +74,8 @@ struct GalleryView: View {
                         }
                     }
                 }
-                .padding(.horizontal, horizontalPadding)
+                .padding(.leading, horizontalPadding + max(0, 2 * (fold?.offset ?? 0)))
+                .padding(.trailing, horizontalPadding + max(0, -2 * (fold?.offset ?? 0)))
                 .padding(.top, 6)
                 .padding(.bottom, 56)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
@@ -101,6 +104,7 @@ struct GalleryView: View {
         }
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onGeometryChange(for: Fold?.self) { Fold.down($0) } action: { fold = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
         .onAppear {
@@ -176,13 +180,43 @@ struct GalleryView: View {
 
     // MARK: Layout
 
-    /// Cards of roughly 240–330 pt: three across a portrait iPad, four or five in landscape.
+    /// Cards of roughly 240–330 pt: three across a portrait iPad, four or five in landscape. With
+    /// a fold down the pages, an even count, so the middle gutter lies on the fold and no card
+    /// does (four across an open iPhone Duo held like a book).
     private var columnCount: Int {
-        switch width {
+        let count = switch width {
         case ..<560: 2
         case ..<1100: 3
         case ..<1300: 4
         default: 5
+        }
+        return fold != nil && count % 2 == 1 ? count + 1 : count
+    }
+
+    /// The columns: the gutter after the middle one as wide as the fold while it is folded, the
+    /// padding (`fold.offset`) putting it on the fold.
+    private var columns: [GridItem] {
+        let count = columnCount
+        return (0..<count).map { column in
+            let gutter = fold != nil && column == count / 2 - 1 ? max(spacing, fold?.width ?? 0) : spacing
+            return GridItem(.flexible(), spacing: gutter, alignment: .top)
+        }
+    }
+
+    /// An iPhone Duo's fold down the gallery, flat (inactive) or half open: how far its middle
+    /// lies past the middle of the room the pages have (toward the trailing edge), and how wide it
+    /// is with its margins while it is folded (none while flat).
+    nonisolated struct Fold: Equatable, Sendable {
+        var offset: CGFloat
+        var width: CGFloat
+
+        static func down(_ proxy: GeometryProxy) -> Fold? {
+            guard #available(iOS 27.1, *) else { return nil }
+            let regions = proxy.reservedRegions(kind: .division, options: .includeInactive)
+            guard let region = regions.first(where: { $0.frame.height > $0.frame.width }) else { return nil }
+            let safe = proxy.safeAreaInsets
+            let middle = (safe.leading + proxy.size.width - safe.trailing) / 2
+            return Fold(offset: region.frame.midX - middle, width: region.isActive ? region.frame.width : 0)
         }
     }
 
@@ -210,7 +244,7 @@ struct GalleryView: View {
             }
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: spacing, alignment: .top), count: columnCount),
+                columns: columns,
                 alignment: .leading, spacing: spacing + 8
             ) {
                 content()

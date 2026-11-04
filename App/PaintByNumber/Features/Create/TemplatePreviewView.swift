@@ -20,6 +20,8 @@ struct TemplatePreviewView: View {
     var pictureProbe: PreviewPictureProbe?
 
     @State private var size: CGSize = .zero
+    /// A half-open iPhone Duo's fold across the preview: the picture keeps to one side of it.
+    @State private var fold: PreviewFold?
     /// `size` with the keyboard's room given back: what the layout is chosen for.
     @State private var roomSize: CGSize = .zero
     /// The layout chosen when title editing began, for that window width: kept until it ends.
@@ -55,21 +57,15 @@ struct TemplatePreviewView: View {
     /// The preview, its bar and its covers.
     private var screen: some View {
         Group {
-            if isSideBySide {
+            if let fold, fold.isUpright {
+                pages(beside: fold.frame)
+            } else if let fold {
+                halves(across: fold.frame)
+            } else if isSideBySide {
                 HStack(spacing: 24) {
                     canvas
-                    // The card keeps its natural height, centred, and scrolls only when the
-                    // window is too short for it (iPhone in landscape).
-                    ScrollView {
-                        controls
-                            .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
-                            .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
-                            .padding(.vertical, 12)
-                            .frame(minHeight: max(0, size.height - 2 * sidePadding), alignment: .center)
-                    }
-                    .scrollBounceBehavior(.basedOnSize)
-                    .scrollIndicators(.hidden)
-                    .frame(width: panelWidth)
+                    sidePanel
+                        .frame(width: panelWidth)
                 }
                 .padding(.horizontal, sidePadding)
                 .padding(.vertical, sidePadding - 12)
@@ -105,6 +101,7 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        .onGeometryChange(for: PreviewFold?.self) { PreviewFold.active(in: $0) } action: { fold = $0 }
         .background {
             Color.clear
                 .ignoresSafeArea(.keyboard)
@@ -190,6 +187,9 @@ struct TemplatePreviewView: View {
     /// keyboard (`roomSize`) and holds while the title is edited: switching layouts then would
     /// rebuild the title field and drop its focus, and the keyboard with it.
     private var isSideBySide: Bool {
+        // Half open, the fold decides: the picture beside the card like a book's two pages, or
+        // above it like a laptop's screen over its keys.
+        if let fold { return fold.isUpright }
         if let editingLayout, editingLayout.width == size.width { return editingLayout.sideBySide }
         return chosenLayout
     }
@@ -342,6 +342,65 @@ struct TemplatePreviewView: View {
     }
 
     // MARK: Canvas
+
+    /// The card beside the picture: its natural height, centred, scrolling only when the window
+    /// is too short for it (iPhone in landscape).
+    private var sidePanel: some View {
+        ScrollView {
+            controls
+                .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
+                .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
+                .padding(.vertical, 12)
+                .frame(minHeight: max(0, size.height - 2 * sidePadding), alignment: .center)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
+    }
+
+    /// Half open like a book: the picture on the leading page, the card on the trailing one,
+    /// nothing on the fold (`fold`, in this view's coordinates).
+    private func pages(beside fold: CGRect) -> some View {
+        HStack(spacing: 0) {
+            canvas
+                .padding(.leading, sidePadding)
+                .padding(.trailing, 16)
+                .frame(width: max(0, fold.minX))
+            Color.clear
+                .frame(width: fold.width)
+            sidePanel
+                .padding(.leading, 16)
+                .padding(.trailing, sidePadding)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(.vertical, sidePadding - 12)
+    }
+
+    /// Half open like a laptop: the picture stands above the fold, the card lies below it,
+    /// scrolling should it be taller than the half.
+    private func halves(across fold: CGRect) -> some View {
+        VStack(spacing: 0) {
+            canvas
+                .padding(.horizontal, sidePadding)
+                .padding(.top, 4)
+                .padding(.bottom, 12)
+                .frame(height: max(0, fold.minY))
+            Color.clear
+                .frame(height: fold.height)
+            ScrollView {
+                controls
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            .background {
+                UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30, style: .continuous)
+                    .fill(Theme.surface)
+                    .shadow(color: .black.opacity(0.06), radius: 16, x: 0, y: -4)
+                    .ignoresSafeArea(edges: .bottom)
+            }
+        }
+    }
 
     private var canvas: some View {
         VStack {
@@ -1055,5 +1114,19 @@ private struct UnlockOffer: ViewModifier {
         content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } }) {
             UnlockSheet(fromStart: true)
         }
+    }
+}
+
+/// A half-open iPhone Duo's fold across the create flow's preview (`TemplatePreviewView`): its
+/// active reserved region, margins included, in the preview's coordinates.
+nonisolated struct PreviewFold: Equatable, Sendable {
+    var frame: CGRect
+    /// Down the middle, like a book; else across it, like a laptop.
+    var isUpright: Bool { frame.height > frame.width }
+
+    static func active(in proxy: GeometryProxy) -> PreviewFold? {
+        guard #available(iOS 27.1, *) else { return nil }
+        guard let region = proxy.reservedRegions(kind: .division).first(where: \.isActive) else { return nil }
+        return PreviewFold(frame: region.frame)
     }
 }

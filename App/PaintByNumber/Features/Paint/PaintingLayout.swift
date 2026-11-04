@@ -162,7 +162,7 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         let metrics = PaletteMetrics(dynamicTypeSize: inputs.dynamicTypeSize)
             .scaled(by: chromeScale(regularWidth: inputs.regularWidth))
         let caption = !inputs.regularWidth
-        let bars = topGap + barHeight(regularWidth: inputs.regularWidth) + canvasGap + bottomGap
+        let bars: CGFloat = topGap + barHeight(regularWidth: inputs.regularWidth) + canvasGap + bottomGap
         return Palette(
             side: false,
             lines: lines(

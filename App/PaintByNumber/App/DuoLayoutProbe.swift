@@ -66,8 +66,10 @@ final class DuoLayoutProbe {
         try? data.write(to: Self.file, options: .atomic)
     }
 
+    /// `[x, y, width, height]` to a tenth of a point.
     private static func numbers(_ rect: CGRect) -> [Double] {
-        [rect.minX, rect.minY, rect.width, rect.height].map { (Double($0) * 10).rounded() / 10 }
+        let values: [CGFloat] = [rect.minX, rect.minY, rect.width, rect.height]
+        return values.map { (value: CGFloat) -> Double in (Double(value) * 10).rounded() / 10 }
     }
 }
 
