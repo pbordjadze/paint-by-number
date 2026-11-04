@@ -84,9 +84,7 @@ struct LineArtPreviewTests {
             aspectRatio: CGFloat(book.width) / CGFloat(book.height)
         )
         .frame(width: 300, height: 400)
-        let renderer = ImageRenderer(content: view)
-        renderer.scale = 1
-        let image = try #require(renderer.cgImage)
+        let image = try #require(Self.render(view))
         let pixels = try #require(Self.pixels(of: image))
         #expect(pixels.width == 300 && pixels.height == 400)
         // The photo on the leading half (the divider starts in the middle)…
@@ -141,6 +139,35 @@ struct LineArtPreviewTests {
         ctx.setFillColor(CGColor(srgbRed: CGFloat(rgb.x) / 255, green: CGFloat(rgb.y) / 255, blue: CGFloat(rgb.z) / 255, alpha: 1))
         ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
         return ctx.makeImage()
+    }
+
+    /// `view` rendered at scale 1. iOS 27's `ImageRenderer` can give a test process's first render
+    /// back with nothing drawn (CI on Xcode 27.1, November 4, 2026: twice in four iPad runs, every
+    /// pixel alike, and drawn when run again). A comparison is never one flat color, so only such a
+    /// render is made again, by a new renderer, and a view that draws nothing still fails.
+    private static func render(_ view: some View) -> CGImage? {
+        var image: CGImage?
+        for _ in 0..<3 {
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = 1
+            image = renderer.cgImage
+            if let image, showsAnything(image) { break }
+        }
+        return image
+    }
+
+    /// Whether `image` shows anything: one with every pixel alike drew nothing.
+    private static func showsAnything(_ image: CGImage) -> Bool {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return false }
+        var rgba = [UInt32](repeating: 0, count: image.width * image.height)
+        rgba.withUnsafeMutableBytes { raw in
+            let ctx = CGContext(
+                data: raw.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
+                bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        }
+        let first = rgba.first
+        return rgba.contains { $0 != first }
     }
 
     /// `image` drawn into 8-bit sRGB (whatever space the renderer gave it).
