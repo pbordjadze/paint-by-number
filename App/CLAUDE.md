@@ -62,8 +62,8 @@ synchronized folder would bundle it into the app.
   as a `TipSet` (bits), never an array: they are plain data, which SwiftUI compares bit for bit,
   skipping their bodies when their screen renders again unchanged.
 - iOS 27's TipKit leaves a presented popover tip on screen, its text and all, when the tip handed
-  to `popoverTip` turns nil (CI, November 4): `.gentleTip`'s modifier closes the popover by its
-  binding with the tip still attached and lets the tip go a second later.
+  to `popoverTip` turns nil (CI, November 4): `.gentleTip`'s modifier keeps handing it the tip it
+  pointed last and closes the popover by its binding alone.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
