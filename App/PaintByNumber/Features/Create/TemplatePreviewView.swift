@@ -132,10 +132,15 @@ struct TemplatePreviewView: View {
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         #if UNRELEASED
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
-        // A tap on Refine made while the painting was updating: it opens once it is made. Initial
-        // too: a page from scratch asks for Refine as it loads, and may be made before this shows.
-        .onChange(of: model.opensRefine, initial: true) { _, opens in
+        // A tap on Refine made while the painting was updating: it opens once it is made.
+        .onChange(of: model.opensRefine) { _, opens in
             if opens { openRefine() }
+        }
+        // A page from scratch asks for Refine as it loads and may be made before this shows: it
+        // opens once the push has landed (a cover presented mid-push can be dropped).
+        .task {
+            try? await Task.sleep(for: Self.pushSettles)
+            if model.opensRefine { openRefine() }
         }
         #endif
     }
@@ -232,6 +237,9 @@ struct TemplatePreviewView: View {
     private var isEnlarged: Bool { isTuning && !isSideBySide && fold == nil }
 
     #if UNRELEASED
+    /// How long the preview's push takes to land before Refine, already made, is opened over it.
+    private static let pushSettles: Duration = .milliseconds(450)
+
     /// Refine on the final template, or, while it is being made, as soon as it is.
     private func openRefine() {
         titleFocused = false

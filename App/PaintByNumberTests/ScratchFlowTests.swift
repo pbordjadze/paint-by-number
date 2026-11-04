@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import Testing
+import UIKit
 @testable import PaintByNumber
 
 #if UNRELEASED
@@ -50,6 +51,20 @@ struct ScratchFlowTests {
         let kept = try #require(model.draft, "a drawing is kept as a draft once something is drawn")
         #expect(kept.refinements.start == .blank && kept.sampleName == nil)
         #expect(kept.defaultTitle == CreateModel.scratchTitle())
+        #expect(kept.scratch == true)
+        let coded = try JSONDecoder().decode(CreateDraft.self, from: JSONEncoder().encode(kept))
+        #expect(coded.scratch == true, "draft.json keeps that it is a page from scratch")
+
+        // Resumed, it is a page from scratch again: no analysis, no Start From, its line laid.
+        let photo = try #require(UIImage(cgImage: try #require(model.source?.preview)).pngData())
+        let resumed = CreateModel()
+        resumed.load(draft: kept, photo: photo)
+        try await waitUntil { resumed.isFinal && resumed.preview?.refinements.edits.count == 1 }
+        #expect(resumed.isScratch)
+        #expect(resumed.refinements.start == .blank)
+        #expect(resumed.decision == nil)
+        #expect(resumed.preview?.template.regions.count == 2)
+        resumed.cancelAll()
 
         let draft = try await model.makeDraft()
         #expect(draft.title == CreateModel.scratchTitle())

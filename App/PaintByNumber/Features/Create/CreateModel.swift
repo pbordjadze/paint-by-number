@@ -189,10 +189,10 @@ final class CreateModel {
     var draft: CreateDraft? {
         guard let source, !isChoosingSettings, !refinements.isEmpty, !isPractice else { return nil }
         // A blank page with nothing drawn on it is nothing to keep.
-        guard !isScratch || !refinements.edits.isEmpty else { return nil }
+        guard !isScratch || refinements.changeCount > 0 else { return nil }
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
-            sampleName: source.sampleName, refinements: refinements)
+            sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil)
     }
 
     var colorCount: Double
@@ -522,7 +522,7 @@ final class CreateModel {
     func load(draft: CreateDraft, photo: Data, kept: EditTrail.Kept? = nil) {
         // A drawing's draft keeps the cleaned sheet as its photo: nothing to clean again.
         begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept,
-              drawing: draft.settings.drawing != nil, cleaned: true) {
+              drawing: draft.settings.drawing != nil, cleaned: true, scratch: draft.scratch == true) {
             try await Self.decode(data: photo)
         }
     }
@@ -647,11 +647,16 @@ final class CreateModel {
                     // and Refine is where the picture is made.
                     source = Source(image: decoded.image, preview: decoded.preview, sampleName: nil)
                     draftImage = nil
-                    apply(GenerationSettings())
-                    phase = .ready
                     refineAsked = true
                     trace("A blank page: Refine asked for")
-                    startGeneration(draftFirst: false)
+                    if let saved {
+                        // A drawing from scratch kept as a draft: its settings, its edits.
+                        resume(saved, suggestion: nil)
+                    } else {
+                        apply(GenerationSettings())
+                        phase = .ready
+                        startGeneration(draftFirst: false)
+                    }
                     return
                 }
                 if drawing {

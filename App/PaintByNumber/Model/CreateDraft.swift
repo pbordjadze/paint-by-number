@@ -25,6 +25,9 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     var sampleName: String?
     /// Kept beside the draft the way an artwork keeps its own (`refinements.json`).
     var refinements = TemplateRefinements()
+    /// A page From Scratch (`CreateModel.loadScratch()`): resumed as one, not as a photo. Absent
+    /// (nil) in every draft before it, and in a photo's.
+    var scratch: Bool? = nil
 
     var resolvedTitle: String { Self.resolvedTitle(typed: title, default: defaultTitle) }
 
@@ -35,7 +38,7 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case photoID, title, defaultTitle, settings, lines, sampleName
+        case photoID, title, defaultTitle, settings, lines, sampleName, scratch
     }
 }
 

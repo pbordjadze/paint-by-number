@@ -39,7 +39,9 @@ final class ScratchUITests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 20), "Done didn't go back to the preview")
         let name = title.placeholderValue ?? ""
         XCTAssertTrue(name.hasPrefix("Drawing, "), "The page is named \(name)")
-        XCTAssertFalse(app.sliders.firstMatch.exists, "A blank page offers sliders")
+        for setting in ["Colors", "Detail", "Smoothness", "Lines"] {
+            XCTAssertFalse(app.sliders[setting].exists, "A blank page offers the \(setting) slider")
+        }
         attachScreenshot(of: app, named: "scratch-preview")
 
         let start = app.buttons["Start Painting"]
