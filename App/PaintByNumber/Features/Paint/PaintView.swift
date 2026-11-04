@@ -82,6 +82,8 @@ struct PaintView: View {
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
 
+    /// Between the bar and the palette on a half-open Duo's book page.
+    private static let bookGap: CGFloat = 20
     /// The bars' margins (`PaintingLayout`, whose canvas insets keep the canvas clear of them).
     private static let edge = PaintingLayout.edge
     private static let topGap = PaintingLayout.topGap
@@ -254,6 +256,11 @@ struct PaintView: View {
             }
 
             VStack(spacing: 0) {
+                if layout.mode == .book {
+                    // The book's controls page: the bar and the palette together in its middle
+                    // (the Lamplit Table's Rikyū: "so the controls' page reads as one group").
+                    Spacer(minLength: 0)
+                }
                 Group {
                     if let feedback {
                         FeedbackBar(
@@ -269,7 +276,11 @@ struct PaintView: View {
                 .padding(.horizontal, Self.edge)
                 .padding(.top, Self.topGap)
                 .duoProbe("paint-top-bar")
-                Spacer(minLength: 0)
+                if layout.mode == .book {
+                    Color.clear.frame(height: Self.bookGap)
+                } else {
+                    Spacer(minLength: 0)
+                }
                 if let feedback {
                     FeedbackTools(draft: feedback)
                         .padding(.horizontal, Self.edge)
@@ -282,7 +293,8 @@ struct PaintView: View {
                         .duoProbe("paint-palette")
                 }
                 if layout.mode != .whole {
-                    // The page beside a fold: the palette in the middle of the room below the bar.
+                    // The page beside a fold: the palette in the middle of the room below the bar
+                    // (with the bar, on a book's page).
                     Spacer(minLength: 0)
                 }
             }
