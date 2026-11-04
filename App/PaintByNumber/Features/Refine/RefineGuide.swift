@@ -123,9 +123,17 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.basics.summary", defaultValue: "How a picture is made, and the gestures every tool shares.",
                                 comment: "Tool Guide, The Basics: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.basics.text", defaultValue: """
-                    A picture in Refine is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Refine’s own messages say area for a cell.
+                    A picture in Refine is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Refine’s own messages call a cell an “area”.
 
-                    The tools are in five groups named after what they work on: Ink, Cells, Paint, Numbers and See. On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom. Each tool is made for one of the three, though one change can lead to another: erase the line between two cells, and they become one.
+                    The tools are in five groups:
+
+                    - Ink: the Pen, Shapes, Bend Line, the Eraser and the Line Eraser
+                    - Cells: Select, Cell Edge, Merge, Move Edge and Make Cell
+                    - Paint: the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks
+                    - Numbers: Move Number
+                    - See: Writing and Try Painting
+
+                    On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom. Each tool is made for ink, cells, paint or numbers, though one change can lead to another: erase the line between two cells, and they become one.
 
                     ## When a change seems to do nothing
                     It often did something. A line that closes off a shape makes a new cell, but the new cell keeps the paint of the cell it was cut from, so it looks the same until you paint it. Turn on Numbers in [Layers](guide:layers) to see its number.
@@ -137,7 +145,7 @@ nonisolated struct RefineGuidePage {
 
                     Tap with two fingers to undo and with three to redo. Leave them on the screen to keep going, faster the longer you hold.
 
-                    Touch and hold still for half a second to pick up a color. A loupe appears: its top half is the color under your finger, its bottom half the paint you have now. Slide to another color if you like, and lift to pick it. Your tool stays the same. This works with every tool but Bend Line, Move Edge and Move Number, where holding still is part of the drag.
+                    Touch and hold still for half a second to pick up a color. A loupe appears: its top half is the color under your finger, its bottom half your current paint. Slide to another color if you like, and lift to pick it. Your tool stays the same. This works with every tool but Bend Line, Move Edge and Move Number, where holding still is part of the drag.
 
                     Tap with four fingers to hide the tools and see the picture alone, and again to bring them back.
 
@@ -146,15 +154,13 @@ nonisolated struct RefineGuidePage {
 
                     On a keyboard, hold ⌘ to see the shortcuts. Most tools have a letter, such as P for the Pen and B for the Paint Brush, and [ and ] change the size of the brush and the erasers.
 
-                    The practice pictures in this guide answer the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.
+                    The practice pictures in this guide work with the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.
 
                     ## Keeping your changes
                     Done keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.
 
                     ## On the practice picture
                     Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like.
-
-                    Procreate, mentioned on the Pen’s and the Bucket’s pages, is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
                     """,
                              comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
@@ -211,7 +217,7 @@ nonisolated struct RefineGuidePage {
 
                     A very short stroke, a few points on the screen, is ignored, and a tap does nothing.
 
-                    If you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it.
+                    If you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
 
                     ## On the practice picture
                     Draw a cloud low in the sky and end where you began, then look for the sparkles. Turn on Color from Photo and draw a second cloud: it takes the peach of the glow beneath it.
@@ -227,7 +233,7 @@ nonisolated struct RefineGuidePage {
 
                     A closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.
 
-                    A curve takes two drags. The first sets its ends, and the second bends it toward your finger. To leave it straight, tap, or pick another tool. Undo takes the curve away. While a curve waits to be bent, a line under the tools says so.
+                    A curve takes two drags. The first sets its ends, and the second bends it toward your finger. To leave it straight, tap anywhere on the picture, or pick another tool. Undo takes the curve away. While a curve waits, a line under the tools reminds you: “Drag to bend the curve, or tap to keep it straight.”
 
                     The Snap switch works only on lines and curves: it moves their ends onto lines near them. Rectangles, ovals, hexagons and stars go exactly where you drag them, so draw them clear of other lines or well across them.
 
@@ -243,11 +249,11 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.eraser.summary", defaultValue: "Rubs out the ink it touches.",
                                 comment: "Tool Guide, the Eraser: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.eraser.text", defaultValue: """
-                    The Eraser takes out ink, the lines you drew and the lines the app drew alike. Where it breaks a line between two cells, even by a small gap, those cells become one, with the paint and number of the larger cell. The rest of the line stays on the picture, so it can look as if nothing changed; turn on Numbers in [Layers](guide:layers) and you’ll see one number where there were two. If two cells joined that you wanted apart, undo, or close the gap again with the Pen.
+                    The Eraser takes out ink, the lines you drew and the lines the app drew alike. Where it breaks a line between two cells, even by a small gap, those cells become one, with the paint and number of the larger cell. The rest of the line stays, and is still drawn on the finished picture, now inside one cell, so it can look as if nothing changed; turn on Numbers in [Layers](guide:layers) and you’ll see one number where there were two. If two cells joined that you wanted apart, undo, or close the gap again with the Pen.
 
                     It leaves the edge of the picture alone, and the dashed edges between cells, which have no ink; to take those away, use [Merge](guide:merge). It also erases the letters the app drew where your photo had writing.
 
-                    Size, from 4 to 48 points, is measured on the screen, so the Eraser rubs finer when you zoom in. A tap rubs out one round spot the size of the eraser. With the Apple Pencil hovering over the picture, a ring shows how much it will take.
+                    The Size slider sets how wide the Eraser rubs on the screen, not on the picture, so it rubs finer when you zoom in. A tap rubs out one round spot the size of the eraser. With the Apple Pencil hovering over the picture, a ring shows how much it will take.
 
                     If erasing would leave a cell without room for its number, a note at the top says “That couldn’t be erased.” and nothing changes.
 
@@ -281,7 +287,7 @@ nonisolated struct RefineGuidePage {
 
                     Start the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed at a junction won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”
 
-                    A line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. Then the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
+                    A line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. If your drag would do that, the line stays where it was and the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
 
                     Bend Line moves the drawn lines. The dashed edges between cells, which have no ink, move with [Move Edge](guide:moveEdge). With this tool, touching and holding doesn’t pick up a color as it does with most others: you’re holding the line.
 
@@ -295,15 +301,15 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell, its paint, and how many cells share it.",
                                 comment: "Tool Guide, Select: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.select.text", defaultValue: """
-                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many cells use that paint (the bar calls them areas). Tap it again, or tap off the picture, to let it go.
+                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many areas, as the bar calls cells, use that paint. Tap it again, or tap off the picture, to let it go.
 
-                    While any Cells tool is picked, dashed lines show the edges between cells that have no ink. They divide the paint, but they won’t be drawn on the finished picture.
+                    While any Cells tool is picked, dashed lines show the borders between cells where no line is drawn. They divide the paint, but they won’t be drawn on the finished picture.
 
-                    Change Color in the bar opens the cell’s card. If other cells share its paint, the picker there is called Only This Area: it gives this cell a color of its own and leaves the others as they are. If it’s the only cell with that paint, the picker is called Color and changes the paint itself. Under Or Use a Paint, you can give the cell one of the picture’s other paints instead. If you pick a color very close to a paint the picture already has, the cell gets that paint.
+                    Change Color in the bar opens the cell’s card. If other cells share its paint, the card’s color picker gives this cell a color of its own and leaves the others as they are; it’s labelled Only This Area. If it’s the only cell with that paint, the picker is called Color and changes the paint itself. The swatches below it give the cell one of the picture’s other paints instead. If you pick a color very close to a paint the picture already has, the cell gets that paint.
 
                     On the card of a cell that shares its paint, Show Its Other Areas takes you to [Edit Paint](guide:editPaint) with that paint picked and its cells glowing.
 
-                    If you recolor the last cell of a paint, that paint goes, and the paints after it are renumbered.
+                    If you recolor the last cell of a paint, that paint is removed, and the paints after it are renumbered.
 
                     ## On the practice picture
                     Select the moon and open its card: it’s the only cell of its paint, so the picker is Color. Then select one of the window’s panes, which share one yellow paint: its picker is Only This Area.
@@ -331,16 +337,16 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.merge.summary", defaultValue: "Joins the cells you drag across into one.",
                                 comment: "Tool Guide, Merge: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.merge.text", defaultValue: """
-                    Start in the cell whose paint you want to keep, and drag across the cells that should join it. The first cell keeps its paint and number. Everything that divided the cells goes: the dashed edges and the drawn lines too. Once your finger has crossed into a second cell, the cells that will join light up.
+                    Start in the cell whose paint you want to keep, and drag across the cells that should join it. The first cell keeps its paint and number. The edges between them are removed, drawn lines as well as dashed ones. Once your finger has crossed into a second cell, the cells that will join light up.
 
-                    A cell joins only if it touches one that’s already joining. If your drag never leaves the first cell, a note at the top says “That’s already one area.” If none of the cells you crossed could join, for instance because they don’t touch, it says “Those areas couldn’t be joined.”
+                    A cell joins only if it touches the cell you’re building. If your drag never leaves the first cell, a note at the top says “That’s already one area.” If none of the cells you crossed touch it, the note says “Those areas couldn’t be joined.”
 
-                    A paint no cell uses any more drops out of the palette, so the paints numbered after it each move down a number.
+                    If no cell is left using a paint, that paint is removed from the palette, and each paint after it moves down a number.
 
                     To divide a cell again, draw an edge with [Cell Edge](guide:cellEdge), or a line with the [Pen](guide:pen).
 
                     ## On the practice picture
-                    Drag across the window’s four panes to make one big pane. Then drag from the sky into the moon.
+                    Drag across the window’s four panes to make one big pane. Then drag from the sky into the moon: the moon disappears into the sky’s paint.
                     """,
                              comment: "Tool Guide, Merge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .merge))
@@ -351,14 +357,14 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.moveEdge.text", defaultValue: """
                     Grab the border between two cells, inked or dashed, and drag it. One cell grows as the other shrinks, and both keep their paint. A border with ink takes its ink along.
 
-                    Where three or more borders meet, the meeting point stays put, and the border bends between those points. Start your drag on the border itself, within about 16 points of it and away from those meeting points. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”
+                    A border runs from one corner, where three or more borders meet, to the next. The corners stay put, and the border bends between them. Start your drag on the border itself, close to it and away from the corners. If your drag starts away from any border, a note at the top says “Start the drag on the border between two cells.”
 
-                    A border can’t cross another, leave the picture, or squeeze a cell until its number no longer fits. Then the note says “That line couldn’t be moved there.” Try a shorter drag.
+                    A border can’t cross another, leave the picture, or squeeze a cell until its number no longer fits. If your drag would do one of those, nothing moves, and the note says “That line couldn’t be moved there.” Try a shorter drag.
 
-                    [Bend Line](guide:bendLine) moves inked borders too. The difference: Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.
+                    [Bend Line](guide:bendLine) moves inked borders too. Move Edge also moves the dashed ones, and Bend Line also moves a line that isn’t a border, such as a stroke inside a cell.
 
                     ## On the practice picture
-                    Grab the border between the two hills near the middle and drag it down a little, so the far hills grow taller.
+                    Grab the middle of the border between the two hills and drag it down a little, so the far hills grow taller.
                     """,
                              comment: "Tool Guide, Move Edge: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .moveEdge))
@@ -371,7 +377,7 @@ nonisolated struct RefineGuidePage {
 
                     The fill spreads out to the ink around your tap, across any dashed edges (borders between cells that have no ink), and the cells it covers become one. If there’s no ink all the way around, and the fill reaches the edge of the picture, only the cell you tapped changes color.
 
-                    To undo a fill, tap the cell it made: the shape goes back to how it was before. A tap on any other cell makes a new fill.
+                    Tap a cell that Make Cell made, and it goes back to how it was before. A tap on any other cell makes a new one.
 
                     The palette doesn’t show here, because the color comes from your photo. To pour a paint you’ve chosen, use the [Bucket](guide:bucket).
 
@@ -396,7 +402,7 @@ nonisolated struct RefineGuidePage {
                     ## What else can change
                     Pouring into the last cell of a paint retires that paint, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint with no line between them, only a dashed edge, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”
 
-                    If you color in Procreate, this is ColorDrop that never leaks: a cell ends exactly at its edges.
+                    If you color in Procreate, this is ColorDrop that never leaks: a cell ends exactly at its edges. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
 
                     ## On the practice picture
                     Here the roof and the moon are outlined, but have the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then pick the sky’s paint and pour it into the far hills.
@@ -408,13 +414,13 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.brush.summary", defaultValue: "Paints a stroke in the current paint.",
                                 comment: "Tool Guide, the Paint Brush: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.brush.text", defaultValue: """
-                    Brush across the picture, and everything under the stroke takes the current paint. The brush cuts new cells out of the cells it crosses, with dashed edges along the sides of the stroke, and any cells of the same paint it touches join up with them. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.
+                    Brush across the picture, and everything under the stroke takes the current paint. Where the stroke crosses a cell, the part under it becomes a cell of its own, with dashed edges along the sides of the stroke. Where it touches a cell that already has the paint, the two join into one. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.
 
-                    Start moving straight away. A finger that rests still for half a second first is a touch and hold, and picks up a color instead.
+                    Start moving as soon as you touch the screen. If your finger rests for half a second before it moves, Refine takes it as a touch and hold and picks up a color instead.
 
                     The Size slider sets the brush’s width on the screen, not on the picture, so zoom in to paint finer. A tap paints a single dab. With the Apple Pencil hovering over the picture, a ring shows the brush’s size.
 
-                    A piece too small for a number keeps the paint it had. If nothing under the stroke has room for a number, a note at the top says “That couldn’t be painted there.”
+                    Where the stroke would leave a sliver too small to hold a number, that sliver keeps its old paint. If the whole stroke is like that, nothing changes, and a note at the top says “That couldn’t be painted there.” A wider brush, or a stroke farther from the lines, usually works.
 
                     ## On the practice picture
                     Touch and hold the cottage’s wall to pick up its cream, then paint a winding path over the near hill to the door.
@@ -453,7 +459,7 @@ nonisolated struct RefineGuidePage {
                     Choosing one of the [Looks](guide:looks), or going back to the photo’s colors there, undoes every change made here.
 
                     ## On the practice picture
-                    Pick the near hill and turn it an autumn orange. Then drag the window’s swatch onto the moon’s.
+                    Pick the near hill and turn it an autumn orange; with Similar colors too on, watch the tree’s greens follow it. Then drag the window’s swatch onto the moon’s.
                     """,
                              comment: "Tool Guide, Edit Paint: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .editPaint))
@@ -464,7 +470,7 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.looks.text", defaultValue: """
                     A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. Photo goes back to your photo’s own colors.
 
-                    You can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while the colors you poured with the Bucket or brushed on stay. So choose your look first, then adjust single paints.
+                    You can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while colors you gave single cells, with the Bucket, the Paint Brush or Only This Area, stay. So choose your look first, then adjust single paints.
 
                     When a look makes two paints too alike, they become one paint, and the note says “Colors that came out alike share a number now.”
 
@@ -494,11 +500,11 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.text.text", defaultValue: """
                     When your photo has writing in it, the app looks for lines of text and draws their letters as fine pen lines, so they can still be read once the picture is painted. While you use Writing, each line it found has a box around it.
 
+                    Every tap or drag here remakes the picture from your photo, which takes a moment, and then redoes your other changes on top. Any that no longer fit the new picture, such as a line that ended on a line that’s gone, are left out, and a note says how many.
+
                     Tap a box to turn that line off. The box turns dashed, and the writing is painted like the rest of the photo, which tends to lose the small parts of letters: an i’s dot, the inside of an O. Tap it again to turn it back on.
 
                     If the app missed some writing, drag a box over it from one corner to the opposite one. The box has to be a little taller than a line, so a flat swipe along the words does nothing. Tap a box you drew to take it away.
-
-                    Each change remakes the picture from your photo, which takes a moment, and then redoes your other changes on top. Any that no longer fit the new picture, such as a line that ended on a line that’s gone, are left out, and a note says how many.
 
                     ## On the practice picture
                     The two lines written in ink on the paper and the jar’s label were found. The faint pencil line, “feed the cat”, wasn’t, so only pieces of it show. Drag a box over it, corner to corner, and wait for the picture to be remade. Then tap the box around HONEY and look at the O.
