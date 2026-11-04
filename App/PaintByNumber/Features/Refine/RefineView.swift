@@ -2347,7 +2347,8 @@ extension RefineView {
     /// into the picture. Out of the way while a note shows at the top.
     @ViewBuilder
     private var startChooser: some View {
-        if model.refinements.edits.isEmpty, submitted.isEmpty, model.hasLineArtInput, model.note == nil {
+        // A page from scratch has nothing to generate: Blank is all it is.
+        if model.refinements.edits.isEmpty, submitted.isEmpty, model.hasLineArtInput, !model.isScratch, model.note == nil {
             Picker("Start From", selection: Binding(get: { model.refinements.start }, set: { model.start(from: $0) })) {
                 Text("Generated").tag(TemplateRefinements.Start.generated)
                 Text("Blank").tag(TemplateRefinements.Start.blank)

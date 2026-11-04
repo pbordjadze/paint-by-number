@@ -54,6 +54,9 @@ In the critic's order, each smallest change, none started:
    new colors picked in a row keep only the last. Device-confirm the first, then keep each new
    paint until undone or Refine closes.
 3. The Blank switch sits under Refine's first tip, and a drawing keeps the sample photo's title.
+   From Scratch on the New Painting screen (painting-company row 231) now opens Refine on a
+   blank page with no photo behind it, no Start From and a name of its own ("Drawing, <date>");
+   the switch on a photo's Refine is as it was.
 4. The template validator charges a long segment's whole box (`GeometryValidator`'s bucket
    stage); drawn lines are densified, but an edge made otherwise across a big Blank (a Bend Line
    of a long line) could still meet the limit.

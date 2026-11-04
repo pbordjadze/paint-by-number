@@ -883,6 +883,16 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
   covers the flow and regeneration, `DrawingEntryUITests` the long press and the bare toolbar.
+- From Scratch (SideStore and Debug builds, `#if UNRELEASED`, as Refine is; painting-company
+  row 231): the New Painting screen's toolbar button (`from-scratch`, beside Take Photo) calls
+  `CreateModel.loadScratch()`: a white square page (`blankPageSide`) is the flow's photo, the
+  base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
+  makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
+  is asked for at once (`opensRefine`; the preview opens it with `initial: true`). `isScratch`
+  hides Refine's Start From and the preview's suggestion chip and sliders; the name is
+  "Drawing, <date>" (`scratchTitle`); a page with nothing drawn is no draft. A resumed draft
+  is a Blank start of its photo, the paper (analyzed like any photo, Start From back until the
+  first edit). `ScratchFlowTests`, `ScratchUITests`.
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until

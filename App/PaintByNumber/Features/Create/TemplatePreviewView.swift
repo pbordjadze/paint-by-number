@@ -132,8 +132,9 @@ struct TemplatePreviewView: View {
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         #if UNRELEASED
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
-        // A tap on Refine made while the painting was updating: it opens once it is made.
-        .onChange(of: model.opensRefine) { _, opens in
+        // A tap on Refine made while the painting was updating: it opens once it is made. Initial
+        // too: a page from scratch asks for Refine as it loads, and may be made before this shows.
+        .onChange(of: model.opensRefine, initial: true) { _, opens in
             if opens { openRefine() }
         }
         #endif
@@ -494,13 +495,14 @@ struct TemplatePreviewView: View {
             if model.isDrawing {
                 // A drawing has no settings to suggest or tune: its paints come from a set.
                 palettePicker
-            } else {
+            } else if !model.isScratch {
+                // Nor has a page from scratch: Refine is where it is made.
                 originRow
             }
             #else
             originRow
             #endif
-            if showsSettings && !model.isDrawing {
+            if showsSettings && !model.isDrawing && !model.isScratch {
                 if isCompact && !isSideBySide {
                     // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
                     // the comparison large and asks one thing at once.
