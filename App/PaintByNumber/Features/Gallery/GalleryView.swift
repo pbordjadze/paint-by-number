@@ -22,6 +22,9 @@ struct GalleryView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
+    /// Where an open iPhone Duo's fold runs through the pages (`FoldPlace`), flat or not.
+    @State private var foldPlace: FoldPlace?
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
@@ -72,7 +75,8 @@ struct GalleryView: View {
                         }
                     }
                 }
-                .padding(.horizontal, horizontalPadding)
+                .padding(.leading, horizontalPadding + max(0, 2 * (fold?.offset ?? 0)))
+                .padding(.trailing, horizontalPadding + max(0, -2 * (fold?.offset ?? 0)))
                 .padding(.top, 6)
                 .padding(.bottom, 56)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
@@ -101,6 +105,7 @@ struct GalleryView: View {
         }
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .readsTheFold { foldPlace = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
         .onAppear {
@@ -176,15 +181,47 @@ struct GalleryView: View {
 
     // MARK: Layout
 
-    /// Cards of roughly 240–330 pt: three across a portrait iPad, four or five in landscape.
+    /// Cards of roughly 240–330 pt: three across a portrait iPad, four or five in landscape. With
+    /// a fold down the pages, an even count, so the middle gutter lies on the fold and no card
+    /// does (four across an open iPhone Duo held like a book).
     private var columnCount: Int {
-        switch width {
+        let count = switch width {
         case ..<560: 2
         case ..<1100: 3
         case ..<1300: 4
         default: 5
         }
+        return fold != nil && count % 2 == 1 ? count + 1 : count
     }
+
+    /// The columns: the gutter after the middle one as wide as the fold while it is folded, the
+    /// padding (`fold.offset`) putting it on the fold.
+    private var columns: [GridItem] {
+        let count = columnCount
+        return (0..<count).map { column in
+            let gutter = fold != nil && column == count / 2 - 1 ? max(spacing, fold?.width ?? 0) : spacing
+            return GridItem(.flexible(), spacing: gutter, alignment: .top)
+        }
+    }
+
+    /// An iPhone Duo's fold down the gallery, flat (inactive) or half open: how far its middle
+    /// lies past the middle of the room the pages have (toward the trailing edge), and how wide it
+    /// is with its margins while it is folded (none while flat).
+    nonisolated struct Fold: Equatable, Sendable {
+        var offset: CGFloat
+        var width: CGFloat
+
+        static func of(_ place: FoldPlace?, rightToLeft: Bool) -> Fold? {
+            guard let place, place.isUpright else { return nil }
+            // Not a fold through these pages (a window beside another app's): no gutter to keep.
+            guard place.frame.midX > 0, place.frame.midX < place.size.width else { return nil }
+            let middle = (place.safeLeft + place.size.width - place.safeRight) / 2
+            let offset = place.frame.midX - middle
+            return Fold(offset: rightToLeft ? -offset : offset, width: place.isActive ? place.frame.width : 0)
+        }
+    }
+
+    private var fold: Fold? { Fold.of(foldPlace, rightToLeft: layoutDirection == .rightToLeft) }
 
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
     /// widths, 20 pt on regular ones), so the cards start where they do.
@@ -210,7 +247,7 @@ struct GalleryView: View {
             }
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: spacing, alignment: .top), count: columnCount),
+                columns: columns,
                 alignment: .leading, spacing: spacing + 8
             ) {
                 content()

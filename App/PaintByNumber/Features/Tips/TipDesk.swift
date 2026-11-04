@@ -423,11 +423,23 @@ private struct GentleTipModifier: ViewModifier {
     let ids: TipSet
     var active: Bool
     var arrowEdge: Edge?
+    /// The tip this view pointed last, which TipKit keeps being handed once its turn has gone.
+    @State private var pointed: TipID?
 
     func body(content: Content) -> some View {
-        // `isPresented: nil` leaves it to TipKit to show and dismiss the popover by the tip's status
-        // (and picks the one overload of `popoverTip` that takes an arrow edge that may be nil).
-        content.popoverTip(active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge)
+        // Read here, in the body, so the popover follows the desk's turn. Presented by a binding
+        // to it alone, which closing the popover (its ×, a tap outside) sets, ending the turn.
+        // Once the view has pointed a tip, TipKit is never handed nil again, only the binding
+        // false: iOS 27's TipKit left a presented popover up, its text and all, when its tip went to
+        // nil (CI, November 4: Tap to Paint stayed over the swatch after the fill used it, whether
+        // the popover was presented by the tip's status or by this binding).
+        let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
+        let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
+        content
+            .popoverTip((shown ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+            .onChange(of: shown, initial: true) { _, now in
+                if let now { pointed = now }
+            }
     }
 }
 

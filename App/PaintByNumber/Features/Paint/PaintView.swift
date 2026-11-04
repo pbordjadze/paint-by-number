@@ -8,7 +8,9 @@ import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
-/// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`).
+/// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`). On a
+/// half-open iPhone Duo the painting has a page of its own either side of the fold, and the bars
+/// and the whole palette the other (`PaintingLayout.Mode`).
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
 /// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
@@ -50,6 +52,9 @@ struct PaintView: View {
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.layoutDirection) private var layoutDirection
+    /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`), in the safe area.
+    @State private var foldPlace: FoldPlace?
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -77,15 +82,18 @@ struct PaintView: View {
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
 
+    /// Between the bar and the palette on a half-open Duo's book page.
+    private static let bookGap: CGFloat = 20
     /// The bars' margins (`PaintingLayout`, whose canvas insets keep the canvas clear of them).
     private static let edge = PaintingLayout.edge
     private static let topGap = PaintingLayout.topGap
     private static let bottomGap = PaintingLayout.bottomGap
 
-    /// How much bigger the bar's buttons and the swatches are here (`QuietPainting.scale`).
-    private var chromeScale: CGFloat { PaintingLayout.chromeScale(regularWidth: sizeClass == .regular) }
+    /// How much bigger the bar's buttons and the swatches are (`QuietPainting.scale`), for the
+    /// layout's `regularChrome`: a regular width's, but for a phone's on a Duo's book page.
+    private func chromeScale(_ regular: Bool) -> CGFloat { PaintingLayout.chromeScale(regularWidth: regular) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.
-    private var barHeight: CGFloat { PaintingLayout.barHeight(regularWidth: sizeClass == .regular) }
+    private func barHeight(_ regular: Bool) -> CGFloat { PaintingLayout.barHeight(regularWidth: regular) }
     private var chromeScheme: ColorScheme { Self.chromeScheme(paper: paperAppearance, system: colorScheme) }
 
     /// The bars' appearance: dark over dark paper whatever the system's (on a light system the
@@ -118,6 +126,7 @@ struct PaintView: View {
                 canvasAndChrome(geo: geo, layout: layout(in: geo))
             }
         }
+        .readsTheFold { foldPlace = $0 }
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
         // canvas where it is.
         .ignoresSafeArea(.keyboard)
@@ -179,16 +188,7 @@ struct PaintView: View {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
                     .pageSizedOnPad()
-            }
-        }
-        .overlay(alignment: .top) {
-            if let thanks {
-                // Below the top bar, like the painting's other toasts; taps reach the canvas.
-                Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
-                    .padding(.top, Self.topGap + barHeight + 12)
-                    .padding(.horizontal, 20)
-                    .allowsHitTesting(false)
-                    .environment(\.colorScheme, chromeScheme)
+                    .besideTheFold()
             }
         }
         .animation(.snappy, value: thanks)
@@ -200,7 +200,14 @@ struct PaintView: View {
     /// The Metal canvas with the floating bars over it.
     private func canvasAndChrome(geo: GeometryProxy, layout: PaintingLayout) -> some View {
         let palette = layout.palette
+        // The bars' room within the safe area: all of it, or the controls' page beside a fold.
+        let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
+        let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
         return ZStack {
+            if layout.mode != .whole {
+                // The controls' page, on the painting's own surroundings.
+                backdrop.ignoresSafeArea()
+            }
             PaintCanvas(
                 session: session, controller: controller,
                 chromeInsets: layout.canvasInsets,
@@ -219,6 +226,7 @@ struct PaintView: View {
                 isAnnotating: feedback != nil,
                 watchesFirstFrame: onTemplateFrame != nil)
                 .id(ObjectIdentifier(session))
+                .padding(layout.canvasFrame)
                 .ignoresSafeArea()
 
             if let feedback {
@@ -226,6 +234,7 @@ struct PaintView: View {
                     draft: feedback, controller: controller,
                     canvasSize: CGSize(width: session.template.width, height: session.template.height),
                     isMarking: !feedback.isReviewing && !feedback.isSent, tool: feedback.tool, penColor: feedback.penColor)
+                    .padding(layout.canvasFrame)
                     .ignoresSafeArea()
             }
 
@@ -233,7 +242,7 @@ struct PaintView: View {
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
             if feedback == nil, PaintTips.desk.pageTip != nil {
-                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, insets: layout.canvasInsets)
+                let visiblePadding = layout.visibleCanvasPadding(safe: geo.safeAreaInsets)
                 TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
@@ -247,41 +256,74 @@ struct PaintView: View {
             }
 
             VStack(spacing: 0) {
+                if layout.mode == .book {
+                    // The book's controls page: the bar and the palette together in its middle
+                    // (the Lamplit Table's Rikyū: "so the controls' page reads as one group").
+                    Spacer(minLength: 0)
+                }
                 Group {
                     if let feedback {
                         FeedbackBar(
-                            draft: feedback, width: max(0, geo.size.width - 2 * Self.edge), onDiscard: endFeedback,
+                            draft: feedback, width: max(0, controlsWidth - 2 * Self.edge), onDiscard: endFeedback,
                             onNext: {
                                 Log.feedback.notice("Next: the review opens")
                                 feedback.isReviewing = true
                             })
                     } else {
-                        topBar(width: geo.size.width)
+                        topBar(width: controlsWidth, regular: layout.regularChrome)
                     }
                 }
                 .padding(.horizontal, Self.edge)
                 .padding(.top, Self.topGap)
-                Spacer(minLength: 0)
+                .duoProbe("paint-top-bar")
+                if layout.mode == .book {
+                    Color.clear.frame(height: Self.bookGap)
+                } else {
+                    Spacer(minLength: 0)
+                }
                 if let feedback {
                     FeedbackTools(draft: feedback)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
+                        .duoProbe("paint-feedback-tools")
                 } else if !palette.side || session.isComplete {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
+                        .duoProbe("paint-palette")
+                }
+                if layout.mode != .whole {
+                    // The page beside a fold: the palette in the middle of the room below the bar
+                    // (with the bar, on a book's page).
+                    Spacer(minLength: 0)
                 }
             }
+            .padding(controls)
             .environment(\.colorScheme, chromeScheme)
             if feedback == nil && palette.side && !session.isComplete {
                 HStack {
                     Spacer(minLength: 0)
                     bottomBar(palette)
                         .padding(.trailing, Self.edge)
-                        .padding(.top, sidePaletteTop)
+                        .padding(.top, PaintingLayout.sidePaletteTop(regularWidth: layout.regularChrome))
                         .padding(.bottom, Self.edge)
+                        .duoProbe("paint-palette-side")
                 }
+                .padding(controls)
                 .environment(\.colorScheme, chromeScheme)
+            }
+
+            if let thanks {
+                // Below the top bar, like the painting's other toasts (`ArtworkPaintingView`); beside
+                // a fold, at the top of the painting's page, never over the controls' page, whose
+                // bar may stand anywhere on it. Taps reach the canvas.
+                Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
+                    .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
+                    .padding(.horizontal, 20)
+                    .allowsHitTesting(false)
+                    .environment(\.colorScheme, chromeScheme)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(layout.mode == .whole ? controls : Self.padding(layout.canvasFrame, within: geo.safeAreaInsets))
             }
 
             // The capture's flash as feedback starts.
@@ -294,6 +336,20 @@ struct PaintView: View {
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
         .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
+    }
+
+    /// The controls' page beside a half-open Duo's fold: the canvas's backdrop, as the paper it
+    /// lies on (`CanvasPalette.backdropSRGB`).
+    private var backdrop: Color {
+        let rgb = CanvasPalette.backdropSRGB(paperAppearance, interfaceIsDark: colorScheme == .dark)
+        return Color(.sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
+    }
+
+    /// `insets` from the screen's edges as padding within the safe area.
+    private static func padding(_ insets: EdgeInsets, within safe: EdgeInsets) -> EdgeInsets {
+        EdgeInsets(
+            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
+            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
     }
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
@@ -328,10 +384,12 @@ struct PaintView: View {
         PaintingLayout(PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
-            isComplete: session.isComplete))
+            isComplete: session.isComplete,
+            fold: foldPlace == nil
+                ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
+                : PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
     }
 
-    private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: sizeClass == .regular) }
 
     /// Every color of the palette in its order on screen (finished ones too).
     private var colorOrder: [Int] {
@@ -353,13 +411,6 @@ struct PaintView: View {
     private static let pageTipDepth: CGFloat = 32
     private static let pageTipWidth: CGFloat = 420
 
-    /// The canvas's visible area within the safe area (the canvas itself ignores it).
-    private func visibleCanvasPadding(safe: EdgeInsets, insets: EdgeInsets) -> EdgeInsets {
-        EdgeInsets(
-            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
-            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
-    }
-
     // MARK: Top bar
 
     /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
@@ -371,8 +422,8 @@ struct PaintView: View {
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
     /// window: the bar's width would widen the whole screen. Quiet (`QuietPainting`), it fades
     /// to `quietRow`.
-    private func topBar(width: CGFloat) -> some View {
-        let badges = badgeVariants
+    private func topBar(width: CGFloat, regular: Bool) -> some View {
+        let badges = badgeVariants(regular)
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) }
@@ -381,13 +432,13 @@ struct PaintView: View {
         return GlassEffectContainer(spacing: 10) {
             Group {
                 if quiet {
-                    quietRow
+                    quietRow(regular)
                         .transition(.opacity)
                 } else {
                     // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
                     ViewThatFits(in: .horizontal) {
                         ForEach(rows, id: \.self) { row in
-                            topBarRow(badge: row.badge, showsHint: row.showsHint)
+                            topBarRow(badge: row.badge, showsHint: row.showsHint, regular: regular)
                                 .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
                         }
                     }
@@ -396,7 +447,7 @@ struct PaintView: View {
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
         }
-        .environment(\.glassButtonDiameter, barHeight)
+        .environment(\.glassButtonDiameter, barHeight(regular))
         .onPreferenceChange(BadgeTitleKey.self) { shown in
             // Only the row that fit is on screen; were any other heard, the bar names the title.
             MainActor.assumeIsolated { badgeShowsTitle = shown == [true] }
@@ -418,8 +469,9 @@ struct PaintView: View {
 
     /// The quiet bar: Back, the progress ring, which brings the rest back, and Hint.
     /// Spaced and held to their circles as `topBarRow`'s are, so Back stays where it was.
-    private var quietRow: some View {
-        HStack(spacing: 12) {
+    private func quietRow(_ regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
+        return HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
                     .frame(width: barHeight, height: barHeight)
@@ -444,17 +496,18 @@ struct PaintView: View {
         static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool, regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
         // 12 pt between every two shapes, more than the container's 10, so they don't merge. The
         // system glass buttons lay out about 5 pt wider on each side than their circle, Photo and
         // More exactly as wide: held to their circles, the gaps come out even (they were 13 and
         // 18 pt on a phone). Six controls fit a 402 pt phone.
-        HStack(spacing: 12) {
+        return HStack(spacing: 12) {
             if let onClose {
                 GlassIconButton(systemImage: "chevron.backward", label: "Back", action: onClose)
                     .frame(width: barHeight, height: barHeight)
             }
-            progressBadge(badge)
+            progressBadge(badge, regular: regular)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if photoLoader != nil {
                 PhotoPeekButton(peek: $peek)
@@ -468,7 +521,7 @@ struct PaintView: View {
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
-            moreMenu
+            moreMenu(regular)
         }
     }
 
@@ -487,8 +540,8 @@ struct PaintView: View {
 
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
-    private var badgeVariants: [BadgeVariant] {
-        let showsColor = sizeClass == .regular && !session.isComplete && session.selectedColor != nil
+    private func badgeVariants(_ regular: Bool) -> [BadgeVariant] {
+        let showsColor = regular && !session.isComplete && session.selectedColor != nil
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))
@@ -496,7 +549,7 @@ struct PaintView: View {
         return variants
     }
 
-    private func progressBadge(_ variant: BadgeVariant) -> some View {
+    private func progressBadge(_ variant: BadgeVariant, regular: Bool) -> some View {
         HStack(spacing: 10) {
             ProgressGroup(session: session, title: title, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
             if variant.showsColor {
@@ -514,13 +567,14 @@ struct PaintView: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: barHeight)
+        .frame(height: barHeight(regular))
         .glassEffect(.regular, in: .capsule)
     }
 
     /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
-    private var moreMenu: some View {
-        Menu {
+    private func moreMenu(_ regular: Bool) -> some View {
+        let barHeight = self.barHeight(regular)
+        return Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
@@ -539,7 +593,7 @@ struct PaintView: View {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.primary)
-                .imageScale(chromeScale > 1 ? .large : .medium)
+                .imageScale(chromeScale(regular) > 1 ? .large : .medium)
                 .frame(width: barHeight, height: barHeight)
                 .glassEffect(.regular.interactive(), in: .circle)
         }

@@ -34,6 +34,16 @@ struct ArtworkPaintingView: View {
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
     @State private var notice: ShownNotice?
+    /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`): the toasts keep to
+    /// the painting's page beside it.
+    @State private var foldPlace: FoldPlace?
+    @Environment(\.layoutDirection) private var layoutDirection
+    /// Half open like a book, how far the painting's page ends from the trailing edge; else 0.
+    private var beyondTheFold: CGFloat {
+        guard let foldPlace, let fold = foldPlace.active(rightToLeft: layoutDirection == .rightToLeft), fold.isUpright
+        else { return 0 }
+        return max(0, foldPlace.size.width - fold.frame.minX)
+    }
 
     private struct ShownNotice: Equatable {
         var notice: OpenNotice
@@ -126,9 +136,13 @@ struct ArtworkPaintingView: View {
             }
             .padding(.top, 62)
             .padding(.horizontal, 20)
+            // Half open like a book, on the painting's page: the controls' page beyond the fold
+            // (`PaintingLayout`) has its bar wherever its palette leaves it.
+            .padding(.trailing, beyondTheFold)
             // Over the painting, like its bars.
             .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
+        .readsTheFold { foldPlace = $0 }
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in

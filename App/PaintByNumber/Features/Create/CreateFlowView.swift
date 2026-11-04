@@ -299,11 +299,13 @@ struct CreateFlowView: View {
     /// Hides the status bar and waits until the window is laid out without it, and the flow too:
     /// the page's place is worked out from that layout. UIKit says the status bar is hidden a
     /// moment before the safe area follows (on CI's iPad, every time), so where the status bar
-    /// alone keeps the top clear (`statusBarSetsTheTop`) the safe area itself is waited for; where
-    /// a sensor housing does, it doesn't change.
+    /// alone may keep its edge clear (`statusBarSetsTheTop`, or an iPhone Duo's, which runs down
+    /// the side) the safe area itself is waited for; where a sensor housing does, it doesn't change.
     private func letStatusBarGo(in window: UIWindow?) async {
         let before = window?.safeAreaInsets
         let wasHidden = window?.windowScene?.statusBarManager?.isStatusBarHidden ?? true
+        let barFrame = window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
+        let runsDownTheSide = barFrame.height > barFrame.width
         hidesStatusBar = true
         // A window that isn't the whole screen (Stage Manager, Split View) keeps its status bar.
         guard let window, let before, !wasHidden, window.windowScene?.isFullScreen != false else { return }
@@ -312,19 +314,29 @@ struct CreateFlowView: View {
         while window.windowScene?.statusBarManager?.isStatusBarHidden == false, ContinuousClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(10))
         }
-        if Self.statusBarSetsTheTop(window) {
+        if Self.statusBarSetsTheTop(window) || runsDownTheSide {
             let followed = min(deadline, ContinuousClock.now + StartHandoffPlan.safeAreaFollows)
             while window.safeAreaInsets == before, ContinuousClock.now < followed {
                 try? await Task.sleep(for: .milliseconds(10))
             }
         }
         let laidOut = ContinuousClock.now + StartHandoffPlan.layoutFollows
-        while abs(window.safeAreaInsets.top - safeArea.top) > 0.5, ContinuousClock.now < laidOut {
+        while !flowFollows(window.safeAreaInsets), ContinuousClock.now < laidOut {
             try? await Task.sleep(for: .milliseconds(10))
         }
         let waited = ContinuousClock.now - start
+        let after = window.safeAreaInsets
         Log.create.notice(
-            "Hand-off: the status bar went in \(String(describing: waited), privacy: .public), safe area top \(Double(before.top), privacy: .public) → \(Double(window.safeAreaInsets.top), privacy: .public) (the flow's \(Double(safeArea.top), privacy: .public))")
+            "Hand-off: the status bar went in \(String(describing: waited), privacy: .public), safe area (top, left, right) \(Double(before.top), privacy: .public), \(Double(before.left), privacy: .public), \(Double(before.right), privacy: .public) → \(Double(after.top), privacy: .public), \(Double(after.left), privacy: .public), \(Double(after.right), privacy: .public) (the flow's \(Double(safeArea.top), privacy: .public), \(Double(safeArea.leading), privacy: .public), \(Double(safeArea.trailing), privacy: .public))")
+    }
+
+    /// Whether the flow's safe area has followed the window's `insets` on the edges a status bar
+    /// can leave: the top, or a Duo's side.
+    private func flowFollows(_ insets: UIEdgeInsets) -> Bool {
+        let rightToLeft = layoutDirection == .rightToLeft
+        return abs(insets.top - safeArea.top) <= 0.5
+            && abs((rightToLeft ? insets.right : insets.left) - safeArea.leading) <= 0.5
+            && abs((rightToLeft ? insets.left : insets.right) - safeArea.trailing) <= 0.5
     }
 
     /// Whether the window's top safe area is the status bar's alone, so that it goes with it: on an
@@ -349,7 +361,8 @@ struct CreateFlowView: View {
                 top: insets.top, leading: rightToLeft ? insets.right : insets.left, bottom: insets.bottom,
                 trailing: rightToLeft ? insets.left : insets.right),
             regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize, rows: paletteRows,
-            colors: PaletteBar.visibleColorCount(template), isComplete: false)
+            colors: PaletteBar.visibleColorCount(template), isComplete: false,
+            fold: PaintingLayout.fold(in: window, rightToLeft: rightToLeft))
         let page = PaintingLayout(inputs).page(
             of: CGSize(width: template.width, height: template.height), inputs: inputs, rightToLeft: rightToLeft)
         return page.isPlace ? page : nil

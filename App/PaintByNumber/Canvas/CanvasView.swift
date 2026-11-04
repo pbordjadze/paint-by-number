@@ -216,6 +216,9 @@ final class CanvasView: UIView, PaintingCanvas {
         return CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
     }
 
+    /// A zoom this close to the fit counts as fitted when the canvas's room changes
+    /// (`layoutSubviews`): the band `finish` leaves a painting in as showing all of it.
+    private static var fittedSlack: CGFloat { finishFitSlack }
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 
@@ -391,29 +394,40 @@ final class CanvasView: UIView, PaintingCanvas {
         if contentScaleFactor != scale { contentScaleFactor = scale }
         let drawable = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
         if metalLayer.drawableSize != drawable { metalLayer.drawableSize = drawable }
+        // Where the camera looked, read before the scroll view takes the new size: grown, it pulls
+        // its offset in to its new bounds, and the place was lost (by 70 canvas units as a Duo
+        // opened, `DuoLayoutTests`).
+        let roomChanged = bounds.size != laidOutSize || chromeInsets != laidOutInsets
+        let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
+        let lookedAt = roomChanged && laidOutSize != .zero ? canvasPoint(forView: CGPoint(x: old.midX, y: old.midY)) : nil
         if scrollView.frame != bounds { scrollView.frame = bounds }
         guard bounds.width > 1, bounds.height > 1 else { return }
-        guard bounds.size != laidOutSize || chromeInsets != laidOutInsets else { return }
+        guard roomChanged else { return }
 
-        // Keep looking at the same place across rotation / chrome changes.
-        let relative: CGFloat
+        // Keep looking at the same place across a rotation, a chrome change, or an iPhone Duo
+        // opening, closing or folding: a painting that was fitted fits its new room, and one zoomed
+        // in keeps its scale (the areas under the finger stay their size, the new room showing
+        // more or less around them), centered where it was. Kept relative to the fit, a zoomed
+        // painting halved as a Duo folded to the page beside its fold.
+        let zoom: (_ fit: CGFloat) -> CGFloat
         let center: SIMD2<Float>
-        if laidOutSize != .zero {
-            relative = scrollView.zoomScale / fitZoom
-            let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
-            center = canvasPoint(forView: CGPoint(x: old.midX, y: old.midY))
+        if let lookedAt {
+            let scale = scrollView.zoomScale
+            let fitted = abs(scale / fitZoom - 1) <= Self.fittedSlack
+            zoom = { fit in fitted ? fit : scale }
+            center = lookedAt
         } else if let initial = initialCamera {
-            relative = initial.zoom
+            zoom = { fit in fit * initial.zoom }
             center = initial.center
         } else {
-            relative = 1
+            zoom = { fit in fit }
             center = SIMD2(Float(template.width), Float(template.height)) / 2
         }
         laidOutSize = bounds.size
         laidOutInsets = chromeInsets
         updateZoomLimits()
         restrictNavigationToFingers()
-        let z = clampZoom(fitZoom * relative)
+        let z = clampZoom(zoom(fitZoom))
         let flight = cameraAnimation
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))

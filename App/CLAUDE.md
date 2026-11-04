@@ -61,6 +61,9 @@ synchronized folder would bundle it into the app.
 - The modifiers that point a tip (`.gentleTip`, `.barTips`, `.cardTip`'s popover) hold their ids
   as a `TipSet` (bits), never an array: they are plain data, which SwiftUI compares bit for bit,
   skipping their bodies when their screen renders again unchanged.
+- iOS 27's TipKit leaves a presented popover tip on screen, its text and all, when the tip handed
+  to `popoverTip` turns nil (CI, November 4): `.gentleTip`'s modifier keeps handing it the tip it
+  pointed last and closes the popover by its binding alone.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
@@ -446,6 +449,50 @@ Conventions).
 - Tests compare each model with a PyTorch-made map (`HEDFixture.ppm` → `HEDFixture.pgm`,
   `LineArtFixture.pgm`, written by the conversion scripts; at most 2 levels apart), eyes on
   `FaceFixture.jpg`.
+
+## iPhone Duo
+
+The foldable (painting-company row 212): an outer display (466 × 678 pt upright, compact width,
+compact both ways on its side) and, opened, an inner one (951 × 669 pt held like a book, 669 × 951
+turned; regular both ways, as an iPad), its status bar, Dynamic Island and the system's bars down
+the right side but for the inner display upright. The app moves between them in place: one scene,
+resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLAUDE.md` › App rules).
+
+- Layout follows size classes and the window, never the device: the three idiom checks left
+  (`embedsPicker`, `pageSizedOnPad`, `statusBarSetsTheTop`) are about what an iPhone's or an iPad's
+  system does, and hold for the Duo as an iPhone. Safe areas are uneven there: lay out each edge
+  by its own inset.
+- Half open, the fold is an active reserved region (`.division`, iOS 27.1; inactive and zero-wide
+  while flat): 40 pt with its margins down the middle at x 456 held like a book, across at y 456
+  like a laptop. A view learns where it is from UIKit (`.readsTheFold`, a `FoldReader` behind it:
+  `UIView.reservedRegions` in its own coordinates, `FoldPlace`), read again as the window's fold
+  changes (`FoldWatch`, refreshed from the root by `.watchesTheFold()`): inside a navigation stack
+  with the Duo's vertical bar, SwiftUI's geometry proxies and its global space both put it 42 pt
+  off, half the bar (CI, November 4); the layout probe measures in UIKit's window too. Until its
+  reader has, a screen that fills the window lays out by the window's fold
+  (`FoldWatch.windowFold`), so one opened half open isn't laid out across the fold first; a view
+  the keyboard shrinks reads it where the keyboard doesn't reach (the create flow's preview), or a
+  keyboard up to the fold would take it away.
+- The painting screen shares the screen out by the fold (`PaintingLayout.Mode`): like a laptop
+  (`easel`), the painting stands on the upper half and the bar and the whole palette lie on the
+  lower; like a book (`book`), the painting has the leading page and the controls the trailing, a
+  phone's width, so a phone's bar and swatches (`regularChrome` false), the two together in the
+  page's middle (the Lamplit Table's `factory/pieces/iphone-duo`); like a laptop, the palette in
+  the middle of the room under the bar; on the canvas's backdrop (`CanvasPalette.backdropSRGB`).
+  The painting's toasts keep to the painting's page or half, at its top: the bar stands wherever
+  the palette leaves it on the controls'. The create flow's hand-off and the making-of show read
+  the same layout (`PaintingLayout.fold`, from a `FoldPlace` or the window); its preview puts the
+  picture and the card either side of the fold. The gallery keeps an even number of columns while
+  a fold runs down it, flat or not, its middle gutter on the fold (`GalleryView.Fold`). The app's
+  sheets keep to the trailing page while the Duo is half open like a book (`.besideTheFold()`,
+  `presentationPlacement`): the system left them centred on the fold. System containers, alerts
+  and menus keep off the fold by themselves; scrolling content needn't.
+- The canvas keeps the painter's place through the change of room (`CanvasView.layoutSubviews`): a
+  painting within 5% of its fit (the band `finish` leaves it in) fits again, a zoomed one keeps its
+  scale and centre; on every device, a rotation too.
+- `ci/duo.sh` (`[duo]`, root `CLAUDE.md` › CI) carries each of `ci/duo-scenarios.txt` through every
+  pose and checks the layout the app reports (DEBUG `DuoLayoutProbe`, `.duoProbe(_:)` on the
+  painting screen's bars) against the fold; `DuoLayoutTests` pin the layouts and the camera.
 
 ## Library and saving
 

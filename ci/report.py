@@ -30,6 +30,10 @@ def outcomes(job_dir):
 def job_result(steps, matrix_result):
     """A simulator job's result from its steps; the matrix's when it left no outcomes."""
     if steps is None:
+        if matrix_result == "abandoned":
+            # GitHub found no runner for it within about 15 minutes ("not acquired by Runner of
+            # type hosted"): nothing ran, and re-running the job is all it needs.
+            return "no report (abandoned: never got a runner; re-run the job)"
         return "cancelled" if matrix_result == "cancelled" else f"no report ({matrix_result})"
     states = {outcome for _, outcome in steps}
     for state in ("failure", "cancelled"):
@@ -103,6 +107,12 @@ def screenshot_notes(job_dir):
             text = f.read()
         unready = re.findall(r"(\S+): no ready marker within (\d+) s", text)
         crashed = re.findall(r"captured (\S+) — CRASH", text)
+        on_fold = re.findall(r"^FOLD (\S+): (.*)$", text, re.M)
+        unposed = re.findall(r"duo: unposed (\S+ \S+):", text)
+        if unposed:
+            notes.append("  not carried through every pose (ci/duo.sh): " + ", ".join(unposed))
+        if on_fold:
+            notes.append(f"  on the fold (ci/duo.sh): {len(on_fold)}: " + "; ".join(f"{p}: {what}" for p, what in on_fold[:6]))
         if unready:
             notes.append("  no ready marker (taken at the timeout): " + ", ".join(f"{s} ({t} s)" for s, t in unready))
         if crashed:
@@ -201,7 +211,7 @@ def main(argv):
     for job, result in jobs:
         job_dir = os.path.join(report, job)
         steps = outcomes(job_dir)
-        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "compile", "test"):
+        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "compile", "test", "duo"):
             # A matrix job that left no artifact: planned but lost, or not planned at all.
             head.append(f"{job}: {job_result(None, result)}")
             continue
@@ -253,6 +263,7 @@ def self_test():
     assert job_result([("build", "success"), ("tests", "failure")], "failure") == "failure"
     assert job_result([("build", "success"), ("tests", "success"), ("release", "skipped")], "failure") == "success"
     assert job_result(None, "cancelled") == "cancelled"
+    assert job_result(None, "abandoned").startswith("no report (abandoned: never got a runner")
     log = "2026-10-07 11:55:06.6 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo] Main thread {} ({}), 3 frames:"
     assert stalls([
         log.format("stuck for 2.25 seconds", "stall 1"), log.format("stuck for 7.3 seconds", "stall 1"),

@@ -118,6 +118,7 @@ struct TimelapseExportSheet: View {
         }
         // A progress bar and a button: half a screen is room enough, with nothing to pull up to.
         .presentationDetents([.medium])
+        .besideTheFold()
         .task(id: attempt) { await model.run() }
         #if DEBUG
         .onChange(of: model.phase) { _, phase in

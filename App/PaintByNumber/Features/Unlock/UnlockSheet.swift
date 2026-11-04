@@ -86,6 +86,7 @@ struct UnlockSheet: View {
         .scrollBounceBehavior(.basedOnSize)
         // At accessibility sizes the content outgrows any sheet: it opens full height, and scrolls.
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(contentHeight)])
+        .besideTheFold()
         .task { await loadPrice() }
         // Bought here, restored, or approved while the sheet was up (Ask to Buy).
         .onChange(of: paintings.isUnlocked) { _, unlocked in
