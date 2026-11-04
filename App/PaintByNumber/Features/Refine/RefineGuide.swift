@@ -133,7 +133,7 @@ nonisolated struct RefineGuidePage {
                     - Numbers: Move Number
                     - See: Writing and Try Painting
 
-                    On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom. Each tool is made for ink, cells, paint or numbers, though one change can lead to another: erase the line between two cells, and they become one.
+                    On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom, and so does the palette: a swatch for each paint, with its number, and a color wheel at the end for a new one. Each tool is made for ink, cells, paint or numbers, though one change can lead to another: erase the line between two cells, and they become one.
 
                     ## When a change seems to do nothing
                     It often did something. A line that closes off a shape makes a new cell, but the new cell keeps the paint of the cell it was cut from, so it looks the same until you paint it. Turn on Numbers in [Layers](guide:layers) to see its number.
@@ -156,11 +156,14 @@ nonisolated struct RefineGuidePage {
 
                     The practice pictures in this guide work with the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.
 
+                    ## Starting from a blank page
+                    Until your first change, Start From at the top lets you pick Blank instead of Generated: your photo as one plain cell, to draw everything yourself. Shapes you draw on it all keep that one paint, so either paint them as you go or turn on Color from Photo on the [Pen](guide:pen) first.
+
                     ## Keeping your changes
-                    Done keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.
+                    Done, the ✓ at the top, keeps what you did. Cancel throws it away and puts the picture back as it was when Refine opened; if you’ve changed anything, it asks first.
 
                     ## On the practice picture
-                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like.
+                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Reset, above the picture, puts it back as it was whenever you like, and clears Undo with it.
                     """,
                              comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
@@ -173,7 +176,7 @@ nonisolated struct RefineGuidePage {
 
                     It lists four layers, from the top: Numbers, Ink, Paint and Photo. Refine opens with Ink and Paint showing, the picture as it will look finished. Numbers starts off, so a cell you’ve just made shows no number until you turn Numbers on.
 
-                    Paint and Photo each have an opacity slider. With Photo on and Paint turned down, your photo shows through the paint, and you can trace it with the Pen.
+                    Paint and Photo each have a slider for how strongly they show. With Photo on and Paint turned down, your photo shows through the paint, and you can trace it with the Pen.
 
                     The Eyedropper picks the color of whichever layer shows more strongly. With Paint at half, the paint still wins, so to pick a color from the photo, turn Paint below half or off.
 
@@ -285,7 +288,7 @@ nonisolated struct RefineGuidePage {
                 text: String(localized: "refine.guide.bendLine.text", defaultValue: """
                     Put your finger on a line and drag. The spot you grabbed follows your finger, and the line curves smoothly on either side of it, bending less the farther it is from your finger. Its ends stay where they meet other lines, and the cells on both sides keep their paint and follow the new shape. You see where the line will go before you lift your finger.
 
-                    Start the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed at a junction won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”
+                    Start the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed right where it meets another won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”
 
                     A line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. If your drag would do that, the line stays where it was and the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
 
@@ -301,7 +304,7 @@ nonisolated struct RefineGuidePage {
                 summary: String(localized: "refine.guide.select.summary", defaultValue: "Shows a cell, its paint, and how many cells share it.",
                                 comment: "Tool Guide, Select: one line under its name in the guide's list (iPhone)"),
                 text: String(localized: "refine.guide.select.text", defaultValue: """
-                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many areas, as the bar calls cells, use that paint. Tap it again, or tap off the picture, to let it go.
+                    Tap a cell to select it. It glows, and the bar below shows its paint’s number and name and how many areas, as the bar calls cells, use that paint. Tap it again, or tap off the picture, to let it go. Selecting a cell doesn’t change your current paint: the ring in the palette stays where it was.
 
                     While any Cells tool is picked, dashed lines show the borders between cells where no line is drawn. They divide the paint, but they won’t be drawn on the finished picture.
 
@@ -397,12 +400,17 @@ nonisolated struct RefineGuidePage {
 
                     Pick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. One very close to a paint you have is poured as that paint.
 
+                    Choose one new color and pour it before you choose the next: picking several new colors in a row keeps only the last.
+
                     You don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.
 
-                    ## What else can change
+                    ## When more changes color than you meant
+                    The shape you poured into wasn’t closed. Its outline has a gap somewhere, so it was still part of the cell around it, and the paint went everywhere that cell goes. Undo, close the gap with the [Pen](guide:pen) (two gold sparkles tell you a shape has closed), and pour again.
+
+                    ## What else changes
                     Pouring into the last cell of a paint retires that paint, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint with no line between them, only a dashed edge, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”
 
-                    If you color in Procreate, this is ColorDrop that never leaks: a cell ends exactly at its edges. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
+                    If you color in Procreate, this is ColorDrop with your ink as the reference, and no threshold: a cell ends exactly at its edges, so paint spreads further only where an outline has a gap. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.
 
                     ## On the practice picture
                     Here the roof and the moon are outlined, but have the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then pick the sky’s paint and pour it into the far hills.
