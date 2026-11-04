@@ -21,7 +21,7 @@ struct TemplatePreviewView: View {
 
     @State private var size: CGSize = .zero
     /// A half-open iPhone Duo's fold across the preview: the picture keeps to one side of it.
-    @State private var fold: PreviewFold?
+    @State private var fold: ActiveFold?
     /// `size` with the keyboard's room given back: what the layout is chosen for.
     @State private var roomSize: CGSize = .zero
     /// The layout chosen when title editing began, for that window width: kept until it ends.
@@ -101,7 +101,7 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .onGeometryChange(for: PreviewFold?.self) { PreviewFold.active(in: $0) } action: { fold = $0 }
+        .onGeometryChange(for: ActiveFold?.self) { ActiveFold.of($0) } action: { fold = $0 }
         .background {
             Color.clear
                 .ignoresSafeArea(.keyboard)
@@ -1114,19 +1114,5 @@ private struct UnlockOffer: ViewModifier {
         content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } }) {
             UnlockSheet(fromStart: true)
         }
-    }
-}
-
-/// A half-open iPhone Duo's fold across the create flow's preview (`TemplatePreviewView`): its
-/// active reserved region, margins included, in the preview's coordinates.
-nonisolated struct PreviewFold: Equatable, Sendable {
-    var frame: CGRect
-    /// Down the middle, like a book; else across it, like a laptop.
-    var isUpright: Bool { frame.height > frame.width }
-
-    static func active(in proxy: GeometryProxy) -> PreviewFold? {
-        guard #available(iOS 27.1, *) else { return nil }
-        guard let region = proxy.reservedRegions(kind: .division).first(where: \.isActive) else { return nil }
-        return PreviewFold(frame: region.frame)
     }
 }

@@ -183,16 +183,6 @@ struct PaintView: View {
                     .pageSizedOnPad()
             }
         }
-        .overlay(alignment: .top) {
-            if let thanks {
-                // Below the top bar, like the painting's other toasts; taps reach the canvas.
-                Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
-                    .padding(.top, Self.topGap + barHeight + 12)
-                    .padding(.horizontal, 20)
-                    .allowsHitTesting(false)
-                    .environment(\.colorScheme, chromeScheme)
-            }
-        }
         .animation(.snappy, value: thanks)
         #if DEBUG
         .task { await runFeedbackDemo() }
@@ -299,6 +289,18 @@ struct PaintView: View {
                 }
                 .padding(controls)
                 .environment(\.colorScheme, chromeScheme)
+            }
+
+            if let thanks {
+                // Below the top bar, like the painting's other toasts, on the controls' page
+                // beside a fold; taps reach the canvas.
+                Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
+                    .padding(.top, Self.topGap + barHeight + 12)
+                    .padding(.horizontal, 20)
+                    .allowsHitTesting(false)
+                    .environment(\.colorScheme, chromeScheme)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(controls)
             }
 
             // The capture's flash as feedback starts.

@@ -246,9 +246,7 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     /// and on every other device.
     @MainActor
     static func fold(in proxy: GeometryProxy) -> CGRect? {
-        guard #available(iOS 27.1, *) else { return nil }
-        guard let region = proxy.reservedRegions(kind: .division).first(where: \.isActive) else { return nil }
-        return region.frame.offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
+        ActiveFold.of(proxy)?.frame.offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
     }
 
     /// The same from a window that fills the screen (the create flow's, for a new painting's page):

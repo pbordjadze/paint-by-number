@@ -34,6 +34,8 @@ struct ArtworkPaintingView: View {
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
     @State private var notice: ShownNotice?
+    /// A half-open iPhone Duo's fold: the toasts keep to the controls' page beside it.
+    @State private var fold: ActiveFold?
 
     private struct ShownNotice: Equatable {
         var notice: OpenNotice
@@ -126,9 +128,12 @@ struct ArtworkPaintingView: View {
             }
             .padding(.top, 62)
             .padding(.horizontal, 20)
+            // Half open like a book, on the controls' page beyond the fold (`PaintingLayout`).
+            .padding(.leading, fold.map { $0.isUpright ? $0.frame.maxX : 0 } ?? 0)
             // Over the painting, like its bars.
             .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
+        .onGeometryChange(for: ActiveFold?.self) { ActiveFold.of($0) } action: { fold = $0 }
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in
