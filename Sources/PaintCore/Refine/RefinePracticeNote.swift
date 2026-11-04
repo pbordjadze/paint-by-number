@@ -163,12 +163,17 @@ public enum RefinePracticeNote {
         rect(paper.rect)
         rect(lid.rect)
         rect(label.rect)
-        // The jar: its rounded outline below the lid.
+        // The jar: its rounded outline, the lid across its top.
         let r = jar.rect, corner: Float = 40
-        stamp(SIMD2(r.x, r.y), SIMD2(r.x, r.w - corner))
-        stamp(SIMD2(r.z, r.y), SIMD2(r.z, r.w - corner))
+        stamp(SIMD2(r.x, r.y + corner), SIMD2(r.x, r.w - corner))
+        stamp(SIMD2(r.z, r.y + corner), SIMD2(r.z, r.w - corner))
+        stamp(SIMD2(r.x + corner, r.y), SIMD2(r.z - corner, r.y))
         stamp(SIMD2(r.x + corner, r.w), SIMD2(r.z - corner, r.w))
-        for (center, start) in [(SIMD2(r.x + corner, r.w - corner), Float.pi / 2), (SIMD2(r.z - corner, r.w - corner), 0)] {
+        // Corners in image space (+y down): the angle runs clockwise on screen from `start`.
+        for (center, start) in [
+            (SIMD2(r.x + corner, r.w - corner), Float.pi / 2), (SIMD2(r.z - corner, r.w - corner), 0),
+            (SIMD2(r.z - corner, r.y + corner), -Float.pi / 2), (SIMD2(r.x + corner, r.y + corner), Float.pi),
+        ] {
             let points = (0...12).map { k in
                 let angle = start + Float.pi / 2 * Float(k) / 12
                 return center + corner * SIMD2(cos(angle), sin(angle))

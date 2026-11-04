@@ -557,12 +557,25 @@ nonisolated enum RefineGuideText {
                 blocks.append(.heading(String(first.dropFirst(3))))
                 lines.removeFirst()
             }
-            guard !lines.isEmpty else { return blocks }
-            if lines.allSatisfy({ $0.hasPrefix("- ") }) {
-                blocks.append(.list(lines.map { String($0.dropFirst(2)) }))
-            } else {
-                blocks.append(.paragraph(lines.joined(separator: " ")))
+            // The rest: paragraphs, and lists where a run of lines starts "- ".
+            var paragraph: [String] = []
+            var items: [String] = []
+            func flush() {
+                if !paragraph.isEmpty { blocks.append(.paragraph(paragraph.joined(separator: " "))) }
+                if !items.isEmpty { blocks.append(.list(items)) }
+                paragraph = []
+                items = []
             }
+            for line in lines {
+                if line.hasPrefix("- ") {
+                    if !paragraph.isEmpty { flush() }
+                    items.append(String(line.dropFirst(2)))
+                } else {
+                    if !items.isEmpty { flush() }
+                    paragraph.append(line)
+                }
+            }
+            flush()
             return blocks
         }
     }
@@ -766,6 +779,8 @@ struct RefineGuidePageView: View {
         .background { GuidePageArrival(onArrival: land).frame(width: 0, height: 0) }
         .navigationTitle(Self.title(topic))
         .navigationBarTitleDisplayMode(.inline)
+        // Writing's note is generated: a page left before it's made stops making it.
+        .onDisappear { model?.cancelAll() }
         .task(id: picture != nil) {
             guard let picture, model == nil else { return }
             let model = CreateModel(previewStyle: .lineArt)
@@ -782,6 +797,13 @@ struct RefineGuidePageView: View {
         Log.create.notice("Tool Guide page shown: \(topic.identifier, privacy: .public)")
     }
 
+    /// The picture couldn't be made, or Writing's note couldn't be generated.
+    private var practiceFailed: Bool {
+        if failed { return true }
+        if case .failed? = model?.phase { return true }
+        return false
+    }
+
     @ViewBuilder
     private func pad(_ practice: RefinePracticeSetup) -> some View {
         Group {
@@ -795,7 +817,7 @@ struct RefineGuidePageView: View {
                 } ?? practice
                 RefineView(model: model, practice: setup, onReset: { resets += 1 }, layersChanged: { practiceLayers = $0 })
                     .id(resets)
-            } else if failed {
+            } else if practiceFailed {
                 ContentUnavailableView {
                     Label { Text("The Practice Picture Didn’t Open") } icon: { Image(systemName: "exclamationmark.triangle") }
                 }

@@ -50,6 +50,10 @@ struct RefineGuideTests {
     @Test func theWordsLayOut() throws {
         let blocks = RefineGuideText.blocks("Lead.\n\n## A heading\nIts paragraph.\n\n- one\n- two\n\n## Alone")
         #expect(blocks == [.paragraph("Lead."), .heading("A heading"), .paragraph("Its paragraph."), .list(["one", "two"]), .heading("Alone")])
+        // A paragraph and a list in one chunk, as the Pen's page has under a heading.
+        #expect(RefineGuideText.blocks("## Notes\nWhat went wrong:\n- one\n- two\nAfter.") == [
+            .heading("Notes"), .paragraph("What went wrong:"), .list(["one", "two"]), .paragraph("After."),
+        ])
         let link = RefineGuideText.inline("Use [Merge](guide:merge).").runs.compactMap { $0.link }.first
         #expect(link.flatMap(RefineGuideTopic.init(link:)) == .tool(.merge))
     }
