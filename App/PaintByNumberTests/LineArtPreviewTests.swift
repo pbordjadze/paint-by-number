@@ -75,7 +75,7 @@ struct LineArtPreviewTests {
 
     /// The comparison shows the line art on the sheet's paper beside the photo, the drawing's
     /// ink where its lines run and nothing of the photo.
-    @Test func theComparisonShowsTheLineArtBesideThePhoto() throws {
+    @Test func theComparisonShowsTheLineArtBesideThePhoto() async throws {
         let book = LineArtRenderingTests.book
         let red = SIMD3(200, 30, 40)
         let photo = try #require(Self.solid(red, width: book.width, height: book.height))
@@ -84,7 +84,7 @@ struct LineArtPreviewTests {
             aspectRatio: CGFloat(book.width) / CGFloat(book.height)
         )
         .frame(width: 300, height: 400)
-        let image = try #require(Self.render(view))
+        let image = try #require(await Self.render(view))
         let pixels = try #require(Self.pixels(of: image))
         #expect(pixels.width == 300 && pixels.height == 400)
         // The photo on the leading half (the divider starts in the middle)…
@@ -143,31 +143,36 @@ struct LineArtPreviewTests {
 
     /// `view` rendered at scale 1. iOS 27's `ImageRenderer` can give a test process's first render
     /// back with nothing drawn (CI on Xcode 27.1, November 4, 2026: twice in four iPad runs, every
-    /// pixel alike, and drawn when run again). A comparison is never one flat color, so only such a
-    /// render is made again, by a new renderer, and a view that draws nothing still fails.
-    private static func render(_ view: some View) -> CGImage? {
+    /// sampled pixel black, and drawn when run again, after the run loop had turned). A comparison
+    /// is never one flat color, so only such a render is made again, after a pause, by a new
+    /// renderer, and kept in the test's attachments; a view that draws nothing still fails.
+    private static func render(_ view: some View) async -> CGImage? {
         var image: CGImage?
-        for _ in 0..<3 {
+        for attempt in 1...3 {
+            if attempt > 1 { try? await Task.sleep(for: .milliseconds(100)) }
             let renderer = ImageRenderer(content: view)
             renderer.scale = 1
             image = renderer.cgImage
-            if let image, showsAnything(image) { break }
+            guard let drawn = image else { continue }
+            if showsAnything(drawn) { break }
+            record(drawn, "comparison-blank-\(attempt)")
         }
         return image
     }
 
-    /// Whether `image` shows anything: one with every pixel alike drew nothing.
+    /// Whether `image` shows anything: one whose pixels are all one color drew nothing, whatever
+    /// its alpha (a shadow on nothing is still black).
     private static func showsAnything(_ image: CGImage) -> Bool {
         guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return false }
-        var rgba = [UInt32](repeating: 0, count: image.width * image.height)
+        var rgba = [UInt8](repeating: 0, count: image.width * image.height * 4)
         rgba.withUnsafeMutableBytes { raw in
             let ctx = CGContext(
                 data: raw.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
                 bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
             ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         }
-        let first = rgba.first
-        return rgba.contains { $0 != first }
+        // Each red, green and blue byte against the first pixel's.
+        return rgba.indices.contains { $0 % 4 != 3 && rgba[$0] != rgba[$0 % 4] }
     }
 
     /// `image` drawn into 8-bit sRGB (whatever space the renderer gave it).
