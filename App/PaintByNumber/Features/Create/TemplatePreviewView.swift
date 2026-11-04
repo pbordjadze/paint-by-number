@@ -20,8 +20,10 @@ struct TemplatePreviewView: View {
     var pictureProbe: PreviewPictureProbe?
 
     @State private var size: CGSize = .zero
-    /// A half-open iPhone Duo's fold across the preview: the picture keeps to one side of it.
-    @State private var fold: ActiveFold?
+    /// The preview's frame in the window: where a half-open iPhone Duo's fold lies across it
+    /// (`FoldWatch`), the picture keeping to one side of it.
+    @State private var frameInWindow: CGRect = .zero
+    @Environment(\.layoutDirection) private var layoutDirection
     /// `size` with the keyboard's room given back: what the layout is chosen for.
     @State private var roomSize: CGSize = .zero
     /// The layout chosen when title editing began, for that window width: kept until it ends.
@@ -101,7 +103,7 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .onGeometryChange(for: ActiveFold?.self) { ActiveFold.of($0) } action: { fold = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frameInWindow = $0 }
         .background {
             Color.clear
                 .ignoresSafeArea(.keyboard)
@@ -186,6 +188,10 @@ struct TemplatePreviewView: View {
     /// because measuring it would feed back into the choice of layout. The choice ignores the
     /// keyboard (`roomSize`) and holds while the title is edited: switching layouts then would
     /// rebuild the title field and drop its focus, and the keyboard with it.
+    private var fold: ActiveFold? {
+        FoldWatch.shared.fold(in: frameInWindow, rightToLeft: layoutDirection == .rightToLeft)
+    }
+
     private var isSideBySide: Bool {
         // Half open, the fold decides: the picture beside the card like a book's two pages, or
         // above it like a laptop's screen over its keys.
@@ -437,6 +443,7 @@ struct TemplatePreviewView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .duoProbe("preview-picture")
     }
 
     @ViewBuilder
@@ -533,6 +540,7 @@ struct TemplatePreviewView: View {
         .padding(.horizontal, 22)
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
+        .duoProbe("preview-card")
     }
 
     /// The settings' origin, and in SideStore and Debug builds Adjust beside it (`foldsSettings`).

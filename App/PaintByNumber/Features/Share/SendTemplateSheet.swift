@@ -85,6 +85,7 @@ struct SendTemplateSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .presentationDetents([.height(contentHeight)])
+        .besideTheFold()
         .background {
             ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
         }

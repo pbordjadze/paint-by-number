@@ -460,15 +460,22 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   system does, and hold for the Duo as an iPhone. Safe areas are uneven there: lay out each edge
   by its own inset.
 - Half open, the fold is an active reserved region (`.division`, iOS 27.1; inactive and zero-wide
-  while flat). The painting screen shares the screen out by it (`PaintingLayout.Mode`): like a
-  laptop (`easel`), the painting stands on the upper half and the bar and the whole palette lie on
-  the lower; like a book (`book`), the painting has the leading page and the controls the
-  trailing; the controls' page is the canvas's backdrop (`CanvasPalette.backdropSRGB`). The
-  create flow's hand-off and the making-of show read the same layout, with the fold
-  (`PaintingLayout.fold(in:)`, a proxy's or a window's). The gallery keeps an even number of
-  columns while a fold runs down it, flat or not, its middle gutter on the fold (`GalleryView.Fold`).
-  System containers, sheets, alerts and menus keep off the fold by themselves; scrolling content
-  needn't.
+  while flat): 40 pt with its margins down the middle at x 456 held like a book, across at y 456
+  like a laptop. `FoldWatch` keeps where it is from UIKit's window (`.watchesTheFold()` on the root)
+  and places it in a view by that view's frame in the window: a view's own geometry proxy put it
+  42 pt off, half the system's vertical bar, inside a navigation stack (CI, November 4). The
+  painting screen shares the screen out by it (`PaintingLayout.Mode`, from its own proxy, which has
+  no bar): like a laptop (`easel`), the painting stands on the upper half and the bar and the
+  whole palette lie on the lower; like a book (`book`), the painting has the leading page and the
+  controls the trailing, a phone's width, so a phone's bar and swatches (`regularChrome` false);
+  the palette sits in the middle of the room under the bar, on the canvas's backdrop
+  (`CanvasPalette.backdropSRGB`), and the painting's toasts keep to that page. The create flow's
+  hand-off and the making-of show read the same layout (`PaintingLayout.fold(in:)`, a proxy's or
+  a window's); its preview puts the picture and the card either side of the fold. The gallery keeps
+  an even number of columns while a fold runs down it, flat or not, its middle gutter on the fold
+  (`GalleryView.Fold`). The app's sheets keep to the trailing page while the Duo is half open like
+  a book (`.besideTheFold()`, `presentationPlacement`): the system left them centred on the fold.
+  System containers, alerts and menus keep off the fold by themselves; scrolling content needn't.
 - The canvas keeps the painter's place through the change of room (`CanvasView.layoutSubviews`): a
   fitted painting fits again, a zoomed one keeps its scale and centre.
 - `ci/duo.sh` (`[duo]`, root `CLAUDE.md` › CI) carries each of `ci/duo-scenarios.txt` through every

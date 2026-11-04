@@ -23,6 +23,7 @@ struct DuoLayoutTests {
         let inputs = inputs(Self.upright, fold: fold)
         let layout = PaintingLayout(inputs)
         #expect(layout.mode == .easel)
+        #expect(layout.regularChrome)
         let canvas = layout.canvasRect(inputs: inputs, rightToLeft: false)
         #expect(canvas.minY == 0)
         #expect(canvas.maxY == fold.minY)
@@ -55,6 +56,10 @@ struct DuoLayoutTests {
         #expect(page.maxX <= fold.minX)
         #expect(page.minY >= inputs.safe.top)
         #expect(layout.controls.leading == fold.maxX)
+        // The controls' page is a phone's width: a phone's bar and swatches, the color named over them.
+        #expect(!layout.regularChrome)
+        #expect(layout.palette.caption)
+        #expect(layout.palette.metrics == PaletteMetrics(dynamicTypeSize: .large))
 
         let mirrored = layout.canvasRect(inputs: inputs, rightToLeft: true)
         #expect(mirrored.minX == Self.onItsSide.width - fold.minX)
@@ -135,6 +140,26 @@ struct DuoLayoutTests {
         canvas.chromeInsets = UIEdgeInsets(top: 60, left: 0, bottom: 120, right: 40)
         canvas.layoutIfNeeded()
         #expect(abs(canvas.relativeZoom - 1) < 0.001, "a fitted painting fits its new room")
+    }
+
+    /// The gallery's middle gutter goes on the fold, flat or half open, mirrored right to left: the
+    /// pages' room ends at the system's vertical bar, 84 pt down the right side.
+    @Test func theGallerysMiddleGutterLiesOnTheFold() throws {
+        let room = GalleryView.Room(
+            frame: CGRect(origin: .zero, size: Self.onItsSide), safe: EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 84))
+        let flat = FoldWatch.Region(frame: CGRect(x: 476, y: 0, width: 0, height: 669), isActive: false, windowWidth: 951)
+        let gallery = try #require(GalleryView.Fold.of(flat, in: room, rightToLeft: false))
+        #expect(abs(gallery.offset - 42.5) < 0.01)
+        #expect(gallery.width == 0)
+        let halfOpen = FoldWatch.Region(frame: CGRect(x: 456, y: 0, width: 40, height: 669), isActive: true, windowWidth: 951)
+        #expect(GalleryView.Fold.of(halfOpen, in: room, rightToLeft: false)?.width == 40)
+        let mirroredRoom = GalleryView.Room(frame: room.frame, safe: EdgeInsets(top: 0, leading: 84, bottom: 0, trailing: 0))
+        let mirrored = try #require(GalleryView.Fold.of(flat, in: mirroredRoom, rightToLeft: true))
+        #expect(abs(mirrored.offset + 42.5) < 0.01)
+        // A fold across the pages (a laptop's), or none: no gutter to keep.
+        let across = FoldWatch.Region(frame: CGRect(x: 0, y: 456, width: 669, height: 40), isActive: true, windowWidth: 669)
+        #expect(GalleryView.Fold.of(across, in: room, rightToLeft: false) == nil)
+        #expect(GalleryView.Fold.of(nil, in: room, rightToLeft: false) == nil)
     }
 
     private func inputs(_ screen: CGSize, fold: CGRect?, colors: Int = 24) -> PaintingLayout.Inputs {

@@ -30,7 +30,8 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         /// half, an easel; the bar and the palette lie on the lower, within reach.
         case easel
         /// Half open down the middle, like a book: the painting on the leading page, the bar and
-        /// the palette on the trailing one.
+        /// the palette on the trailing one, each page a phone's width, so the bar and the palette
+        /// are a phone's too (`regularChrome` false).
         case book
     }
 
@@ -52,6 +53,10 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     }
 
     let mode: Mode
+    /// The bar and the swatches at regular widths' size (a quarter bigger, `chromeScale`), and the
+    /// color's name in the badge rather than over the palette: a regular width, but for the
+    /// phone-wide page of a Duo half open like a book.
+    let regularChrome: Bool
     let palette: Palette
     /// The canvas's frame: insets from the whole screen's edges (none but on the two pages of a
     /// half-open Duo, where the canvas is the painting's page alone).
@@ -89,6 +94,7 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         case .easel(let fold):
             // The painting from the screen's top to the fold; the bars from the fold down.
             mode = .easel
+            regularChrome = inputs.regularWidth
             canvasFrame = EdgeInsets(top: 0, leading: 0, bottom: screen.height - fold.minY, trailing: 0)
             controls = EdgeInsets(top: fold.maxY, leading: safe.leading, bottom: safe.bottom, trailing: safe.trailing)
             let room = CGSize(
@@ -98,15 +104,19 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
                 top: safe.top + Self.canvasGap, leading: safe.leading, bottom: Self.canvasGap, trailing: safe.trailing)
         case .book(let fold):
             mode = .book
+            regularChrome = false
             canvasFrame = EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: screen.width - fold.minX)
             controls = EdgeInsets(top: safe.top, leading: fold.maxX, bottom: safe.bottom, trailing: safe.trailing)
             let room = CGSize(width: screen.width - fold.maxX - safe.trailing, height: inputs.size.height)
-            palette = Self.pagePalette(inputs, room: room)
+            var page = inputs
+            page.regularWidth = false
+            palette = Self.pagePalette(page, room: room)
             canvasInsets = EdgeInsets(
                 top: safe.top + Self.canvasGap, leading: safe.leading, bottom: safe.bottom + Self.canvasGap,
                 trailing: Self.canvasGap)
         case .whole:
             mode = .whole
+            regularChrome = inputs.regularWidth
             canvasFrame = EdgeInsets()
             controls = safe
             let palette = Self.palette(inputs)
@@ -246,7 +256,9 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     /// and on every other device.
     @MainActor
     static func fold(in proxy: GeometryProxy) -> CGRect? {
-        ActiveFold.of(proxy)?.frame.offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
+        guard #available(iOS 27.1, *) else { return nil }
+        guard let region = proxy.reservedRegions(kind: .division).first(where: \.isActive) else { return nil }
+        return region.frame.offsetBy(dx: proxy.safeAreaInsets.leading, dy: proxy.safeAreaInsets.top)
     }
 
     /// The same from a window that fills the screen (the create flow's, for a new painting's page):

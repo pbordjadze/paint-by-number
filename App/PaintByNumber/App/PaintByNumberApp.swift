@@ -23,6 +23,8 @@ struct PaintByNumberApp: App {
                 .tint(Theme.accent)
                 // Tip popovers draw their icons in the system blue otherwise, not the tint.
                 .tipImageStyle(Theme.accent)
+                // Where an iPhone Duo folds, for every screen and sheet (`FoldWatch`).
+                .watchesTheFold()
         }
         .commands { PaintCommands() }
     }

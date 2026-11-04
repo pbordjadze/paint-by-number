@@ -56,7 +56,12 @@ turn() {
   xcrun devicectl device orientation set "$name" -d "$UDID" -q >/dev/null 2>&1 || true
   [[ "$(orientation)" == "$want" ]] || step "warning: the orientation is '$(orientation)', not $want"
 }
-fold() { hinge set "$1" 4 || die "the hinge didn't reach ${1}°"; }
+# The simulator sometimes takes longer than 4 s to report an angle (once, closing, on CI): once more.
+fold() {
+  hinge set "$1" 4 && return 0
+  step "warning: the hinge didn't reach ${1}° within 4 s; again"
+  hinge set "$1" 10 || die "the hinge didn't reach ${1}°"
+}
 
 # The integrated display the UI is on (devicectl's `active`; its lit backlight when it has no
 # such flag), as `simctl io --display` names it. Empty when devicectl can't tell.

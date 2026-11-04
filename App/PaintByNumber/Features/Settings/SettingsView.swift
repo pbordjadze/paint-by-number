@@ -204,6 +204,7 @@ struct SettingsView: View {
         }
         .presentationDetents([.large])
         .pageSizedOnPad()
+        .besideTheFold()
         .tint(Theme.accent)
         // Tips on or off takes effect at once, and Show Tips Again can be used once more after the
         // switch has been turned off.

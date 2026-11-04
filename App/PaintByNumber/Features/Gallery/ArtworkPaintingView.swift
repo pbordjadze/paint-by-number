@@ -34,8 +34,13 @@ struct ArtworkPaintingView: View {
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
     @State private var notice: ShownNotice?
-    /// A half-open iPhone Duo's fold: the toasts keep to the controls' page beside it.
-    @State private var fold: ActiveFold?
+    /// The screen's frame in the window: a half-open iPhone Duo's fold (`FoldWatch`) lies in it,
+    /// the toasts keeping to the controls' page beside it.
+    @State private var frameInWindow: CGRect = .zero
+    @Environment(\.layoutDirection) private var layoutDirection
+    private var bookFold: ActiveFold? {
+        FoldWatch.shared.fold(in: frameInWindow, rightToLeft: layoutDirection == .rightToLeft).flatMap { $0.isUpright ? $0 : nil }
+    }
 
     private struct ShownNotice: Equatable {
         var notice: OpenNotice
@@ -129,11 +134,11 @@ struct ArtworkPaintingView: View {
             .padding(.top, 62)
             .padding(.horizontal, 20)
             // Half open like a book, on the controls' page beyond the fold (`PaintingLayout`).
-            .padding(.leading, fold.map { $0.isUpright ? $0.frame.maxX : 0 } ?? 0)
+            .padding(.leading, bookFold.map(\.frame.maxX) ?? 0)
             // Over the painting, like its bars.
             .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
-        .onGeometryChange(for: ActiveFold?.self) { ActiveFold.of($0) } action: { fold = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frameInWindow = $0 }
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in

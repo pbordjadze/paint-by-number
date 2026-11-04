@@ -52,6 +52,9 @@ struct PaintView: View {
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The layout's `regularChrome` (a phone's bar on a Duo's book page), which the bar's views are
+    /// sized by: the size class's until the first layout.
+    @State private var chromeIsRegular: Bool?
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -85,9 +88,10 @@ struct PaintView: View {
     private static let bottomGap = PaintingLayout.bottomGap
 
     /// How much bigger the bar's buttons and the swatches are here (`QuietPainting.scale`).
-    private var chromeScale: CGFloat { PaintingLayout.chromeScale(regularWidth: sizeClass == .regular) }
+    private var chromeScale: CGFloat { PaintingLayout.chromeScale(regularWidth: regularChrome) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.
-    private var barHeight: CGFloat { PaintingLayout.barHeight(regularWidth: sizeClass == .regular) }
+    private var barHeight: CGFloat { PaintingLayout.barHeight(regularWidth: regularChrome) }
+    private var regularChrome: Bool { chromeIsRegular ?? (sizeClass == .regular) }
     private var chromeScheme: ColorScheme { Self.chromeScheme(paper: paperAppearance, system: colorScheme) }
 
     /// The bars' appearance: dark over dark paper whatever the system's (on a light system the
@@ -181,6 +185,7 @@ struct PaintView: View {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
                     .pageSizedOnPad()
+                    .besideTheFold()
             }
         }
         .animation(.snappy, value: thanks)
@@ -275,6 +280,10 @@ struct PaintView: View {
                         .padding(.bottom, Self.bottomGap)
                         .duoProbe("paint-palette")
                 }
+                if layout.mode != .whole {
+                    // The page beside a fold: the palette in the middle of the room below the bar.
+                    Spacer(minLength: 0)
+                }
             }
             .padding(controls)
             .environment(\.colorScheme, chromeScheme)
@@ -285,7 +294,7 @@ struct PaintView: View {
                         .padding(.trailing, Self.edge)
                         .padding(.top, sidePaletteTop)
                         .padding(.bottom, Self.edge)
-                        .duoProbe("paint-palette")
+                        .duoProbe("paint-palette-side")
                 }
                 .padding(controls)
                 .environment(\.colorScheme, chromeScheme)
@@ -313,6 +322,7 @@ struct PaintView: View {
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
         .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
+        .onChange(of: layout.regularChrome, initial: true) { _, regular in chromeIsRegular = regular }
     }
 
     /// The controls' page beside a half-open Duo's fold: the canvas's backdrop, as the paper it
@@ -364,7 +374,7 @@ struct PaintView: View {
             isComplete: session.isComplete, fold: PaintingLayout.fold(in: geo)))
     }
 
-    private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: sizeClass == .regular) }
+    private var sidePaletteTop: CGFloat { PaintingLayout.sidePaletteTop(regularWidth: regularChrome) }
 
     /// Every color of the palette in its order on screen (finished ones too).
     private var colorOrder: [Int] {
@@ -514,7 +524,7 @@ struct PaintView: View {
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
     private var badgeVariants: [BadgeVariant] {
-        let showsColor = sizeClass == .regular && !session.isComplete && session.selectedColor != nil
+        let showsColor = regularChrome && !session.isComplete && session.selectedColor != nil
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))

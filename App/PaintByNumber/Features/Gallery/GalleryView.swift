@@ -22,8 +22,9 @@ struct GalleryView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
-    /// A fold running down the pages (an open iPhone Duo's, flat or not): the middle gutter lies on it.
-    @State private var fold: Fold?
+    /// The pages' frame in the window and their safe area: where the fold (`FoldWatch`) lies in them.
+    @State private var room = Room()
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
@@ -104,7 +105,7 @@ struct GalleryView: View {
         }
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-        .onGeometryChange(for: Fold?.self) { Fold.down($0) } action: { fold = $0 }
+        .onGeometryChange(for: Room.self) { Room(frame: $0.frame(in: .global), safe: $0.safeAreaInsets) } action: { room = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
         .onAppear {
@@ -203,6 +204,12 @@ struct GalleryView: View {
         }
     }
 
+    /// The pages' frame in the window and their safe area.
+    nonisolated struct Room: Equatable, Sendable {
+        var frame: CGRect = .zero
+        var safe = EdgeInsets()
+    }
+
     /// An iPhone Duo's fold down the gallery, flat (inactive) or half open: how far its middle
     /// lies past the middle of the room the pages have (toward the trailing edge), and how wide it
     /// is with its margins while it is folded (none while flat).
@@ -210,14 +217,18 @@ struct GalleryView: View {
         var offset: CGFloat
         var width: CGFloat
 
-        static func down(_ proxy: GeometryProxy) -> Fold? {
-            guard #available(iOS 27.1, *) else { return nil }
-            let regions = proxy.reservedRegions(kind: .division, options: .includeInactive)
-            guard let region = regions.first(where: { $0.frame.height > $0.frame.width }) else { return nil }
-            let safe = proxy.safeAreaInsets
-            let middle = (safe.leading + proxy.size.width - safe.trailing) / 2
-            return Fold(offset: region.frame.midX - middle, width: region.isActive ? region.frame.width : 0)
+        static func of(_ region: FoldWatch.Region?, in room: Room, rightToLeft: Bool) -> Fold? {
+            guard let region, region.isUpright, room.frame.width > 0 else { return nil }
+            let local = FoldWatch.local(region.frame, in: room.frame, rightToLeft: rightToLeft)
+            // Not a fold through these pages (a window beside another app's): no gutter to keep.
+            guard local.midX > 0, local.midX < room.frame.width else { return nil }
+            let middle = (room.safe.leading + room.frame.width - room.safe.trailing) / 2
+            return Fold(offset: local.midX - middle, width: region.isActive ? region.frame.width : 0)
         }
+    }
+
+    private var fold: Fold? {
+        Fold.of(FoldWatch.shared.region, in: room, rightToLeft: layoutDirection == .rightToLeft)
     }
 
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
