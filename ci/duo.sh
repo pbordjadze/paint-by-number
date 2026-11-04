@@ -56,7 +56,7 @@ turn() {
   xcrun devicectl device orientation set "$name" -d "$UDID" -q >/dev/null 2>&1 || true
   [[ "$(orientation)" == "$want" ]] || step "warning: the orientation is '$(orientation)', not $want"
 }
-fold() { hinge set "$1" 4 || die "the hinge didn't reach $1°"; }
+fold() { hinge set "$1" 4 || die "the hinge didn't reach ${1}°"; }
 
 # The integrated display the UI is on (devicectl's `active`; its lit backlight when it has no
 # such flag), as `simctl io --display` names it. Empty when devicectl can't tell.
@@ -91,7 +91,7 @@ xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$UDID" -b >/dev/null; step booted
 xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
   --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
-step "hinge at $(hinge get 2>&1 || echo '?')°, orientation '$(orientation)', displays: $(xcrun simctl io "$UDID" enumerate 2>/dev/null | grep -iE 'display|name' | tr -s ' \n' ' ' | head -c 400)"
+step "hinge at $(hinge get 2>&1 || echo "?")°, orientation '$(orientation)', on $(active_display)"
 xcrun simctl install "$UDID" "$APP"; step installed
 CONTAINER="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)"
 MARKER="$CONTAINER/tmp/demo-ready"
@@ -132,7 +132,7 @@ for entry in "${SCENARIOS[@]}"; do
     display="$(shoot "$base")"
     cp "$LAYOUT" "$base.json" 2>/dev/null || true
     python3 "$HERE/duo/check.py" "$base.json" "$scenario/$name" || on_fold=$((on_fold + 1))
-    step "captured $scenario $name ($angle°, $(orientation), on $display)"
+    step "captured $scenario $name (${angle}°, $(orientation), on $display)"
   done
   reports=$(count_reports)
   if [[ "$reports" -gt "${seen_reports:-0}" ]]; then step "captured $scenario — CRASH: app crashed (see crashes/)"; fi
