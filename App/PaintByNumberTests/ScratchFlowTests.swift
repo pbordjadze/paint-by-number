@@ -56,8 +56,8 @@ struct ScratchFlowTests {
         #expect(coded.scratch == true, "draft.json keeps that it is a page from scratch")
 
         // Resumed, it is a page from scratch again: no analysis, no Start From, its line laid.
-        let page = try #require(model.source?.preview)
-        let photo = try #require(UIImage(cgImage: page).pngData())
+        let paper = try #require(model.source?.preview)
+        let photo = try #require(UIImage(cgImage: paper).pngData())
         let resumed = CreateModel()
         resumed.load(draft: kept, photo: photo)
         try await waitUntil { resumed.isFinal && resumed.preview?.refinements.edits.count == 1 }
