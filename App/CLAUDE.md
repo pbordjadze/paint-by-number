@@ -314,6 +314,8 @@ where they live.
   section's title); and
   `.cardTip(…)` for the two on the shelf's cards, Hold and the time-lapse, where TipKit's popover
   tip found nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside;
+  `.toolTip(…)`, the same popover, for Refine's two at their tools (TipKit's, its turn over
+  without its ×, left Refine unable to present the color wheel: `TipID.hangsFromATool`);
   these, the bar's and the page's have no
   TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
   it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card

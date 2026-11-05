@@ -1680,8 +1680,8 @@ extension RefineView {
         .accessibilityIdentifier("refine-tool-\(Self.toolID(kind))")
         .accessibilityShowsLargeContentViewer { Label { Self.toolName(kind) } icon: { Image(systemName: symbol(kind)) } }
         switch kind {
-        case .pen: row.gentleTip(.refineDraw, arrowEdge: .leading)
-        case .fill: row.gentleTip(.refineFill, arrowEdge: .leading)
+        case .pen: row.toolTip(.refineDraw, arrowEdge: .leading)
+        case .fill: row.toolTip(.refineFill, arrowEdge: .leading)
         case .shape: row.accessibilityValue(shapeName(shape))
         default: row
         }
@@ -1692,8 +1692,8 @@ extension RefineView {
     private func studioButton(_ kind: RefineTool) -> some View {
         let button = toolButton(kind, systemImage: symbol(kind), label: Self.toolName(kind), id: Self.toolID(kind))
         switch kind {
-        case .pen: button.gentleTip(.refineDraw, arrowEdge: .bottom)
-        case .fill: button.gentleTip(.refineFill, arrowEdge: .bottom)
+        case .pen: button.toolTip(.refineDraw, arrowEdge: .bottom)
+        case .fill: button.toolTip(.refineFill, arrowEdge: .bottom)
         case .shape: button.accessibilityValue(shapeName(shape))
         default: button
         }

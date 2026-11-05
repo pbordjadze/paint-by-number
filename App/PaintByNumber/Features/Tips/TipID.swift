@@ -46,6 +46,12 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
+    /// Refine's tips, at a tool, in the same popover of SwiftUI's own (`toolTip`): TipKit's
+    /// popover tip, its turn over without its × (left 45 s), left Refine's screen unable to
+    /// present anything else, so the palette's color wheel opened nothing until another screen
+    /// had been over Refine (QA, November 5; `RefineUITests.testNewPaintOpensThePickerAfterRefinesTip`).
+    var hangsFromATool: Bool { self == .refineDraw || self == .refineFill }
+
     /// The tips about the page itself, a card at the top of the page with no arrow (`TipDesk.pageTip`):
     /// Paul, October 18, shown the arrow and none, "No arrow".
     var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }
@@ -53,7 +59,7 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// Tips the app draws itself, in a popover of SwiftUI's own or as a card on the screen. They have no display
     /// limit of TipKit's, which would retire the tip from under its own view: closing, using or leaving
     /// it unread (`TipDesk`) says it once.
-    var isDrawnByTheApp: Bool { liesUnderTheBar || hangsFromCard || liesOnThePage }
+    var isDrawnByTheApp: Bool { liesUnderTheBar || hangsFromCard || hangsFromATool || liesOnThePage }
 
     /// How to use a screen at all, so it waits for neither the gap nor something done
     /// (`TipPacing`): Tap to Paint, and Refine's Draw Your Own Lines.

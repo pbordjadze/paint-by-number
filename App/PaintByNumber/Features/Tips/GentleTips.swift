@@ -197,7 +197,6 @@ nonisolated struct RefineDrawTip: Tip {
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// The first line drawn inside Refine: filling a closed shape. At Fill. Stops when a fill is made.
@@ -210,7 +209,6 @@ nonisolated struct RefineFillTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.linesDrawn) { $0.donations.count >= 1 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 // MARK: The bench
