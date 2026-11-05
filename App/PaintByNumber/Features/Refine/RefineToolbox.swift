@@ -455,9 +455,13 @@ struct RefineHeldNumber: View {
 struct RefineNumbers: View, Equatable {
     let base: CreateModel.Preview
     let rect: CGRect
+    /// The paint shows under the numbers (its layer on, at most half see-through): each takes
+    /// the ink its paint's swatch has, light on a dark paint, which the drawing's ink vanished
+    /// into (a car's black wheels, QA, November 5).
+    var overPaint = false
 
     nonisolated static func == (a: RefineNumbers, b: RefineNumbers) -> Bool {
-        a.base.id == b.base.id && a.rect == b.rect
+        a.base.id == b.base.id && a.rect == b.rect && a.overPaint == b.overPaint
     }
 
     var body: some View {
@@ -486,7 +490,9 @@ struct RefineNumbers: View, Equatable {
                 guard points >= 4, shown.contains(at) else { continue }
                 let text = Text(verbatim: "\(paint + 1)")
                     .font(.system(size: points, weight: .semibold, design: .serif))
-                    .foregroundStyle(LineArtDrawing.ink.opacity(0.75))
+                    .foregroundStyle(
+                        overPaint && Int(paint) < template.palette.count
+                            ? PaletteBar.numeralInk(template, Int(paint)) : LineArtDrawing.ink.opacity(0.75))
                 context.draw(text, at: at)
             }
         }

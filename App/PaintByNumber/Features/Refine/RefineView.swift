@@ -520,7 +520,7 @@ struct RefineView: View {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
                     if layers.numbers || group == .numbers, let base {
-                        RefineNumbers(base: base, rect: picture)
+                        RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
                             .equatable()
                     }
                     if let held = heldNumber, let template = base?.template {
