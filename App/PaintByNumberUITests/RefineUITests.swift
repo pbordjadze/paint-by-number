@@ -460,6 +460,40 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-edit-paint-merged")
     }
 
+    /// The palette's New Paint opens the system color picker, and still does once Refine's Make
+    /// Cell tip has come and been closed (QA, November 5: on both devices it opened nothing after
+    /// the tip, until the Tool Guide had been over Refine).
+    @MainActor
+    func testNewPaintOpensThePickerAfterRefinesTip() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine--tip-refineFill", "-demoFixedPictures", "YES"]
+        app.launch()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 180), "Refine didn't open")
+        let tip = app.staticTexts["Make a Shape Its Own"]
+        XCTAssertTrue(tip.waitForExistence(timeout: 60), "Make Cell's tip never came up")
+        attachScreenshot(of: app, named: "new-paint-tip")
+        let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Close")).firstMatch
+        if close.waitForExistence(timeout: 3) {
+            close.tap()
+        } else {
+            // A tap outside a popover closes it.
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.04)).tap()
+        }
+        XCTAssertTrue(waitUntil(timeout: 10) { !tip.exists }, "The tip didn't close")
+
+        pickTool("bucket", in: "Paint", of: app)
+        let wheel = app.descendants(matching: .any)["refine-palette-new"]
+        XCTAssertTrue(wheel.waitForExistence(timeout: 5), "The palette has no New Paint")
+        wheel.tap()
+        let picker = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label IN %@", ["Grid", "Spectrum", "Sliders"])).firstMatch
+        let opened = picker.waitForExistence(timeout: 10)
+        attachScreenshot(of: app, named: "new-paint-after-tip")
+        if !opened { attachTree(of: app, named: "new-paint-after-tip-tree") }
+        XCTAssertTrue(opened, "New Paint opened no color picker after the tip")
+    }
+
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).
