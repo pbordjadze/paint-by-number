@@ -152,6 +152,25 @@ struct BlankTemplateTests {
         #expect(abs(two.regions[strip].area - 20 * 50) < 1)
     }
 
+    /// A closed figure's sliver beside the ink it overlaps is not cut off (editor version 5): a
+    /// wheel's circle poking a few units into the car's body above it leaves two areas, not
+    /// three, the lens staying the body's; a small round shape is still an area of its own. The
+    /// lens had room for a number and no one could see it (QA, November 5).
+    @Test func aFiguresSliverBesideInkStaysWithIt() throws {
+        func ellipse(_ c: SIMD2<Float>, _ r: Float) -> [SIMD2<Float>] {
+            (0..<48).map { k in c + r * SIMD2(cos(Float(k) / 48 * 2 * .pi), sin(Float(k) / 48 * 2 * .pi)) }
+        }
+        var t = try Self.blank()
+        let body: [SIMD2<Float>] = [SIMD2(20, 10), SIMD2(140, 10), SIMD2(140, 40), SIMD2(20, 40)]
+        t = try TemplateEditorTests.apply(.draw(points: body, closed: true), to: t).0
+        let (car, outcome) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(80, 74), 40), closed: true), to: t)
+        #expect(outcome.regionsSplit == 1 && car.regions.count == 3)
+        expectValid(car)
+        #expect(try TemplateEditorTests.region(car, 80, 37) == TemplateEditorTests.region(car, 80, 25))
+        let (dot, small) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(150, 100), 4), closed: true), to: car)
+        #expect(small.regionsSplit == 1 && dot.regions.count == 4)
+    }
+
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
     /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
     /// paint, which leaves the palette, so the painting's numbers skip none.
