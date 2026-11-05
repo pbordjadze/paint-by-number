@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// The Refine Toolbox's current paint: a color as on screen (OKLab), which the Bucket gives a cell
 /// (`TemplateEditor.Edit.paintArea`, which lands it on the paint of that color, or adds it as a
@@ -492,5 +493,21 @@ struct RefineNumbers: View, Equatable {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The system color picker, made and loaded once a launch as Refine opens, before New Paint asks
+/// for it: the first a newly installed app presented never came (QA, November 3 and 5: New Paint's
+/// first taps opened nothing in most sessions; on CI the first launch's tap showed no picker in
+/// 40 s, every later one within 3, `RefineUITests.testNewPaintOpensThePickerFromScratch`).
+enum RefineColorWheel {
+    private static var warm: UIColorPickerViewController?
+
+    static func warmUp() {
+        guard warm == nil else { return }
+        let picker = UIColorPickerViewController()
+        picker.supportsAlpha = false
+        picker.loadViewIfNeeded()
+        warm = picker
     }
 }

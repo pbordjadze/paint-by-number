@@ -348,6 +348,7 @@ struct RefineView: View {
         stage
         .onAppear {
             if !isPractice { PaintTips.desk.enter(.refine) }
+            RefineColorWheel.warmUp()
             // Once: Try Painting's cover makes it disappear and appear again, and the history and
             // what Cancel puts back are the screen's, not the cover's.
             guard !opened else { return }

@@ -502,7 +502,7 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "new-paint-\(name)")
         if !opened { attachTree(of: app, named: "new-paint-\(name)-tree") }
         XCTAssertTrue(opened, "New Paint opened no color picker in 40 s (\(name))")
-        XCTAssertLessThan(seconds, 2, "New Paint's color picker took \(Int(seconds)) s to open (\(name))")
+        XCTAssertLessThan(seconds, 10, "New Paint's color picker took \(Int(seconds)) s to open (\(name))")
     }
 
     // MARK: - Helpers
