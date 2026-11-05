@@ -1,0 +1,973 @@
+Timestamp               Ty Process[PID:TID]
+2026-11-04 23:31:01.242 Df PaintByNumber[19098:e09c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.613423958 seconds
+2026-11-04 23:31:03.959 Df PaintByNumber[19098:e09d] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 1.268438 seconds
+2026-11-04 23:31:19.243 Df PaintByNumber[19791:e801] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.253762042 seconds
+2026-11-04 23:31:20.694 Df PaintByNumber[19791:e809] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.731674542 seconds
+2026-11-04 23:31:34.916 Df PaintByNumber[20328:ee22] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.235095208 seconds
+2026-11-04 23:31:36.508 Df PaintByNumber[20328:ee2d] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.865894666 seconds
+2026-11-04 23:31:51.684 Df PaintByNumber[21080:f2e7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.219192916 seconds
+2026-11-04 23:31:53.007 Df PaintByNumber[21080:f2ec] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.702178792 seconds
+2026-11-04 23:32:12.255 Df PaintByNumber[21578:f9ff] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.228663625 seconds
+2026-11-04 23:32:13.638 Df PaintByNumber[21578:fa0f] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.752701708 seconds
+2026-11-04 23:32:28.837 Df PaintByNumber[22056:ffdd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211801042 seconds
+2026-11-04 23:32:30.254 Df PaintByNumber[22056:fff5] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.7841855 seconds
+2026-11-04 23:32:54.104 Df PaintByNumber[22770:10a6f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.209690875 seconds
+2026-11-04 23:32:55.506 Df PaintByNumber[22770:10a71] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.748046542 seconds
+2026-11-04 23:32:56.344 Df PaintByNumber[22770:108c0] [com.pbordjadze.paintbynumber:demo] demo paint-fill: painted [9, 115, 366] of color 10; frames 1
+2026-11-04 23:33:04.565 Df PaintByNumber[22770:108c0] [com.pbordjadze.paintbynumber:canvas] Waited 0.314232666 seconds for a drawable
+2026-11-04 23:33:13.952 Df PaintByNumber[23625:10e10] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.249461042 seconds
+2026-11-04 23:33:15.280 Df PaintByNumber[23625:10e16] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.751631042 seconds
+2026-11-04 23:33:16.082 Df PaintByNumber[23625:10cb4] [com.pbordjadze.paintbynumber:demo] demo paint-hint: requested (canvas attached: true)
+2026-11-04 23:33:29.759 Df PaintByNumber[24330:1137b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.247642417 seconds
+2026-11-04 23:33:31.112 Df PaintByNumber[24330:11371] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.845477209 seconds
+2026-11-04 23:33:47.155 Df PaintByNumber[24992:11bd1] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.204797208 seconds
+2026-11-04 23:33:48.505 Df PaintByNumber[24992:11bd7] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.762342667 seconds
+2026-11-04 23:33:51.611 Df PaintByNumber[24992:119b8] [com.pbordjadze.paintbynumber:demo] demo paint-finish: relative zoom 1.000000
+2026-11-04 23:34:03.813 Df PaintByNumber[25807:1239f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.225529375 seconds
+2026-11-04 23:34:04.929 Df PaintByNumber[25807:1239e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.5149155 seconds
+2026-11-04 23:34:07.765 Df PaintByNumber[25807:12161] [com.pbordjadze.paintbynumber:demo] demo paint-finish: relative zoom 1.000000
+2026-11-04 23:34:10.797 Df PaintByNumber[25807:12161] [com.pbordjadze.paintbynumber:demo] demo paint-nightfall: night at its fullest
+2026-11-04 23:34:27.191 Df PaintByNumber[26357:12891] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.196255167 seconds
+2026-11-04 23:34:28.572 Df PaintByNumber[26357:1288c] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.797380083 seconds
+2026-11-04 23:34:31.007 Df PaintByNumber[26357:12725] [com.pbordjadze.paintbynumber:demo] demo paint-finish: relative zoom 1.000000
+2026-11-04 23:34:34.056 Df PaintByNumber[26357:12725] [com.pbordjadze.paintbynumber:demo] demo paint-nightfall: night at its fullest
+2026-11-04 23:34:50.191 Df PaintByNumber[27101:12f0a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.177002375 seconds
+2026-11-04 23:34:51.459 Df PaintByNumber[27101:12ebc] [com.pbordjadze.paintbynumber:demo] demo paint-photo: photo opacity 1.000000
+2026-11-04 23:34:51.481 Df PaintByNumber[27101:12f03] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.729072 seconds
+2026-11-04 23:35:08.015 Df PaintByNumber[27839:1388d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.268225583 seconds
+2026-11-04 23:35:08.982 Df PaintByNumber[27839:13895] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.401977166 seconds
+2026-11-04 23:35:25.260 Df PaintByNumber[28567:1407a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.217356709 seconds
+2026-11-04 23:35:26.680 Df PaintByNumber[28567:14081] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.798575125 seconds
+2026-11-04 23:35:48.662 Df PaintByNumber[29206:14816] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.269130709 seconds
+2026-11-04 23:35:49.525 Df PaintByNumber[29206:1451a] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap
+2026-11-04 23:35:50.417 Df PaintByNumber[29206:1481e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.8995885 seconds
+2026-11-04 23:35:50.446 Df PaintByNumber[29206:1451a] [com.pbordjadze.paintbynumber:tips] turn: benchTap
+2026-11-04 23:36:08.053 Df PaintByNumber[29973:14e10] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.331578084 seconds
+2026-11-04 23:36:09.745 Df PaintByNumber[29973:14e24] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.864873875 seconds
+2026-11-04 23:36:25.999 Df PaintByNumber[31034:1579c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.253916416 seconds
+2026-11-04 23:36:27.232 Df PaintByNumber[31034:157ac] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.678989292 seconds
+2026-11-04 23:36:42.428 Df PaintByNumber[31559:15e54] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.208928041 seconds
+2026-11-04 23:36:43.586 Df PaintByNumber[31559:15e4c] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.62017675 seconds
+2026-11-04 23:36:56.407 Df PaintByNumber[31939:16070] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1728175 seconds
+2026-11-04 23:36:57.305 Df PaintByNumber[31939:16071] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.392742542 seconds
+2026-11-04 23:37:09.404 Df PaintByNumber[32553:167c9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.250741916 seconds
+2026-11-04 23:37:10.587 Df PaintByNumber[32553:167ce] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.545164625 seconds
+2026-11-04 23:37:23.780 Df PaintByNumber[32885:16d57] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.248476708 seconds
+2026-11-04 23:37:24.964 Df PaintByNumber[32885:16d59] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.609795 seconds
+2026-11-04 23:37:37.301 Df PaintByNumber[33888:1735c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.231715 seconds
+2026-11-04 23:37:38.824 Df PaintByNumber[33888:17364] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.860567875 seconds
+2026-11-04 23:37:39.023 Df PaintByNumber[33888:172ff] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-11-04 23:37:39.585 Df PaintByNumber[33888:172ff] [com.pbordjadze.paintbynumber:demo] demo paint-feedback: 0 marks
+2026-11-04 23:37:54.050 Df PaintByNumber[34654:17b5e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1929235 seconds
+2026-11-04 23:37:55.078 Df PaintByNumber[34654:17b60] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.456309916 seconds
+2026-11-04 23:37:55.677 Df PaintByNumber[34654:17a93] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-11-04 23:37:55.699 Df PaintByNumber[34654:17a93] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-dark: 0 marks
+2026-11-04 23:38:11.529 Df PaintByNumber[35179:18333] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.768644834 seconds
+2026-11-04 23:38:13.012 Df PaintByNumber[35179:1832b] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.679800625 seconds
+2026-11-04 23:38:13.365 Df PaintByNumber[35179:17fe6] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-11-04 23:38:15.173 Df PaintByNumber[35179:17fe6] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+2026-11-04 23:38:15.175 Df PaintByNumber[35179:17fe6] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+2026-11-04 23:38:17.702 Df PaintByNumber[35179:17fe6] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-review: 2 marks
+2026-11-04 23:38:33.273 Df PaintByNumber[36312:18c26] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192052875 seconds
+2026-11-04 23:38:34.641 Df PaintByNumber[36312:18c2a] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.762126916 seconds
+2026-11-04 23:38:34.912 Df PaintByNumber[36312:18b5f] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-11-04 23:38:36.154 Df PaintByNumber[36312:18b5f] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+2026-11-04 23:38:36.154 Df PaintByNumber[36312:18b5f] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+2026-11-04 23:38:37.263 Df PaintByNumber[36312:18b5f] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-long-text: 2 marks
+2026-11-04 23:38:53.231 Df PaintByNumber[37234:194e6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.235543875 seconds
+2026-11-04 23:38:55.308 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.899613 seconds
+2026-11-04 23:38:56.366 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.05706675 seconds
+2026-11-04 23:38:56.802 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.435837459 seconds
+2026-11-04 23:38:57.166 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.36444725 seconds
+2026-11-04 23:38:57.565 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.398092542 seconds
+2026-11-04 23:38:57.822 Df PaintByNumber[37234:19345] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.257315833 seconds
+2026-11-04 23:39:11.274 Df PaintByNumber[37553:19b03] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.205489 seconds
+2026-11-04 23:39:11.995 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.558821458 seconds
+2026-11-04 23:39:12.424 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.42883825 seconds
+2026-11-04 23:39:12.806 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.382191292 seconds
+2026-11-04 23:39:13.080 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.273508875 seconds
+2026-11-04 23:39:13.478 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.397590083 seconds
+2026-11-04 23:39:13.738 Df PaintByNumber[37553:1972b] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.260162833 seconds
+2026-11-04 23:39:27.502 Df PaintByNumber[38389:19ffa] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.227434708 seconds
+2026-11-04 23:39:28.435 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.781865667 seconds
+2026-11-04 23:39:28.733 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.2977185 seconds
+2026-11-04 23:39:28.936 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.203106 seconds
+2026-11-04 23:39:29.181 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.244373459 seconds
+2026-11-04 23:39:29.529 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.348052375 seconds
+2026-11-04 23:39:29.783 Df PaintByNumber[38389:19f49] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.254006792 seconds
+2026-11-04 23:39:43.012 Df PaintByNumber[39123:1a6da] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.159818166 seconds
+2026-11-04 23:39:43.719 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.362339083 seconds
+2026-11-04 23:39:43.910 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.190242875 seconds
+2026-11-04 23:39:44.075 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.165389708 seconds
+2026-11-04 23:39:44.228 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.152538209 seconds
+2026-11-04 23:39:44.456 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.227683041 seconds
+2026-11-04 23:39:44.703 Df PaintByNumber[39123:1a5cc] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.247312625 seconds
+2026-11-04 23:39:58.503 Df PaintByNumber[39576:1abe3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.185494625 seconds
+2026-11-04 23:39:59.392 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.663935708 seconds
+2026-11-04 23:39:59.671 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.279144875 seconds
+2026-11-04 23:39:59.849 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.177277625 seconds
+2026-11-04 23:40:00.038 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.188992666 seconds
+2026-11-04 23:40:01.032 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.993940375 seconds
+2026-11-04 23:40:01.293 Df PaintByNumber[39576:1aa62] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.260258792 seconds
+2026-11-04 23:40:14.686 Df PaintByNumber[40364:1b180] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.202668792 seconds
+2026-11-04 23:40:15.305 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.327600542 seconds
+2026-11-04 23:40:15.541 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.235796583 seconds
+2026-11-04 23:40:15.675 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.133960833 seconds
+2026-11-04 23:40:15.827 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.151957916 seconds
+2026-11-04 23:40:16.680 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.851929417 seconds
+2026-11-04 23:40:16.967 Df PaintByNumber[40364:1b12d] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.28664725 seconds
+2026-11-04 23:40:30.489 Df PaintByNumber[40871:1b8c4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.234214208 seconds
+2026-11-04 23:40:31.162 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.633185292 seconds
+2026-11-04 23:40:31.295 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.132446 seconds
+2026-11-04 23:40:31.411 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.11527775 seconds
+2026-11-04 23:40:31.499 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.08814725 seconds
+2026-11-04 23:40:31.670 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.170864791 seconds
+2026-11-04 23:40:31.811 Df PaintByNumber[40871:1b5b4] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.140509 seconds
+2026-11-04 23:40:43.886 Df PaintByNumber[41283:1bd35] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.214380791 seconds
+2026-11-04 23:40:57.779 Df PaintByNumber[42132:1c2e5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.209733792 seconds
+2026-11-04 23:40:58.735 Df PaintByNumber[42132:1c196] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.793788959 seconds
+2026-11-04 23:40:59.517 Df PaintByNumber[42132:1c196] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.782011916 seconds
+2026-11-04 23:41:11.460 Df PaintByNumber[43085:1cb78] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.231221166 seconds
+2026-11-04 23:41:23.780 Df PaintByNumber[43278:1d055] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.210138583 seconds
+2026-11-04 23:41:24.421 Df PaintByNumber[43278:1cc64] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.519484375 seconds
+2026-11-04 23:41:24.774 Df PaintByNumber[43278:1cc64] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.352953792 seconds
+2026-11-04 23:41:25.075 Df PaintByNumber[43278:1cc64] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.300694416 seconds
+2026-11-04 23:41:38.668 Df PaintByNumber[44123:1d42c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.219804666 seconds
+2026-11-04 23:41:41.728 Df PaintByNumber[44123:1d3ea] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.92647175 seconds
+2026-11-04 23:41:44.640 Df PaintByNumber[44123:1d3ea] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 2.911523583 seconds
+2026-11-04 23:41:45.039 Df PaintByNumber[44123:1d3ea] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.399066375 seconds
+2026-11-04 23:41:57.606 Df PaintByNumber[44933:1db90] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.2288675 seconds
+2026-11-04 23:41:58.279 Df PaintByNumber[44933:1db2e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.543331 seconds
+2026-11-04 23:41:58.688 Df PaintByNumber[44933:1db2e] [com.pbordjadze.paintbynumber:library] Opened 15549465-F4BC-41AE-923D-FA7136EED9E0: 204 regions
+2026-11-04 23:41:59.528 Df PaintByNumber[44933:1db2e] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-04 23:42:00.229 Df PaintByNumber[44933:1db2e] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-04 23:42:01.011 Df PaintByNumber[44933:1db95] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.980634083 seconds
+2026-11-04 23:42:09.851 Df PaintByNumber[45466:1e3d7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.180008375 seconds
+2026-11-04 23:42:10.604 Df PaintByNumber[45466:1e047] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.512267458 seconds
+2026-11-04 23:42:25.277 Df PaintByNumber[46078:1ea0b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.190328208 seconds
+2026-11-04 23:42:25.862 Df PaintByNumber[46078:1e636] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.30612975 seconds
+2026-11-04 23:42:41.290 Df PaintByNumber[46861:1f049] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.171410417 seconds
+2026-11-04 23:42:41.862 Df PaintByNumber[46861:1ed39] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.42734075 seconds
+2026-11-04 23:42:52.091 Df PaintByNumber[47663:1f45e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.242507417 seconds
+2026-11-04 23:42:53.041 Df PaintByNumber[47663:1f423] [com.pbordjadze.paintbynumber:library] Opened B8A71118-21B1-45B2-9365-2727666B1630: 205 regions
+2026-11-04 23:42:53.921 Df PaintByNumber[47663:1f423] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-04 23:42:54.678 Df PaintByNumber[47663:1f423] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-04 23:42:55.343 Df PaintByNumber[47663:1f460] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.829926333 seconds
+2026-11-04 23:43:08.517 Df PaintByNumber[48287:1fc45] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.289582416 seconds
+2026-11-04 23:43:09.557 Df PaintByNumber[48287:1fa5c] [com.pbordjadze.paintbynumber:library] Opened 64A7ED78-1CD7-48DA-A96A-52EC7CB92E72: 205 regions
+2026-11-04 23:43:10.487 Df PaintByNumber[48287:1fa5c] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-04 23:43:11.706 Df PaintByNumber[48287:1fa5c] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-04 23:43:12.172 Df PaintByNumber[48287:1fc40] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.936093417 seconds
+2026-11-04 23:43:26.610 Df PaintByNumber[48819:20187] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.187269625 seconds
+2026-11-04 23:43:28.560 Df PaintByNumber[48819:1ffb6] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.832883125 seconds
+2026-11-04 23:43:28.761 E  PaintByNumber[48819:20183] [com.pbordjadze.paintbynumber:library] Template of 9903F2AA-AF1D-4F9F-A983-41C3010CFFE3 is unreadable: unreadable("template decompression")
+2026-11-04 23:43:28.859 E  PaintByNumber[48819:1ffb6] [com.pbordjadze.paintbynumber:library] Opening 9903F2AA-AF1D-4F9F-A983-41C3010CFFE3 failed: damaged(canRegenerate: true)
+2026-11-04 23:43:29.712 Df PaintByNumber[48819:1ffb6] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-04 23:43:30.217 Df PaintByNumber[48819:1ffb6] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-04 23:43:43.945 Df PaintByNumber[49609:2071d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1819825 seconds
+2026-11-04 23:43:44.406 Df PaintByNumber[49609:206cb] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.232413709 seconds
+2026-11-04 23:44:06.791 Df PaintByNumber[50051:20cbb] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.227971541 seconds
+2026-11-04 23:44:07.827 Df PaintByNumber[50051:20b0c] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 2.053047084 seconds
+2026-11-04 23:44:22.257 Df PaintByNumber[50492:20f9b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211694709 seconds
+2026-11-04 23:44:26.432 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 5.0425390409999995 seconds
+2026-11-04 23:44:27.002 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.569586667 seconds
+2026-11-04 23:44:27.437 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.429409125 seconds
+2026-11-04 23:44:27.837 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.399745875 seconds
+2026-11-04 23:44:28.415 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.578167083 seconds
+2026-11-04 23:44:28.820 Df PaintByNumber[50492:20eff] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.403696 seconds
+2026-11-04 23:44:49.668 Df PaintByNumber[51636:21e1a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.177503875 seconds
+2026-11-04 23:45:12.525 Df PaintByNumber[52548:2264c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.183386292 seconds
+2026-11-04 23:45:26.618 Df PaintByNumber[53214:2298e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.282832375 seconds
+2026-11-04 23:45:50.609 Df PaintByNumber[53799:2304c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.242371542 seconds
+2026-11-04 23:46:11.928 Df PaintByNumber[54337:23497] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.20560425 seconds
+2026-11-04 23:46:30.769 Df PaintByNumber[54954:23bf1] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1745645 seconds
+2026-11-04 23:46:34.950 Df PaintByNumber[54954:239f6] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:46:35.503 Df PaintByNumber[54954:239f6] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:46:35.526 Df PaintByNumber[54954:239f6] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:46:38.511 Df PaintByNumber[54954:239f6] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:46:50.608 Df PaintByNumber[56001:24379] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.166418708 seconds
+2026-11-04 23:46:53.803 Df PaintByNumber[56001:24341] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:46:54.240 Df PaintByNumber[56001:24341] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:46:54.262 Df PaintByNumber[56001:24341] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:46:57.271 Df PaintByNumber[56001:24341] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:47:11.417 Df PaintByNumber[56764:24c0b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.206591042 seconds
+2026-11-04 23:47:14.597 Df PaintByNumber[56764:24a73] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:15.012 Df PaintByNumber[56764:24a73] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:15.041 Df PaintByNumber[56764:24a73] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:47:17.623 Df PaintByNumber[56764:24a73] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:47:26.686 Df PaintByNumber[57140:24e92] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.180817041 seconds
+2026-11-04 23:47:29.344 Df PaintByNumber[57140:24e54] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:29.787 Df PaintByNumber[57140:24e54] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:29.813 Df PaintByNumber[57140:24e54] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:47:32.194 Df PaintByNumber[57140:24e54] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:47:47.083 Df PaintByNumber[57981:2561c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.289080375 seconds
+2026-11-04 23:47:50.745 Df PaintByNumber[57981:255e6] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:51.271 Df PaintByNumber[57981:255e6] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:47:51.308 Df PaintByNumber[57981:255e6] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:47:54.508 Df PaintByNumber[57981:255e6] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:48:09.065 Df PaintByNumber[58607:25dc4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.201271416 seconds
+2026-11-04 23:48:11.598 Df PaintByNumber[58607:25bc1] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:12.053 Df PaintByNumber[58607:25bc1] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:12.072 Df PaintByNumber[58607:25bc1] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:48:14.724 Df PaintByNumber[58607:25bc1] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:48:29.200 Df PaintByNumber[59615:2674f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.254029334 seconds
+2026-11-04 23:48:32.930 Df PaintByNumber[59615:264c9] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:33.559 Df PaintByNumber[59615:264c9] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:33.592 Df PaintByNumber[59615:264c9] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:48:37.095 Df PaintByNumber[59615:264c9] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:48:55.025 Df PaintByNumber[60569:26ef3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211592458 seconds
+2026-11-04 23:48:58.293 Df PaintByNumber[60569:26da9] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:58.779 Df PaintByNumber[60569:26da9] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:48:58.799 Df PaintByNumber[60569:26da9] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:49:01.725 Df PaintByNumber[60569:26da9] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:49:14.237 Df PaintByNumber[61345:276cf] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.207492167 seconds
+2026-11-04 23:49:16.880 Df PaintByNumber[61345:274c3] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:17.330 Df PaintByNumber[61345:274c3] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:17.348 Df PaintByNumber[61345:274c3] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:49:19.714 Df PaintByNumber[61345:274c3] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:49:32.159 Df PaintByNumber[62255:27f7d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.190604417 seconds
+2026-11-04 23:49:34.672 Df PaintByNumber[62255:27cdf] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:35.105 Df PaintByNumber[62255:27cdf] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:35.127 Df PaintByNumber[62255:27cdf] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:49:37.568 Df PaintByNumber[62255:27cdf] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:49:49.088 Df PaintByNumber[63177:287df] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.146039917 seconds
+2026-11-04 23:49:51.704 Df PaintByNumber[63177:28553] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:52.126 Df PaintByNumber[63177:28553] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:49:52.141 Df PaintByNumber[63177:28553] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:49:54.464 Df PaintByNumber[63177:28553] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:50:06.271 Df PaintByNumber[64078:28f60] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.142037834 seconds
+2026-11-04 23:50:08.871 Df PaintByNumber[64078:28d54] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:09.301 Df PaintByNumber[64078:28d54] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:09.321 Df PaintByNumber[64078:28d54] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:50:12.425 Df PaintByNumber[64078:28d54] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:50:26.329 Df PaintByNumber[64828:295b6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192436083 seconds
+2026-11-04 23:50:28.987 Df PaintByNumber[64828:2942f] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:29.428 Df PaintByNumber[64828:2942f] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:29.452 Df PaintByNumber[64828:2942f] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:50:31.812 Df PaintByNumber[64828:2942f] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:50:42.074 Df PaintByNumber[65220:29928] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.184390458 seconds
+2026-11-04 23:50:44.665 Df PaintByNumber[65220:29823] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:45.298 Df PaintByNumber[65220:29823] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:50:45.330 Df PaintByNumber[65220:29823] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:50:48.005 Df PaintByNumber[65220:29823] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:50:58.906 Df PaintByNumber[66255:2a1c5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.139140083 seconds
+2026-11-04 23:51:01.650 Df PaintByNumber[66255:2a158] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:02.077 Df PaintByNumber[66255:2a158] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:02.091 Df PaintByNumber[66255:2a158] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:51:04.434 Df PaintByNumber[66255:2a158] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:51:17.430 Df PaintByNumber[66943:2a92a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.190257375 seconds
+2026-11-04 23:51:20.126 Df PaintByNumber[66943:2a793] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:20.568 Df PaintByNumber[66943:2a793] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:20.593 Df PaintByNumber[66943:2a793] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:51:22.914 Df PaintByNumber[66943:2a793] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:51:35.396 Df PaintByNumber[67514:2ae76] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.191644875 seconds
+2026-11-04 23:51:37.893 Df PaintByNumber[67514:2ace5] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:38.318 Df PaintByNumber[67514:2ace5] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:38.340 Df PaintByNumber[67514:2ace5] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:51:40.679 Df PaintByNumber[67514:2ace5] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:51:51.429 Df PaintByNumber[68046:2b211] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.23319225 seconds
+2026-11-04 23:51:54.122 Df PaintByNumber[68046:2b1df] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:54.619 Df PaintByNumber[68046:2b1df] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:51:54.651 Df PaintByNumber[68046:2b1df] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:51:57.076 Df PaintByNumber[68046:2b1df] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:51:59.366 Df PaintByNumber[68046:2b1df] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: merge
+2026-11-04 23:52:09.849 Df PaintByNumber[69125:2bbb8] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.14198975 seconds
+2026-11-04 23:52:12.409 Df PaintByNumber[69125:2bb80] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:12.839 Df PaintByNumber[69125:2bb80] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:12.860 Df PaintByNumber[69125:2bb80] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:52:15.193 Df PaintByNumber[69125:2bb80] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:52:17.613 Df PaintByNumber[69125:2bb80] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: merge
+2026-11-04 23:52:26.903 Df PaintByNumber[69973:2c327] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.144012916 seconds
+2026-11-04 23:52:29.639 Df PaintByNumber[69973:2c2f4] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:30.168 Df PaintByNumber[69973:2c2f4] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:30.186 Df PaintByNumber[69973:2c2f4] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:52:32.465 Df PaintByNumber[69973:2c2f4] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:52:34.767 Df PaintByNumber[69973:2c2f4] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: merge
+2026-11-04 23:52:43.436 Df PaintByNumber[70822:2cadd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.190017791 seconds
+2026-11-04 23:52:46.070 Df PaintByNumber[70822:2ca8c] [com.pbordjadze.paintbynumber:create] Draft #1 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:46.547 Df PaintByNumber[70822:2ca8c] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:52:46.572 Df PaintByNumber[70822:2ca8c] [com.pbordjadze.paintbynumber:create] Full #2 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:52:49.111 Df PaintByNumber[70822:2ca8c] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:52:57.159 Df PaintByNumber[71664:2d22e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192317708 seconds
+2026-11-04 23:52:59.656 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:00.108 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:00.130 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:02.654 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:53:02.683 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+2026-11-04 23:53:02.957 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:06.006 Df PaintByNumber[71664:2d208] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:53:15.705 Df PaintByNumber[72522:2db9e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.217947084 seconds
+2026-11-04 23:53:18.238 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:18.663 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:18.683 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:21.021 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:53:21.057 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+2026-11-04 23:53:21.375 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:24.243 Df PaintByNumber[72522:2da0f] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:53:33.613 Df PaintByNumber[72829:2df4d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.175268042 seconds
+2026-11-04 23:53:36.060 Df PaintByNumber[72829:2dd81] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:36.423 Df PaintByNumber[72829:2dd81] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:53:36.445 Df PaintByNumber[72829:2dd81] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:38.847 Df PaintByNumber[72829:2dd81] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:53:47.319 Df PaintByNumber[73664:2e4be] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.185333625 seconds
+2026-11-04 23:53:48.370 Df PaintByNumber[73664:2e4c0] [com.pbordjadze.paintbynumber:create] Drawing cleaned: 1092×1415, sheet pulled square true
+2026-11-04 23:53:48.496 Df PaintByNumber[73664:2e489] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:53:50.445 Df PaintByNumber[73664:2e489] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:54:01.427 Df PaintByNumber[74087:2ea58] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.181106959 seconds
+2026-11-04 23:54:02.262 Df PaintByNumber[74087:2ea65] [com.pbordjadze.paintbynumber:create] Drawing cleaned: 1092×1415, sheet pulled square true
+2026-11-04 23:54:02.450 Df PaintByNumber[74087:2e885] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:54:04.311 Df PaintByNumber[74087:2e885] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:54:13.809 Df PaintByNumber[74597:2ed4e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.189625958 seconds
+2026-11-04 23:54:16.411 Df PaintByNumber[74597:2ed04] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:16.771 Df PaintByNumber[74597:2ed04] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:16.791 Df PaintByNumber[74597:2ed04] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:54:19.081 Df PaintByNumber[74597:2ed04] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:54:28.438 Df PaintByNumber[75684:2f6cd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1947965 seconds
+2026-11-04 23:54:30.873 Df PaintByNumber[75684:2f6a6] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:31.210 Df PaintByNumber[75684:2f6a6] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:31.232 Df PaintByNumber[75684:2f6a6] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:54:33.472 Df PaintByNumber[75684:2f6a6] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:54:42.133 Df PaintByNumber[76488:2fe27] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.197312792 seconds
+2026-11-04 23:54:44.532 Df PaintByNumber[76488:2fd93] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:44.895 Df PaintByNumber[76488:2fd93] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:54:44.920 Df PaintByNumber[76488:2fd93] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:54:47.361 Df PaintByNumber[76488:2fd93] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:54:56.233 Df PaintByNumber[76919:3057d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.240368375 seconds
+2026-11-04 23:55:03.568 Df PaintByNumber[77440:3064e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.185293916 seconds
+2026-11-04 23:55:11.444 Df PaintByNumber[78236:30d0c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1688455 seconds
+2026-11-04 23:55:18.629 Df PaintByNumber[78322:30db9] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:55:20.128 Df PaintByNumber[78322:30db9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.132707875 seconds
+2026-11-04 23:55:21.296 Df PaintByNumber[78322:30db8] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.596883708 seconds
+2026-11-04 23:55:28.807 Df PaintByNumber[79187:31607] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:55:30.281 Df PaintByNumber[79187:31607] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.123433042 seconds
+2026-11-04 23:55:30.983 Df PaintByNumber[79187:3160b] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.311577833 seconds
+2026-11-04 23:55:39.347 Df PaintByNumber[79710:31c41] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:55:40.820 Df PaintByNumber[79710:31c41] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.122925458 seconds
+2026-11-04 23:55:41.522 Df PaintByNumber[79710:31c45] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.308190625 seconds
+2026-11-04 23:55:50.361 Df PaintByNumber[80300:32033] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:55:51.832 Df PaintByNumber[80300:32033] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.127845792 seconds
+2026-11-04 23:55:52.577 Df PaintByNumber[80300:32032] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.340576958 seconds
+2026-11-04 23:55:54.049 Df PaintByNumber[80300:32008] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+2026-11-04 23:55:54.051 Df PaintByNumber[80300:32008] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+2026-11-04 23:56:04.103 Df PaintByNumber[81155:327cc] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:56:05.582 Df PaintByNumber[81155:327cc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.131487 seconds
+2026-11-04 23:56:06.313 Df PaintByNumber[81155:327cf] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.30403775 seconds
+2026-11-04 23:56:15.834 Df PaintByNumber[81362:32b8f] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:56:17.356 Df PaintByNumber[81362:32b8f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.151831084 seconds
+2026-11-04 23:56:18.180 Df PaintByNumber[81362:32b9c] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.374478125 seconds
+2026-11-04 23:56:26.073 Df PaintByNumber[82069:33077] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-11-04 23:56:27.556 Df PaintByNumber[82069:33077] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.129400125 seconds
+2026-11-04 23:56:28.263 Df PaintByNumber[82069:33079] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.309427209 seconds
+2026-11-04 23:56:47.981 Df PaintByNumber[82069:33049] [com.pbordjadze.paintbynumber:demo] demo paint-book-moon-dark: painted 171, fill 13.853811 s
+2026-11-04 23:58:25.518 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:25.651 Df PaintByNumber[87891:36619] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.134933041 seconds
+2026-11-04 23:58:26.130 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.035446 seconds
+2026-11-04 23:58:26.224 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:26.371 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.241352167 seconds
+2026-11-04 23:58:26.390 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-04 23:58:26.838 Df PaintByNumber[87891:365eb] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-04 23:58:38.097 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:38.234 Df PaintByNumber[88756:36d7a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.139175167 seconds
+2026-11-04 23:58:38.857 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.54081575 seconds
+2026-11-04 23:58:38.951 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:39.323 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.465098667 seconds
+2026-11-04 23:58:39.340 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-04 23:58:39.791 Df PaintByNumber[88756:36d58] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-04 23:58:50.743 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:50.879 Df PaintByNumber[89052:37265] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.138067375 seconds
+2026-11-04 23:58:51.684 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.73926075 seconds
+2026-11-04 23:58:51.797 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:58:52.045 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.360420125 seconds
+2026-11-04 23:58:52.060 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-04 23:58:52.506 Df PaintByNumber[89052:37055] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-04 23:59:02.116 Df PaintByNumber[89684:375c8] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-04 23:59:02.250 Df PaintByNumber[89684:3767e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.13545225 seconds
+2026-11-04 23:59:02.807 Df PaintByNumber[89684:375c8] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.094107333 seconds
+2026-11-04 23:59:02.902 Df PaintByNumber[89684:375c8] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfNewPainting, shelfSettings, shelfTimeLapse, wanted shelfNewPainting, shelfSettings, shelfTimeLapse
+2026-11-04 23:59:03.354 Df PaintByNumber[89684:375c8] [com.pbordjadze.paintbynumber:tips] turn: shelfSettings
+2026-11-04 23:59:12.723 Df PaintByNumber[90718:37f32] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.173161875 seconds
+2026-11-04 23:59:15.708 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:create] Draft #1 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:59:16.169 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-04 23:59:16.187 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:create] Full #2 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-04 23:59:19.023 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-04 23:59:19.032 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine, wanted newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine
+2026-11-04 23:59:19.503 Df PaintByNumber[90718:37eaf] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSuggested
+2026-11-04 23:59:28.630 Df PaintByNumber[91636:386a3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.250109375 seconds
+2026-11-04 23:59:36.234 Df PaintByNumber[91692:38aab] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.180984084 seconds
+2026-11-04 23:59:36.824 Df PaintByNumber[91692:38735] [com.pbordjadze.paintbynumber:tips] offer in drawer: drawerWorthALook, wanted drawerWorthALook
+2026-11-04 23:59:37.738 Df PaintByNumber[91692:38735] [com.pbordjadze.paintbynumber:tips] turn: drawerWorthALook
+2026-11-04 23:59:47.401 Df PaintByNumber[92560:38ed8] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.139842792 seconds
+2026-11-04 23:59:47.949 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.121227 seconds
+2026-11-04 23:59:48.344 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.3938365 seconds
+2026-11-04 23:59:48.743 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.398957959 seconds
+2026-11-04 23:59:49.069 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.326318167 seconds
+2026-11-04 23:59:49.612 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.542432709 seconds
+2026-11-04 23:59:50.249 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.636996916 seconds
+2026-11-04 23:59:52.047 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:tips] forced: shelfNewPainting
+2026-11-04 23:59:52.050 Df PaintByNumber[92560:38e67] [com.pbordjadze.paintbynumber:tips] turn: shelfNewPainting
+2026-11-05 00:00:30.107 Df PaintByNumber[94046:3a042] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.213423292 seconds
+2026-11-05 00:00:32.589 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.803915917 seconds
+2026-11-05 00:00:33.452 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.862718125 seconds
+2026-11-05 00:00:34.429 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.976383916 seconds
+2026-11-05 00:00:34.995 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.566625583 seconds
+2026-11-05 00:00:35.535 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.539565833 seconds
+2026-11-05 00:00:35.767 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.231407333 seconds
+2026-11-05 00:00:37.665 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:tips] forced: shelfHold
+2026-11-05 00:00:37.670 Df PaintByNumber[94046:39dd9] [com.pbordjadze.paintbynumber:tips] turn: shelfHold
+2026-11-05 00:00:48.290 Df PaintByNumber[94644:3a5fa] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.142037333 seconds
+2026-11-05 00:00:51.249 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.482112417 seconds
+2026-11-05 00:00:51.681 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.431567333 seconds
+2026-11-05 00:00:52.404 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.722632292 seconds
+2026-11-05 00:00:52.954 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.549736125 seconds
+2026-11-05 00:00:53.580 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.625908708 seconds
+2026-11-05 00:00:53.899 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.318933125 seconds
+2026-11-05 00:00:55.700 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:tips] forced: shelfTimeLapse
+2026-11-05 00:00:55.705 Df PaintByNumber[94644:3a478] [com.pbordjadze.paintbynumber:tips] turn: shelfTimeLapse
+2026-11-05 00:01:05.498 Df PaintByNumber[95542:3ac88] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.171292458 seconds
+2026-11-05 00:01:10.634 Df PaintByNumber[95542:3ac5f] [com.pbordjadze.paintbynumber:tips] forced: newPaintingSamples
+2026-11-05 00:01:10.637 Df PaintByNumber[95542:3ac5f] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSamples
+2026-11-05 00:01:23.788 Df PaintByNumber[96104:3b348] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.174751583 seconds
+2026-11-05 00:01:26.974 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:01:27.418 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:01:27.439 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:01:29.785 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:01:31.149 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:tips] forced: newPaintingDivider
+2026-11-05 00:01:31.152 Df PaintByNumber[96104:3b17d] [com.pbordjadze.paintbynumber:tips] turn: newPaintingDivider
+2026-11-05 00:01:42.868 Df PaintByNumber[96635:3b791] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192908917 seconds
+2026-11-05 00:01:45.367 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:01:45.801 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:01:45.823 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:01:48.260 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:01:49.853 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:tips] forced: newPaintingSliders
+2026-11-05 00:01:49.855 Df PaintByNumber[96635:3b6ba] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSliders
+2026-11-05 00:02:00.619 Df PaintByNumber[97634:3bfab] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.187590625 seconds
+2026-11-05 00:02:03.150 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:03.598 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:03.622 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:02:05.933 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:02:05.979 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:02:06.288 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:02:09.124 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:02:10.703 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:tips] forced: newPaintingReset
+2026-11-05 00:02:10.705 Df PaintByNumber[97634:3bf80] [com.pbordjadze.paintbynumber:tips] turn: newPaintingReset
+2026-11-05 00:02:20.290 Df PaintByNumber[98527:3c775] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.189054 seconds
+2026-11-05 00:02:22.980 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:23.421 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:23.441 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:02:25.768 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:02:27.370 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:tips] forced: newPaintingRefine
+2026-11-05 00:02:27.372 Df PaintByNumber[98527:3c74a] [com.pbordjadze.paintbynumber:tips] turn: newPaintingRefine
+2026-11-05 00:02:37.119 Df PaintByNumber[99417:3cf1b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.180857833 seconds
+2026-11-05 00:02:39.590 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:40.018 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:02:40.038 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:02:42.375 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:02:46.028 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:tips] forced: refineFill
+2026-11-05 00:02:46.032 Df PaintByNumber[99417:3cefc] [com.pbordjadze.paintbynumber:tips] turn: refineFill
+2026-11-05 00:02:57.782 Df PaintByNumber[972:3d908] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.185411417 seconds
+2026-11-05 00:03:00.303 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:03:00.746 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:03:00.769 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:03:03.101 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:03:06.029 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:tips] forced: refineDraw
+2026-11-05 00:03:06.032 Df PaintByNumber[972:3d84c] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+2026-11-05 00:03:16.123 Df PaintByNumber[1996:3e0ac] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.135311958 seconds
+2026-11-05 00:03:17.443 Df PaintByNumber[1996:3e0ac] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.805623625 seconds
+2026-11-05 00:03:18.424 Df PaintByNumber[1996:3e08c] [com.pbordjadze.paintbynumber:tips] forced: benchZoom
+2026-11-05 00:03:18.427 Df PaintByNumber[1996:3e08c] [com.pbordjadze.paintbynumber:tips] turn: benchZoom
+2026-11-05 00:03:28.268 Df PaintByNumber[2971:3e834] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.141143625 seconds
+2026-11-05 00:03:28.980 Df PaintByNumber[2971:3e83a] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.305358791 seconds
+2026-11-05 00:03:30.438 Df PaintByNumber[2971:3e729] [com.pbordjadze.paintbynumber:tips] forced: benchDrag
+2026-11-05 00:03:30.443 Df PaintByNumber[2971:3e729] [com.pbordjadze.paintbynumber:tips] turn: benchDrag
+2026-11-05 00:03:40.452 Df PaintByNumber[3361:3eeb0] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.160196625 seconds
+2026-11-05 00:03:41.273 Df PaintByNumber[3361:3eeb3] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.324070833 seconds
+2026-11-05 00:03:42.753 Df PaintByNumber[3361:3eae3] [com.pbordjadze.paintbynumber:tips] forced: benchPencil
+2026-11-05 00:03:42.756 Df PaintByNumber[3361:3eae3] [com.pbordjadze.paintbynumber:tips] turn: benchPencil
+2026-11-05 00:03:52.289 Df PaintByNumber[4071:3f128] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.158340875 seconds
+2026-11-05 00:03:53.104 Df PaintByNumber[4071:3f128] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.338226791 seconds
+2026-11-05 00:03:54.523 Df PaintByNumber[4071:3f104] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+2026-11-05 00:03:54.525 Df PaintByNumber[4071:3f104] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+2026-11-05 00:04:04.774 Df PaintByNumber[4974:3f9bc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.136251875 seconds
+2026-11-05 00:04:05.475 Df PaintByNumber[4974:3f9ba] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.299524334 seconds
+2026-11-05 00:04:06.904 Df PaintByNumber[4974:3f908] [com.pbordjadze.paintbynumber:tips] forced: benchShowPhoto
+2026-11-05 00:04:06.906 Df PaintByNumber[4974:3f908] [com.pbordjadze.paintbynumber:tips] turn: benchShowPhoto
+2026-11-05 00:04:16.708 Df PaintByNumber[6104:4034e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.136666125 seconds
+2026-11-05 00:04:17.385 Df PaintByNumber[6104:4034c] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.31565125 seconds
+2026-11-05 00:04:18.752 Df PaintByNumber[6104:4031e] [com.pbordjadze.paintbynumber:tips] forced: benchReplay
+2026-11-05 00:04:18.754 Df PaintByNumber[6104:4031e] [com.pbordjadze.paintbynumber:tips] turn: benchReplay
+2026-11-05 00:04:29.983 Df PaintByNumber[7009:40b3c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.139694167 seconds
+2026-11-05 00:04:30.697 Df PaintByNumber[7009:40b3a] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.327554125 seconds
+2026-11-05 00:04:32.116 Df PaintByNumber[7009:40b1a] [com.pbordjadze.paintbynumber:tips] forced: benchZen
+2026-11-05 00:04:32.118 Df PaintByNumber[7009:40b1a] [com.pbordjadze.paintbynumber:tips] turn: benchZen
+2026-11-05 00:04:42.876 Df PaintByNumber[7912:4131b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.139723625 seconds
+2026-11-05 00:04:43.577 Df PaintByNumber[7912:41317] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.302567458 seconds
+2026-11-05 00:04:44.991 Df PaintByNumber[7912:412fd] [com.pbordjadze.paintbynumber:tips] forced: benchFeedback
+2026-11-05 00:04:44.996 Df PaintByNumber[7912:412fd] [com.pbordjadze.paintbynumber:tips] turn: benchFeedback
+2026-11-05 00:05:18.488 Df PaintByNumber[9702:42737] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.175444416 seconds
+2026-11-05 00:05:37.510 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:37.797 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:37.797 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:39.768 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:40.945 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:41.180 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:41.180 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:43.115 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:43.151 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:43.404 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:44.807 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:44.835 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:45.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 shown [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:45.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:45.145 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:46.425 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:46.646 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:46.647 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:48.514 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:49.919 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 24 colors, detail 0.63, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:49.920 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.63, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:49.925 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 cancelled [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:05:51.646 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:53.499 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 30 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:53.724 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:53.724 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 30 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:55.249 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:57.529 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:57.743 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:05:57.743 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:59.549 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:05:59.599 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-05 00:05:59.599 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.600 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 started for 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.653 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.704 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.758 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.807 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 shown [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.807 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 started for 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.810 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 8 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:05:59.810 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:59.811 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 cancelled [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:05:59.872 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 started for 8 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:01.606 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:02.910 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:02.925 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 7 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:02.925 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 7 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:02.927 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 cancelled [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:06:04.916 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:07.142 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:07.168 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 cancelled [adjusting false, full under way false, final false, phase failed("The photo from the camera couldn’t be used. Try taking it again.")]
+2026-11-05 00:06:08.497 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:08.727 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #2 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:08.727 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:10.544 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:11.660 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:11.887 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:11.887 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:13.648 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:13.669 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-05 00:06:13.669 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.669 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.669 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 started for 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.675 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.682 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.689 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.695 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.702 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.708 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.714 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.721 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.728 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.734 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.740 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.746 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.753 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.759 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.785 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.792 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.798 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.805 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.811 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.818 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.823 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.830 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.836 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.843 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.850 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.856 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.862 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.869 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.873 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 shown [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.874 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 started for 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.876 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:13.876 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:13.877 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 cancelled [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:13.940 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 started for 9 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:15.603 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:16.755 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:16.977 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:16.977 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:18.835 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:18.846 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-05 00:06:18.847 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:18.847 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:18.909 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:18.912 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way true, final false, phase generating]
+2026-11-05 00:06:18.912 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:06:20.634 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:21.826 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:22.052 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:22.052 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:23.846 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:23.875 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:23.875 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:24.127 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:25.851 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:25.877 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-11-05 00:06:27.041 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:27.270 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:27.270 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:29.081 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:29.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-05 00:06:29.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:29.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:29.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 started for 12 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:29.361 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 shown [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:29.463 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 12 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:31.249 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting true, full under way true, final true, phase generating]
+2026-11-05 00:06:32.126 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Start asked for [adjusting false, full under way false, final false, phase suggesting]
+2026-11-05 00:06:32.437 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:32.667 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:32.667 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:34.465 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:34.511 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Start asked for is withdrawn or goes [adjusting false, full under way false, final true, phase ready]
+2026-11-05 00:06:34.512 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:34.512 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Start asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:34.512 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 28 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:34.512 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Start asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:34.512 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Start asked for [adjusting false, full under way false, final true, phase ready]
+2026-11-05 00:06:35.643 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:35.866 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:35.866 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:37.659 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:37.686 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:37.686 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:37.686 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 28 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:38.844 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:39.068 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:39.068 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:40.985 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:41.004 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:41.004 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:41.004 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:41.004 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:41.069 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:42.827 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:42.856 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 28 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:42.856 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:42.856 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 28 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:44.662 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:44.662 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 12 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:44.662 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Refine asked for [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:44.684 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Loading photo failed: undecodable
+2026-11-05 00:06:45.874 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:46.126 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:46.126 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:47.950 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:47.963 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was touched [adjusting true, full under way false, final true, phase ready]
+2026-11-05 00:06:47.963 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:47.964 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 started for 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:48.165 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #3 shown [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:48.338 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 9 colors, detail 0.83, lines 0.5 [adjusting true, full under way false, final false, phase ready]
+2026-11-05 00:06:50.039 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting true, full under way true, final true, phase generating]
+2026-11-05 00:06:50.053 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] A slider was let go [adjusting false, full under way false, final true, phase ready]
+2026-11-05 00:06:51.221 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:51.449 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:51.449 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:53.311 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:53.353 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.9 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:53.611 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.9 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.437 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:55.481 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.481 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.2 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.481 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.755 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #4 shown [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.756 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:55.796 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #5 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:56.664 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:56.884 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:06:56.884 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:06:58.671 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:06:58.713 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:00.928 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:02.092 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:02.354 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:02.354 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:04.293 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:04.314 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:07.075 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:07.077 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:07.113 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:08.285 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:08.506 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:08.506 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:10.300 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:11.657 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:11.878 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:11.878 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:13.697 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:15.358 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:15.590 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:15.590 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:17.550 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:19.214 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:19.434 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:19.435 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:21.225 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:23.066 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:23.286 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:23.286 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:25.189 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:26.373 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:26.596 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:26.597 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:28.391 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:29.798 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:30.017 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:30.018 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:31.808 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:33.486 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:34.294 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:35.490 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:35.721 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:35.721 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:37.621 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:37.658 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:37.919 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:39.275 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:39.307 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:39.564 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:39.617 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:40.874 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:41.093 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:41.093 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:42.919 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:44.599 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:44.822 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:44.823 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:46.652 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:48.079 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:48.320 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:48.321 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:50.150 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:50.322 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:50.583 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:52.002 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:53.310 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:53.530 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:53.530 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:55.315 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:55.325 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:55.593 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:07:56.970 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:07:58.255 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:58.498 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:07:58.498 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:00.347 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:00.347 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.7 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:00.608 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.7 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:02.491 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:03.776 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:04.001 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:04.001 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:05.794 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:05.834 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:05.851 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:06.421 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:06.456 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:07.617 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:07.837 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:07.837 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:09.769 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:09.813 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:09.830 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:09.866 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:09.904 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #4 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:11.078 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:11.300 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:11.301 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:13.091 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:13.244 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] The draft's kept trail can't be read; its edits will be laid again: unreadable("template decompression")
+2026-11-05 00:08:13.332 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-FD1A3EB1-8F39-4DB3-A361-E45C153AC05C/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-FD1A3EB1-8F39-4DB3-A361-E45C153AC05C/Drafts/.staging/Current, NSUnderlyingError=0x1090fd290 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.339 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-FD1A3EB1-8F39-4DB3-A361-E45C153AC05C/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-FD1A3EB1-8F39-4DB3-A361-E45C153AC05C/Drafts/.staging/Current, NSUnderlyingError=0x1090ff1b0 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.347 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-894C9185-3991-48DA-B22B-2CB6CFAFE5DE/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-894C9185-3991-48DA-B22B-2CB6CFAFE5DE/Drafts/.staging/Current, NSUnderlyingError=0x1090fd500 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.355 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-F5D0117D-73B4-45F2-A040-FC551E5D8865/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-F5D0117D-73B4-45F2-A040-FC551E5D8865/Drafts/.staging/Current, NSUnderlyingError=0x1090fd500 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.355 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-F5D0117D-73B4-45F2-A040-FC551E5D8865/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-F5D0117D-73B4-45F2-A040-FC551E5D8865/Drafts/.staging/Current, NSUnderlyingError=0x1090ff390 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.381 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D8B5E036-02BD-44FD-9856-BAB157A3CF59/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D8B5E036-02BD-44FD-9856-BAB157A3CF59/Drafts/.staging/Current, NSUnderlyingError=0x1090fef10 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.393 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Saving the draft failed: Error Domain=NSCocoaErrorDomain Code=513 "You don’t have permission to save the file “Current” in the folder “.staging”." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-2DA74115-BAD0-4231-9B03-9F4B9BC57ABC/Drafts/.staging/Current, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-2DA74115-BAD0-4231-9B03-9F4B9BC57ABC/Drafts/.staging/Current, NSUnderlyingError=0x1090ff1b0 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:08:13.414 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Removing a damaged draft: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'o' in expected null value around line 1, column 2." UserInfo={NSJSONSerializationErrorIndex=1, NSDebugDescription=Unexpected character 'o' in expected null value around line 1, column 2.}
+2026-11-05 00:08:13.418 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Removing a damaged draft: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'o' in expected null value around line 1, column 2." UserInfo={NSJSONSerializationErrorIndex=1, NSDebugDescription=Unexpected character 'o' in expected null value around line 1, column 2.}
+2026-11-05 00:08:13.429 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Removing a damaged draft: missingPhoto
+2026-11-05 00:08:13.444 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] The draft can't be read now: CocoaError(_nsError: Error Domain=NSCocoaErrorDomain Code=257 "The file “draft.json” couldn’t be opened because you don’t have permission to view it." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-0C84F7ED-0D8F-4287-A202-997FB28B08A5/Drafts/Current/draft.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-0C84F7ED-0D8F-4287-A202-997FB28B08A5/Drafts/Current/draft.json, NSUnderlyingError=0x109260a20 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}})
+2026-11-05 00:08:13.461 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] The draft can't be opened now: CocoaError(_nsError: Error Domain=NSCocoaErrorDomain Code=257 "The file “source.jpg” couldn’t be opened because you don’t have permission to view it." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A1459D95-E5A7-4B1A-966D-7CC03E06D723/Drafts/Current/source.jpg, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A1459D95-E5A7-4B1A-966D-7CC03E06D723/Drafts/Current/source.jpg, NSUnderlyingError=0x1090fdc80 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}})
+2026-11-05 00:08:13.474 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Removing a draft that can't be opened: undecodablePhoto
+2026-11-05 00:08:14.670 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:14.892 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:14.892 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:16.683 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:17.879 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:18.100 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:18.101 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:19.888 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:19.933 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:19.933 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:22.303 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:23.456 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.58, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:25.689 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:26.946 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:27.208 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:27.208 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:29.096 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:29.116 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:29.133 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:30.333 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:30.351 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:31.669 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:31.940 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:31.940 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:33.741 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:33.896 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 24 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:33.896 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final true, phase ready]
+2026-11-05 00:08:35.088 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:35.125 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:35.185 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 24 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:35.443 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:37.304 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:37.344 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:37.595 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:37.660 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:38.889 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:38.954 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:40.136 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:40.360 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:40.360 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:42.228 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:43.604 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:08:45.406 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:45.890 Df PaintByNumber[9702:4272f] [com.pbordjadze.paintbynumber:create] Drawing cleaned: 1092×1415, sheet pulled square true
+2026-11-05 00:08:45.891 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:47.435 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:47.485 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Settings changed to 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:47.746 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:49.238 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:49.577 Df PaintByNumber[9702:42737] [com.pbordjadze.paintbynumber:create] Drawing cleaned: 1092×1415, sheet pulled square true
+2026-11-05 00:08:49.578 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:08:51.068 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:08:55.289 E  PaintByNumber[9702:4272f] [com.pbordjadze.paintbynumber:library] Refinements of E7FD1426-3524-4E25-A9D5-5F1FF01F0410 can't be read: Error Domain=NSCocoaErrorDomain Code=257 "The file “refinements.json” couldn’t be opened because you don’t have permission to view it." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-302B86A0-B642-4078-B746-EAAAF0BF21C6/E7FD1426-3524-4E25-A9D5-5F1FF01F0410/refinements.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-302B86A0-B642-4078-B746-EAAAF0BF21C6/E7FD1426-3524-4E25-A9D5-5F1FF01F0410/refinements.json, NSUnderlyingError=0x1084aa3a0 {Error Domain=NSPOSIXErrorDomain Code=13 "Permission denied"}}
+2026-11-05 00:09:01.057 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork FC116B1B-2377-4338-829D-81D9DA503A3C: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSJSONSerializationErrorIndex=2, NSDebugDescription=Unexpected character 'n' around line 1, column 3.}
+2026-11-05 00:09:01.058 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 329041F4-E7B6-4779-9759-CD6566D947AF: Error Domain=NSCocoaErrorDomain Code=260 "The file “meta.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D116EEBC-9141-49FB-8992-9A50A0D6FF6E/329041F4-E7B6-4779-9759-CD6566D947AF/meta.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D116EEBC-9141-49FB-8992-9A50A0D6FF6E/329041F4-E7B6-4779-9759-CD6566D947AF/meta.json, NSUnderlyingError=0x1090fdb60 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-11-05 00:09:01.073 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 2B8F159D-EC91-489D-B6B6-E24345160E63 is unreadable: unreadable("template decompression")
+2026-11-05 00:09:01.108 E  PaintByNumber[9702:42731] [com.pbordjadze.paintbynumber:library] Discarding unreadable progress of 3D9AF1F4-58C4-41D4-90D7-AB9E3F18E66A
+2026-11-05 00:09:01.111 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork FC116B1B-2377-4338-829D-81D9DA503A3C: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSJSONSerializationErrorIndex=2, NSDebugDescription=Unexpected character 'n' around line 1, column 3.}
+2026-11-05 00:09:01.111 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 329041F4-E7B6-4779-9759-CD6566D947AF: Error Domain=NSCocoaErrorDomain Code=260 "The file “meta.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D116EEBC-9141-49FB-8992-9A50A0D6FF6E/329041F4-E7B6-4779-9759-CD6566D947AF/meta.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-D116EEBC-9141-49FB-8992-9A50A0D6FF6E/329041F4-E7B6-4779-9759-CD6566D947AF/meta.json, NSUnderlyingError=0x1090ff150 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-11-05 00:09:01.119 E  PaintByNumber[9702:42731] [com.pbordjadze.paintbynumber:library] Template of 238DB65B-82A1-43D6-A744-5191FF5F1A48 is unreadable: truncated
+2026-11-05 00:09:01.837 E  PaintByNumber[9702:42d93] [com.pbordjadze.paintbynumber:library] Template of 8D5B141C-5ABF-4BED-99D1-4C7D8D8CC5DB is unreadable: badMagic
+2026-11-05 00:09:01.858 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC can't be read: CocoaError(_nsError: Error Domain=NSCocoaErrorDomain Code=256 "The file “template.pbnt” couldn’t be opened." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSUnderlyingError=0x1084a9f50 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}})
+2026-11-05 00:09:01.859 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC can't be read: CocoaError(_nsError: Error Domain=NSCocoaErrorDomain Code=256 "The file “template.pbnt” couldn’t be opened." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSUnderlyingError=0x1084aa1c0 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}})
+2026-11-05 00:09:01.859 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC can't be read: CocoaError(_nsError: Error Domain=NSCocoaErrorDomain Code=256 "The file “template.pbnt” couldn’t be opened." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSUnderlyingError=0x1084a9f50 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}})
+2026-11-05 00:09:01.861 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC is unreadable: Error Domain=NSCocoaErrorDomain Code=260 "The file “template.pbnt” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-A933F029-BE3A-4157-8BBB-2232ED95F8AC/1AB3AA0F-5446-4459-B2BA-DB9EF4379CDC/template.pbnt, NSUnderlyingError=0x1084aa1c0 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-11-05 00:09:01.877 E  PaintByNumber[9702:42d93] [com.pbordjadze.paintbynumber:library] Progress of 08C20135-8552-44AC-8DD4-5CE88C6D561D can't be read: Error Domain=NSCocoaErrorDomain Code=256 "The file “progress.bin” couldn’t be opened." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-6C07F343-E0F9-479F-8AE4-565BFD7CAE6C/08C20135-8552-44AC-8DD4-5CE88C6D561D/progress.bin, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-6C07F343-E0F9-479F-8AE4-565BFD7CAE6C/08C20135-8552-44AC-8DD4-5CE88C6D561D/progress.bin, NSUnderlyingError=0x1084a9dd0 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+2026-11-05 00:09:02.555 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Discarding progress of C3731601-2550-48D5-B86E-A2F641939624: 5 regions, template has 3
+2026-11-05 00:09:02.555 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Discarding progress of C3731601-2550-48D5-B86E-A2F641939624: 5 regions, template has 6
+2026-11-05 00:09:02.555 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Discarding progress of C3731601-2550-48D5-B86E-A2F641939624: 5 regions, template has 3
+2026-11-05 00:09:03.851 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 20A117B5-D376-4E62-A106-FE1ECD0ECFB3 is unreadable: unreadable("template decompression")
+2026-11-05 00:09:03.851 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Template of 20A117B5-D376-4E62-A106-FE1ECD0ECFB3 is unreadable: unreadable("template decompression")
+2026-11-05 00:09:03.851 E  PaintByNumber[9702:439e3] [com.pbordjadze.paintbynumber:library] Discarding progress of 20A117B5-D376-4E62-A106-FE1ECD0ECFB3: 3 regions, template has 0
+2026-11-05 00:09:04.854 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeded morning-glories in 0.330631708 seconds
+2026-11-05 00:09:04.860 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-11-05 00:09:04.862 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-11-05 00:09:04.863 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-11-05 00:09:05.190 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeded morning-glories in 0.317420041 seconds
+2026-11-05 00:09:05.195 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-11-05 00:09:05.473 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Seeded morning-glories in 0.277561875 seconds
+2026-11-05 00:09:05.486 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 9FA1BCC3-3E0E-4D5E-AB22-EDCD79D1A4CA: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.488 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 9FA1BCC3-3E0E-4D5E-AB22-EDCD79D1A4CA: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.501 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 16905DCE-B227-43A8-B150-5D282866A292: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.515 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for EE8EB14A-A19F-4CFB-80DD-E1FAC3717B43: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.535 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 9379D96E-5322-4760-BC13-7DA87CDBD70B: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.546 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 63C052DB-F10E-41BE-A3C8-24F74B401499: Error Domain=NSCocoaErrorDomain Code=512 "“63C052DB-F10E-41BE-A3C8-24F74B401499” couldn’t be moved to “.trash”." UserInfo={NSSourceFilePathErrorKey=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-36331DEC-8B19-4EA5-844E-37A896E02585/63C052DB-F10E-41BE-A3C8-24F74B401499, NSUserStringVariant=(
+    Move
+), NSDestinationFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-36331DEC-8B19-4EA5-844E-37A896E02585/.trash/63C052DB-F10E-41BE-A3C8-24F74B401499, NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-36331DEC-8B19-4EA5-844E-37A896E02585/63C052DB-F10E-41BE-A3C8-24F74B401499, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-36331DEC-8B19-4EA5-844E-37A896E02585/63C052DB-F10E-41BE-A3C8-24F74B401499, NSUnderlyingError=0x1084a9dd0 {Error Domain=NSPOSIXErrorDomain Code=20 "Not a directory"}}
+2026-11-05 00:09:05.614 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 7940C926-A7CA-4F00-8AB5-906AE5C8E704: Error Domain=NSCocoaErrorDomain Code=516 "“7940C926-A7CA-4F00-8AB5-906AE5C8E704” couldn’t be moved to “PBNTests-83415E68-C06A-4781-B917-15A82A7812E8” because an item with the same name already exists." UserInfo={NSSourceFilePathErrorKey=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-83415E68-C06A-4781-B917-15A82A7812E8/.trash/7940C926-A7CA-4F00-8AB5-906AE5C8E704, NSUserStringVariant=(
+    Move
+), NSDestinationFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-83415E68-C06A-4781-B917-15A82A7812E8/7940C926-A7CA-4F00-8AB5-906AE5C8E704, NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-83415E68-C06A-4781-B917-15A82A7812E8/.trash/7940C926-A7CA-4F00-8AB5-906AE5C8E704, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-83415E68-C06A-4781-B917-15A82A7812E8/.trash/7940C926-A7CA-4F00-8AB5-906AE5C8E704, NSUnderlyingError=0x1084aa010 {Error Domain=NSPOSIXErrorDomain Code=17 "File exists"}}
+2026-11-05 00:09:05.677 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 56D0E264-DC8C-49EA-8B9F-FB5CB5CC3990: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:05.866 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for 29477E9D-F18A-499E-9A2C-AFDCF6270D8D: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:20.050 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Line art without a photo image: generating classic lines
+2026-11-05 00:09:24.981 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.63, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:09:24.981 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.63, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:09:24.986 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 cancelled [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:09:26.440 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:09:27.699 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.63, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:09:27.699 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.63, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:09:27.701 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #1 cancelled [adjusting false, full under way true, final false, phase generating]
+2026-11-05 00:09:28.278 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:09:32.230 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:09:32.449 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 00:09:32.449 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 00:09:34.228 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 00:09:41.529 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Loading photo failed: undecodable
+2026-11-05 00:09:41.578 E  PaintByNumber[9702:42734] [com.pbordjadze.paintbynumber:create] Reading an opened file failed: Error Domain=NSCocoaErrorDomain Code=260 "The file “Gone.jpg” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-EAA0BF1B-1E15-46C3-823F-1FA5615B8393/Inbox/Gone.jpg, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-EAA0BF1B-1E15-46C3-823F-1FA5615B8393/Inbox/Gone.jpg, NSUnderlyingError=0x12f319140 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-11-05 00:09:41.591 E  PaintByNumber[9702:42734] [com.pbordjadze.paintbynumber:create] Deleting an inbox copy failed: Error Domain=NSCocoaErrorDomain Code=4 "“Gone.jpg” couldn’t be removed." UserInfo={NSUserStringVariant=(
+    Remove
+), NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-EAA0BF1B-1E15-46C3-823F-1FA5615B8393/Inbox/Gone.jpg, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/3CE49892-DF52-49A7-9D5F-68E49A7DD048/data/Containers/Data/Application/6DC08D85-0123-4119-A857-E677A57C7857/tmp/PBNTests-EAA0BF1B-1E15-46C3-823F-1FA5615B8393/Inbox/Gone.jpg, NSUnderlyingError=0x12f319620 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-11-05 00:09:41.601 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Loading photo failed: undecodable
+2026-11-05 00:09:41.673 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:create] Loading photo failed: undecodable
+2026-11-05 00:09:42.952 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] Write failed for CE3B623B-D9D5-4CD5-9B5A-F586C08FE5D1: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-11-05 00:09:57.021 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:canvas] canvas: source photo unavailable
+2026-11-05 00:10:02.943 F  PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.keyNotFound: Key 'title' not found in keyed decoding container. Path: [0]. Debug description: No value associated with key CodingKeys(stringValue: "title", intValue: nil) ("title").
+2026-11-05 00:10:02.945 F  PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.keyNotFound: Key 'title' not found in keyed decoding container. Path: [0]. Debug description: No value associated with key CodingKeys(stringValue: "title", intValue: nil) ("title").
+2026-11-05 00:10:02.945 F  PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.dataCorrupted: Data was corrupted. Path: [0].kind. Debug description: Cannot initialize Kind from invalid String value sculpture
+2026-11-05 00:10:02.946 F  PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected end of file" UserInfo={NSDebugDescription=Unexpected end of file}
+2026-11-05 00:10:04.661 E  PaintByNumber[9702:4272f] [com.pbordjadze.paintbynumber:library] Template of CA8D837F-5368-416D-89FC-06569B39AB17 is unreadable: unreadable("template decompression")
+2026-11-05 00:10:04.661 E  PaintByNumber[9702:4272f] [com.pbordjadze.paintbynumber:library] Template of CA8D837F-5368-416D-89FC-06569B39AB17 is unreadable: unreadable("template decompression")
+2026-11-05 00:10:04.662 E  PaintByNumber[9702:4272f] [com.pbordjadze.paintbynumber:library] Discarding progress of CA8D837F-5368-416D-89FC-06569B39AB17: 3 regions, template has 0
+2026-11-05 00:10:04.756 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] A received painting's photo couldn't be decoded
+2026-11-05 00:10:04.788 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] A received painting couldn't be read: truncated
+2026-11-05 00:10:04.788 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] A received painting couldn't be read: truncated
+2026-11-05 00:10:04.789 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] A received painting couldn't be read: truncated
+2026-11-05 00:10:04.789 E  PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:library] A received painting couldn't be read: corrupt("TMPL")
+2026-11-05 00:10:11.183 Df PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:create] Found 3 lines of text in 1.350312875 seconds
+2026-11-05 00:10:12.324 Df PaintByNumber[9702:488d1] [com.pbordjadze.paintbynumber:create] Found 3 lines of text in 1.141046209 seconds
+2026-11-05 00:10:21.621 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-05 00:10:21.628 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap
+2026-11-05 00:10:22.129 Df PaintByNumber[9702:42308] [com.pbordjadze.paintbynumber:store] Unlimited Paintings bought
+2026-11-05 00:10:42.104 Df PaintByNumber[22738:49970] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.163889333 seconds
+2026-11-05 00:10:44.815 Df PaintByNumber[22738:4973b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.479838333 seconds
+2026-11-05 00:10:45.533 Df PaintByNumber[22738:4973b] [com.pbordjadze.paintbynumber:library] Opened FDEDDFA2-DCA2-47C7-8C52-6519657D9D42: 204 regions
+2026-11-05 00:10:46.046 Df PaintByNumber[22738:4973b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-05 00:10:47.598 Df PaintByNumber[22738:4973b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-05 00:10:47.655 Df PaintByNumber[22738:4996d] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.757155334 seconds
+2026-11-05 00:10:49.660 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.012975292 seconds (stall 1), 46 frames:
+2026-11-05 00:10:49.814 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 SwiftUI $s7SwiftUI11EnvironmentV7ContentOyAA11ColorSchemeO_GMaTm + 28 | #1 SwiftUI $s7SwiftUI31AccessibilityStaticTextModifierV4body7contentQrx_tFAA06StyledE11ContentViewV_Tg5 + 232 | #2 SwiftUI $s7SwiftUI31AccessibilityStaticTextModifierV4body7contentQrx_tFAA06StyledE11ContentViewV_Tg5 + 232 | #3 SwiftUI $s7SwiftUI0A27UITextAccessibilityProviderVAA04TextdE0A2aDP8makeView7content4text8resolved4BodyQzAA06Styledf7ContentH0V_AA0F0VAA08ResolvedmF0CtFZTW + 172 | #4 SwiftUICore $s7SwiftUI34AccessibilityStyledTextContentViewV4bodyQrvg + 124 | #5 SwiftUICore $s7SwiftUI14TextChildQuery33_641995D812913A47B866B20B88782376LLV5valueQrvg + 360 | #6 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA4RuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_ + 148
+2026-11-05 00:10:49.814 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo]   stall 1 #7 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 512 | #8 AttributeGraph _ZN2AG8Subgraph6updateEj + 924 | #9 SwiftUICore $s7SwiftUI9GraphHostC14runTransactionyyF + 212 | #10 SwiftUICore $s7SwiftUI9ViewGraphC13updateOutputs2atyAA4TimeV_tF + 148 | #11 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 1072 | #12 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #13 UIKitCore __swift_closure_destructor.55 + 4088 | #14 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #15 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #16 UIKitCore block_destroy_helper + 22024
+2026-11-05 00:10:49.857 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo]   stall 1 #17 UIKitCore block_destroy_helper + 22844 | #18 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #19 QuartzCore -[CALayer layoutSublayers] + 324 | #20 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #21 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #22 QuartzCore _ZN2CA5Layer28layout_and_display_if_neededEPNS_11TransactionE + 152 | #23 QuartzCore _ZN2CA7Context18commit_transactionEPNS_11TransactionEdPd + 632 | #24 QuartzCore _ZN2CA11Transaction6commitEv + 624 | #25 QuartzCore _ZN2CA11Transaction5flushEv + 80 | #26 QuartzCore _ZN2CA11Transaction25flush_as_runloop_observerEb + 68 | #27 UIKitCore _UIApplicationFlushCATransaction + 48
+2026-11-05 00:10:49.892 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo]   stall 1 #28 UIKitCore __setupUpdateSequence_block_invoke_2 + 356 | #29 UIKitCore _UIUpdateSequenceRunNext + 120 | #30 UIKitCore schedulerStepScheduledMainSectionContinue + 44 | #31 UpdateCycle _ZN2UC10DriverCore18continueProcessingEv + 80 | #32 CoreFoundation __CFMachPortPerform + 164 | #33 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__ + 56 | #34 CoreFoundation __CFRunLoopDoSource1 + 476 | #35 CoreFoundation __CFRunLoopRun + 2116 | #36 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #37 GraphicsServices GSEventRunModal + 116 | #38 UIKitCore UIApplicationMain + 124 | #39 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #40 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204
+2026-11-05 00:10:49.934 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo]   stall 1 #41 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #42 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #43 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #44 dyld dyld-internal + 20 | #45 0x104be1e80
+2026-11-05 00:10:50.184 E  PaintByNumber[22738:49963] [com.pbordjadze.paintbynumber:demo] Main thread answered after 2.537191792 seconds (stall 1)
+2026-11-05 00:11:01.584 Df PaintByNumber[23228:49c7b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.147992708 seconds
+2026-11-05 00:11:03.417 Df PaintByNumber[23228:49c40] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.637548875 seconds
+2026-11-05 00:11:03.863 Df PaintByNumber[23228:49c40] [com.pbordjadze.paintbynumber:library] Opened 3141CD89-D889-4F9E-BE8A-0B7362B61C60: 204 regions
+2026-11-05 00:11:04.700 Df PaintByNumber[23228:49c40] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-05 00:11:05.744 Df PaintByNumber[23228:49c7e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.50423775 seconds
+2026-11-05 00:11:05.881 Df PaintByNumber[23228:49c40] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-05 00:11:35.556 Df PaintByNumber[24806:4ada3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.202128958 seconds
+2026-11-05 00:11:51.761 Df PaintByNumber[25408:4b58d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.178731625 seconds
+2026-11-05 00:12:46.402 Df PaintByNumber[28863:4ce38] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1981255 seconds
+2026-11-05 00:13:16.466 Df PaintByNumber[29824:4d904] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192936958 seconds
+2026-11-05 00:13:39.963 Df PaintByNumber[30673:4e423] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.189469459 seconds
+2026-11-05 00:14:14.240 Df PaintByNumber[33057:4f534] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.21084225 seconds
+2026-11-05 00:14:47.171 Df PaintByNumber[35122:50400] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.178980292 seconds
+2026-11-05 00:15:16.865 Df PaintByNumber[36391:5124b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.224084166 seconds
+2026-11-05 00:15:48.957 Df PaintByNumber[37677:51d14] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.187705708 seconds
+2026-11-05 00:16:22.440 Df PaintByNumber[39061:5279f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.223873833 seconds
+2026-11-05 00:16:51.316 Df PaintByNumber[39940:53390] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.177214291 seconds
+2026-11-05 00:17:08.601 Df PaintByNumber[39940:5302c] [com.pbordjadze.paintbynumber:store] Unlimited Paintings bought
