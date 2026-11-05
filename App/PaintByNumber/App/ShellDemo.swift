@@ -83,6 +83,8 @@ import PaintCore
 /// - `settings-tips`: the same with tips on, for its Tips section; `settings-tip` waits for Worth a
 ///   Look Here at Painting Length.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
+/// - `settings-clock` (SideStore and Debug builds): the settings sheet with the secret door's
+///   clock out under Version, at the present year (`EraDoor`).
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
@@ -103,7 +105,7 @@ enum ShellDemo: Equatable {
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
-         settings, settingsLongText, settingsAcknowledgements
+         settings, settingsLongText, settingsAcknowledgements, settingsClock
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -151,6 +153,7 @@ enum ShellDemo: Equatable {
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
+        case "settings-clock": .settingsClock
         default: nil
         }
     }()
@@ -218,6 +221,7 @@ enum ShellDemo: Equatable {
 
     var opensSettings: Bool {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements || self == .settingsTips
+            || self == .settingsClock
             || self == .settingsTip
     }
 
@@ -381,6 +385,8 @@ enum ShellDemo: Equatable {
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
+        case .settingsClock:
+            break
         }
     }
 
@@ -510,6 +516,6 @@ enum ShellDemo: Equatable {
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded; `gallery-empty` once its sketch has
     /// painted itself, `SelfPaintingSketch`).
-    var isReadyOnAppear: Bool { opensSettings && self != .settingsTip }
+    var isReadyOnAppear: Bool { opensSettings && self != .settingsTip && self != .settingsClock }
 }
 #endif
