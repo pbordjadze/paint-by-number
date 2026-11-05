@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 118,
+ "duration_ms": 1113568,
+ "total_cost_usd": 3.0034292,
+ "result": "I got the picture I planned: a fish in a round bowl, drawn from scratch in Refine and then painted to 100%. It was still in the gallery, with the right thumbnail, after I quit through Home and relaunched. There were no crashes (`crashes.txt` is empty). The full report is in `/Users/runner/work/_temp/qa/report.md`.\n\n**My plan:** a round bowl of light-blue water, an orange oval fish facing left with a black eye, a red fin and tail, yellow sand with two green triangle plants, and three white bubbles.\n\n**What I got:** that picture, with 7 paints and 12 areas. The screenshots are `shots/final-refine`, `shots/final-template` and `shots/final-painting`.\n\n**How it went:**\n- **Blank page:** one tap. + \u2192 From Scratch opens an empty page in Refine.\n- **Drawing:** every shape worked on the first try. I used Shapes \u203a Oval for the round parts and Line for the rest. Snap joined the tail to the body and cut the sand line off exactly at the bowl's edge. Ovals covered every curve I needed, so the straight-swipe limit didn't hurt the result.\n- **Colors:** each one worked on the first try once the picker opened: New Paint \u2192 pick a color \u2192 tap an area with the Bucket. I read the Tool Guide's Bucket page once to find out how to add a color, and it told me exactly what to do.\n\n**Where I got stuck:**\n1. **The New Paint wheel ignored my first two taps.** Nothing opened and nothing was logged. A newcomer with only white in the palette would think colors can't be added. The third tap opened the picker, and the next 7 taps (including in a second, fresh drawing) worked first time. I couldn't reproduce it.\n2. **While painting, two taps (fin and tail) painted nothing and the canvas zoomed in about 2.5\u00d7.** Without a pinch I had no way back to the whole picture until I finished. I tried the same sequence on a small test drawing and it worked normally, so this also stays a suspicion, seen once.\n3. **Layers \u203a Numbers:** tapping the row didn't switch it on; tapping the switch itself did. This may be how Maestro taps rather than the app.\n\n**Minor:** both drawings are named \"Drawing, November 5\" in the gallery, because I kept the default name both times. The Layers panel also offers a Photo switch on a page that has no photo.\n\n**What it cost:** the test drawing used one of the app's free paintings (3 were left before it). Pen freehand, Bend Line, the erasers and the multi-finger gestures went untested. They are listed under Not tested.",
+ "usage": {
+  "input_tokens": 128,
+  "cache_creation_input_tokens": 197664,
+  "cache_read_input_tokens": 6675886,
+  "output_tokens": 33971,
+  "output_tokens_details": {
+   "thinking_tokens": 8374
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 197664
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "Read": 5,
+  "mcp__maestro__take_screenshot": 44,
+  "mcp__maestro__run": 50,
+  "mcp__maestro__inspect_screen": 14,
+  "Write": 4
+ },
+ "images_received": 44
+}
