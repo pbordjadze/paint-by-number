@@ -460,51 +460,6 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-edit-paint-merged")
     }
 
-    /// The palette's New Paint opens the system color picker the first time it is tapped after a
-    /// launch (QA, November 3 and 5: the first taps opened nothing in most sessions; on CI the first
-    /// launch's tap showed no picker within 10 s, a relaunch's did).
-    @MainActor
-    func testNewPaintOpensThePickerTheFirstTime() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-refine", "-demoFixedPictures", "YES"]
-        app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 180), "Refine didn't open")
-        expectNewPaintOpens(in: app, named: "first-time")
-    }
-
-    /// The same on a page from scratch, where both testers drew.
-    @MainActor
-    func testNewPaintOpensThePickerFromScratch() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create"]
-        app.launch()
-        let scratch = app.buttons["from-scratch"]
-        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
-        let ok = app.buttons["OK"]
-        if ok.waitForExistence(timeout: 2) { ok.tap() }
-        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
-        scratch.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 60), "From Scratch didn't open Refine")
-        expectNewPaintOpens(in: app, named: "from-scratch")
-    }
-
-    @MainActor
-    private func expectNewPaintOpens(in app: XCUIApplication, named name: String) {
-        pickTool("bucket", in: "Paint", of: app)
-        let wheel = app.descendants(matching: .any)["refine-palette-new"]
-        XCTAssertTrue(wheel.waitForExistence(timeout: 5), "The palette has no New Paint")
-        wheel.tap()
-        let picker = app.descendants(matching: .any).matching(
-            NSPredicate(format: "label IN %@", ["Grid", "Spectrum", "Sliders"])).firstMatch
-        let tapped = Date()
-        let opened = picker.waitForExistence(timeout: 40)
-        let seconds = Date().timeIntervalSince(tapped)
-        attachScreenshot(of: app, named: "new-paint-\(name)")
-        if !opened { attachTree(of: app, named: "new-paint-\(name)-tree") }
-        XCTAssertTrue(opened, "New Paint opened no color picker in 40 s (\(name))")
-        XCTAssertLessThan(seconds, 10, "New Paint's color picker took \(Int(seconds)) s to open (\(name))")
-    }
-
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).

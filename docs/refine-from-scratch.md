@@ -56,9 +56,14 @@ In the critic's order, each smallest change, none started:
 
 1. A pour that runs out through a gap shows nowhere where the gap is: flash the outline of the
    area the pour spread into, or mark the gap.
-2. New Paint (the palette's color wheel) ignored its first tap in 6 of 8 sessions; and several
-   new colors picked in a row keep only the last. Device-confirm the first, then keep each new
-   paint until undone or Refine closes.
+2. New Paint (the palette's color wheel) ignored its first taps in 6 of 8 sessions of November 3
+   and in both of November 5. Several new colors picked in a row now wait in the palette until
+   poured (November 5). The first taps: on CI (runs 42066725760 to 42085773960, November 5) a
+   fresh simulator's first launch showed no picker within 40 s of the tap while the main thread
+   stalled, again and again for about two minutes, in UIKit loading the system picker's images;
+   every later launch opened it within 3 s, with a tip shown or not, from scratch or on a photo,
+   and a picker made in advance as Refine opened changed nothing. It looks like the cold
+   simulator's, not Refine's: a device's first New Paint is the check still owed.
 3. The Blank switch sits under Refine's first tip, and a drawing keeps the sample photo's title.
    From Scratch on the New Painting screen (painting-company row 231) now opens Refine on a
    blank page with no photo behind it, no Start From and a name of its own ("Drawing, <date>");
