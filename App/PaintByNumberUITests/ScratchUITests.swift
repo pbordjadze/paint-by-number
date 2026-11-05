@@ -52,4 +52,38 @@ final class ScratchUITests: XCTestCase {
         attachScreenshot(of: app, named: "scratch-painting")
         XCTAssertTrue(painting, "Start Painting didn't open the drawing to paint")
     }
+
+    /// Where Unlimited Paintings is sold and not bought, From Scratch offers it, worded for Refine,
+    /// with the Tool Guide free to try; bought there, the blank page opens in Refine.
+    @MainActor
+    func testFromScratchWaitsForTheUnlockAndTheGuideIsFree() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create", "-demoRefineLocked", "YES"]
+        app.launch()
+        let scratch = app.buttons["from-scratch"]
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
+        scratch.tap()
+
+        let buy = app.buttons["unlock-buy"]
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock")
+        let guide = app.buttons["unlock-try-guide"]
+        XCTAssertTrue(guide.exists, "The sheet doesn't offer the Tool Guide")
+        attachScreenshot(of: app, named: "scratch-unlock")
+        guide.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
+        XCTAssertFalse(app.descendants(matching: .any)["refine-canvas"].exists, "The guide opened Refine")
+        app.buttons["refine-guide-done"].tap()
+
+        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "The guide didn't go back to the New Painting screen")
+        scratch.tap()
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock again")
+        XCTAssertTrue(waitFor(buy, toMatch: NSPredicate(format: "label CONTAINS '4.99'")), "The buy button never showed the price")
+        buy.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 60), "Buying didn't open the blank page in Refine")
+    }
 }

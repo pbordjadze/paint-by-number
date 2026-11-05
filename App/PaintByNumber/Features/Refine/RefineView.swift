@@ -248,6 +248,11 @@ struct RefineView: View {
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
+    /// Every color made current in this Refine that no paint had then, in order: the palette shows
+    /// those no paint has as new paints, so several picked in a row wait side by side to be
+    /// poured (QA, November 3: only the last was kept). Kept as long as Refine is open, so a pour
+    /// undone shows its color as a new paint again.
+    @State private var newColors: [SIMD3<Float>] = []
     /// The last repaint of the current paint sent, until a template has it (`RefinePalette.landing`):
     /// its paint is then the current one. Made current as the repaint was sent, before any
     /// template had it, the paint was none for a moment and the picker's next picks went nowhere
@@ -411,7 +416,16 @@ struct RefineView: View {
                 .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
+        .onChange(of: currentPaint) { _, color in
+            guard let color, !newColors.contains(color),
+                  RefinePalette.index(of: color, in: base?.template.palette ?? []) == nil else { return }
+            newColors.append(color)
+            if newColors.count > Self.newColorsKept { newColors.removeFirst(newColors.count - Self.newColorsKept) }
+        }
     }
+
+    /// How many colors picked `newColors` keeps: a row's worth.
+    private static let newColorsKept = 12
 
     /// An edit sent to the model, which draws it until the template on screen has it.
     private struct Submitted: Identifiable {
@@ -1560,7 +1574,7 @@ extension RefineView {
             if tool == .select, let region = selectedRegion {
                 selectionBand(template: template, region: region)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge)
                     .disabled(!model.hasLineArtInput)
             }
         }
@@ -2029,7 +2043,7 @@ extension RefineView {
                 }
             }
             if group == .cells || group == .paint, let template = base?.template {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge)
             }
         }
         .padding(16)
@@ -2313,7 +2327,7 @@ extension RefineView {
             if let barCard {
                 areaCard(barCard, inBar: true)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge, glass: false)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge, glass: false)
                     .disabled(!model.hasLineArtInput)
             }
         }
@@ -2323,17 +2337,21 @@ extension RefineView {
         .transition(.opacity)
     }
 
-    /// Start From at the top's leading end and the tiny-numbers badge at its trailing one, clear of
-    /// each other; where they don't fit side by side (larger text) the badge goes under the chooser.
+    /// Start From and the tiny-numbers badge at the top's trailing end, side by side or, where they
+    /// don't fit (larger text), the badge under the chooser: the leading end is where the first
+    /// tip opens beside the Pen on iPad, and it hid Blank there (QA, November 3).
     private var topControls: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 8) {
-                startChooser
                 Spacer(minLength: 0)
+                startChooser
                 tinyBadge
             }
-            VStack(alignment: .leading, spacing: 8) {
-                startChooser
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    startChooser
+                }
                 HStack(spacing: 0) {
                     Spacer(minLength: 0)
                     tinyBadge

@@ -153,7 +153,9 @@ struct CreateFlowView: View {
             }
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).
-            if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil)
+            // `create-refine-unlock` is ready once the sheet shows its price (`UnlockSheet`).
+            if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil
+                && ShellDemo.current != .createRefineUnlock)
                 || ShellDemo.current == .createFromFile || ShellDemo.current?.opensDrawing == true {
                 DemoMode.markReady()
             }
@@ -194,7 +196,11 @@ struct CreateFlowView: View {
             TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() }, pictureProbe: previewPicture)
         } else {
             PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
-                path = [.preview]
+                // A page from scratch goes to Refine: its preview, plain paper until Refine has
+                // slid up over it, is there at once rather than pushed (`TemplatePreviewView`).
+                var push = Transaction()
+                push.disablesAnimations = model.isScratch
+                withTransaction(push) { path = [.preview] }
             }
         }
     }

@@ -168,8 +168,22 @@ final class CreateModel {
     private(set) var startAsked = false
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
-    /// The sample's name, or the date for a photo.
-    private(set) var defaultTitle = ""
+    /// The sample's name, or the date for a photo; a drawing on Blank's own name once the photo
+    /// is gone from it (Refine's Start From), as a page from scratch is named (QA, November 3:
+    /// a sailboat drawn on Blank was called "Red Fuji").
+    var defaultTitle: String {
+        #if UNRELEASED
+        if refinements.start == .blank { return blankTitle }
+        #endif
+        return photoDefaultTitle
+    }
+    /// The photo's default name: the sample's, or the date.
+    private var photoDefaultTitle = ""
+    #if UNRELEASED
+    /// The default name of a drawing on Blank, fixed for the flow so a draft resumed another day
+    /// keeps it.
+    private var blankTitle = ""
+    #endif
     /// Names the photo, new with each one chosen and the draft's for a photo resumed from one.
     private(set) var photoID = UUID()
 
@@ -539,7 +553,8 @@ final class CreateModel {
         isPractice = true
         isDrawing = false
         isScratch = false
-        defaultTitle = ""
+        photoDefaultTitle = ""
+        blankTitle = ""
         title = ""
         let photo = scene == .note ? picture.note : picture.evening
         source = Source(image: photo.image, preview: photo.preview, sampleName: nil)
@@ -614,7 +629,11 @@ final class CreateModel {
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
         }
         // A new photo gets a new default name, and anything typed for the last one goes.
-        self.defaultTitle = defaultTitle
+        photoDefaultTitle = defaultTitle
+        #if UNRELEASED
+        // A draft on Blank (or a page from scratch) saved its drawing's name as its default.
+        blankTitle = scratch || saved?.refinements.start == .blank ? defaultTitle : Self.scratchTitle()
+        #endif
         title = saved?.title ?? ""
         photoID = saved?.photoID ?? UUID()
         source = nil

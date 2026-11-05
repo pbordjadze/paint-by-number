@@ -105,6 +105,22 @@ struct UnlimitedPaintingsTests {
         #expect(try decoder.decode(FreePaintings.self, from: JSONEncoder().encode(free)) == free)
     }
 
+    // MARK: Refine
+
+    /// Refine comes with the unlock (painting-company row 143): locked where it is sold until
+    /// bought, open where nothing is sold (SideStore), and open in Debug launches unless asked.
+    @Test func refineWaitsForTheUnlockWhereItIsSold() async throws {
+        #expect(UnlimitedPaintings.includesRefine)
+        let model = paintings()
+        #expect(model.locksRefine)
+        model.refineOpenAnyway = true
+        #expect(!model.locksRefine)
+        model.refineOpenAnyway = false
+        #expect(try await model.buy(with: nil) == .unlocked)
+        #expect(!model.locksRefine)
+        #expect(!UnlimitedPaintings(store: nil, defaults: nil).locksRefine)
+    }
+
     // MARK: Starting paintings
 
     @Test func libraryPicturesNeverTakeAFreePainting() async {

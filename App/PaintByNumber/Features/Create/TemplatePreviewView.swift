@@ -37,6 +37,10 @@ struct TemplatePreviewView: View {
     @State private var isRefining = false
     /// The preview's push has landed: Refine asked for before then waits for it.
     @State private var hasSettled = false
+    /// Refine has opened over this preview once.
+    @State private var hasRefined = false
+    /// Refine was asked for before Unlimited Paintings, which it comes with, was bought.
+    @State private var offersRefineUnlock = false
     #endif
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
@@ -102,6 +106,7 @@ struct TemplatePreviewView: View {
                 }
             }
         }
+        .opacity(waitsForRefine ? 0 : 1)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
@@ -131,9 +136,11 @@ struct TemplatePreviewView: View {
         // Shrink Preview is the way back from the enlarged preview. There is none while Start
         // Painting saves: leaving then would open the painting from whichever flow closes next.
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
+        .toolbarVisibility(waitsForRefine ? .hidden : .automatic, for: .navigationBar)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         #if UNRELEASED
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock) { openRefine() })
         // A tap on Refine made while the painting was updating: it opens once it is made.
         .onChange(of: model.opensRefine) { _, opens in
             if opens && hasSettled { openRefine() }
@@ -141,7 +148,7 @@ struct TemplatePreviewView: View {
         // A page from scratch asks for Refine as it loads and may be made before this shows: it
         // opens once the push has landed (a cover presented mid-push can be dropped).
         .task {
-            guard (try? await Task.sleep(for: Self.pushSettles)) != nil else { return }
+            guard (try? await Task.sleep(for: model.isScratch ? Self.scratchSettles : Self.pushSettles)) != nil else { return }
             hasSettled = true
             if model.opensRefine { openRefine() }
         }
@@ -179,7 +186,10 @@ struct TemplatePreviewView: View {
             }
             #if UNRELEASED
             .onChange(of: isRefining) { _, refining in
-                if refining { PaintTips.refineOpened() }
+                if refining {
+                    PaintTips.refineOpened()
+                    hasRefined = true
+                }
             }
             #endif
             // Start Painting saves the painting, and The Making-of may play: the preview says no more.
@@ -239,15 +249,35 @@ struct TemplatePreviewView: View {
     /// Enlarged, but never beside a half-open Duo's fold, where the picture has its own half.
     private var isEnlarged: Bool { isTuning && !isSideBySide && fold == nil }
 
+    /// A page from scratch on its way to Refine: plain paper, with no bar, until Refine has opened
+    /// over it, so the photo step gives way to Refine with no preview between them (it showed for
+    /// half a second). One that couldn't be made says so.
+    private var waitsForRefine: Bool {
+        #if UNRELEASED
+        guard model.isScratch, !hasRefined else { return false }
+        if case .failed = model.phase { return false }
+        return true
+        #else
+        false
+        #endif
+    }
+
     #if UNRELEASED
     /// How long the preview's push takes to land before Refine, already made, is opened over it.
     private static let pushSettles: Duration = .milliseconds(450)
+    /// The same for a page from scratch, whose preview is there with no push.
+    private static let scratchSettles: Duration = .milliseconds(100)
 
     /// Refine on the final template, or, while it is being made, as soon as it is.
     private func openRefine() {
         titleFocused = false
         guard !isStarting else { return }
         model.withdrawStart()
+        guard !paintings.locksRefine else {
+            model.withdrawRefine()
+            offersRefineUnlock = true
+            return
+        }
         if model.canRefine {
             model.withdrawRefine()
             isRefining = true
@@ -357,6 +387,10 @@ struct TemplatePreviewView: View {
         #if DEBUG
         // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
         if ShellDemo.current == .createUnlock { start() }
+        #if UNRELEASED
+        // `create-refine-unlock` taps Refine, which waits for the unlock.
+        if ShellDemo.current == .createRefineUnlock { openRefine() }
+        #endif
         #endif
     }
 
@@ -428,7 +462,7 @@ struct TemplatePreviewView: View {
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name,
                     beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
-                    aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    compares: !model.isScratch, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }

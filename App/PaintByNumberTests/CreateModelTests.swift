@@ -976,6 +976,10 @@ struct CreateModelTests {
         model.start(from: .blank)
         try await waitUntil { model.refinements.start == .blank && model.isFinal }
         #expect(model.canUndo && model.refinements.changeCount == 0)
+        #if UNRELEASED
+        // A drawing on Blank isn't the photo's: it takes a drawing's name (QA, November 3).
+        #expect(model.defaultTitle == CreateModel.scratchTitle() && model.resolvedTitle == model.defaultTitle)
+        #endif
         let blank = try #require(model.preview?.template)
         let photo = try #require(model.source?.image)
         #expect(blank.regions.count == 1 && blank.palette.count == 1)
@@ -1002,6 +1006,7 @@ struct CreateModelTests {
         model.undo()
         try await waitUntil { model.refinements.start == .generated && model.isFinal }
         #expect(model.preview?.template == generated && model.refinements.isEmpty && !model.canUndo)
+        #expect(model.defaultTitle == (try #require(Sample.named("red-fox"))).title, "Generated again, the sample's name again")
         model.cancelAll()
     }
 

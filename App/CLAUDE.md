@@ -591,7 +591,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   Refine's screen named so is left out and checked too, and
   anything outside them that names its types needs `#if UNRELEASED`. `RefineEdits.swift` (the
   edits' model, back in by `INCLUDED_SOURCE_FILE_NAMES`) and `CreateModel`'s refining stay, so
-  paintings refined before regenerate as they were.
+  paintings refined before regenerate as they were. Every gate that ships Refine and From Scratch,
+  and what else changes with them, is listed in `docs/refine-release-gates.md` (painting-company
+  row 236 takes them out on a release branch).
 - Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
   which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
   the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
@@ -673,7 +675,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
-    which the first Bucket tap adds as a paint), the Bucket (`.paintArea` with the current paint,
+    which the first Bucket tap adds as a paint; every color made current that no paint has waits
+    after the paints with a plus, in the order picked, until poured, `RefineView.newColors`,
+    `RefinePaletteBar.unpoured`), the Bucket (`.paintArea` with the current paint,
     each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
@@ -688,10 +692,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
     the picked tool's layer is marked (`RefineTool.layer`), and a tool that changes a hidden layer
     shows it again. `create-refine-layers` (with `-dark`) opens it, tracing. Until the first edit a
-    Start From control at the canvas's top picks the base (`CreateModel.start(from:)`,
+    Start From control at the canvas's top, trailing end (the leading one is where the first tip
+    opens on iPad), picks the base (`CreateModel.start(from:)`,
     `TemplateRefinements.start`: Generated, or Blank, the photo as one area on the generator's
     canvas, `ArtworkFactory.blank`, to draw and paint everything on; a refinement kept in drafts and
-    `refinements.json`, a step of the history, and no making-of show). Select's Change Color opens
+    `refinements.json`, a step of the history, and no making-of show; on Blank the painting's
+    default name is a drawing's, `CreateModel.defaultTitle`, as From Scratch's is). Select's Change Color opens
     an area's card (`RefineAreaCard`, a popover beside it; on iPhone in Select's band, in the
     palette's place, so nothing covers the picture, the Lamplit Table's `factory/pieces/refine-phase3`;
     a long press opened it until October 28, when the hold became the Eyedropper): its paint and how many areas
@@ -904,7 +910,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   is asked for at once (`opensRefine`; the preview opens it once its push has landed, `pushSettles`). `isScratch`
   hides Refine's Start From and the preview's suggestion chip and sliders; the name is
   "Drawing, <date>" (`scratchTitle`); a page with nothing drawn is no draft, and a draft records
-  `scratch` (`CreateDraft`, absent in older ones), so it resumes as a page from scratch. `ScratchFlowTests`, `ScratchUITests`.
+  `scratch` (`CreateDraft`, absent in older ones), so it resumes as a page from scratch. The
+  preview is there with no push and stays plain paper, with no bar, until Refine has slid up over
+  it (`TemplatePreviewView.waitsForRefine`), and shows the drawing alone, with no comparison
+  (`CompareView.compares`). `ScratchFlowTests`, `ScratchUITests`.
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until
@@ -970,6 +979,14 @@ sends it, the developers collect nothing).
   change to the privacy manifest). `App/UnlimitedPaintings.storekit` sells it in Xcode runs (Edit
   Scheme › Run › Options › StoreKit Configuration); App Store Connect must hold the product before
   a TestFlight or App Store build that carries it.
+- Refine, and From Scratch with it, come with the unlock (painting-company row 143;
+  `UnlimitedPaintings.includesRefine`, `locksRefine`): in a build that sells it, not yet bought,
+  the preview's Refine and From Scratch open `UnlockSheet` worded for Refine (`forRefine`), whose
+  Try It in the Tool Guide opens the guide, its practice pictures free (`RefineUnlockOffer`);
+  bought there, Refine opens. Refine's paintings take free paintings as any other. Debug launches
+  leave Refine open unless `-demoRefineLocked YES`; `create-refine-unlock` (with `-dark`,
+  `-long-text`) is the sheet over a sample's preview; `ScratchUITests` and
+  `UnlimitedPaintingsTests` cover it.
 - SideStore builds (`UNRELEASED` without `DEBUG`) sell nothing: a sideloaded app can't buy from
   the App Store, so everything is unlocked there and none of it shows. Demo and test launches use
   `UnlockStoreStub` (DEBUG): `-demoFreePaintings <n>`, `-demoUnlocked YES`, `-demoPurchase

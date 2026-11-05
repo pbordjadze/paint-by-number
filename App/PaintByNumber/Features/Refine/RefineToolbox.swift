@@ -72,14 +72,17 @@ nonisolated enum RefinePalette {
     }
 }
 
-/// The painting's paints in a row, in Cells and Paint, the current one ringed; a color no paint
-/// has yet shows after them, and the system color picker at the end picks any color as the
-/// current paint. A swatch dragged onto a cell of the picture pours its paint there (the canvas
+/// The painting's paints in a row, in Cells and Paint, the current one ringed; the colors picked
+/// that no paint has yet (`unpoured`) show after them, each until a pour makes it a paint, and the
+/// system color picker at the end picks any color as the current paint. A swatch dragged onto a cell of the picture pours its paint there (the canvas
 /// takes the drop, `color(of:in:)`). With `merge` (Edit Paint), a paint dragged onto another
 /// becomes it, and VoiceOver offers the same on each paint (into the current one).
 struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
+    /// The colors picked in this Refine, in the order picked (`RefineView.newColors`): those no
+    /// paint has show as new paints, so several picked in a row are all kept (QA, November 3).
+    var picked: [SIMD3<Float>] = []
     /// Makes paint `from` the paint `into` (both indices of the palette).
     var merge: ((_ from: Int, _ into: Int) -> Void)?
     /// Whether it stands in glass of its own, else in a band that holds it with Select's bar
@@ -108,7 +111,10 @@ struct RefinePaletteBar: View {
                         ForEach(template.palette.indices, id: \.self) { index in
                             mergeable(swatch(index, selected: selected == index), index, current: selected).id(index)
                         }
-                        if selected == nil, let current { newPaint(current) }
+                        let unpoured = Self.unpoured(picked, current: current, palette: template.palette)
+                        ForEach(unpoured.indices, id: \.self) { k in
+                            newPaint(unpoured[k], selected: unpoured[k] == current, k).id("new-\(k)")
+                        }
                     }
                     .padding(.horizontal, 2)
                     .padding(.vertical, 3)
@@ -118,10 +124,16 @@ struct RefinePaletteBar: View {
                     guard let index else { return }
                     withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo(index) }
                 }
+                // A color just picked, in view at the row's end.
+                .onChange(of: current) { _, color in
+                    let unpoured = Self.unpoured(picked, current: color, palette: template.palette)
+                    guard selected == nil, let color, let k = unpoured.firstIndex(of: color) else { return }
+                    withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo("new-\(k)") }
+                }
                 // Back in Cells or Paint, the current paint in view (QA, October 28).
                 .onAppear { if let selected { reader.scrollTo(selected) } }
             }
-            ColorPicker(selection: picked, supportsOpacity: false) { Text("New Paint") }
+            ColorPicker(selection: wheel, supportsOpacity: false) { Text("New Paint") }
                 .labelsHidden()
                 .accessibilityLabel(Text("New Paint"))
                 .accessibilityHint(Text(String(
@@ -212,27 +224,46 @@ struct RefinePaletteBar: View {
         }
     }
 
-    /// The current color, which no paint has yet: ringed, with a plus, as the Bucket will add it.
-    private func newPaint(_ color: SIMD3<Float>) -> some View {
-        Image(systemName: "plus")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(Color.white)
-            .shadow(color: .black.opacity(0.5), radius: 1)
-            .frame(width: 32, height: 32)
-            .background(Circle().fill(RefinePalette.color(color, space: template.colorSpace)))
-            .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
-            .padding(3)
-            .overlay { Circle().stroke(Theme.signature, lineWidth: 2.5) }
-            .draggable(Self.payload(of: color))
-            .accessibilityElement()
-            .accessibilityLabel(Text("New Paint"))
-            .accessibilityAddTraits(.isSelected)
-            .accessibilityIdentifier("refine-paint-new")
+    /// The colors picked that no paint has, in the order picked, and the current color after them
+    /// when no paint has it and it wasn't picked (the photo's, from the Eyedropper).
+    nonisolated static func unpoured(_ picked: [SIMD3<Float>], current: SIMD3<Float>?, palette: [PaletteColor]) -> [SIMD3<Float>] {
+        var colors: [SIMD3<Float>] = []
+        for color in picked + (current.map { [$0] } ?? []) where !colors.contains(color) && RefinePalette.index(of: color, in: palette) == nil {
+            colors.append(color)
+        }
+        return colors
+    }
+
+    /// A color no paint has yet, with a plus, as the Bucket will add it; ringed while current, and
+    /// a tap makes it current again.
+    private func newPaint(_ color: SIMD3<Float>, selected: Bool, _ k: Int) -> some View {
+        Button {
+            FeedbackEngine.shared.selectionChanged()
+            current = color
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.white)
+                .shadow(color: .black.opacity(0.5), radius: 1)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(RefinePalette.color(color, space: template.colorSpace)))
+                .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
+                .padding(3)
+                .overlay { Circle().stroke(selected ? Theme.signature : .clear, lineWidth: 2.5) }
+        }
+        .buttonStyle(.plain)
+        .draggable(Self.payload(of: color))
+        .accessibilityLabel(Text("New Paint"))
+        .accessibilityHint(Text(String(
+            localized: "refine.palette.paint.hint", defaultValue: "Makes this the current paint.",
+            comment: "Refine screen, the palette: VoiceOver hint of a paint's swatch, which makes it the paint the Bucket gives and Edit Paint changes")))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier(selected ? "refine-paint-new" : "refine-new-\(k + 1)")
     }
 
     /// The picker's color: the current paint's; a color picked becomes the current paint, or the
     /// painting's paint that a Bucket tap would give for it.
-    private var picked: Binding<Color> {
+    private var wheel: Binding<Color> {
         Binding(
             get: { current.map { RefinePalette.color($0, space: template.colorSpace) } ?? .gray },
             set: { color in

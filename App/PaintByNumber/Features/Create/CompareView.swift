@@ -18,6 +18,9 @@ struct CompareView: View {
     let afterLabel: String
     /// The caption of the photo's side: a drawing's cleaned sheet is captioned Drawing.
     var beforeLabel: String = String(localized: "Photo")
+    /// Whether the photo is there to compare with: a page from scratch's blank paper isn't, and
+    /// shows the picture alone, with no divider and no captions.
+    var compares = true
     let aspectRatio: CGFloat
     /// The space the painting screen fits a painting into (the window): line art is drawn as
     /// heavy as the canvas would draw it at the picture's size relative to that.
@@ -46,7 +49,7 @@ struct CompareView: View {
                 let size = geo.size
                 let picture = pictureRect(in: size)
                 let visible = Self.visible(picture, in: size)
-                let x = after == nil ? visible.maxX : visible.minX + visible.width * split
+                let x = after == nil ? visible.maxX : compares ? visible.minX + visible.width * split : visible.minX
                 ZStack(alignment: .topLeading) {
                     card(visible)
 
@@ -65,13 +68,15 @@ struct CompareView: View {
                                 Rectangle().frame(width: max(0, x))
                             }
 
-                        if after != nil {
+                        if after != nil, compares {
                             divider(at: x, in: visible, size: size)
                         }
 
-                        labels(split: after == nil ? 1 : split)
-                            .frame(width: visible.width)
-                            .offset(x: visible.minX, y: visible.minY)
+                        if compares {
+                            labels(split: after == nil ? 1 : split)
+                                .frame(width: visible.width)
+                                .offset(x: visible.minX, y: visible.minY)
+                        }
                     }
                     .frame(width: size.width, height: size.height, alignment: .topLeading)
                     .mask(alignment: .topLeading) { placed(Self.cardShape, in: visible) }
@@ -91,7 +96,7 @@ struct CompareView: View {
                                 liveOffset = clamped(
                                     CGSize(width: offset.width + value.translation.width, height: offset.height + value.translation.height),
                                     zoom: shownZoom, in: size)
-                            } else {
+                            } else if compares {
                                 moveDivider(to: value.location.x, in: size)
                             }
                         }
@@ -146,9 +151,10 @@ struct CompareView: View {
             if !isNil { sweepIn() }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Comparison of photo and painting")
-        .accessibilityValue(accessibilityValue)
+        .accessibilityLabel(compares ? Text("Comparison of photo and painting") : Text("Painting"))
+        .accessibilityValue(compares ? accessibilityValue : "")
         .accessibilityAdjustableAction { direction in
+            guard compares else { return }
             switch direction {
             case .increment: split = min(1, split + 0.1)
             case .decrement: split = max(0, split - 0.1)

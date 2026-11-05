@@ -77,6 +77,26 @@ final class UnlimitedPaintings {
     /// Free paintings left now.
     var freeLeft: Int { free.at(now(), calendar: calendar).left }
 
+    /// Whether Refine, and From Scratch with it, come with the unlock (painting-company row 143:
+    /// Refine joins Unlimited Paintings, and the Tool Guide's practice pictures stay free to
+    /// everyone). False gives Refine to every painter, free paintings or not.
+    static let includesRefine = true
+
+    #if DEBUG
+    /// Debug launches leave Refine open unless they ask for it locked (`UnlockStoreStub`,
+    /// `-demoRefineLocked YES`): its demos and tests don't buy it first.
+    @ObservationIgnored var refineOpenAnyway = false
+    #endif
+
+    /// Refine waits for the unlock: a build that sells it, not yet bought. Refine's own paintings
+    /// count as any other: only Start Painting on the painter's own photo takes a free painting.
+    var locksRefine: Bool {
+        #if DEBUG
+        if refineOpenAnyway { return false }
+        #endif
+        return Self.includesRefine && isSold && !isUnlocked
+    }
+
     /// Whether a painting may start: one of a library picture always may, one of the painter's own
     /// photo once the unlock is bought or while a free painting is left. The first time, it asks
     /// the App Store (on the device) what is owned.
