@@ -80,7 +80,7 @@ struct EraPassage: View {
     var body: some View {
         if let destination = door.passage {
             TimelineView(.animation) { context in
-                let elapsed = start.map { context.date.timeIntervalSince($0) } ?? 0
+                let elapsed = Self.held(start.map { context.date.timeIntervalSince($0) } ?? 0)
                 Canvas { graphics, size in
                     draw(in: &graphics, size: size, elapsed: elapsed)
                 }
@@ -101,9 +101,26 @@ struct EraPassage: View {
             .onAppear {
                 start = .now
                 settledCover = false
+                #if DEBUG
+                if DemoMode.scenario == "era-passage" {
+                    Task {
+                        try? await Task.sleep(for: .seconds(Self.wait + Self.cover * 0.67 + 0.5))
+                        DemoMode.markReady()
+                    }
+                }
+                #endif
             }
             .id(destination)
         }
+    }
+
+    /// The `era-passage` demo holds the passage two thirds of the way through its cover, the
+    /// gallery half laid over, for a screenshot (Debug builds).
+    private static func held(_ elapsed: TimeInterval) -> TimeInterval {
+        #if DEBUG
+        if DemoMode.scenario == "era-passage" { return min(elapsed, wait + cover * 0.67) }
+        #endif
+        return elapsed
     }
 
     /// One tile: where it sits, when it is set (0 to 1 through the cover), its color.

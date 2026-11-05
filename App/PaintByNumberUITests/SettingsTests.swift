@@ -299,7 +299,8 @@ final class SettingsTests: XCTestCase {
     @MainActor
     private func roll(_ wheels: XCUIElementQuery, to year: Int) {
         let digits = String(format: "%04d", year).map(String.init)
-        XCTAssertGreaterThanOrEqual(wheels.count, 4, "The clock has \(wheels.count) wheels")
+        // The clock's row can be in the tree a moment before its wheels are.
+        XCTAssertTrue(wheels.element(boundBy: 3).waitForExistence(timeout: 10), "The clock has \(wheels.count) wheels")
         for (place, digit) in digits.enumerated().reversed() {
             wheels.element(boundBy: place).adjust(toPickerWheelValue: digit)
         }

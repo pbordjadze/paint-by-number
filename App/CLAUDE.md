@@ -950,7 +950,9 @@ own, so it follows none of this app's later changes and needs none of its gates.
   Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
   Ravenna's Settings › About has a Year row (547) whose clock, rolled to the present or later,
   calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
-  while the door is shut). `EraDoorTests`; `settings-clock` screenshots the clock.
+  while the door is shut). `EraDoorTests` and `SettingsTests.testTheClockSetBack…` (through the
+  door and back); `settings-clock` screenshots the clock, `era-passage` (`RootView`) the passage
+  held two thirds laid.
 - **Kept apart in one process:** resources through `Bundle.ravenna` (never `Bundle.main`, but for
   the HED model, which is the app's own file), settings in `UserDefaults.ravenna` (every
   `@AppStorage` through `.defaultAppStorage`; launch arguments are still read from `.standard`),
