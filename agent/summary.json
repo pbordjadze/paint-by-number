@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 101,
+ "duration_ms": 959244,
+ "total_cost_usd": 2.5186589999999995,
+ "result": "I got the lighthouse I planned, drew it in Refine, and painted it to 100%, with no redos. It took about 9 minutes and has 16 areas in 9 paints. It's saved in the gallery as \"Lighthouse \u00b7 Finished\".\n\n**The drawing:** I found the empty page right away: + \u2192 \"From Scratch\". The Tool Guide's Pen page told me what I needed: lines snap to each other within about 10 pt, and a closed line makes a new area. Everything was drawn with the Shapes tool:\n- **Island:** one Oval.\n- **Tower, stripes, lantern, roof:** straight Lines, which all snapped closed on the first try.\n- **Waves:** the Curve shape gives one bend per curve, so the wave line is three curves joined end to end.\n- **Gulls:** each wing is a bent curve with a straight line under it, making a closed crescent.\n\nI colored it with the Bucket and the system color picker, then filled every area with one tap on the painting screen.\n\n**Bug (reproduced 2 of 2):** Back on the New Painting preview throws away a from-scratch drawing without asking. Tapping From Scratch again gives a blank page. Refine's own Cancel does ask \"Discard Your Changes?\", so this is inconsistent. It would have thrown away the 9-minute lighthouse with no warning.\n\n**Suspicions:**\n- Choosing the Curve shape shows a hint, and the canvas moves up 23 pt and stays there. It moves when the tool is picked, not mid-stroke. That fits the \"canvas keeps the room of the tallest panel\" design, but it moved the picture just as I was about to draw on it. Seen 2 of 2.\n- The log shows a Refine tip being offered about 25 times and taking a turn on screen, yet none of my screenshots show it. It was then refused as \"nothing done\", though I'd drawn plenty by then.\n\n**Automation problems:** Maestro's `hideKeyboard` on the name field landed me on the painting screen without my tapping Start Painting. That used up one of the free paintings (5 \u2192 4). Retesting with the keyboard's own \u2713 key just closed the keyboard, so this was Maestro's tap, not the app.\n\nNo crashes. Everything is in `/Users/runner/work/_temp/qa/report.md`, with screenshots in `shots/` (`final-refine`, `final-template`, `final-painting`, plus the discard evidence: `discard-1-preview`, `discard-2-after-back`, `discard-3-blank-again`).",
+ "usage": {
+  "input_tokens": 110,
+  "cache_creation_input_tokens": 174621,
+  "cache_read_input_tokens": 4944670,
+  "output_tokens": 32809,
+  "output_tokens_details": {
+   "thinking_tokens": 9957
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 174621
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 37,
+  "mcp__maestro__inspect_screen": 12,
+  "mcp__maestro__run": 44,
+  "Write": 3,
+  "Read": 3
+ },
+ "images_received": 38
+}
