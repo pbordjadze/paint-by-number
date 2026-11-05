@@ -13,7 +13,7 @@ before planning app work).
 ## Map
 
 - `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`, and the separate `MakingOf`,
-  `MakingOfTests`. The Xcode project builds PaintCore from this package (local reference `..`), so
+  `MakingOfTests`; Ravenna's `MosaicKit`, `MosaicEngine`, `MosaicCore`, `mosaic` and their tests. The Xcode project builds PaintCore from this package (local reference `..`), so
   its flags change the app's builds too (release `-Ounchecked`); its iOS 18 / macOS 15 platforms
   are only a floor (the app's 26.0 is the project's).
 - `Sources/PaintCore`: the portable, dependency-free pipeline (builds on Linux too).
@@ -104,6 +104,13 @@ before planning app work).
   `compose-small.json` by `tools/tests/test_making_of_layers.py --write-goldens`, and
   `fields-small.json` by `tools/tests/test_making_of_fields.py --write-goldens`. `python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'` (numpy,
   Pillow; CI `core`) fails when a committed fixture is not what the Python makes now.
+- `Sources/MosaicKit`, `Sources/MosaicEngine`, `Sources/MosaicCore` (and `Sources/mosaic`, the
+  engine on files): Ravenna's engine, a photo laid as a Byzantine mosaic and built as a PaintCore
+  template, one area per tile (`MosaicCore.template(of:)`), ported from the Python prototype in
+  pbordjadze/ravenna; deterministic (`Tests/MosaicCoreTests/DeterminismTests` pins hashes, per
+  platform for OKLab). Tests `Tests/Mosaic*Tests`, fixtures `Tests/MosaicFixtures`; the paints'
+  names come from `docs/ravenna/paint-names.json` through `tools/ravenna/paint_names.py`. The
+  app's era behind the secret door: App/CLAUDE.md › Ravenna.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data), and so is
   `edits-v1.json` (every kind of edit, as `refinements.json` keeps them: `EditGoldenTests`);
@@ -121,7 +128,7 @@ before planning app work).
   `tools/drawings/demo_page.py` draws the create flow's demo page (`ShellDemo.drawingPhoto`) for
   `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
-  `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
+  `PaintByNumber/`, `Ravenna/` and `RavennaResources/` (the mosaic era, SideStore and Debug only), `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
@@ -442,7 +449,9 @@ Saved paintings must open in every later build. The format history is documented
 Ported or adapted code, the methods the pipeline implements and the bundled models (with their
 weights' license) are credited in Settings › About › Acknowledgements (`Acknowledgements.swift`) and
 `ACKNOWLEDGEMENTS.md`, which `AboutTests` keeps in step: add an entry when adding any.
-`Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); nothing else is third-party code, and
+`Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox), as are their copies in
+`Sources/MosaicCore`; Ravenna's own credits are `docs/ravenna/ACKNOWLEDGEMENTS.md`, shown in its
+Settings; nothing else is third-party code, and
 nothing is GPL. The models' weights are Apache-2.0 (HED, ControlNet) and MIT (the line-drawing
 network); the evidence is in `tools/models/convert_*.py`. `Vector/CurveFitter.swift` is a clean-room
 implementation of the method in Selinger's paper "Potrace: a polygon-based tracing algorithm"

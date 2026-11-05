@@ -3437,6 +3437,10 @@
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
     },
+    "Clock" : {
+      "comment" : "VoiceOver action on Settings › About's Version row (SideStore builds): brings out the secret door's clock, a year on four wheels",
+      "extractionState" : "manual"
+    },
     "Shape the Lines Yourself" : {
       "comment" : "Title of the tip at the Refine button of the New Painting preview, shown on the third page made",
       "extractionState" : "manual"

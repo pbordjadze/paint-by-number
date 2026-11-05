@@ -542,3 +542,11 @@ Caroline Chan, Frédo Durand and Phillip Isola, "Learning to generate line drawi
 Makes the same photo and settings always give the same template.
 
 Guy Steele, Doug Lea and Christine Flood, "Fast Splittable Pseudorandom Number Generators", 2014
+
+## Ravenna
+
+Ravenna, the mosaic era behind the secret door (SideStore builds; `App/Ravenna`, the engine in
+`Sources/MosaicKit`, `Sources/MosaicEngine` and `Sources/MosaicCore`), credits its own sources in
+its Settings › About › Acknowledgements, and in `docs/ravenna/ACKNOWLEDGEMENTS.md`: the ancient
+works its library offers (The Metropolitan Museum of Art, Open Access), its paints' names, the
+techniques its making-of names, and the same models and code as above.

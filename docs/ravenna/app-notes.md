@@ -1,0 +1,168 @@
+# Ravenna's app notes
+
+Ravenna's app (`App/Ravenna`, module `Ravenna`, and `App/RavennaResources`) is Paint by
+Moonlight's app as copied at f1024441 for the separate Ravenna app (pbordjadze/ravenna), with
+Ravenna's changes at the seams below, and then moved into this repository behind the secret door
+(painting-company row 234; App/CLAUDE.md › Ravenna). Type and file names are still Paint by
+Moonlight's, so the two can be compared (`git show f1024441:App/PaintByNumber/<path>`). The seams
+are as they were in Ravenna's repository; what changed on the way in is in App/CLAUDE.md ›
+Ravenna, which wins where they disagree (no own bundle identifier, icon, Info.plist, v0 carry-over
+or Paint menu any more; paths under `App/RavennaResources`).
+
+## Ravenna's seams
+
+Every change to the copy, kept small and listed here, so the copy can follow its source and one day
+go back into it (#5).
+
+- **Identity:** the target, bundle identifier, display name and icon (Apse, below)
+  (`App/Ravenna.xcodeproj`, `InfoPlist.xcstrings`, the catalog's `AppIcon`); `Config/Info.plist`'s
+  own file type (`com.pbordjadze.ravenna.mosaic`, `.ravenna`, so neither app claims the other's
+  files); the log subsystem and queue labels; the gallery's title and the PDF's footer; feedback
+  reports name the app ("Ravenna …" in `FeedbackCapture`), since they reach Paint by Moonlight's
+  relay.
+- **Nothing sold:** `UnlimitedPaintings.forLaunch`. Every configuration defines `UNRELEASED`:
+  Ravenna is only ever a SideStore build.
+- **The library:** `Resources/Samples/library.json` lists the ancient works of
+  `App/RavennaResources/Mosaics/catalog.json`; `Sample.url` reads their `<id>-photo.jpg`; the starters and
+  the demos' pictures (`ShellDemo.fixedPictures`, `PaintDemoView`) are theirs.
+- **The engine:** templates are mosaics. `Generation/MosaicMaker` (photo cut to its panel → HED
+  contours from `EdgeDetector`, faces from `SubjectVision`'s Vision pass mapped by `MosaicFaces` as
+  v0 did, or for a library picture the faces its bundled mosaics were laid with (`<id>-faces.json`,
+  `MosaicMaker.tracedFaces`, cut to the panel), since Vision may find no painted face and a line
+  in Refine then took the eyes away → `MosaicEngine.make` → `MosaicCore.template(of:)`) stands
+  where `TemplateGenerator` was, in `ArtworkFactory` (`draft`, `made`, `source`), `CreateModel` and `Library.regenerate` (now
+  `regenerate(artwork:)`, from the artwork's recipe). A library picture whose recipe matches a
+  bundled mosaic (`Recipe.bundledDetail`) is laid from it. `SubjectVision` runs only face landmarks
+  and animals; `EdgeDetector` only HED. `Generation/MosaicPicture` draws a mosaic in its finish
+  (v0's `TileArt`, as `MosaicDrawing`), for the preview and the making-of.
+- **The mosaic kept:** each artwork folder has `mosaic.json` (`ArtworkStore.File.mosaic`, written
+  by `create` and `replaceContents`, read by `readMosaic`) and `meta.json` records `recipe`
+  (`Artwork.recipe`, `MosaicEngine.Recipe`: pieces, eyes, mouth, ground, panel; tolerant;
+  GenerationSettings stay written, unread). The finish is the app's, how every mosaic shows
+  (`MosaicLook`: Glass and Stone, `TileOptions.finish`), not the recipe's. A mosaic's grout region is
+  no part of `Artwork.isStarted`, `fractionComplete`, `paintedAreas` and `areaCount` while it has
+  its mosaic (`Artwork.isMosaic`: `meta.json`'s `hasMosaic`, else a recipe); `loadForPainting`
+  records a `mosaic.json` missing or damaged (`hasMosaic` false: the grout is painted and counts)
+  and `regenerate` its return.
+  `Library.loadForPainting` and `regenerate` hand it out as `PaintingDocument.mosaic` (nil when
+  missing or not one tile a region plus the grout). `ArtworkDraft` carries `mosaic` and `recipe`.
+- **The create flow:** `CreateModel` is Ravenna's (its recipe, drafts at `MosaicMaker.draftLongSide`
+  while Pieces moves, the engine's mosaics kept per tile recipe, a panel's analysis once, which
+  carries on for the next change when the one that asked is superseded: a stroke after a stroke
+  in Refine waits for it rather than starting it again). The
+  preview's card (`TemplatePreviewView`) is Paint by Moonlight's folded one (`foldsSettings`, as
+  `UNRELEASED` builds have it; `SettingsKey.previewShowsSettings`): the title, Adjust, the summary
+  and Start the Mosaic; Adjust shows Pieces and the Ground where the sliders were. The Panel (its
+  sheet, `PanelFramingView`) is the enlarged preview's, a third group in its chooser, and where
+  the copy offers no enlarged preview (the iPad, side by side) Adjust's, after the Ground; the
+  Eyes and the Mouth take the engine's defaults, and recipes saved with others keep them (Paul,
+  October 28, issue #14). Out: Suggested settings (`AutoSettings`, the chip,
+  Settings › Painting Length), Settings › Preview and Line Weight, the line-art picture (`CompareView`,
+  `LineArtDrawing`), Paint by Moonlight's Refine (`Features/Refine`, its tips, notes,
+  `TemplateRefinements`, `refinements.json`; Ravenna's own is below), drafts (`Drafts`,
+  `CreateDraft`, `DraftRow`, `DraftSaveToast`), the line-art inputs (`LineArtInputs`, `LineArtMapsCache`, `TextFinder`, `ObjectFinder`, `EyeFinder`,
+  `SubjectImportance`) and `DemoTemplateCache`. Their settings keys are retired
+  (`Preferences.retiredKeys`); `PaintDemoView`'s book demo runs HED alone.
+- **Refine** (Paul, October 28): Ravenna's own, `Features/Create/MosaicRefineView`, opened by
+  the preview bar's Refine where Paint by Moonlight's was, before the mosaic is set. One finger
+  draws on the mosaic (or the photo, Show the Photo) with two tools: Lines, a line the rows
+  follow (Erase rubs the photo's contours out), and Gold, the gold ground brushed on (Erase takes
+  it off); Undo, Cancel (back to the marks it opened with) and Done. What is drawn is the recipe's
+  (`MosaicEngine.Mark`, `Recipe.marks`, in the panel's unit square, written in `meta.json` only
+  when there are some): lines and rub-outs are drawn into the contours (`Recipe.mark(contours:)`,
+  in `MosaicMaker.make`), so the engine lays the mosaic again (a draft first), and gold marks are
+  laid on its tiles (`Recipe.laid`, `goldTiles`), so `TileKey` (`Recipe.forTiles`) keeps the
+  engine's mosaic for them, and a job laying the same tiles finishes and takes the new gold
+  (`startGeneration`'s `laying`); a new photo clears the marks and a moved panel carries them
+  (`CreateModel.recipe`'s `didSet`, `reframingMarks`). A stroke is simplified when the finger
+  lifts (`Mark.simplified`), a tap in Lines is no line (`shortestLine`), and a line is drawn at
+  least 1.5 px wide so a draft keeps it. Its cover hides the create flow without ending it
+  (`CreateModel.isRefining`, which `CreateFlowView`'s `onDisappear` heeds); the preview's tips
+  wait while it is open.
+- **The making-of:** `Features/MakingOf` is v0's show (MosaicKit's `MakingOf.Show`, its cards and
+  sources from docs/making-of.md) behind Paint by Moonlight's `MakingOfView` interface and hand-off
+  (`StartHandoff`), with v0's options in a menu; always on (`SettingsDefault.playsMakingOf`, its
+  Settings switch gone; Skip ends it).
+  The `MakingOf` package product is unlinked and `making-of.json` is gone. Its demos:
+  `making-of`, `-smalti`, `-andamento`, `-dark`, `-long-text`, `-end`, `-reduce-motion`.
+- **v0's mosaics and settings:** `Model/V0CarryOver` carries v0's `Own/` mosaics and `Settings/`
+  progress into the library once at launch (`Library.forLaunch`), a set tile a painted region,
+  v0's app-wide `ground` recorded as each one's; a read failing just now is tried again at a later
+  launch, a work failing 3 launches is given up, and the starters wait for it
+  (`Library.forLaunch`, made only if it leaves the library empty). v0's keys `makingOf.*` are
+  v1's own; `finish`, `oneFinger`, `rowSound` and `border`, with v1's `typeface`, are retired
+  (`Preferences.retiredKeys`, issue #14); `Preferences.carryV0Settings` (from
+  `removeRetiredSettings`) carries `sound`, `touch` and `tune` to Sounds, Haptics and Music where
+  those are unset, removes them with `lesson` and `detail` (`retiredV0Keys`; v0's first lesson is
+  the tips' Tap to Set and Lay a Row), and `ground` once the carry-over is done. v0's code is in
+  the history (`App/v0/`, up to 108a3c7).
+- **The More menu** (v0's): The Making-of plays the show again on an open mosaic, and About This
+  Work shows a library work's record (`SampleAboutView`: title, maker and year, place, medium,
+  credit, license and its page at The Met, from `library.json`'s `place`, `medium` and `source`,
+  which `Sample` reads tolerantly). `ArtworkPaintingView` hands them to `PaintView` as
+  `PaintingWork` (`\.paintingWork`); a painting without a mosaic has no making-of.
+- **The row tip sooner:** Lay a Row (`DragPaintTip`) after 3 single taps, looked at every 3
+  (`PaintChromeState.dragCheckEvery`), where Paint by Moonlight waits for 15: v0's first lesson
+  taught the row right after the first tile.
+- **The icon:** Apse (Paul, October 28, issue #15), the catalog's `AppIcon` in light, dark and
+  tinted, drawn and put in by `sketchbook/icon_candidates.py` (its other candidates stay there).
+  No alternates and no Settings › Icon; `App/PrimaryIcon.swift` sets the primary back once on a
+  device still showing an old alternate (`PaintByNumberApp`, on the scene becoming active; iOS
+  shows its alert for that one switch). Apse is also the mode's icon in `docs/door-icon.md`.
+- **Demos:** `ShellDemo` has none of Paint by Moonlight's Refine, draft, line-art or suggestion scenarios; `create-custom`
+  moves Pieces so the engine lays a library picture, with Adjust opened (`showsPreviewSettings`;
+  the other scenarios fold it); `create-refine` draws a line and gold on it (`refineMarks`) and
+  opens Refine. `[shots]` takes `create-custom`, `create-refine`, `making-of`
+  and `making-of-end` beside Paint by Moonlight's (ci.yml's `ALL`).
+- **Left behind:** Paint by Moonlight's picture library and its line-drawing model
+  (`LineArt.mlpackage`). The HED model is the same file in both apps. No test targets: Ravenna's
+  checks are its package's tests on Linux, `[compile]` and `[shots]`.
+- **Tiles on the canvas** (issue #13, phase 3): a painting whose session has a mosaic
+  (`PaintingSession.make(template:…mosaic:)`, `TileWall`) is drawn as tiles. `TileScene` puts the
+  tiles on the GPU (shape, corners, body colour per `Finish`, the painted bed); `Shaders.metal`
+  draws them in the fill pass (`tessera`, the ground, `rake`) and a lift pass draws tiles still
+  raised over their neighbours (`liftVertex`, `RenderContext.encode`); `CanvasUniforms.tiles`,
+  `.grout` and `CanvasFrame.tiles` carry the look. `CanvasView.setTiles` sets them a row's gap
+  apart; the finish is the light raking across the wall (no `Nightfall`, no sparkles). The grout is
+  the ground: set before the first tile (`PaintProgress.groutSet`), never undone, not counted as
+  started. One finger moves the wall, as in Paint by Moonlight, and a press then a drag lays a
+  row (`TileWall.laying`, MosaicKit's `Laying`), a quick run of the tune. `TileOptions` holds
+  the finish, Glass and Stone: Paul fixed the options on October 28 (issue #14), and Settings is
+  Paint by Moonlight's but for Music's Sun and Moon, which read Major and Minor, and the tip's row
+  (Icon went with Paul's pick, #15). A painting without a mosaic draws as Paint by Moonlight's. Demos: `PaintDemoView`'s scenarios are mosaics; `paint-setting` and
+  `paint-mosaic-measure` (frame time and memory, `FrameMeter`) are Ravenna's.
+- **Sound and haptics:** `FeedbackEngine` plays `TileSound` (v0's clinks of Paint by Moonlight's
+  tune, major by Sun and minor by Moon) and `TileTouch` (v0's taps); `SoundPlayer`, `ToneSynth`,
+  `PaintingMelody` and `HapticsPlayer` are gone.
+- **The look** (phase 5): `Theme`'s tokens and the asset catalog's `Paper`, `Surface`, `Outline`
+  and `AccentColor` are Ravenna's (apse, bench, joint, lime; lapis as `signature`; gold only where
+  a tile sets), from the design page linked in `Theme`; titles and numerals in New York, as
+  Paint by Moonlight's (Paul kept the system serif, October 28); `CanvasPalette`'s sheet, ink and
+  backdrop; the launch screen is
+  `LaunchGround`, and the app is dark only (`UIUserInterfaceStyle`).
+- **A mosaic as a picture:** `MosaicCard` draws a mosaic on the CPU (its ground, the places still to
+  set faint on it, the set tiles in the app's finish, through `MosaicPicture` and `MosaicDrawing`),
+  in place of Paint by Moonlight's light paper: the gallery's card (`Library.thumbnailPNG`) and the
+  picture shared, saved or printed (`ArtworkExporter.paintingPNG`, `CompletionShare`), the latter
+  with nothing round it (v0's border, Paul's None, October 28). The time-lapse replays a mosaic
+  as tiles on its bed with the canvas shaders (`TimelapseFrameRenderer`, `TimelapseSource.live`'s
+  mosaic). The printable template (PDF) keeps Paint by Moonlight's page.
+- **The words** (phase 5): Ravenna's vocabulary is in `Localizable.xcstrings` as English values over
+  Paint by Moonlight's keys, so the sources keep its words and the catalog says Ravenna's: a
+  painting is a mosaic, an area a tile, to paint is to set (a page is the mosaic; "Lay a Row",
+  "Start the Mosaic", "Ready to Set"), and the app is Ravenna. Left: the samples' Paintings (the
+  ancient works are paintings), colors, Nightfall and the unlock sheet (neither shows in Ravenna),
+  and the engine's acknowledgements. The feedback report's header names the app from
+  `FeedbackCapture`.
+- **The paints' names** (#16): `ColorNameText.nicknames` names every artwork's paints, those made
+  before too, from MosaicCore's `PaintNames` (Roman and Byzantine stones, glass, metals and
+  pigments; one source, docs/ravenna/paint-names.json, from which `tools/ravenna/paint_names.py` writes
+  `PaintNamesTable.swift` and docs/ravenna/paint-names.md) through PaintCore's `ColorNickname.Vocabulary(table:)`
+  and its seeded draw: derived at load from the artwork's seed, English only as before. A drawn
+  name is kept within `PaintNames.maximumDistance` (0.08, nearer than PaintCore's 0.12), else the
+  nearest free material within it, else the paint keeps its structured name. `meta.json`'s `nicknameVersion` stays written
+  for Paint by Moonlight's vocabulary; the table is frozen once shipped, so a change is a new table
+  with a version of Ravenna's own recorded per artwork (absent meaning the first). The feedback
+  report's `pbn names` line (`FeedbackReport`, `PaintingSession`'s notes) reproduces Paint by
+  Moonlight's names, not these: its `paints[].nickname` are what the painter saw. Their credits
+  are Acknowledgements' The Paints' Names (`PaintNamesView`, from `PaintNames.credits`).
