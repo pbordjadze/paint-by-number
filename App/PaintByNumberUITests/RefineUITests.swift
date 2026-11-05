@@ -461,8 +461,8 @@ final class RefineUITests: XCTestCase {
     }
 
     /// The palette's New Paint opens the system color picker, and still does once Refine's Make
-    /// Cell tip has come and been closed (QA, November 5: on both devices it opened nothing after
-    /// the tip, until the Tool Guide had been over Refine).
+    /// Cell tip has come and gone by itself (QA, November 5: on both devices it opened nothing
+    /// after the tip, until the Tool Guide had been over Refine).
     @MainActor
     func testNewPaintOpensThePickerAfterRefinesTip() throws {
         let app = XCUIApplication()
@@ -473,15 +473,29 @@ final class RefineUITests: XCTestCase {
         let tip = app.staticTexts["Make a Shape Its Own"]
         XCTAssertTrue(tip.waitForExistence(timeout: 60), "Make Cell's tip never came up")
         attachScreenshot(of: app, named: "new-paint-tip")
-        let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Close")).firstMatch
-        if close.waitForExistence(timeout: 3) {
-            close.tap()
-        } else {
-            // A tap outside a popover closes it.
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.04)).tap()
-        }
-        XCTAssertTrue(waitUntil(timeout: 10) { !tip.exists }, "The tip didn't close")
+        // Its turn ends by itself after 45 s, as the testers' did.
+        XCTAssertTrue(waitUntil(timeout: 70) { !tip.exists }, "The tip didn't go")
+        expectNewPaintOpens(in: app, named: "after-tip")
+    }
 
+    /// The same on a page from scratch, where both testers drew.
+    @MainActor
+    func testNewPaintOpensThePickerFromScratch() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create"]
+        app.launch()
+        let scratch = app.buttons["from-scratch"]
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
+        scratch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 60), "From Scratch didn't open Refine")
+        expectNewPaintOpens(in: app, named: "from-scratch")
+    }
+
+    @MainActor
+    private func expectNewPaintOpens(in app: XCUIApplication, named name: String) {
         pickTool("bucket", in: "Paint", of: app)
         let wheel = app.descendants(matching: .any)["refine-palette-new"]
         XCTAssertTrue(wheel.waitForExistence(timeout: 5), "The palette has no New Paint")
@@ -489,9 +503,9 @@ final class RefineUITests: XCTestCase {
         let picker = app.descendants(matching: .any).matching(
             NSPredicate(format: "label IN %@", ["Grid", "Spectrum", "Sliders"])).firstMatch
         let opened = picker.waitForExistence(timeout: 10)
-        attachScreenshot(of: app, named: "new-paint-after-tip")
-        if !opened { attachTree(of: app, named: "new-paint-after-tip-tree") }
-        XCTAssertTrue(opened, "New Paint opened no color picker after the tip")
+        attachScreenshot(of: app, named: "new-paint-\(name)")
+        if !opened { attachTree(of: app, named: "new-paint-\(name)-tree") }
+        XCTAssertTrue(opened, "New Paint opened no color picker (\(name))")
     }
 
     // MARK: - Helpers

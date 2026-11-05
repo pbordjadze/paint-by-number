@@ -371,6 +371,10 @@ def qa():
     case("bridge-iphone", 12, 185, 378, [
         ("rectangle", (60, 240), (160, 290)), ("rectangle", (60, 420), (160, 470)),
         ("line", (90, 290), (90, 420)), ("line", (130, 290), (130, 420))], pour=(110, 355), outside=(300, 300))
+    # And its stem as a rectangle overlapping the top shape's bottom and the bottom one's top.
+    case("bridge-rectangle-iphone", 12, 185, 378, [
+        ("rectangle", (60, 240), (160, 290)), ("rectangle", (60, 420), (160, 470)),
+        ("rectangle", (90, 286), (130, 424))], pour=(110, 355), outside=(300, 300))
     # Its iPad horizon (run 42045770277): Shapes' Line from past the left edge to 15 points short
     # of the right one, where the swipe's last points went missing.
     case("horizon-ipad", 223.5, 279, 796, [("line", (211, 700), (1004, 700))], pour=(600, 500), outside=(600, 900))
