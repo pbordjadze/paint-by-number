@@ -2,7 +2,7 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
-# behind Settings' The Making-of ships), nothing of the Marginarium, none of what the project leaves
+# behind Settings' The Making-of ships), nothing of the Marginarium or of Ravenna, none of what the project leaves
 # out of Release, and none of the Debug-only code. Run from the repository: the types it looks for
 # are read from the sources, so a file added to either set is checked without an edit here.
 set -euo pipefail
@@ -71,6 +71,15 @@ echo "checked $(wc -l < "$WORK/types.txt" | tr -d ' ') types left out of Release
 # The Debug-only launch arguments and folder names (the ready marker, the demo library, the
 # caches, the feedback stub's `-feedback-upload` and the App Store stub's `-demo…` arguments).
 for symbol in demo-ready DemoLibrary LineArtMaps DemoTemplates feedback-upload demoFreePaintings demoUnlocked demoPurchase; do
+  if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
+done
+
+# Ravenna, the era behind the secret door (painting-company row 234), is SideStore's and Debug's
+# only for now: Release leaves its module and its resource bundle out (EXCLUDED_SOURCE_FILE_NAMES
+# names both), and the door's own files (`Era*.swift`) are checked with the rest above.
+[[ ! -e "$APP/RavennaResources.bundle" ]] || fail "the Release app bundles RavennaResources.bundle"
+[[ ! -e "$APP/Frameworks/Ravenna.framework" ]] || fail "the Release app embeds Ravenna.framework"
+for symbol in RavennaEra RavennaWorld EraClock ravenna.library; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 

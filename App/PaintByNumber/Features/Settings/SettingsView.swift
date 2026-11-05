@@ -1,6 +1,9 @@
 import CoreHaptics
 import Foundation
 import PaintCore
+#if UNRELEASED
+import Ravenna
+#endif
 import SwiftUI
 
 struct SettingsView: View {
@@ -27,10 +30,15 @@ struct SettingsView: View {
     private enum Destination: Hashable { case acknowledgements }
     private static let paintingLengthRow = "painting-length"
     @State private var tipsReset = false
+    #if UNRELEASED
+    /// The secret door's clock is out under Version (`EraDoor`): held, the row brings it.
+    @State private var showsClock = false
+    #endif
 
     init() {
         #if DEBUG
         if ShellDemo.current == .settingsAcknowledgements { _path = State(initialValue: [.acknowledgements]) }
+        if ShellDemo.current == .settingsClock { _showsClock = State(initialValue: true) }
         #endif
     }
 
@@ -169,6 +177,25 @@ struct SettingsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
+                        #if UNRELEASED
+                        .contentShape(Rectangle())
+                        .onLongPressGesture(minimumDuration: 1) {
+                            withAnimation { showsClock.toggle() }
+                        }
+                        .accessibilityAction(named: Text("Set the Clock")) {
+                            withAnimation { showsClock.toggle() }
+                        }
+                        #endif
+                        #if UNRELEASED
+                        if showsClock {
+                            EraClock(year: EraYear.present) { year in
+                                guard EraYear.opensByzantium(year) else { return }
+                                dismiss()
+                                EraDoor.shared.go(to: .byzantium)
+                            }
+                            .accessibilityIdentifier("era-clock")
+                        }
+                        #endif
                         NavigationLink(value: Destination.acknowledgements) {
                             SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
                         }
