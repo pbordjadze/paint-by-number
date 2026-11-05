@@ -477,14 +477,6 @@ struct TipPacingTests {
         #expect(Set(cards) == [.shelfHold, .shelfTimeLapse])
     }
 
-    /// Refine's two hang from their tools in SwiftUI's own popover, which the desk retires itself.
-    @Test func theTipsAtRefinesToolsAreTheAppsOwn() {
-        let tools = TipID.allCases.filter { $0.hangsFromATool }
-        #expect(Set(tools) == [.refineDraw, .refineFill])
-        let notTheApps = tools.filter { !$0.isDrawnByTheApp }
-        #expect(notTheApps.isEmpty)
-    }
-
     @Test func eachHintLivesWhereTheDesignPutsIt() {
         func ids(in place: TipPlace) -> Set<TipID> { Set(TipID.allCases.filter { $0.place == place }) }
         #expect(ids(in: .shelf) == [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings])

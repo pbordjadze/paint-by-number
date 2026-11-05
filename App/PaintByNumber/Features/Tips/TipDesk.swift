@@ -579,14 +579,6 @@ extension View {
     }
 }
 
-extension View {
-    /// The tip of `id` while it has the turn, as a popover of SwiftUI's own from this tool
-    /// (`TipID.hangsFromATool`).
-    func toolTip(_ id: TipID, arrowEdge: Edge) -> some View {
-        modifier(OwnPopoverTipModifier(ids: TipSet([id]), arrowEdge: arrowEdge))
-    }
-}
-
 /// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf, and the
 /// gear's and the +'s atop it). The caller shows it only while it is the tip's turn.
 struct GentleTipView: View {
