@@ -32,6 +32,24 @@ final class ScratchUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(canvas, toMatch: NSPredicate(format: "value == %@", "1 change")), "The line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "scratch-drawn")
+
+        // New Paint's picker on the first tap (QA, November 5: SwiftUI's ColorPicker there
+        // presented nothing for a newcomer's first taps, and CI's first launch saw none in 40 s).
+        let bucket = app.buttons["refine-tool-bucket"]
+        if !bucket.exists { app.buttons["Paint"].tap() }
+        XCTAssertTrue(bucket.waitForExistence(timeout: 5), "Refine has no Bucket")
+        bucket.tap()
+        let wheel = app.buttons["refine-palette-new"]
+        XCTAssertTrue(wheel.waitForExistence(timeout: 5), "The palette has no New Paint")
+        wheel.tap()
+        let picker = app.descendants(matching: .any).matching(NSPredicate(format: "label IN %@", ["Grid", "Spectrum", "Sliders"])).firstMatch
+        let picks = picker.waitForExistence(timeout: 10)
+        attachScreenshot(of: app, named: "scratch-new-paint")
+        XCTAssertTrue(picks, "New Paint opened no color picker on its first tap")
+        let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Close")).firstMatch
+        if close.exists { close.tap() } else { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap() }
+        XCTAssertTrue(waitUntil(timeout: 10) { !picker.exists }, "New Paint's picker didn't close")
+
         app.buttons["refine-done"].tap()
 
         // Its own name: a drawing of today, not a sample's title.

@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// The Refine Toolbox's current paint: a color as on screen (OKLab), which the Bucket gives a cell
 /// (`TemplateEditor.Edit.paintArea`, which lands it on the paint of that color, or adds it as a
@@ -92,6 +93,8 @@ struct RefinePaletteBar: View {
 
     @Environment(\.self) private var environment
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The color wheel's picker is up (`RefineColorWheel`).
+    @State private var picksNewPaint = false
 
     var body: some View {
         Group {
@@ -134,13 +137,23 @@ struct RefinePaletteBar: View {
                 // Back in Cells or Paint, the current paint in view (QA, October 28).
                 .onAppear { if let selected { reader.scrollTo(selected) } }
             }
-            ColorPicker(selection: wheel, supportsOpacity: false) { Text("New Paint") }
-                .labelsHidden()
-                .accessibilityLabel(Text("New Paint"))
-                .accessibilityHint(Text(String(
-                    localized: "refine.palette.new.hint", defaultValue: "Picks any color as the current paint. The Bucket adds it to the painting.",
-                    comment: "Refine screen, the palette: VoiceOver hint of the color picker at its end, which makes a color the current paint; the Bucket then adds it as a paint")))
-                .accessibilityIdentifier("refine-palette-new")
+            // The system picker in a popover of SwiftUI's own (a sheet on iPhone), as the area
+            // card's is: SwiftUI's ColorPicker here presented nothing for a newcomer's first taps,
+            // in every QA session of November 5, while the Tool Guide's, over Refine, opened at once.
+            Button { picksNewPaint = true } label: {
+                RefineColorWheel.Swatch(color: current.map { RefinePalette.color($0, space: template.colorSpace) })
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $picksNewPaint, arrowEdge: .bottom) {
+                RefineColorWheel(color: wheel, title: String(localized: "New Paint")) { picksNewPaint = false }
+                    .frame(idealWidth: 360, idealHeight: 560)
+                    .presentationDetents([.medium, .large])
+            }
+            .accessibilityLabel(Text("New Paint"))
+            .accessibilityHint(Text(String(
+                localized: "refine.palette.new.hint", defaultValue: "Picks any color as the current paint. The Bucket adds it to the painting.",
+                comment: "Refine screen, the palette: VoiceOver hint of the color picker at its end, which makes a color the current paint; the Bucket then adds it as a paint")))
+            .accessibilityIdentifier("refine-palette-new")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
@@ -498,5 +511,61 @@ struct RefineNumbers: View, Equatable {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The system color picker (`UIColorPickerViewController`) for the palette's New Paint, shown in
+/// a presentation of SwiftUI's own: a color picked lands in `color` once it rests, and its close
+/// button is `done`.
+struct RefineColorWheel: UIViewControllerRepresentable {
+    @Binding var color: Color
+    let title: String
+    let done: () -> Void
+
+    func makeUIViewController(context: Context) -> UIColorPickerViewController {
+        let picker = UIColorPickerViewController()
+        picker.supportsAlpha = false
+        picker.title = title
+        picker.selectedColor = UIColor(color)
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ picker: UIColorPickerViewController, context: Context) {
+        context.coordinator.parent = self
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    final class Coordinator: NSObject, UIColorPickerViewControllerDelegate {
+        var parent: RefineColorWheel
+
+        init(parent: RefineColorWheel) { self.parent = parent }
+
+        /// Once a pick rests: each color a drag passes through would wait in the palette.
+        func colorPickerViewController(_ picker: UIColorPickerViewController, didSelect color: UIColor, continuously: Bool) {
+            guard !continuously else { return }
+            parent.color = Color(uiColor: color)
+        }
+
+        func colorPickerViewControllerDidFinish(_ picker: UIColorPickerViewController) {
+            parent.done()
+        }
+    }
+
+    /// The wheel at the palette's end: the system's ring of hues round the current color.
+    struct Swatch: View {
+        let color: Color?
+
+        var body: some View {
+            ZStack {
+                Circle().strokeBorder(
+                    AngularGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple, .red], center: .center), lineWidth: 4)
+                Circle().fill(color ?? .clear).padding(6)
+            }
+            .frame(width: 32, height: 32)
+            .padding(2)
+            .contentShape(Circle())
+        }
     }
 }
