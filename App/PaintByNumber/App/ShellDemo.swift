@@ -379,7 +379,9 @@ enum ShellDemo: Equatable {
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
              .createFromFile, .createDrawing, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
-             .settingsTips, .settingsLongText, .settingsAcknowledgements, .settingsClock:
+             .settingsTips, .settingsLongText, .settingsAcknowledgements:
+            break
+        case .settingsClock:
             break
         }
     }

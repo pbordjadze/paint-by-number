@@ -159,7 +159,8 @@ struct EraPassage: View {
     /// The courses: rings round the bottom's middle, every fourth in gold, the rest in lapis, the
     /// apse's dark and lime, a little uneven as smalti are.
     static func tiles(in size: CGSize) -> [Tile] {
-        let side: CGFloat = 22
+        // About 36 across the short side: a phone's tiles are 22 points, an iPad's larger.
+        let side = max(22, (min(size.width, size.height) / 36).rounded())
         let gap: CGFloat = 2
         let columns = Int((size.width / side).rounded(.up)) + 1
         let rows = Int((size.height / side).rounded(.up)) + 1
