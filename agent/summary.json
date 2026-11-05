@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 124,
+ "duration_ms": 1673230,
+ "total_cost_usd": 4.198613800000001,
+ "result": "I got the picture I planned, and painted it to 100%. Separating the hill from the sky took about 12 minutes of trial and error, though, and the fix left marks and extra areas. The full report is in `/Users/runner/work/_temp/qa/report.md`.\n\n**The plan:** a grey castle with a brown arched gate and dark windows, two grey towers with red pointed roofs, a red flag, a green rounded hill, a blue sky and a yellow sun.\n\n**What went smoothly:**\n- **Blank page:** + \u2192 \"From Scratch\" opened Refine on a white page straight away.\n- **Line drawing:** Rectangle, Line, Oval and Curve each worked on the first try. Curve (drag between the ends, then drag to bend) gave the hill and the gate arch real curves.\n- **Colouring:** new paints from the palette's colour wheel and the Bucket, 8 colours, one pour each.\n- **Painting:** the painting screen showed 8 colours and 18 areas; painting finished with \"Finished! Every region is painted.\"\n\n**The worst moment: the hill wouldn't close.** I drew two hill curves from the page edges to the towers' bottom corners. They looked joined, but the blue Bucket flooded the sky and the hill as one area, and nothing on screen showed where the gap was.\n- **What didn't help:** short lines across the frame, redrawing the curves from outside the page, and short lines across the tower/wall seams (Snap pulled their ends onto the seam).\n- **What I learned:** a straight line from edge to edge closed a cell, and so did a curve from edge to edge. The problem was only where the curves met the towers.\n- **What fixed it:** turning Snap off and drawing a short line across each curve end and the tower wall, in an X.\n- **What it cost:** visible X marks at the towers' feet, stray ticks at the seams, and 18 areas instead of the 14 I designed (4 tiny triangles).\n\n**Suspicions (no bugs confirmed, no crashes):**\n- **Curve ends don't join:** a curve that ends on a rectangle's corner or side didn't close the area, twice out of two. A possible cause is my tower and wall rectangles sitting a hairline apart (rectangles don't snap; the Tool Guide says so). I couldn't zoom in to check, because that needs a pinch.\n- **Snap shortens sealing lines:** Snap pulls a short sealing line onto the line it was meant to cross.\n- **The canvas moves:** it shifted about 23 pt up when Curve's hint line appeared, and about 3 pt more later, so my next strokes missed.\n- **Unexpected zoom:** the painting screen zoomed in about 2.5\u00d7 during taps on two different roofs, about 500 pt apart, and neither got painted. It may have been an automation double tap.\n- **Missed tip:** a Refine tip was on screen for only about 5 seconds.\n\nThe Tool Guide is clear, and Layers \u203a Numbers helped. But nothing in the guide explains why an area isn't closed or how to find the gap.\n\n**Not tested:** Merge (which could remove the tiny areas), Cell Edge, Bend Line and the other Refine tools. I also didn't test drag painting, multi-finger gestures, quitting and relaunching, or the moon-rise on finishing.\n\nScreenshots are in `shots/`: `final-refine`, `final-template` and `final-painting`, plus the step shots `plan-1` to `plan-14` and `paint-progress`.",
+ "usage": {
+  "input_tokens": 128,
+  "cache_creation_input_tokens": 289499,
+  "cache_read_input_tokens": 9870434,
+  "output_tokens": 38826,
+  "output_tokens_details": {
+   "thinking_tokens": 14547
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 289499
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 40,
+  "Read": 5,
+  "mcp__maestro__run": 55,
+  "mcp__maestro__inspect_screen": 20,
+  "Write": 3
+ },
+ "images_received": 40
+}

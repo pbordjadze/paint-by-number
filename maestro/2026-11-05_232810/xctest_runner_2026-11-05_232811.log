@@ -1,0 +1,85 @@
+2026-11-05 23:28:20.106 xcodebuild[74099:184768] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-05 23:28:43.365 xcodebuild[74099:184768] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple Watch Series 12 (46mm) (4DA5F4CB-FB8D-4FFF-8A66-E222F1B25593) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-12-46mm: SimDeviceType : Apple Watch Series 12 (46mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-12-46mm) } runtime={ com.apple.CoreSimulator.SimRuntime.watchOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x764c24d000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x    t =      nans Interface orientation changed to Portrait
+objc[74429]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.qUPOFh/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1027dc398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.qUPOFh/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105ce4310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+Test Suite 'Selected tests' started at 2026-11-05 23:28:54.760.
+Test Suite 'maestro-driver-iosUITests.xctest' started at 2026-11-05 23:28:54.769.
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' started at 2026-11-05 23:28:54.770.
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' started.
+    t =     0.03s Start Test at 2026-11-05 23:28:54.801
+    t =     0.03s Set Up
+    t =     0.10s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' passed (0.185 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:54.986
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' passed (0.047 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:55.034
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' passed (0.015 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:55.049
+    t =     0.00s Set Up
+    t =     0.01s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' passed (0.033 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:55.083
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' passed (0.024 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:55.107
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' passed (0.022 seconds).
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' passed at 2026-11-05 23:28:55.129.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.325 (0.360) seconds
+Test Suite 'maestro_driver_iosUITests' started at 2026-11-05 23:28:55.137.
+    t =      nans Suite Set Up
+Test Case '-[maestro_driver_iosUITests.maestro_driver_iosUITests testHttpServer]' started.
+    t =     0.00s Start Test at 2026-11-05 23:28:55.139
+    t =     0.00s Set Up
+2026-11-05 23:28:55.146364+0000 maestro-driver-iosUITests-Runner[74429:187798] [maestro_driver_iosUITests] Will start HTTP server
+2026-11-05 23:28:55.396146+0000 maestro-driver-iosUITests-Runner[74429:186542] [FlyingFox] starting server 127.0.0.1:22087
+2026-11-05 23:28:55.546404+0000 maestro-driver-iosUITests-Runner[74429:186542] [FlyingFox] <127.0.0.1> open connection
+2026-11-05 23:28:55.571695+0000 maestro-driver-iosUITests-Runner[74429:187799] [FlyingFox] <127.0.0.1> request: GET /status
+2026-11-05 23:28:55.663897+0000 maestro-driver-iosUITests-Runner[74429:186542] [FlyingFox] <127.0.0.1> open connection
+2026-11-05 23:28:55.666268+0000 maestro-driver-iosUITests-Runner[74429:186546] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-05 23:29:03.713187+0000 maestro-driver-iosUITests-Runner[74429:186546] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =     8.58s Getting device orientation
+2026-11-05 23:29:03.817145+0000 maestro-driver-iosUITests-Runner[74429:185749] Using singleton test manager
+2026-11-05 23:29:03.848311+0000 maestro-driver-iosUITests-Runner[74429:185749] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =     8.73s Getting device orientation
+    t =     8.73s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-05 23:29:04.786744+0000 maestro-driver-iosUITests-Runner[74429:185749] Device orientation is 1
+2026-11-05 23:29:05.864630+0000 maestro-driver-iosUITests-Runner[74429:187799] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-05 23:29:05.880394+0000 maestro-driver-iosUITests-Runner[74429:185749] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-05 23:29:05.881769+0000 maestro-driver-iosUITests-Runner[74429:185749] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-05 23:29:05.882118+0000 maestro-driver-iosUITests-Runner[74429:185749] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    10.74s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-05 23:29:05.995629+0000 maestro-driver-iosUITests-Runner[74429:185749] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-05 23:29:05.995893+0000 maestro-driver-iosUITests-Runner[74429:185749] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    10.86s Checking existence of `StatusBar (First Match)`
+    t =    10.99s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    11.07s Find the StatusBar (Element at index 0)
+    t =    11.10s Find the StatusBar (Element at index 1)
+2026-11-05 23:29:06.311231+0000 maestro-driver-iosUITests-Runner[74429:185749] Fetch status bar hierarchy - duration 0.31524503231048584
+2026-11-05 23:29:06.311408+0000 maestro-driver-iosUITests-Runner[74429:185749] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-05 23:29:06.316342+0000 maestro-driver-iosUITests-Runner[74429:185749] Fetch Safari WebView hierarchy - duration 0.004761934280395508
+    t =    11.18s Find the Application 'com.apple.springboard'
+2026-11-05 23:29:06.352401+0000 maestro-driver-iosUITests-Runner[74429:185749] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-05 23:29:06.634363+0000 maestro-driver-iosUITests-Runner[74429:186542] [FlyingFox] <127.0.0.1> request: GET /status
+ype : Apple Watch Ultra 4 (49mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Ultra-4-49mm) } runtime={ com.apple.CoreSimulator.SimRuntime.watchOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x764c24d400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x1054b0df0>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+** BUILD INTERRUPTED **
