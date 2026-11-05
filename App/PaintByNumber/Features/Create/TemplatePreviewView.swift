@@ -275,7 +275,7 @@ struct TemplatePreviewView: View {
         guard !isStarting else { return }
         model.withdrawStart()
         guard !paintings.locksRefine else {
-            model.withdrawRefine()
+            if model.isWaitingToRefine || model.opensRefine { model.withdrawRefine() }
             offersRefineUnlock = true
             return
         }

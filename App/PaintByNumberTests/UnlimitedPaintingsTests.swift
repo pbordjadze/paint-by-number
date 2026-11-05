@@ -112,10 +112,10 @@ struct UnlimitedPaintingsTests {
     @Test func refineWaitsForTheUnlockWhereItIsSold() async throws {
         #expect(UnlimitedPaintings.includesRefine)
         let model = paintings()
-        #expect(model.locksRefine)
-        model.refineOpenAnyway = true
+        #expect(model.refineOpenAnyway, "Debug launches leave Refine open")
         #expect(!model.locksRefine)
         model.refineOpenAnyway = false
+        #expect(model.locksRefine)
         #expect(try await model.buy(with: nil) == .unlocked)
         #expect(!model.locksRefine)
         #expect(!UnlimitedPaintings(store: nil, defaults: nil).locksRefine)

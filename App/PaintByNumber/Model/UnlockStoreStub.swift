@@ -13,7 +13,7 @@ import SwiftUI
 /// - `-demoUnlocked YES`: Unlimited Paintings already bought;
 /// - `-demoPurchase fail|pending|cancel`: what buying does (by default it unlocks, after a moment);
 /// - `-demoRefineLocked YES`: Refine waits for the unlock, as in a build that sells it (by default
-///   it is open, `UnlimitedPaintings.refineOpenAnyway`).
+///   Debug builds leave it open, `UnlimitedPaintings.refineOpenAnyway`).
 ///
 /// Debug builds only: Release has neither this type nor the arguments (`ci/check_release.sh`).
 final class UnlockStoreStub: UnlockStore {
@@ -66,7 +66,6 @@ final class UnlockStoreStub: UnlockStore {
         let left = arguments.string(forKey: "demoFreePaintings").flatMap(Int.init) ?? ShellDemo.current?.freePaintings
         let free = left.map { FreePaintings(left: $0, since: Calendar.autoupdatingCurrent.startOfDay(for: launch)) }
         let paintings = UnlimitedPaintings(store: stub, defaults: nil, free: free, now: { launch })
-        paintings.refineOpenAnyway = !arguments.bool(forKey: "demoRefineLocked") && ShellDemo.current != .createRefineUnlock
         paintings.follow()
         return paintings
     }

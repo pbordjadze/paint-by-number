@@ -83,9 +83,12 @@ final class UnlimitedPaintings {
     static let includesRefine = true
 
     #if DEBUG
-    /// Debug launches leave Refine open unless they ask for it locked (`UnlockStoreStub`,
-    /// `-demoRefineLocked YES`): its demos and tests don't buy it first.
-    @ObservationIgnored var refineOpenAnyway = false
+    /// Debug builds leave Refine open unless a launch asks for it locked (`-demoRefineLocked YES`,
+    /// `create-refine-unlock`): their demos, tests and QA sessions don't buy it first, whichever
+    /// store they ask (QA, November 5: a plain Debug launch asks the App Store, and Refine was
+    /// out of the tester's reach).
+    @ObservationIgnored var refineOpenAnyway = !UserDefaults.standard.bool(forKey: "demoRefineLocked")
+        && ShellDemo.current != .createRefineUnlock
     #endif
 
     /// Refine waits for the unlock: a build that sells it, not yet bought. Refine's own paintings

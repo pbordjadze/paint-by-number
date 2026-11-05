@@ -983,8 +983,8 @@ sends it, the developers collect nothing).
   `UnlimitedPaintings.includesRefine`, `locksRefine`): in a build that sells it, not yet bought,
   the preview's Refine and From Scratch open `UnlockSheet` worded for Refine (`forRefine`), whose
   Try It in the Tool Guide opens the guide, its practice pictures free (`RefineUnlockOffer`);
-  bought there, Refine opens. Refine's paintings take free paintings as any other. Debug launches
-  leave Refine open unless `-demoRefineLocked YES`; `create-refine-unlock` (with `-dark`,
+  bought there, Refine opens. Refine's paintings take free paintings as any other. Debug builds
+  leave Refine open unless `-demoRefineLocked YES` (QA's and Xcode's launches ask the App Store); `create-refine-unlock` (with `-dark`,
   `-long-text`) is the sheet over a sample's preview; `ScratchUITests` and
   `UnlimitedPaintingsTests` cover it.
 - SideStore builds (`UNRELEASED` without `DEBUG`) sell nothing: a sideloaded app can't buy from
