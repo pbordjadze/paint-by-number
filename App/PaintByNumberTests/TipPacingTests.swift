@@ -481,7 +481,8 @@ struct TipPacingTests {
     @Test func theTipsAtRefinesToolsAreTheAppsOwn() {
         let tools = TipID.allCases.filter { $0.hangsFromATool }
         #expect(Set(tools) == [.refineDraw, .refineFill])
-        #expect(tools.allSatisfy(\.isDrawnByTheApp))
+        let notTheApps = tools.filter { !$0.isDrawnByTheApp }
+        #expect(notTheApps.isEmpty)
     }
 
     @Test func eachHintLivesWhereTheDesignPutsIt() {
