@@ -1,0 +1,27 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 20,
+  "Read": 4,
+  "mcp__maestro__run": 24,
+  "mcp__maestro__inspect_screen": 9,
+  "Write": 1
+ },
+ "images_received": 19
+}
