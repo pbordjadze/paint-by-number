@@ -1462,6 +1462,19 @@ final class CreateModel {
                 refinements = next
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
                 handled(serial)
+                // What a merge joined, for a QA report's log: once, in QA, one took the sky
+                // into a hat it never crossed, which replaying its gestures doesn't do
+                // (painting-company row 235, November 5).
+                if case .merge(let points) = laid.edit {
+                    let was = current.template, now = laid.trail.template
+                    let from = points.first.map { "\($0)" } ?? "-", to = points.last.map { "\($0)" } ?? "-"
+                    let joined = was.regions.count - now.regions.count + 1
+                    Log.create.info("""
+                        A merge from \(from, privacy: .public) to \(to, privacy: .public) joined \(joined) areas: \
+                        \(was.regions.count) areas and \(was.palette.count) paints before, \
+                        \(now.regions.count) and \(now.palette.count) after
+                        """)
+                }
                 if tooSmall { say(.tooSmall) }
                 if TemplateEditor.isRecolor(laid.edit), laid.trail.template.palette.count < current.template.palette.count {
                     say(.alike)
