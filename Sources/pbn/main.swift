@@ -110,6 +110,10 @@
 //   pbn practice painted|inked --out <dir>
 //       writes the Tool Guide's practice picture (RefinePractice) for pbn refine: photo.ppm,
 //       template.pbnt (its scene, for --template) and painting.ppm (as the page shows it)
+//   pbn practice note --out <dir>
+//       writes Writing's practice picture (RefinePracticeNote) for pbn generate --line-style book:
+//       photo.ppm, edges.pgm (--edges), writing.json (--writing, the lines the app found) and
+//       missed.json (the pencil line it missed)
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--taste finished] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into

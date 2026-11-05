@@ -277,8 +277,9 @@ final class RefineUITests: XCTestCase {
     }
 
     /// The Tool Guide opens on the tool in hand (Merge): its practice canvas merges the moon into
-    /// the sky (a change on the practice picture, none on the painting), Reset puts it back, Goes
-    /// Well With opens Cell Edge's page on its own canvas, and Done goes back to Refine as it was.
+    /// the sky (a change on the practice picture, none on the painting), Reset puts it back, the
+    /// page's link to Cell Edge opens its page on its own canvas, and Done goes back to Refine as
+    /// it was.
     @MainActor
     func testToolGuidePracticesAndResets() throws {
         let app = launchPreview()
@@ -294,7 +295,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(pad.waitForExistence(timeout: 60), "The practice canvas didn't show")
         // The palette shows once the practice picture's template is on the canvas.
         XCTAssertTrue(practice.buttons["refine-paint-1"].waitForExistence(timeout: 60), "The practice picture didn't load")
-        XCTAssertTrue(app.descendants(matching: .any)["refine-guide-try"].exists, "Merge's page has no Try This")
+        XCTAssertTrue(app.descendants(matching: .any)["refine-guide-page"].exists, "Merge's page has no words")
         attachScreenshot(of: app, named: "refine-guide")
 
         // The practice picture is 4 × 3: from the sky into the moon.
@@ -304,9 +305,9 @@ final class RefineUITests: XCTestCase {
         reset.tap()
         XCTAssertTrue(waitFor(pad, toMatch: changes("No changes")), "Reset didn't put the picture back: \(pad.value ?? "")")
 
-        let related = app.buttons["refine-guide-related-cellEdge"]
-        XCTAssertTrue(related.waitForExistence(timeout: 5), "Merge's page doesn't link Cell Edge")
-        related.tap()
+        let link = app.links["Cell Edge"].firstMatch
+        XCTAssertTrue(link.waitForExistence(timeout: 5), "Merge's page doesn't link Cell Edge")
+        link.tap()
         XCTAssertTrue(app.switches["refine-snap"].waitForExistence(timeout: 60), "Cell Edge's practice has no Snap")
 
         app.buttons["refine-guide-done"].firstMatch.tap()

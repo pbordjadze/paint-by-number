@@ -7,43 +7,55 @@ import Testing
 /// practice picture its canvases refine.
 @MainActor
 struct RefineGuideTests {
-    /// The guide lists The Basics, Layers and Coming from Procreate, then every tool the Toolbox
-    /// offers, each once, and every page has words; a practice's finger tool is one of the listed
+    /// The guide lists The Basics and Layers, then every tool the Toolbox offers, each once, and
+    /// every page has words and a practice picture; a practice's finger tool is one of the listed
     /// tools, never an action.
     @Test func everyToolTheToolboxOffersHasAPage() {
         let listed = RefineGuideTopic.sections.flatMap(\.topics)
         let start = RefineGuideTopic.sections[0]
         #expect(start.group == nil)
-        #expect(start.topics == [.basics, .layers, .procreate])
+        #expect(start.topics == [.basics, .layers])
         #expect(Set(listed).count == listed.count, "a page listed twice")
         for tool in RefineGroup.allCases.flatMap(\.tools) {
             #expect(listed.contains(.tool(tool)), "\(tool) has no page")
         }
         for topic in listed {
             let page = RefineGuidePage.of(topic)
-            #expect(!page.summary.isEmpty && !page.about.isEmpty && !page.steps.isEmpty, "\(topic)")
-            #expect(!page.related.contains { RefineGuideTopic.tool($0) == topic }, "\(topic) goes well with itself")
-            if let practice = page.practice {
-                #expect(listed.contains(.tool(practice.tool)) && practice.tool != .tryPainting, "\(topic)")
-            }
+            #expect(!page.summary.isEmpty && !RefineGuideText.blocks(page.text).isEmpty, "\(topic)")
+            #expect(listed.contains(.tool(page.practice.tool)) && page.practice.tool != .tryPainting, "\(topic)")
         }
-        // Writing works on the text found in the painter's photo: the practice picture has none.
-        #expect(RefineGuidePage.of(.tool(.text)).practice == nil)
-        #expect(RefineGuidePage.of(.tool(.tryPainting)).practice?.teaches == .tryPainting)
+        // Writing practises on the note, whose text it corrects; every other page on the evening.
+        #expect(RefineGuidePage.of(.tool(.text)).practice == RefinePracticeSetup(scene: .note, tool: .text))
+        #expect(RefineGuidePage.of(.tool(.tryPainting)).practice.teaches == .tryPainting)
     }
 
-    /// Every tool's page says what it is in Procreate, or what it does that Procreate's pixels
-    /// can't, for whoever comes from there or goes on to it.
-    @Test func everyToolPageSaysWhatItIsInProcreate() {
-        for tool in RefineGroup.allCases.flatMap(\.tools) {
-            let line = RefineGuidePage.of(.tool(tool)).inProcreate ?? ""
-            #expect(!line.isEmpty, "\(tool)'s page has no In Procreate line")
+    /// A page's links name pages the guide lists, and none links to itself.
+    @Test func everyLinkOpensAListedPage() throws {
+        for topic in RefineGuideTopic.sections.flatMap(\.topics) {
+            let text = RefineGuidePage.of(topic).text
+            let targets = text.matches(of: /\]\((guide:[A-Za-z]+)\)/).map { String($0.output.1) }
+            for target in targets {
+                let url = try #require(URL(string: target))
+                let linked = RefineGuideTopic(link: url)
+                #expect(linked != nil, "\(topic) links \(target), which isn't a page")
+                #expect(linked != topic, "\(topic) links to itself")
+            }
         }
-        // The Procreate page is the comparison itself, practised with the Bucket: touch and hold
-        // picks a paint, and a swatch dragged onto a cell pours it.
-        let procreate = RefineGuidePage.of(.procreate)
-        #expect(procreate.inProcreate == nil && !procreate.notes.isEmpty)
-        #expect(procreate.practice == RefinePracticeSetup(scene: .painted, tool: .bucket))
+        // Merge's page sends the painter on to Cell Edge (the UI test follows it).
+        #expect(RefineGuidePage.of(.tool(.merge)).text.contains("(guide:cellEdge)"))
+    }
+
+    /// The words' layout: a heading takes its paragraph on the next line, a run of `- ` lines is
+    /// a list, and a paragraph's links parse.
+    @Test func theWordsLayOut() throws {
+        let blocks = RefineGuideText.blocks("Lead.\n\n## A heading\nIts paragraph.\n\n- one\n- two\n\n## Alone")
+        #expect(blocks == [.paragraph("Lead."), .heading("A heading"), .paragraph("Its paragraph."), .list(["one", "two"]), .heading("Alone")])
+        // A paragraph and a list in one chunk, as the Pen's page has under a heading.
+        #expect(RefineGuideText.blocks("## Notes\nWhat went wrong:\n- one\n- two\nAfter.") == [
+            .heading("Notes"), .paragraph("What went wrong:"), .list(["one", "two"]), .paragraph("After."),
+        ])
+        let link = RefineGuideText.inline("Use [Merge](guide:merge).").runs.compactMap { $0.link }.first
+        #expect(link.flatMap(RefineGuideTopic.init(link:)) == .tool(.merge))
     }
 
     /// The pages that start the guide: their identifiers (after `refine-guide-topic-`, which UI
@@ -51,8 +63,7 @@ struct RefineGuideTests {
     @Test func theStartPagesAreNamed() {
         #expect(RefineGuideTopic.basics.identifier == "basics")
         #expect(RefineGuideTopic.layers.identifier == "layers")
-        #expect(RefineGuideTopic.procreate.identifier == "procreate")
-        #expect(RefineGuidePage.of(.layers).practice?.layers == .tracing)
+        #expect(RefineGuidePage.of(.layers).practice.layers == .tracing)
     }
 
     /// A practice canvas's switches are its own: the painter's are their start, and a change on a
@@ -93,5 +104,24 @@ struct RefineGuideTests {
         try await waitUntil { model.refinements.edits.isEmpty }
         try await waitUntil { model.preview?.template == picture.painted }
         #expect(!model.canUndo && model.phase == .ready)
+    }
+
+    /// Writing's practice: the note is generated from its own line-art input, its found lines are
+    /// Writing's boxes, and marking the pencil line makes it again with the mark (no draft kept).
+    @Test func theNoteIsWritingsPractice() async throws {
+        let picture = try await RefinePracticePicture.make()
+        let model = CreateModel(previewStyle: .lineArt)
+        model.practice(picture, scene: .note)
+        try await waitUntil(timeout: .seconds(120)) { model.preview != nil && model.phase == .ready }
+        #expect(model.isPractice && model.foundText == RefinePracticeNote.foundText)
+        let before = try #require(model.preview?.template.lineArt?.writingStrokes.count)
+        #expect(before > 0, "the found lines drew no writing")
+        model.beginRefining()
+        let missed = RefinePracticeNote.missedText
+        model.change(.markText(TemplateRefinements.textLine(from: missed[0], to: missed[2])))
+        try await waitUntil(timeout: .seconds(120)) { model.preview?.refinements.addedText.count == 1 && model.phase == .ready }
+        let after = try #require(model.preview?.template.lineArt?.writingStrokes.count)
+        #expect(after > before, "the pencil line, marked, drew no writing")
+        #expect(model.draft == nil)
     }
 }

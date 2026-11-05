@@ -52,6 +52,8 @@ import PaintCore
 /// - `create-refine-guide`, `-dark`, `-long-text`: Refine's Tool Guide over the Toolbox, on Merge's
 ///   page: the practice picture on its canvas, the words beside it (`RefineGuideView`); ready once
 ///   the canvas shows.
+/// - `create-refine-guide-writing`, `-dark`: the Tool Guide on Writing's page, whose practice is
+///   the note on a table (`RefinePracticeNote`), generated: ready once its template shows.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   picture" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -95,7 +97,8 @@ import PaintCore
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createSuggested,
+         createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
+         createSuggested,
          createCustom, createFromFile, createDrawing, createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements
 
@@ -129,6 +132,7 @@ enum ShellDemo: Equatable {
         case "create-refine-layers", "create-refine-layers-dark": .createRefineLayers
         case "create-refine-select", "create-refine-select-dark": .createRefineSelect
         case "create-refine-guide", "create-refine-guide-dark", "create-refine-guide-long-text": .createRefineGuide
+        case "create-refine-guide-writing", "create-refine-guide-writing-dark": .createRefineGuideWriting
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -220,7 +224,7 @@ enum ShellDemo: Equatable {
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
-             .createRefineSelect, .createRefineGuide:
+             .createRefineSelect, .createRefineGuide, .createRefineGuideWriting:
             pictures.first
         default: nil
         }
@@ -248,7 +252,13 @@ enum ShellDemo: Equatable {
 
     /// Refine opens the Tool Guide on this page, ready once its practice canvas shows
     /// (`RefineView.land`).
-    var opensGuide: RefineGuideTopic? { self == .createRefineGuide ? .tool(.merge) : nil }
+    var opensGuide: RefineGuideTopic? {
+        switch self {
+        case .createRefineGuide: .tool(.merge)
+        case .createRefineGuideWriting: .tool(.text)
+        default: nil
+        }
+    }
 
     /// Refine opens on Select with its largest area selected once its edits have landed.
     var selectsCell: Bool { self == .createRefineSelect }
@@ -363,7 +373,8 @@ enum ShellDemo: Equatable {
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createSuggested, .createCustom, .createFromFile, .createDrawing, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
+             .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
+             .createFromFile, .createDrawing, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         }

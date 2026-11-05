@@ -46,3 +46,44 @@ struct RefinePracticeTests {
         #expect(inked.palette.count == 3 && painted.palette.count > 6)
     }
 }
+
+/// Writing's practice picture (`RefinePracticeNote`): a note and a labelled jar, generated as a
+/// coloring book from its own line-art input, whose found lines are traced as writing and whose
+/// pencil line, missed, is traced once a painter marks it.
+@Suite("Refine practice note")
+struct RefinePracticeNoteTests {
+    static let photo = RefinePracticeNote.photo()
+
+    static func generate(writing: [[SIMD2<Float>]]) throws -> Template {
+        var input = RefinePracticeNote.lineArt()
+        input.writing = writing
+        let settings = GenerationSettings(lineArt: LineArtSettings(style: .coloringBook))
+        return try TemplateGenerator(settings: settings).generate(from: photo, lineArt: input, cancel: .none).template
+    }
+
+    @Test func theNoteIsTheSameEveryTime() {
+        #expect(Self.photo.width == RefinePracticeNote.width && Self.photo.height == RefinePracticeNote.height)
+        #expect(RefinePracticeNote.photo() == Self.photo)
+        #expect(RefinePracticeNote.lineArt() == RefinePracticeNote.lineArt())
+        // The two inked lines and the label are found; the pencil line isn't.
+        #expect(RefinePracticeNote.foundText.count == 3)
+        #expect(!RefinePracticeNote.foundText.contains(RefinePracticeNote.missedText))
+        for box in RefinePracticeNote.foundText + [RefinePracticeNote.missedText] {
+            #expect(box.count == 4 && box.allSatisfy { $0.x > 0 && $0.x < 1 && $0.y > 0 && $0.y < 1 })
+        }
+    }
+
+    /// The found lines are drawn as writing; marking the pencil line draws it too. With nothing
+    /// found, nothing is writing (the letters are left to the paint, as Writing's page says).
+    @Test func markingThePencilLineTracesIt() throws {
+        let none = try Self.generate(writing: [])
+        let found = try Self.generate(writing: RefinePracticeNote.foundText)
+        let marked = try Self.generate(writing: RefinePracticeNote.foundText + [RefinePracticeNote.missedText])
+        for t in [none, found, marked] {
+            let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+            #expect(report.isValid, "\(report)")
+        }
+        let strokes = [none, found, marked].map { $0.lineArt?.writingStrokes.count ?? 0 }
+        #expect(strokes[0] == 0 && strokes[1] > 0 && strokes[2] > strokes[1], "\(strokes)")
+    }
+}
