@@ -35,10 +35,11 @@ public struct EraClock: View {
                     Text(Self.placeName(place))
                 }
                 .pickerStyle(.wheel)
-                .frame(width: 44, height: 132)
+                .frame(width: Self.wheelWidth, height: 112)
                 .clipped()
             }
         }
+        .overlay { rails }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
@@ -59,6 +60,21 @@ public struct EraClock: View {
     }
 
     private var year: Int { Self.year(of: digits) }
+
+    static let wheelWidth: CGFloat = 44
+
+    /// Two hairlines across all four wheels, above and below the year read, so the wheels are one
+    /// clock rather than four pickers; they warm with the numerals.
+    private var rails: some View {
+        let ink = Color.primary.mix(with: Self.gold, by: Self.age(of: year)).opacity(0.45)
+        return VStack(spacing: 36) {
+            Rectangle().fill(ink).frame(height: 1)
+            Rectangle().fill(ink).frame(height: 1)
+        }
+        .frame(width: Self.wheelWidth * 4 + 12)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 
     /// Smalti gold, as Ravenna's theme has it.
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
