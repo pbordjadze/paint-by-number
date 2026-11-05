@@ -612,7 +612,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   was the ink's width and Snap on or off was the same, painting-company row 175; until November 3
   a free tip, a corner, the picture's edge or a stroke past a wall's corner kept many a newcomer's
   shape open, `tools/refine_from_scratch.py`, which also replays that QA with `--qa`; and the
-  editor closes a shape drawn in pieces however they lie, `TemplateEditor.version` 3, and a strip between two lines drawn from one shape to another, 4, and leaves a figure's sliver beside ink it overlaps uncut, 5; never onto writing, which the editor never
+  editor closes a shape drawn in pieces however they lie, `TemplateEditor.version` 3, and a strip between two lines drawn from one shape to another, 4, and leaves a sliver that ink there before bounds in part uncut, 5; never onto writing, which the editor never
   joins a line to: `RefineGestures.drawingLines(of:writing:)`, `LineArtDrawing.Line.isWriting`), Shapes draws a straight line, a rectangle, an oval, a curve (two
   drags: its ends, then its bend), a hexagon or a star (`RefineShape`, `ShapePath`); the Eraser
   rubs out what it touches (a tap, a dab), the Line Eraser rubs too and a tap takes a line from

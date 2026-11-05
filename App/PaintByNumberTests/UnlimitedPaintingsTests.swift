@@ -118,7 +118,10 @@ struct UnlimitedPaintingsTests {
         #expect(model.locksRefine)
         #expect(try await model.buy(with: nil) == .unlocked)
         #expect(!model.locksRefine)
-        #expect(!UnlimitedPaintings(store: nil, defaults: nil).locksRefine)
+        // Where nothing is sold (SideStore), Refine is open, Debug's opening put aside.
+        let unsold = UnlimitedPaintings(store: nil, defaults: nil)
+        unsold.refineOpenAnyway = false
+        #expect(!unsold.locksRefine)
     }
 
     // MARK: Starting paintings

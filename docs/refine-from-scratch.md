@@ -47,8 +47,9 @@ now):
   meet (editor 4: a line meets the strokes of its regions that touch their outlines; November 5);
 - an end heading straight at the picture's edge meets it from two fingertips, not one
   (`PenAssist.joined`; November 5);
-- a closed figure's sliver beside the ink it overlaps (a wheel's circle poking a point into the
-  car's body) stays with the shape beside it instead of being an area nobody sees (editor 5;
+- a sliver that ink there before bounds in part (a wheel's circle poking a point into the
+  car's body) stays with the shape beside it instead of being an area nobody sees, and stays so
+  when a later line meets the ink round it; a thin shape drawn whole is still an area (editor 5;
   November 5);
 - a drawn line's segments are at most 16 units (`RefineGestures.longestSegment`), so a big
   Blank's validation doesn't run out of work and decline a plain line.

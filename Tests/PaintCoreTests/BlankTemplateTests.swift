@@ -152,23 +152,33 @@ struct BlankTemplateTests {
         #expect(abs(two.regions[strip].area - 20 * 50) < 1)
     }
 
-    /// A closed figure's sliver beside the ink it overlaps is not cut off (editor version 5): a
-    /// wheel's circle poking a few units into the car's body above it leaves two areas, not
-    /// three, the lens staying the body's; a small round shape is still an area of its own. The
-    /// lens had room for a number and no one could see it (QA, November 5).
-    @Test func aFiguresSliverBesideInkStaysWithIt() throws {
+    /// A sliver that ink there before bounds in part is not cut off (editor version 5), on a page
+    /// the size of one from scratch: a wheel's circle poking 8 units into the car's body above it
+    /// leaves the body and the wheel, the lens staying the body's, and it stays so when a later
+    /// line, crossing the body clear of it, meets the ink round it. A thin stem drawn whole and a
+    /// small round shape are areas of their own. The lens had room for a number and no one could
+    /// see it (QA, November 5).
+    @Test func aSliverBesideInkStaysWithIt() throws {
         func ellipse(_ c: SIMD2<Float>, _ r: Float) -> [SIMD2<Float>] {
-            (0..<48).map { k in c + r * SIMD2(cos(Float(k) / 48 * 2 * .pi), sin(Float(k) / 48 * 2 * .pi)) }
+            (0..<96).map { k in c + r * SIMD2(cos(Float(k) / 96 * 2 * .pi), sin(Float(k) / 96 * 2 * .pi)) }
         }
-        var t = try Self.blank()
-        let body: [SIMD2<Float>] = [SIMD2(20, 10), SIMD2(140, 10), SIMD2(140, 40), SIMD2(20, 40)]
+        var t = try TemplateEditor.blank(
+            width: 1600, height: 1600, photo: RGBAImage(width: 160, height: 160, fill: SIMD4(255, 255, 255, 255)), colorSpace: .sRGB)
+        let body: [SIMD2<Float>] = [SIMD2(200, 100), SIMD2(1400, 100), SIMD2(1400, 400), SIMD2(200, 400)]
         t = try TemplateEditorTests.apply(.draw(points: body, closed: true), to: t).0
-        let (car, outcome) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(80, 74), 40), closed: true), to: t)
-        #expect(outcome.regionsSplit == 1 && car.regions.count == 3)
+        let (car, wheel) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(800, 792), 400), closed: true), to: t)
+        #expect(wheel.regionsSplit == 1 && car.regions.count == 3)
         expectValid(car)
-        #expect(try TemplateEditorTests.region(car, 80, 37) == TemplateEditorTests.region(car, 80, 25))
-        let (dot, small) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(150, 100), 4), closed: true), to: car)
-        #expect(small.regionsSplit == 1 && dot.regions.count == 4)
+        let lens = SIMD2<Float>(800, 397)
+        #expect(try TemplateEditorTests.region(car, lens.x, lens.y) == TemplateEditorTests.region(car, 800, 250))
+        let (door, _) = try TemplateEditorTests.apply(.draw(points: [SIMD2(300, 100), SIMD2(300, 400)], closed: false), to: car)
+        #expect(door.regions.count == 4)
+        #expect(try TemplateEditorTests.region(door, lens.x, lens.y) == TemplateEditorTests.region(door, 800, 250))
+        let stem: [SIMD2<Float>] = [SIMD2(1500, 600), SIMD2(1512, 600), SIMD2(1512, 900), SIMD2(1500, 900)]
+        let (stemmed, drawn) = try TemplateEditorTests.apply(.draw(points: stem, closed: true), to: door)
+        #expect(drawn.regionsSplit == 1 && stemmed.regions.count == 5)
+        let (dot, small) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(100, 1500), 5), closed: true), to: stemmed)
+        #expect(small.regionsSplit == 1 && dot.regions.count == 6)
     }
 
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an

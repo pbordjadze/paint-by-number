@@ -56,21 +56,25 @@ extension EditWork {
     /// number becomes one), the largest keeps the region's index. The numbers stay where they
     /// were while their room does (`labelPlan`), the pixels go to the piece their centre is in,
     /// and the strokes of the region to the piece they lie in.
-    /// A piece of a closed draw thinner than two widths of ink and long, as where a wheel's circle pokes a point
-    /// into the car's body above it: it has room for a number, but nobody sees it at the size the
-    /// picture is drawn at, let alone paints it apart, and the painting couldn't be finished
-    /// without finding it (QA, November 5). It is not cut off: the shape beside it keeps it.
-    /// A small round shape (an eye's highlight) is no sliver.
-    static func isSliver(room: Float, area2: Int64) -> Bool {
-        let width = TemplateEditor.inkWidth
-        guard room < 2 * width else { return false }
+    /// A piece thin for the picture and long whose outline the line drew only in part, the rest
+    /// being ink there before, as where a wheel's circle pokes a point into the car's body above
+    /// it: it has room for a number, but nobody sees it at the size the picture is drawn at, let
+    /// alone paints it apart, and the painting couldn't be finished without finding it (QA,
+    /// November 5). It is not cut off: the shape beside it keeps it, then and when a later line
+    /// meets the ink round it. A shape the line draws whole, a stem or a whisker however thin, and
+    /// a small round one (an eye's highlight) are no slivers.
+    static func isSliver(room: Float, area2: Int64, longSide: Int) -> Bool {
+        guard room < Float(longSide) / Self.sliverWidths else { return false }
         let unit = Double(Lattice.unit)
         let area = Double(area2) / 2 / (unit * unit)
         return area > Self.sliverLength * Double.pi * Double(room) * Double(room)
     }
 
+    /// How many of a piece's widest disc's radius fit along the picture's long side for it to be
+    /// thin: on a page from scratch (1500 px) about 6 units, a point and a half on a phone.
+    static let sliverWidths: Float = 250
     /// How many times the area of its widest disc a thin piece covers to be a sliver: a lens
-    /// where a circle overlaps a line by a point covers about 17, a disc 1, a square 1.3.
+    /// where a circle overlaps a line by a point covers about 8 to 17, a disc 1, a square 1.3.
     static let sliverLength = 4.0
 
     mutating func splitRegion(_ r: Int, chains: [Int], fresh: Set<Int>) throws {
@@ -150,7 +154,9 @@ extension EditWork {
             for i in pieces.indices {
                 pieces[i].plan = labelPlan(
                     rings: pieces[i].rings, color: color, detail: wasDetail, hints: hints, region: r, keepOut: freshLines)
-                if closedDraw, let plan = pieces[i].plan, Self.isSliver(room: plan.labels.map(\.radius).max() ?? 0, area2: pieces[i].area2) {
+                let drawnWhole = (pieces[i].outer + pieces[i].holes.flatMap { $0 }).allSatisfy { fresh.contains($0.edge) }
+                if !drawnWhole, let plan = pieces[i].plan,
+                   Self.isSliver(room: plan.labels.map(\.radius).max() ?? 0, area2: pieces[i].area2, longSide: max(t.width, t.height)) {
                     pieces[i].plan = nil
                 }
             }

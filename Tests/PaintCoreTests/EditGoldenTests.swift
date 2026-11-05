@@ -33,7 +33,7 @@ struct EditGoldenTests {
     /// (`BlankTemplateTests.aShapeDrawnInPiecesCloses` pins that). 4's is 3's: none of its
     /// draws closes a shape with strokes it doesn't meet
     /// (`BlankTemplateTests.twoLinesBetweenShapesCloseTheStripBetween` pins that). 5's is 4's:
-    /// none of its closed draws leaves a sliver (`BlankTemplateTests.aFiguresSliverBesideInkStaysWithIt`).
+    /// none of its draws leaves a sliver (`BlankTemplateTests.aSliverBesideInkStaysWithIt`).
     static let pins: [Int: UInt64] = [
         1: 0x609c_c372_67f9_af85, 2: 0x609c_c372_67f9_af85, 3: 0x609c_c372_67f9_af85, 4: 0x609c_c372_67f9_af85,
         5: 0x609c_c372_67f9_af85,
