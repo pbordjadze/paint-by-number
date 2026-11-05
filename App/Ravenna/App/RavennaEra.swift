@@ -77,5 +77,5 @@ extension Bundle {
 
 extension UserDefaults {
     /// Ravenna's settings, apart from Paint by Moonlight's (both apps had the same keys).
-    nonisolated static let ravenna = UserDefaults(suiteName: "com.pbordjadze.paintbynumber.ravenna") ?? .standard
+    nonisolated(unsafe) static let ravenna = UserDefaults(suiteName: "com.pbordjadze.paintbynumber.ravenna") ?? .standard
 }

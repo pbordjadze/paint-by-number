@@ -264,6 +264,46 @@ final class SettingsTests: XCTestCase {
         waitUntil(timeout: 10) { describe(picker).contains(choice) }
     }
 
+    /// The secret door (painting-company row 234): holding Version brings out a clock at the
+    /// present year; rolled back to 547 it opens Ravenna, the mosaic era, and Ravenna's own
+    /// Settings roll it forward again to Paint by Moonlight.
+    @MainActor
+    func testTheClockSetBackOpensRavennaAndForwardComesBack() throws {
+        let app = openSettings()
+        let version = app.descendants(matching: .any)["about-version"]
+        scroll(app, to: version)
+        version.press(forDuration: 1.4)
+        let clock = app.descendants(matching: .any)["era-clock"]
+        XCTAssertTrue(clock.waitForExistence(timeout: 5), "Holding Version brought out no clock")
+        roll(app.pickerWheels, to: 547)
+        attachScreenshot(of: app, named: "clock-at-547")
+        XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
+        attachScreenshot(of: app, named: "ravenna-through-the-door")
+
+        let settings = app.buttons["Settings"]
+        settings.tap()
+        if !app.navigationBars["Settings"].waitForExistence(timeout: 5) { retapIfLost("Settings") { settings.tap() } }
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "Ravenna's settings didn't open")
+        let year = app.descendants(matching: .any)["about-year"]
+        scroll(app, to: year)
+        XCTAssertTrue(year.exists, "Ravenna's Settings has no Year row")
+        year.tap()
+        XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
+        roll(app.pickerWheels, to: Calendar.current.component(.year, from: .now))
+        XCTAssertTrue(app.buttons["New Painting"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
+        attachScreenshot(of: app, named: "back-in-the-present")
+    }
+
+    /// Sets the clock's four wheels to a year, thousands first.
+    @MainActor
+    private func roll(_ wheels: XCUIElementQuery, to year: Int) {
+        let digits = String(format: "%04d", year).map(String.init)
+        XCTAssertGreaterThanOrEqual(wheels.count, 4, "The clock has \(wheels.count) wheels")
+        for (place, digit) in digits.enumerated() {
+            wheels.element(boundBy: place).adjust(toPickerWheelValue: digit)
+        }
+    }
+
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
     /// drag moves the list by four fifths of its frame, less than what shows below the navigation
     /// bar, and rests before lifting, so it can't fling past a row and leaves nothing to settle:

@@ -3,7 +3,9 @@ import SwiftUI
 /// The clock behind the secret door: a year on four wheels, which Paint by Moonlight's Settings ›
 /// About shows at the present year once the Version row is held, and the era's own Settings at 547.
 /// Rolled to a year and left there, it hands that year over (`onSettle`); what a year opens is the
-/// caller's to say. No label and no hint: whoever finds it works out what it does.
+/// caller's to say. No label and no hint: whoever finds it works out what it does, but the clock
+/// answers as it turns: the further back the year, the warmer its numerals, toward the gold of a
+/// smalto, and the heavier each step back is in the hand.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
     @State private var digits: [Int]
@@ -26,6 +28,7 @@ public struct EraClock: View {
                         Text(digit, format: .number.grouping(.never))
                             .font(.system(.title2, design: .serif, weight: .semibold))
                             .monospacedDigit()
+                            .foregroundStyle(Color.primary.mix(with: Self.gold, by: Self.age(of: year)))
                             .tag(digit)
                     }
                 } label: {
@@ -41,6 +44,9 @@ public struct EraClock: View {
         .accessibilityLabel(Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
                                         comment: "VoiceOver name of the clock behind the secret door: four wheels, one digit each, which together show a year")))
         .accessibilityValue(Text(Self.year(of: digits), format: .number.grouping(.never)))
+        .sensoryFeedback(trigger: year) { old, new in
+            new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
+        }
         .onChange(of: digits) { _, digits in
             settling?.cancel()
             settling = Task {
@@ -50,6 +56,18 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
+    }
+
+    private var year: Int { Self.year(of: digits) }
+
+    /// Smalti gold, as Ravenna's theme has it.
+    static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
+
+    /// How far back a year is, from 0 at the present (and after) to 1 at 547 and before it.
+    static func age(of year: Int) -> Double {
+        let present = EraYear.present
+        guard year < present else { return 0 }
+        return min(1, Double(present - year) / Double(present - EraYear.byzantium))
     }
 
     static func digits(of year: Int) -> [Int] {

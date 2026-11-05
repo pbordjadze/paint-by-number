@@ -931,6 +931,48 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   edits, which never travel. It opens in place of any painting or create flow; one that can't be
   read adds nothing and says why in an alert (`Library.ReceiveError`).
 
+## Ravenna (the secret door)
+
+Ravenna, the mosaic era (painting-company row 234; it was the separate SideStore app
+pbordjadze/ravenna), is in SideStore and Debug builds only. Its app is the static framework
+`App/Ravenna` (module `Ravenna`, the project's `Ravenna` target) with its resources in
+`App/RavennaResources` (the `RavennaResources` bundle target: asset catalog, string catalog,
+`RavennaShaders.metal`, `Mosaics/` and `Samples/library.json`), on the package's `MosaicKit`,
+`MosaicEngine` and `MosaicCore`. It is Paint by Moonlight's app as copied at f1024441 with
+Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
+own, so it follows none of this app's later changes and needs none of its gates.
+
+- **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About, hold Version (or
+  VoiceOver's Clock action) and Ravenna's `EraClock` comes out at the present year; its numerals
+  warm toward gold and its steps back weigh more the further back the year. Rolled to 547 and
+  left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
+  (tiles set over the screen in an apse's courses, the era swapped under them, the tiles lifted;
+  Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
+  Ravenna's Settings › About has a Year row (547) whose clock, rolled to the present or later,
+  calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
+  while the door is shut). `EraDoorTests`; `settings-clock` screenshots the clock.
+- **Kept apart in one process:** resources through `Bundle.ravenna` (never `Bundle.main`, but for
+  the HED model, which is the app's own file), settings in `UserDefaults.ravenna` (every
+  `@AppStorage` through `.defaultAppStorage`; launch arguments are still read from `.standard`),
+  mosaics in `Application Support/Ravenna/Artworks`, exports in `tmp/RavennaExports`, scene
+  storage, tip ids and log categories under `ravenna.`. SwiftUI looks a literal up in the main
+  bundle, so Ravenna's words are its source literals (its catalog keys them so) and every
+  `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
+  `strings_check.py` reads only `App/PaintByNumber`.
+- **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
+  navigation titles' New York, the free paintings' count (`freePaintings`: a mosaic counts like a
+  painting; the money rule is Paul's, painting-company row 234), the feedback relay and the
+  `.moonlight` file type (a mosaic sent opens as a painting of tiles).
+- **Release:** the door's files are `Era*.swift`, and Release's `EXCLUDED_SOURCE_FILE_NAMES` leaves
+  out them, `Ravenna.framework` and `RavennaResources.bundle`; `ci/check_release.sh` checks the
+  Release app holds none of it. The `Ravenna` target defines `UNRELEASED` in every
+  configuration, as Ravenna's own app did.
+- **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
+  `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
+  its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
+- **The App Review note** for the version that ships it (Guideline 2.3.1):
+  `docs/ravenna/app-review-note.md`.
+
 ## Sharing and exports
 
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try

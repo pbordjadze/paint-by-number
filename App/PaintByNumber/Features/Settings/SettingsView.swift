@@ -182,7 +182,7 @@ struct SettingsView: View {
                         .onLongPressGesture(minimumDuration: 1) {
                             withAnimation { showsClock.toggle() }
                         }
-                        .accessibilityAction(named: Text("Set the Clock")) {
+                        .accessibilityAction(named: Text("Clock")) {
                             withAnimation { showsClock.toggle() }
                         }
                         #endif

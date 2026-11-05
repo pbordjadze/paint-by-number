@@ -16,7 +16,13 @@ enum Era: String {
 /// Moonlight's own), and the passage between two while it plays.
 @Observable
 final class EraDoor {
-    static let shared = EraDoor()
+    static let shared: EraDoor = {
+        #if DEBUG
+        // Demo and test launches start with the door shut, whatever a run before left.
+        if DemoMode.isActive || DemoMode.isTestHost { UserDefaults.standard.removeObject(forKey: key) }
+        #endif
+        return EraDoor()
+    }()
     static let key = "era"
 
     /// The era the root shows.
