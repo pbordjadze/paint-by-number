@@ -1,0 +1,54 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "subsystem == "com.pbordjadze.paintbynumber""
+Timestamp               Ty Process[PID:TID]
+2026-11-05 14:10:45.299 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-05 14:10:46.702 Df PaintByNumber[31592:157fd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.406043875 seconds
+2026-11-05 14:11:15.609 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 29.939241541 seconds
+2026-11-05 14:11:15.812 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-05 14:11:38.673 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 23.0632025 seconds
+2026-11-05 14:11:38.700 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-05 14:11:39.085 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-05 14:12:24.226 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+2026-11-05 14:14:10.185 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted
+2026-11-05 14:15:35.740 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: basics
+2026-11-05 14:16:52.143 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in drawer: drawerWorthALook, wanted drawerWorthALook
+2026-11-05 14:16:52.872 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn: drawerWorthALook
+2026-11-05 14:17:16.305 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn over: drawerWorthALook
+2026-11-05 14:17:29.302 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:library] Opened 886960C4-33D4-4AE0-BE86-EAE81F003A1B: 333 regions
+2026-11-05 14:17:30.232 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-11-05 14:17:30.795 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap
+2026-11-05 14:17:30.953 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-11-05 14:17:31.486 Df PaintByNumber[31592:1e914] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.701740625 seconds
+2026-11-05 14:17:31.599 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn: benchTap
+2026-11-05 14:17:58.626 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] turn over: benchTap
+2026-11-05 14:18:31.036 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted
+2026-11-05 14:19:08.531 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in newPainting: newPaintingSamples, wanted
+2026-11-05 14:19:56.781 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Draft #1 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+2026-11-05 14:19:57.458 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+2026-11-05 14:19:57.483 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Full #2 started for 24 colors, detail 0.79, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2026-11-05 14:20:00.697 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+2026-11-05 14:20:00.764 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSliders, newPaintingRefine, wanted
+2026-11-05 14:20:27.819 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-11-05 14:21:23.880 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+2026-11-05 14:21:31.683 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: basics
+2026-11-05 14:21:38.138 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: pen
+2026-11-05 14:21:56.996 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: shapes
+2026-11-05 14:23:40.161 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: bucket
+2026-11-05 14:24:10.059 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: tryPainting
+2026-11-05 14:24:26.093 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: shapes
+2026-11-05 14:24:48.787 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: tryPainting
+2026-11-05 14:26:02.669 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted
+2026-11-05 14:26:22.841 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted
+2026-11-05 14:26:54.445 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchDrag, wanted benchDrag
+2026-11-05 14:26:57.309 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchShowPhoto, wanted benchShowPhoto
+2026-11-05 14:26:57.352 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] nothing was eligible in time: benchDrag pending
+2026-11-05 14:26:58.842 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] benchShowPhoto lost its place: cancelled false, turn none, views ["shelf", "preview", "bench"], covered true, served false
+2026-11-05 14:27:06.668 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:canvas] Waited 0.374913917 seconds for a drawable
+2026-11-05 14:27:15.493 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchDrag, wanted benchDrag
+2026-11-05 14:27:18.500 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] nothing was eligible in time: benchDrag pending
+2026-11-05 14:27:44.560 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchDrag, wanted benchDrag
+2026-11-05 14:27:46.155 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] benchDrag lost its place: cancelled false, turn none, views ["shelf", "preview", "bench"], covered true, served false
+2026-11-05 14:28:04.210 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchDrag, wanted benchDrag
+2026-11-05 14:28:05.737 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] benchDrag lost its place: cancelled false, turn none, views ["shelf", "preview", "bench"], covered true, served false
+2026-11-05 14:28:14.135 Df PaintByNumber[31592:156a7] [com.pbordjadze.paintbynumber:tips] offer in bench: benchReplay, wanted
+Child process terminated with signal 15: Terminated
