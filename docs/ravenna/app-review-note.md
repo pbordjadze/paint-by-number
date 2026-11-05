@@ -9,7 +9,8 @@ the `Ravenna` module, its resources and the door, which `ci/check_release.sh` ch
 without it needs none of this.
 
 Before pasting, check the steps against the build being submitted (the row, the gesture, the
-year), and the free paintings sentence against what Paul decided for mosaics.
+year), and the free paintings sentence against the free paintings rules the build carries (decided in
+painting-company row 234; the count itself is row 235's).
 
 ---
 
@@ -32,6 +33,6 @@ which era it is in between launches.
 
 With VoiceOver, the Version row offers a "Clock" action that brings out the same clock.
 
-Mosaics count toward the same free paintings as paintings do (three of your own photos, one back
-each day), and the Unlimited Paintings purchase covers both; the era's library of ancient works
-is always free. Nothing is sold in the era itself.
+Every new mosaic, from a photo or from the era's library, uses one of the same free paintings as
+a new painting does (five, one back each day), and the Unlimited Paintings purchase covers both
+eras. Nothing is sold in the era itself.
