@@ -149,6 +149,10 @@
       "comment" : "Refine screen: the tool whose tap picks an area's paint, or the photo's color, as the current paint; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"
     },
+    "From Scratch" : {
+      "comment" : "Toolbar button of the create flow's New Painting screen that starts a painting on a blank page, drawn in Refine",
+      "extractionState" : "manual"
+    },
     "Full Screen" : {
       "comment" : "Refine screen: hides the tools, the bars and the palette, the picture alone on screen (a four-finger tap; a VoiceOver action of the picture and a keyboard shortcut's name)",
       "extractionState" : "manual"
@@ -2125,6 +2129,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sample: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "create.scratch.title" : {
+      "comment" : "Default name of a painting started From Scratch on a blank page; the argument is today's month and day, e.g. “November 4”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing, %@"
           }
         }
       }
@@ -4443,6 +4459,10 @@
     },
     "Pen" : {
       "comment" : "Feedback mode's tools on the painting screen: the pen, for circling and writing on the painting; the Refine screen's pen, which draws lines into a new painting's drawing (button label)",
+      "extractionState" : "manual"
+    },
+    "Draw your own picture on a blank page" : {
+      "comment" : "Pointer help of the New Painting screen's From Scratch button",
       "extractionState" : "manual"
     },
     "Drawing" : {

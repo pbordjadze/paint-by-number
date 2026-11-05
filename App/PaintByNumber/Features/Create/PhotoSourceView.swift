@@ -12,6 +12,9 @@ import UIKit
 /// picker's own top bar reaches the albums and search; "Browse All…" (iPad's toolbar) presents
 /// the full system picker, a way in that doesn't depend on the embedded one taking taps.
 ///
+/// From Scratch (SideStore and Debug builds, beside Take Photo) starts on a blank page instead
+/// (`CreateModel.loadScratch()`), and Refine opens on it.
+///
 /// iPhone doesn't embed the picker (`embedsPicker`): on Paul's iPhone its grid never took a tap,
 /// though its bar did, after three layouts that each picked photos on the simulator (Sept 30,
 /// Oct 4 and 9). The page offers Choose Photo there instead, which presents the full picker.
@@ -98,6 +101,19 @@ struct PhotoSourceView: View {
                     Button("Take Photo", systemImage: "camera") { showCamera() }
                 }
             }
+            #if UNRELEASED
+            // From Scratch (painting-company row 231): a blank page, no photo behind it, straight
+            // into Refine. Refine's builds only, as Refine is.
+            ToolbarItem(placement: .primaryAction) {
+                Button("From Scratch", systemImage: "pencil.and.scribble") {
+                    PaintTips.photoChosen()
+                    model.loadScratch()
+                    onPicked()
+                }
+                .help("Draw your own picture on a blank page")
+                .accessibilityIdentifier("from-scratch")
+            }
+            #endif
         }
         .onChange(of: libraryItems) { _, items in
             guard let item = items.first else { return }

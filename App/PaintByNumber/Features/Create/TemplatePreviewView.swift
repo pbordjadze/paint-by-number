@@ -35,6 +35,8 @@ struct TemplatePreviewView: View {
     @State private var isTuning = false
     #if UNRELEASED
     @State private var isRefining = false
+    /// The preview's push has landed: Refine asked for before then waits for it.
+    @State private var hasSettled = false
     #endif
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
@@ -134,7 +136,14 @@ struct TemplatePreviewView: View {
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         // A tap on Refine made while the painting was updating: it opens once it is made.
         .onChange(of: model.opensRefine) { _, opens in
-            if opens { openRefine() }
+            if opens && hasSettled { openRefine() }
+        }
+        // A page from scratch asks for Refine as it loads and may be made before this shows: it
+        // opens once the push has landed (a cover presented mid-push can be dropped).
+        .task {
+            guard (try? await Task.sleep(for: Self.pushSettles)) != nil else { return }
+            hasSettled = true
+            if model.opensRefine { openRefine() }
         }
         #endif
     }
@@ -231,6 +240,9 @@ struct TemplatePreviewView: View {
     private var isEnlarged: Bool { isTuning && !isSideBySide && fold == nil }
 
     #if UNRELEASED
+    /// How long the preview's push takes to land before Refine, already made, is opened over it.
+    private static let pushSettles: Duration = .milliseconds(450)
+
     /// Refine on the final template, or, while it is being made, as soon as it is.
     private func openRefine() {
         titleFocused = false
@@ -494,13 +506,14 @@ struct TemplatePreviewView: View {
             if model.isDrawing {
                 // A drawing has no settings to suggest or tune: its paints come from a set.
                 palettePicker
-            } else {
+            } else if !model.isScratch {
+                // Nor has a page from scratch: Refine is where it is made.
                 originRow
             }
             #else
             originRow
             #endif
-            if showsSettings && !model.isDrawing {
+            if showsSettings && !model.isDrawing && !model.isScratch {
                 if isCompact && !isSideBySide {
                     // One slider at a time on a phone (Paul's calmer menus, October 18): the card keeps
                     // the comparison large and asks one thing at once.

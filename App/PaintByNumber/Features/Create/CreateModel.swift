@@ -130,6 +130,10 @@ final class CreateModel {
     /// made by the generator's drawing path (`GenerationSettings.drawing`: the areas the drawn
     /// lines bound, `drawingPalette`'s paints laid over them).
     private(set) var isDrawing = false
+    /// The page is blank paper (From Scratch, painting-company row 231; `loadScratch()`): the
+    /// base is Blank from the start (`TemplateRefinements.Start.blank`), nothing is analyzed or
+    /// suggested, and Refine opens on it by itself.
+    private(set) var isScratch = false
     /// The palette set a drawing's paints come from (`DrawingPalette`).
     var drawingPalette: DrawingPalette.Set = .crayons
     /// The painter's refinements of this photo's template (the optional Refine step): the
@@ -184,9 +188,11 @@ final class CreateModel {
     /// settings are being chosen (the sliders don't hold them yet).
     var draft: CreateDraft? {
         guard let source, !isChoosingSettings, !refinements.isEmpty, !isPractice else { return nil }
+        // A blank page with nothing drawn on it is nothing to keep.
+        guard !isScratch || refinements.changeCount > 0 else { return nil }
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
-            sampleName: source.sampleName, refinements: refinements)
+            sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil)
     }
 
     var colorCount: Double
@@ -398,7 +404,7 @@ final class CreateModel {
     /// Whether the template draws from the line-art inputs, where lines can be drawn and erased
     /// and the text corrections apply; or it is a Tool Guide's practice picture, which is drawn
     /// on alike (the evening has no text; Writing's note brings its own input).
-    var hasLineArtInput: Bool { lineArtInput != nil || isPractice || isDrawing }
+    var hasLineArtInput: Bool { lineArtInput != nil || isPractice || isDrawing || isScratch }
 
     /// The flow is a Tool Guide page's practice (`practice(_:scene:)`).
     private(set) var isPractice = false
@@ -473,6 +479,32 @@ final class CreateModel {
         }
     }
 
+    #if UNRELEASED
+    /// From Scratch (painting-company row 231): a blank page to draw and paint everything on, with
+    /// no photo behind it. The page is plain paper made here, the base Blank from the start, and
+    /// Refine opens on it as soon as it is made (`opensRefine`).
+    func loadScratch() {
+        begin(defaultTitle: Self.scratchTitle(), sampleName: nil, scratch: true) { try await Self.blankPage() }
+    }
+
+    /// The paper a page from scratch is drawn on: white, square, so it suits a phone and an iPad
+    /// either way up, and large enough that the canvas is what a photo's would be
+    /// (`GenerationSettings.workingSize`).
+    @concurrent
+    private static func blankPage() async throws -> Decoded {
+        try Decoded(RGBAImage(width: blankPageSide, height: blankPageSide, fill: SIMD4(255, 255, 255, 255)))
+    }
+
+    nonisolated static let blankPageSide = 1500
+
+    /// A page from scratch's own name: the date, as a photo's is, after "Drawing".
+    static func scratchTitle() -> String {
+        let date = Date.now.formatted(.dateTime.month(.wide).day())
+        return String(localized: "create.scratch.title", defaultValue: "Drawing, \(date)",
+                      comment: "Default name of a painting started From Scratch on a blank page; the argument is today's month and day, e.g. “November 4”")
+    }
+    #endif
+
     /// A photo of a drawing from the camera or a file (`isDrawing`).
     func load(drawingData: Data, title: String? = nil) {
         begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true) { try await Self.decode(data: drawingData) }
@@ -490,7 +522,7 @@ final class CreateModel {
     func load(draft: CreateDraft, photo: Data, kept: EditTrail.Kept? = nil) {
         // A drawing's draft keeps the cleaned sheet as its photo: nothing to clean again.
         begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept,
-              drawing: draft.settings.drawing != nil, cleaned: true) {
+              drawing: draft.settings.drawing != nil, cleaned: true, scratch: draft.scratch == true) {
             try await Self.decode(data: photo)
         }
     }
@@ -506,6 +538,7 @@ final class CreateModel {
         cancelAll()
         isPractice = true
         isDrawing = false
+        isScratch = false
         defaultTitle = ""
         title = ""
         let photo = scene == .note ? picture.note : picture.evening
@@ -570,11 +603,12 @@ final class CreateModel {
     /// `cleaned` already (a draft's photo).
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
-        drawing: Bool = false, cleaned: Bool = false, decode: @escaping () async throws -> Decoded
+        drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
         isPractice = false
         isDrawing = drawing
+        isScratch = scratch
         if let set = saved?.settings.drawing?.palette { drawingPalette = set }
         resumeKept = saved.flatMap { saved in
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
@@ -595,6 +629,7 @@ final class CreateModel {
         paintMix = Self.newPaintMix
         tuning = Self.newTuning
         refinements = saved?.refinements ?? TemplateRefinements()
+        if scratch { refinements.start = .blank }
         made = []
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would
         // not make again: kept for coming back to them too.
@@ -615,6 +650,23 @@ final class CreateModel {
             do {
                 var decoded = try await decode()
                 try Task.checkCancellation()
+                if scratch {
+                    // Paper alone: nothing to analyze or suggest, the base the page as one area,
+                    // and Refine is where the picture is made.
+                    source = Source(image: decoded.image, preview: decoded.preview, sampleName: nil)
+                    draftImage = nil
+                    refineAsked = true
+                    trace("A blank page: Refine asked for")
+                    if let saved {
+                        // A drawing from scratch kept as a draft: its settings, its edits.
+                        resume(saved, suggestion: nil)
+                    } else {
+                        apply(GenerationSettings())
+                        phase = .ready
+                        startGeneration(draftFirst: false)
+                    }
+                    return
+                }
                 if drawing {
                     // The sheet cleaned is the photo from here on: the painting's own photo, what
                     // the comparison and the photo peek show, and what a regeneration reads.
