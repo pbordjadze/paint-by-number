@@ -194,6 +194,7 @@ struct SettingsView: View {
                                 EraDoor.shared.go(to: .byzantium)
                             }
                             .accessibilityIdentifier("era-clock")
+                            .id("era-clock")
                         }
                         #endif
                         NavigationLink(value: Destination.acknowledgements) {
@@ -209,6 +210,15 @@ struct SettingsView: View {
                 #if DEBUG
                 // On a phone the row is below the fold, and its tip comes only once it is reached.
                 .task {
+                    #if UNRELEASED
+                    if ShellDemo.current == .settingsClock {
+                        try? await Task.sleep(for: .seconds(1))
+                        withAnimation { proxy.scrollTo("era-clock", anchor: .center) }
+                        try? await Task.sleep(for: .seconds(1))
+                        DemoMode.markReady()
+                        return
+                    }
+                    #endif
                     guard ShellDemo.current == .settingsTip else { return }
                     try? await Task.sleep(for: .seconds(1))
                     withAnimation { proxy.scrollTo(Self.paintingLengthRow, anchor: .center) }

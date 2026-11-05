@@ -135,7 +135,7 @@ final class Library {
         let launch = Date.now
         Task { await Background.run { ArtworkExporter.purgeExports(createdBefore: launch) } }
         #if DEBUG
-        if DemoMode.isActive || DemoMode.isTestHost {
+        if DemoMode.isIsolated {
             let root = FileManager.default.temporaryDirectory.appending(path: "RavennaDemoLibrary", directoryHint: .isDirectory)
             try? FileManager.default.removeItem(at: root)
             let library = Library(store: ArtworkStore(root: root))

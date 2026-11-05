@@ -53,8 +53,10 @@ final class EraDoor {
         if let passage { shown = passage }
     }
 
-    /// The passage has lifted.
+    /// The passage has lifted. The new era is in even if the cover went unseen (the app was away
+    /// while it played, and both moments came at once).
     func passed() {
+        if let passage { shown = passage }
         passage = nil
     }
 }

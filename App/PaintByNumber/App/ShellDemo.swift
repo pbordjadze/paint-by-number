@@ -512,6 +512,6 @@ enum ShellDemo: Equatable {
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded; `gallery-empty` once its sketch has
     /// painted itself, `SelfPaintingSketch`).
-    var isReadyOnAppear: Bool { opensSettings && self != .settingsTip }
+    var isReadyOnAppear: Bool { opensSettings && self != .settingsTip && self != .settingsClock }
 }
 #endif

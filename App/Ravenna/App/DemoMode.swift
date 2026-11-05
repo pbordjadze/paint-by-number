@@ -35,6 +35,11 @@ enum DemoMode {
 
     static var isActive: Bool { scenario != nil }
 
+    /// Any demo launch of the app (Paint by Moonlight's scenarios too, whose UI tests may open the
+    /// door) or the test host: Ravenna keeps no state between them either, as its own scenarios
+    /// don't (a throwaway library, the App Store stub, tips from nothing).
+    static var isIsolated: Bool { UserDefaults.standard.string(forKey: "demo") != nil || isTestHost }
+
     /// The app is hosting the unit tests: like a demo, it keeps no state between runs.
     static var isTestHost: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 

@@ -294,12 +294,13 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
-    /// Sets the clock's four wheels to a year, thousands first.
+    /// Sets the clock's four wheels to a year, ones first: no year on the way (2027, 2047, 2547;
+    /// 546, 526, 026) opens anything, as 2547 would once the thousands went first from 547.
     @MainActor
     private func roll(_ wheels: XCUIElementQuery, to year: Int) {
         let digits = String(format: "%04d", year).map(String.init)
         XCTAssertGreaterThanOrEqual(wheels.count, 4, "The clock has \(wheels.count) wheels")
-        for (place, digit) in digits.enumerated() {
+        for (place, digit) in digits.enumerated().reversed() {
             wheels.element(boundBy: place).adjust(toPickerWheelValue: digit)
         }
     }

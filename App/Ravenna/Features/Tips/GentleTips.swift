@@ -13,7 +13,7 @@ import TipKit
 /// Whether tips are on, for every tip's rules: Settings › Tips' switch, set by `PaintTips.setEnabled`.
 /// A parameter rather than only the desk's say-so, so that turning tips off takes a tip that is
 /// showing off the screen at once.
-nonisolated struct TipSwitch {
+nonisolated struct RavennaTipSwitch {
     @Parameter static var tipsOn: Bool = false
 }
 
@@ -57,7 +57,7 @@ nonisolated struct ShelfStarterTip: Tip {
     var message: Text? { Text("Tap a mosaic in Ready to Set to begin. Nothing needs setting up first.") }
     var image: Image? { Image(systemName: "paintbrush.pointed") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     // Inline, it may come back on a visit or two while no painting has been opened.
     var options: [any TipOption] { Tips.MaxDisplayCount(3) }
@@ -70,7 +70,7 @@ nonisolated struct ShelfNewPaintingTip: Tip {
     var message: Text? { Text("Tap + to lay one of your photos, or a sample, as a mosaic to set.") }
     var image: Image? { Image(systemName: "plus.circle") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
 }
@@ -82,7 +82,7 @@ nonisolated struct ShelfHoldTip: Tip {
     var message: Text? { Text("Touch and hold a mosaic to favorite, rename, share, print or start it over.") }
     var image: Image? { Image(systemName: "ellipsis.circle") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
 }
 
@@ -93,7 +93,7 @@ nonisolated struct ShelfTimeLapseTip: Tip {
     var message: Text? { Text("Touch and hold a finished mosaic and choose Share for a time-lapse of it.") }
     var image: Image? { Image(systemName: "timelapse") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
 }
 
@@ -104,7 +104,7 @@ nonisolated struct ShelfSettingsTip: Tip {
     var message: Text? { Text("The gear holds the finish, the sound and the paper. Tips can be turned off there.") }
     var image: Image? { Image(systemName: "gearshape") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
 }
 
@@ -117,7 +117,7 @@ nonisolated struct NewPaintingSamplesTip: Tip {
     var message: Text? { Text("Samples has paintings and photographs ready to use.") }
     var image: Image? { Image(systemName: "photo.on.rectangle") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -129,7 +129,7 @@ nonisolated struct NewPaintingDividerTip: Tip {
     var message: Text? { Text("Drag the divider to compare the photo and the mosaic. Pinch to look closer.") }
     var image: Image? { Image(systemName: "rectangle.split.2x1") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -142,7 +142,7 @@ nonisolated struct NewPaintingSuggestedTip: Tip {
     var message: Text? { Text("These settings were picked for this photo. You can just tap Start the Mosaic.") }
     var image: Image? { Image(systemName: "sparkles") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -154,7 +154,7 @@ nonisolated struct NewPaintingResetTip: Tip {
     var message: Text? { Text("Watch the preview change. Reset to Suggested returns every slider to where it started.") }
     var image: Image? { Image(systemName: "arrow.counterclockwise") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.sliderReleases) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
@@ -167,7 +167,7 @@ nonisolated struct NewPaintingSlidersTip: Tip {
     var message: Text? { Text("Fewer pieces make a bolder mosaic, quicker to set. More make a finer one.") }
     var image: Image? { Image(systemName: "slider.horizontal.3") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.pagesMade) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
@@ -182,7 +182,7 @@ nonisolated struct BenchShowPhotoTip: Tip {
     var message: Text? { Text("Hold Show Photo to see the original. Tap it to keep it showing.") }
     var image: Image? { Image(systemName: "photo") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.quarters) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
@@ -195,7 +195,7 @@ nonisolated struct BenchReplayTip: Tip {
     var message: Text? { Text("Replay Mosaic plays your mosaic back from the first tile.") }
     var image: Image? { Image(systemName: "play") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.finishes) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
@@ -208,7 +208,7 @@ nonisolated struct BenchZenTip: Tip {
     var message: Text? { Text("In More, Zen Mode moves the mosaic to the next tile after each one you set.") }
     var image: Image? { Image(systemName: "leaf") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
@@ -221,7 +221,7 @@ nonisolated struct BenchFeedbackTip: Tip {
     var message: Text? { Text("In More, Give Feedback lets you mark the mosaic and say what is wrong or right.") }
     var image: Image? { Image(systemName: "exclamationmark.bubble") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -237,7 +237,7 @@ nonisolated struct DrawerWorthALookTip: Tip {
     }
     var image: Image? { Image(systemName: "sparkles") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
@@ -258,7 +258,7 @@ extension TipID {
         case .newPaintingSuggested: NewPaintingSuggestedTip()
         case .newPaintingReset: NewPaintingResetTip()
         case .newPaintingSliders: NewPaintingSlidersTip()
-        case .benchTap: FirstPaintTip()
+        case .benchTap: RavennaFirstPaintTip()
         case .benchZoom: ZoomTip()
         case .benchFind: HintTip()
         case .benchDrag: DragPaintTip()

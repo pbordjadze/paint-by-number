@@ -231,7 +231,7 @@ final class TipDesk {
             // The rules read the tips-on parameter, which TipKit takes from here only once it has
             // loaded its datastore: say again what it should be until it does.
             let tipsOn = TipPreference.isEnabled(in: store.defaults)
-            if TipSwitch.tipsOn != tipsOn { TipSwitch.tipsOn = tipsOn }
+            if RavennaTipSwitch.tipsOn != tipsOn { RavennaTipSwitch.tipsOn = tipsOn }
             var stillPending = false
             chosen = nil
             for id in candidates {

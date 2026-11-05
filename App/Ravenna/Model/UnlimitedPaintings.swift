@@ -68,7 +68,7 @@ final class UnlimitedPaintings {
         return UnlimitedPaintings(store: nil, defaults: nil)
         #else
         #if DEBUG
-        if DemoMode.isActive || DemoMode.isTestHost { return UnlockStoreStub.paintingsForLaunch() }
+        if DemoMode.isIsolated { return UnlockStoreStub.paintingsForLaunch() }
         #endif
         let paintings = UnlimitedPaintings(store: StoreKitUnlock(), defaults: .standard)
         paintings.follow()
@@ -85,6 +85,8 @@ final class UnlimitedPaintings {
     func mayStart(ownPhoto: Bool) async -> Bool {
         guard ownPhoto, isSold else { return true }
         if !hasChecked { await refresh() }
+        // The count is shared with Paint by Moonlight's, which may have taken one since.
+        if let defaults { free = Self.stored(in: defaults) }
         return isUnlocked || freeLeft > 0
     }
 
@@ -92,6 +94,7 @@ final class UnlimitedPaintings {
     /// is bought.
     func started(ownPhoto: Bool) {
         guard ownPhoto, isSold, !isUnlocked else { return }
+        if let defaults { self.free = Self.stored(in: defaults) }
         var free = self.free
         guard free.use(at: now(), calendar: calendar) else { return }
         self.free = free

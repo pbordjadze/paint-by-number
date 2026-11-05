@@ -11,7 +11,7 @@ import TipKit
 // fresh counts, and the ids of the first version are kept: whoever closed one has it closed.
 
 /// The first painting: how to paint at all. Tap to Paint.
-nonisolated struct FirstPaintTip: Tip {
+nonisolated struct RavennaFirstPaintTip: Tip {
     /// Whether the open painting has paint already. A rule rather than an invalidation, so
     /// the tip still comes back on the next fresh painting after Show Tips Again.
     @Parameter static var hasPaint: Bool = false
@@ -21,7 +21,7 @@ nonisolated struct FirstPaintTip: Tip {
     var message: Text? { Text("Pick a color, then tap a tile marked with its number to set it.") }
     var image: Image? { Image(systemName: "hand.tap") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(Self.$hasPaint) { $0 == false }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
@@ -34,7 +34,7 @@ nonisolated struct HintTip: Tip {
     var message: Text? { Text("Tap the selected color again, or the lightbulb, to be shown a tile to set.") }
     var image: Image? { Image(systemName: "lightbulb") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.stalls) { $0.donations.count >= 1 }
     }
     var options: [any TipOption] { Tips.MaxDisplayCount(PaintTips.swatchTipDisplays) }
@@ -47,7 +47,7 @@ nonisolated struct ZoomTip: Tip {
     var message: Text? { Text("Double-tap the mosaic to zoom in. Pinch to zoom back out.") }
     var image: Image? { Image(systemName: "plus.magnifyingglass") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.smallMisses) { $0.donations.count >= 2 }
     }
 }
@@ -60,7 +60,7 @@ nonisolated struct DragPaintTip: Tip {
     var message: Text? { Text("Touch and hold, then drag along a row of tiles with this number to set them in one stroke.") }
     var image: Image? { Image(systemName: "hand.draw") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.singleTaps) { $0.donations.count >= 3 }
     }
 }
@@ -72,7 +72,7 @@ nonisolated struct PencilTip: Tip {
     var message: Text? { Text("The Pencil sets tiles while fingers move the mosaic. Double-tap the Pencil for the next color.") }
     var image: Image? { Image(systemName: "applepencil") }
     var rules: [Tips.Rule] {
-        #Rule(TipSwitch.$tipsOn) { $0 == true }
+        #Rule(RavennaTipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.pencilStrokes) { $0.donations.count >= 1 }
     }
 }
@@ -106,7 +106,7 @@ enum PaintTips {
     /// they show no tip but the scenarios' own.
     static func configure() {
         #if DEBUG
-        let isolatedRun = DemoMode.isActive || DemoMode.isTestHost
+        let isolatedRun = DemoMode.isIsolated
         let demo = DemoMode.scenario.flatMap { demoScenarios[$0] }
         if isolatedRun {
             TipStore().reset()
@@ -116,7 +116,7 @@ enum PaintTips {
         #endif
         // TipKit is configured once a process, by Paint by Moonlight at launch (with the same options).
         // The rules of every tip read this: on unless Settings says otherwise.
-        TipSwitch.tipsOn = TipPreference.isEnabled()
+        RavennaTipSwitch.tipsOn = TipPreference.isEnabled()
         desk.beginSession()
         #if DEBUG
         if let demo {
@@ -136,7 +136,7 @@ enum PaintTips {
     /// Tips on or off: Settings › Tips' switch.
     static func setEnabled(_ enabled: Bool) {
         TipPreference.record(enabled)
-        TipSwitch.tipsOn = enabled
+        RavennaTipSwitch.tipsOn = enabled
         desk.answered(tipsOn: enabled)
     }
 
@@ -146,7 +146,7 @@ enum PaintTips {
         donated.removeAll()
         invalidated.removeAll()
         TipPreference.record(true)
-        TipSwitch.tipsOn = true
+        RavennaTipSwitch.tipsOn = true
         desk.startOver()
         desk.answered(tipsOn: true)
     }
@@ -218,7 +218,7 @@ enum PaintTips {
 
     /// A painting that already has paint needs no first tip.
     static func paintingOpened(hasProgress: Bool) {
-        FirstPaintTip.hasPaint = hasProgress
+        RavennaFirstPaintTip.hasPaint = hasProgress
     }
 
     // MARK: Donations and invalidations
