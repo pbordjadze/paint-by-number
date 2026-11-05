@@ -248,10 +248,9 @@ struct RefineView: View {
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
-    /// Every color made current in this Refine that no paint had then, in order: the palette shows
-    /// those no paint has as new paints, so several picked in a row wait side by side to be
-    /// poured (QA, November 3: only the last was kept). Kept as long as Refine is open, so a pour
-    /// undone shows its color as a new paint again.
+    /// The colors the color wheel picked that no paint has yet, in order: the palette shows them
+    /// as new paints, so several picked in a row wait side by side to be poured (QA, November 3:
+    /// only the last was kept). A color leaves once a paint has it (`landedColors`).
     @State private var newColors: [SIMD3<Float>] = []
     /// The last repaint of the current paint sent, until a template has it (`RefinePalette.landing`):
     /// its paint is then the current one. Made current as the repaint was sent, before any
@@ -416,16 +415,15 @@ struct RefineView: View {
                 .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
-        .onChange(of: currentPaint) { _, color in
-            guard let color, !newColors.contains(color),
-                  RefinePalette.index(of: color, in: base?.template.palette ?? []) == nil else { return }
-            newColors.append(color)
-            if newColors.count > Self.newColorsKept { newColors.removeFirst(newColors.count - Self.newColorsKept) }
-        }
+        .onChange(of: base?.id) { landedColors() }
     }
 
-    /// How many colors picked `newColors` keeps: a row's worth.
-    private static let newColorsKept = 12
+    /// A color picked that a paint has now (poured) is that paint from then on: a look, a repaint
+    /// or a merge that later takes its paint away doesn't bring it back as new.
+    private func landedColors() {
+        let palette = base?.template.palette ?? []
+        newColors.removeAll { RefinePalette.index(of: $0, in: palette) != nil }
+    }
 
     /// An edit sent to the model, which draws it until the template on screen has it.
     private struct Submitted: Identifiable {
@@ -1574,7 +1572,7 @@ extension RefineView {
             if tool == .select, let region = selectedRegion {
                 selectionBand(template: template, region: region)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge)
                     .disabled(!model.hasLineArtInput)
             }
         }
@@ -2043,7 +2041,7 @@ extension RefineView {
                 }
             }
             if group == .cells || group == .paint, let template = base?.template {
-                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge)
             }
         }
         .padding(16)
@@ -2327,7 +2325,7 @@ extension RefineView {
             if let barCard {
                 areaCard(barCard, inBar: true)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, picked: newColors, merge: paletteMerge, glass: false)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge, glass: false)
                     .disabled(!model.hasLineArtInput)
             }
         }

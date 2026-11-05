@@ -675,7 +675,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
-    which the first Bucket tap adds as a paint; every color made current that no paint has waits
+    which the first Bucket tap adds as a paint; every color it picks that no paint has waits
     after the paints with a plus, in the order picked, until poured, `RefineView.newColors`,
     `RefinePaletteBar.unpoured`), the Bucket (`.paintArea` with the current paint,
     each tap a step of its own; only the card's picker takes its last pick's place), the
@@ -912,7 +912,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   "Drawing, <date>" (`scratchTitle`); a page with nothing drawn is no draft, and a draft records
   `scratch` (`CreateDraft`, absent in older ones), so it resumes as a page from scratch. The
   preview is there with no push and stays plain paper, with no bar, until Refine has slid up over
-  it (`TemplatePreviewView.waitsForRefine`), and shows the drawing alone, with no comparison
+  it (`TemplatePreviewView.waitsForRefine`, `scratchSettles`), and shows the drawing alone, with no comparison
   (`CompareView.compares`). `ScratchFlowTests`, `ScratchUITests`.
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the

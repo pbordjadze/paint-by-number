@@ -1006,7 +1006,8 @@ struct CreateModelTests {
         model.undo()
         try await waitUntil { model.refinements.start == .generated && model.isFinal }
         #expect(model.preview?.template == generated && model.refinements.isEmpty && !model.canUndo)
-        #expect(model.defaultTitle == (try #require(Sample.named("red-fox"))).title, "Generated again, the sample's name again")
+        let fox = try #require(Sample.named("red-fox"))
+        #expect(model.defaultTitle == fox.title, "Generated again, the sample's name again")
         model.cancelAll()
     }
 

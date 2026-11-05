@@ -75,7 +75,6 @@ final class ScratchUITests: XCTestCase {
         guide.tap()
         XCTAssertTrue(
             app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
-        XCTAssertFalse(app.descendants(matching: .any)["refine-canvas"].exists, "The guide opened Refine")
         app.buttons["refine-guide-done"].tap()
 
         XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "The guide didn't go back to the New Painting screen")

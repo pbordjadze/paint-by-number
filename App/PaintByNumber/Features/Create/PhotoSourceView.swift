@@ -371,7 +371,6 @@ struct PhotoSourceView: View {
         isBrowsingAll = true
     }
 
-    /// The camera, for a photo.
     #if UNRELEASED
     /// A blank page, straight into Refine.
     private func startFromScratch() {
@@ -381,6 +380,7 @@ struct PhotoSourceView: View {
     }
     #endif
 
+    /// The camera, for a photo.
     private func showCamera() {
         #if UNRELEASED
         picksDrawing = false

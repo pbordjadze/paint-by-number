@@ -251,10 +251,11 @@ struct TemplatePreviewView: View {
 
     /// A page from scratch on its way to Refine: plain paper, with no bar, until Refine has opened
     /// over it, so the photo step gives way to Refine with no preview between them (it showed for
-    /// half a second). One that couldn't be made says so.
+    /// half a second). One that couldn't be made says so, and one Refine won't open on before the
+    /// unlock (a draft resumed) shows its preview.
     private var waitsForRefine: Bool {
         #if UNRELEASED
-        guard model.isScratch, !hasRefined else { return false }
+        guard model.isScratch, !hasRefined, !paintings.locksRefine else { return false }
         if case .failed = model.phase { return false }
         return true
         #else

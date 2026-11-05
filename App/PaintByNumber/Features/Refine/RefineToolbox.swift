@@ -80,9 +80,10 @@ nonisolated enum RefinePalette {
 struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
-    /// The colors picked in this Refine, in the order picked (`RefineView.newColors`): those no
-    /// paint has show as new paints, so several picked in a row are all kept (QA, November 3).
-    var picked: [SIMD3<Float>] = []
+    /// The colors the color wheel picked that no paint had, in the order picked
+    /// (`RefineView.newColors`): they show as new paints, so several picked in a row are all kept
+    /// (QA, November 3).
+    var picked: Binding<[SIMD3<Float>]> = .constant([])
     /// Makes paint `from` the paint `into` (both indices of the palette).
     var merge: ((_ from: Int, _ into: Int) -> Void)?
     /// Whether it stands in glass of its own, else in a band that holds it with Select's bar
@@ -111,7 +112,7 @@ struct RefinePaletteBar: View {
                         ForEach(template.palette.indices, id: \.self) { index in
                             mergeable(swatch(index, selected: selected == index), index, current: selected).id(index)
                         }
-                        let unpoured = Self.unpoured(picked, current: current, palette: template.palette)
+                        let unpoured = Self.unpoured(picked.wrappedValue, current: current, palette: template.palette)
                         ForEach(unpoured.indices, id: \.self) { k in
                             newPaint(unpoured[k], selected: unpoured[k] == current, k).id("new-\(k)")
                         }
@@ -126,7 +127,7 @@ struct RefinePaletteBar: View {
                 }
                 // A color just picked, in view at the row's end.
                 .onChange(of: current) { _, color in
-                    let unpoured = Self.unpoured(picked, current: color, palette: template.palette)
+                    let unpoured = Self.unpoured(picked.wrappedValue, current: color, palette: template.palette)
                     guard selected == nil, let color, let k = unpoured.firstIndex(of: color) else { return }
                     withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo("new-\(k)") }
                 }
@@ -171,6 +172,9 @@ struct RefinePaletteBar: View {
             Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName))
         }
     }
+
+    /// How many colors picked the palette keeps waiting: a row's worth.
+    nonisolated static let pickedKept = 12
 
     /// What a swatch's drag carries before its paint's index.
     nonisolated static let dragPrefix = "refine-paint:"
@@ -269,7 +273,11 @@ struct RefinePaletteBar: View {
             set: { color in
                 let resolved = color.resolve(in: environment)
                 let lab = ColorScience.linearSRGBToOKLab(SIMD3(resolved.linearRed, resolved.linearGreen, resolved.linearBlue))
-                current = RefinePalette.snapped(lab, to: template.palette)
+                let color = RefinePalette.snapped(lab, to: template.palette)
+                current = color
+                guard RefinePalette.index(of: color, in: template.palette) == nil, !picked.wrappedValue.contains(color) else { return }
+                picked.wrappedValue.append(color)
+                if picked.wrappedValue.count > Self.pickedKept { picked.wrappedValue.removeFirst(picked.wrappedValue.count - Self.pickedKept) }
             })
     }
 }
