@@ -9,7 +9,8 @@ import MosaicKit
 /// (`TemplateRasterizer`, `CanvasSnapshot`), which glared on Ravenna's dark gallery and lost the
 /// tiles from a shared wall.
 ///
-/// - The gallery's card (`Library.thumbnailPNG`): `pngData`.
+/// - The gallery's card (`Library.thumbnailPNG`): `pngData`, its tiles still to set laid faint
+///   (`ghostAlpha`).
 /// - The picture shared, saved or printed from a finished or begun mosaic (`ArtworkExporter
 ///   .paintingPNG`, `CompletionShare`): `keepsake`, about 3,000 px, with nothing round it (v0's
 ///   `Keepsake` offered a border; Paul kept none, October 28).
@@ -17,7 +18,7 @@ nonisolated enum MosaicCard {
     /// The card as PNG, at most `maxPixelSize` px on its long side; nil when `painted` (one flag per
     /// template region: tile i, then the grout) doesn't fit the mosaic.
     static func pngData(_ m: Mosaic, painted: [Bool], maxPixelSize: Int) -> Data? {
-        image(m, painted: painted, maxPixelSize: maxPixelSize).flatMap(ImageCodec.pngData)
+        image(m, painted: painted, maxPixelSize: maxPixelSize, ghosts: true).flatMap(ImageCodec.pngData)
     }
 
     /// The picture to share: a finished wall has no outlines left, one begun shows where its tiles
@@ -29,7 +30,12 @@ nonisolated enum MosaicCard {
     /// The painted bed's long side at most, as the canvas's (`TileScene.bed`).
     static let bedLongSide = 1024
 
-    static func image(_ m: Mosaic, painted: [Bool], maxPixelSize: Int) -> CGImage? {
+    /// How strongly a card shows a tile still to set (`ghosts`): the wall it will be, laid faint
+    /// over the bed, so a card reads as the mosaic waiting rather than a blur (round 1's critic: the
+    /// first screen through the door looked broken with outlines alone).
+    static let ghostAlpha: CGFloat = 0.42
+
+    static func image(_ m: Mosaic, painted: [Bool], maxPixelSize: Int, ghosts: Bool = false) -> CGImage? {
         guard m.width > 0, m.height > 0, !m.tiles.isEmpty, painted.count == m.tiles.count + 1 else { return nil }
         let finish = MosaicLook.current.finish
         let scale = CGFloat(maxPixelSize) / CGFloat(max(m.width, m.height))
@@ -45,6 +51,12 @@ nonisolated enum MosaicCard {
         let drawing = MosaicDrawing(m, finish: finish)
         // The places still to set, as v0's covers drew them: faint on the bed, grey on light grout.
         let unset = drawing.paths.indices.filter { !painted[$0] }
+        if ghosts, !unset.isEmpty {
+            cg.saveGState()
+            cg.setAlpha(Self.ghostAlpha)
+            for i in unset { drawing.draw(i, in: cg) }
+            cg.restoreGState()
+        }
         if !unset.isEmpty {
             for i in unset { cg.addPath(drawing.paths[i]) }
             cg.setStrokeColor(finish.paintedBed
