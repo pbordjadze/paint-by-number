@@ -35,6 +35,8 @@ struct TemplatePreviewView: View {
     @State private var isTuning = false
     #if UNRELEASED
     @State private var isRefining = false
+    /// The preview's push has landed: Refine asked for before then waits for it.
+    @State private var hasSettled = false
     #endif
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
@@ -134,12 +136,13 @@ struct TemplatePreviewView: View {
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         // A tap on Refine made while the painting was updating: it opens once it is made.
         .onChange(of: model.opensRefine) { _, opens in
-            if opens { openRefine() }
+            if opens && hasSettled { openRefine() }
         }
         // A page from scratch asks for Refine as it loads and may be made before this shows: it
         // opens once the push has landed (a cover presented mid-push can be dropped).
         .task {
-            try? await Task.sleep(for: Self.pushSettles)
+            guard (try? await Task.sleep(for: Self.pushSettles)) != nil else { return }
+            hasSettled = true
             if model.opensRefine { openRefine() }
         }
         #endif
