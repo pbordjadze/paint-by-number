@@ -9,6 +9,10 @@
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
+    "A free painting comes back each day, up to five. Paintings someone sends you are always free." : {
+      "comment" : "Settings › Unlimited Paintings footer before the unlock is bought, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
     "About" : {
       "comment" : "Header of the About section in Settings",
       "extractionState" : "manual"
@@ -69,20 +73,24 @@
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
     },
-    "Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many paintings of your own photos as you like." : {
-      "comment" : "The Unlimited Paintings sheet's message when Refine or From Scratch opened it: Refine comes with the purchase",
+    "Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened from Refine or From Scratch, in builds where every new painting takes a free painting (1.1): what the purchase unlocks",
       "extractionState" : "manual"
     },
-    "One purchase unlocks Refine and as many paintings of your own photos as you like." : {
-      "comment" : "The Unlimited Paintings sheet's message when opened from Settings, in builds with Refine (which comes with the purchase)",
+    "One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
+    "Paintings someone sends you are always free." : {
+      "comment" : "The Unlimited Paintings sheet, under its buttons, in builds where every new painting takes a free painting (1.1): what never takes one",
       "extractionState" : "manual"
     },
     "Try It in the Tool Guide" : {
       "comment" : "The Unlimited Paintings sheet opened by Refine or From Scratch: a button that opens Refine's Tool Guide, whose practice pictures are free",
       "extractionState" : "manual"
     },
-    "Your next free painting comes tomorrow. One purchase unlocks Refine and as many paintings of your own photos as you like." : {
-      "comment" : "The Unlimited Paintings sheet's message when Start Painting found no free painting left, in builds with Refine (which comes with the purchase)",
+    "Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened by Start Painting with no free painting left, in builds where every new painting takes one (1.1)",
       "extractionState" : "manual"
     },
     "drawing.palette.garden" : {
@@ -5906,7 +5914,7 @@
       }
     },
     "unlock.freeLeft" : {
-      "comment" : "Under the create flow's Start Painting, for a painting of the painter's own photo before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 3)",
+      "comment" : "Under the create flow's Start Painting, for a painting that takes a free painting before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 5)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -5930,7 +5938,7 @@
       }
     },
     "settings.freePaintings.left" : {
-      "comment" : "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)",
+      "comment" : "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 5)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

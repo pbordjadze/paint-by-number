@@ -2,9 +2,11 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// Unlimited Paintings and the free paintings (Paul, October 22): three to begin with, one back at
-/// each midnight, never more than three waiting; library pictures never take one; the unlock,
-/// bought or restored, lifts the count; the count outlives the launch. The App Store is
+/// Unlimited Paintings and the free paintings (Paul, October 22): `FreePaintings.most` to begin
+/// with (three in 1.0, five in 1.1), one back at each midnight, never more waiting; in 1.0 library
+/// pictures never take one, in 1.1 every new painting does (the owner's decision of November 5,
+/// painting-company row 235); the unlock, bought or restored, lifts the count; the count outlives
+/// the launch. The App Store is
 /// `UnlockStoreStub`, with an injected clock.
 @MainActor
 struct UnlimitedPaintingsTests {
@@ -21,6 +23,8 @@ struct UnlimitedPaintingsTests {
 
     private static func left(_ free: FreePaintings, at date: Date) -> Int { free.at(date, calendar: calendar).left }
 
+    private static let most = FreePaintings.most
+
     private static func used(_ count: Int, at date: Date, from free: FreePaintings = FreePaintings()) -> FreePaintings {
         var free = free
         for _ in 0..<count { _ = free.use(at: date, calendar: calendar) }
@@ -33,14 +37,14 @@ struct UnlimitedPaintingsTests {
 
     // MARK: Free paintings
 
-    @Test func aNewPainterHasThree() {
-        #expect(FreePaintings().left == FreePaintings.most)
-        #expect(FreePaintings.most == 3)
-        #expect(Self.left(FreePaintings(), at: Self.start) == 3)
+    @Test func aNewPainterHasTheMost() {
+        #expect(FreePaintings().left == Self.most)
+        #expect(Self.most == (UnlimitedPaintings.countsEveryPainting ? 5 : 3))
+        #expect(Self.left(FreePaintings(), at: Self.start) == Self.most)
     }
 
-    @Test func noneIsLeftUntilMidnightOnceThreeAreUsed() {
-        var free = Self.used(3, at: Self.start)
+    @Test func noneIsLeftUntilMidnightOnceAllAreUsed() {
+        var free = Self.used(Self.most, at: Self.start)
         #expect(free.left == 0)
         // 11 p.m. the same day.
         let usedLate = free.use(at: Self.at(days: 0, hours: 13), calendar: Self.calendar)
@@ -49,31 +53,32 @@ struct UnlimitedPaintingsTests {
         #expect(Self.left(free, at: Self.at(days: 0, hours: 14)) == 1)
     }
 
-    @Test func oneComesBackEachDayUpToThree() {
-        let free = Self.used(3, at: Self.start)
-        #expect(Self.left(free, at: Self.at(days: 1)) == 1)
-        #expect(Self.left(free, at: Self.at(days: 2)) == 2)
-        #expect(Self.left(free, at: Self.at(days: 3)) == 3)
+    @Test func oneComesBackEachDayUpToTheMost() {
+        let free = Self.used(Self.most, at: Self.start)
+        for day in 1...Self.most {
+            #expect(Self.left(free, at: Self.at(days: Double(day))) == day)
+        }
+        #expect(Self.left(free, at: Self.at(days: Double(Self.most + 2))) == Self.most)
         #expect(free.at(Self.at(days: 30), calendar: Self.calendar) == FreePaintings())
     }
 
     @Test func theDayCountGoesOnFromTheLastMidnight() {
         // One back on day 1 and used; the next comes on day 2, not later.
-        let free = Self.used(1, at: Self.at(days: 1), from: Self.used(3, at: Self.start))
+        let free = Self.used(1, at: Self.at(days: 1), from: Self.used(Self.most, at: Self.start))
         #expect(Self.left(free, at: Self.at(days: 1, hours: 5)) == 0)
         #expect(Self.left(free, at: Self.at(days: 2)) == 1)
     }
 
-    @Test func usingOneOfThreeStartsTheDayCount() {
+    @Test func usingOneStartsTheDayCount() {
         let free = Self.used(1, at: Self.start)
-        #expect(Self.left(free, at: Self.at(days: 0, hours: 13)) == 2)
-        #expect(Self.left(free, at: Self.at(days: 1)) == 3)
+        #expect(Self.left(free, at: Self.at(days: 0, hours: 13)) == Self.most - 1)
+        #expect(Self.left(free, at: Self.at(days: 1)) == Self.most)
     }
 
-    /// Back before the count began, the count can't know the days: all three come back, rather
+    /// Back before the count began, the count can't know the days: all come back, rather
     /// than none until the clock catches up with the day they were used.
     @Test func aClockSetBackBeforeTheCountBeganGivesThemBack() {
-        let free = Self.used(3, at: Self.at(days: 5))
+        let free = Self.used(Self.most, at: Self.at(days: 5))
         #expect(free.at(Self.start, calendar: Self.calendar) == FreePaintings())
         // Back within the day they were used, nothing changes.
         #expect(Self.left(free, at: Self.at(days: 5, hours: -9)) == 0)
@@ -89,7 +94,7 @@ struct UnlimitedPaintingsTests {
         // Ten in the morning of October 22 in Tokyo is three in the afternoon of October 21 in Honolulu.
         let used = try #require(tokyo.date(from: DateComponents(year: 2026, month: 10, day: 22, hour: 10)))
         var free = FreePaintings()
-        for _ in 0..<3 { _ = free.use(at: used, calendar: tokyo) }
+        for _ in 0..<Self.most { _ = free.use(at: used, calendar: tokyo) }
 
         #expect(free.at(used.addingTimeInterval(5 * 3600), calendar: honolulu).left == 0)
         let midnight = try #require(honolulu.date(from: DateComponents(year: 2026, month: 10, day: 22)))
@@ -126,24 +131,26 @@ struct UnlimitedPaintingsTests {
 
     // MARK: Starting paintings
 
-    @Test func libraryPicturesNeverTakeAFreePainting() async {
+    /// In 1.0 a library picture never takes a free painting; in 1.1 every new painting does.
+    @Test func libraryPicturesTakeOneOnlyWhereEveryPaintingCounts() async {
         let model = paintings()
-        for _ in 0..<5 {
+        for _ in 0..<Self.most {
             #expect(await model.mayStart(ownPhoto: false))
             model.started(ownPhoto: false)
         }
-        #expect(model.freeLeft == 3)
+        #expect(model.freeLeft == (UnlimitedPaintings.countsEveryPainting ? 0 : Self.most))
+        #expect(await model.mayStart(ownPhoto: false) == !UnlimitedPaintings.countsEveryPainting)
     }
 
     @Test func ownPhotosTakeOneEachUntilNoneIsLeft() async {
         let model = paintings()
-        for left in [2, 1, 0] {
+        for left in (0..<Self.most).reversed() {
             #expect(await model.mayStart(ownPhoto: true))
             model.started(ownPhoto: true)
             #expect(model.freeLeft == left)
         }
         #expect(await model.mayStart(ownPhoto: true) == false)
-        #expect(await model.mayStart(ownPhoto: false))
+        #expect(await model.mayStart(ownPhoto: false) == !UnlimitedPaintings.countsEveryPainting)
     }
 
     @Test func anOwnedUnlockIsFoundAtTheFirstStartAndTakesNothing() async {
@@ -151,12 +158,12 @@ struct UnlimitedPaintingsTests {
         #expect(await model.mayStart(ownPhoto: true))
         #expect(model.isUnlocked)
         for _ in 0..<5 { model.started(ownPhoto: true) }
-        #expect(model.freeLeft == 3)
+        #expect(model.freeLeft == Self.most)
     }
 
     @Test func buyingUnlocks() async throws {
         let model = paintings()
-        for _ in 0..<3 { model.started(ownPhoto: true) }
+        for _ in 0..<Self.most { model.started(ownPhoto: true) }
         #expect(await model.mayStart(ownPhoto: true) == false)
         try await model.loadPrice()
         #expect(model.price == "$4.99")
@@ -191,16 +198,25 @@ struct UnlimitedPaintingsTests {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        // The persisted key: renaming it would give every painter three again.
-        #expect(UnlimitedPaintings.freeKey == "freePaintings")
+        // The persisted keys: renaming one would give every painter the most again. 1.1 counts
+        // under a key of its own, so everyone from 1.0 begins it with five.
+        #expect(UnlimitedPaintings.freeKey == (UnlimitedPaintings.countsEveryPainting ? "freePaintings.v2" : "freePaintings"))
 
         let first = paintings(defaults: defaults)
         first.started(ownPhoto: true)
         first.started(ownPhoto: true)
-        #expect(paintings(defaults: defaults).freeLeft == 1)
+        #expect(paintings(defaults: defaults).freeLeft == Self.most - 2)
 
         defaults.set(Data("not a count".utf8), forKey: UnlimitedPaintings.freeKey)
-        #expect(paintings(defaults: defaults).freeLeft == 3)
+        #expect(paintings(defaults: defaults).freeLeft == Self.most)
+
+        // 1.0's count, all used, is not 1.1's: everyone lands at five.
+        if UnlimitedPaintings.countsEveryPainting {
+            defaults.removeObject(forKey: UnlimitedPaintings.freeKey)
+            let spent = try JSONEncoder().encode(Self.used(3, at: Self.start))
+            defaults.set(spent, forKey: "freePaintings")
+            #expect(paintings(defaults: defaults).freeLeft == 5)
+        }
     }
 
     /// SideStore builds sell nothing: every painting is free there.
@@ -211,7 +227,7 @@ struct UnlimitedPaintingsTests {
             #expect(await model.mayStart(ownPhoto: true))
             model.started(ownPhoto: true)
         }
-        #expect(model.freeLeft == 3)
+        #expect(model.freeLeft == Self.most)
     }
 
     /// The App Store Connect product, and the StoreKit configuration Xcode runs sell it from.

@@ -972,6 +972,16 @@ sends it, the developers collect nothing).
   the same sheet, which has Restore Purchases (App Review requires one). Its mark is the design
   system's crescent and two of the Moon's stars, drawn as `Nightfall` draws them (the Lamplit
   Table's `factory/pieces/unlimited-paintings` on `claude/vibe-factory`).
+- 1.1's count (`#if UNRELEASED`, so Debug builds and, once the gates come out, the release;
+  painting-company row 235, the owner's decision of November 5): five, one back each day, and
+  every new painting takes one, a library picture's and a page from scratch too
+  (`UnlimitedPaintings.countsEveryPainting`, `FreePaintings.most`); making a painting is what
+  counts, so painting and refining it, one someone sent and one made again take none. It is
+  kept under UserDefaults `freePaintings.v2`, so everyone from 1.0 begins it with five and 1.0's
+  `freePaintings` stays as it was. Ravenna's mosaics take from the same count: the key, `left`
+  (an Int) and `since` (a JSONEncoder `Date`, nil while all five are left), and `FreePaintings`'
+  rules. The sheet and Settings say "new paintings" there, and that paintings someone sends are
+  free.
 - StoreKit 2 on the device (`StoreKitUnlock`: the product
   `com.pbordjadze.paintbynumber.unlimited`, a non-consumable with Family Sharing on, bought with
   SwiftUI's `\.purchase`; `Transaction.updates` followed from launch for Ask to Buy, other

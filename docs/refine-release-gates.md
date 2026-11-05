@@ -75,6 +75,12 @@ keep the `UNRELEASED` side and drop the other).
   to everyone. The price, the product's display name and description in App Store Connect, and
   `App/UnlimitedPaintings.storekit`'s `displayPrice` (pinned at 4.99 by
   `UnlimitedPaintingsTests`, and the stub's `price()`), are the owner's to change.
+- **1.1's free paintings** (painting-company row 235, the owner's decision of November 5): under
+  `UNRELEASED`, `FreePaintings.most` is five and `UnlimitedPaintings.countsEveryPainting` true,
+  kept under `freePaintings.v2`; `UnlockSheet` and Settings' footer have 1.1 wording. These are
+  not Refine's gates but ship with them: take each `#if UNRELEASED` there out keeping its 1.1
+  side, and change `PRIVACY.md` › Unlimited Paintings, `ci/store-listing.json`'s free-paintings
+  lines and the root `CLAUDE.md`'s Monetization line to five, every new painting.
 - `ACCESSIBILITY.md` (the App Store's accessibility page) gains Refine's line, left out until it
   ships: "Refine: with VoiceOver, the cells in view are buttons while a cell tool is picked; Merge
   and Move Number offer actions in place of their drags."

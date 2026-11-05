@@ -5,8 +5,9 @@ import StoreKit
 import SwiftUI
 
 /// Unlimited Paintings, the app's one purchase (Paul, October 22): paid once, it lets a painter
-/// make as many paintings of their own photos as they like. Without it they have `FreePaintings`;
-/// library pictures, paintings someone sent and paintings made again are always free. Start
+/// make as many paintings as they like. Without it they have `FreePaintings`, which in 1.0 only
+/// paintings of their own photos take and in 1.1 every new one (`countsEveryPainting`); paintings
+/// someone sent and paintings made again are always free. Start
 /// Painting asks `mayStart(ownPhoto:)` and reports `started(ownPhoto:)`; `UnlockSheet` sells it.
 ///
 /// Purchases are checked on the device by StoreKit 2 (`StoreKitUnlock`): no server and no account
@@ -20,8 +21,24 @@ import SwiftUI
 @Observable
 final class UnlimitedPaintings {
     static let productID = "com.pbordjadze.paintbynumber.unlimited"
-    /// Where the free paintings are counted (UserDefaults).
+    /// Where the free paintings are counted (UserDefaults): `FreePaintings` as JSON, `left` and
+    /// `since` (a `Date` as JSONEncoder writes one). 1.1's count is a key of its own, so everyone
+    /// from 1.0 begins it with five, and 1.0's is left as it was; Ravenna's mosaics take from the
+    /// same count.
+    #if UNRELEASED
+    static let freeKey = "freePaintings.v2"
+    #else
     static let freeKey = "freePaintings"
+    #endif
+
+    /// Whether every new painting takes a free painting (1.1: a library picture's, a page from
+    /// scratch, a mosaic), or only one of the painter's own photo (1.0). Making a painting is what
+    /// counts; painting it, refining it, a painting someone sent and one made again take none.
+    #if UNRELEASED
+    static let countsEveryPainting = true
+    #else
+    static let countsEveryPainting = false
+    #endif
 
     /// Whether this build sells the unlock: every build but SideStore's.
     let isSold: Bool
@@ -92,7 +109,7 @@ final class UnlimitedPaintings {
     #endif
 
     /// Refine waits for the unlock: a build that sells it, not yet bought. Refine's own paintings
-    /// count as any other: only Start Painting on the painter's own photo takes a free painting.
+    /// count as any other: Start Painting takes the free painting, refining takes none.
     var locksRefine: Bool {
         #if DEBUG
         if refineOpenAnyway { return false }
@@ -100,19 +117,18 @@ final class UnlimitedPaintings {
         return Self.includesRefine && isSold && !isUnlocked
     }
 
-    /// Whether a painting may start: one of a library picture always may, one of the painter's own
-    /// photo once the unlock is bought or while a free painting is left. The first time, it asks
-    /// the App Store (on the device) what is owned.
+    /// Whether a painting may start: one that counts (`countsEveryPainting`, or the painter's own
+    /// photo) once the unlock is bought or while a free painting is left, any other always. The
+    /// first time, it asks the App Store (on the device) what is owned.
     func mayStart(ownPhoto: Bool) async -> Bool {
-        guard ownPhoto, isSold else { return true }
+        guard ownPhoto || Self.countsEveryPainting, isSold else { return true }
         if !hasChecked { await refresh() }
         return isUnlocked || freeLeft > 0
     }
 
-    /// A painting started: one of the painter's own photo took a free painting, unless the unlock
-    /// is bought.
+    /// A painting started: one that counts took a free painting, unless the unlock is bought.
     func started(ownPhoto: Bool) {
-        guard ownPhoto, isSold, !isUnlocked else { return }
+        guard ownPhoto || Self.countsEveryPainting, isSold, !isUnlocked else { return }
         var free = self.free
         guard free.use(at: now(), calendar: calendar) else { return }
         self.free = free

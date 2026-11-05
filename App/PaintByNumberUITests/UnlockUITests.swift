@@ -53,9 +53,11 @@ final class UnlockUITests: XCTestCase {
         XCTAssertTrue(restore.isHittable, "Restore Purchases can't be reached at the largest text size")
     }
 
-    /// A library picture starts with no free painting left, and its preview counts none.
+    /// A library picture takes a free painting as any new painting does (1.1, the owner's decision
+    /// of November 5; Debug builds count as 1.1 does): with none left, its preview says when the
+    /// next comes and Start Painting offers the unlock.
     @MainActor
-    func testALibraryPictureStartsWithNoFreePaintingLeft() throws {
+    func testALibraryPictureTakesAFreePaintingToo() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-demoFreePaintings", "0"]
         app.launch()
@@ -63,11 +65,9 @@ final class UnlockUITests: XCTestCase {
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 60), "The sample didn't open its preview")
         XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 90), "Start Painting never enabled")
-        XCTAssertFalse(app.staticTexts["free-paintings"].exists, "A library picture's preview counts free paintings")
-        // Start works from the first draft: the 60 s below are for the full resolution and the save.
+        XCTAssertTrue(app.staticTexts["free-paintings"].waitForExistence(timeout: 10), "A library picture's preview counts no free paintings")
         XCTAssertTrue(waitForSuggestion(in: app), "The preview never chose its settings")
         start.tap()
-        XCTAssertTrue(start.waitForNonExistence(timeout: 60), "The library picture's painting didn't start")
-        XCTAssertFalse(app.buttons["unlock-buy"].exists, "A library picture asked for the unlock")
+        XCTAssertTrue(app.buttons["unlock-buy"].waitForExistence(timeout: 60), "A library picture with no free painting left started")
     }
 }

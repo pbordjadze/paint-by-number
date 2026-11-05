@@ -852,16 +852,17 @@ struct TemplatePreviewView: View {
     /// A photo of the painter's own, not a library picture: its painting may take a free painting.
     private var isOwnPhoto: Bool { model.source != nil && model.source?.sampleName == nil }
 
-    /// The free paintings left show under Start Painting while one of the painter's own photos
-    /// would take one (`UnlimitedPaintings`).
-    private var showsFreeCount: Bool { isOwnPhoto && paintings.isSold && !paintings.isUnlocked }
+    /// The free paintings left show under Start Painting while it would take one (`UnlimitedPaintings`).
+    private var showsFreeCount: Bool {
+        (isOwnPhoto || UnlimitedPaintings.countsEveryPainting) && paintings.isSold && !paintings.isUnlocked
+    }
 
     private var freeCount: some View {
         Group {
             let left = paintings.freeLeft
             if left > 0 {
                 Text(String(localized: "unlock.freeLeft", defaultValue: "\(left) free paintings left",
-                            comment: "Under the create flow's Start Painting, for a painting of the painter's own photo before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 3)"))
+                            comment: "Under the create flow's Start Painting, for a painting that takes a free painting before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 5)"))
             } else {
                 Text("Your next free painting comes tomorrow.")
             }

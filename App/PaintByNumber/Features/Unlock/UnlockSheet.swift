@@ -42,11 +42,11 @@ struct UnlockSheet: View {
                     Group {
                         #if UNRELEASED
                         if forRefine {
-                            Text("Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many paintings of your own photos as you like.")
+                            Text("Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like.")
                         } else if fromStart {
-                            Text("Your next free painting comes tomorrow. One purchase unlocks Refine and as many paintings of your own photos as you like.")
+                            Text("Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like.")
                         } else {
-                            Text("One purchase unlocks Refine and as many paintings of your own photos as you like.")
+                            Text("One purchase unlocks Refine and as many new paintings as you like.")
                         }
                         #else
                         if fromStart {
@@ -128,7 +128,8 @@ struct UnlockSheet: View {
             .accessibilityIdentifier("unlock-buy")
     }
 
-    /// What stays free: Refine's Tool Guide, opened from here, or the samples.
+    /// What stays free: Refine's Tool Guide, opened from here, or the samples (1.0), paintings
+    /// someone sends (1.1).
     @ViewBuilder
     private var freeNote: some View {
         if forRefine, let tryGuide {
@@ -141,8 +142,14 @@ struct UnlockSheet: View {
                 comment: "VoiceOver hint of the Unlimited Paintings sheet's button that opens Refine's Tool Guide, whose practice pictures anyone may use")))
             .accessibilityIdentifier("unlock-try-guide")
         } else {
+            #if UNRELEASED
+            // 1.1: Samples take a free painting as any new painting does.
+            Text("Paintings someone sends you are always free.")
+                .foregroundStyle(.secondary)
+            #else
             Text("Everything in Samples is always free.")
                 .foregroundStyle(.secondary)
+            #endif
         }
     }
 
