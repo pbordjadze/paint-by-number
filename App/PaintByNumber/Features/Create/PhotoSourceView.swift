@@ -379,7 +379,8 @@ struct PhotoSourceView: View {
     /// A blank page, straight into Refine.
     private func startFromScratch() {
         PaintTips.photoChosen()
-        model.loadScratch()
+        // Back from a page drawn on and From Scratch again: that page, not a fresh one.
+        if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
         onPicked()
     }
     #endif

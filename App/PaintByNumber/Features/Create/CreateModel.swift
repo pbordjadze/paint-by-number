@@ -501,6 +501,17 @@ final class CreateModel {
         begin(defaultTitle: Self.scratchTitle(), sampleName: nil, scratch: true) { try await Self.blankPage() }
     }
 
+    /// This flow's page from scratch, drawn on: From Scratch tapped again after Back opens it
+    /// again in Refine (`reopenScratch`), where a fresh page would replace its draft at the first
+    /// line (QA, November 5: the drawing seemed lost).
+    var hasScratchDrawing: Bool { isScratch && refinements.changeCount > 0 && canRefine }
+
+    func reopenScratch() {
+        guard hasScratchDrawing else { return }
+        refineAsked = true
+        trace("The page from scratch again: Refine asked for")
+    }
+
     /// The paper a page from scratch is drawn on: white, square, so it suits a phone and an iPad
     /// either way up, and large enough that the canvas is what a photo's would be
     /// (`GenerationSettings.workingSize`).

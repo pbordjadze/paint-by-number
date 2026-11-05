@@ -80,6 +80,27 @@ struct ScratchFlowTests {
     }
 
     /// Another photo after From Scratch is a photo again: Start From and the sliders come back.
+    /// Back from the preview of a page drawn on, From Scratch again opens that page in Refine
+    /// (`reopenScratch`): a fresh one would replace its draft at the first line (QA, November 5).
+    /// A page with nothing drawn is no drawing to reopen.
+    @Test func aDrawnPageIsOpenedAgainNotReplaced() async throws {
+        let model = CreateModel()
+        model.loadScratch()
+        try await waitUntil { model.isFinal }
+        #expect(!model.hasScratchDrawing, "nothing drawn yet")
+        model.withdrawRefine()
+        let page = try #require(model.preview?.template)
+        let w = Float(page.width), h = Float(page.height)
+        let serial = model.edit(.draw(points: [SIMD2(0.2 * w, 0.5 * h), SIMD2(0.8 * w, 0.5 * h)], closed: false))
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial && model.isFinal }
+        #expect(model.hasScratchDrawing)
+        #expect(!model.opensRefine)
+        model.reopenScratch()
+        #expect(model.opensRefine, "Refine opens again on the drawing")
+        #expect(model.refinements.changeCount == 1, "the drawing is still there")
+        model.cancelAll()
+    }
+
     @Test func aPhotoAfterScratchIsNoLongerScratch() async throws {
         let model = CreateModel()
         model.loadScratch()

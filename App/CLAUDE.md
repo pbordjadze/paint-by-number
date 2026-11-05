@@ -909,7 +909,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
   is asked for at once (`opensRefine`; the preview opens it once its push has landed, `pushSettles`). `isScratch`
   hides Refine's Start From and the preview's suggestion chip and sliders; the name is
-  "Drawing, <date>" (`scratchTitle`); a page with nothing drawn is no draft, and a draft records
+  "Drawing, <date>" (`scratchTitle`); From Scratch again, back from a page drawn on, opens that
+  page in Refine (`hasScratchDrawing`, `reopenScratch`); a page with nothing drawn is no draft, and a draft records
   `scratch` (`CreateDraft`, absent in older ones), so it resumes as a page from scratch. The
   preview is there with no push and stays plain paper, with no bar, until Refine has slid up over
   it (`TemplatePreviewView.waitsForRefine`, `scratchSettles`), and shows the drawing alone, with no comparison
@@ -971,8 +972,9 @@ own, so it follows none of this app's later changes and needs none of its gates.
   `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
   `strings_check.py` reads only `App/PaintByNumber`.
 - **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
-  navigation titles' New York, the free paintings' count (`freePaintings`: a mosaic counts like a
-  painting; the money rule is Paul's, painting-company row 234), the feedback relay and the
+  navigation titles' New York, the free paintings' count (`freePaintings`, 1.1's `freePaintings.v2` once Ravenna's copy
+  moves to it: Unlimited Paintings; a mosaic counts like a painting; the money rule is Paul's,
+  painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
 - **Release:** the door's files are `Era*.swift`, and Release's `EXCLUDED_SOURCE_FILE_NAMES` leaves
   out them, `Ravenna.framework` and `RavennaResources.bundle`; `ci/check_release.sh` checks the
