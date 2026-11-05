@@ -123,9 +123,11 @@ struct EraPassage: View {
         return elapsed
     }
 
-    /// One tile: where it sits, when it is set (0 to 1 through the cover), its color.
+    /// One tessera: its centre, side and turn, when it is set (0 to 1 through the cover), its color.
     struct Tile {
-        let rect: CGRect
+        let centre: CGPoint
+        let side: CGFloat
+        let angle: Double
         let delay: Double
         let color: Color
     }
@@ -161,13 +163,20 @@ struct EraPassage: View {
                 opacity = 1 - eased
                 scale = 1 - 0.25 * eased
             }
-            let rect = tile.rect
-            let scaled = CGRect(
-                x: rect.midX - rect.width * scale / 2, y: rect.midY - rect.height * scale / 2,
-                width: rect.width * scale, height: rect.height * scale)
-            graphics.fill(Path(roundedRect: scaled, cornerRadius: 1.5), with: .color(tile.color.opacity(opacity)))
+            let side = tile.side * scale
+            let turn = CGAffineTransform(translationX: tile.centre.x, y: tile.centre.y).rotated(by: tile.angle)
+            let face = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+            graphics.fill(Path(roundedRect: face, cornerRadius: side * 0.12).applying(turn),
+                          with: .color(tile.color.opacity(opacity)))
+            // The light on the glass: a bright edge toward the top of the screen, a shade below.
+            let lit = CGRect(x: face.minX + side * 0.12, y: face.minY + side * 0.08, width: side * 0.76, height: side * 0.14)
+            graphics.fill(Path(roundedRect: lit, cornerRadius: side * 0.07).applying(turn),
+                          with: .color(.white.opacity(0.22 * opacity)))
+            let shade = CGRect(x: face.minX + side * 0.1, y: face.maxY - side * 0.16, width: side * 0.8, height: side * 0.1)
+            graphics.fill(Path(roundedRect: shade, cornerRadius: side * 0.05).applying(turn),
+                          with: .color(.black.opacity(0.18 * opacity)))
         }
-        // The joints: the apse's dark between the tiles, laid with the first of them.
+        // The setting bed: the apse's dark in the joints, laid with the first tiles.
         let bed = min(1, max(0, t / (Self.cover * 0.3)))
         let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
         let ground = t < Self.cover + Self.hold ? bed : max(0, 1 - lifted * 1.4)
@@ -175,38 +184,42 @@ struct EraPassage: View {
         graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(apse.opacity(ground)))
     }
 
-    /// The courses: rings round the bottom's middle, every fourth in gold, the rest in lapis, the
-    /// apse's dark and lime, a little uneven as smalti are.
+    /// The courses: tesserae laid along true arcs round the bottom's middle, each turned to its
+    /// course as an apse's are, mostly gold smalti with bands of lime and lapis, every one a little
+    /// uneven in size, turn, place and tone. The same seed lays the same tiles every time.
     static func tiles(in size: CGSize) -> [Tile] {
         // About 36 across the short side: a phone's tiles are 22 points, an iPad's larger.
-        let side = max(22, (min(size.width, size.height) / 36).rounded())
-        let gap: CGFloat = 2
-        let columns = Int((size.width / side).rounded(.up)) + 1
-        let rows = Int((size.height / side).rounded(.up)) + 1
-        let centre = CGPoint(x: size.width / 2, y: size.height + side)
-        let farthest = hypot(max(centre.x, size.width - centre.x), centre.y) + side
-        let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
-        let lapis = Color(red: 0.122, green: 0.165, blue: 0.322)
-        let deep = Color(red: 0.165, green: 0.153, blue: 0.125)
-        let lime = Color(red: 0.914, green: 0.886, blue: 0.827)
+        let pitch = max(22, (min(size.width, size.height) / 36).rounded())
+        let centre = CGPoint(x: size.width / 2, y: size.height + pitch)
+        let farthest = hypot(max(centre.x, size.width - centre.x), centre.y) + pitch
+        let gold: (Double, Double, Double) = (0.788, 0.635, 0.290)
+        let lime: (Double, Double, Double) = (0.914, 0.886, 0.827)
+        let lapis: (Double, Double, Double) = (0.122, 0.165, 0.322)
         var random = PassageRandom(seed: 547)
         var tiles: [Tile] = []
-        tiles.reserveCapacity(columns * rows)
-        for row in 0..<rows {
-            for column in 0..<columns {
-                let rect = CGRect(x: CGFloat(column) * side, y: CGFloat(row) * side, width: side - gap, height: side - gap)
-                let distance = hypot(rect.midX - centre.x, rect.midY - centre.y)
-                let course = Int(distance / side)
-                let jitter = random.next() * 0.06
-                let delay = min(1, distance / farthest + jitter)
-                let color: Color
-                switch course % 8 {
-                case 0, 1: color = gold.opacity(0.88 + random.next() * 0.12)
-                case 2: color = lime.opacity(0.8 + random.next() * 0.2)
-                case 3, 4, 5: color = lapis.opacity(0.8 + random.next() * 0.2)
-                default: color = deep
-                }
-                tiles.append(Tile(rect: rect, delay: delay, color: color))
+        let courses = Int((farthest / pitch).rounded(.up))
+        for course in 0..<courses {
+            let radius = (CGFloat(course) + 0.6) * pitch
+            let count = max(3, Int((CGFloat.pi * radius / pitch).rounded()))
+            let step = Double.pi / Double(count)
+            let shift = random.next() * step
+            let tone: (Double, Double, Double)
+            switch course % 7 {
+            case 4: tone = lime
+            case 5, 6: tone = lapis
+            default: tone = gold
+            }
+            for index in 0..<count {
+                let theta = shift + Double(index) * step
+                let r = radius + CGFloat(random.next() - 0.5) * pitch * 0.12
+                let point = CGPoint(x: centre.x + r * CGFloat(cos(theta)), y: centre.y - r * CGFloat(sin(theta)))
+                let side = pitch * CGFloat(0.8 + random.next() * 0.1)
+                guard point.x > -side, point.x < size.width + side, point.y > -side, point.y < size.height + side else { continue }
+                let angle = -theta + (random.next() - 0.5) * 0.14
+                let light = 0.86 + random.next() * 0.24
+                let color = Color(red: min(1, tone.0 * light), green: min(1, tone.1 * light), blue: min(1, tone.2 * light))
+                let delay = min(1, Double(radius / farthest) + random.next() * 0.06)
+                tiles.append(Tile(centre: point, side: side, angle: angle, delay: delay, color: color))
             }
         }
         return tiles
