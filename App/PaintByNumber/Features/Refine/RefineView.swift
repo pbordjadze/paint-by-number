@@ -363,6 +363,12 @@ struct RefineView: View {
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
+        // Make Cell is for a shape a line closed with no room for a number of its own: its tip
+        // comes then. After any line, it sent newcomers to tap shapes already areas of their own,
+        // and nothing showed (round 5's QA, November 5).
+        .onChange(of: model.note?.kind == .tooSmall) { _, small in
+            if small, !isPractice { PaintTips.refineLineDrawn() }
+        }
         .onChange(of: layers) { layersChanged?(layers) }
         #if DEBUG
         .onChange(of: picture) {
@@ -803,7 +809,6 @@ struct RefineView: View {
         submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain, bent: bent))
         if !isPractice {
             PaintTips.refineEdited()
-            if case .draw = edit { PaintTips.refineLineDrawn() }
         }
     }
 

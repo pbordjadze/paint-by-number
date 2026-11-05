@@ -200,7 +200,8 @@ nonisolated struct RefineDrawTip: Tip {
     var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
-/// The first line drawn inside Refine: filling a closed shape. At Fill. Stops when a fill is made.
+/// A shape a line closed in Refine with no room for a number: Make Cell gives it one. At Make Cell.
+/// Stops when a fill is made.
 nonisolated struct RefineFillTip: Tip {
     var id: String { PaintTips.scoped("tip.refineFill") }
     var title: Text { Text("Make a Shape Its Own") }
