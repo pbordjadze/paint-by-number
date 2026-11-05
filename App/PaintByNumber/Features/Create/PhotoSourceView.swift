@@ -106,10 +106,14 @@ struct PhotoSourceView: View {
             }
             #if UNRELEASED
             // From Scratch (painting-company row 231): a blank page, no photo behind it, straight
-            // into Refine. Refine's builds only, as Refine is.
+            // into Refine. Refine's builds only, as Refine is. A text button, as the preview's
+            // Refine is: as an icon alone, newcomers found it only by its VoiceOver label (QA,
+            // November 5).
             ToolbarItem(placement: .primaryAction) {
-                Button("From Scratch", systemImage: "pencil.and.scribble") {
+                Button {
                     if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                } label: {
+                    Text("From Scratch")
                 }
                 .help("Draw your own picture on a blank page")
                 .accessibilityIdentifier("from-scratch")

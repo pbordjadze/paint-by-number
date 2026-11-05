@@ -903,7 +903,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
   covers the flow and regeneration, `DrawingEntryUITests` the long press and the bare toolbar.
 - From Scratch (SideStore and Debug builds, `#if UNRELEASED`, as Refine is; painting-company
-  row 231): the New Painting screen's toolbar button (`from-scratch`, beside Take Photo) calls
+  row 231): the New Painting screen's toolbar button (`from-scratch`, beside Take Photo, its name in text: as an icon newcomers found it only by its VoiceOver label) calls
   `CreateModel.loadScratch()`: a white square page (`blankPageSide`) is the flow's photo, the
   base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
   makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
