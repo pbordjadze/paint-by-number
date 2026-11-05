@@ -54,7 +54,10 @@ nonisolated enum MosaicCard {
         if ghosts, !unset.isEmpty {
             cg.saveGState()
             cg.setAlpha(Self.ghostAlpha)
+            // One layer, so each tile fades whole rather than its fill, edges and glint each apart.
+            cg.beginTransparencyLayer(auxiliaryInfo: nil)
             for i in unset { drawing.draw(i, in: cg) }
+            cg.endTransparencyLayer()
             cg.restoreGState()
         }
         if !unset.isEmpty {

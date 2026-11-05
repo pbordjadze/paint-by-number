@@ -144,7 +144,8 @@ struct EraPassage: View {
         }
         let t = elapsed - Self.wait
         guard t > 0 else { return }
-        for tile in Self.tiles(in: size) {
+        let layout = Self.layout(in: size)
+        for tile in layout.tiles {
             let opacity: Double
             let scale: Double
             if t < Self.cover {
@@ -168,7 +169,7 @@ struct EraPassage: View {
             let face = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
             graphics.fill(Path(roundedRect: face, cornerRadius: side * 0.12).applying(turn),
                           with: .color(tile.color.opacity(opacity)))
-            // The light on the glass: a bright edge toward the top of the screen, a shade below.
+            // The light on the glass: a bright edge along the course, a shade along the other.
             let lit = CGRect(x: face.minX + side * 0.12, y: face.minY + side * 0.08, width: side * 0.76, height: side * 0.14)
             graphics.fill(Path(roundedRect: lit, cornerRadius: side * 0.07).applying(turn),
                           with: .color(.white.opacity(0.22 * opacity)))
@@ -176,22 +177,48 @@ struct EraPassage: View {
             graphics.fill(Path(roundedRect: shade, cornerRadius: side * 0.05).applying(turn),
                           with: .color(.black.opacity(0.18 * opacity)))
         }
-        // The setting bed: the apse's dark in the joints, laid with the first tiles.
-        let bed = min(1, max(0, t / (Self.cover * 0.3)))
-        let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
-        let ground = t < Self.cover + Self.hold ? bed : max(0, 1 - lifted * 1.4)
+        // The setting bed: the apse's dark in the joints, spread only as far as the courses are laid,
+        // so the old era shows beyond them until the cover is whole.
         graphics.blendMode = .destinationOver
-        graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(apse.opacity(ground)))
+        let whole = Path(CGRect(origin: .zero, size: size))
+        if t < Self.cover {
+            let front = min(layout.farthest, CGFloat(t / Self.cover / 0.75) * layout.farthest)
+            let centre = layout.centre
+            let bed = Path(ellipseIn: CGRect(x: centre.x - front, y: centre.y - front, width: 2 * front, height: 2 * front))
+            graphics.fill(bed, with: .color(apse))
+        } else {
+            let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
+            graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
+        }
+    }
+
+    struct Layout {
+        let size: CGSize
+        let pitch: CGFloat
+        let centre: CGPoint
+        let farthest: CGFloat
+        let tiles: [Tile]
+    }
+
+    /// The last layout laid, kept for the passage's frames: tiles are laid once per screen size.
+    private static var laid: Layout?
+
+    static func layout(in size: CGSize) -> Layout {
+        if let laid, laid.size == size { return laid }
+        // About 36 across the short side: a phone's tiles are 22 points, an iPad's larger.
+        let pitch = max(22, (min(size.width, size.height) / 36).rounded())
+        let centre = CGPoint(x: size.width / 2, y: size.height + pitch)
+        let farthest = hypot(max(centre.x, size.width - centre.x), centre.y) + pitch
+        let layout = Layout(size: size, pitch: pitch, centre: centre, farthest: farthest,
+                            tiles: tiles(pitch: pitch, centre: centre, farthest: farthest, size: size))
+        laid = layout
+        return layout
     }
 
     /// The courses: tesserae laid along true arcs round the bottom's middle, each turned to its
     /// course as an apse's are, mostly gold smalti with bands of lime and lapis, every one a little
     /// uneven in size, turn, place and tone. The same seed lays the same tiles every time.
-    static func tiles(in size: CGSize) -> [Tile] {
-        // About 36 across the short side: a phone's tiles are 22 points, an iPad's larger.
-        let pitch = max(22, (min(size.width, size.height) / 36).rounded())
-        let centre = CGPoint(x: size.width / 2, y: size.height + pitch)
-        let farthest = hypot(max(centre.x, size.width - centre.x), centre.y) + pitch
+    private static func tiles(pitch: CGFloat, centre: CGPoint, farthest: CGFloat, size: CGSize) -> [Tile] {
         let gold: (Double, Double, Double) = (0.788, 0.635, 0.290)
         let lime: (Double, Double, Double) = (0.914, 0.886, 0.827)
         let lapis: (Double, Double, Double) = (0.122, 0.165, 0.322)
