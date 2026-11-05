@@ -23,6 +23,8 @@ is `ci/qa/explore.md` with its Goals and report replaced, on the branch `claude/
 | 1 | face, iPad | 41627468839 | yes, every part its own area |
 | 1 | sailboat, iPhone | 41632352641 | yes, painted to 100%; one line declined three times |
 | 1 (after 51e1868) | cat, iPad | 41658370278 | yes, ears and tail by Pen, every shape closed first try |
+| 2 (November 5, row 235) | lighthouse, iPad | 42045770277 | yes, painted to 100%; the horizon stopped short of the edge |
+| 2 | potted flower, iPhone | 42045777195 | mostly: the stem between flower and pot never closed |
 
 Verdict of the round 1 critic: mostly yes. Round 0's: partly.
 
@@ -37,6 +39,10 @@ now):
 - the picture's edge is a line an end heading at it meets (`SnapLines.frame`);
 - a line meets every stroke a chain it touches runs to, not only those in its box (editor 3);
 - a line passing just beside a free tip heading at it bends through it (`PenAssist.throughTips`);
+- two lines drawn from one shape to another close the strip between them, though they never
+  meet (editor 4: a line meets the strokes of its regions that touch their outlines; November 5);
+- an end heading straight at the picture's edge meets it from two fingertips, not one
+  (`PenAssist.joined`; November 5);
 - a drawn line's segments are at most 16 units (`RefineGestures.longestSegment`), so a big
   Blank's validation doesn't run out of work and decline a plain line.
 

@@ -366,6 +366,14 @@ def qa():
     case("trunk-iphone", 12.2, 248, 376.5, [
         ("oval", (255, 325), (345, 420)), ("line", (291, 418), (291, 488)), ("line", (309, 418), (309, 488)),
         ("line", (13, 489), (389, 489))], pour=(300, 460), outside=(200, 300), paper="paper-wide.ppm")
+    # Round 2's bridge (run 42045777195, iPhone): two rectangles, then two Lines from the top one's
+    # bottom edge to the bottom one's top edge; the strip between them should be an area of its own.
+    case("bridge-iphone", 12, 185, 378, [
+        ("rectangle", (60, 240), (160, 290)), ("rectangle", (60, 420), (160, 470)),
+        ("line", (90, 290), (90, 420)), ("line", (130, 290), (130, 420))], pour=(110, 355), outside=(300, 300))
+    # Its iPad horizon (run 42045770277): Shapes' Line from past the left edge to 15 points short
+    # of the right one, where the swipe's last points went missing.
+    case("horizon-ipad", 223.5, 279, 796, [("line", (211, 700), (1004, 700))], pour=(600, 500), outside=(600, 900))
     case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
          [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
 

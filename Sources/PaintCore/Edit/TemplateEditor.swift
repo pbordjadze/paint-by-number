@@ -21,7 +21,8 @@ import Foundation
 ///   edge, a stroke, the canvas frame) is moved onto it, to the nearest vertex within
 ///   `vertexSnap`, else to the nearest point, which becomes a vertex of that ink; a line whose
 ///   ends meet closes into a loop. The line is cut wherever it meets the drawing. Where a stretch
-///   closes off part of a region with the region's outline (and the strokes it touches), the
+///   closes off part of a region with the region's outline (and the strokes it touches, and those
+///   of the region that touch its outline), the
 ///   region is cut exactly along it: each piece keeps the region's paint, has a number of its
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
@@ -116,8 +117,10 @@ public enum TemplateEditor {
     /// saved before it record none. 2 (October 28, 2026): a fill or an erasure that leaves a
     /// paint with no area drops it from the palette, as Merge and Only This Area do. 3 (November
     /// 3, 2026): a line meets every stroke a chain of strokes it touches runs to, not only those
-    /// inside its own box, so a shape drawn in pieces closes however they lie.
-    public static let version = 3
+    /// inside its own box, so a shape drawn in pieces closes however they lie. 4 (November 5,
+    /// 2026): it also meets the strokes of the regions it runs through that touch their outlines,
+    /// so two lines drawn from one shape to another close the strip between them.
+    public static let version = 4
 
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"

@@ -132,6 +132,26 @@ struct BlankTemplateTests {
         #expect(abs(u.regions[lip].area - closed.regions[try TemplateEditorTests.region(closed, 80, 57)].area) < 1e-3)
     }
 
+    /// Two lines from one shape to another close the strip between them (editor version 4), though
+    /// neither meets the other: the second line closes it with the first and the shapes' outlines.
+    /// A line met only the strokes it touched, so the strip stayed part of the paper and a stem
+    /// drawn from a flower to its pot never became an area of its own (QA, November 5).
+    @Test func twoLinesBetweenShapesCloseTheStripBetween() throws {
+        var t = try Self.blank()
+        for (a, b) in [(SIMD2<Float>(30, 20), SIMD2<Float>(70, 40)), (SIMD2(30, 90), SIMD2(70, 110))] {
+            let box = [a, SIMD2(b.x, a.y), b, SIMD2(a.x, b.y)]
+            t = try TemplateEditorTests.apply(.draw(points: box, closed: true), to: t).0
+        }
+        let (one, first) = try TemplateEditorTests.apply(.draw(points: [SIMD2(40, 40), SIMD2(40, 90)], closed: false), to: t)
+        #expect(first.regionsSplit == 0)
+        let (two, second) = try TemplateEditorTests.apply(.draw(points: [SIMD2(60, 40), SIMD2(60, 90)], closed: false), to: one)
+        #expect(second.regionsSplit == 1 && two.regions.count == 4)
+        expectValid(two)
+        let strip = try TemplateEditorTests.region(two, 50, 65), around = try TemplateEditorTests.region(two, 120, 65)
+        #expect(strip != around)
+        #expect(abs(two.regions[strip].area - 20 * 50) < 1)
+    }
+
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
     /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
     /// paint, which leaves the palette, so the painting's numbers skip none.

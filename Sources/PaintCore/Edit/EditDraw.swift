@@ -221,19 +221,23 @@ extension EditWork {
             for p in pts { slo = pointwiseMin(slo, p); shi = pointwiseMax(shi, p) }
             return (pts, slo, shi)
         }
-        var judged: [Int: Bool] = [:]
-        func isCandidate(_ i: Int) -> Bool {
+        var judged: [Int: (ok: Bool, touchesOutline: Bool)] = [:]
+        func judge(_ i: Int) -> (ok: Bool, touchesOutline: Bool) {
             if let known = judged[i] { return known }
             let pts = shapes[i]!.points
-            let ok = Self.isSimple(pts) && !contacts(of: pts).contains { c in
-                switch c.contact {
-                case .cross, .overlap: return true
-                default: return false
-                }
-            }
-            judged[i] = ok
-            return ok
+            let found = contacts(of: pts)
+            let verdict = (
+                ok: Self.isSimple(pts) && !found.contains { c in
+                    switch c.contact {
+                    case .cross, .overlap: return true
+                    default: return false
+                    }
+                },
+                touchesOutline: !found.isEmpty)
+            judged[i] = verdict
+            return verdict
         }
+        func isCandidate(_ i: Int) -> Bool { judge(i).ok }
         func meet(_ a: [LatticePoint], _ b: [LatticePoint]) -> Bool {
             for k in 0..<(a.count - 1) {
                 for l in 0..<(b.count - 1) where Lattice.contact(a[k], a[k + 1], b[l], b[l + 1]) != .none { return true }
@@ -245,6 +249,18 @@ extension EditWork {
             return meet(points, shape.points) && isCandidate(i)
         }
         var taken = Set(strokes.indices.filter { meets($0, run, within: lo, hi) })
+        // And the strokes of the regions the line runs through that touch those regions'
+        // outlines: two of them can close a shape between them without meeting at all, as two
+        // lines drawn from one shape to another do round the strip between (a stem from a flower
+        // to its pot, QA, November 5: the second line closed nothing).
+        var crossed = Set<Int>()
+        for (a, b) in zip(run, run.dropFirst()) {
+            if let r = locate(a &+ b, scale: 2) { crossed.insert(r) }
+        }
+        for i in strokes.indices where !taken.contains(i) && shapes[i] != nil && crossed.contains(strokes[i].region) {
+            let verdict = judge(i)
+            if verdict.ok && verdict.touchesOutline { taken.insert(i) }
+        }
         var frontier = taken.sorted()
         while let a = frontier.popLast() {
             let shape = shapes[a]!
