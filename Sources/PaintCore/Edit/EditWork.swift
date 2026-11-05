@@ -93,6 +93,9 @@ struct EditWork {
     /// The edit is a split (`TemplateEditor.Edit.split`): the line it lays is an undrawn boundary,
     /// its ends meet any edge, and what of it closes nothing leaves no stroke.
     var splitting = false
+    /// The edit is a closed draw (a figure from Shapes, a loop of the Pen): a sliver of it that ink
+    /// there before bounds in part is not cut off (`isSliver`).
+    var closedDraw = false
     /// The boundaries this edit's line laid (the chains of its line; `drawRun`): a split's
     /// undrawn ones, a drawn line's inked ones.
     var lineEdges: [Int] = []

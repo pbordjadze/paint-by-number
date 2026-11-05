@@ -26,8 +26,9 @@ import Foundation
 ///   region is cut exactly along it: each piece keeps the region's paint, has a number of its
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
-///   area; a piece with less is not cut off, nor is a sliver (thin for the picture and long)
-///   that ink there before bounds in part. A stretch that closes nothing is an interior stroke,
+///   area; a piece with less is not cut off, nor is a sliver (thin for the picture and long) of
+///   a closed draw that ink there before bounds in part, nor one that ink there before bounds
+///   wholly (a stroke the line met closing it). A stretch that closes nothing is an interior stroke,
 ///   verbatim. Traced writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins
 ///   it and no stretch closes a shape with it, so a letter never becomes an outline; where the line
 ///   cuts the region the letters it crosses are cut with it, each piece still writing. A draw
@@ -316,6 +317,7 @@ public enum TemplateEditor {
         var work = try EditWork(template, snapRadius: snapRadius)
         switch edit {
         case .draw(let points, let closed, let paints):
+            work.closedDraw = closed
             try work.draw(points, closed: closed, nudging: paints != nil)
             if let paints { try work.paint(Array(paints.prefix(maximumPoints))) }
         case .split(let points, let closed, let paints):

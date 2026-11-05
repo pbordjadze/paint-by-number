@@ -181,6 +181,20 @@ struct BlankTemplateTests {
         #expect(small.regionsSplit == 1 && dot.regions.count == 6)
     }
 
+    /// A thin piece that isn't a figure's sliver is cut as ever: on a page from scratch, a stripe
+    /// 10 units high that a second line closes off against the first is an area, and a Cell Edge
+    /// across it divides it (the branch's review, November 5: the sliver rule once declined both).
+    @Test func aThinStripeAndACellEdgeAcrossItAreCut() throws {
+        var t = try TemplateEditor.blank(
+            width: 1600, height: 1600, photo: RGBAImage(width: 160, height: 160, fill: SIMD4(255, 255, 255, 255)), colorSpace: .sRGB)
+        t = try TemplateEditorTests.apply(.draw(points: [SIMD2(0, 800), SIMD2(1600, 800)], closed: false), to: t).0
+        let (striped, stripe) = try TemplateEditorTests.apply(.draw(points: [SIMD2(0, 810), SIMD2(1600, 810)], closed: false), to: t)
+        #expect(stripe.regionsSplit == 1 && striped.regions.count == 3)
+        let (divided, edge) = try TemplateEditorTests.apply(.cellEdge(points: [SIMD2(800, 795), SIMD2(800, 815)], closed: false), to: striped)
+        #expect(edge.regionsSplit == 1 && divided.regions.count == 4)
+        expectValid(divided)
+    }
+
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
     /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
     /// paint, which leaves the palette, so the painting's numbers skip none.

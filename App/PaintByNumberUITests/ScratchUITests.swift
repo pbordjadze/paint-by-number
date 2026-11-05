@@ -36,7 +36,7 @@ final class ScratchUITests: XCTestCase {
         // New Paint's picker on the first tap (QA, November 5: SwiftUI's ColorPicker there
         // presented nothing for a newcomer's first taps, and CI's first launch saw none in 40 s).
         let bucket = app.buttons["refine-tool-bucket"]
-        if !bucket.exists { app.buttons["Paint"].tap() }
+        if !bucket.exists { app.buttons["Paint"].firstMatch.tap() }
         XCTAssertTrue(bucket.waitForExistence(timeout: 5), "Refine has no Bucket")
         bucket.tap()
         let wheel = app.buttons["refine-palette-new"]

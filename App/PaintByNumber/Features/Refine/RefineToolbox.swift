@@ -537,19 +537,36 @@ struct RefineColorWheel: UIViewControllerRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
+    /// A drag's color not yet landed lands as the picker goes, however it is closed.
+    static func dismantleUIViewController(_ picker: UIColorPickerViewController, coordinator: Coordinator) {
+        coordinator.land()
+    }
+
     final class Coordinator: NSObject, UIColorPickerViewControllerDelegate {
         var parent: RefineColorWheel
+        /// A color a drag is passing through, landed when it rests or the picker goes.
+        private var moving: UIColor?
 
         init(parent: RefineColorWheel) { self.parent = parent }
 
         /// Once a pick rests: each color a drag passes through would wait in the palette.
         func colorPickerViewController(_ picker: UIColorPickerViewController, didSelect color: UIColor, continuously: Bool) {
+            moving = color
             guard !continuously else { return }
-            parent.color = Color(uiColor: color)
+            land()
         }
 
         func colorPickerViewControllerDidFinish(_ picker: UIColorPickerViewController) {
+            land()
             parent.done()
+        }
+
+        func land() {
+            guard let color = moving else { return }
+            moving = nil
+            let parent = parent
+            // Out of the view update the picker's going may come in.
+            Task { @MainActor in parent.color = Color(uiColor: color) }
         }
     }
 

@@ -2,7 +2,7 @@ import XCTest
 
 /// Unlimited Paintings in the create flow: a painting of the painter's own photo with no free
 /// painting left offers the unlock at Start Painting (`UnlockSheet`), Not Now keeps the preview,
-/// and buying starts the painting; a library picture needs no free painting. The App Store is
+/// and buying starts the painting; in 1.1 (Debug builds) a library picture takes one too. The App Store is
 /// `UnlockStoreStub` (Debug launches): nothing is bought for real.
 final class UnlockUITests: XCTestCase {
     @MainActor

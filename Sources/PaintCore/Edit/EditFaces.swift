@@ -56,13 +56,13 @@ extension EditWork {
     /// number becomes one), the largest keeps the region's index. The numbers stay where they
     /// were while their room does (`labelPlan`), the pixels go to the piece their centre is in,
     /// and the strokes of the region to the piece they lie in.
-    /// A piece thin for the picture and long whose outline the line drew only in part, the rest
-    /// being ink there before, as where a wheel's circle pokes a point into the car's body above
-    /// it: it has room for a number, but nobody sees it at the size the picture is drawn at, let
-    /// alone paints it apart, and the painting couldn't be finished without finding it (QA,
-    /// November 5). It is not cut off: the shape beside it keeps it, then and when a later line
-    /// meets the ink round it. A shape the line draws whole, a stem or a whisker however thin, and
-    /// a small round one (an eye's highlight) are no slivers.
+    /// A piece thin for the picture and long, as where a wheel's circle pokes a point into the
+    /// car's body above it: it has room for a number, but nobody sees it at the size the picture
+    /// is drawn at, let alone paints it apart, and the painting couldn't be finished without
+    /// finding it (QA, November 5). `splitRegion` asks only of a closed draw's pieces that ink
+    /// there before bounds in part, and of pieces the line drew none of; such a piece is not cut
+    /// off: the shape beside it keeps it, then and when a later line meets the ink round it. A
+    /// small round shape (an eye's highlight) is no sliver.
     static func isSliver(room: Float, area2: Int64, longSide: Int) -> Bool {
         guard room < Float(longSide) / Self.sliverWidths else { return false }
         let unit = Double(Lattice.unit)
@@ -154,8 +154,14 @@ extension EditWork {
             for i in pieces.indices {
                 pieces[i].plan = labelPlan(
                     rings: pieces[i].rings, color: color, detail: wasDetail, hints: hints, region: r, keepOut: freshLines)
-                let drawnWhole = (pieces[i].outer + pieces[i].holes.flatMap { $0 }).allSatisfy { fresh.contains($0.edge) }
-                if !drawnWhole, let plan = pieces[i].plan,
+                // A closed figure's piece beside ink there before (the lens where a wheel pokes
+                // into the car), or a piece the line drew none of, closed by a stroke it met (that
+                // lens's arc, met by a later line across the body). Any other thin piece is cut: a
+                // stripe a Cell Edge divides, a strip a line closes off, a stem drawn whole.
+                let outline = pieces[i].outer + pieces[i].holes.flatMap { $0 }
+                let drawn = outline.filter { fresh.contains($0.edge) }.count
+                let judged = drawn == 0 || (closedDraw && drawn < outline.count)
+                if judged, let plan = pieces[i].plan,
                    Self.isSliver(room: plan.labels.map(\.radius).max() ?? 0, area2: pieces[i].area2, longSide: max(t.width, t.height)) {
                     pieces[i].plan = nil
                 }
