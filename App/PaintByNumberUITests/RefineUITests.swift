@@ -87,6 +87,11 @@ final class RefineUITests: XCTestCase {
         // In the full screen the bar's Undo is the canvas's ⌘Z (on iPad, a keyboard's).
         if keyboard {
             app.typeKey("z", modifierFlags: .command)
+            // A key CI's simulator lost while the bars went (November 5, another branch's run):
+            // typed again only if nothing was undone at all.
+            if !waitFor(canvas, toMatch: changes("2 changes")), canvas.value as? String == "3 changes" {
+                retapIfLost("full-screen undo") { app.typeKey("z", modifierFlags: .command) }
+            }
             XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "⌘Z didn't undo in the full screen")
             app.typeKey("z", modifierFlags: [.command, .shift])
             XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "⇧⌘Z didn't redo in the full screen")
