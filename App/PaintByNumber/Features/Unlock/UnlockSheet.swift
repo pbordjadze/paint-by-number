@@ -79,13 +79,16 @@ struct UnlockSheet: View {
                         notNowButton
                     }
                 }
-                // One quiet line when it fits (the Lamplit Table: Rikyū).
+                // One quiet line when it fits (the Lamplit Table: Rikyū); two links, the guide's and
+                // Restore's, read as one there, so for Refine they take a line each.
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) {
-                        freeNote
-                        restoreButton
+                    if !forRefine {
+                        HStack(spacing: 6) {
+                            freeNote
+                            restoreButton
+                        }
                     }
-                    VStack(spacing: 6) {
+                    VStack(spacing: 10) {
                         freeNote
                         restoreButton
                     }
