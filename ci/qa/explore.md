@@ -179,9 +179,8 @@ paint-by-numbers picture. You are a newcomer: nobody has shown you its tools, an
 expect anyone to. Your task, as a person would take it:
 
 **Draw something of your own from scratch in Refine and make it look the way you want.** Your
-subject is given under "This session" below. Get to Refine from the New Painting preview (after
-+, choosing the photo or a sample). Start from as empty a canvas as the screen lets you; you
-decide what that means and how to find it. Draw your subject so it would make a good
+subject is given under "This session" below. Start from + (New Painting) and find your own way
+to an empty page to draw on; you decide what that means and how to find it. Draw your subject so it would make a good
 paint-by-numbers picture: closed shapes, each its own area, in colors you chose. Then paint it
 on the painting screen.
 
