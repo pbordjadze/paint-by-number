@@ -1,0 +1,97 @@
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 271]
+[Planning deferred tasks]
+[65 / 134] MakingOfTests-product
+[72 / 134]
+[77 / 134]
+[78 / 135] PaintCore
+[82 / 176]
+[87 / 176]
+[90 / 176]
+[93 / 176]
+[95 / 176]
+[97 / 176]
+[100 / 176]
+[102 / 176]
+[104 / 176]
+[106 / 176]
+[109 / 176]
+[112 / 176]
+[113 / 176]
+[117 / 176] PaintCore
+[118 / 176] PaintCore
+[119 / 176] PaintCore
+[125 / 176] PaintCore
+[130 / 177]
+[133 / 222]
+[135 / 222]
+[137 / 222]
+[139 / 222]
+[141 / 222]
+[143 / 222]
+[145 / 222]
+[147 / 222]
+[148 / 222]
+[149 / 222]
+[152 / 222]
+[154 / 222]
+[155 / 222]
+[158 / 222]
+[160 / 222]
+[161 / 222]
+[163 / 222]
+[164 / 222]
+[165 / 222]
+[166 / 222]
+[169 / 222]
+[170 / 222]
+[171 / 222]
+[173 / 222] pbn-product
+[175 / 222] pbn-product
+[176 / 222]
+[178 / 223]
+[180 / 227] MakingOf
+[181 / 227] MakingOf
+[183 / 227] MakingOf
+[188 / 227] MakingOf
+[190 / 227] PaintCore
+[192 / 227] PaintCore
+[198 / 228] PaintCoreTests-product
+[199 / 234]
+[205 / 235] MakingOfTests-product
+[207 / 235] MakingOfTests-product
+[210 / 239] MakingOfTests-product
+[210 / 239] pbn-product
+[212 / 239] MakingOfTests-product
+[223 / 239] MakingOfTests-product
+[225 / 239] MakingOfTests-product
+[225 / 239] AllIncludingTests
+[226 / 239]
+[227 / 239] PaintCoreTests-product
+[228 / 239] PaintCoreTests-product
+[229 / 239] PaintCoreTests-product
+[230 / 239] PaintCoreTests-product
+[231 / 239] PaintCoreTests-product
+[233 / 239] MakingOfTests-product
+[235 / 239] MakingOfTests-product
+[237 / 239] MakingOfTests-product
+Build complete! (149.99 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test sharedPlatformPins() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.055 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.055 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.055 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.055 seconds.
+✔ Test sharedPlatformPins() passed after 0.085 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.130 seconds.
+✔ Suite "ColorNickname v2" passed after 0.131 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.131 seconds.

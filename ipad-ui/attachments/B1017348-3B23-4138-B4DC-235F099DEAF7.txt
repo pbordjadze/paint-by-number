@@ -1,0 +1,270 @@
+Attributes: Other, 0x112720140, {{196.0, 86.0}, {836.0, 1122.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes
+Element subtree:
+ →Other, 0x112720140, {{196.0, 86.0}, {836.0, 1122.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes
+Path to element:
+ →Application, 0x112720dc0, pid: 53547, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x112720c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x112720b40, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x112720a00, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x1127208c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      ↳Other, 0x112720780, {{0.0, 0.0}, {1032.0, 1376.0}}
+       ↳Other, 0x112720640, {{0.0, 0.0}, {1032.0, 1376.0}}
+        ↳Other, 0x112720500, {{0.0, 0.0}, {1032.0, 1376.0}}
+         ↳Other, 0x1127203c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          ↳Other, 0x112720280, {{0.0, 0.0}, {1032.0, 1376.0}}
+           ↳Other, 0x112720140, {{196.0, 86.0}, {836.0, 1122.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x112761cc0, pid: 53547, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x1124766c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Window, 0x112761900, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112476800, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112475cc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112715540, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112761a40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112476940, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112475e00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1087c1180, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112761b80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112476a80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112475f40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1087c1400, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112477200, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112476080, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1087c12c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112477340, {{0.0, 0.0}, {1032.0, 1376.0}}
+      NavigationBar, 0x11275d2c0, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+      Other, 0x11275cc80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Toolbar, 0x112717700, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar'
+      NavigationBar, 0x1087c08c0, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'Refine'
+      Other, 0x1087c0140, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Toolbar, 0x112761680, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar'
+      NavigationBar, 0x112477480, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+      Other, 0x112477ac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Toolbar, 0x112475a40, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar'
+      Button, 0x11275d400, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+      StaticText, 0x11275d180, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+      Other, 0x11275d040, {{946.0, 36.0}, {72.0, 36.0}}
+      Other, 0x11275cb40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112715680, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x1087c0b40, {{14.0, 36.0}, {40.0, 36.0}}, identifier: 'refine-guide', label: 'Tool Guide'
+      Button, 0x1087c0a00, {{70.0, 36.0}, {36.5, 36.0}}, identifier: 'refine-cancel', label: 'Cancel'
+      StaticText, 0x1087c03c0, {{489.0, 43.5}, {54.0, 21.0}}, label: 'Refine'
+      Button, 0x1087c0640, {{810.0, 36.0}, {39.5, 36.0}}, identifier: 'refine-undo', label: 'Undo', Disabled
+      Button, 0x1087c0500, {{865.5, 36.0}, {39.5, 36.0}}, identifier: 'refine-redo', label: 'Redo', Disabled
+      Button, 0x1087c0000, {{921.0, 36.0}, {41.0, 36.0}}, identifier: 'refine-layers', label: 'Layers'
+      Button, 0x1087c0280, {{982.0, 36.0}, {36.0, 36.0}}, identifier: 'refine-done', label: 'Done'
+      Other, 0x1087c0dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1127617c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x1124775c0, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      SearchField, 0x112477e80, {{782.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+      StaticText, 0x112477c00, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+      Other, 0x112477980, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112475b80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x11275cf00, {{946.0, 36.0}, {72.0, 36.0}}
+      Other, 0x11275ca00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1087c0780, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Image, 0x112477d40, {{794.0, 43.5}, {20.5, 20.0}}, identifier: 'magnifyingglass', label: 'Search'
+      Other, 0x112477700, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x11275cdc0, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Other, 0x11275c8c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1087c0c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x112477840, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x11275c780, {{0.0, 86.0}, {1032.0, 1270.0}}
+      Other, 0x11275c640, {{32.0, 90.0}, {968.0, 715.5}}
+      Other, 0x11275c500, {{32.0, 123.0}, {968.0, 649.5}}
+      Other, 0x11275c3c0, {{32.0, 123.0}, {968.0, 649.5}}, identifier: 'compare', label: 'Comparison of photo and painting', value: 50 percent photo
+      Other, 0x112716300, {{516.0, 721.0}, {0.0, 0.0}}
+      Other, 0x112715e00, {{236.0, 821.5}, {560.0, 534.5}}
+      Image, 0x112716a80, {{274.0, 859.0}, {13.5, 13.5}}, identifier: 'pencil', label: 'Edit'
+      TextField, 0x112716940, {{299.5, 853.5}, {460.5, 24.0}}, identifier: 'painting-title', placeholderValue: 'The Great Wave', value: The Great Wave
+      Other, 0x112716bc0, {{258.0, 905.5}, {210.5, 44.0}}
+      Other, 0x112716d00, {{258.0, 905.5}, {210.5, 44.0}}
+      Other, 0x112717200, {{258.0, 905.5}, {210.5, 44.0}}, identifier: 'settings-origin', label: 'Settings', value: Suggested for this...
+      Other, 0x112717340, {{706.5, 912.5}, {67.5, 30.0}}
+      Button, 0x1127170c0, {{706.5, 912.5}, {67.5, 30.0}}, identifier: 'preview-adjust', label: 'Adjust', value: Settings shown
+      StaticText, 0x112716580, {{258.0, 967.5}, {46.5, 18.0}}, label: 'Colors'
+      Other, 0x112716440, {{258.0, 967.5}, {516.0, 53.0}}
+      StaticText, 0x1127175c0, {{755.5, 967.5}, {18.5, 18.0}}, label: '22'
+      Slider, 0x112717480, {{258.0, 989.5}, {516.0, 31.0}}, label: 'Colors', value: 22
+      StaticText, 0x112715cc0, {{258.0, 1038.5}, {41.5, 18.0}}, label: 'Detail'
+      StaticText, 0x112715b80, {{717.0, 1038.5}, {57.0, 18.0}}, label: 'Detailed'
+      Slider, 0x112715a40, {{258.0, 1060.5}, {516.0, 31.0}}, label: 'Detail', value: Detailed
+      StaticText, 0x112715900, {{258.0, 1109.5}, {89.5, 18.0}}, label: 'Smoothness'
+      StaticText, 0x1127157c0, {{720.5, 1109.5}, {53.5, 18.0}}, label: 'Smooth'
+      Slider, 0x112717d40, {{258.0, 1131.5}, {516.0, 31.0}}, label: 'Smoothness', value: Smooth
+      StaticText, 0x112717e80, {{258.0, 1180.5}, {38.0, 18.0}}, label: 'Lines'
+      StaticText, 0x112717c00, {{710.5, 1180.5}, {63.5, 18.0}}, label: 'Balanced'
+      Slider, 0x112717ac0, {{258.0, 1202.5}, {516.0, 31.0}}, label: 'Lines', value: Balanced
+      StaticText, 0x112717980, {{419.2, 1251.5}, {193.5, 16.0}}, label: '22 colors · 406 areas · ~20 min'
+      Button, 0x112717840, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      Other, 0x1087c0f00, {{196.0, 86.0}, {836.0, 1122.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes
+      StaticText, 0x11271bac0, {{32.0, 110.0}, {21.0, 14.5}}, label: 'INK'
+      SegmentedControl, 0x11271b840, {{208.0, 98.0}, {180.0, 43.0}}, identifier: 'refine-start'
+      Other, 0x108405680, {{20.0, 128.5}, {168.0, 37.0}}
+      Button, 0x108405540, {{20.0, 128.5}, {168.0, 37.0}}, identifier: 'refine-tool-pen', label: 'Pen'
+      Button, 0x108404780, {{20.0, 167.5}, {168.0, 36.0}}, identifier: 'refine-tool-shapes', label: 'Shapes', value: Line
+      Button, 0x108404000, {{20.0, 205.5}, {168.0, 38.5}}, identifier: 'refine-tool-bendLine', label: 'Bend Line'
+      Button, 0x1084048c0, {{20.0, 246.0}, {168.0, 39.5}}, identifier: 'refine-tool-eraser', label: 'Eraser'
+      Button, 0x108404a00, {{20.0, 287.5}, {168.0, 42.0}}, identifier: 'refine-tool-smartEraser', label: 'Line Eraser'
+      StaticText, 0x108404f00, {{32.0, 345.5}, {38.5, 14.5}}, label: 'CELLS'
+      Button, 0x1084052c0, {{20.0, 364.0}, {168.0, 39.0}}, identifier: 'refine-tool-select', label: 'Select'
+      Button, 0x108405400, {{20.0, 405.0}, {168.0, 37.0}}, identifier: 'refine-tool-cellEdge', label: 'Cell Edge'
+      Button, 0x108406580, {{20.0, 444.0}, {168.0, 38.5}}, identifier: 'refine-tool-merge', label: 'Merge'
+      Button, 0x108406080, {{20.0, 484.5}, {168.0, 37.0}}, identifier: 'refine-tool-moveEdge', label: 'Move Edge'
+      Button, 0x1084e7840, {{578.0, 503.0}, {44.0, 44.0}}, identifier: 'refine-cell-48', label: '17 · Light gray', value: top
+      Other, 0x1084e7700, {{20.0, 523.5}, {168.0, 38.5}}
+      Button, 0x1084e5680, {{20.0, 523.5}, {168.0, 38.5}}, identifier: 'refine-tool-fill', label: 'Make Cell'
+      Button, 0x1084e7980, {{529.0, 529.0}, {44.0, 44.0}}, identifier: 'refine-cell-68', label: '8 · Vivid blue', value: top
+      Button, 0x1084e5cc0, {{536.5, 517.5}, {44.0, 44.0}}, identifier: 'refine-cell-42', label: '17 · Light gray', value: top
+      Button, 0x1084e5b80, {{566.0, 507.0}, {44.0, 44.0}}, identifier: 'refine-cell-47', label: '17 · Light gray', value: top
+      Button, 0x1084e5a40, {{559.5, 528.0}, {44.0, 44.0}}, identifier: 'refine-cell-44', label: '14 · Pale gray', value: top
+      Button, 0x1084e7480, {{620.0, 521.5}, {44.0, 44.0}}, identifier: 'refine-cell-64', label: '17 · Light gray', value: top
+      Button, 0x1084e57c0, {{637.0, 531.0}, {44.0, 44.0}}, identifier: 'refine-cell-69', label: '17 · Light gray', value: top
+      Button, 0x1084e75c0, {{647.5, 526.0}, {44.0, 44.0}}, identifier: 'refine-cell-65', label: '3 · Light beige', value: top
+      Button, 0x1084e6580, {{651.5, 518.5}, {44.0, 44.0}}, identifier: 'refine-cell-63', label: '14 · Pale gray', value: top
+      Button, 0x1084e66c0, {{661.0, 526.5}, {44.0, 44.0}}, identifier: 'refine-cell-66', label: '14 · Pale gray', value: top
+      Button, 0x1084e6440, {{509.5, 551.5}, {44.0, 44.0}}, identifier: 'refine-cell-72', label: '8 · Vivid blue', value: center
+      Button, 0x1084e6800, {{536.5, 542.0}, {44.0, 44.0}}, identifier: 'refine-cell-76', label: '15 · Pale gray', value: center
+      Button, 0x1084e7340, {{635.5, 550.0}, {44.0, 44.0}}, identifier: 'refine-cell-73', label: '3 · Light beige', value: center
+      Button, 0x1084e7200, {{576.5, 563.0}, {44.0, 44.0}}, identifier: 'refine-cell-87', label: '2 · White', value: center
+      Button, 0x1084e70c0, {{581.0, 557.5}, {44.0, 44.0}}, identifier: 'refine-cell-84', label: '14 · Pale gray', value: center
+      Button, 0x1084e6e40, {{585.0, 562.5}, {44.0, 44.0}}, identifier: 'refine-cell-88', label: '2 · White', value: center
+      Button, 0x1084e6d00, {{604.0, 553.5}, {44.0, 44.0}}, identifier: 'refine-cell-81', label: '14 · Pale gray', value: center
+      Button, 0x1084e6a80, {{617.5, 562.5}, {44.0, 44.0}}, identifier: 'refine-cell-90', label: '14 · Pale gray', value: center
+      StaticText, 0x1084e6f80, {{32.0, 578.0}, {36.5, 14.5}}, label: 'PAINT'
+      Button, 0x1084e6940, {{628.0, 583.5}, {44.0, 44.0}}, identifier: 'refine-cell-107', label: '2 · White', value: center
+      Button, 0x1084e6bc0, {{636.5, 571.5}, {44.0, 44.0}}, identifier: 'refine-cell-89', label: '3 · Light beige', value: center
+      Button, 0x1084e5e00, {{20.0, 596.5}, {168.0, 38.5}}, identifier: 'refine-tool-bucket', label: 'Bucket'
+      Button, 0x1084e5f40, {{481.0, 585.0}, {44.0, 44.0}}, identifier: 'refine-cell-109', label: '6 · Light grayish teal', value: center
+      Button, 0x1084e61c0, {{489.5, 580.0}, {44.0, 44.0}}, identifier: 'refine-cell-102', label: '13 · Navy', value: center
+      Button, 0x1084e7d40, {{633.0, 585.0}, {44.0, 44.0}}, identifier: 'refine-cell-108', label: '3 · Light beige', value: center
+      Button, 0x1084e7e80, {{634.0, 579.0}, {44.0, 44.0}}, identifier: 'refine-cell-100', label: '3 · Light beige', value: center
+      Button, 0x1084e7c00, {{470.0, 612.0}, {44.0, 44.0}}, identifier: 'refine-cell-129', label: '13 · Navy', value: center
+      Button, 0x1084e7ac0, {{472.5, 602.0}, {44.0, 44.0}}, identifier: 'refine-cell-123', label: '12 · Navy', value: center
+      Button, 0x112741040, {{484.0, 603.5}, {44.0, 44.0}}, identifier: 'refine-cell-125', label: '6 · Light grayish teal', value: center
+      Button, 0x112740f00, {{20.0, 637.0}, {168.0, 40.5}}, identifier: 'refine-tool-brush', label: 'Paint Brush'
+      Button, 0x112740780, {{477.5, 643.5}, {44.0, 44.0}}, identifier: 'refine-cell-145', label: '13 · Navy', value: center
+      Button, 0x112740000, {{494.0, 632.0}, {44.0, 44.0}}, identifier: 'refine-cell-115', label: '13 · Navy', value: center
+      Button, 0x112740140, {{505.0, 620.5}, {44.0, 44.0}}, identifier: 'refine-cell-132', label: '8 · Vivid blue', value: center
+      Button, 0x112740280, {{485.0, 658.0}, {44.0, 44.0}}, identifier: 'refine-cell-156', label: '11 · Vivid blue', value: center
+      Button, 0x1127403c0, {{20.0, 679.5}, {168.0, 40.0}}, identifier: 'refine-tool-eyedropper', label: 'Eyedropper'
+      Button, 0x1127408c0, {{490.0, 667.0}, {44.0, 44.0}}, identifier: 'refine-cell-171', label: '12 · Navy', value: center
+      Button, 0x112740a00, {{516.0, 655.0}, {44.0, 44.0}}, identifier: 'refine-cell-139', label: '9 · Blue', value: center
+      Button, 0x112740b40, {{520.0, 678.5}, {44.0, 44.0}}, identifier: 'refine-cell-167', label: '13 · Navy', value: center
+      Button, 0x1127412c0, {{558.0, 680.5}, {44.0, 44.0}}, identifier: 'refine-cell-162', label: '5 · Beige', value: center
+      Button, 0x112741400, {{524.0, 703.0}, {44.0, 44.0}}, identifier: 'refine-cell-202', label: '16 · Pale gray', value: center
+      Button, 0x112741180, {{535.5, 699.5}, {44.0, 44.0}}, identifier: 'refine-cell-190', label: '13 · Navy', value: center
+      Button, 0x112721540, {{582.0, 696.0}, {44.0, 44.0}}, identifier: 'refine-cell-166', label: '18 · Light gray', value: center
+      Button, 0x112721680, {{20.0, 721.5}, {168.0, 41.0}}, identifier: 'refine-tool-editPaint', label: 'Edit Paint', Selected
+      Button, 0x112723980, {{616.0, 726.5}, {44.0, 44.0}}, identifier: 'refine-cell-185', label: '21 · Gray', value: bottom
+      Button, 0x112723ac0, {{567.0, 741.0}, {44.0, 44.0}}, identifier: 'refine-cell-234', label: '16 · Pale gray', value: bottom
+      Button, 0x112723c00, {{20.0, 764.5}, {168.0, 39.0}}, identifier: 'refine-tool-looks', label: 'Looks'
+      StaticText, 0x1127217c0, {{32.0, 819.5}, {60.5, 14.5}}, label: 'NUMBERS'
+      Button, 0x112721900, {{20.0, 838.0}, {168.0, 38.5}}, identifier: 'refine-tool-moveNumber', label: 'Move Number'
+      StaticText, 0x112721cc0, {{32.0, 892.5}, {23.0, 14.5}}, label: 'SEE'
+      Button, 0x112723480, {{20.0, 911.0}, {168.0, 38.0}}, identifier: 'refine-tool-text', label: 'Writing'
+      Button, 0x112722580, {{20.0, 951.0}, {168.0, 42.5}}, identifier: 'refine-tool-tryPainting', label: 'Try Painting'
+      Other, 0x1127230c0, {{254.0, 1220.0}, {720.0, 64.0}}, identifier: 'refine-colors'
+      Other, 0x112722bc0, {{254.0, 1296.0}, {720.0, 52.0}}, identifier: 'refine-palette', label: 'Palette'
+      ScrollView, 0x112476bc0, {{516.0, 0.0}, {0.0, 1376.0}}
+      Other, 0x112476e40, {{0.0, 138.0}, {1032.0, 1218.0}}
+      Other, 0x112476f80, {{381.0, 504.0}, {270.0, 198.0}}
+      StaticText, 0x112476d00, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+      StaticText, 0x112475540, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+      Button, 0x112475680, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+      Image, 0x11275c280, {{32.0, 122.5}, {968.0, 650.5}}
+      Image, 0x11275c140, {{32.0, 123.0}, {968.0, 649.5}}
+      StaticText, 0x11275c000, {{32.0, 123.0}, {968.0, 649.5}}, label: 'Photo'
+      StaticText, 0x1127161c0, {{933.5, 137.8}, {48.5, 14.5}}, label: 'Painting'
+      Other, 0x112715f40, {{494.0, 426.0}, {44.0, 44.0}}
+      Image, 0x112716080, {{494.0, 426.0}, {44.0, 44.0}}, identifier: 'arrow.left.and.right', label: 'Left And Right Arrows'
+      Image, 0x112716e40, {{271.5, 920.0}, {12.5, 15.0}}, identifier: 'sparkles', label: 'Sparkle'
+      StaticText, 0x112716f80, {{291.5, 919.5}, {165.0, 16.0}}, label: 'Suggested for this picture'
+      StaticText, 0x112716800, {{706.5, 912.5}, {67.5, 30.0}}, label: 'Adjust'
+      Image, 0x1127166c0, {{758.5, 923.5}, {13.5, 8.0}}, identifier: 'chevron.down', label: 'Go Down'
+      Other, 0x1087c1040, {{196.0, 86.0}, {836.0, 1122.0}}
+      Other, 0x11271bd40, {{196.0, 86.0}, {836.0, 1122.0}}
+      Image, 0x11271bc00, {{208.0, 374.5}, {812.0, 545.0}}
+      Button, 0x108405a40, {{214.0, 104.0}, {84.0, 32.0}}, label: 'Generated', Selected
+      Button, 0x1084057c0, {{298.0, 104.0}, {84.0, 32.0}}, label: 'Blank'
+      Image, 0x108404640, {{38.5, 139.0}, {11.5, 16.0}}, identifier: 'pencil.tip', label: 'Pencil Tip'
+      StaticText, 0x108404500, {{66.0, 138.0}, {26.0, 18.0}}, label: 'Pen'
+      Image, 0x108406300, {{37.0, 178.5}, {14.0, 14.0}}, identifier: 'line.diagonal', label: 'Diagonal Line'
+      StaticText, 0x1084061c0, {{66.0, 176.5}, {51.0, 18.0}}, label: 'Shapes'
+      Image, 0x108404280, {{35.0, 216.0}, {18.0, 17.5}}, identifier: 'scribble', label: 'Draw'
+      StaticText, 0x108404140, {{66.0, 215.8}, {68.5, 18.0}}, label: 'Bend Line'
+      Image, 0x108404b40, {{35.0, 256.5}, {18.5, 18.5}}, identifier: 'eraser', label: 'Eraser'
+      StaticText, 0x108404c80, {{66.0, 256.8}, {44.0, 18.0}}, label: 'Eraser'
+      Image, 0x108404dc0, {{31.5, 298.0}, {23.0, 21.0}}, identifier: 'eraser.line.dashed', label: 'Eraser With A Dashed Line'
+      StaticText, 0x108405cc0, {{66.0, 299.5}, {76.5, 18.0}}, label: 'Line Eraser'
+      Image, 0x108405180, {{39.0, 374.5}, {10.5, 18.0}}, identifier: 'cursorarrow', label: 'Cursor Arrow Pointer'
+      StaticText, 0x108405040, {{66.0, 374.5}, {43.5, 18.0}}, label: 'Select'
+      Image, 0x108405b80, {{36.0, 415.5}, {16.0, 16.0}}, identifier: 'square.split.diagonal', label: 'Square Split Diagonally'
+      StaticText, 0x108405900, {{66.0, 414.5}, {65.0, 18.0}}, label: 'Cell Edge'
+      Image, 0x1084043c0, {{39.0, 454.5}, {10.5, 17.5}}, identifier: 'arrow.triangle.merge', label: 'Merge'
+      StaticText, 0x108406440, {{66.0, 454.2}, {44.0, 18.0}}, label: 'Merge'
+      Image, 0x108405f40, {{36.0, 495.0}, {16.0, 16.0}}, identifier: 'arrow.left.and.right.square', label: 'Left And Right Arrows In A Square'
+      StaticText, 0x108405e00, {{66.0, 494.0}, {76.5, 18.0}}, label: 'Move Edge'
+      Image, 0x1084e5540, {{35.5, 534.0}, {17.5, 17.5}}, identifier: 'circle.inset.filled', label: 'Circle With A Filled Inset'
+      StaticText, 0x1084e5900, {{66.0, 533.8}, {67.0, 18.0}}, label: 'Make Cell'
+      Image, 0x1084e6300, {{38.0, 607.0}, {12.5, 17.5}}, identifier: 'drop.fill', label: 'Water Drop'
+      StaticText, 0x1084e6080, {{66.0, 606.8}, {47.5, 18.0}}, label: 'Bucket'
+      Image, 0x112740dc0, {{34.0, 647.5}, {20.5, 19.5}}, identifier: 'paintbrush.pointed', label: 'Pointed Paintbrush'
+      StaticText, 0x112740c80, {{66.0, 648.2}, {78.5, 18.0}}, label: 'Paint Brush'
+      Image, 0x112740500, {{35.0, 690.0}, {19.0, 19.0}}, identifier: 'eyedropper', label: 'Pick Color Empty'
+      StaticText, 0x112740640, {{66.0, 690.5}, {79.5, 18.0}}, label: 'Eyedropper'
+      Image, 0x112723700, {{34.0, 732.0}, {20.0, 20.0}}, identifier: 'swatchpalette', label: 'Color Swatch Palette'
+      StaticText, 0x112723840, {{66.0, 733.0}, {68.0, 18.0}}, label: 'Edit Paint'
+      Image, 0x112723e80, {{34.5, 775.0}, {19.0, 18.0}}, identifier: 'camera.filters', label: 'Filters'
+      StaticText, 0x112723d40, {{66.0, 775.0}, {40.5, 18.0}}, label: 'Looks'
+      Image, 0x112721a40, {{35.5, 848.5}, {17.5, 17.5}}, identifier: 'number.circle', label: 'Number Sign In A Circle'
+      StaticText, 0x112721b80, {{66.0, 848.2}, {96.5, 18.0}}, label: 'Move Number'
+      Image, 0x1127235c0, {{35.5, 921.5}, {17.0, 17.0}}, identifier: 'text.viewfinder', label: 'Text In A Viewfinder'
+      StaticText, 0x112722440, {{66.0, 921.0}, {49.0, 18.0}}, label: 'Writing'
+      Image, 0x1127226c0, {{34.5, 961.5}, {19.0, 21.5}}, identifier: 'paintbrush', label: 'Format'
+      StaticText, 0x112722800, {{66.0, 963.2}, {81.0, 18.0}}, label: 'Try Painting'
+      StaticText, 0x112723340, {{268.0, 1244.0}, {42.0, 16.0}}, label: 'Paint 1'
+      Button, 0x112723200, {{322.0, 1234.0}, {36.0, 36.0}}, identifier: 'refine-colors-picker', label: 'Color', value: orange
+      Switch, 0x112722f80, {{786.0, 1238.0}, {174.0, 28.0}}, identifier: 'refine-colors-family', label: 'Similar colors too', value: 1
+      ScrollView, 0x112722940, {{266.0, 1300.0}, {650.0, 44.0}}
+      Button, 0x112761540, {{926.0, 1304.0}, {36.0, 36.0}}, identifier: 'refine-palette-new', label: 'New Paint, New Paint', value: orange
+      Other, 0x1124770c0, {{516.0, 138.0}, {0.0, 0.0}}
+      StaticText, 0x1124757c0, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+      Image, 0x112475900, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+      ScrollView, 0x11271be80, {{196.0, 86.0}, {836.0, 1122.0}}
+      StaticText, 0x112722e40, {{786.0, 1244.0}, {105.0, 16.0}}, label: 'Similar colors too'
+      Switch, 0x112722d00, {{899.0, 1238.0}, {63.0, 28.0}}, value: 1
+      Other, 0x112722a80, {{266.0, 1300.0}, {966.0, 44.0}}
+      Other, 0x11271b980, {{208.0, 374.5}, {812.0, 545.2}}
+      Button, 0x112721e00, {{266.8, 1301.8}, {40.5, 40.5}}, identifier: 'refine-paint-1', label: '1 · Beige', Selected
+      Button, 0x112722300, {{315.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-2', label: '2 · White'
+      Button, 0x112722080, {{359.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-3', label: '3 · Light beige'
+      Button, 0x1127221c0, {{403.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-4', label: '4 · Light beige'
+      Button, 0x112721f40, {{447.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-5', label: '5 · Beige'
+      Button, 0x112760000, {{491.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-6', label: '6 · Light grayish teal'
+      Button, 0x112760140, {{535.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-7', label: '7 · Vivid blue'
+      Button, 0x112760280, {{579.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-8', label: '8 · Vivid blue'
+      Button, 0x1127603c0, {{623.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-9', label: '9 · Blue'
+      Button, 0x112760500, {{667.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-10', label: '10 · Blue'
+      Button, 0x112760640, {{711.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-11', label: '11 · Vivid blue'
+      Button, 0x112760780, {{755.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-12', label: '12 · Navy'
+      Button, 0x1127608c0, {{799.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-13', label: '13 · Navy'
+      Button, 0x112760a00, {{843.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-14', label: '14 · Pale gray'
+      Button, 0x112760b40, {{887.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-15', label: '15 · Pale gray'
+      Button, 0x112760c80, {{931.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-16', label: '16 · Pale gray'
+      Button, 0x112760dc0, {{975.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-17', label: '17 · Light gray'
+      Button, 0x112760f00, {{1019.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-18', label: '18 · Light gray'
+      Button, 0x112761040, {{1063.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-19', label: '19 · Gray'
+      Button, 0x112761180, {{1107.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-20', label: '20 · Gray'
+      Button, 0x1127612c0, {{1151.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-21', label: '21 · Gray'
+      Button, 0x112761400, {{1195.0, 1306.0}, {32.0, 32.0}}, identifier: 'refine-paint-22', label: '22 · Gray'
+    }
+    ↪︎Find: Elements matching predicate '"refine-canvas" IN identifiers'
+      Output: {
+        Other, 0x11274be80, {{196.0, 86.0}, {836.0, 1122.0}}, identifier: 'refine-canvas', label: 'Painting to refine', value: No changes
+      }
