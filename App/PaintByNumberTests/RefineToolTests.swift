@@ -116,6 +116,20 @@ struct RefineToolTests {
         #expect(RefineGroup.of(.tryPainting) == .see)
     }
 
+    /// Several colors picked in a row all wait in the palette as new paints, in the order picked
+    /// (QA, November 3: only the last was kept); one a paint now has (poured) leaves them, and
+    /// the photo's color held as current shows after them.
+    @Test func everyColorPickedWaitsUntilPoured() {
+        let palette = [PaletteColor(oklab: SIMD3(0.3, 0.1, 0), space: .sRGB)]
+        let orange = SIMD3<Float>(0.7, 0.1, 0.12), green = SIMD3<Float>(0.6, -0.15, 0.1), photo = SIMD3<Float>(0.5, 0, 0)
+        #expect(RefinePaletteBar.unpoured([orange, green], current: green, palette: palette) == [orange, green])
+        #expect(RefinePaletteBar.unpoured([orange, green], current: palette[0].oklab, palette: palette) == [orange, green])
+        let poured = palette + [PaletteColor(oklab: orange, space: .sRGB)]
+        #expect(RefinePaletteBar.unpoured([orange, green], current: orange, palette: poured) == [green])
+        #expect(RefinePaletteBar.unpoured([orange], current: photo, palette: palette) == [orange, photo])
+        #expect(RefinePaletteBar.unpoured([], current: nil, palette: palette).isEmpty)
+    }
+
     /// The current paint is a color: a paint's exactly, a new one's, or within a just-noticeable
     /// difference of a paint, that paint's. It follows its paint through a look (same count, new
     /// colors) and through paints made one, stays when a paint is added, and with none is the

@@ -21,11 +21,14 @@ import Foundation
 ///   edge, a stroke, the canvas frame) is moved onto it, to the nearest vertex within
 ///   `vertexSnap`, else to the nearest point, which becomes a vertex of that ink; a line whose
 ///   ends meet closes into a loop. The line is cut wherever it meets the drawing. Where a stretch
-///   closes off part of a region with the region's outline (and the strokes it touches), the
+///   closes off part of a region with the region's outline (and the strokes it touches, and those
+///   of the region that touch its outline), the
 ///   region is cut exactly along it: each piece keeps the region's paint, has a number of its
 ///   own, and the new boundary is inked (`LineLayer.outline`, weight 255) with the line's points
 ///   verbatim. A piece with room for a number only at a detail area's floor becomes a detail
-///   area; a piece with less is not cut off. A stretch that closes nothing is an interior stroke,
+///   area; a piece with less is not cut off, nor is a sliver (thin for the picture and long) of
+///   a closed draw that ink there before bounds in part, nor one that ink there before bounds
+///   wholly (a stroke the line met closing it). A stretch that closes nothing is an interior stroke,
 ///   verbatim. Traced writing (`TemplateLineArt.writingStrokes`) is not the drawing: no end joins
 ///   it and no stretch closes a shape with it, so a letter never becomes an outline; where the line
 ///   cuts the region the letters it crosses are cut with it, each piece still writing. A draw
@@ -116,8 +119,12 @@ public enum TemplateEditor {
     /// saved before it record none. 2 (October 28, 2026): a fill or an erasure that leaves a
     /// paint with no area drops it from the palette, as Merge and Only This Area do. 3 (November
     /// 3, 2026): a line meets every stroke a chain of strokes it touches runs to, not only those
-    /// inside its own box, so a shape drawn in pieces closes however they lie.
-    public static let version = 3
+    /// inside its own box, so a shape drawn in pieces closes however they lie. 4 (November 5,
+    /// 2026): it also meets the strokes of the regions it runs through that touch their outlines,
+    /// so two lines drawn from one shape to another close the strip between them. 5 (November 5,
+    /// 2026): a sliver beside ink there before (a circle poking a point into a box) is not cut
+    /// off (`isSliver`).
+    public static let version = 5
 
     /// Why a Merge whose drag never left the area it began in is declined.
     public static let mergeStaysInOneArea = "the merge stays in one area"
@@ -310,6 +317,7 @@ public enum TemplateEditor {
         var work = try EditWork(template, snapRadius: snapRadius)
         switch edit {
         case .draw(let points, let closed, let paints):
+            work.closedDraw = closed
             try work.draw(points, closed: closed, nudging: paints != nil)
             if let paints { try work.paint(Array(paints.prefix(maximumPoints))) }
         case .split(let points, let closed, let paints):

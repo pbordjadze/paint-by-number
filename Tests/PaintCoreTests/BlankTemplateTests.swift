@@ -132,6 +132,69 @@ struct BlankTemplateTests {
         #expect(abs(u.regions[lip].area - closed.regions[try TemplateEditorTests.region(closed, 80, 57)].area) < 1e-3)
     }
 
+    /// Two lines from one shape to another close the strip between them (editor version 4), though
+    /// neither meets the other: the second line closes it with the first and the shapes' outlines.
+    /// A line met only the strokes it touched, so the strip stayed part of the paper and a stem
+    /// drawn from a flower to its pot never became an area of its own (QA, November 5).
+    @Test func twoLinesBetweenShapesCloseTheStripBetween() throws {
+        var t = try Self.blank()
+        for (a, b) in [(SIMD2<Float>(30, 20), SIMD2<Float>(70, 40)), (SIMD2(30, 90), SIMD2(70, 110))] {
+            let box = [a, SIMD2(b.x, a.y), b, SIMD2(a.x, b.y)]
+            t = try TemplateEditorTests.apply(.draw(points: box, closed: true), to: t).0
+        }
+        let (one, first) = try TemplateEditorTests.apply(.draw(points: [SIMD2(40, 40), SIMD2(40, 90)], closed: false), to: t)
+        #expect(first.regionsSplit == 0)
+        let (two, second) = try TemplateEditorTests.apply(.draw(points: [SIMD2(60, 40), SIMD2(60, 90)], closed: false), to: one)
+        #expect(second.regionsSplit == 1 && two.regions.count == 4)
+        expectValid(two)
+        let strip = try TemplateEditorTests.region(two, 50, 65), around = try TemplateEditorTests.region(two, 120, 65)
+        #expect(strip != around)
+        #expect(abs(two.regions[strip].area - 20 * 50) < 1)
+    }
+
+    /// A sliver that ink there before bounds in part is not cut off (editor version 5), on a page
+    /// the size of one from scratch: a wheel's circle poking 8 units into the car's body above it
+    /// leaves the body and the wheel, the lens staying the body's, and it stays so when a later
+    /// line, crossing the body clear of it, meets the ink round it. A thin stem drawn whole and a
+    /// small round shape are areas of their own. The lens had room for a number and no one could
+    /// see it (QA, November 5).
+    @Test func aSliverBesideInkStaysWithIt() throws {
+        func ellipse(_ c: SIMD2<Float>, _ r: Float) -> [SIMD2<Float>] {
+            (0..<96).map { k in c + r * SIMD2(cos(Float(k) / 96 * 2 * .pi), sin(Float(k) / 96 * 2 * .pi)) }
+        }
+        var t = try TemplateEditor.blank(
+            width: 1600, height: 1600, photo: RGBAImage(width: 160, height: 160, fill: SIMD4(255, 255, 255, 255)), colorSpace: .sRGB)
+        let body: [SIMD2<Float>] = [SIMD2(200, 100), SIMD2(1400, 100), SIMD2(1400, 400), SIMD2(200, 400)]
+        t = try TemplateEditorTests.apply(.draw(points: body, closed: true), to: t).0
+        let (car, wheel) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(800, 792), 400), closed: true), to: t)
+        #expect(wheel.regionsSplit == 1 && car.regions.count == 3)
+        expectValid(car)
+        let lens = SIMD2<Float>(800, 397)
+        #expect(try TemplateEditorTests.region(car, lens.x, lens.y) == TemplateEditorTests.region(car, 800, 250))
+        let (door, _) = try TemplateEditorTests.apply(.draw(points: [SIMD2(300, 100), SIMD2(300, 400)], closed: false), to: car)
+        #expect(door.regions.count == 4)
+        #expect(try TemplateEditorTests.region(door, lens.x, lens.y) == TemplateEditorTests.region(door, 800, 250))
+        let stem: [SIMD2<Float>] = [SIMD2(1500, 600), SIMD2(1512, 600), SIMD2(1512, 900), SIMD2(1500, 900)]
+        let (stemmed, drawn) = try TemplateEditorTests.apply(.draw(points: stem, closed: true), to: door)
+        #expect(drawn.regionsSplit == 1 && stemmed.regions.count == 5)
+        let (dot, small) = try TemplateEditorTests.apply(.draw(points: ellipse(SIMD2(100, 1500), 5), closed: true), to: stemmed)
+        #expect(small.regionsSplit == 1 && dot.regions.count == 6)
+    }
+
+    /// A thin piece that isn't a figure's sliver is cut as ever: on a page from scratch, a stripe
+    /// 10 units high that a second line closes off against the first is an area, and a Cell Edge
+    /// across it divides it (the branch's review, November 5: the sliver rule once declined both).
+    @Test func aThinStripeAndACellEdgeAcrossItAreCut() throws {
+        var t = try TemplateEditor.blank(
+            width: 1600, height: 1600, photo: RGBAImage(width: 160, height: 160, fill: SIMD4(255, 255, 255, 255)), colorSpace: .sRGB)
+        t = try TemplateEditorTests.apply(.draw(points: [SIMD2(0, 800), SIMD2(1600, 800)], closed: false), to: t).0
+        let (striped, stripe) = try TemplateEditorTests.apply(.draw(points: [SIMD2(0, 810), SIMD2(1600, 810)], closed: false), to: t)
+        #expect(stripe.regionsSplit == 1 && striped.regions.count == 3)
+        let (divided, edge) = try TemplateEditorTests.apply(.cellEdge(points: [SIMD2(800, 795), SIMD2(800, 815)], closed: false), to: striped)
+        #expect(edge.regionsSplit == 1 && divided.regions.count == 4)
+        expectValid(divided)
+    }
+
     /// No paint is left without an area (editor version 2): a fill of the loop's area, or an
     /// eraser or Line Eraser opening it into the area around, takes the last area of the loop's
     /// paint, which leaves the palette, so the painting's numbers skip none.

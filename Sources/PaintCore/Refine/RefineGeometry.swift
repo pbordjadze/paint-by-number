@@ -121,6 +121,7 @@ public enum PenAssist {
         // end can't be taken back to a line its start is on. A finger lifts late, so the end's
         // tail past a crossing may be two reaches; a stroke begins where the finger lands.
         let limit = min(reach, length / 2), tailLimit = min(2 * reach, length / 2)
+        let frameLimit = min(2 * reach, length / 2)
         // How far back an end that ran along a line is cut: a few reaches, never half the line.
         let runLimit = min(overrun * reach, length / 2)
         let touch = reach / 4
@@ -138,6 +139,13 @@ public enum PenAssist {
                 return PenPath.distance(on, end) > 1e-9 ? move(points, to: on) : points
             }
             if let hit = ahead(points, of: lines, within: limit), PenPath.distance(end, hit) > 1e-9 {
+                return straight ? Array(points.dropLast()) + [hit] : points + [hit]
+            }
+            // Heading straight at the picture's edge, twice that: a horizon drawn edge to edge
+            // that stopped a fingertip short left sky and sea one area, and nothing showed it
+            // against the paper's rounded corner (QA, November 5). Ink stops at the edge, so no
+            // line can lie past it to be meant instead.
+            if let hit = ahead(points, of: lines, within: frameLimit), lines.isOnFrame(hit), PenPath.distance(end, hit) > 1e-9 {
                 return straight ? Array(points.dropLast()) + [hit] : points + [hit]
             }
             // An end heading at a line it won't meet straight on (a stroke's free tip, a corner

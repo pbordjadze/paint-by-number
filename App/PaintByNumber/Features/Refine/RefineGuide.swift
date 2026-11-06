@@ -207,7 +207,7 @@ nonisolated struct RefineGuidePage {
                     A line that doesn’t close anything off stays as ink. It shows in the finished picture, but the paint on both sides of it is still one cell.
 
                     ## Snap
-                    Snap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom, so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.
+                    Snap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom (20 for an end heading straight at the picture’s edge), so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.
 
                     ## Smoothing
                     Smoothing steadies a wobbly hand: the line trails a little behind your finger and evens out as it goes. It starts at zero, where the Pen draws exactly where you draw.
@@ -400,7 +400,7 @@ nonisolated struct RefineGuidePage {
 
                     Pick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. If you choose a color very close to a paint you already have, that paint is poured instead.
 
-                    Choose one new color and pour it before you choose the next: picking several new colors in a row keeps only the last.
+                    Each new color you choose waits at the end of the palette, with a +, until you pour it.
 
                     You don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.
 

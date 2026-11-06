@@ -3,11 +3,16 @@ import SwiftUI
 
 /// Unlimited Paintings' sheet (`UnlimitedPaintings`): what it unlocks, its price and Restore
 /// Purchases. Start Painting opens it when a painting of the painter's own photo finds no free
-/// painting left (`fromStart`), Settings at any time. It closes itself once the unlock is bought,
-/// and Start Painting then goes on. Present it as a sheet.
+/// painting left (`fromStart`), Refine and From Scratch before it is bought (`forRefine`,
+/// `UnlimitedPaintings.locksRefine`), Settings at any time. It closes itself once the unlock is
+/// bought, and what opened it then goes on. Present it as a sheet.
 struct UnlockSheet: View {
     /// Opened by Start Painting with no free painting left.
     var fromStart = false
+    /// Opened by Refine or From Scratch, which come with the unlock.
+    var forRefine = false
+    /// Opens the Tool Guide, whose practice pictures are free (`forRefine`): the sheet closes first.
+    var tryGuide: (() -> Void)?
     @Environment(UnlimitedPaintings.self) private var paintings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.purchase) private var purchase
@@ -35,11 +40,21 @@ struct UnlockSheet: View {
                         .font(.display(.title3))
                         .accessibilityAddTraits(.isHeader)
                     Group {
+                        #if UNRELEASED
+                        if forRefine {
+                            Text("Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like.")
+                        } else if fromStart {
+                            Text("Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like.")
+                        } else {
+                            Text("One purchase unlocks Refine and as many new paintings as you like.")
+                        }
+                        #else
                         if fromStart {
                             Text("Your next free painting comes tomorrow. One purchase unlocks as many paintings of your own photos as you like.")
                         } else {
                             Text("One purchase unlocks as many paintings of your own photos as you like.")
                         }
+                        #endif
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -64,14 +79,17 @@ struct UnlockSheet: View {
                         notNowButton
                     }
                 }
-                // One quiet line when it fits (the Lamplit Table: Rikyū).
+                // One quiet line when it fits (the Lamplit Table: Rikyū); two links, the guide's and
+                // Restore's, read as one there, so for Refine they take a line each.
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) {
-                        samplesNote
-                        restoreButton
+                    if !forRefine {
+                        HStack(spacing: 6) {
+                            freeNote
+                            restoreButton
+                        }
                     }
-                    VStack(spacing: 6) {
-                        samplesNote
+                    VStack(spacing: 10) {
+                        freeNote
                         restoreButton
                     }
                 }
@@ -110,9 +128,29 @@ struct UnlockSheet: View {
             .accessibilityIdentifier("unlock-buy")
     }
 
-    private var samplesNote: some View {
-        Text("Everything in Samples is always free.")
-            .foregroundStyle(.secondary)
+    /// What stays free: Refine's Tool Guide, opened from here, or the samples (1.0), paintings
+    /// someone sends (1.1).
+    @ViewBuilder
+    private var freeNote: some View {
+        if forRefine, let tryGuide {
+            Button("Try It in the Tool Guide") {
+                dismiss()
+                tryGuide()
+            }
+            .accessibilityHint(Text(String(
+                localized: "unlock.tryGuide.hint", defaultValue: "Its practice pictures are free.",
+                comment: "VoiceOver hint of the Unlimited Paintings sheet's button that opens Refine's Tool Guide, whose practice pictures anyone may use")))
+            .accessibilityIdentifier("unlock-try-guide")
+        } else {
+            #if UNRELEASED
+            // 1.1: Samples take a free painting as any new painting does.
+            Text("Paintings someone sends you are always free.")
+                .foregroundStyle(.secondary)
+            #else
+            Text("Everything in Samples is always free.")
+                .foregroundStyle(.secondary)
+            #endif
+        }
     }
 
     private var restoreButton: some View {
@@ -163,7 +201,7 @@ struct UnlockSheet: View {
         do {
             try await paintings.loadPrice()
             #if DEBUG
-            if ShellDemo.current == .createUnlock { DemoMode.markReady() }
+            if ShellDemo.current == .createUnlock || ShellDemo.current == .createRefineUnlock { DemoMode.markReady() }
             #endif
         } catch {
             note = .failed(error.localizedDescription)

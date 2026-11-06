@@ -23,7 +23,8 @@ subject's first seeds. Written for the from-scratch loop of November 3 (Refine, 
 row 175's sequel); run it after a change to PenAssist, Snap's reach or the editor's draw, and
 compare. `--qa` replays instead the strokes with which the QA of November 3 failed to close a
 roof (Shapes' Line), a sea under a horizon drawn to the picture's edges, a hull, a trunk over a
-ground line drawn after it, and a mouth (Pen strokes tip to tip), and says whether each closes. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
+ground line drawn after it, and a mouth (Pen strokes tip to tip), and says whether each closes; then round 2's snowman (November 5), whose last Merge drag took the
+sky into the hat on the device, and says whether the sky keeps its paint. Needs pbn built (`tools/swift.sh build -c release --static-swift-stdlib`) and Pillow.
 """
 import argparse, json, math, os, random, subprocess, sys, zlib
 
@@ -366,7 +367,67 @@ def qa():
     case("trunk-iphone", 12.2, 248, 376.5, [
         ("oval", (255, 325), (345, 420)), ("line", (291, 418), (291, 488)), ("line", (309, 418), (309, 488)),
         ("line", (13, 489), (389, 489))], pour=(300, 460), outside=(200, 300), paper="paper-wide.ppm")
+    # Round 2's bridge (run 42045777195, iPhone): two rectangles, then two Lines from the top one's
+    # bottom edge to the bottom one's top edge; the strip between them should be an area of its own.
+    case("bridge-iphone", 12, 185, 378, [
+        ("rectangle", (60, 240), (160, 290)), ("rectangle", (60, 420), (160, 470)),
+        ("line", (90, 290), (90, 420)), ("line", (130, 290), (130, 420))], pour=(110, 355), outside=(300, 300))
+    # And its stem as a rectangle overlapping the top shape's bottom and the bottom one's top.
+    case("bridge-rectangle-iphone", 12, 185, 378, [
+        ("rectangle", (60, 240), (160, 290)), ("rectangle", (60, 420), (160, 470)),
+        ("rectangle", (90, 286), (130, 424))], pour=(110, 355), outside=(300, 300))
+    # Its iPad horizon (run 42045770277): Shapes' Line from past the left edge to 15 points short
+    # of the right one, where the swipe's last points went missing.
+    case("horizon-ipad", 223.5, 279, 796, [("line", (211, 700), (1004, 700))], pour=(600, 500), outside=(600, 900))
     case("mouth-ipad", 208, 279, 811.5, [("oval", (424, 430), (804, 1010))] + [("pen", a, b) for a, b in zip(up, up[1:])] +
          [("pen", (565, 860), (660, 860))] + [("pen", a, b) for a, b in zip(lo, lo[1:])], pour=(600, 855), outside=(612, 760))
 
-qa() if opts.qa else main()
+def qa_merge():
+    """Round 2's snowman (run 42090194956, iPad): its drawing, pours and four Merge drags, the last
+    from the hat's brim up into its crown, which on the device took the sky into the hat."""
+    x0, y0, w = 223.5, 279, 796
+    def n(x, y):
+        return [round((x - x0) / w, 5), round((y - y0) / w, 5)]
+    g = []
+    def shape(kind, a, b):
+        g.append({"tool": "shape", "shape": kind, "from": n(*a), "to": n(*b)})
+    shape("rectangle", (620, 560), (960, 850)); shape("line", (211, 848), (1017, 848))
+    for a, b in [((619, 559), (788, 420)), ((788, 420), (957, 559)), ((880, 496), (880, 440)), ((880, 440), (915, 440)),
+                 ((915, 440), (915, 524))]:
+        shape("line", a, b)
+    shape("rectangle", (760, 760), (815, 848)); shape("oval", (290, 620), (510, 840)); shape("oval", (340, 505), (460, 635))
+    shape("rectangle", (330, 492), (470, 512)); shape("rectangle", (365, 420), (435, 492)); shape("rectangle", (335, 612), (465, 642))
+    for a, b in [((402, 560), (455, 572)), ((455, 572), (402, 584)), ((402, 584), (402, 560))]:
+        shape("line", a, b)
+    def pour(p, rgb):
+        g.append({"tool": "bucket", "at": n(*p), "rgb": rgb})
+    pour((300, 330), [0.2, 0.85, 1.0])
+    for p in [(400, 455), (336, 501), (400, 496), (464, 501), (400, 509)]:
+        pour(p, [0.02, 0.02, 0.02])
+    for p in [(342, 622), (458, 622), (390, 614), (400, 627), (400, 638)]:
+        pour(p, [0.95, 0.2, 0.2])
+    pour((418, 572), [1, 0.45, 0]); pour((680, 700), [0.98, 0.9, 0.5]); pour((788, 520), [0.5, 0.3, 0.15])
+    pour((787, 805), [0.7, 0.5, 0.1]); pour((897, 470), [0.5, 0.5, 0.5])
+    for a, b in [((342, 623), (458, 623)), ((400, 616), (400, 639)), ((336, 502), (464, 502)), ((400, 509), (400, 470))]:
+        g.append({"tool": "merge", "points": [n(a[0] + (b[0] - a[0]) * k / 12, a[1] + (b[1] - a[1]) * k / 12) for k in range(13)]})
+    d = os.path.join(OUT, "qa", "snowman-hat-ipad")
+    os.makedirs(d, exist_ok=True)
+    json.dump({"screen": {"width": w}, "gestures": g}, open(os.path.join(d, "gestures.json"), "w"))
+    paper = os.path.join(OUT, "paper-square.ppm")
+    r = subprocess.run([PBN, "refine", paper, os.path.join(d, "gestures.json"), "--out", d, "--blank", "--no-steps"],
+                       capture_output=True, text=True)
+    if r.returncode:
+        sys.exit(f"pbn refine failed on {d}: {r.stderr[-800:]}")
+    img = Image.open(os.path.join(d, "after.ppm")).convert("RGB")
+    k = img.width / w
+    sky = img.getpixel((int((600 - x0) * k), int((400 - y0) * k)))
+    hat = img.getpixel((int((400 - x0) * k), int((455 - y0) * k)))
+    os.remove(os.path.join(d, "after.ppm"))
+    print(f"  snowman-hat-ipad: {'the sky kept its paint' if sky != hat else 'THE SKY JOINED THE HAT'}")
+
+if opts.qa:
+    qa()
+    qa_merge()
+else:
+    main()
+

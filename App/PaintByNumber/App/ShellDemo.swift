@@ -69,6 +69,9 @@ import PaintCore
 /// - `create-unlock`, `-dark`, `-long-text`: the same photo with no free painting left
 ///   (`freePaintings`): Start Painting tapped once the painting is made, Unlimited Paintings'
 ///   sheet over the preview, ready once its price shows (`UnlockSheet`).
+/// - `create-refine-unlock`, `-dark`, `-long-text`: Unlimited Paintings not bought, Refine locked
+///   (`UnlimitedPaintings.locksRefine`): Refine tapped once the sample's painting is made, the
+///   sheet worded for Refine, with Try It in the Tool Guide, ready once its price shows.
 /// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
 ///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
 ///   `paint-tip` (`PaintTips.configure`).
@@ -101,7 +104,7 @@ enum ShellDemo: Equatable {
          galleryDraft, galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
-         createCustom, createFromFile, createDrawing, createUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createCustom, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, settingsClock
 
     static let current: ShellDemo? = {
@@ -140,6 +143,7 @@ enum ShellDemo: Equatable {
         case "create-from-file": .createFromFile
         case "create-drawing", "create-drawing-dark": .createDrawing
         case "create-unlock", "create-unlock-dark", "create-unlock-long-text": .createUnlock
+        case "create-refine-unlock", "create-refine-unlock-dark", "create-refine-unlock-long-text": .createRefineUnlock
         case "gallery-tip", "gallery-tip-dark", "gallery-tip-long-text": .galleryTip
         case "gallery-tip-gear": .galleryTipGear
         case "gallery-tips-off": .galleryTipsOff
@@ -197,7 +201,7 @@ enum ShellDemo: Equatable {
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
-            || self == .createTip || self == .createDrawing
+            || self == .createTip || self == .createDrawing || self == .createRefineUnlock
     }
 
     /// The create flow opens on the preview of a drawing (`drawingPhoto`).
@@ -228,7 +232,7 @@ enum ShellDemo: Equatable {
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createTip: pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
-             .createRefineSelect, .createRefineGuide, .createRefineGuideWriting:
+             .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createRefineUnlock:
             pictures.first
         default: nil
         }
@@ -378,7 +382,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
-             .createFromFile, .createDrawing, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
+             .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         case .settingsClock:

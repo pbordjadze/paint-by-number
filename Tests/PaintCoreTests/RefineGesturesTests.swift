@@ -271,6 +271,22 @@ struct RefineGesturesTests {
         #expect(closed.first == loop[0] && Self.nearlyEqual(closed.last, loop[0]))
     }
 
+    /// Heading straight at the picture's edge, an end meets it from twice as far as any other
+    /// line: a horizon drawn edge to edge that stopped a fingertip short left sky and sea one area
+    /// (QA, November 5). Heading at a line inside the picture from as far, it stays as drawn, and
+    /// so does an end twice as far again from the edge.
+    @Test func anEndHeadingAtThePictureEdgeMeetsItFromFarther() throws {
+        let canvas = CGSize(width: 192, height: 144)
+        let wall = [CGPoint(x: 150, y: 0), CGPoint(x: 150, y: 144)]
+        let frameOnly = SnapLines([], frame: CGRect(origin: .zero, size: canvas))
+        let withWall = SnapLines([wall], frame: CGRect(origin: .zero, size: canvas))
+        func line(to x: CGFloat) -> [CGPoint] { [CGPoint(x: 0, y: 72), CGPoint(x: x, y: 72)] }
+        let reach: CGFloat = 10
+        #expect(PenAssist.joined(line(to: 177), to: frameOnly, reach: reach, straight: true).last == CGPoint(x: 192, y: 72))
+        #expect(PenAssist.joined(line(to: 155), to: frameOnly, reach: reach, straight: true) == line(to: 155))
+        #expect(PenAssist.joined(line(to: 135), to: withWall, reach: reach, straight: true) == line(to: 135))
+    }
+
     static func nearlyEqual(_ p: CGPoint?, _ q: CGPoint) -> Bool { p.map { PenPath.distance($0, q) < 1e-6 } ?? false }
 
     /// Long straight lines on a large Blank are laid, however many: a line's long segments are
