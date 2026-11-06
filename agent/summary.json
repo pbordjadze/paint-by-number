@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 191,
+ "duration_ms": 1284145,
+ "total_cost_usd": 6.196833400000002,
+ "result": "All six goals worked end to end with no crash (`crashes.txt` empty), and painted progress survived two quit-and-relaunch cycles. The full report, with screenshots under `shots/`, is in `/Users/runner/work/_temp/qa/report.md`.\n\n**Tips:** I saw four, and each pointed at roughly the right control and stayed until I closed it. Not all of them worked well:\n1. **\"Tap to Paint\"** (opening The Great Wave): good. It hides the palette's current-colour label.\n2. **\"Compare Photo and Page\"** (photo preview): it points at the divider, but covers about 40% of the picture. Its grey text is hard to read over the colourful picture showing through the card.\n3. **\"No Photo at Hand\"** (New Painting): its arrow points at the middle of the Photos/Samples switch, not at \"Samples\". It also came long after its moment, when I'd already used both.\n4. **\"Draw Your Own Lines\"** (Refine): it covers the whole options panel. The text only covers two-finger gestures and never says how to draw.\n\nTwo things only the log showed:\n- **Wasted tip slot:** the gallery's first tip came and went while the app was preparing the starter paintings, before anyone could see it. That seems to have used one of the session's tip slots: a third tip was refused as \"sessionFull\" after I'd seen only two.\n- **Zen Mode tip never shows:** it was wanted twice, then \"nothing was eligible in time\", even with the More button visible.\n\n**Printing:** I expected it in the painting's \"\u2026\" menu. It took about 2 minutes and 6 places to find it at gallery \u203a long-press \u203a Share \u203a **Print Template\u2026**. There's nothing in the painting screen itself, and \"Share\" plus \"Template\" is not wording a newcomer would look for. I'd put \"Print\u2026\" in the painting's \"\u2026\" menu and as its own item in the long-press menu.\n\n**Reproduced problems:**\n- **Colors slider works backwards:** on the preview, fewer colours gives *more* areas. Cranes went 263 \u2192 305 areas at 11 colours; Irises went 840 \u2192 973 areas and about 40 \u2192 50 minutes at 10 colours. This may be how the generator works, but the control does the opposite of what its name suggests.\n- **Zen Mode tip** (above): failed 2 of 2 times.\n\n**Suspicions (seen once):**\n- A drawing from scratch becomes a painting with one white paint and no hint of how to add colours.\n- Every Start Painting uses up a free painting, including your own drawing, without warning.\n- In Refine, the \"Generated / Blank\" switch vanishes after the first edit.\n\n**Not tested:** pinch, two-finger gestures, drag painting, actually printing, finishing a painting, and a crash-style kill. The simulator's software keyboard popping up with the \"\u2026\" menu is listed under Automation problems, not as an app bug.",
+ "usage": {
+  "input_tokens": 216,
+  "cache_creation_input_tokens": 317955,
+  "cache_read_input_tokens": 17827472,
+  "output_tokens": 52035,
+  "output_tokens_details": {
+   "thinking_tokens": 10417
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 317955
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 76,
+  "Read": 15,
+  "mcp__maestro__run": 78,
+  "mcp__maestro__inspect_screen": 16,
+  "Write": 5
+ },
+ "images_received": 76
+}
