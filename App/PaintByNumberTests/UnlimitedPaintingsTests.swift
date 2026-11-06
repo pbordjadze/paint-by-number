@@ -219,6 +219,23 @@ struct UnlimitedPaintingsTests {
         }
     }
 
+    /// Two models on one count (Paint by Moonlight's and Ravenna's, each era its own
+    /// `UnlimitedPaintings`): what one took, the other sees before it starts, and never writes back
+    /// over.
+    @Test func aCountSharedWithAnotherModelIsReadAgainBeforeStarting() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let here = paintings(defaults: defaults)
+        let there = paintings(defaults: defaults)
+        for _ in 0..<(Self.most - 1) { there.started(ownPhoto: true) }
+        #expect(await here.mayStart(ownPhoto: true))
+        #expect(here.freeLeft == 1)
+        here.started(ownPhoto: true)
+        #expect(!(await there.mayStart(ownPhoto: true)))
+        #expect(paintings(defaults: defaults).freeLeft == 0)
+    }
+
     /// SideStore builds sell nothing: every painting is free there.
     @Test func aBuildThatSellsNothingIsUnlimited() async {
         let model = UnlimitedPaintings(store: nil, defaults: nil)

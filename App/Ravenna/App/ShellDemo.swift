@@ -177,7 +177,7 @@ enum ShellDemo: Equatable {
         }
     }
 
-    /// The free paintings left at launch (`UnlockStoreStub`); nil leaves the three a new painter has.
+    /// The free paintings left at launch (`UnlockStoreStub`); nil leaves the five a new painter has.
     var freePaintings: Int? { self == .createUnlock ? 0 : nil }
 
     /// The painter moves Pieces off the standard count once the preview is final, and lets go.

@@ -5,8 +5,10 @@ import StoreKit
 import SwiftUI
 
 /// Unlimited Paintings, the app's one purchase (Paul, October 22): paid once, it lets a painter
-/// make as many paintings of their own photos as they like. Without it they have `FreePaintings`;
-/// library pictures, paintings someone sent and paintings made again are always free. Start
+/// make as many paintings as they like, in both eras. Without it they have `FreePaintings`, the
+/// one count Paint by Moonlight keeps too, which every new mosaic takes, a library picture's
+/// included (`countsEveryPainting`; painting-company rows 234 and 235); mosaics someone sent and
+/// mosaics made again are always free. Start
 /// Painting asks `mayStart(ownPhoto:)` and reports `started(ownPhoto:)`; `UnlockSheet` sells it.
 ///
 /// Purchases are checked on the device by StoreKit 2 (`StoreKitUnlock`): no server and no account
@@ -20,8 +22,13 @@ import SwiftUI
 @Observable
 final class UnlimitedPaintings {
     static let productID = "com.pbordjadze.paintbynumber.unlimited"
-    /// Where the free paintings are counted (UserDefaults).
-    static let freeKey = "freePaintings"
+    /// Where the free paintings are counted (UserDefaults.standard, not `.ravenna`): Paint by
+    /// Moonlight's 1.1 count, `FreePaintings` as JSON, shared by both eras.
+    static let freeKey = "freePaintings.v2"
+
+    /// Every new mosaic takes a free painting, as every new painting does in 1.1; reopening one,
+    /// one someone sent and one made again take none.
+    static let countsEveryPainting = true
 
     /// Whether this build sells the unlock: every build but SideStore's.
     let isSold: Bool
@@ -60,7 +67,7 @@ final class UnlimitedPaintings {
     }
 
     /// The running app's, as Paint by Moonlight's (a mosaic counts like any painting): the App
-    /// Store, its purchase and the same free paintings (`freePaintings` in the standard defaults,
+    /// Store, its purchase and the same free paintings (`freeKey` in the standard defaults,
     /// one count for both eras), or nothing to sell in SideStore builds (Debug builds: the stub for
     /// demos and the test host).
     static func forLaunch() -> UnlimitedPaintings {
@@ -79,21 +86,20 @@ final class UnlimitedPaintings {
     /// Free paintings left now.
     var freeLeft: Int { free.at(now(), calendar: calendar).left }
 
-    /// Whether a painting may start: one of a library picture always may, one of the painter's own
-    /// photo once the unlock is bought or while a free painting is left. The first time, it asks
-    /// the App Store (on the device) what is owned.
+    /// Whether a mosaic may start: one that counts (every new one, `countsEveryPainting`) once the
+    /// unlock is bought or while a free painting is left. The first time, it asks the App Store
+    /// (on the device) what is owned.
     func mayStart(ownPhoto: Bool) async -> Bool {
-        guard ownPhoto, isSold else { return true }
+        guard ownPhoto || Self.countsEveryPainting, isSold else { return true }
         if !hasChecked { await refresh() }
         // The count is shared with Paint by Moonlight's, which may have taken one since.
         if let defaults { free = Self.stored(in: defaults) }
         return isUnlocked || freeLeft > 0
     }
 
-    /// A painting started: one of the painter's own photo took a free painting, unless the unlock
-    /// is bought.
+    /// A mosaic started: one that counts took a free painting, unless the unlock is bought.
     func started(ownPhoto: Bool) {
-        guard ownPhoto, isSold, !isUnlocked else { return }
+        guard ownPhoto || Self.countsEveryPainting, isSold, !isUnlocked else { return }
         if let defaults { self.free = Self.stored(in: defaults) }
         var free = self.free
         guard free.use(at: now(), calendar: calendar) else { return }

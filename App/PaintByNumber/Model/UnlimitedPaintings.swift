@@ -123,12 +123,16 @@ final class UnlimitedPaintings {
     func mayStart(ownPhoto: Bool) async -> Bool {
         guard ownPhoto || Self.countsEveryPainting, isSold else { return true }
         if !hasChecked { await refresh() }
+        // The count is shared with Ravenna's (SideStore and Debug builds), which may have taken
+        // one since.
+        if let defaults { free = Self.stored(in: defaults) }
         return isUnlocked || freeLeft > 0
     }
 
     /// A painting started: one that counts took a free painting, unless the unlock is bought.
     func started(ownPhoto: Bool) {
         guard ownPhoto || Self.countsEveryPainting, isSold, !isUnlocked else { return }
+        if let defaults { self.free = Self.stored(in: defaults) }
         var free = self.free
         guard free.use(at: now(), calendar: calendar) else { return }
         self.free = free

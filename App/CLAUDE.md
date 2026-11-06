@@ -973,8 +973,9 @@ own, so it follows none of this app's later changes and needs none of its gates.
   `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
   `strings_check.py` reads only `App/PaintByNumber`.
 - **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
-  navigation titles' New York, the free paintings' count (`freePaintings`, 1.1's `freePaintings.v2` once Ravenna's copy
-  moves to it: Unlimited Paintings; a mosaic counts like a painting; the money rule is Paul's,
+  navigation titles' New York, the free paintings' count (1.1's `freePaintings.v2`, in `.standard`: Unlimited Paintings; every
+  new mosaic takes one, a library picture's too, and each era's `UnlimitedPaintings` reads the
+  count again before it starts one; the money rule is Paul's,
   painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
 - **Release:** the door's files are `Era*.swift`, and Release's `EXCLUDED_SOURCE_FILE_NAMES` leaves
