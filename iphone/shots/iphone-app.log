@@ -1,0 +1,247 @@
+----- the app's own lines -----
+284:2026-11-06 05:51:40.515 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.016406958 seconds (stall 1), 65 frames:
+290:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 libobjc.A.dylib _ZL18prepareMethodListsP10objc_classPP13method_list_tibbPKc + 76 | #1 libobjc.A.dylib _ZL24realizeClassWithoutSwiftP10objc_classS0_ + 1500 | #2 libobjc.A.dylib _ZL24realizeClassWithoutSwiftP10objc_classS0_ + 1500 | #3 libobjc.A.dylib _ZL33realizeClassMaybeSwiftMaybeRelockP10objc_classR12locker_mixinIN9lockdebug10lock_mixinI16objc_lock_base_tEEEb + 56 | #4 libobjc.A.dylib look_up_class + 100 | #5 UIKitCore __getAFDictationConnectionClass_block_invoke + 44 | #6 UIKitCore getAFDictationConnectionClass + 108 | #7 UIKitCore +[UIDictationConnection isDictationAvailable] + 12 | #8 UIKitCore -[UIDictationController init] + 72 | #9 UIKitCore +[UIDictationController sharedInstance] + 36 | #10 UIKitCore -[_UISearchBarVisualProviderIOS updateForAllowedToShowDictationChange] + 56
+291:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #11 UIKitCore -[_UISearchBarVisualProviderIOS canShowDictationButton] + 56 | #12 UIKitCore -[_UISearchBarVisualProviderIOS updateRightViewForSearchField:] + 124 | #13 UIKitCore -[_UISearchBarVisualProviderIOS setUpNewSearchField:] + 208 | #14 UIKitCore -[_UISearchBarVisualProviderIOS setUpSearchField] + 144 | #15 UIKitCore -[_UISearchBarVisualProviderIOS _searchBarTextField] + 64 | #16 UIKitCore -[UISearchBar _searchBarTextField] + 40 | #17 SwiftUI $s7SwiftUI0A18UISearchControllerC10_searchBar33_7B8BEE61C4A02DCD29DD7A9875C2F423LLAA011UIKitSearchF0CvgAGyXEfU_ + 108 | #18 SwiftUI $s7SwiftUI0A18UISearchControllerC10_searchBar33_7B8BEE61C4A02DCD29DD7A9875C2F423LLAA011UIKitSearchF0Cvg + 48 | #19 SwiftUI $s7SwiftUI0A18UISearchControllerC9searchBarSo0cF0CvgTo + 24
+292:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #20 UIKitCore -[UISearchController _commonInit] + 276 | #21 UIKitCore -[UISearchController initWithSearchResultsController:] + 152 | #22 SwiftUI $s7SwiftUI0A18UISearchControllerCACycfc + 348 | #23 SwiftUI $s7SwiftUI0A18UISearchControllerCACycfcTo + 20 | #24 SwiftUI $s7SwiftUI20UIKitToolbarStrategyV12updateSearchSbyFSbAA0D6BridgeCyACG_AA0D0O13UpdateContextVtXEfU_ + 344 | #25 SwiftUI $s7SwiftUI20UIKitToolbarStrategyVAA0dE0A2aDP12updateSearchSbyFTW + 92 | #26 SwiftUI $s7SwiftUI13ToolbarBridgeC20preferencesDidChange_7contextAA0C0O7UpdatesVAA16PreferenceValuesV_AG13UpdateContextVntFyxXEfU0_yAA0C7StorageV10SearchItemVSgXEfU0_ + 136 | #27 SwiftUICore $s7SwiftUI18VersionSeedTrackerV9didChange_6actionSbAA16PreferenceValuesV_y5ValueQzXEtF + 216
+293:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #28 SwiftUI $s7SwiftUI13ToolbarBridgeC20preferencesDidChange_7contextAA0C0O7UpdatesVAA16PreferenceValuesV_AG13UpdateContextVntFyxXEfU0_ + 392 | #29 SwiftUI $s7SwiftUI15ToolbarStrategyPAAE11withUpdater__4bodyqd__AA0C6BridgeCyxG_AA0C0O13UpdateContextVqd__xXEtlFZ + 304 | #30 SwiftUI $s7SwiftUI13ToolbarBridgeC20preferencesDidChange_7contextAA0C0O7UpdatesVAA16PreferenceValuesV_AG13UpdateContextVntF + 792 | #31 SwiftUI $s7SwiftUI13ToolbarBridgeC20preferencesDidChange_17hostingControlleryAA16PreferenceValuesV_AA09UIHostingI0Cyqd__GtAA4ViewRd__lF + 128 | #32 SwiftUI $s7SwiftUI19UIHostingControllerC20preferencesDidChangeyyAA16PreferenceValuesVF + 780 | #33 SwiftUI $s7SwiftUI14_UIHostingViewC20preferencesDidChangeyyF + 464
+294:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #34 SwiftUICore $s7SwiftUI9ViewGraphC13updateOutputs33_7D9EDEF832940A362646A6E979F296C8LL5asyncySb_tF0E0L_yyFTf0snnss_n + 304 | #35 SwiftUICore $s7SwiftUI9ViewGraphC13updateOutputs2atyAA4TimeV_tF + 444 | #36 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 620 | #37 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #38 UIKitCore __swift_closure_destructor.55 + 4088 | #39 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #40 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #41 UIKitCore block_destroy_helper + 22024 | #42 UIKitCore block_destroy_helper + 22844
+295:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #43 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #44 QuartzCore -[CALayer layoutSublayers] + 324 | #45 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #46 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #47 QuartzCore _ZN2CA5Layer28layout_and_display_if_neededEPNS_11TransactionE + 152 | #48 QuartzCore _ZN2CA7Context18commit_transactionEPNS_11TransactionEdPd + 632 | #49 QuartzCore _ZN2CA11Transaction6commitEv + 624 | #50 QuartzCore _ZN2CA11Transaction5flushEv + 80 | #51 UIKitCore __34-[UIApplication _firstCommitBlock]_block_invoke_2 + 28 | #52 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 | #53 CoreFoundation __CFRunLoopDoBlocks + 340
+296:2026-11-06 05:51:40.799 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo]   stall 1 #54 CoreFoundation __CFRunLoopRun + 788 | #55 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #56 GraphicsServices GSEventRunModal + 116 | #57 UIKitCore UIApplicationMain + 124 | #58 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #59 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204 | #60 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #61 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #62 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #63 dyld dyld-internal + 20 | #64 0x100669e80
+348:2026-11-06 05:51:42.193 Df PaintByNumber[24259:10d5d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.4365885 seconds
+350:2026-11-06 05:51:42.310 E  PaintByNumber[24259:10d50] [com.pbordjadze.paintbynumber:demo] Main thread answered after 3.814869042 seconds (stall 1)
+494:2026-11-06 05:51:43.918 Df PaintByNumber[24259:10a7e] [com.pbordjadze.paintbynumber:create] A blank page: Refine asked for [adjusting false, full under way false, final false, phase loading]
+498:2026-11-06 05:51:43.988 Df PaintByNumber[24259:10a7e] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+499:2026-11-06 05:51:44.063 Df PaintByNumber[24259:10a7e] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+500:2026-11-06 05:51:44.082 Df PaintByNumber[24259:10a7e] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way true, final true, phase generating]
+833:2026-11-06 05:52:03.850 Df PaintByNumber[25513:117e4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.248016084 seconds
+955:2026-11-06 05:52:05.322 Df PaintByNumber[25513:116b6] [com.pbordjadze.paintbynumber:create] A blank page: Refine asked for [adjusting false, full under way false, final false, phase loading]
+959:2026-11-06 05:52:05.462 Df PaintByNumber[25513:116b6] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+960:2026-11-06 05:52:05.559 Df PaintByNumber[25513:116b6] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+961:2026-11-06 05:52:05.573 Df PaintByNumber[25513:116b6] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way true, final true, phase generating]
+1489:2026-11-06 05:52:28.303 Df PaintByNumber[26300:11efe] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.2582255 seconds
+1613:2026-11-06 05:52:29.832 Df PaintByNumber[26300:11e8f] [com.pbordjadze.paintbynumber:create] A blank page: Refine asked for [adjusting false, full under way false, final false, phase loading]
+1614:2026-11-06 05:52:29.833 Df PaintByNumber[26300:11e8f] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+1617:2026-11-06 05:52:29.974 Df PaintByNumber[26300:11e8f] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+1618:2026-11-06 05:52:29.998 Df PaintByNumber[26300:11e8f] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way true, final true, phase generating]
+1994:2026-11-06 05:52:44.064 Df PaintByNumber[26991:12537] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.234801417 seconds
+2126:2026-11-06 05:52:45.639 Df PaintByNumber[26991:124ac] [com.pbordjadze.paintbynumber:create] A blank page: Refine asked for [adjusting false, full under way false, final false, phase loading]
+2130:2026-11-06 05:52:45.771 Df PaintByNumber[26991:124ac] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2131:2026-11-06 05:52:45.857 Df PaintByNumber[26991:124ac] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2132:2026-11-06 05:52:45.896 Df PaintByNumber[26991:124ac] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way true, final true, phase generating]
+2664:2026-11-06 05:53:09.552 Df PaintByNumber[27793:12dd9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211571792 seconds
+2810:2026-11-06 05:53:11.565 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] A blank page: Refine asked for [adjusting false, full under way false, final false, phase loading]
+2814:2026-11-06 05:53:11.679 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+2816:2026-11-06 05:53:11.758 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+2817:2026-11-06 05:53:11.787 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way true, final true, phase generating]
+3119:2026-11-06 05:53:21.044 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Hand-off: the page is expected at Optional((16.0, 239.0, 370.0, 370.0))
+3135:2026-11-06 05:53:22.030 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:library] Opened 5BD4D0D7-629B-417A-998A-692E17DEB6E6: 9 regions
+3161:2026-11-06 05:53:22.879 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+3244:2026-11-06 05:53:24.152 Df PaintByNumber[27793:12dd9] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.72069375 seconds
+3247:2026-11-06 05:53:24.868 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+3254:2026-11-06 05:53:24.959 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Hand-off: the painting never drew; the cover fades away
+3261:2026-11-06 05:53:25.398 Df PaintByNumber[27793:12c8b] [com.pbordjadze.paintbynumber:create] Painting reports its template at (16.0, 239.0, 370.0, 370.0)
+3538:2026-11-06 05:53:36.628 Df PaintByNumber[28843:1386b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.199548917 seconds
+3671:2026-11-06 05:53:38.130 Df PaintByNumber[28843:136d1] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+3673:2026-11-06 05:53:38.238 Df PaintByNumber[28843:136d1] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+3706:2026-11-06 05:53:39.892 Df PaintByNumber[28843:136d1] [com.pbordjadze.paintbynumber:create] Refine opens [adjusting false, full under way false, final true, phase ready]
+----- tail -----
+2026-11-06 05:53:40.923 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:40.923 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.198 Df PaintByNumber[28843:136d1] [com.apple.UIKit:Orientation] <compose failure [shared UUID]>
+2026-11-06 05:53:41.203 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.203 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.203 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.711 Df PaintByNumber[28843:13873] [com.apple.audio.caulk:alloc] <compose failure [shared UUID]>
+2026-11-06 05:53:41.713 Df PaintByNumber[28843:13873] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:41.912 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.912 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.912 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.912 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:41.912 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.126 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.126 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.126 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.127 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.333 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.333 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.333 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.333 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.404 Df PaintByNumber[28843:13873] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:42.405 Df PaintByNumber[28843:13873] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:42.416 E  PaintByNumber[28843:13873] [com.apple.coreaudio:AudioConverter] <compose failure [shared UUID]>
+2026-11-06 05:53:42.419 Df PaintByNumber[28843:1386b] [com.apple.extensionkit:NSExtension] <compose failure [shared UUID]>
+2026-11-06 05:53:42.419 Df PaintByNumber[28843:1386b] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:42.419 A  PaintByNumber[28843:1386b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.423 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.425 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.435 Df PaintByNumber[28843:13873] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.435 Df PaintByNumber[28843:13873] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.435 A  PaintByNumber[28843:13873] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.435 Df PaintByNumber[28843:13873] [com.apple.extensionkit:NSExtension] <compose failure [shared UUID]>
+2026-11-06 05:53:42.435 Df PaintByNumber[28843:13873] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.436 Df PaintByNumber[28843:13873] [com.apple.launchservices:appinstallation] <compose failure [shared UUID]>
+2026-11-06 05:53:42.436 A  PaintByNumber[28843:1386b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.436 Df PaintByNumber[28843:13873] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:42.437 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.437 Df PaintByNumber[28843:13873] [com.apple.launchservices:appinstallation] <compose failure [shared UUID]>
+2026-11-06 05:53:42.437 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.442 Df PaintByNumber[28843:13873] [com.apple.launchservices:progress] <compose failure [shared UUID]>
+2026-11-06 05:53:42.442 Df PaintByNumber[28843:13873] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 05:53:42.444 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.444 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.445 Df PaintByNumber[28843:13873] [com.apple.launchservices:progress] <compose failure [shared UUID]>
+2026-11-06 05:53:42.445 A  PaintByNumber[28843:1387a] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.445 Df PaintByNumber[28843:1387a] [com.apple.extensionkit:NSExtension] <compose failure [shared UUID]>
+2026-11-06 05:53:42.445 A  PaintByNumber[28843:1386b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.445 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.445 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.446 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.454 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.454 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.454 A  PaintByNumber[28843:1387a] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.456 Df PaintByNumber[28843:1387a] [com.apple.extensionkit:NSExtension] <compose failure [shared UUID]>
+2026-11-06 05:53:42.456 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.458 A  PaintByNumber[28843:1386b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.458 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.458 Df PaintByNumber[28843:1386b] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.460 Df PaintByNumber[28843:1386f] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.460 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.460 A  PaintByNumber[28843:1387a] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 05:53:42.460 Df PaintByNumber[28843:1387a] [com.apple.extensionkit:NSExtension] <compose failure [shared UUID]>
+2026-11-06 05:53:42.460 Df PaintByNumber[28843:1387a] [com.apple.PlugInKit:discovery] <compose failure [shared UUID]>
+2026-11-06 05:53:42.469 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.469 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.469 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.536 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.536 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.536 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.536 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.706 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.706 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.706 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.706 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.845 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.846 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.846 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.862 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.862 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.862 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.862 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.995 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.995 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.995 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:42.995 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.115 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.115 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.115 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.169 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.169 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.169 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.169 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.460 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.460 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.460 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.460 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.460 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.672 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.672 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.672 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.672 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.672 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.714 Df PaintByNumber[28843:13873] [com.apple.TipKit:TipKit • Core] <compose failure [shared UUID]>
+2026-11-06 05:53:43.742 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.742 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.742 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.742 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:43.753 Df PaintByNumber[28843:136d1] [com.apple.TipKit:TipKit • Core] <compose failure [shared UUID]>
+2026-11-06 05:53:43.757 Df PaintByNumber[28843:136d1] [com.apple.TipKit:TipKit • Core] <compose failure [shared UUID]>
+2026-11-06 05:53:44.016 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.016 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.016 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.016 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.016 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.077 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.077 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.077 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.078 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.225 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.225 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.225 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.225 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.401 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.401 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.401 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.627 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.627 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.627 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.627 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.627 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.815 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.815 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.815 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.815 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.815 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.867 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.867 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.867 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.867 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.981 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.982 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.982 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:44.982 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.211 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.212 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.212 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.328 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.328 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.328 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.328 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.328 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.386 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.386 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.386 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.386 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.727 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.727 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.727 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.727 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.727 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.738 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.738 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.738 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.738 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.930 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.930 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.930 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.930 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.930 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.985 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.985 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.985 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:45.985 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.302 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.302 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.302 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.302 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.302 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.317 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.317 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.317 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.317 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.525 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.525 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.525 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.526 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.526 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.540 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.540 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.540 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:46.540 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:47.649 Df PaintByNumber[28843:136d1] [com.apple.FrontBoard:SceneClient] <compose failure [shared UUID]>
+2026-11-06 05:53:47.672 Df PaintByNumber[28843:1387a] [com.apple.CoreAnalytics:client] <compose failure [shared UUID]>
+2026-11-06 05:53:47.674 Df PaintByNumber[28843:1387a] (5827BB56-52E1-3D0B-AC02-7A3201246563) <compose failure [shared UUID]>
+2026-11-06 05:53:47.681 E  PaintByNumber[28843:1387a] [com.apple.corevideo:] <compose failure [shared UUID]>
+2026-11-06 05:53:47.681 E  PaintByNumber[28843:1387a] [com.apple.corevideo:] <compose failure [shared UUID]>
+2026-11-06 05:53:47.944 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:47.944 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 05:53:47.944 E  PaintByNumber[28843:136d1] [com.apple.coreanimation:API] <compose failure [shared UUID]>
