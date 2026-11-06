@@ -29,7 +29,7 @@ def types_of(runtime):
         all_types = json.loads(sim("list", "devicetypes", "-j"))["devicetypes"]
     return all_types
 PATTERNS = {
-    "iphone": [r"iPhone 17 Pro", r"iPhone 1\d Pro", r"iPhone .*Pro"],
+    "iphone": [r"iPhone 1\de", r"iPhone 17", r"iPhone 16", r"iPhone 17 Pro"],  # one-off: a small iPhone
     "ipad": [r"iPad Pro 13-inch \(M5\)", r"iPad Pro 13-inch \(M\d\)", r"iPad Pro 13-inch.*", r"iPad Pro.*"],
     "duo": [r"iPhone Duo.*"],
 }

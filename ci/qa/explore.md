@@ -102,8 +102,7 @@ screenshot a moment later, and in the report say which you trusted.
 ## The app, briefly
 
 - The gallery (the shelf) lists paintings: in progress, ready to paint, finished. A new install
-  prepares two starter pictures (this can take a minute in a simulator). Tips may appear; close
-  them as a person would.
+  prepares two starter pictures (this can take a minute in a simulator). Tips may appear: see Goals.
 - The + button starts a new painting: a photo (one is in the simulator's Photos) or a sample
   picture, then a preview with sliders and Start Painting. Making a painting can take tens of
   seconds here.
@@ -174,17 +173,39 @@ Report these only if they look wrong in another way:
 
 ## Goals
 
-Adapt the order to what you find; depth on a real problem beats covering every goal.
+This session is a newcomer's first hour with the app. You have never seen it, nobody showed you
+anything, and you know only what the screen tells you. Behave as that person: read what appears,
+and act on it only if it makes sense to you.
 
-1. Create a new painting from a sample or the photo, through to the painting screen.
-2. Paint: pick colors, fill areas at the fitted zoom and zoomed in, try a drag. Check that what
-   gets painted is what you tapped, in the swatch's color, and that the progress moves.
-3. Navigate between zoom levels while painting; check the canvas, numbers and fills stay right.
-4. Go back to the gallery and reopen the painting: everything painted is still there, the same
-   progress shows in the gallery and in the painting.
-5. Quit and relaunch the app, reopen the painting, and check the same again.
-6. With time left, explore what you like (undo, Hint, the palette, the gallery's menus,
-   Settings), and anything that looked wrong earlier.
+**The tips are what this session is about.** The app shows short tips (a card or a bubble with
+a title, a line or two and a close button) at moments of its own choosing. Every time one
+appears, before you close it or do anything else:
+
+- save a screenshot (`- takeScreenshot: {{DIR}}/shots/tip-<n>-<short-name>`), and note in the
+  report: when it came (what you had just done, roughly how long after), where on the screen it
+  sits, what it covers or hides (a control, the picture, text, the thing it talks about), whether
+  it points at anything and whether that is the thing it names, whether its words made sense to
+  you right then, and what you did next;
+- leave it up for a few seconds and look again: did it move, go, or stay;
+- say plainly if it looked broken (blank, cut off, empty space, a sheet with almost nothing in
+  it, overlapping something).
+
+The journey, in this order, adapting as you go:
+
+1. Look at the gallery as it first is. Open one of the paintings already there and paint a few
+   areas; go back.
+2. Make a painting from one of the app's own pictures (not the photo), through to painting it.
+3. Make a painting from the photo in the simulator's Photos, through to painting it.
+4. Find a way to draw something of your own on an empty page (no photo), draw a simple closed
+   shape (a circle or a house), and start painting it.
+5. On a painting's preview (before Start Painting), find and try the tool that lets you change
+   the lines yourself; draw one line; leave it.
+6. **Printing.** You would like to print one of your pages to paint on paper with real paints at
+   the kitchen table. Find out how, with no help. Before you start, write in the report where
+   you expect it to be. Then look: note every place you looked, in order, with a screenshot of
+   each (`shots/print-<n>-<where>`), and roughly how many minutes and turns it took. Stop when
+   you see a print or PDF option (you need not print), or after 15 turns of looking; then say
+   whether you would have given up. Afterwards say where you would have put it.
 
 You have about {{MINUTES}} minutes and {{TURNS}} turns; you may be stopped without warning. Write
 `{{DIR}}/report.md` once you have something to say, by turn 20 at the latest, and write it again
@@ -196,6 +217,9 @@ whenever you learn more, so that a sudden stop still leaves a report.
 
 - **Summary**: two or three sentences.
 - **Coverage**: each goal above: done, partly (how far) or not tried, and why.
+- **Tips**: every tip you saw, in order, with the fields asked above, and its screenshot file.
+- **Printing**: where you expected it, where you looked (in order), how long, where it was,
+  where you would put it.
 - **App bugs (reproduced)**: problems you saw twice or more. For each: a title, the steps from a
   known state, expected, observed, how often it reproduced (e.g. 2 of 2), and its evidence (the
   screenshot files in `shots/`, log lines with their times).
