@@ -1,0 +1,12 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "subsystem == "com.pbordjadze.paintbynumber""
+Timestamp               Ty Process[PID:TID]
+2026-11-06 04:40:16.573 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-06 04:40:18.342 Df PaintByNumber[83496:313f3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 1.771645791 seconds
+2026-11-06 04:42:17.088 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 119.898219583 seconds
+2026-11-06 04:42:17.340 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+2026-11-06 04:42:58.410 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 41.320818208999995 seconds
+2026-11-06 04:42:58.468 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+2026-11-06 04:42:58.913 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+2026-11-06 04:43:44.164 Df PaintByNumber[83496:312f2] [com.pbordjadze.paintbynumber:tips] turn over: shelfStarter
+Child process terminated with signal 15: Terminated

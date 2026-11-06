@@ -1,0 +1,47 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "failed",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_ms": 60228,
+ "total_cost_usd": 0.0985028,
+ "result": "I couldn't run the session: the Maestro MCP server failed to connect (\"connection timed out after 120000ms\"). I couldn't take screenshots, inspect the screen or tap anything, so none of the six goals were tried. That includes the tips and the printing search.\n\nI still wrote `/Users/runner/work/_temp/qa/report.md`. It records:\n- **Why nothing was tested**, with every goal marked \"Not tried\" and the failure listed under Automation problems.\n- **One tip, from the log only.** The gallery's first tip (`shelfStarter`) came and went during the setup launch, before this session (04:42:58 to 04:43:44). It started about 0.06 s after the second starter painting was ready. Nobody saw it on screen, so I can't say where it sat or what it said.\n- **One suspicion, from the log only.** First-launch setup was slow: 120 s for the first starter painting and about 2 min 42 s for both, against the \"about a minute\" the brief expects. I don't know what the gallery showed meanwhile.\n- **Where I expected printing to be**, written down before looking, as the goal asks: the painting's More menu.\n\n`crashes.txt` was empty when I checked. I found no app bugs because I tested nothing. If you fix or retry the Maestro connection, I can run the full session.",
+ "usage": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 10372,
+  "cache_read_input_tokens": 31554,
+  "output_tokens": 2015,
+  "output_tokens_details": {
+   "thinking_tokens": 115
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 10372
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "Read": 3,
+  "Write": 1
+ },
+ "images_received": 0
+}
