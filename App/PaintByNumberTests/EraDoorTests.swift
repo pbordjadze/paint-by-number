@@ -78,7 +78,7 @@ struct EraDoorTests {
         #expect(years.last == EraYear.present)
         #expect(years == years.sorted() && Set(years).count == years.count)
         #expect(years.count < 30, "the far end is a flick away, not a long scroll")
-        #expect(years.suffix(7) == Array(EraYear.present - 6...EraYear.present))
+        #expect(Array(years.suffix(7)) == Array(EraYear.present - 6...EraYear.present))
         #expect(EraClock.text(of: EraYear.byzantium) == "0547")
         #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
         #expect(EraClock.nearest(to: 547) == 547)
