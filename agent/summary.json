@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 183,
+ "duration_ms": 1584281,
+ "total_cost_usd": 7.940893399999998,
+ "result": "I covered all six goals; the report is at `/Users/runner/work/_temp/qa/report.md`. There were no crashes (`crashes.txt` is empty), and quitting through Home and relaunching kept my progress.\n\n**Tips:** I saw four, and none looked broken (no blank or cut-off cards). Each pointed at the thing it names.\n1. \"Tap to Paint\" when I first opened a painting.\n2. \"Compare Photo and Page\" on the photo's preview.\n3. \"Tap to Paint\" again, after I used Settings \u203a Show Tips Again.\n4. \"Peek at the Photo\", shown on my hand-drawn From Scratch painting, which has no photo.\n\n**Bugs I saw at least twice:**\n- **Photo on a hand-drawn painting (2 of 2):** doing what \"Peek at the Photo\" says, tapping Photo, turns the whole page blank white.\n- **Washed-out drawing (2 of 3):** turning Photo off again left that drawing faded for over 40 s. On Red Fuji, which has a photo, it went back to full color.\n- **Log error at every move from preview to painting (3 of 3):** \"the page is not where it was expected\", each time exactly 16 pt off. The jump is too quick for a screenshot, so I only have the log for it.\n\n**Printing:** I expected it in the painting's More menu, but it isn't there. It's only in the gallery: long-press a painting \u203a Share \u203a Print Template\u2026. It took about 2.5 minutes and 6 places. I wouldn't quite have given up, because long-pressing a tile is a common iOS habit, but nothing on the painting screen hints at it. I'd add it to the More menu. The print preview itself is good: 6 pages, including numbered tiles and a color key.\n\n**Suspicions, each seen once:**\n- The gallery's first tip played while the app was still preparing its starter paintings, before anyone could see it. The log then refused a later tip because the session was \"full\" about 9 minutes in.\n- With \"Tap to Paint\" up, my tap on a matching area only closed the tip and painted nothing. A second tap painted it.\n- The first time I chose Print Template\u2026, nothing appeared for about a minute, with no spinner. The second time it opened promptly.\n\nNot reached: the tips still waiting on the app's roughly 3-minute spacing after the reset. Drag painting and pinch aren't possible with Maestro, and I didn't open Give Feedback or print anything.",
+ "usage": {
+  "input_tokens": 208,
+  "cache_creation_input_tokens": 606205,
+  "cache_read_input_tokens": 18902782,
+  "output_tokens": 56424,
+  "output_tokens_details": {
+   "thinking_tokens": 8417
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 606205
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 78,
+  "Read": 16,
+  "mcp__maestro__run": 76,
+  "mcp__maestro__inspect_screen": 6,
+  "Write": 6
+ },
+ "images_received": 78
+}
