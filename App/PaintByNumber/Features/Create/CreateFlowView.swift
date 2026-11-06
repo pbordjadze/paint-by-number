@@ -134,10 +134,12 @@ struct CreateFlowView: View {
         #if DEBUG
         .task {
             // A cancelled wait must not signal readiness.
-            guard ShellDemo.current == .create || ShellDemo.current?.opensSamples == true else { return }
+            guard ShellDemo.current == .create || ShellDemo.current?.opensSamples == true
+                || ScratchDemo.current?.step == .entry else { return }
             do { try await Task.sleep(for: ShellDemo.pickerLoadAllowance) } catch { return }
             DemoMode.markReady()
         }
+        .task { await playScratchDemo() }
         .onChange(of: model.isFinal) { _, isFinal in
             guard isFinal else { return }
             if ShellDemo.current?.movesASlider == true, model.settingsOrigin == .suggested {
@@ -199,11 +201,70 @@ struct CreateFlowView: View {
                 // A page from scratch goes to Refine: its preview, plain paper until Refine has
                 // slid up over it, is there at once rather than pushed (`TemplatePreviewView`).
                 var push = Transaction()
-                push.disablesAnimations = model.isScratch
+                push.disablesAnimations = model.isScratch && !Self.scratchIsAPicture
                 withTransaction(push) { path = [.preview] }
             }
         }
     }
+
+    /// Design C of the From Scratch spike (painting-company row 239) pushes the blank page's
+    /// preview as any picture's.
+    private static var scratchIsAPicture: Bool {
+        #if UNRELEASED
+        ScratchDesign.chosen.isAPicture
+        #else
+        false
+        #endif
+    }
+
+    #if DEBUG
+    /// The From Scratch spike's screens (`ScratchDemo`): From Scratch tapped, the picture drawn
+    /// with the Pen and poured with the Bucket, the finishing button tapped, as a painter would.
+    private func playScratchDemo() async {
+        guard let demo = ScratchDemo.current, demo.step != .entry else { return }
+        func pause(_ seconds: Double) async -> Bool { (try? await Task.sleep(for: .seconds(seconds))) != nil }
+        func until(_ ready: () -> Bool) async -> Bool {
+            for _ in 0..<600 {
+                if ready() { return true }
+                guard await pause(0.1) else { return false }
+            }
+            return false
+        }
+        guard await pause(0.8) else { return }
+        model.loadScratch()
+        var push = Transaction()
+        push.disablesAnimations = model.isScratch && !Self.scratchIsAPicture
+        withTransaction(push) { path = [.preview] }
+        guard await until({ model.isFinal }), await pause(1.5) else { return }
+        if demo.design == .c, demo.draws {
+            model.demoAsksToDraw()
+            guard await pause(1.5) else { return }
+        }
+        guard demo.draws, let template = model.preview?.template else {
+            DemoMode.markReady()
+            return
+        }
+        let drawing = ScratchDemo.drawing(side: Float(template.width))
+        for line in drawing.lines {
+            _ = model.edit(line)
+            guard await pause(0.15) else { return }
+        }
+        for pour in drawing.pours {
+            model.paintArea(at: pour.at, color: pour.color)
+            guard await pause(0.15) else { return }
+        }
+        let count = drawing.lines.count + drawing.pours.count
+        guard await until({ model.isFinal && model.refinements.edits.count >= count }), await pause(1.5) else { return }
+        if demo.step == .drawn {
+            DemoMode.markReady()
+            return
+        }
+        model.demoFinishesRefine = true
+        // B opens the painting, which marks itself ready (`ArtworkPaintingView`).
+        guard demo.design != .b, await pause(2.5) else { return }
+        DemoMode.markReady()
+    }
+    #endif
 
     /// The `create-drawing` demos open on the drawing's preview.
     private var opensOnDrawing: Bool {

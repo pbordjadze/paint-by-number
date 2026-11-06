@@ -48,7 +48,12 @@ struct TemplatePreviewView: View {
     @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
     @Environment(UnlimitedPaintings.self) private var paintings
+    #if UNRELEASED
+    /// How many changes the page had when Refine last opened over it (the From Scratch spike).
+    @State private var changesAtOpen = 0
+    #endif
 
     // In two parts, which the compiler type-checks apart: as one chain it ran out of time.
     var body: some View {
@@ -189,6 +194,9 @@ struct TemplatePreviewView: View {
                 if refining {
                     PaintTips.refineOpened()
                     hasRefined = true
+                    changesAtOpen = model.refinements.changeCount
+                } else {
+                    refineClosed()
                 }
             }
             #endif
@@ -255,9 +263,12 @@ struct TemplatePreviewView: View {
     /// unlock (a draft resumed) shows its preview.
     private var waitsForRefine: Bool {
         #if UNRELEASED
-        guard model.isScratch, !hasRefined, !paintings.locksRefine else { return false }
+        guard model.isScratch, !paintings.locksRefine else { return false }
         if case .failed = model.phase { return false }
-        return true
+        // The spike (painting-company row 239): B never shows this preview, C always does.
+        if ScratchDesign.chosen.startsFromDrawing { return true }
+        if ScratchDesign.chosen.isAPicture { return false }
+        return !hasRefined
         #else
         false
         #endif
@@ -268,6 +279,43 @@ struct TemplatePreviewView: View {
     private static let pushSettles: Duration = .milliseconds(450)
     /// The same for a page from scratch, whose preview is there with no push.
     private static let scratchSettles: Duration = .milliseconds(100)
+
+    /// Refine closed over a page from scratch (the spike, painting-company row 239): B's Start
+    /// Painting starts the painting, and A and B leave a page with nothing drawn for New Painting.
+    private func refineClosed() {
+        guard model.isScratch else { return }
+        let design = ScratchDesign.chosen
+        if design.startsFromDrawing {
+            if model.startsAfterRefine {
+                model.startsAfterRefine = false
+                start()
+            } else {
+                dismiss()
+            }
+            return
+        }
+        guard design.closesBackToStart else { return }
+        let nothingDrawn = model.refineWasCancelled ? changesAtOpen == 0 : model.refinements.changeCount == 0
+        if nothingDrawn { dismiss() }
+    }
+
+    /// Design C's blank page asks to be drawn on.
+    private var asksToBeDrawnOn: Bool {
+        model.isScratch && ScratchDesign.chosen.isAPicture && model.refinements.changeCount == 0 && model.canAskForRefine
+    }
+
+    private var drawPrompt: some View {
+        Button(action: openRefine) {
+            Label("Draw on This Page", systemImage: "pencil.tip")
+                .font(.headline)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+        }
+        .buttonStyle(.glassProminent)
+        .tint(Theme.signature)
+        .controlSize(.large)
+        .accessibilityIdentifier("draw-on-page")
+    }
 
     /// Refine on the final template, or, while it is being made, as soon as it is.
     private func openRefine() {
@@ -319,6 +367,8 @@ struct TemplatePreviewView: View {
                             ProgressView().controlSize(.small)
                             Text("Preparing…")
                         }
+                    } else if model.isScratch && ScratchDesign.chosen.namesItDraw {
+                        if model.refinements.changeCount > 0 { Text("Keep Drawing") } else { Text("Draw") }
                     } else {
                         Text("Refine")
                     }
@@ -481,6 +531,9 @@ struct TemplatePreviewView: View {
                         .padding(.top, 8)
                     }
                     .animation(reduceMotion ? nil : .snappy, value: model.note)
+                    .overlay {
+                        if asksToBeDrawnOn { drawPrompt }
+                    }
                     #endif
             } else if case .failed(let message) = model.phase {
                 ContentUnavailableView("Couldn’t Open Photo", systemImage: "photo.badge.exclamationmark", description: Text(message))
@@ -562,7 +615,7 @@ struct TemplatePreviewView: View {
                     if hasLines { slider(.lines) }
                 }
             }
-            summary
+            if !isBlankScratch { summary }
 
             Button(action: start) {
                 HStack(spacing: 10) {
@@ -580,7 +633,7 @@ struct TemplatePreviewView: View {
             .buttonStyle(.glassProminent)
             .tint(Theme.signature)
             .controlSize(.large)
-            .disabled(model.preview == nil || (model.isChoosingSettings && !Self.startsEarly) || isStarting || model.startAsked)
+            .disabled(model.preview == nil || (model.isChoosingSettings && !Self.startsEarly) || isStarting || model.startAsked || isBlankScratch)
             .accessibilityLabel("Start Painting")
             .accessibilityValue(isPreparingStart ? String(localized: "Preparing…") : "")
 
@@ -590,6 +643,16 @@ struct TemplatePreviewView: View {
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
         .duoProbe("preview-card")
+    }
+
+    /// A page from scratch with nothing drawn on it yet, in the spike's designs: nothing to count
+    /// or start (painting-company row 239).
+    private var isBlankScratch: Bool {
+        #if UNRELEASED
+        model.isScratch && ScratchDesign.chosen.namesItDraw && model.refinements.changeCount == 0
+        #else
+        false
+        #endif
     }
 
     /// The settings' origin, and in SideStore and Debug builds Adjust beside it (`foldsSettings`).

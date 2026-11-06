@@ -109,14 +109,17 @@ struct PhotoSourceView: View {
             // into Refine. Refine's builds only, as Refine is. A text button, as the preview's
             // Refine is: as an icon alone, newcomers found it only by its VoiceOver label (QA,
             // November 5).
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
-                } label: {
-                    Text("From Scratch")
+            // Design C (painting-company row 239) has it among the samples instead.
+            if !ScratchDesign.chosen.isAPicture {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                    } label: {
+                        Text("From Scratch")
+                    }
+                    .help("Draw your own picture on a blank page")
+                    .accessibilityIdentifier("from-scratch")
                 }
-                .help("Draw your own picture on a blank page")
-                .accessibilityIdentifier("from-scratch")
             }
             #endif
         }
@@ -273,6 +276,9 @@ struct PhotoSourceView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
+                        #if UNRELEASED
+                        if ScratchDesign.chosen.isAPicture { blankPageSection }
+                        #endif
                         ForEach(Sample.Kind.allCases, id: \.self) { kind in
                             let samples = Sample.all(of: kind)
                             if !samples.isEmpty { samplesSection(kind, samples: samples) }
@@ -312,6 +318,24 @@ struct PhotoSourceView: View {
             }
         }
     }
+
+    #if UNRELEASED
+    /// Design C (painting-company row 239): a blank page leads the pictures, a picture of its own.
+    private var blankPageSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle("Your Own", style: isWide ? .headline : .title3)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: 14)], spacing: 14) {
+                Button {
+                    if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                } label: {
+                    BlankPageTile()
+                }
+                .buttonStyle(PressableCardStyle())
+                .accessibilityIdentifier("from-scratch")
+            }
+        }
+    }
+    #endif
 
     /// Under the wide layout's "Samples" the sections are subheadings; compact windows, where
     /// the segmented control names the pane, give them the title size.
@@ -416,6 +440,37 @@ private struct SectionTitle: View {
             .accessibilityAddTraits(.isHeader)
     }
 }
+
+#if UNRELEASED
+/// Design C's blank page among the samples: paper, a pencil, and its name where a sample's is.
+private struct BlankPageTile: View {
+    var body: some View {
+        Color.clear
+            .aspectRatio(4 / 3, contentMode: .fit)
+            .overlay {
+                Image(systemName: "pencil.and.scribble")
+                    .font(.system(size: 34, weight: .light))
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+            }
+            .overlay(alignment: .bottomLeading) {
+                Text("Blank Page")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(12)
+            }
+            .background(Color.white)
+            .clipShape(.rect(cornerRadius: 18, style: .continuous))
+            .overlay { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1) }
+            .contentShape(.rect(cornerRadius: 18, style: .continuous))
+            .hoverEffect(.lift)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Blank Page")
+            .accessibilityHint("Draw your own picture on a blank page")
+            .accessibilityAddTraits(.isButton)
+    }
+}
+#endif
 
 private struct SampleTile: View {
     let sample: Sample

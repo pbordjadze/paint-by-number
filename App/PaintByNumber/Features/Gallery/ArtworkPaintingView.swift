@@ -224,7 +224,9 @@ struct ArtworkPaintingView: View {
     #if DEBUG
     /// `gallery-open` and `gallery-received` are ready once the painting is on screen.
     private func markDemoReady() {
-        guard autosaver != nil, hasLanded, ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryReceived else { return }
+        guard autosaver != nil, hasLanded,
+              ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryReceived || ScratchDemo.current?.step == .after
+        else { return }
         DemoMode.markReady()
     }
     #endif

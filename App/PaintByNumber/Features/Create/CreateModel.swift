@@ -506,6 +506,23 @@ final class CreateModel {
     /// line (QA, November 5: the drawing seemed lost).
     var hasScratchDrawing: Bool { isScratch && refinements.changeCount > 0 && canRefine }
 
+    /// Design B (painting-company row 239): the drawing space's Start Painting closed it, and the
+    /// painting starts as it goes.
+    var startsAfterRefine = false
+
+    /// Refine's Cancel was its last close (its edits are being put back).
+    var refineWasCancelled: Bool { refiningCancelled }
+
+    #if DEBUG
+    /// The spike's `after` screens: the drawing space's finishing button, as a painter taps it.
+    var demoFinishesRefine = false
+
+    /// The spike's design C screens: the blank page's Draw, as a painter taps it.
+    func demoAsksToDraw() {
+        refineAsked = true
+    }
+    #endif
+
     func reopenScratch() {
         guard hasScratchDrawing else { return }
         refineAsked = true
@@ -685,8 +702,16 @@ final class CreateModel {
                     // and Refine is where the picture is made.
                     source = Source(image: decoded.image, preview: decoded.preview, sampleName: nil)
                     draftImage = nil
-                    refineAsked = true
-                    trace("A blank page: Refine asked for")
+                    // Design C (painting-company row 239): the blank page's preview comes first.
+                    #if UNRELEASED
+                    let asksForRefine = !ScratchDesign.chosen.isAPicture
+                    #else
+                    let asksForRefine = true
+                    #endif
+                    if asksForRefine {
+                        refineAsked = true
+                        trace("A blank page: Refine asked for")
+                    }
                     if let saved {
                         // A drawing from scratch kept as a draft: its settings, its edits.
                         resume(saved, suggestion: nil)

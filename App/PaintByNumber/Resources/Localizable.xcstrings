@@ -29,6 +29,10 @@
       "comment" : "Refine screen, Start From: a blank start, the photo as one area of one paint, which the painter's lines then divide and the paint tools color",
       "extractionState" : "manual"
     },
+    "Blank Page" : {
+      "comment" : "From Scratch spike: the tile leading the samples on New Painting that starts a blank page to draw on",
+      "extractionState" : "manual"
+    },
     "Brings back the other controls" : {
       "comment" : "Accessibility hint of the painting screen's progress ring while the top bar is quiet (faded to Back, the ring and Hint): a tap brings back Photo, Undo and More",
       "extractionState" : "manual"
@@ -69,12 +73,24 @@
       "comment" : "Refine screen: title of the dialog Cancel opens when there are changes, which Cancel would take back",
       "extractionState" : "manual"
     },
+    "Draw" : {
+      "comment" : "From Scratch spike: the drawing space's title from a blank page, and the preview's button that opens it before anything is drawn",
+      "extractionState" : "manual"
+    },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
       "extractionState" : "manual"
     },
+    "Draw on This Page" : {
+      "comment" : "From Scratch spike: button over a blank page's preview that opens the drawing space",
+      "extractionState" : "manual"
+    },
     "Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like." : {
       "comment" : "The Unlimited Paintings sheet opened from Refine or From Scratch, in builds where every new painting takes a free painting (1.1): what the purchase unlocks",
+      "extractionState" : "manual"
+    },
+    "Keep Drawing" : {
+      "comment" : "From Scratch spike: the preview's button that opens the drawing space again once something is drawn",
       "extractionState" : "manual"
     },
     "One purchase unlocks Refine and as many new paintings as you like." : {
@@ -87,6 +103,10 @@
     },
     "Try It in the Tool Guide" : {
       "comment" : "The Unlimited Paintings sheet opened by Refine or From Scratch: a button that opens Refine's Tool Guide, whose practice pictures are free",
+      "extractionState" : "manual"
+    },
+    "Your Own" : {
+      "comment" : "From Scratch spike: title of the samples' section holding the blank page",
       "extractionState" : "manual"
     },
     "Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like." : {

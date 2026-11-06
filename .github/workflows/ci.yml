@@ -155,7 +155,7 @@ jobs:
       matrix:
         # compile, test, duo and iphone as the header says; the report job asks the same (TEST_ONLY,
         # DUO_ONLY: env can't be read here).
-        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
+        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name != 'main' && contains(github.event.head_commit.message, '[shots]')) && '["ipad", "iphone"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
@@ -203,6 +203,8 @@ jobs:
               [[ ${#only[@]} -gt 0 ]] || fail "[test] names no UI test class: [test SettingsTests]"
               plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=${only[*]}" SKIP=) ;;
           esac
+          # The From Scratch spike's branch (painting-company row 239): `[shots]` screenshots only.
+          if [[ "$MESSAGE" == *"[shots]"* ]]; then plan+=(RELEASE=0 NOTEST=1); fi
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
       - name: Start simulator
         id: sim
@@ -287,7 +289,7 @@ jobs:
           cp build/warm-up/*-steps.log out/warm-up-steps.log
       - name: Test
         id: test
-        if: ${{ !cancelled() && env.DUO != '1' && steps.build.outcome == 'success' && steps.boot.outcome == 'success' }}
+        if: ${{ !cancelled() && env.DUO != '1' && env.NOTEST != '1' && steps.build.outcome == 'success' && steps.boot.outcome == 'success' }}
         run: |
           # A failed test runs once more and counts as passed if that run passes; the report
           # names it ("passed when run again"), as a flake still needs its cause found.
@@ -493,7 +495,7 @@ jobs:
       - name: Write status and push to refs/ci-shots/${{ github.ref_name }}
         env:
           # The matrix's entries share its result; iphone only when the matrix ran it.
-          IPHONE: ${{ (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && needs.apple.result || 'skipped' }}
+          IPHONE: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[shots]')) && needs.apple.result || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && needs.apple.result || 'skipped' }}
         run: |
           mkdir -p report && cd report
           find . -name '*.log' | while read -r f; do

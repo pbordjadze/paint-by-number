@@ -380,6 +380,14 @@ struct RefineView: View {
             if closed { demoCardAt = nil }
         }
         #endif
+        #if DEBUG
+        // The spike's `after` screens tap the finishing button as a painter would.
+        .onChange(of: model.demoFinishesRefine) { _, finishes in
+            guard finishes, !isPractice else { return }
+            model.demoFinishesRefine = false
+            if startsPainting { startPainting() } else { done() }
+        }
+        #endif
         .fullScreenCover(item: $trial) { trial in
             PaintView(session: trial.session, title: String(localized: "Try Painting"), onClose: { self.trial = nil })
         }
@@ -413,7 +421,7 @@ struct RefineView: View {
                     if usesRail, !fullScreen { toolRail }
                 }
                 .background(Theme.paper)
-                .navigationTitle("Refine")
+                .navigationTitle(drawsFromNothing ? String(localized: "Draw") : String(localized: "Refine"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
                 .toolbarVisibility(fullScreen ? .hidden : .visible, for: .navigationBar)
@@ -1241,6 +1249,19 @@ struct RefineView: View {
         dismiss()
     }
 
+    /// A page from scratch in the spike's designs (painting-company row 239): the space is Draw.
+    private var drawsFromNothing: Bool { model.isScratch && ScratchDesign.chosen.namesItDraw }
+
+    /// Design B: the space's own Start Painting, with no preview between.
+    private var startsPainting: Bool { model.isScratch && ScratchDesign.chosen.startsFromDrawing }
+
+    /// Design B's Start Painting: the drawing kept, and the painting starts as the space closes.
+    private func startPainting() {
+        finishCurve()
+        model.startsAfterRefine = true
+        dismiss()
+    }
+
     /// The number of changes, for VoiceOver.
     static func changes(_ count: Int) -> String {
         guard count > 0 else {
@@ -1294,11 +1315,24 @@ struct RefineView: View {
             }
             .sharedBackgroundVisibility(.hidden)
         }
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Done", systemImage: "checkmark", action: done)
+        if startsPainting {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(action: startPainting) {
+                    Text("Start Painting")
+                }
+                .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
+                .disabled(model.refinements.changeCount == 0)
                 .keyboardShortcut(isCovered ? nil : .defaultAction)
                 .accessibilityIdentifier("refine-done")
+            }
+        } else {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", systemImage: "checkmark", action: done)
+                    .tint(Theme.signature)
+                    .keyboardShortcut(isCovered ? nil : .defaultAction)
+                    .accessibilityIdentifier("refine-done")
+            }
         }
     }
 

@@ -105,7 +105,9 @@ enum ShellDemo: Equatable {
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
-         settings, settingsLongText, settingsAcknowledgements, settingsClock
+         settings, settingsLongText, settingsAcknowledgements, settingsClock,
+         /// The From Scratch spike's screens (`ScratchDemo`, painting-company row 239).
+         scratch
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -154,6 +156,7 @@ enum ShellDemo: Equatable {
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
         case "settings-clock": .settingsClock
+        case let name? where name.hasPrefix("scratch-"): .scratch
         default: nil
         }
     }()
@@ -201,14 +204,17 @@ enum ShellDemo: Equatable {
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
-            || self == .createTip || self == .createDrawing || self == .createRefineUnlock
+            || self == .createTip || self == .createDrawing || self == .createRefineUnlock || self == .scratch
     }
 
     /// The create flow opens on the preview of a drawing (`drawingPhoto`).
     var opensDrawing: Bool { self == .createDrawing }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
-    var opensSamples: Bool { self == .createSamples || self == .createSamplesPaintings || self == .createSamplesPhotographs }
+    var opensSamples: Bool {
+        self == .createSamples || self == .createSamplesPaintings || self == .createSamplesPhotographs
+            || (self == .scratch && ScratchDemo.current?.design == .c && ScratchDemo.current?.step == .entry)
+    }
 
     /// The Samples pane starts scrolled to this section.
     var samplesSection: Sample.Kind? {
@@ -383,7 +389,7 @@ enum ShellDemo: Equatable {
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
-             .settingsTips, .settingsLongText, .settingsAcknowledgements:
+             .settingsTips, .settingsLongText, .settingsAcknowledgements, .scratch:
             break
         case .settingsClock:
             break
