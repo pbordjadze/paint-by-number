@@ -25,7 +25,7 @@ enum ScratchDesign: String {
     }()
 
     /// The design this branch shows without a launch argument.
-    static let branchDefault: ScratchDesign = .today
+    static let branchDefault: ScratchDesign = .c
 
     /// The drawing space is called Draw from a blank page (Refine on a photo).
     var namesItDraw: Bool { self != .today }
