@@ -1305,7 +1305,9 @@ struct RefineView: View {
             Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
                 .disabled(!model.canRedo)
                 .accessibilityIdentifier("refine-redo")
-            layersButton
+            // Design B on a phone: Start Painting needs the room, and a blank page has no photo to
+            // trace (the spike, painting-company row 239).
+            if !(startsPainting && !usesRail) { layersButton }
         }
         // A phone's bar has room for its six controls but not the title, which showed as "R…"
         // (QA, October 28): its middle is left empty there, as the views' menu once filled it.
