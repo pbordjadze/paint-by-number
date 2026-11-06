@@ -1,0 +1,142 @@
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 561]
+[Planning deferred tasks]
+[77 / 266] MosaicCoreTests-product
+[124 / 266]
+[127 / 266] PaintCore_MakingOfTests
+[130 / 266]
+[132 / 268] MosaicKit
+[135 / 306]
+[138 / 313]
+[141 / 313]
+[144 / 313]
+[147 / 313]
+[149 / 313]
+[151 / 313]
+[154 / 313]
+[155 / 313]
+[157 / 313]
+[158 / 313]
+[160 / 313]
+[163 / 313]
+[165 / 313]
+[166 / 313]
+[167 / 313]
+[171 / 313] PaintCore
+[172 / 313] MosaicKit
+[182 / 313] MosaicKit
+[184 / 313] PaintCore
+[185 / 313] pbn-product
+[186 / 313] pbn-product
+[187 / 313] MosaicKit
+[188 / 313] MosaicKitTests-product
+[189 / 313] MosaicKitTests-product
+[193 / 313] pbn-product
+[198 / 314] pbn-product
+[200 / 359]
+[202 / 359]
+[204 / 359]
+[206 / 359]
+[207 / 359]
+[208 / 359]
+[210 / 359]
+[212 / 359]
+[214 / 359]
+[215 / 359]
+[217 / 359]
+[220 / 359]
+[221 / 359]
+[223 / 359]
+[224 / 359]
+[226 / 359]
+[228 / 359]
+[229 / 359]
+[231 / 359]
+[232 / 359]
+[233 / 359]
+[234 / 359]
+[236 / 359]
+[238 / 359]
+[239 / 359]
+[241 / 359] pbn-product
+[242 / 359] pbn-product
+[244 / 359] pbn-product
+[245 / 360]
+[247 / 364] MosaicEngine
+[248 / 364] MosaicEngine
+[250 / 364] MosaicEngine
+[256 / 364] MosaicEngine
+[262 / 366] MosaicKitTests-product
+[263 / 368] mosaic-product
+[263 / 374] mosaic-product
+[265 / 374] mosaic-product
+[266 / 374] mosaic-product
+[268 / 374] mosaic-product
+[269 / 374] MosaicKitTests-product
+[277 / 374] MosaicKitTests-product
+[280 / 374] PaintCore
+[280 / 374]
+[281 / 374] pbn-product
+[287 / 377] MakingOf
+[289 / 381] MosaicCore
+[292 / 385] MosaicKitTests-product
+[293 / 389] MakingOf
+[293 / 389] MosaicKitTests-product
+[295 / 389] MakingOf
+[303 / 389] MakingOf
+[313 / 389] MosaicKitTests-product
+[316 / 389] MosaicEngine
+[316 / 389] MosaicCore
+[318 / 389] MosaicEngine
+[319 / 389] MosaicCoreTests-product
+[320 / 389] MosaicCoreTests-product
+[321 / 389] MakingOfTests-product
+[323 / 389] MosaicCore
+[324 / 389]
+[326 / 389]
+[327 / 389]
+[328 / 389]
+[330 / 389]
+[334 / 389] MosaicKitTests-product
+[336 / 389] MosaicCore
+[342 / 389] mosaic-product
+[346 / 390] mosaic-product
+[347 / 394] mosaic-product
+[349 / 394] MosaicEngineTests-product
+[351 / 394] MosaicEngineTests-product
+[356 / 394]
+[360 / 395] MosaicCoreTests-product
+[363 / 399] MosaicCoreTests-product
+[364 / 399] MosaicCoreTests-product
+[366 / 399] MosaicCoreTests-product
+[372 / 399] MosaicEngineTests-product
+[372 / 399] MosaicCore-product
+[376 / 399]
+[378 / 399] MosaicCoreTests-product
+[382 / 399] MakingOf
+[389 / 400] MakingOfTests-product
+[393 / 404] MakingOfTests-product
+[394 / 404] MakingOfTests-product
+[398 / 404] MakingOfTests-product
+[400 / 404] MakingOfTests-product
+[402 / 404] MakingOfTests-product
+Build complete! (230.40 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test sharedPlatformPins() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.041 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.041 seconds.
+✔ Test sharedPlatformPins() passed after 0.041 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.041 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.051 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.079 seconds.
+✔ Suite "ColorNickname v2" passed after 0.079 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.079 seconds.
