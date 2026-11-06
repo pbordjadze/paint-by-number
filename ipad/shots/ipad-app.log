@@ -1,0 +1,422 @@
+----- the app's own lines -----
+2:2026-11-06 00:14:32.054 Df PaintByNumber[98580:3cedc] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+3:2026-11-06 00:14:32.057 Df PaintByNumber[98580:3cedc] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+366:2026-11-06 00:14:48.553 Df PaintByNumber[99306:3d737] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+368:2026-11-06 00:14:51.123 Df PaintByNumber[99306:3d737] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.169153917 seconds
+540:2026-11-06 00:14:52.655 Df PaintByNumber[99306:3d739] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.871102542 seconds
+885:2026-11-06 00:15:06.798 Df PaintByNumber[99772:3de0b] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+887:2026-11-06 00:15:09.391 Df PaintByNumber[99772:3de0b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.191676583 seconds
+1058:2026-11-06 00:15:10.734 Df PaintByNumber[99772:3de10] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.674437791 seconds
+1415:2026-11-06 00:15:21.378 Df PaintByNumber[846:3e1cc] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+1417:2026-11-06 00:15:23.930 Df PaintByNumber[846:3e1cc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.181847166 seconds
+1609:2026-11-06 00:15:25.165 Df PaintByNumber[846:3e1c2] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.587503667 seconds
+1686:2026-11-06 00:15:44.619 Df PaintByNumber[846:3e069] [com.pbordjadze.paintbynumber:demo] demo paint-book-moon-dark: painted 171, fill 13.853811 s
+4402:2026-11-06 00:18:27.715 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+4412:2026-11-06 00:18:27.926 Df PaintByNumber[9458:42b68] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.213768375 seconds
+4484:2026-11-06 00:18:28.590 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.635979292 seconds
+4485:2026-11-06 00:18:28.735 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+4495:2026-11-06 00:18:29.053 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.462746125 seconds
+4496:2026-11-06 00:18:29.083 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+4520:2026-11-06 00:18:29.461 Df PaintByNumber[9458:42add] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+4820:2026-11-06 00:18:43.916 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+4825:2026-11-06 00:18:44.114 Df PaintByNumber[9929:432c4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.199909958 seconds
+4909:2026-11-06 00:18:44.603 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.282715334 seconds
+4912:2026-11-06 00:18:44.739 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+4913:2026-11-06 00:18:44.888 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.284018 seconds
+4914:2026-11-06 00:18:44.919 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+4938:2026-11-06 00:18:45.302 Df PaintByNumber[9929:42f62] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+5229:2026-11-06 00:18:59.658 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+5238:2026-11-06 00:18:59.878 Df PaintByNumber[10463:435f4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.221781708 seconds
+5319:2026-11-06 00:19:00.972 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.93556125 seconds
+5322:2026-11-06 00:19:01.079 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+5323:2026-11-06 00:19:01.661 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.688387041 seconds
+5324:2026-11-06 00:19:01.673 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+5348:2026-11-06 00:19:02.075 Df PaintByNumber[10463:43448] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+5624:2026-11-06 00:19:13.238 Df PaintByNumber[11323:43b88] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+5631:2026-11-06 00:19:13.444 Df PaintByNumber[11323:43bcb] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.209111 seconds
+5705:2026-11-06 00:19:13.937 Df PaintByNumber[11323:43b88] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.393273709 seconds
+5706:2026-11-06 00:19:14.149 Df PaintByNumber[11323:43b88] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfNewPainting, shelfSettings, shelfTimeLapse, wanted shelfNewPainting, shelfSettings, shelfTimeLapse
+5799:2026-11-06 00:19:14.545 Df PaintByNumber[11323:43b88] [com.pbordjadze.paintbynumber:tips] turn: shelfSettings
+6087:2026-11-06 00:19:28.324 Df PaintByNumber[11969:445a5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.317034583 seconds
+6097:2026-11-06 00:19:28.864 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.023585459 seconds (stall 1), 91 frames:
+6098:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 libobjc.A.dylib objc_release_x7 + 148 | #1 UIKitCore -[UIView(Internal) _didMoveFromWindow:toWindow:] + 744 | #2 UIKitCore __45-[UIView(Hierarchy) _postMovedFromSuperview:]_block_invoke + 124 | #3 UIKitCore -[UIView _postMovedFromSuperview:] + 436 | #4 UIKitCore -[UIView(Internal) _addSubview:positioned:relativeTo:] + 2252 | #5 UIKitCore -[UIView(Internal) _ensureViewsAreInstalledInRelativeOrder:viewCount:insertionStartIndex:] + 132 | #6 UIKitCore -[UIView _ensureViewsAreInstalledInRelativeOrder:] + 164 | #7 UIKitCore __swift_closure_destructor.341 + 26128 | #8 UIKitCore __swift_closure_destructor.341 + 9008 | #9 UIKitCore block_destroy_helper.8 + 35576 | #10 UIKitCore block_destroy_helper.8 + 29528 | #11 UIKitCore block_destroy_helper.8 + 35708
+6099:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #12 UIKitCore -[UINavigationBar layoutSubviews] + 436 | #13 UIKitCore block_destroy_helper + 22024 | #14 UIKitCore block_destroy_helper + 22844 | #15 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #16 UIKitCore -[UINavigationBar layoutSublayersOfLayer:] + 188 | #17 QuartzCore -[CALayer layoutSublayers] + 324 | #18 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #19 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #20 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 312 | #21 UIKitCore -[UINavigationController _positionNavigationBarHidden:edge:initialOffset:] + 536 | #22 UIKitCore -[UINavigationController _positionNavigationBarHidden:edge:] + 292
+6100:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #23 UIKitCore -[UINavigationController _updateBarsForCurrentInterfaceOrientationAndForceBarLayout:] + 212 | #24 UIKitCore -[UIViewController viewDidMoveToWindow:shouldAppearOrDisappear:] + 168 | #25 UIKitCore -[UINavigationController viewDidMoveToWindow:shouldAppearOrDisappear:] + 72 | #26 UIKitCore -[UIView(Internal) _didMoveFromWindow:toWindow:] + 1164 | #27 UIKitCore __45-[UIView(Hierarchy) _postMovedFromSuperview:]_block_invoke + 124 | #28 UIKitCore -[UIView _postMovedFromSuperview:] + 436 | #29 UIKitCore -[UIView(Internal) _addSubview:positioned:relativeTo:] + 2252 | #30 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68 | #31 UIKitCore -[_UIConstraintBasedLayoutHostingView setHostedView:] + 140 | #32 UIKitCore block_destroy_helper.2 + 2136
+6101:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #33 UIKitCore block_destroy_helper.2 + 2036 | #34 UIKitCore block_destroy_helper.2 + 6992 | #35 UIKitCore block_destroy_helper.2 + 7344 | #36 UIKitCore -[UIView(Internal) _didMoveFromWindow:toWindow:] + 1864 | #37 UIKitCore __45-[UIView(Hierarchy) _postMovedFromSuperview:]_block_invoke + 124 | #38 UIKitCore -[UIView _postMovedFromSuperview:] + 436 | #39 UIKitCore -[UIView(Internal) _addSubview:positioned:relativeTo:] + 2252 | #40 SwiftUI $s7SwiftUI14_UIHostingViewC28swiftui_insertManagedSubview_2atySo6UIViewC_SitF + 68 | #41 SwiftUI $s7SwiftUI14_UIHostingViewC28swiftui_insertManagedSubview_2atySo6UIViewC_SitFTo + 64
+6102:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #42 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC010updateItemE033_B86250B2E056EB47628ECF46032DFA4CLL9container4from10localStateyAE9ContainerAGLLVz_AC0H0VAE5ModelO0R0VztF + 300 | #43 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC015updateInheritedE033_B86250B2E056EB47628ECF46032DFA4CLL9container4from11parentStateyAE9ContainerAGLLVz_AC4ItemVSPyAE5ModelO0R0VGtF + 976 | #44 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC6update33_B86250B2E056EB47628ECF46032DFA4CLL9container4from11parentStateyAE9ContainerAGLLVz_ACSPyAE5ModelO0Q0VGtF + 360 | #45 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC015updateInheritedE033_B86250B2E056EB47628ECF46032DFA4CLL9container4from11parentStateyAE9ContainerAGLLVz_AC4ItemVSPyAE5ModelO0R0VGtF + 940
+6103:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #46 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC6update33_B86250B2E056EB47628ECF46032DFA4CLL9container4from11parentStateyAE9ContainerAGLLVz_ACSPyAE5ModelO0Q0VGtF + 360 | #47 SwiftUICore $s7SwiftUI11DisplayListV11ViewUpdaterC6render04rootE04from4time7version10maxVersion11environmentAA4TimeVyXl_AcnC0M0VApcAE0E8RendererC11EnvironmentVtF + 1204 | #48 SwiftUICore $s7SwiftUI9ViewGraphC17renderDisplayList_14asynchronously4time8nextTime15targetTimestamp7version10maxVersionAA0K0VAA0fG0V_SbA3LSgAN0P0VAQtF0E12OnMainThreadL_ALyFALyXEfU_ + 232 | #49 UIKitCore __swift_closure_destructor.55 + 31956 | #50 UIKitCore __swift_closure_destructor + 36 | #51 UIKitCore __swift_closure_destructor.55 + 56 | #52 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68
+6104:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #53 UIKitCore __swift_closure_destructor.55 + 31740 | #54 SwiftUICore $s7SwiftUI9ViewGraphC17renderDisplayList_14asynchronously4time8nextTime15targetTimestamp7version10maxVersionAA0K0VAA0fG0V_SbA3LSgAN0P0VAQtF + 1356 | #55 SwiftUICore $s7SwiftUI9ViewGraphCAA0cD10RenderHostA2aDP17renderDisplayList_14asynchronously4time8nextTime15targetTimestamp7version10maxVersionAA0M0VAA0hI0V_SbA3NSgAP0R0VAStFTW + 20 | #56 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 2136 | #57 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #58 UIKitCore __swift_closure_destructor.55 + 4088
+6105:2026-11-06 00:19:28.961 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #59 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #60 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #61 UIKitCore block_destroy_helper + 22024 | #62 UIKitCore block_destroy_helper + 22844 | #63 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #64 QuartzCore -[CALayer layoutSublayers] + 324 | #65 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #66 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #67 QuartzCore _ZN2CA5Layer28layout_and_display_if_neededEPNS_11TransactionE + 152 | #68 QuartzCore _ZN2CA7Context18commit_transactionEPNS_11TransactionEdPd + 632 | #69 QuartzCore _ZN2CA11Transaction6commitEv + 624
+6106:2026-11-06 00:19:28.962 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #70 QuartzCore _ZN2CA11Transaction5flushEv + 80 | #71 QuartzCore _ZN2CA11Transaction25flush_as_runloop_observerEb + 68 | #72 UIKitCore _UIApplicationFlushCATransaction + 48 | #73 UIKitCore __setupUpdateSequence_block_invoke_2 + 356 | #74 UIKitCore _UIUpdateSequenceRunNext + 120 | #75 UIKitCore schedulerStepScheduledMainSectionContinue + 44 | #76 UpdateCycle _ZN2UC10DriverCore18continueProcessingEv + 80 | #77 CoreFoundation __CFMachPortPerform + 164 | #78 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__ + 56 | #79 CoreFoundation __CFRunLoopDoSource1 + 476 | #80 CoreFoundation __CFRunLoopRun + 2116 | #81 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #82 GraphicsServices GSEventRunModal + 116 | #83 UIKitCore UIApplicationMain + 124
+6107:2026-11-06 00:19:28.962 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo]   stall 1 #84 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #85 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204 | #86 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #87 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #88 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #89 dyld dyld-internal + 20 | #90 0x105091e80
+6168:2026-11-06 00:19:29.213 E  PaintByNumber[11969:44593] [com.pbordjadze.paintbynumber:demo] Main thread answered after 2.372651584 seconds (stall 1)
+6283:2026-11-06 00:19:32.913 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:create] Draft #1 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+6285:2026-11-06 00:19:33.555 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+6286:2026-11-06 00:19:33.596 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:create] Full #2 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+6308:2026-11-06 00:19:38.500 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+6309:2026-11-06 00:19:38.523 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine, wanted newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine
+6388:2026-11-06 00:19:39.046 Df PaintByNumber[11969:4418d] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSuggested
+6736:2026-11-06 00:19:55.739 Df PaintByNumber[13188:44e8e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.449112542 seconds
+6738:2026-11-06 00:19:56.525 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.01663175 seconds (stall 1), 76 frames:
+6739:2026-11-06 00:19:56.591 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 CoreFoundation -[__NSDictionaryI objectForKey:] + 128 | #1 CoreFoundation -[__NSDictionaryI objectForKey:] + 96 | #2 CoreText _ZNK11TDescriptor21CopyAttributeExternalEPK10__CFString + 52 | #3 CoreText CTFontDescriptorCopyAttribute + 44 | #4 UIFoundation -[UICTFontDescriptor objectForKey:] + 16 | #5 UIFoundation -[UIFont _fontAdjustedForContentSizeCategoryCompatibleWithTraitCollection:] + 460 | #6 SwiftUI $s7SwiftUI26ListCollectionViewCellBaseC07hostingE0_10willUpdateyAA010_UIHostingE0Cyqd__G_AA17EnvironmentValuesVztAA0E0Rd__lFTf4dnn_n + 696 | #7 SwiftUI $s7SwiftUI14_UIHostingViewC24baseDidUpdateEnvironmentyyAA0H6ValuesVzF + 636 | #8 UIKitCore __swift_closure_destructor.55 + 8144 | #9 SwiftUI $s7SwiftUI14_UIHostingViewC17updateEnvironmentyyF + 32
+6740:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #10 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE06updateD0yyFyyXEfU_ + 312 | #11 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE06updateD0yyF + 272 | #12 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE07_updatecD04bodyqd__Sgqd__AA0cD0CXE_tlF + 196 | #13 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE06updateD04bodyqd__qd__AA0D4HostCXE_tlF + 136 | #14 SwiftUICore $s7SwiftUI9GraphHostC11updateGroup4dataAcA06UpdateF0C_AC4DataVtcfcyycfU_ + 140 | #15 AttributeGraph _ZN2AG5Graph7Context11call_updateEv + 236 | #16 AttributeGraph _ZN2AG5Graph11call_updateEv + 156 | #17 AttributeGraph _ZN2AG8Subgraph6updateEj + 92 | #18 SwiftUICore $s7SwiftUI9GraphHostC14runTransactionyyF + 212 | #19 SwiftUICore $s7SwiftUI9ViewGraphC13updateOutputs2atyAA4TimeV_tF + 148
+6741:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #20 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 620 | #21 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #22 UIKitCore __swift_closure_destructor.55 + 4088 | #23 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #24 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #25 UIKitCore block_destroy_helper + 22024 | #26 UIKitCore block_destroy_helper + 22844 | #27 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #28 QuartzCore -[CALayer layoutSublayers] + 324 | #29 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456
+6742:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #30 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #31 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 312 | #32 UIKitCore -[UISheetPresentationController _sheetLayoutInfoLayout:] + 32 | #33 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77828 | #34 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77932 | #35 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_3 + 32 | #36 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68 | #37 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_2 + 224 | #38 UIKitCore __UIVIEWCONTROLLERTRANSITIONCOORDINATOR_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 28
+6743:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #39 UIKitCore -[_UIViewControllerTransitionCoordinator _applyBlocks:releaseBlocks:] + 116 | #40 UIKitCore -[_UIViewControllerTransitionContext __runAlongsideAnimations] + 212 | #41 UIKitCore __UIVIEW_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 16 | #42 UIKitCore __72+[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:]_block_invoke + 24 | #43 UIKitCore -[UIViewAnimationState _runAlongsideAnimations] + 32 | #44 UIKitCore -[UIViewAnimationState pop] + 36 | #45 UIKitCore +[UIViewAnimationState popAnimationState] + 56 | #46 UIKitCore +[UIView(UIViewAnimationWithBlocks) _setupAnimationWithDuration:delay:view:options:factory:animations:start:animationStateGenerator:completion:] + 676
+6744:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #47 UIKitCore +[UIView(UIViewAnimationWithBlocks) animateWithDuration:delay:options:animations:completion:] + 44 | #48 UIKitCore __50-[UITransitionView _startTransition:withDuration:]_block_invoke_2 + 328 | #49 UIKitCore +[UIView(UIViewAnimationWithBlocks) conditionallyAnimate:withAnimation:layout:completion:] + 80 | #50 UIKitCore -[UITransitionView _startTransition:withDuration:] + 1064 | #51 UIKitCore -[UITransitionView transition:fromView:toView:removeFromView:] + 1864 | #52 UIKitCore -[UIViewControllerBuiltinTransitionViewAnimator animateTransition:] + 1264 | #53 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_3 + 160 | #54 UIKitCore +[UIKeyboardSceneDelegate _pinInputViewsForKeyboardSceneDelegate:onBehalfOfResponder:duringBlock:] + 88
+6745:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #55 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_2 + 180 | #56 UIKitCore +[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:] + 156 | #57 UIKitCore _UIViewControllerTransitioningRunCustomTransitionWithRequest + 496 | #58 UIKitCore __77-[UIPresentationController runTransitionForCurrentStateAnimated:handoffData:]_block_invoke_3 + 1704 | #59 UIKitCore -[_UIAfterCACommitBlock run] + 64 | #60 UIKitCore -[_UIAfterCACommitQueue flush] + 164 | #61 UIKitCore _runAfterCACommitDeferredBlocks + 256 | #62 UIKitCore _cleanUpAfterCAFlushAndRunDeferredBlocks + 76 | #63 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 | #64 CoreFoundation __CFRunLoopDoBlocks + 340 | #65 CoreFoundation __CFRunLoopRun + 788
+6746:2026-11-06 00:19:56.592 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo]   stall 1 #66 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #67 GraphicsServices GSEventRunModal + 116 | #68 UIKitCore UIApplicationMain + 124 | #69 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #70 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204 | #71 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #72 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #73 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #74 dyld dyld-internal + 20 | #75 0x1026d5e80
+6861:2026-11-06 00:19:57.096 E  PaintByNumber[13188:44e8f] [com.pbordjadze.paintbynumber:demo] Main thread answered after 2.588161083 seconds (stall 1)
+7196:2026-11-06 00:20:08.635 Df PaintByNumber[13485:4510f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.351241917 seconds
+7197:2026-11-06 00:20:09.459 Df PaintByNumber[13485:44fa8] [com.pbordjadze.paintbynumber:tips] offer in drawer: drawerWorthALook, wanted drawerWorthALook
+7198:2026-11-06 00:20:09.600 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.016461 seconds (stall 1), 101 frames:
+7199:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 Foundation -[NSConcreteAttributedString dealloc] + 124 | #1 Foundation -[NSBundle localizedAttributedStringForKey:value:table:localization:] + 288 | #2 SwiftUICore _LocalizeAttributedString + 128 | #3 SwiftUICore $s7SwiftUI18LocalizedStringKeyV7resolve4into2in7options5table6bundleyxz_AA17EnvironmentValuesVAA4TextV14ResolveOptionsVSSSgSo8NSBundleCSgtAA08ResolvedN9ContainerRzlF + 616 | #4 SwiftUICore $s7SwiftUI20LocalizedTextStorage33_8C53218A357EE528547B0855666BD2E5LLC7resolve4into2in4withyxz_AA17EnvironmentValuesVAA0D0V14ResolveOptionsVtAA08ResolvedD9ContainerRzlF + 76 | #5 SwiftUICore $s7SwiftUI4TextV7StorageO7resolve4into2in4withyxz_AA17EnvironmentValuesVAC14ResolveOptionsVtAA08ResolvedC9ContainerRzlFAC0M0V_TB5 + 116
+7200:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #6 SwiftUICore $s7SwiftUI4TextV7resolve4into2in4withyxz_AA17EnvironmentValuesVAC14ResolveOptionsVtAA08ResolvedC9ContainerRzlFAC0L0V_TB5 + 268 | #7 SwiftUICore $s7SwiftUI4TextVAAE36resolveAttributedStringAndProperties2in24includeDefaultAttributes7options5idiom14subrangeStylesSo09NSMutableeF0CSg_AC08ResolvedH0VtAA17EnvironmentValuesV_SbAC14ResolveOptionsVAA17AnyInterfaceIdiomVSgSayAN13S | #8 SwiftUICore $s7SwiftUI18ResolvedTextHelperV7resolve_4with11sizeFittingAA0c6StyledD0CSgAA0D0VSg_AA17EnvironmentValuesVSbtF + 2408 | #9 SwiftUICore $s7SwiftUI18ResolvedTextFilter33_641995D812913A47B866B20B88782376LLV11updateValueyyF + 1016
+7201:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #10 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA12StatefulRuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_7SwiftUI18ResolvedStyledTextC_AK0iK6Filter33_641995D812913A47B866B20B88782376LLVTt1g5 + 20 | #11 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 512 | #12 AttributeGraph _ZN2AG5Graph16update_attributeENS_4data3ptrINS_4NodeEEEj + 352 | #13 AttributeGraph _ZN2AG5Graph9value_refENS_11AttributeIDEjPK15AGSwiftMetadataRh + 296 | #14 AttributeGraph AGGraphGetWeakValue + 388 | #15 SwiftUICore $s7SwiftUI9ViewGraphC14layoutComputer33_7D9EDEF832940A362646A6E979F296C8LLAA06LayoutF0VSgvg + 96 | #16 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE13_sizeThatFitsySo6CGSizeVAA08ProposedC4SizeVFAfA0cD0CXEfU_ + 52
+7202:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #17 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE07_updatecD04bodyqd__Sgqd__AA0cD0CXE_tlF + 212 | #18 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE13_sizeThatFitsySo6CGSizeVAA08ProposedC4SizeVF + 84 | #19 SwiftUI $s7SwiftUI20PlatformListViewBasePAASo6UIViewCRbzrlE16hostSizeThatFits5widthSo6CGSizeV12CoreGraphics7CGFloatV_tF + 424 | #20 SwiftUI $s7SwiftUI20PlatformListViewBasePAASo020UICollectionReusableE0CRbzrlE29hostPreferredLayoutAttributes7fitting6insetsSo0gekL0CAJ_AA10EdgeInsetsVtF + 704 | #21 SwiftUI $s7SwiftUI26ListCollectionViewCellBaseC32preferredLayoutAttributesFittingySo012UICollectioneiJ0CAFF + 440 | #22 SwiftUI $s7SwiftUI26ListCollectionViewCellBaseC32preferredLayoutAttributesFittingySo012UICollectioneiJ0CAFFTo + 44
+7203:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #23 UIKitCore -[UICollectionReusableView _preferredLayoutAttributesFittingAttributes:isAnimatingExistingView:] + 136 | #24 UIKitCore -[UICollectionViewListCell _preferredLayoutAttributesFittingAttributes:isAnimatingExistingView:] + 280 | #25 UIKitCore -[UICollectionView _checkForPreferredAttributesInView:originalAttributes:] + 256 | #26 UIKitCore -[UICollectionView _updateLayoutAttributesForExistingVisibleViewsFadingForBoundsChange:] + 1652 | #27 UIKitCore -[UICollectionView _updateVisibleCellsNow:] + 3196 | #28 UIKitCore -[UICollectionView layoutSubviews] + 276 | #29 SwiftUI $s7SwiftUI30UpdateCoalescingCollectionViewC14layoutSubviewsyyF + 56 | #30 SwiftUI $s7SwiftUI30UpdateCoalescingCollectionViewC14layoutSubviewsyyFTo + 32 | #31 UIKitCore block_destroy_helper + 22024
+7204:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #32 UIKitCore block_destroy_helper + 22844 | #33 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #34 QuartzCore -[CALayer layoutSublayers] + 324 | #35 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #36 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #37 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 312 | #38 SwiftUI $s7SwiftUI35UICollectionViewListCoordinatorBaseC14performUpdates33_6136146D85C971A7B274DB5460AE4C0FLL010collectionD016shouldSetEditingySo0cD0C_SbtFyyXEfU2_TA + 24 | #39 SwiftUI $s7SwiftUI19SubmitTriggerSourcePAAE14dispatchUpdateyyyyXEFyyXEfU_ + 20 | #40 SwiftUI $sIeg_IyB_TR + 20 | #41 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68
+7205:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #42 SwiftUI $s7SwiftUI35UICollectionViewListCoordinatorBaseC14performUpdates33_6136146D85C971A7B274DB5460AE4C0FLL010collectionD016shouldSetEditingySo0cD0C_SbtF + 1056 | #43 SwiftUI $s7SwiftUI35UICollectionViewListCoordinatorBaseC6update_2to11transaction11performDiffySo0cD0C_xAA11TransactionVSbtFyycfU0_ + 60 | #44 SwiftUICore $s7SwiftUI11UpdateGroupC6Action33_6733BA79212FB37D3E5D979DE425452BLLV14callAsFunctionyyF + 172 | #45 SwiftUICore $s7SwiftUI11UpdateGroupC15dispatchActionsyyF0E0L_yyF + 312 | #46 SwiftUICore $s7SwiftUI11UpdateGroupC15dispatchActionsyyF + 320 | #47 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 604
+7206:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #48 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #49 UIKitCore __swift_closure_destructor.55 + 4088 | #50 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #51 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #52 UIKitCore block_destroy_helper + 22024 | #53 UIKitCore block_destroy_helper + 22844 | #54 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #55 QuartzCore -[CALayer layoutSublayers] + 324 | #56 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #57 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600
+7207:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #58 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 312 | #59 UIKitCore -[UISheetPresentationController _sheetLayoutInfoLayout:] + 32 | #60 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77828 | #61 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77932 | #62 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_2 + 292 | #63 UIKitCore __UIVIEWCONTROLLERTRANSITIONCOORDINATOR_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 28 | #64 UIKitCore -[_UIViewControllerTransitionCoordinator _applyBlocks:releaseBlocks:] + 116 | #65 UIKitCore -[_UIViewControllerTransitionContext __runAlongsideAnimations] + 212 | #66 UIKitCore __UIVIEW_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 16
+7208:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #67 UIKitCore __72+[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:]_block_invoke + 24 | #68 UIKitCore -[UIViewAnimationState _runAlongsideAnimations] + 32 | #69 UIKitCore -[UIViewAnimationState pop] + 36 | #70 UIKitCore +[UIViewAnimationState popAnimationState] + 56 | #71 UIKitCore +[UIView(UIViewAnimationWithBlocks) _setupAnimationWithDuration:delay:view:options:factory:animations:start:animationStateGenerator:completion:] + 676 | #72 UIKitCore +[UIView(UIViewAnimationWithBlocks) animateWithDuration:delay:options:animations:completion:] + 44 | #73 UIKitCore __50-[UITransitionView _startTransition:withDuration:]_block_invoke_2 + 328 | #74 UIKitCore +[UIView(UIViewAnimationWithBlocks) conditionallyAnimate:withAnimation:layout:completion:] + 80
+7209:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #75 UIKitCore -[UITransitionView _startTransition:withDuration:] + 1064 | #76 UIKitCore -[UITransitionView transition:fromView:toView:removeFromView:] + 1864 | #77 UIKitCore -[UIViewControllerBuiltinTransitionViewAnimator animateTransition:] + 1264 | #78 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_3 + 160 | #79 UIKitCore +[UIKeyboardSceneDelegate _pinInputViewsForKeyboardSceneDelegate:onBehalfOfResponder:duringBlock:] + 88 | #80 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_2 + 180 | #81 UIKitCore +[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:] + 156 | #82 UIKitCore _UIViewControllerTransitioningRunCustomTransitionWithRequest + 496
+7210:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #83 UIKitCore __77-[UIPresentationController runTransitionForCurrentStateAnimated:handoffData:]_block_invoke_3 + 1704 | #84 UIKitCore -[_UIAfterCACommitBlock run] + 64 | #85 UIKitCore -[_UIAfterCACommitQueue flush] + 164 | #86 UIKitCore _runAfterCACommitDeferredBlocks + 256 | #87 UIKitCore _cleanUpAfterCAFlushAndRunDeferredBlocks + 76 | #88 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 | #89 CoreFoundation __CFRunLoopDoBlocks + 340 | #90 CoreFoundation __CFRunLoopRun + 788 | #91 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #92 GraphicsServices GSEventRunModal + 116 | #93 UIKitCore UIApplicationMain + 124 | #94 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164
+7211:2026-11-06 00:20:09.667 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo]   stall 1 #95 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204 | #96 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #97 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #98 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #99 dyld dyld-internal + 20 | #100 0x10430de80
+7221:2026-11-06 00:20:09.920 E  PaintByNumber[13485:45111] [com.pbordjadze.paintbynumber:demo] Main thread answered after 2.336777917 seconds (stall 1)
+7353:2026-11-06 00:20:10.323 Df PaintByNumber[13485:44fa8] [com.pbordjadze.paintbynumber:tips] turn: drawerWorthALook
+7692:2026-11-06 00:20:24.104 Df PaintByNumber[14359:45749] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211933041 seconds
+7861:2026-11-06 00:20:24.581 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.340130584 seconds
+7930:2026-11-06 00:20:24.970 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.389267209 seconds
+8031:2026-11-06 00:20:25.469 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.498967625 seconds
+8110:2026-11-06 00:20:25.847 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.377845292 seconds
+8277:2026-11-06 00:20:26.442 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.594386583 seconds
+8549:2026-11-06 00:20:26.900 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.4579705 seconds
+10129:2026-11-06 00:20:29.386 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:tips] forced: shelfNewPainting
+10130:2026-11-06 00:20:29.392 Df PaintByNumber[14359:45710] [com.pbordjadze.paintbynumber:tips] turn: shelfNewPainting
+10434:2026-11-06 00:20:44.345 Df PaintByNumber[15249:45fb9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.295111334 seconds
+11523:2026-11-06 00:20:47.273 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.727739875 seconds
+11712:2026-11-06 00:20:48.098 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.824444333 seconds
+12825:2026-11-06 00:20:50.212 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 2.1136515 seconds
+12827:2026-11-06 00:20:50.691 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.478402958 seconds
+12830:2026-11-06 00:20:51.275 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.583427083 seconds
+12832:2026-11-06 00:20:51.787 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.512252583 seconds
+12856:2026-11-06 00:20:53.898 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:tips] forced: shelfHold
+12857:2026-11-06 00:20:53.902 Df PaintByNumber[15249:45ec9] [com.pbordjadze.paintbynumber:tips] turn: shelfHold
+13161:2026-11-06 00:21:06.567 Df PaintByNumber[16470:46a38] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.237038417 seconds
+13349:2026-11-06 00:21:07.430 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.674428625 seconds
+13418:2026-11-06 00:21:07.847 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.416545167 seconds
+13475:2026-11-06 00:21:08.247 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.3997925 seconds
+13594:2026-11-06 00:21:08.708 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.460921916 seconds
+13685:2026-11-06 00:21:09.088 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.379587125 seconds
+13774:2026-11-06 00:21:09.427 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.33886675 seconds
+15424:2026-11-06 00:21:11.072 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:tips] forced: shelfTimeLapse
+15429:2026-11-06 00:21:11.075 Df PaintByNumber[16470:469c6] [com.pbordjadze.paintbynumber:tips] turn: shelfTimeLapse
+15896:2026-11-06 00:21:23.526 Df PaintByNumber[17278:471de] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.252882875 seconds
+18410:2026-11-06 00:21:28.694 Df PaintByNumber[17278:470fd] [com.pbordjadze.paintbynumber:tips] forced: newPaintingSamples
+18411:2026-11-06 00:21:28.700 Df PaintByNumber[17278:470fd] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSamples
+18858:2026-11-06 00:21:47.483 Df PaintByNumber[17889:47a01] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.2827265 seconds
+19836:2026-11-06 00:21:52.084 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+19952:2026-11-06 00:21:53.003 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+19959:2026-11-06 00:21:53.064 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+21026:2026-11-06 00:21:58.608 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+21347:2026-11-06 00:21:59.999 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:tips] forced: newPaintingDivider
+21348:2026-11-06 00:22:00.003 Df PaintByNumber[17889:476d2] [com.pbordjadze.paintbynumber:tips] turn: newPaintingDivider
+21665:2026-11-06 00:22:29.008 Df PaintByNumber[19512:48754] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.206435875 seconds
+22255:2026-11-06 00:22:33.576 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+22364:2026-11-06 00:22:34.200 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+22365:2026-11-06 00:22:34.238 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+23465:2026-11-06 00:22:38.035 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+24190:2026-11-06 00:22:39.680 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:tips] forced: newPaintingSliders
+24191:2026-11-06 00:22:39.688 Df PaintByNumber[19512:486b1] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSliders
+24510:2026-11-06 00:23:01.811 Df PaintByNumber[20276:48f70] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.231637333 seconds
+25982:2026-11-06 00:23:05.835 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+26137:2026-11-06 00:23:06.443 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+26139:2026-11-06 00:23:06.477 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+26979:2026-11-06 00:23:10.966 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+26980:2026-11-06 00:23:11.044 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+27005:2026-11-06 00:23:11.329 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+27007:2026-11-06 00:23:16.473 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+27033:2026-11-06 00:23:18.093 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:tips] forced: newPaintingReset
+27034:2026-11-06 00:23:18.098 Df PaintByNumber[20276:48e06] [com.pbordjadze.paintbynumber:tips] turn: newPaintingReset
+27349:2026-11-06 00:23:34.162 Df PaintByNumber[21596:49bc3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.349660917 seconds
+28603:2026-11-06 00:23:39.096 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+28724:2026-11-06 00:23:39.916 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+28726:2026-11-06 00:23:39.962 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+29735:2026-11-06 00:23:44.727 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+29844:2026-11-06 00:23:46.380 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:tips] forced: newPaintingRefine
+29845:2026-11-06 00:23:46.385 Df PaintByNumber[21596:49a5c] [com.pbordjadze.paintbynumber:tips] turn: newPaintingRefine
+30131:2026-11-06 00:23:59.313 Df PaintByNumber[22594:4a3ad] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.210504292 seconds
+31019:2026-11-06 00:24:04.343 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+31104:2026-11-06 00:24:05.120 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+31110:2026-11-06 00:24:05.155 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+32296:2026-11-06 00:24:09.553 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+32743:2026-11-06 00:24:15.362 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:tips] forced: refineFill
+32744:2026-11-06 00:24:15.366 Df PaintByNumber[22594:4a368] [com.pbordjadze.paintbynumber:tips] turn: refineFill
+33035:2026-11-06 00:24:31.900 Df PaintByNumber[23397:4abfc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.372273667 seconds
+34209:2026-11-06 00:24:36.315 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+34362:2026-11-06 00:24:36.956 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+34364:2026-11-06 00:24:36.993 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+35519:2026-11-06 00:24:41.295 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+35647:2026-11-06 00:24:44.791 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:tips] forced: refineDraw
+35648:2026-11-06 00:24:44.795 Df PaintByNumber[23397:4aaeb] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+36649:2026-11-06 00:24:58.893 Df PaintByNumber[24763:4b75c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.191683125 seconds
+37099:2026-11-06 00:25:00.799 Df PaintByNumber[24763:4b770] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 1.241567459 seconds
+38396:2026-11-06 00:25:01.609 Df PaintByNumber[24763:4b720] [com.pbordjadze.paintbynumber:tips] forced: benchZoom
+38403:2026-11-06 00:25:01.612 Df PaintByNumber[24763:4b720] [com.pbordjadze.paintbynumber:tips] turn: benchZoom
+39790:2026-11-06 00:25:15.227 Df PaintByNumber[25635:4bf31] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.278523834 seconds
+40001:2026-11-06 00:25:16.657 Df PaintByNumber[25635:4bf64] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.6780175 seconds
+41393:2026-11-06 00:25:18.231 Df PaintByNumber[25635:4bf07] [com.pbordjadze.paintbynumber:tips] forced: benchDrag
+41394:2026-11-06 00:25:18.235 Df PaintByNumber[25635:4bf07] [com.pbordjadze.paintbynumber:tips] turn: benchDrag
+42578:2026-11-06 00:25:32.341 Df PaintByNumber[26512:4c716] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.193994667 seconds
+42820:2026-11-06 00:25:33.527 Df PaintByNumber[26512:4c716] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.562629416 seconds
+44262:2026-11-06 00:25:34.828 Df PaintByNumber[26512:4c6e1] [com.pbordjadze.paintbynumber:tips] forced: benchPencil
+44263:2026-11-06 00:25:34.833 Df PaintByNumber[26512:4c6e1] [com.pbordjadze.paintbynumber:tips] turn: benchPencil
+45676:2026-11-06 00:25:48.769 Df PaintByNumber[27389:4ceea] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.189622333 seconds
+45946:2026-11-06 00:25:49.836 Df PaintByNumber[27389:4cee8] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.510025708 seconds
+47104:2026-11-06 00:25:51.193 Df PaintByNumber[27389:4cec1] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+47105:2026-11-06 00:25:51.196 Df PaintByNumber[27389:4cec1] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+48649:2026-11-06 00:26:05.465 Df PaintByNumber[28420:4d98f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.222471875 seconds
+48913:2026-11-06 00:26:06.685 Df PaintByNumber[28420:4d99e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.491689833 seconds
+49987:2026-11-06 00:26:08.062 Df PaintByNumber[28420:4d814] [com.pbordjadze.paintbynumber:tips] forced: benchShowPhoto
+49988:2026-11-06 00:26:08.065 Df PaintByNumber[28420:4d814] [com.pbordjadze.paintbynumber:tips] turn: benchShowPhoto
+51055:2026-11-06 00:26:21.722 Df PaintByNumber[29373:4e1d8] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.239229333 seconds
+51275:2026-11-06 00:26:23.086 Df PaintByNumber[29373:4e1d7] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.693919292 seconds
+52845:2026-11-06 00:26:24.526 Df PaintByNumber[29373:4e0b9] [com.pbordjadze.paintbynumber:tips] forced: benchReplay
+52846:2026-11-06 00:26:24.528 Df PaintByNumber[29373:4e0b9] [com.pbordjadze.paintbynumber:tips] turn: benchReplay
+54194:2026-11-06 00:26:39.383 Df PaintByNumber[30367:4e9df] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.198112166 seconds
+54454:2026-11-06 00:26:40.385 Df PaintByNumber[30367:4e9dd] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.395856167 seconds
+55720:2026-11-06 00:26:42.095 Df PaintByNumber[30367:4e9b8] [com.pbordjadze.paintbynumber:tips] forced: benchZen
+55721:2026-11-06 00:26:42.098 Df PaintByNumber[30367:4e9b8] [com.pbordjadze.paintbynumber:tips] turn: benchZen
+56614:2026-11-06 00:26:57.293 Df PaintByNumber[31251:4f1df] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.169833333 seconds
+56868:2026-11-06 00:26:58.315 Df PaintByNumber[31251:4f1df] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.450432458 seconds
+58623:2026-11-06 00:26:59.720 Df PaintByNumber[31251:4f19b] [com.pbordjadze.paintbynumber:tips] forced: benchFeedback
+58624:2026-11-06 00:26:59.723 Df PaintByNumber[31251:4f19b] [com.pbordjadze.paintbynumber:tips] turn: benchFeedback
+58955:2026-11-06 00:27:13.537 Df PaintByNumber[31947:4f993] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.293227 seconds
+58958:2026-11-06 00:27:14.747 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.020475125 seconds (stall 1), 66 frames:
+58959:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 SwiftUI $s7SwiftUI38TabDropDestinationTraitWritingModifierV0F6Writer33_3A7FE8D22AD050B86D73CF34FA04D031LLV5valueQrvg + 76 | #1 SwiftUICore $s7SwiftUI22EnvironmentPropertyKeyV12defaultValue0G0QzvgZ + 24 | #2 SwiftUICore $s7SwiftUI12PropertyListVy5ValueQzxmcAA0C3KeyRzluig + 192 | #3 SwiftUICore $s7SwiftUI17EnvironmentValuesVy5ValueQzxmcAA0C3KeyRzluig + 32 | #4 SwiftUI $s7SwiftUI12_GraphInputsV34toolbarMatchedTransitionIdentifier09AttributeC00I0VyAA0fgH0VSgGvgAjA17EnvironmentValuesVcfu_33_14a4b9f1f510515981f1f8f8feb30c75AmJTf3nnpk_n + 40 | #5 AttributeGraph _swift_stdlib_malloc_size + 3520 | #6 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA4RuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_ + 148 | #7 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 512
+58960:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #8 AttributeGraph _ZN2AG8Subgraph6updateEj + 924 | #9 SwiftUICore $s7SwiftUI9GraphHostC17flushTransactionsyyF + 776 | #10 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtFyyXEfU_ + 256 | #11 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE6render8interval17updateDisplayList15targetTimestampySd_SbAA4TimeVSgtF + 488 | #12 UIKitCore __swift_closure_destructor.55 + 4088 | #13 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTm + 88 | #14 SwiftUI $s7SwiftUI14_UIHostingViewC14layoutSubviewsyyFTo + 52 | #15 UIKitCore block_destroy_helper + 22024 | #16 UIKitCore block_destroy_helper + 22844 | #17 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2540 | #18 QuartzCore -[CALayer layoutSublayers] + 324
+58961:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #19 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #20 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #21 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 312 | #22 UIKitCore -[UISheetPresentationController _sheetLayoutInfoLayout:] + 32 | #23 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77828 | #24 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 77932 | #25 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_3 + 32 | #26 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68 | #27 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_2 + 224
+58962:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #28 UIKitCore __UIVIEWCONTROLLERTRANSITIONCOORDINATOR_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 28 | #29 UIKitCore -[_UIViewControllerTransitionCoordinator _applyBlocks:releaseBlocks:] + 116 | #30 UIKitCore -[_UIViewControllerTransitionContext __runAlongsideAnimations] + 212 | #31 UIKitCore __UIVIEW_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 16 | #32 UIKitCore __72+[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:]_block_invoke + 24 | #33 UIKitCore -[UIViewAnimationState _runAlongsideAnimations] + 32 | #34 UIKitCore -[UIViewAnimationState pop] + 36 | #35 UIKitCore +[UIViewAnimationState popAnimationState] + 56
+58963:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #36 UIKitCore +[UIView(UIViewAnimationWithBlocks) _setupAnimationWithDuration:delay:view:options:factory:animations:start:animationStateGenerator:completion:] + 676 | #37 UIKitCore +[UIView(UIViewAnimationWithBlocks) animateWithDuration:delay:options:animations:completion:] + 44 | #38 UIKitCore __50-[UITransitionView _startTransition:withDuration:]_block_invoke_2 + 328 | #39 UIKitCore +[UIView(UIViewAnimationWithBlocks) conditionallyAnimate:withAnimation:layout:completion:] + 80 | #40 UIKitCore -[UITransitionView _startTransition:withDuration:] + 1064 | #41 UIKitCore -[UITransitionView transition:fromView:toView:removeFromView:] + 1864 | #42 UIKitCore -[UIViewControllerBuiltinTransitionViewAnimator animateTransition:] + 1264
+58964:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #43 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_3 + 160 | #44 UIKitCore +[UIKeyboardSceneDelegate _pinInputViewsForKeyboardSceneDelegate:onBehalfOfResponder:duringBlock:] + 88 | #45 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_2 + 180 | #46 UIKitCore +[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:] + 156 | #47 UIKitCore _UIViewControllerTransitioningRunCustomTransitionWithRequest + 496 | #48 UIKitCore __77-[UIPresentationController runTransitionForCurrentStateAnimated:handoffData:]_block_invoke_3 + 1704 | #49 UIKitCore -[_UIAfterCACommitBlock run] + 64 | #50 UIKitCore -[_UIAfterCACommitQueue flush] + 164 | #51 UIKitCore _runAfterCACommitDeferredBlocks + 256
+58965:2026-11-06 00:27:14.812 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo]   stall 1 #52 UIKitCore _cleanUpAfterCAFlushAndRunDeferredBlocks + 76 | #53 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 | #54 CoreFoundation __CFRunLoopDoBlocks + 340 | #55 CoreFoundation __CFRunLoopRun + 788 | #56 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #57 GraphicsServices GSEventRunModal + 116 | #58 UIKitCore UIApplicationMain + 124 | #59 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #60 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 204 | #61 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148 | #62 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #63 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #64 dyld dyld-internal + 20 | #65 0x100f89e80
+59015:2026-11-06 00:27:16.323 E  PaintByNumber[31947:4f98d] [com.pbordjadze.paintbynumber:demo] Main thread answered after 3.596195834 seconds (stall 1)
+59451:2026-11-06 00:27:29.607 Df PaintByNumber[32450:4fd71] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 1.016816875 seconds
+59453:2026-11-06 00:27:42.638 Df PaintByNumber[32450:4fcc4] [com.pbordjadze.paintbynumber:ravenna.library] Seeded young-woman-in-red in 13.704979792 seconds
+59456:2026-11-06 00:27:49.663 Df PaintByNumber[32450:4fcc4] [com.pbordjadze.paintbynumber:ravenna.library] Seeded william in 7.0237665830000005 seconds
+59731:2026-11-06 00:28:02.159 Df PaintByNumber[33504:506d1] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.291726375 seconds
+59841:2026-11-06 00:28:03.407 Df PaintByNumber[33504:5068d] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 started [adjusting false, full under way false, final false, phase ready]
+59867:2026-11-06 00:28:06.223 Df PaintByNumber[33504:5068d] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+60166:2026-11-06 00:28:17.563 Df PaintByNumber[34374:50e50] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.283290833 seconds
+60243:2026-11-06 00:28:18.870 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 started [adjusting false, full under way false, final false, phase ready]
+60302:2026-11-06 00:28:21.760 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+60303:2026-11-06 00:28:21.851 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Recipe changed: pieces 0.3868528072345416, eyes asTheyLook, mouth asInThePhoto, ground picture, panel whole [adjusting false, full under way false, final false, phase ready]
+60305:2026-11-06 00:28:21.885 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Draft #2 started [adjusting false, full under way false, final false, phase ready]
+60330:2026-11-06 00:28:28.867 Df PaintByNumber[34374:50e50] [com.pbordjadze.paintbynumber:ravenna.create] Faces: 1, with 2 eyes, from the bench
+60331:2026-11-06 00:28:30.307 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Draft #2 shown [adjusting false, full under way false, final false, phase generating]
+60332:2026-11-06 00:28:30.339 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Full #3 started [adjusting false, full under way false, final false, phase ready]
+60334:2026-11-06 00:28:35.386 Df PaintByNumber[34374:50e0a] [com.pbordjadze.paintbynumber:ravenna.create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+61439:2026-11-06 00:29:15.037 Df PaintByNumber[36176:520b7] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.167497625 seconds
+61896:2026-11-06 00:29:24.015 Df PaintByNumber[36624:52358] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192760167 seconds
+----- tail -----
+2026-11-06 00:29:23.386 Df PaintByNumber[36624:52338] [com.apple.GenerativeModels:availability] <compose failure [shared UUID]>
+2026-11-06 00:29:23.386 Df PaintByNumber[36624:52338] [com.apple.GenerativeModels:availability] <compose failure [shared UUID]>
+2026-11-06 00:29:23.386 Df PaintByNumber[36624:52338] [com.apple.GenerativeModels:availability] <compose failure [shared UUID]>
+2026-11-06 00:29:23.386 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.387 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.387 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.387 Df PaintByNumber[36624:52358] [com.apple.TipKit:TipKit • Datastore] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:5235c] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:5235c] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.388 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.389 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.389 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.389 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.389 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.390 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.390 Df PaintByNumber[36624:5235f] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.390 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.390 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardFocusAssistant] <compose failure [shared UUID]>
+2026-11-06 00:29:23.390 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-06 00:29:23.391 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardArbiterClientLog] <compose failure [shared UUID]>
+2026-11-06 00:29:23.391 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardArbiterClientLog] <compose failure [shared UUID]>
+2026-11-06 00:29:23.391 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.391 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.391 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-06 00:29:23.392 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-06 00:29:23.398 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:23.400 Df PaintByNumber[36624:5235c] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-06 00:29:23.400 Df PaintByNumber[36624:5235c] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-06 00:29:23.404 Df PaintByNumber[36624:5235f] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:23.405 Df PaintByNumber[36624:5235f] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:23.420 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.420 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.420 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.420 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.421 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.421 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.421 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.430 Df PaintByNumber[36624:52338] [com.apple.UIKit:PointerLockState] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52358] [com.apple.TipKit:TipKit • Core] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:23.431 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.433 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:5235e] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:52338] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:52338] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:52338] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-06 00:29:23.434 Df PaintByNumber[36624:52338] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:5235f] [com.apple.UIIntelligenceSupport:xpc] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:5235f] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:5235f] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:5235f] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:5235f] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-06 00:29:23.435 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:23.436 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.436 Df PaintByNumber[36624:5235e] [com.apple.UIIntelligenceSupport:xpc] <compose failure [shared UUID]>
+2026-11-06 00:29:23.436 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.436 Df PaintByNumber[36624:52358] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.436 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:23.437 Df PaintByNumber[36624:52338] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-06 00:29:23.437 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.437 Df PaintByNumber[36624:52338] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-06 00:29:23.438 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:23.444 A  PaintByNumber[36624:52338] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:23.547 Df PaintByNumber[36624:52358] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.683 Df PaintByNumber[36624:52338] [PrototypeTools:domain] <compose failure [shared UUID]>
+2026-11-06 00:29:23.768 Df PaintByNumber[36624:5235b] [com.apple.calls.callkit:Default] <compose failure [shared UUID]>
+2026-11-06 00:29:23.817 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneClient] <compose failure [shared UUID]>
+2026-11-06 00:29:23.837 Df PaintByNumber[36624:52358] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.838 Df PaintByNumber[36624:52358] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.838 Df PaintByNumber[36624:52358] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:23.861 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneClient] <compose failure [shared UUID]>
+2026-11-06 00:29:23.898 Df PaintByNumber[36624:5235e] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.898 Df PaintByNumber[36624:5235e] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.898 Df PaintByNumber[36624:5235e] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:23.931 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneClient] <compose failure [shared UUID]>
+2026-11-06 00:29:24.015 Df PaintByNumber[36624:52358] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192760167 seconds
+2026-11-06 00:29:24.044 Df PaintByNumber[36624:52338] [com.apple.renderbox:misc] <compose failure [shared UUID]>
+2026-11-06 00:29:24.046 Df PaintByNumber[36624:52338] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:24.071 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.076 A  PaintByNumber[36624:52358] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.101 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.158 Df PaintByNumber[36624:52338] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-06 00:29:24.161 Df PaintByNumber[36624:52338] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-06 00:29:24.161 Df PaintByNumber[36624:52338] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-06 00:29:24.161 Df PaintByNumber[36624:52338] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-06 00:29:24.162 Df PaintByNumber[36624:52338] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:24.162 Df PaintByNumber[36624:52338] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:24.162 Df PaintByNumber[36624:52338] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:24.162 Df PaintByNumber[36624:52338] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-06 00:29:24.164 E  PaintByNumber[36624:52338] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 00:29:24.174 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:24.174 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-06 00:29:24.175 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardFocusAssistant] <compose failure [shared UUID]>
+2026-11-06 00:29:24.176 E  PaintByNumber[36624:52338] [com.apple.BoardServices:XPCErrors] <compose failure [shared UUID]>
+2026-11-06 00:29:24.177 Df PaintByNumber[36624:52338] [com.apple.Accessibility:AXCommon] <compose failure [shared UUID]>
+2026-11-06 00:29:24.179 E  PaintByNumber[36624:52338] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-06 00:29:24.181 Df PaintByNumber[36624:52338] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.182 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.183 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-06 00:29:24.188 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.189 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.190 Df PaintByNumber[36624:52338] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.190 Df PaintByNumber[36624:52338] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-06 00:29:24.191 Df PaintByNumber[36624:52338] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-06 00:29:24.195 Df PaintByNumber[36624:52338] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-06 00:29:24.195 Df PaintByNumber[36624:52338] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-06 00:29:24.197 Df PaintByNumber[36624:52338] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-06 00:29:24.197 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.199 Df PaintByNumber[36624:52338] [com.apple.UIKit:DisplayLink] <compose failure [shared UUID]>
+2026-11-06 00:29:24.199 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.209 Df PaintByNumber[36624:52338] [com.apple.UIKit:UIScreen] <compose failure [shared UUID]>
+2026-11-06 00:29:24.209 Df PaintByNumber[36624:52338] [com.apple.UIKit:UIScreen] <compose failure [shared UUID]>
+2026-11-06 00:29:24.210 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.210 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.210 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.210 Df PaintByNumber[36624:52338] [com.apple.UIKit:HomeAffordanceObservation] <compose failure [shared UUID]>
+2026-11-06 00:29:24.210 Df PaintByNumber[36624:52338] [com.apple.BacklightServices:scenes] <compose failure [shared UUID]>
+2026-11-06 00:29:24.211 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.211 Df PaintByNumber[36624:52338] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-06 00:29:24.212 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.212 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.212 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.214 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.214 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.214 Df PaintByNumber[36624:5235f] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.214 Df PaintByNumber[36624:52338] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-06 00:29:24.214 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.215 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.217 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.217 Df PaintByNumber[36624:52338] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.218 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.218 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-06 00:29:24.218 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.218 Df PaintByNumber[36624:52338] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-06 00:29:24.218 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.219 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.219 Df PaintByNumber[36624:52338] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-06 00:29:24.219 Df PaintByNumber[36624:52338] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-06 00:29:24.266 Df PaintByNumber[36624:52338] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.266 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.266 Df PaintByNumber[36624:52338] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-06 00:29:24.267 Df PaintByNumber[36624:52338] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-06 00:29:24.335 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.386 Df PaintByNumber[36624:52338] (5827BB56-52E1-3D0B-AC02-7A3201246563) <compose failure [shared UUID]>
+2026-11-06 00:29:24.386 Df PaintByNumber[36624:52338] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:24.426 Df PaintByNumber[36624:52338] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-06 00:29:24.426 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.861 A  PaintByNumber[36624:5235b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.891 E  PaintByNumber[36624:52338] [com.apple.renderbox:error] <compose failure [shared UUID]>
+2026-11-06 00:29:24.892 A  PaintByNumber[36624:5235b] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:24.905 A  PaintByNumber[36624:5235f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-06 00:29:26.215 Df PaintByNumber[36624:52338] [com.apple.FrontBoard:SceneClient] <compose failure [shared UUID]>
