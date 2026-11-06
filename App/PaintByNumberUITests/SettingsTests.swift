@@ -303,13 +303,14 @@ final class SettingsTests: XCTestCase {
         // The setter's row can be in the tree a moment before its wheel is.
         XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
         XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
-        let wheel = wheels.firstMatch
-        let text = String(format: "%04d", year)
-        for _ in 0..<6 where (wheel.value as? String) != text {
-            let shown = Int((wheel.value as? String) ?? "") ?? 0
-            if year > shown { wheel.swipeUp(velocity: .fast) } else { wheel.swipeDown(velocity: .fast) }
+        // Both years are the wheel's ends, so flicks toward one can't pass it. Once there the era
+        // changes and the wheel goes, so it is only counted (a count of nothing fails nothing),
+        // never read; the caller checks the era it opened.
+        let reached = wheels.matching(NSPredicate(format: "value == %@", String(format: "%04d", year)))
+        let back = year == 547
+        for _ in 0..<6 where wheels.count > 0 && reached.count == 0 {
+            if back { wheels.firstMatch.swipeDown(velocity: .fast) } else { wheels.firstMatch.swipeUp(velocity: .fast) }
         }
-        XCTAssertEqual(wheel.value as? String, text, "The wheel didn't reach \(text)")
     }
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
