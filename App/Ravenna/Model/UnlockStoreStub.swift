@@ -8,7 +8,7 @@ import SwiftUI
 /// on a clock stopped at launch: each launch starts over, and a test that runs past midnight isn't
 /// given one back. Its launch arguments:
 ///
-/// - `-demoFreePaintings <n>`: the free paintings left at launch (three, or the scenario's
+/// - `-demoFreePaintings <n>`: the free paintings left at launch (five, or the scenario's
 ///   `ShellDemo.freePaintings`, when not given);
 /// - `-demoUnlocked YES`: Unlimited Paintings already bought;
 /// - `-demoPurchase fail|pending|cancel`: what buying does (by default it unlocks, after a moment).

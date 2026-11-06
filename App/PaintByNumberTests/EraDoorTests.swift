@@ -71,5 +71,18 @@ struct EraDoorTests {
         #expect(!EraYear.returnsToThePresent(547))
         #expect(!EraYear.returnsToThePresent(EraYear.present - 1))
     }
+
+    @Test func theWheelStartsAt0547AndEndsAtThePresent() {
+        let years = EraClock.years
+        #expect(years.first == EraYear.byzantium)
+        #expect(years.last == EraYear.present)
+        #expect(years == years.sorted() && Set(years).count == years.count)
+        #expect(years.count < 30, "the far end is a flick away, not a long scroll")
+        #expect(Array(years.suffix(7)) == Array(EraYear.present - 6...EraYear.present))
+        #expect(EraClock.text(of: EraYear.byzantium) == "0547")
+        #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
+        #expect(EraClock.nearest(to: 547) == 547)
+        #expect(EraClock.nearest(to: 1550) == 1600, "a tie takes the later year")
+    }
 }
 #endif

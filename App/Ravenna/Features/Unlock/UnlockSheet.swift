@@ -36,9 +36,9 @@ struct UnlockSheet: View {
                         .accessibilityAddTraits(.isHeader)
                     Group {
                         if fromStart {
-                            Text("Your next free painting comes tomorrow. One purchase unlocks as many paintings of your own photos as you like.")
+                            Text("Your next free painting comes tomorrow. One purchase unlocks as many new mosaics and paintings as you like.")
                         } else {
-                            Text("One purchase unlocks as many paintings of your own photos as you like.")
+                            Text("One purchase unlocks as many new mosaics and paintings as you like.")
                         }
                     }
                     .font(.subheadline)
@@ -110,7 +110,7 @@ struct UnlockSheet: View {
     }
 
     private var samplesNote: some View {
-        Text("Everything in Samples is always free.")
+        Text("Paintings someone sends you are always free.")
             .foregroundStyle(.secondary)
     }
 

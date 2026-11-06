@@ -84,7 +84,7 @@ import PaintCore
 ///   Look Here at Painting Length.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `settings-clock` (SideStore and Debug builds): the settings sheet with the secret door's
-///   clock out under Version, at the present year (`EraDoor`).
+///   year setter out under the Year row, at the present year (`EraDoor`).
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.

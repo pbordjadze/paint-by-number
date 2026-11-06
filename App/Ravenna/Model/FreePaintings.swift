@@ -1,17 +1,24 @@
 import Foundation
 
-/// The paintings of a painter's own photos that need no purchase (Paul, October 22: "3 free at
-/// first, then one per day"): three to begin with and, once one is used, one back at each
-/// midnight, never more than three waiting. Library pictures, paintings someone sent and paintings
-/// made again never take one (`UnlimitedPaintings`).
+/// The paintings that need no purchase (Paul, October 22: "3 free at first, then one per day"):
+/// `most` to begin with and, once one is used, one back at each midnight, never more than `most`
+/// waiting. In 1.0 three, taken only by the painter's own photos; with `UNRELEASED` (1.1) five,
+/// taken by every new painting (`UnlimitedPaintings.countsEveryPainting`). Paintings someone sent
+/// and paintings made again never take one.
 ///
 /// Counted on the device alone, in UserDefaults: a reinstall starts over and a changed clock
 /// moves the days, which is accepted rather than sending anything anywhere. Days are counted
 /// between local midnights where the painter is now, so a time zone crossed or a change of
 /// daylight saving time moves the count by no more than the clock did; a clock set back before
-/// the count began gives all three back rather than stalling them until it catches up.
+/// the count began gives them all back rather than stalling them until it catches up.
 nonisolated struct FreePaintings: Codable, Equatable, Sendable {
+    #if UNRELEASED
+    /// Five in 1.1, every new painting taking one (painting-company row 235, the owner's decision
+    /// of November 5; `UnlimitedPaintings.countsEveryPainting`).
+    static let most = 5
+    #else
     static let most = 3
+    #endif
 
     /// Free paintings left, as of `since`.
     private(set) var left: Int

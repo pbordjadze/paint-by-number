@@ -264,17 +264,18 @@ final class SettingsTests: XCTestCase {
         waitUntil(timeout: 10) { describe(picker).contains(choice) }
     }
 
-    /// The secret door (painting-company row 234): holding Version brings out a clock at the
-    /// present year; rolled back to 547 it opens Ravenna, the mosaic era, and Ravenna's own
-    /// Settings roll it forward again to Paint by Moonlight.
+    /// The secret door (painting-company row 234): the Year row brings out a one-wheel year
+    /// setter at the present year; rolled back to 0547 it opens Ravenna, the mosaic era, and
+    /// Ravenna's own Year row rolls it forward again to Paint by Moonlight.
     @MainActor
     func testTheClockSetBackOpensRavennaAndForwardComesBack() throws {
         let app = openSettings()
-        let version = app.descendants(matching: .any)["about-version"]
-        scroll(app, to: version)
-        version.press(forDuration: 1.4)
+        let presentYear = app.descendants(matching: .any)["about-year"]
+        scroll(app, to: presentYear)
+        XCTAssertTrue(presentYear.exists, "Settings has no Year row")
+        presentYear.tap()
         let clock = app.descendants(matching: .any)["era-clock"]
-        XCTAssertTrue(clock.waitForExistence(timeout: 5), "Holding Version brought out no clock")
+        XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no year setter")
         roll(app.pickerWheels, to: 547)
         attachScreenshot(of: app, named: "clock-at-547")
         XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
@@ -289,20 +290,29 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(year.exists, "Ravenna's Settings has no Year row")
         year.tap()
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
-        roll(app.pickerWheels, to: Calendar.current.component(.year, from: .now))
+        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
         XCTAssertTrue(app.buttons["New Painting"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
-    /// Sets the clock's four wheels to a year, ones first: no year on the way (2027, 2047, 2547;
-    /// 546, 526, 026) opens anything, as 2547 would once the thousands went first from 547.
+    /// Flicks the year setter's one wheel to a year at either end of it (0547, the present), as a
+    /// painter does: `adjust(toPickerWheelValue:)` left the wheel reading the present on the way
+    /// back with no selection made, so the era never changed (CI, November 6).
     @MainActor
     private func roll(_ wheels: XCUIElementQuery, to year: Int) {
-        let digits = String(format: "%04d", year).map(String.init)
-        // The clock's row can be in the tree a moment before its wheels are.
-        XCTAssertTrue(wheels.element(boundBy: 3).waitForExistence(timeout: 10), "The clock has \(wheels.count) wheels")
-        for (place, digit) in digits.enumerated().reversed() {
-            wheels.element(boundBy: place).adjust(toPickerWheelValue: digit)
+        // The setter's row can be in the tree a moment before its wheel is.
+        XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
+        XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
+        // Both years are the wheel's ends, so flicks toward one can't pass it. Once there the era
+        // changes and the wheel goes, so it is only counted (a count of nothing fails nothing),
+        // never read; the caller checks the era it opened.
+        let reached = wheels.matching(NSPredicate(format: "value == %@", String(format: "%04d", year)))
+        let back = year == 547
+        // A flick returns while the wheel still turns, and the year counts once it has rested
+        // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
+        for _ in 0..<6 where wheels.count > 0 && reached.count == 0 {
+            if back { wheels.firstMatch.swipeDown(velocity: .fast) } else { wheels.firstMatch.swipeUp(velocity: .fast) }
+            _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
         }
     }
 

@@ -21,17 +21,17 @@ like the rest of the app, and collects nothing.
 
 How to reach it:
 1. Open Settings (the gear in the gallery's top bar) and scroll to About.
-2. Touch and hold the Version row for about one second. A year clock appears below it, showing the
-   current year on four wheels.
-3. Roll the wheels to 0547 and let go. The Settings sheet closes, the screen fills with tiles,
+2. Tap the Year row (it shows the current year). A year wheel appears below it.
+3. Roll the wheel to its first year, 0547, and let go. The Settings sheet closes, the screen fills with tiles,
    and the app opens in the mosaic era: its own gallery of mosaics, with + to make one from a
    photo or from its library of ancient works.
 
-How to return: in the era, open Settings (the gear), tap the Year row (547) under About, and roll
-the clock forward to the current year. The app returns to Paint by Moonlight. The app remembers
+How to return: in the era, open Settings (the gear), tap the Year row (0547) under About, and roll
+the wheel forward to the current year. The app returns to Paint by Moonlight. The app remembers
 which era it is in between launches.
 
-With VoiceOver, the Version row offers a "Clock" action that brings out the same clock.
+With VoiceOver, the Year row is a button, and the wheel that appears is adjustable (swipe up or
+down).
 
 Every new mosaic, from a photo or from the era's library, uses one of the same free paintings as
 a new painting does (five, one back each day), and the Unlimited Paintings purchase covers both

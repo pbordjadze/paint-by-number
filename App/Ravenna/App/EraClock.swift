@@ -1,79 +1,71 @@
 import SwiftUI
 
-/// The clock behind the secret door: a year on four wheels, which Paint by Moonlight's Settings ›
-/// About shows at the present year once the Version row is held, and the era's own Settings at 547.
+/// The year setter behind the secret door: one wheel of years, under a plain Year row in Paint by
+/// Moonlight's Settings › About (at the present year) and in the era's own Settings (at 0547).
 /// Rolled to a year and left there, it hands that year over (`onSettle`); what a year opens is the
-/// caller's to say. No label and no hint: whoever finds it works out what it does, but the clock
-/// answers as it turns: the further back the year, the warmer its numerals, toward the gold of a
-/// smalto, and the heavier each step back is in the hand.
+/// caller's to say. The wheel reads like any year setting, with a long reach: 0547 first, then
+/// each century, then the last years one by one up to the present (`years`), so the far end is
+/// a flick away. It answers as it turns: the further back the year, the warmer its numerals,
+/// toward the gold of a smalto, and the heavier each step back is in the hand.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
-    @State private var digits: [Int]
+    @State private var year: Int
     @State private var settling: Task<Void, Never>?
-    /// The wheels and the rails' gap grow with the numerals' text size.
-    @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 44
-    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 112
+    /// The wheel and the rails' gap grow with the numerals' text size.
+    /// Tall enough for two years above and below the one read, fading as a system wheel does.
+    @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
+    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 176
     @ScaledMetric(relativeTo: .title2) private var railGap: CGFloat = 36
 
-    /// How long the wheels must rest on a year before it counts: a wheel spun past 547 isn't a
+    /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
     static let rest: Duration = .milliseconds(700)
 
     public init(year: Int, onSettle: @escaping (Int) -> Void) {
         self.onSettle = onSettle
-        _digits = State(initialValue: Self.digits(of: year))
+        _year = State(initialValue: Self.nearest(to: year))
     }
 
     public var body: some View {
-        HStack(spacing: 0) {
-            ForEach(0..<4, id: \.self) { place in
-                Picker(selection: $digits[place]) {
-                    ForEach(0..<10, id: \.self) { digit in
-                        Text(digit, format: .number.grouping(.never))
-                            .font(.system(.title2, design: .serif, weight: .semibold))
-                            .monospacedDigit()
-                            .foregroundStyle(Color.primary.mix(with: Self.gold, by: Self.age(of: year)))
-                            .tag(digit)
-                    }
-                } label: {
-                    Text(Self.placeName(place))
-                }
-                .pickerStyle(.wheel)
-                .frame(width: wheelWidth, height: wheelHeight)
-                .clipped()
+        Picker(selection: $year) {
+            ForEach(Self.years, id: \.self) { year in
+                Text(verbatim: Self.text(of: year))
+                    .font(.system(.title2, design: .serif, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(Color.primary.mix(with: Self.gold, by: Self.age(of: year)))
+                    .tag(year)
             }
+        } label: {
+            Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
+                        comment: "VoiceOver name of the year setter behind the secret door: one wheel of years"))
         }
+        .pickerStyle(.wheel)
+        .frame(width: wheelWidth, height: wheelHeight)
+        .clipped()
         .overlay { rails }
         .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
-                                        comment: "VoiceOver name of the clock behind the secret door: four wheels, one digit each, which together show a year")))
-        .accessibilityValue(Text(Self.year(of: digits), format: .number.grouping(.never)))
         .sensoryFeedback(trigger: year) { old, new in
             new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
         }
-        .onChange(of: digits) { _, digits in
+        .onChange(of: year) { _, year in
             settling?.cancel()
             settling = Task {
                 try? await Task.sleep(for: Self.rest)
                 guard !Task.isCancelled else { return }
-                onSettle(Self.year(of: digits))
+                onSettle(year)
             }
         }
         .onDisappear { settling?.cancel() }
     }
 
-    private var year: Int { Self.year(of: digits) }
-
-    /// Two hairlines across all four wheels, above and below the year read, so the wheels are one
-    /// clock rather than four pickers; they warm with the numerals.
+    /// Two hairlines across the wheel, above and below the year read, in the numerals' warmth.
     private var rails: some View {
         let ink = Color.primary.mix(with: Self.gold, by: Self.age(of: year)).opacity(0.45)
         return VStack(spacing: railGap) {
             Rectangle().fill(ink).frame(height: 1)
             Rectangle().fill(ink).frame(height: 1)
         }
-        .frame(width: wheelWidth * 4 + 12)
+        .frame(width: wheelWidth)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -81,33 +73,33 @@ public struct EraClock: View {
     /// Smalti gold, as Ravenna's theme has it.
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
 
-    /// How far back a year is, from 0 at the present (and after) to 1 at 547 and before it.
+    /// The wheel's years, oldest first: 0547, the centuries from 600 to 1900, the decades from
+    /// 2000, and the present's last seven years one by one (in 2026: 2000, 2010, 2020…2026), so
+    /// the wheel stays short however many years pass.
+    public static var years: [Int] {
+        let present = EraYear.present
+        let recent = present - 6
+        let centuries = stride(from: 600, through: 1900, by: 100).filter { $0 < recent }
+        let decades = stride(from: 2000, to: recent, by: 10)
+        let years = Set([EraYear.byzantium] + centuries + decades + Array(recent...present))
+        return years.filter { $0 >= EraYear.byzantium && $0 <= max(present, EraYear.byzantium) }.sorted()
+    }
+
+    /// The wheel's year closest to `year` (the later on a tie), for a year the wheel lacks.
+    public static func nearest(to year: Int) -> Int {
+        years.min { abs($0 - year) < abs($1 - year) || (abs($0 - year) == abs($1 - year) && $0 > $1) } ?? year
+    }
+
+    /// A year as the setter writes it: four digits, so the far end reads 0547.
+    public static func text(of year: Int) -> String {
+        String(format: "%04ld", min(max(year, 0), 9999))
+    }
+
+    /// How far back a year is, from 0 at the present (and after) to 1 at 0547 and before it.
     static func age(of year: Int) -> Double {
         let present = EraYear.present
         guard year < present else { return 0 }
         return min(1, Double(present - year) / Double(present - EraYear.byzantium))
-    }
-
-    static func digits(of year: Int) -> [Int] {
-        let year = min(max(year, 0), 9999)
-        return [year / 1000, year / 100 % 10, year / 10 % 10, year % 10]
-    }
-
-    static func year(of digits: [Int]) -> Int {
-        digits.reduce(0) { $0 * 10 + $1 }
-    }
-
-    private static func placeName(_ place: Int) -> String {
-        switch place {
-        case 0: String(localized: "eraClock.thousands", defaultValue: "Thousands", bundle: .ravenna,
-                       comment: "VoiceOver name of the clock's first wheel (the year's thousands)")
-        case 1: String(localized: "eraClock.hundreds", defaultValue: "Hundreds", bundle: .ravenna,
-                       comment: "VoiceOver name of the clock's second wheel (the year's hundreds)")
-        case 2: String(localized: "eraClock.tens", defaultValue: "Tens", bundle: .ravenna,
-                       comment: "VoiceOver name of the clock's third wheel (the year's tens)")
-        default: String(localized: "eraClock.ones", defaultValue: "Ones", bundle: .ravenna,
-                        comment: "VoiceOver name of the clock's fourth wheel (the year's ones)")
-        }
     }
 }
 
@@ -117,8 +109,9 @@ public struct EraClock: View {
 public enum EraYear {
     public static let byzantium = 547
 
-    /// The present year by the device's calendar.
-    public static var present: Int { Calendar.current.component(.year, from: .now) }
+    /// The present year, by the Gregorian calendar whatever the device's (547 is a Gregorian
+    /// year; the Japanese calendar's present would be a single digit).
+    public static var present: Int { Calendar(identifier: .gregorian).component(.year, from: .now) }
 
     public static func opensByzantium(_ year: Int) -> Bool { year == byzantium }
 

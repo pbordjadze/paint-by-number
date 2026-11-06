@@ -952,16 +952,17 @@ pbordjadze/ravenna), is in SideStore and Debug builds only. Its app is the stati
 Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
 own, so it follows none of this app's later changes and needs none of its gates.
 
-- **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About, hold Version (or
-  VoiceOver's Clock action) and Ravenna's `EraClock` comes out at the present year; its numerals
-  warm toward gold and its steps back weigh more the further back the year. Rolled to 547 and
-  left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
+- **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About has a plain Year row
+  (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
+  first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`); its
+  numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
+  0547 and left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
   (tiles set over the screen in an apse's courses, the era swapped under them, the tiles lifted;
   Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
-  Ravenna's Settings › About has a Year row (547) whose clock, rolled to the present or later,
+  Ravenna's Settings › About has the same Year row (0547) whose wheel, rolled to the present or later,
   calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
   while the door is shut). `EraDoorTests` and `SettingsTests.testTheClockSetBack…` (through the
-  door and back); `settings-clock` screenshots the clock, `era-passage` (`RootView`) the passage
+  door and back); `settings-clock` screenshots the wheel, `era-passage` (`RootView`) the passage
   held two thirds laid.
 - **Kept apart in one process:** resources through `Bundle.ravenna` (never `Bundle.main`, but for
   the HED model, which is the app's own file), settings in `UserDefaults.ravenna` (every
@@ -972,8 +973,9 @@ own, so it follows none of this app's later changes and needs none of its gates.
   `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
   `strings_check.py` reads only `App/PaintByNumber`.
 - **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
-  navigation titles' New York, the free paintings' count (`freePaintings`, 1.1's `freePaintings.v2` once Ravenna's copy
-  moves to it: Unlimited Paintings; a mosaic counts like a painting; the money rule is Paul's,
+  navigation titles' New York, the free paintings' count (1.1's `freePaintings.v2`, in `.standard`: Unlimited Paintings; every
+  new mosaic takes one, a library picture's too, and each era's `UnlimitedPaintings` reads the
+  count again before it starts one; the money rule is Paul's,
   painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
 - **Release:** the door's files are `Era*.swift`, and Release's `EXCLUDED_SOURCE_FILE_NAMES` leaves

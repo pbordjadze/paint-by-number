@@ -126,13 +126,13 @@ struct SettingsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
-                        // The way back through the door: the clock is set to 547 in here, and
-                        // rolled forward to the present it brings Paint by Moonlight back.
+                        // The way back through the door: the year is 0547 in here, and rolled
+                        // forward to the present it brings Paint by Moonlight back.
                         Button {
                             withAnimation { showsClock.toggle() }
                         } label: {
                             LabeledContent {
-                                Text(EraYear.byzantium, format: .number.grouping(.never))
+                                Text(verbatim: EraClock.text(of: EraYear.byzantium))
                             } label: {
                                 SwiftUI.Label("Year", systemImage: "clock")
                             }
@@ -209,7 +209,7 @@ struct SettingsView: View {
             } else {
                 LabeledContent {
                     Text(String(localized: "settings.freePaintings.left", defaultValue: "\(paintings.freeLeft) left", bundle: .ravenna,
-                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)"))
+                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 5)"))
                 } label: {
                     SwiftUI.Label("Free Paintings", systemImage: "photo")
                 }
@@ -226,7 +226,7 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Ravenna.")
             } else {
-                Text("A free painting of your own photos comes back each day, up to three. Everything in Samples is always free.")
+                Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
             }
         }
     }
