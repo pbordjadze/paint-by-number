@@ -295,13 +295,21 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
-    /// Sets the year setter's one wheel to a year, as it writes it (0547).
+    /// Flicks the year setter's one wheel to a year at either end of it (0547, the present), as a
+    /// painter does: `adjust(toPickerWheelValue:)` left the wheel reading the present on the way
+    /// back with no selection made, so the era never changed (CI, November 6).
     @MainActor
     private func roll(_ wheels: XCUIElementQuery, to year: Int) {
         // The setter's row can be in the tree a moment before its wheel is.
         XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
         XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
-        wheels.firstMatch.adjust(toPickerWheelValue: String(format: "%04d", year))
+        let wheel = wheels.firstMatch
+        let text = String(format: "%04d", year)
+        for _ in 0..<6 where (wheel.value as? String) != text {
+            let shown = Int((wheel.value as? String) ?? "") ?? 0
+            if year > shown { wheel.swipeUp(velocity: .fast) } else { wheel.swipeDown(velocity: .fast) }
+        }
+        XCTAssertEqual(wheel.value as? String, text, "The wheel didn't reach \(text)")
     }
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
