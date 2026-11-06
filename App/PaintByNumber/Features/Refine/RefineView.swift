@@ -1322,18 +1322,23 @@ struct RefineView: View {
     /// bent says what comes next.
     private var tools: some View {
         VStack(spacing: 12) {
-            // The hint keeps its room from the moment the Curve is picked, unseen until a curve
-            // waits to be bent: appearing then, it moved the picture up under the finger about to
-            // bend it (QA, October 29).
-            if tool == .shape, shape == .curve {
-                Text(hint(for: .shape))
+            // The hint keeps its room whatever the tool, unseen until a curve waits to be bent:
+            // appearing then, it moved the picture up under the finger about to bend it (QA,
+            // October 29), and kept from when Curve was picked, it moved it then, so the next
+            // strokes landed 23 points off where they were aimed (QA, November 5, three sessions).
+            // (A practice canvas keeps its one tool: Shapes' page alone needs the room.)
+            if !isPractice || tool == .shape {
+                let waits = tool == .shape && shape == .curve && curve != nil
+                Text(String(localized: "refine.hint.curve.bend",
+                            defaultValue: "Drag to bend the curve, or tap to keep it straight.",
+                            comment: "Refine screen: the Shapes tool's Curve once its ends are placed: a drag bends it through the finger, a tap keeps it a straight line"))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: 480)
-                    .opacity(curve != nil ? 1 : 0)
-                    .accessibilityHidden(curve == nil)
+                    .opacity(waits ? 1 : 0)
+                    .accessibilityHidden(!waits)
                     .accessibilityIdentifier("refine-hint")
             }
             studioBar
