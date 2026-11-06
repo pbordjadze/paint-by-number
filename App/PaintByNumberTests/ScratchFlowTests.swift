@@ -79,7 +79,6 @@ struct ScratchFlowTests {
         #expect(document.template.regions.count == draft.template.regions.count)
     }
 
-    /// Another photo after From Scratch is a photo again: Start From and the sliders come back.
     /// Back from the preview of a page drawn on, From Scratch again opens that page in Refine
     /// (`reopenScratch`): a fresh one would replace its draft at the first line (QA, November 5).
     /// A page with nothing drawn is no drawing to reopen.
@@ -101,6 +100,7 @@ struct ScratchFlowTests {
         model.cancelAll()
     }
 
+    /// Another photo after From Scratch is a photo again: Start From and the sliders come back.
     @Test func aPhotoAfterScratchIsNoLongerScratch() async throws {
         let model = CreateModel()
         model.loadScratch()
