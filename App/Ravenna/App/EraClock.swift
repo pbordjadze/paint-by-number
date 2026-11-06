@@ -12,8 +12,9 @@ public struct EraClock: View {
     @State private var year: Int
     @State private var settling: Task<Void, Never>?
     /// The wheel and the rails' gap grow with the numerals' text size.
+    /// Tall enough for two years above and below the one read, fading as a system wheel does.
     @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
-    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 112
+    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 176
     @ScaledMetric(relativeTo: .title2) private var railGap: CGFloat = 36
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
