@@ -72,11 +72,16 @@ public struct EraClock: View {
     /// Smalti gold, as Ravenna's theme has it.
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
 
-    /// The wheel's years, oldest first: 0547, the centuries from 600 to 2000, 2010, and every
-    /// year from 2020 to the present.
+    /// The wheel's years, oldest first: 0547, the centuries from 600 to 1900, the decades from
+    /// 2000, and the present's last seven years one by one (in 2026: 2000, 2010, 2020…2026), so
+    /// the wheel stays short however many years pass.
     public static var years: [Int] {
-        [EraYear.byzantium] + Array(stride(from: 600, through: 2000, by: 100)) + [2010]
-            + Array(2020...max(2020, EraYear.present))
+        let present = EraYear.present
+        let recent = present - 6
+        let centuries = stride(from: 600, through: 1900, by: 100).filter { $0 < recent }
+        let decades = stride(from: 2000, to: recent, by: 10)
+        let years = Set([EraYear.byzantium] + centuries + decades + Array(recent...present))
+        return years.filter { $0 >= EraYear.byzantium && $0 <= max(present, EraYear.byzantium) }.sorted()
     }
 
     /// The wheel's year closest to `year` (the later on a tie), for a year the wheel lacks.
@@ -86,7 +91,7 @@ public struct EraClock: View {
 
     /// A year as the setter writes it: four digits, so the far end reads 0547.
     public static func text(of year: Int) -> String {
-        String(format: "%04d", min(max(year, 0), 9999))
+        String(format: "%04ld", min(max(year, 0), 9999))
     }
 
     /// How far back a year is, from 0 at the present (and after) to 1 at 0547 and before it.
@@ -103,8 +108,9 @@ public struct EraClock: View {
 public enum EraYear {
     public static let byzantium = 547
 
-    /// The present year by the device's calendar.
-    public static var present: Int { Calendar.current.component(.year, from: .now) }
+    /// The present year, by the Gregorian calendar whatever the device's (547 is a Gregorian
+    /// year; the Japanese calendar's present would be a single digit).
+    public static var present: Int { Calendar(identifier: .gregorian).component(.year, from: .now) }
 
     public static func opensByzantium(_ year: Int) -> Bool { year == byzantium }
 

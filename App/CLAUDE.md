@@ -944,7 +944,7 @@ own, so it follows none of this app's later changes and needs none of its gates.
 
 - **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About has a plain Year row
   (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
-  first is 0547 (then the centuries, then the last years to the present: `EraClock.years`); its
+  first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
   0547 and left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
   (tiles set over the screen in an apse's courses, the era swapped under them, the tiles lifted;

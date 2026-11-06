@@ -290,7 +290,7 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(year.exists, "Ravenna's Settings has no Year row")
         year.tap()
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
-        roll(app.pickerWheels, to: Calendar.current.component(.year, from: .now))
+        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
         XCTAssertTrue(app.buttons["New Painting"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
         attachScreenshot(of: app, named: "back-in-the-present")
     }
