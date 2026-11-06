@@ -1,0 +1,55 @@
+{
+ "model": "claude-opus-5-5",
+ "mcp_servers": [
+  {
+   "name": "maestro",
+   "status": "connected",
+   "source": "dynamic"
+  }
+ ],
+ "tools": [
+  "Read",
+  "Write",
+  "mcp__maestro__cheat_sheet",
+  "mcp__maestro__inspect_screen",
+  "mcp__maestro__list_devices",
+  "mcp__maestro__run",
+  "mcp__maestro__take_screenshot"
+ ],
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 212,
+ "duration_ms": 1786437,
+ "total_cost_usd": 6.8835066,
+ "result": "I finished the session (05:28\u201305:58) and wrote the report to `/Users/runner/work/_temp/qa/report.md`. All six goals worked and nothing crashed (`crashes.txt` is empty). Progress survived both quit-and-relaunch checks; both times I went to Home first.\n\n**Tips seen on screen** (screenshots `shots/tip-1`, `tip-3`, `tip-4`, `tip-5`):\n- **\"Tap to Paint\"**, twice (once again after Settings \u203a Show Tips Again). It points at the selected swatch, as it should, but covers the current-color label both times.\n- **\"No Photo at Hand\"**: its arrow points at the middle of the Photos/Samples control, not at Samples, which is what it talks about.\n- **\"Draw Your Own Lines\"**: the title promises drawing, but the text only explains two-finger zoom and undo, never how to draw.\n\nAll of them were readable, stayed put when I looked again, and closed cleanly.\n\n**Problems seen more than once:**\n- **Refine on portrait pictures:** the Generated/Blank switch and the \"tiny numbers\" badge sit on top of the picture and hide part of it (2 of 2 portrait pictures). On the landscape Irises they sat above it.\n- **Two preview tips never come:** the tips for the sliders and for Refine were wanted three times. Each time the log says \"nothing was eligible in time \u2026 pending\", and nothing appeared. The Refine one matters, because a newcomer can't guess what Refine does.\n\n**Seen once (in Suspicions):**\n- In the first session the log gave a Zen tip a 30-second turn while nothing showed on screen. It was most likely tied to the More button, which was hidden then. The session then counted as full and refused all later tips. Two later sessions held that tip back instead, so I couldn't reproduce it.\n- Two preview tips were marked as already acted on, though I never tapped what they point at.\n- A drawing made on an empty page has a Photo button that shows a blank page, and comes out with a single white paint, so painting it means filling white with white.\n\n**Printing:** I expected it in the painting's More menu; it isn't there. It's under long-press on a gallery card \u203a Share \u203a Print Template\u2026. It took about 1 minute to find and about 3 to reach the print options. \"Print Template\u2026\" opens a share sheet first, and its thumbnail shows my paint although the printed pages are clean. I wouldn't have given up, but someone who never long-presses might. I'd also put it in the painting's More menu.\n\n**Not tested:** Maestro can't pinch, two-finger pan, drag-paint, or double-tap zoom on the canvas. I didn't actually print, and didn't touch Send Template, Share Progress or Give Feedback, since they send things out.",
+ "usage": {
+  "input_tokens": 236,
+  "cache_creation_input_tokens": 333907,
+  "cache_read_input_tokens": 20571838,
+  "output_tokens": 54933,
+  "output_tokens_details": {
+   "thinking_tokens": 12548
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 0,
+   "ephemeral_5m_input_tokens": 333907
+  },
+  "inference_geo": "global",
+  "iterations": [],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "tool_calls": {
+  "mcp__maestro__take_screenshot": 74,
+  "Read": 28,
+  "mcp__maestro__run": 84,
+  "mcp__maestro__inspect_screen": 20,
+  "Write": 5
+ },
+ "images_received": 74
+}
