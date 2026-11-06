@@ -1252,6 +1252,16 @@ struct RefineView: View {
     /// A page from scratch in the spike's designs (painting-company row 239): the space is Draw.
     private var drawsFromNothing: Bool { model.isScratch && ScratchDesign.chosen.namesItDraw }
 
+    /// The drawing toolbox of a page from scratch in the spike: what a blank page needs to be drawn
+    /// and colored, none of the tools for reworking a photo's painting.
+    private static let drawingTools: [RefineTool] = [.pen, .shape, .eraser, .bucket, .brush]
+
+    private var shownGroups: [RefineGroup] { drawsFromNothing ? [.ink, .paint] : RefineGroup.allCases }
+
+    private func shownTools(_ kind: RefineGroup) -> [RefineTool] {
+        drawsFromNothing ? kind.tools.filter { Self.drawingTools.contains($0) } : kind.tools
+    }
+
     /// Design B: the space's own Start Painting, with no preview between.
     private var startsPainting: Bool { model.isScratch && ScratchDesign.chosen.startsFromDrawing }
 
@@ -1625,15 +1635,18 @@ extension RefineView {
                 .accessibilityIdentifier("refine-practice-try")
         }
         if !usesRail, practice == nil {
-            Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
-                ForEach(RefineGroup.allCases, id: \.self) { kind in
-                    Self.groupName(kind).tag(kind)
+            // A page from scratch in the spike has one row of drawing tools and no groups.
+            if !drawsFromNothing {
+                Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
+                    ForEach(RefineGroup.allCases, id: \.self) { kind in
+                        Self.groupName(kind).tag(kind)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 420)
+                .disabled(!model.hasLineArtInput)
+                .accessibilityIdentifier("refine-groups")
             }
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 420)
-            .disabled(!model.hasLineArtInput)
-            .accessibilityIdentifier("refine-groups")
             // Centred where the row fits (a group holds at most five), scrolling where it doesn't
             // (larger text).
             ViewThatFits(in: .horizontal) {
@@ -1648,7 +1661,7 @@ extension RefineView {
     private var groupRow: some View {
         GlassEffectContainer(spacing: 10) {
             HStack(spacing: 8) {
-                ForEach(group.tools, id: \.self) { kind in
+                ForEach(drawsFromNothing ? Self.drawingTools : group.tools, id: \.self) { kind in
                     studioButton(kind)
                         .disabled(!model.hasLineArtInput)
                 }
@@ -1675,16 +1688,16 @@ extension RefineView {
 
     private var railTools: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(RefineGroup.allCases, id: \.self) { kind in
+            ForEach(shownGroups, id: \.self) { kind in
                 Self.groupName(kind)
                     .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 12)
-                    .padding(.top, kind == RefineGroup.allCases.first ? 4 : 14)
+                    .padding(.top, kind == shownGroups.first ? 4 : 14)
                     .padding(.bottom, 2)
                     .accessibilityAddTraits(.isHeader)
-                ForEach(kind.tools, id: \.self) { railRow($0) }
+                ForEach(shownTools(kind), id: \.self) { railRow($0) }
             }
         }
         .padding(8)
@@ -1822,7 +1835,7 @@ extension RefineView {
         case .pen:
             optionBar {
                 snapToggle
-                penColorsToggle
+                if !drawsFromNothing { penColorsToggle }
             } more: {
                 Text("Smoothing")
                 Slider(value: $penSmoothing, in: 0...1)
@@ -1841,7 +1854,7 @@ extension RefineView {
                 }
             } more: {
                 snapToggle
-                penColorsToggle
+                if !drawsFromNothing { penColorsToggle }
             }
         case .cellEdge:
             optionBar { snapToggle }
@@ -2066,7 +2079,7 @@ extension RefineView {
     /// double tap or squeeze asks for them.
     private var pencilPaletteView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(RefineGroup.allCases, id: \.self) { kind in
+            ForEach(shownGroups, id: \.self) { kind in
                 HStack(spacing: 8) {
                     Self.groupName(kind)
                         .font(.caption.weight(.semibold))
@@ -2076,7 +2089,7 @@ extension RefineView {
                         .accessibilityAddTraits(.isHeader)
                     GlassEffectContainer(spacing: 8) {
                         HStack(spacing: 6) {
-                            ForEach(kind.tools, id: \.self) { studioButton($0) }
+                            ForEach(shownTools(kind), id: \.self) { studioButton($0) }
                         }
                     }
                 }
