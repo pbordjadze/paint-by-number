@@ -308,8 +308,11 @@ final class SettingsTests: XCTestCase {
         // never read; the caller checks the era it opened.
         let reached = wheels.matching(NSPredicate(format: "value == %@", String(format: "%04d", year)))
         let back = year == 547
+        // A flick returns while the wheel still turns, and the year counts once it has rested
+        // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
         for _ in 0..<6 where wheels.count > 0 && reached.count == 0 {
             if back { wheels.firstMatch.swipeDown(velocity: .fast) } else { wheels.firstMatch.swipeUp(velocity: .fast) }
+            _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
         }
     }
 
