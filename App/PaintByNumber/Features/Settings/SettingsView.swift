@@ -273,7 +273,7 @@ struct SettingsView: View {
             } else {
                 LabeledContent {
                     Text(String(localized: "settings.freePaintings.left", defaultValue: "\(paintings.freeLeft) left",
-                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)"))
+                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 5)"))
                 } label: {
                     SwiftUI.Label("Free Paintings", systemImage: "photo")
                 }
@@ -290,7 +290,11 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Paint by Moonlight.")
             } else {
+                #if UNRELEASED
+                Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
+                #else
                 Text("A free painting of your own photos comes back each day, up to three. Everything in Samples is always free.")
+                #endif
             }
         }
     }

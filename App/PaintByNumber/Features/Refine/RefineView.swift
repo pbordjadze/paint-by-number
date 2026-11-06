@@ -248,6 +248,10 @@ struct RefineView: View {
     /// The current paint (OKLab, as on screen): the Bucket gives it, the palette, the Eyedropper
     /// and Edit Paint pick it. A color no paint has yet becomes one with the first Bucket tap.
     @State private var currentPaint: SIMD3<Float>?
+    /// The colors the color wheel picked that no paint has yet, in order: the palette shows them
+    /// as new paints, so several picked in a row wait side by side to be poured (QA, November 3:
+    /// only the last was kept). A color leaves once a paint has it (`landedColors`).
+    @State private var newColors: [SIMD3<Float>] = []
     /// The last repaint of the current paint sent, until a template has it (`RefinePalette.landing`):
     /// its paint is then the current one. Made current as the repaint was sent, before any
     /// template had it, the paint was none for a moment and the picker's next picks went nowhere
@@ -359,6 +363,12 @@ struct RefineView: View {
         .onChange(of: model.closedShape) { _, shape in
             if let shape { closed(shape) }
         }
+        // Make Cell is for a shape a line closed with no room for a number of its own: its tip
+        // comes then. After any line, it sent newcomers to tap shapes already areas of their own,
+        // and nothing showed (round 5's QA, November 5).
+        .onChange(of: model.note?.kind == .tooSmall) { _, small in
+            if small, !isPractice { PaintTips.refineLineDrawn() }
+        }
         .onChange(of: layers) { layersChanged?(layers) }
         #if DEBUG
         .onChange(of: picture) {
@@ -411,6 +421,14 @@ struct RefineView: View {
                 .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
+        .onChange(of: base?.id) { landedColors() }
+    }
+
+    /// A color picked that a paint has now (poured) is that paint from then on: a look, a repaint
+    /// or a merge that later takes its paint away doesn't bring it back as new.
+    private func landedColors() {
+        let palette = base?.template.palette ?? []
+        newColors.removeAll { RefinePalette.index(of: $0, in: palette) != nil }
     }
 
     /// An edit sent to the model, which draws it until the template on screen has it.
@@ -508,7 +526,7 @@ struct RefineView: View {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
                     if layers.numbers || group == .numbers, let base {
-                        RefineNumbers(base: base, rect: picture)
+                        RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
                             .equatable()
                     }
                     if let held = heldNumber, let template = base?.template {
@@ -791,7 +809,6 @@ struct RefineView: View {
         submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain, bent: bent))
         if !isPractice {
             PaintTips.refineEdited()
-            if case .draw = edit { PaintTips.refineLineDrawn() }
         }
     }
 
@@ -1560,7 +1577,7 @@ extension RefineView {
             if tool == .select, let region = selectedRegion {
                 selectionBand(template: template, region: region)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge)
                     .disabled(!model.hasLineArtInput)
             }
         }
@@ -2029,7 +2046,7 @@ extension RefineView {
                 }
             }
             if group == .cells || group == .paint, let template = base?.template {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge)
             }
         }
         .padding(16)
@@ -2313,7 +2330,7 @@ extension RefineView {
             if let barCard {
                 areaCard(barCard, inBar: true)
             } else {
-                RefinePaletteBar(template: template, current: $currentPaint, merge: paletteMerge, glass: false)
+                RefinePaletteBar(template: template, current: $currentPaint, picked: $newColors, merge: paletteMerge, glass: false)
                     .disabled(!model.hasLineArtInput)
             }
         }
@@ -2323,17 +2340,21 @@ extension RefineView {
         .transition(.opacity)
     }
 
-    /// Start From at the top's leading end and the tiny-numbers badge at its trailing one, clear of
-    /// each other; where they don't fit side by side (larger text) the badge goes under the chooser.
+    /// Start From and the tiny-numbers badge at the top's trailing end, side by side or, where they
+    /// don't fit (larger text), the badge under the chooser: the leading end is where the first
+    /// tip opens beside the Pen on iPad, and it hid Blank there (QA, November 3).
     private var topControls: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 8) {
-                startChooser
                 Spacer(minLength: 0)
+                startChooser
                 tinyBadge
             }
-            VStack(alignment: .leading, spacing: 8) {
-                startChooser
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    startChooser
+                }
                 HStack(spacing: 0) {
                     Spacer(minLength: 0)
                     tinyBadge

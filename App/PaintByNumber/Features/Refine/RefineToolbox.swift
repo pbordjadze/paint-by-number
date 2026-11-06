@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// The Refine Toolbox's current paint: a color as on screen (OKLab), which the Bucket gives a cell
 /// (`TemplateEditor.Edit.paintArea`, which lands it on the paint of that color, or adds it as a
@@ -72,14 +73,18 @@ nonisolated enum RefinePalette {
     }
 }
 
-/// The painting's paints in a row, in Cells and Paint, the current one ringed; a color no paint
-/// has yet shows after them, and the system color picker at the end picks any color as the
-/// current paint. A swatch dragged onto a cell of the picture pours its paint there (the canvas
+/// The painting's paints in a row, in Cells and Paint, the current one ringed; the colors picked
+/// that no paint has yet (`unpoured`) show after them, each until a pour makes it a paint, and the
+/// system color picker at the end picks any color as the current paint. A swatch dragged onto a cell of the picture pours its paint there (the canvas
 /// takes the drop, `color(of:in:)`). With `merge` (Edit Paint), a paint dragged onto another
 /// becomes it, and VoiceOver offers the same on each paint (into the current one).
 struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
+    /// The colors the color wheel picked that no paint had, in the order picked
+    /// (`RefineView.newColors`): they show as new paints, so several picked in a row are all kept
+    /// (QA, November 3).
+    var picked: Binding<[SIMD3<Float>]> = .constant([])
     /// Makes paint `from` the paint `into` (both indices of the palette).
     var merge: ((_ from: Int, _ into: Int) -> Void)?
     /// Whether it stands in glass of its own, else in a band that holds it with Select's bar
@@ -88,6 +93,8 @@ struct RefinePaletteBar: View {
 
     @Environment(\.self) private var environment
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The color wheel's picker is up (`RefineColorWheel`).
+    @State private var picksNewPaint = false
 
     var body: some View {
         Group {
@@ -108,7 +115,10 @@ struct RefinePaletteBar: View {
                         ForEach(template.palette.indices, id: \.self) { index in
                             mergeable(swatch(index, selected: selected == index), index, current: selected).id(index)
                         }
-                        if selected == nil, let current { newPaint(current) }
+                        let unpoured = Self.unpoured(picked.wrappedValue, current: current, palette: template.palette)
+                        ForEach(unpoured.indices, id: \.self) { k in
+                            newPaint(unpoured[k], selected: unpoured[k] == current, k).id("new-\(k)")
+                        }
                     }
                     .padding(.horizontal, 2)
                     .padding(.vertical, 3)
@@ -118,16 +128,32 @@ struct RefinePaletteBar: View {
                     guard let index else { return }
                     withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo(index) }
                 }
+                // A color just picked, in view at the row's end.
+                .onChange(of: current) { _, color in
+                    let unpoured = Self.unpoured(picked.wrappedValue, current: color, palette: template.palette)
+                    guard selected == nil, let color, let k = unpoured.firstIndex(of: color) else { return }
+                    withAnimation(reduceMotion ? nil : .snappy) { reader.scrollTo("new-\(k)") }
+                }
                 // Back in Cells or Paint, the current paint in view (QA, October 28).
                 .onAppear { if let selected { reader.scrollTo(selected) } }
             }
-            ColorPicker(selection: picked, supportsOpacity: false) { Text("New Paint") }
-                .labelsHidden()
-                .accessibilityLabel(Text("New Paint"))
-                .accessibilityHint(Text(String(
-                    localized: "refine.palette.new.hint", defaultValue: "Picks any color as the current paint. The Bucket adds it to the painting.",
-                    comment: "Refine screen, the palette: VoiceOver hint of the color picker at its end, which makes a color the current paint; the Bucket then adds it as a paint")))
-                .accessibilityIdentifier("refine-palette-new")
+            // The system picker in a popover of SwiftUI's own (a sheet on iPhone), as the area
+            // card's is: SwiftUI's ColorPicker here presented nothing for a newcomer's first taps,
+            // in every QA session of November 5, while the Tool Guide's, over Refine, opened at once.
+            Button { picksNewPaint = true } label: {
+                RefineColorWheel.Swatch(color: current.map { RefinePalette.color($0, space: template.colorSpace) })
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $picksNewPaint, arrowEdge: .bottom) {
+                RefineColorWheel(color: wheel, title: String(localized: "New Paint")) { picksNewPaint = false }
+                    .frame(idealWidth: 360, idealHeight: 560)
+                    .presentationDetents([.medium, .large])
+            }
+            .accessibilityLabel(Text("New Paint"))
+            .accessibilityHint(Text(String(
+                localized: "refine.palette.new.hint", defaultValue: "Picks any color as the current paint. The Bucket adds it to the painting.",
+                comment: "Refine screen, the palette: VoiceOver hint of the color picker at its end, which makes a color the current paint; the Bucket then adds it as a paint")))
+            .accessibilityIdentifier("refine-palette-new")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
@@ -159,6 +185,9 @@ struct RefinePaletteBar: View {
             Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName))
         }
     }
+
+    /// How many colors picked the palette keeps waiting: a row's worth.
+    nonisolated static let pickedKept = 12
 
     /// What a swatch's drag carries before its paint's index.
     nonisolated static let dragPrefix = "refine-paint:"
@@ -212,33 +241,56 @@ struct RefinePaletteBar: View {
         }
     }
 
-    /// The current color, which no paint has yet: ringed, with a plus, as the Bucket will add it.
-    private func newPaint(_ color: SIMD3<Float>) -> some View {
-        Image(systemName: "plus")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(Color.white)
-            .shadow(color: .black.opacity(0.5), radius: 1)
-            .frame(width: 32, height: 32)
-            .background(Circle().fill(RefinePalette.color(color, space: template.colorSpace)))
-            .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
-            .padding(3)
-            .overlay { Circle().stroke(Theme.signature, lineWidth: 2.5) }
-            .draggable(Self.payload(of: color))
-            .accessibilityElement()
-            .accessibilityLabel(Text("New Paint"))
-            .accessibilityAddTraits(.isSelected)
-            .accessibilityIdentifier("refine-paint-new")
+    /// The colors picked that no paint has, in the order picked, and the current color after them
+    /// when no paint has it and it wasn't picked (the photo's, from the Eyedropper).
+    nonisolated static func unpoured(_ picked: [SIMD3<Float>], current: SIMD3<Float>?, palette: [PaletteColor]) -> [SIMD3<Float>] {
+        var colors: [SIMD3<Float>] = []
+        for color in picked + (current.map { [$0] } ?? []) where !colors.contains(color) && RefinePalette.index(of: color, in: palette) == nil {
+            colors.append(color)
+        }
+        return colors
+    }
+
+    /// A color no paint has yet, with a plus, as the Bucket will add it; ringed while current, and
+    /// a tap makes it current again.
+    private func newPaint(_ color: SIMD3<Float>, selected: Bool, _ k: Int) -> some View {
+        Button {
+            FeedbackEngine.shared.selectionChanged()
+            current = color
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.white)
+                .shadow(color: .black.opacity(0.5), radius: 1)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(RefinePalette.color(color, space: template.colorSpace)))
+                .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
+                .padding(3)
+                .overlay { Circle().stroke(selected ? Theme.signature : .clear, lineWidth: 2.5) }
+        }
+        .buttonStyle(.plain)
+        .draggable(Self.payload(of: color))
+        .accessibilityLabel(Text("New Paint"))
+        .accessibilityHint(Text(String(
+            localized: "refine.palette.paint.hint", defaultValue: "Makes this the current paint.",
+            comment: "Refine screen, the palette: VoiceOver hint of a paint's swatch, which makes it the paint the Bucket gives and Edit Paint changes")))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier(selected ? "refine-paint-new" : "refine-new-\(k + 1)")
     }
 
     /// The picker's color: the current paint's; a color picked becomes the current paint, or the
     /// painting's paint that a Bucket tap would give for it.
-    private var picked: Binding<Color> {
+    private var wheel: Binding<Color> {
         Binding(
             get: { current.map { RefinePalette.color($0, space: template.colorSpace) } ?? .gray },
             set: { color in
                 let resolved = color.resolve(in: environment)
                 let lab = ColorScience.linearSRGBToOKLab(SIMD3(resolved.linearRed, resolved.linearGreen, resolved.linearBlue))
-                current = RefinePalette.snapped(lab, to: template.palette)
+                let color = RefinePalette.snapped(lab, to: template.palette)
+                current = color
+                guard RefinePalette.index(of: color, in: template.palette) == nil, !picked.wrappedValue.contains(color) else { return }
+                picked.wrappedValue.append(color)
+                if picked.wrappedValue.count > Self.pickedKept { picked.wrappedValue.removeFirst(picked.wrappedValue.count - Self.pickedKept) }
             })
     }
 }
@@ -416,9 +468,13 @@ struct RefineHeldNumber: View {
 struct RefineNumbers: View, Equatable {
     let base: CreateModel.Preview
     let rect: CGRect
+    /// The paint shows under the numbers (its layer on, at most half see-through): each takes
+    /// the ink its paint's swatch has, light on a dark paint, which the drawing's ink vanished
+    /// into (a car's black wheels, QA, November 5).
+    var overPaint = false
 
     nonisolated static func == (a: RefineNumbers, b: RefineNumbers) -> Bool {
-        a.base.id == b.base.id && a.rect == b.rect
+        a.base.id == b.base.id && a.rect == b.rect && a.overPaint == b.overPaint
     }
 
     var body: some View {
@@ -447,11 +503,86 @@ struct RefineNumbers: View, Equatable {
                 guard points >= 4, shown.contains(at) else { continue }
                 let text = Text(verbatim: "\(paint + 1)")
                     .font(.system(size: points, weight: .semibold, design: .serif))
-                    .foregroundStyle(LineArtDrawing.ink.opacity(0.75))
+                    .foregroundStyle(
+                        overPaint && Int(paint) < template.palette.count
+                            ? PaletteBar.numeralInk(template, Int(paint)) : LineArtDrawing.ink.opacity(0.75))
                 context.draw(text, at: at)
             }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The system color picker (`UIColorPickerViewController`) for the palette's New Paint, shown in
+/// a presentation of SwiftUI's own: a color picked lands in `color` once it rests, and its close
+/// button is `done`.
+struct RefineColorWheel: UIViewControllerRepresentable {
+    @Binding var color: Color
+    let title: String
+    let done: () -> Void
+
+    func makeUIViewController(context: Context) -> UIColorPickerViewController {
+        let picker = UIColorPickerViewController()
+        picker.supportsAlpha = false
+        picker.title = title
+        picker.selectedColor = UIColor(color)
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ picker: UIColorPickerViewController, context: Context) {
+        context.coordinator.parent = self
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    /// A drag's color not yet landed lands as the picker goes, however it is closed.
+    static func dismantleUIViewController(_ picker: UIColorPickerViewController, coordinator: Coordinator) {
+        coordinator.land()
+    }
+
+    final class Coordinator: NSObject, UIColorPickerViewControllerDelegate {
+        var parent: RefineColorWheel
+        /// A color a drag is passing through, landed when it rests or the picker goes.
+        private var moving: UIColor?
+
+        init(parent: RefineColorWheel) { self.parent = parent }
+
+        /// Once a pick rests: each color a drag passes through would wait in the palette.
+        func colorPickerViewController(_ picker: UIColorPickerViewController, didSelect color: UIColor, continuously: Bool) {
+            moving = color
+            guard !continuously else { return }
+            land()
+        }
+
+        func colorPickerViewControllerDidFinish(_ picker: UIColorPickerViewController) {
+            land()
+            parent.done()
+        }
+
+        func land() {
+            guard let color = moving else { return }
+            moving = nil
+            let parent = parent
+            // Out of the view update the picker's going may come in.
+            Task { @MainActor in parent.color = Color(uiColor: color) }
+        }
+    }
+
+    /// The wheel at the palette's end: the system's ring of hues round the current color.
+    struct Swatch: View {
+        let color: Color?
+
+        var body: some View {
+            ZStack {
+                Circle().strokeBorder(
+                    AngularGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple, .red], center: .center), lineWidth: 4)
+                Circle().fill(color ?? .clear).padding(6)
+            }
+            .frame(width: 32, height: 32)
+            .padding(2)
+            .contentShape(Circle())
+        }
     }
 }

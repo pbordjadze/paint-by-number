@@ -45,6 +45,9 @@ struct PhotoSourceView: View {
     /// same picker and camera serve both; this says which way the next pick goes, set by
     /// whichever button opened them. Off the toolbar on purpose: findable, not offered.
     @State private var picksDrawing = false
+    /// From Scratch was tapped before Unlimited Paintings, which Refine comes with, was bought.
+    @State private var offersRefineUnlock = false
+    @Environment(UnlimitedPaintings.self) private var paintings
     #endif
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
@@ -103,12 +106,14 @@ struct PhotoSourceView: View {
             }
             #if UNRELEASED
             // From Scratch (painting-company row 231): a blank page, no photo behind it, straight
-            // into Refine. Refine's builds only, as Refine is.
+            // into Refine. Refine's builds only, as Refine is. A text button, as the preview's
+            // Refine is: as an icon alone, newcomers found it only by its VoiceOver label (QA,
+            // November 5).
             ToolbarItem(placement: .primaryAction) {
-                Button("From Scratch", systemImage: "pencil.and.scribble") {
-                    PaintTips.photoChosen()
-                    model.loadScratch()
-                    onPicked()
+                Button {
+                    if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                } label: {
+                    Text("From Scratch")
                 }
                 .help("Draw your own picture on a blank page")
                 .accessibilityIdentifier("from-scratch")
@@ -138,6 +143,9 @@ struct PhotoSourceView: View {
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
+        #if UNRELEASED
+        .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
+        #endif
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
@@ -366,6 +374,16 @@ struct PhotoSourceView: View {
         #endif
         isBrowsingAll = true
     }
+
+    #if UNRELEASED
+    /// A blank page, straight into Refine.
+    private func startFromScratch() {
+        PaintTips.photoChosen()
+        // Back from a page drawn on and From Scratch again: that page, not a fresh one.
+        if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
+        onPicked()
+    }
+    #endif
 
     /// The camera, for a photo.
     private func showCamera() {

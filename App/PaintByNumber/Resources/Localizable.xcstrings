@@ -9,6 +9,10 @@
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
+    "A free painting comes back each day, up to five. Paintings someone sends you are always free." : {
+      "comment" : "Settings › Unlimited Paintings footer before the unlock is bought, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
     "About" : {
       "comment" : "Header of the About section in Settings",
       "extractionState" : "manual"
@@ -67,6 +71,26 @@
     },
     "Draw Your Own Lines" : {
       "comment" : "Title of the gentle tip in Refine, at the Pen, said once when Refine first opens: how its canvas takes drawing",
+      "extractionState" : "manual"
+    },
+    "Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened from Refine or From Scratch, in builds where every new painting takes a free painting (1.1): what the purchase unlocks",
+      "extractionState" : "manual"
+    },
+    "One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
+    "Paintings someone sends you are always free." : {
+      "comment" : "The Unlimited Paintings sheet, under its buttons, in builds where every new painting takes a free painting (1.1): what never takes one",
+      "extractionState" : "manual"
+    },
+    "Try It in the Tool Guide" : {
+      "comment" : "The Unlimited Paintings sheet opened by Refine or From Scratch: a button that opens Refine's Tool Guide, whose practice pictures are free",
+      "extractionState" : "manual"
+    },
+    "Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like." : {
+      "comment" : "The Unlimited Paintings sheet opened by Start Painting with no free painting left, in builds where every new painting takes one (1.1)",
       "extractionState" : "manual"
     },
     "drawing.palette.garden" : {
@@ -432,7 +456,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "## Your first closed shape may look as if nothing happened\nDraw a loop and finish where you began, or end your line on another line. Two gold sparkles where the ends meet mean a new cell was made. It keeps the paint of the cell it was cut from, so it looks the same until you give it a paint of its own with the [Bucket](guide:bucket), or turn on Numbers in [Layers](guide:layers) to see its number.\n\nIf you’d rather each new piece took its color from your photo, turn on Color from Photo. Every piece a line cuts off then takes the photo’s color under it. If the picture already has a paint close to that color, the piece gets that paint; if not, a new paint is added.\n\nA line that doesn’t close anything off stays as ink. It shows in the finished picture, but the paint on both sides of it is still one cell.\n\n## Snap\nSnap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom, so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.\n\n## Smoothing\nSmoothing steadies a wobbly hand: the line trails a little behind your finger and evens out as it goes. It starts at zero, where the Pen draws exactly where you draw.\n\n## When a line won’t go down\nA note at the top of the screen says what went wrong:\n- “That line doubles back on itself.” The line ran back along its own path. Draw it again without retracing.\n- “That line couldn’t be drawn there.” Usually it came too close to other lines. Try a little farther from them, or zoom in.\n- “That shape is too small for a number.” The line stays, but the shape it closed has no room for a number, so it isn’t a cell. Draw it bigger, or erase the line.\n\nA very short stroke, a few points on the screen, is ignored, and a tap does nothing.\n\nIf you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.\n\n## On the practice picture\nDraw a cloud low in the sky and end where you began, then look for the sparkles. Turn on Color from Photo and draw a second cloud: it takes the peach of the glow beneath it."
+            "value" : "## Your first closed shape may look as if nothing happened\nDraw a loop and finish where you began, or end your line on another line. Two gold sparkles where the ends meet mean a new cell was made. It keeps the paint of the cell it was cut from, so it looks the same until you give it a paint of its own with the [Bucket](guide:bucket), or turn on Numbers in [Layers](guide:layers) to see its number.\n\nIf you’d rather each new piece took its color from your photo, turn on Color from Photo. Every piece a line cuts off then takes the photo’s color under it. If the picture already has a paint close to that color, the piece gets that paint; if not, a new paint is added.\n\nA line that doesn’t close anything off stays as ink. It shows in the finished picture, but the paint on both sides of it is still one cell.\n\n## Snap\nSnap is on to start with. It moves an end that stops just short of a line, or runs a little past it, onto the line, and closes a loop whose end comes back near its start. Near means about 10 points on the screen, whatever the zoom (20 for an end heading straight at the picture’s edge), so zoom in to end a line close to another without joining it. With Snap off, an end joins a line only when it all but touches it.\n\n## Smoothing\nSmoothing steadies a wobbly hand: the line trails a little behind your finger and evens out as it goes. It starts at zero, where the Pen draws exactly where you draw.\n\n## When a line won’t go down\nA note at the top of the screen says what went wrong:\n- “That line doubles back on itself.” The line ran back along its own path. Draw it again without retracing.\n- “That line couldn’t be drawn there.” Usually it came too close to other lines. Try a little farther from them, or zoom in.\n- “That shape is too small for a number.” The line stays, but the shape it closed has no room for a number, so it isn’t a cell. Draw it bigger, or erase the line.\n\nA very short stroke, a few points on the screen, is ignored, and a tap does nothing.\n\nIf you ink in Procreate, this is the Studio Pen. Smoothing does what StreamLine does there, and a shape becomes a cell the moment you close it. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.\n\n## On the practice picture\nDraw a cloud low in the sky and end where you began, then look for the sparkles. Turn on Color from Photo and draw a second cloud: it takes the peach of the glow beneath it."
           }
         }
       }
@@ -672,7 +696,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap a cell and it takes the current paint, the one circled in the palette. Only that cell changes, even when other cells share its old paint. To change every cell of a paint at once, use [Edit Paint](guide:editPaint).\n\nPick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. If you choose a color very close to a paint you already have, that paint is poured instead.\n\nChoose one new color and pour it before you choose the next: picking several new colors in a row keeps only the last.\n\nYou don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.\n\n## When more changes color than you meant\nThe shape you poured into wasn’t closed. Its outline has a gap somewhere, so it was still part of the cell around it, and the paint filled that whole cell. Undo, close the gap with the [Pen](guide:pen) (two gold sparkles tell you a shape has closed), and pour again.\n\n## What else changes\nPouring into the last cell of a paint removes that paint from the palette, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint and only a dashed edge lies between them, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”\n\nIf you color in Procreate, this is ColorDrop with your ink as the reference, and no threshold: a cell ends exactly at its edges, so paint spreads further only where an outline has a gap. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.\n\n## On the practice picture\nThis page’s evening differs from the other pages’: the roof and the moon are only outlined, with the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then touch and hold the sky to pick up its paint, and tap the far hills to pour it in."
+            "value" : "Tap a cell and it takes the current paint, the one circled in the palette. Only that cell changes, even when other cells share its old paint. To change every cell of a paint at once, use [Edit Paint](guide:editPaint).\n\nPick the paint first: tap a swatch, touch and hold a spot on the picture to take its color, or choose any color with the color wheel at the end of the palette. A color the picture doesn’t have becomes a new paint, at the end of the palette, the first time you pour it. If you choose a color very close to a paint you already have, that paint is poured instead.\n\nEach new color you choose waits at the end of the palette, with a +, until you pour it.\n\nYou don’t need the Bucket to pour. With any tool that shows the palette, drag a swatch onto a cell.\n\n## When more changes color than you meant\nThe shape you poured into wasn’t closed. Its outline has a gap somewhere, so it was still part of the cell around it, and the paint filled that whole cell. Undo, close the gap with the [Pen](guide:pen) (two gold sparkles tell you a shape has closed), and pour again.\n\n## What else changes\nPouring into the last cell of a paint removes that paint from the palette, and every paint after it gets a number one lower. If the cell ends up beside a cell of the same paint and only a dashed edge lies between them, the two become one cell. A tap on a cell that already has the paint does nothing. If a cell has no room for its new number, a note at the top says “Those colors couldn’t be changed.”\n\nIf you color in Procreate, this is ColorDrop with your ink as the reference, and no threshold: a cell ends exactly at its edges, so paint spreads further only where an outline has a gap. Procreate is a trademark of Savage Interactive Pty Ltd, and this app isn’t connected with it.\n\n## On the practice picture\nThis page’s evening differs from the other pages’: the roof and the moon are only outlined, with the same paint as what’s around them. Choose a brick red with the color wheel and pour it into the roof. Then touch and hold the sky to pick up its paint, and tap the far hills to pour it in."
           }
         }
       }
@@ -5894,7 +5918,7 @@
       }
     },
     "unlock.freeLeft" : {
-      "comment" : "Under the create flow's Start Painting, for a painting of the painter's own photo before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 3)",
+      "comment" : "Under the create flow's Start Painting, for a painting that takes a free painting before Unlimited Paintings is bought; the argument is how many free paintings are left (at most 5)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -5918,7 +5942,7 @@
       }
     },
     "settings.freePaintings.left" : {
-      "comment" : "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)",
+      "comment" : "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 5)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -6052,6 +6076,18 @@
     "Zoom to Fit" : {
       "comment" : "Paint menu item (iPad menu bar): show the whole painting",
       "extractionState" : "manual"
+    },
+    "unlock.tryGuide.hint" : {
+      "comment" : "VoiceOver hint of the Unlimited Paintings sheet's button that opens Refine's Tool Guide, whose practice pictures anyone may use",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its practice pictures are free."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

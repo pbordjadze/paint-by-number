@@ -32,6 +32,24 @@ final class ScratchUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(canvas, toMatch: NSPredicate(format: "value == %@", "1 change")), "The line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "scratch-drawn")
+
+        // New Paint's picker on the first tap (QA, November 5: SwiftUI's ColorPicker there
+        // presented nothing for a newcomer's first taps, and CI's first launch saw none in 40 s).
+        let bucket = app.buttons["refine-tool-bucket"]
+        if !bucket.exists { app.buttons["Paint"].firstMatch.tap() }
+        XCTAssertTrue(bucket.waitForExistence(timeout: 5), "Refine has no Bucket")
+        bucket.tap()
+        let wheel = app.buttons["refine-palette-new"]
+        XCTAssertTrue(wheel.waitForExistence(timeout: 5), "The palette has no New Paint")
+        wheel.tap()
+        let picker = app.descendants(matching: .any).matching(NSPredicate(format: "label IN %@", ["Grid", "Spectrum", "Sliders"])).firstMatch
+        let picks = picker.waitForExistence(timeout: 10)
+        attachScreenshot(of: app, named: "scratch-new-paint")
+        XCTAssertTrue(picks, "New Paint opened no color picker on its first tap")
+        let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Close")).firstMatch
+        if close.exists { close.tap() } else { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap() }
+        XCTAssertTrue(waitUntil(timeout: 10) { !picker.exists }, "New Paint's picker didn't close")
+
         app.buttons["refine-done"].tap()
 
         // Its own name: a drawing of today, not a sample's title.
@@ -51,5 +69,38 @@ final class ScratchUITests: XCTestCase {
         let painting = swatch.waitForExistence(timeout: 60)
         attachScreenshot(of: app, named: "scratch-painting")
         XCTAssertTrue(painting, "Start Painting didn't open the drawing to paint")
+    }
+
+    /// Where Unlimited Paintings is sold and not bought, From Scratch offers it, worded for Refine,
+    /// with the Tool Guide free to try; bought there, the blank page opens in Refine.
+    @MainActor
+    func testFromScratchWaitsForTheUnlockAndTheGuideIsFree() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create", "-demoRefineLocked", "YES"]
+        app.launch()
+        let scratch = app.buttons["from-scratch"]
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
+        scratch.tap()
+
+        let buy = app.buttons["unlock-buy"]
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock")
+        let guide = app.buttons["unlock-try-guide"]
+        XCTAssertTrue(guide.exists, "The sheet doesn't offer the Tool Guide")
+        attachScreenshot(of: app, named: "scratch-unlock")
+        guide.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
+        app.buttons["refine-guide-done"].tap()
+
+        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "The guide didn't go back to the New Painting screen")
+        scratch.tap()
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock again")
+        XCTAssertTrue(waitFor(buy, toMatch: NSPredicate(format: "label CONTAINS '4.99'")), "The buy button never showed the price")
+        buy.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 60), "Buying didn't open the blank page in Refine")
     }
 }

@@ -97,7 +97,8 @@ extension PaintTips {
         used(.refineDraw)
     }
 
-    /// A line was drawn: filling a closed shape is the next thing.
+    /// A line closed a shape with no room for a number of its own: Make Cell, which gives it a
+    /// detail area's, is the next thing.
     static func refineLineDrawn() {
         donate(TipEvents.linesDrawn, limit: 2)
         desk.offer([.refineFill], in: .refine, rest: .milliseconds(1500))
