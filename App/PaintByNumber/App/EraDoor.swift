@@ -3,8 +3,8 @@ import Foundation
 import Observation
 import SwiftUI
 
-/// The secret door (painting-company row 234): the app's clock, set back to 547 in Settings ›
-/// About (hold the Version row, roll the year), opens Ravenna, the mosaic era (the `Ravenna`
+/// The secret door (painting-company row 234): the app's year, set back to 0547 in Settings ›
+/// About (tap the Year row, roll its wheel), opens Ravenna, the mosaic era (the `Ravenna`
 /// module); rolled forward again in Ravenna's own Settings, it brings Paint by Moonlight back.
 /// SideStore and Debug builds only. With the door closed nothing is stored and nothing changes.
 enum Era: String {

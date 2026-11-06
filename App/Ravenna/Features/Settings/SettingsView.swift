@@ -126,13 +126,13 @@ struct SettingsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
-                        // The way back through the door: the clock is set to 547 in here, and
-                        // rolled forward to the present it brings Paint by Moonlight back.
+                        // The way back through the door: the year is 0547 in here, and rolled
+                        // forward to the present it brings Paint by Moonlight back.
                         Button {
                             withAnimation { showsClock.toggle() }
                         } label: {
                             LabeledContent {
-                                Text(EraYear.byzantium, format: .number.grouping(.never))
+                                Text(verbatim: EraClock.text(of: EraYear.byzantium))
                             } label: {
                                 SwiftUI.Label("Year", systemImage: "clock")
                             }

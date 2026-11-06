@@ -3437,8 +3437,8 @@
       "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
       "extractionState" : "manual"
     },
-    "Clock" : {
-      "comment" : "VoiceOver action on Settings › About's Version row (SideStore builds): brings out the secret door's clock, a year on four wheels",
+    "Year" : {
+      "comment" : "Label of a row in Settings › About (SideStore builds) showing the present year; tapped, it brings out a one-wheel year setter",
       "extractionState" : "manual"
     },
     "Shape the Lines Yourself" : {

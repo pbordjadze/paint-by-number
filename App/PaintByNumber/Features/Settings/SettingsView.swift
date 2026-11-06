@@ -31,7 +31,7 @@ struct SettingsView: View {
     private static let paintingLengthRow = "painting-length"
     @State private var tipsReset = false
     #if UNRELEASED
-    /// The secret door's clock is out under Version (`EraDoor`): held, the row brings it.
+    /// The secret door's year setter is out under the Year row (`EraDoor`): tapped, the row brings it.
     @State private var showsClock = false
     #endif
 
@@ -178,15 +178,19 @@ struct SettingsView: View {
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
                         #if UNRELEASED
-                        .contentShape(Rectangle())
-                        .onLongPressGesture(minimumDuration: 1) {
+                        // The secret door: a plain Year row at the present; its setter's first
+                        // year, 0547, opens Ravenna (`EraDoor`).
+                        Button {
                             withAnimation { showsClock.toggle() }
+                        } label: {
+                            LabeledContent {
+                                Text(verbatim: EraClock.text(of: EraYear.present))
+                            } label: {
+                                SwiftUI.Label("Year", systemImage: "clock")
+                            }
                         }
-                        .accessibilityAction(named: Text("Clock")) {
-                            withAnimation { showsClock.toggle() }
-                        }
-                        #endif
-                        #if UNRELEASED
+                        .foregroundStyle(.primary)
+                        .accessibilityIdentifier("about-year")
                         if showsClock {
                             EraClock(year: EraYear.present) { year in
                                 guard EraYear.opensByzantium(year) else { return }
