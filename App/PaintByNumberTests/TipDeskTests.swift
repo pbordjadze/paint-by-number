@@ -191,6 +191,25 @@ struct TipDeskTests {
         #expect(f.desk.offeringPlace == nil)
     }
 
+    /// Back from a painting, the shelf appears before the painting screen has gone: the desk says
+    /// so once the painting leaves, so the shelf offers its moment then.
+    @Test func theShelfIsToldWhenAPaintingLeavesIt() throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.desk.enter(.shelf)
+        f.desk.enter(.bench)
+        let before = f.desk.shelfReturns
+        f.desk.enter(.shelf)
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == nil)
+        f.desk.leave(.bench)
+        #expect(f.desk.shelfReturns == before + 1)
+        f.desk.offer([.shelfStarter], in: .shelf, rest: .zero)
+        #expect(f.desk.offeringPlace == .shelf)
+        f.desk.leave(.shelf)
+        #expect(f.desk.shelfReturns == before + 1)
+    }
+
     @Test func noTipHasTheTurnBeforeOneIsGiven() throws {
         let f = try fixture()
         defer { f.cleanup() }

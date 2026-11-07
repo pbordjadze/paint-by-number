@@ -24,6 +24,9 @@ final class TipDesk {
     /// Counts the changes of the Tips switch; a screen that offers when tips come on (the shelf,
     /// after Show Tips Again) watches it.
     private(set) var answers = 0
+    /// Counts the times the shelf came back into view under a screen that went (a painting): the
+    /// shelf appears before the painting screen has left, so its own appearance offers nothing.
+    private(set) var shelfReturns = 0
 
     /// Tests and demos that show no tips: nothing is offered.
     @ObservationIgnored var isMuted = false
@@ -106,6 +109,7 @@ final class TipDesk {
         places.removeAll { $0 == place }
         if offering?.place == place { stopOffering() }
         if let turn, turn.place == place { retire(turn) }
+        if place != .shelf, isInView(.shelf) { shelfReturns += 1 }
         noteActivity()
     }
 

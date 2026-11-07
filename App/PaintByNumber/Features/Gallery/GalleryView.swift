@@ -115,6 +115,7 @@ struct GalleryView: View {
         .onDisappear { PaintTips.desk.leave(.shelf) }
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
+        .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards.
         .animation(reduceMotion ? nil : .snappy, value: shownIDs)
         .animation(reduceMotion ? nil : .snappy, value: library.placeholders)
