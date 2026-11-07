@@ -1029,7 +1029,7 @@ sends it, the developers collect nothing).
   `freePaintings` stays as it was. Ravenna's mosaics take from the same count: the key, `left`
   (an Int) and `since` (a JSONEncoder `Date`, nil while all five are left), and `FreePaintings`'
   rules. The sheet and Settings say "new paintings" there, and that paintings someone sends are
-  free.
+  free; Ravenna's Settings counts Free Mosaics, sharing the five with the paintings.
 - StoreKit 2 on the device (`StoreKitUnlock`: the product
   `com.pbordjadze.paintbynumber.unlimited`, a non-consumable with Family Sharing on, bought with
   SwiftUI's `\.purchase`; `Transaction.updates` followed from launch for Ask to Buy, other
