@@ -2321,12 +2321,12 @@
       "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away; the Refine screen's eraser, which takes lines out of a new painting's drawing (button label)",
       "extractionState" : "manual"
     },
-    "Every painted area will be cleared." : {
-      "comment" : "Message of the confirmation dialog for restarting a painting from the gallery",
+    "Every area is painted." : {
+      "comment" : "Caption in the completion bar of a painting without a title",
       "extractionState" : "manual"
     },
-    "Every region is painted." : {
-      "comment" : "Caption in the completion bar of a painting without a title",
+    "Every painted area will be cleared." : {
+      "comment" : "Message of the confirmation dialog for restarting a painting from the gallery",
       "extractionState" : "manual"
     },
     "export.error.renderFailed" : {

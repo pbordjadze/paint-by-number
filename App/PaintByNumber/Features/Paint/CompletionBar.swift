@@ -58,7 +58,7 @@ struct CompletionBar: View {
                     .lineLimit(1)
                 Group {
                     if title.isEmpty || !showsTitle {
-                        Text("Every region is painted.")
+                        Text("Every area is painted.")
                     } else {
                         Text(title)
                     }
