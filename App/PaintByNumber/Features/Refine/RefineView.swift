@@ -2498,7 +2498,10 @@ extension RefineView {
         FeedbackEngine.shared.selectionChanged()
         Task {
             _ = await RenderContext.ready()
-            trial = RefineTrial(session: PaintingSession(template: template, nicknameVersion: ColorNickname.currentVersion))
+            // Named as the painting Start makes will be: by its id, at the version it records.
+            trial = RefineTrial(session: PaintingSession(
+                template: template, nicknameSeed: ColorNickname.seed(for: model.paintingID),
+                nicknameVersion: ColorNickname.currentVersion))
         }
     }
 }

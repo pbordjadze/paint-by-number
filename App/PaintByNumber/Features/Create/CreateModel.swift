@@ -19,6 +19,11 @@ import SwiftUI
 /// edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
+    /// The id the painting this flow starts will have, chosen up front: its paints' nicknames are
+    /// seeded by it (`ColorNickname.seed(for:)`), and Try Painting names them as the painting will
+    /// (QA, November 7: with seed 0 it renamed most paints, "Golden Hour" to "Lantern Glow").
+    let paintingID = UUID()
+
     struct Source {
         let image: RGBAImage
         let preview: CGImage
@@ -863,7 +868,7 @@ final class CreateModel {
             throw CreateError.renderFailed
         }
         return ArtworkDraft(
-            title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
+            id: paintingID, title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
             paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName,
             refinements: refinements)
     }

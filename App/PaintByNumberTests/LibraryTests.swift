@@ -161,6 +161,19 @@ struct LibraryTests {
         #expect(makeLibrary().artwork(with: artwork.id)?.thumbnailVersion == 2)
     }
 
+    /// A painting keeps the id its create flow chose (`CreateModel.paintingID`), which seeds its
+    /// paints' nicknames, so Try Painting, before it exists, names them as it will (QA, November 7).
+    @Test func aNewPaintingKeepsTheIdItsFlowChose() async throws {
+        let library = makeLibrary()
+        var chosen = draft()
+        let id = UUID()
+        chosen.id = id
+        let artwork = try await library.create(chosen)
+        #expect(artwork.id == id)
+        #expect(makeLibrary().artwork(with: id) != nil)
+        #expect(CreateModel(previewStyle: .painting).paintingID != CreateModel(previewStyle: .painting).paintingID)
+    }
+
     @Test func exportsShareFiles() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(title: "Stripes: Blue/Red", painted: [2, 0, 1]))
