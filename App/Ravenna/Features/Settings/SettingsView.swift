@@ -209,9 +209,9 @@ struct SettingsView: View {
             } else {
                 LabeledContent {
                     Text(String(localized: "settings.freePaintings.left", defaultValue: "\(paintings.freeLeft) left", bundle: .ravenna,
-                                comment: "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 5)"))
+                                comment: "Settings › Unlimited Paintings: the value of its Free Mosaics row before the unlock is bought; the argument is how many free mosaics are left (at most 5)"))
                 } label: {
-                    SwiftUI.Label("Free Paintings", systemImage: "photo")
+                    SwiftUI.Label("Free Mosaics", systemImage: "square.grid.3x3.fill")
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("settings-free-paintings")
@@ -226,7 +226,7 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Ravenna.")
             } else {
-                Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
+                Text("A free mosaic comes back each day, up to five, and Paint by Moonlight’s new paintings take from the same five. Mosaics someone sends you are always free.")
             }
         }
     }

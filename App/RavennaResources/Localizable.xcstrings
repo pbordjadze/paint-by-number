@@ -5,8 +5,8 @@
       "comment": "Title of the tip at the More menu of the painting screen about Zen Mode",
       "extractionState": "manual"
     },
-    "A free painting comes back each day, up to five. Paintings someone sends you are always free.": {
-      "comment": "Footer of Settings › Unlimited Paintings before the purchase is bought: how free paintings work (every new painting takes one; paintings someone sends never need one)",
+    "A free mosaic comes back each day, up to five, and Paint by Moonlight’s new paintings take from the same five. Mosaics someone sends you are always free.": {
+      "comment": "Footer of Settings › Unlimited Paintings before the purchase is bought: how free mosaics work (every new mosaic takes one, from the count Paint by Moonlight's new paintings share; mosaics someone sends never need one)",
       "extractionState": "manual"
     },
     "A Mosaic Is Waiting": {
@@ -1153,8 +1153,8 @@
       "comment": "Menu item on the painting screen: zoom to show the whole painting",
       "extractionState": "manual"
     },
-    "Free Paintings": {
-      "comment": "Settings › Unlimited Paintings: the row that says how many free paintings of the painter's own photos are left",
+    "Free Mosaics": {
+      "comment": "Settings › Unlimited Paintings: the row that says how many free mosaics are left",
       "extractionState": "manual"
     },
     "gallery.card.finishedAfter": {
@@ -3062,7 +3062,7 @@
       "extractionState": "manual"
     },
     "settings.freePaintings.left": {
-      "comment": "Settings › Unlimited Paintings: the value of its Free Paintings row before the unlock is bought; the argument is how many free paintings are left (at most 3)",
+      "comment": "Settings › Unlimited Paintings: the value of its Free Mosaics row before the unlock is bought; the argument is how many free mosaics are left (at most 5)",
       "extractionState": "manual",
       "localizations": {
         "en": {
