@@ -114,6 +114,21 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(card.exists)
     }
 
+    /// A painting nobody has painted on has no progress to share: its Share menu offers the
+    /// template only.
+    @MainActor
+    func testAnUnstartedCardSharesNoProgress() {
+        let app = launchGallery()
+        let blank = revealCard("The Milkmaid", in: app)
+        blank.press(forDuration: 1.5)
+        let share = app.buttons["Share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5), "The card menu has no Share")
+        share.tap()
+        XCTAssertTrue(app.buttons["Send Template…"].waitForExistence(timeout: 5), "The Share menu didn't open")
+        XCTAssertFalse(app.buttons["Share Progress"].exists, "An unstarted card offers Share Progress")
+        attachScreenshot(of: app, named: "share-unstarted")
+    }
+
     @MainActor
     func testTimelapseShowsProgressAndCancels() throws {
         let app = launchGallery()

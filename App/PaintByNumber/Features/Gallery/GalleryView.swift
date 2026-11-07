@@ -366,14 +366,18 @@ struct GalleryView: View {
 
     @ViewBuilder
     private func shareItems(for artwork: Artwork) -> some View {
-        ShareLink(
-            item: PaintingImageFile(store: library.store, artwork: artwork),
-            preview: SharePreview(artwork.title, image: previewImage(artwork))
-        ) {
-            if artwork.isComplete {
-                Label("Share Painting", systemImage: "square.and.arrow.up")
-            } else {
-                Label("Share Progress", systemImage: "square.and.arrow.up")
+        // A painting nobody has painted on has no progress to share, as in the painting's own
+        // menu: its template goes by Print and Send.
+        if artwork.isStarted {
+            ShareLink(
+                item: PaintingImageFile(store: library.store, artwork: artwork),
+                preview: SharePreview(artwork.title, image: previewImage(artwork))
+            ) {
+                if artwork.isComplete {
+                    Label("Share Painting", systemImage: "square.and.arrow.up")
+                } else {
+                    Label("Share Progress", systemImage: "square.and.arrow.up")
+                }
             }
         }
         if artwork.isComplete {
