@@ -10,7 +10,7 @@ import UIKit.UIGestureRecognizerSubclass
 /// Once the popover is up, its presentation lets every touch through to the screen that presented
 /// it (`passthroughViews`), and a watcher on the window, which never takes a touch from anyone,
 /// calls `close` when a touch outside the popover ends. A touch inside it (its ×, its words) is
-/// the popover's own. A tip over a sheet lets touches through to that sheet alone: outside it,
+/// the popover's own. The popover takes the appearance of the view it hangs from. A tip over a sheet lets touches through to that sheet alone: outside it,
 /// the sheet's own dimming takes them, and the tip still closes.
 ///
 /// Ravenna keeps its own copy of the tips (App/CLAUDE.md › Ravenna: it follows none of this app's
@@ -65,6 +65,10 @@ struct TipPassthrough: UIViewRepresentable {
             guard let window, let popover = Self.topPopover(in: window), points(at: popover, in: window),
                   let presented = popover.presentedView, let screen = popover.presentingViewController.view else { return false }
             popover.passthroughViews = [screen]
+            // The tip in the appearance of the view it points from: over dark paper the painting's
+            // bars are dark on a light system (`PaintView.chromeScheme`), and the tip, presented
+            // in the window's light, read as a grey slab there (QA, November 7).
+            popover.presentedViewController.overrideUserInterfaceStyle = traitCollection.userInterfaceStyle
             let watcher = TouchWatcher(inside: presented) { [weak self] in
                 guard let self, self.isShown else { return }
                 self.close()
