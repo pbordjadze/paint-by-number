@@ -909,10 +909,12 @@ struct CreateModelTests {
         #expect(model.refinements.edits.isEmpty)
         #expect(model.canRedo)
 
-        // Cancel goes back to what this opening had: the line, which Undo took out.
+        // Cancel goes back to what this opening had: the line, which Undo took out, and the line
+        // stays undoable.
         model.cancelRefining()
         await model.settled()
         #expect(model.refinements == drawn)
+        #expect(model.canUndo, "Cancel lost the earlier opening's steps")
         model.cancelAll()
     }
 

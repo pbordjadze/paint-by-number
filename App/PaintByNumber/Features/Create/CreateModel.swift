@@ -1264,16 +1264,21 @@ final class CreateModel {
         refiningCancelled = false
         enqueue { [self] in
             history.opening = refinements
+            openingHistory = history
             dismissNote()
         }
     }
+
+    /// The history as Refine opened, which its Cancel puts back with the refinements.
+    private var openingHistory = RefineHistory()
 
     /// Refine's Cancel: back to what it opened with.
     func cancelRefining() {
         refiningCancelled = true
         enqueue { [self] in
             let opening = history.opening
-            history = RefineHistory(opening: opening)
+            // The steps of earlier openings stay undoable: the refinements are back where they were.
+            history = openingHistory.opening == opening ? openingHistory : RefineHistory(opening: opening)
             await settle(on: opening)
         }
     }
@@ -1317,6 +1322,7 @@ final class CreateModel {
         trail = nil
         trailKey = nil
         history = RefineHistory()
+        openingHistory = RefineHistory()
         historySteps = 0
         sentEdits = 0
         handledEdits = 0
