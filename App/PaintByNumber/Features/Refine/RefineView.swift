@@ -179,6 +179,10 @@ struct RefineView: View {
     @State private var layersAnchor = RefineLayersAnchor()
     /// The button's frame on the screen as last measured; nil until it is in the window.
     @State private var layersButtonFrame: CGRect?
+    /// The panel opens from the Layers button itself: on a practice canvas, and when a tap found
+    /// no bar button to hang it under (the bar built otherwise, its items in an overflow menu), so
+    /// the button never opens nothing.
+    @State private var layersFromButton = false
     /// The template on screen painted, for the paint layer, with its preview's id.
     @State private var painting: (preview: UUID, image: CGImage)?
     /// The template the screen draws over: the newest at full resolution.
@@ -1929,13 +1933,10 @@ extension RefineView {
 
     /// The Layers button and its panel (`RefineLayersPanel`), the picked tool's layer marked: from
     /// the button on a practice canvas, from `layersHook` under the bar's (`RefineLayersAnchor`).
-    @ViewBuilder
     private var layersButton: some View {
-        if isPractice {
-            layersButtonAlone.popover(isPresented: $showsLayers) { layersPanel }
-        } else {
-            layersButtonAlone
-        }
+        layersButtonAlone.popover(
+            isPresented: Binding(get: { showsLayers && (isPractice || layersFromButton) }, set: { showsLayers = $0 })
+        ) { layersPanel }
     }
 
     private var layersPanel: some View {
@@ -1949,7 +1950,9 @@ extension RefineView {
         Color.clear
             .refineLayersAnchor(layersAnchor)
             .popover(
-                isPresented: Binding(get: { showsLayers && layersButtonFrame != nil }, set: { showsLayers = $0 }),
+                isPresented: Binding(
+                    get: { showsLayers && !isPractice && !layersFromButton && layersButtonFrame != nil },
+                    set: { showsLayers = $0 }),
                 // Its arrow a little under the button, not flush with the bar's glass.
                 attachmentAnchor: .rect(.rect((layersButtonFrame ?? .zero).offsetBy(dx: 0, dy: 4))), arrowEdge: .top
             ) { layersPanel }
@@ -1967,6 +1970,7 @@ extension RefineView {
     private var layersButtonAlone: some View {
         Button("Layers", systemImage: "square.3.layers.3d") {
             FeedbackEngine.shared.selectionChanged()
+            layersFromButton = !isPractice && layersAnchor.buttonOnScreen == nil
             showsLayers = true
         }
         .accessibilityHint(Text(String(
