@@ -65,7 +65,9 @@ struct RefineColorPickerPresenter: UIViewRepresentable {
             picker.supportsAlpha = false
             picker.selectedColor = color
             picker.delegate = self
-            if host.traitCollection.horizontalSizeClass == .compact {
+            // The window's size class: content inside a popover (the area's card on iPad) reports
+            // compact, which would give the iPad the phone's sheet.
+            if (view.window?.traitCollection ?? host.traitCollection).horizontalSizeClass == .compact {
                 // A phone: half the screen, the picture above it undimmed, as a popover's
                 // adaptation left it dimmed and covering most of the screen.
                 picker.modalPresentationStyle = .pageSheet
