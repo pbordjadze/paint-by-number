@@ -289,6 +289,10 @@ struct RefineView: View {
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
+    /// The tiny area the badge brought up close, glowing with the numbers shown, whatever Layers
+    /// says, until the painter does something else: the zoom showed no number and marked nothing
+    /// (QA, November 7). Move Number's numbers show so too.
+    @State private var tinyMarked: Int?
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -528,7 +532,7 @@ struct RefineView: View {
                     if let bend {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
-                    if layers.numbers || group == .numbers, let base {
+                    if layers.numbers || group == .numbers || tinyMarked != nil, let base {
                         RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
                             .equatable()
                     }
@@ -762,7 +766,10 @@ struct RefineView: View {
     // MARK: Touches
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
-        if touch == .began { revealLayer() }
+        if touch == .began {
+            tinyMarked = nil
+            revealLayer()
+        }
         switch tool {
         case .pen, .cellEdge, .merge, .brush, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
@@ -1037,6 +1044,8 @@ struct RefineView: View {
             // Bedtime); every other edit is there the moment it lands.
             let fades = tool.paints && !reduceMotion && painting != nil && image?.preview != painting?.preview
             let before = base?.template.palette
+            // Another template may number its areas anew: the mark goes with the one it was on.
+            if base?.id != preview.id { tinyMarked = nil }
             withAnimation(fades ? .easeInOut(duration: 0.35) : nil) {
                 base = preview
                 // Only a painting of this template: an older one would show lines that are gone.
@@ -1103,6 +1112,7 @@ struct RefineView: View {
     }
 
     private func tap(at point: SIMD2<Float>) {
+        tinyMarked = nil
         revealLayer()
         switch tool {
         case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
@@ -1500,6 +1510,7 @@ struct RefineView: View {
         pencilPalette = nil
         hovering = nil
         guard tool != self.tool else { return }
+        tinyMarked = nil
         // A practice canvas keeps the tool its page teaches (the card's link, the Pencil's double tap).
         if let practice, tool != practice.tool { return }
         FeedbackEngine.shared.selectionChanged()
@@ -2206,10 +2217,11 @@ extension RefineView {
             })
     }
 
-    /// The areas that glow: those a Merge drag joins, a card's paint's, the cell Select picked,
-    /// or Edit Paint's paint's.
+    /// The areas that glow: the tiny one the badge brought up close, those a Merge drag joins, a
+    /// card's paint's, the cell Select picked, or Edit Paint's paint's.
     private var glowAreas: [Int] {
         guard let template = base?.template else { return [] }
+        if let tinyMarked, tinyMarked < template.regions.count { return [tinyMarked] }
         if tool == .merge, trace != nil, let probe = mergeProbe, probe.preview == base?.id { return mergeAreas }
         if let card = card ?? barCard, let region = template.region(at: card.at) {
             return RefinePaintGlow.areas(of: Int(template.regions[region].colorIndex), in: template)
@@ -2416,6 +2428,7 @@ extension RefineView {
             Button {
                 tinyShown = (tinyShown + 1) % tiny.count
                 let label = tiny[tinyShown].label
+                tinyMarked = tiny[tinyShown].region
                 focus = RefineFocus(
                     id: (focus?.id ?? 0) + 1, rect: RefineTinyAreas.focus(on: label, in: template), animated: !reduceMotion)
                 FeedbackEngine.shared.selectionChanged()

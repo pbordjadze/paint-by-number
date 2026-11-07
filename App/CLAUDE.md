@@ -713,7 +713,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
-    each (`RefineFocus`). `create-refine-card` (with `-dark`, `-long-text`) selects the largest
+    each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
+    says, until the next touch, tool or template (`RefineView.tinyMarked`). `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
     is the screen with doubled strings. With VoiceOver or Switch Control (and in demo launches, for
     the UI tests) a cell tool's cells in view are elements over the picture (`RefineCellElements`,
