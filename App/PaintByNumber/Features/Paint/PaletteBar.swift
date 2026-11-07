@@ -114,6 +114,9 @@ struct PaletteBar: View {
     @State private var detailsColor: Int?
     @State private var position = ScrollPosition(idType: Int.self)
     @State private var scroll = ScrollState()
+    /// Whether swatches lie past either end of the bar, which then fades there: a swatch cut by
+    /// the bar's edge alone didn't say the bar scrolls (QA, November 7, the seventh on an iPhone).
+    @State private var more = PaletteOverflow()
 
     /// Where the scroll view and the bar's clipped glass are, and how far it has scrolled. A
     /// reference, so that scrolling renders nothing.
@@ -211,8 +214,10 @@ struct PaletteBar: View {
             .scrollPosition($position)
             .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { _, geometry in
                 scroll.geometry = geometry
+                more = PaletteOverflow(geometry, axis: axis)
                 revealPending()
             }
+            .mask { PaletteFade(more: more, axis: axis) }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                 scroll.frame = frame
                 revealPending()
@@ -463,5 +468,47 @@ nonisolated private struct Shake: GeometryEffect {
 
     func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX: 5 * sin(amount * .pi * 4), y: 0))
+    }
+}
+
+/// Whether a palette's swatches run on past the start or the end of its bar.
+struct PaletteOverflow: Equatable {
+    var before = false
+    var after = false
+
+    init() {}
+
+    init(_ geometry: ScrollGeometry, axis: Axis) {
+        let visible = geometry.visibleRect, content = geometry.contentSize
+        if axis == .horizontal {
+            before = visible.minX > 1
+            after = visible.maxX < content.width - 1
+        } else {
+            before = visible.minY > 1
+            after = visible.maxY < content.height - 1
+        }
+    }
+}
+
+/// The palette's mask: opaque, but fading out toward an end with swatches past it.
+private struct PaletteFade: View {
+    let more: PaletteOverflow
+    let axis: Axis
+    /// The bar's end padding: a swatch brought into view (`PaletteWindow`) stays clear of the fade.
+    private static let length = PaletteMetrics.endPadding
+
+    var body: some View {
+        let layout = axis == .horizontal ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+        layout {
+            fade(shown: more.before, from: axis == .horizontal ? .leading : .top)
+            Rectangle()
+            fade(shown: more.after, from: axis == .horizontal ? .trailing : .bottom)
+        }
+    }
+
+    private func fade(shown: Bool, from edge: UnitPoint) -> some View {
+        LinearGradient(colors: [shown ? .black.opacity(0.15) : .black, .black], startPoint: edge,
+                       endPoint: UnitPoint(x: 1 - edge.x, y: 1 - edge.y))
+            .frame(width: axis == .horizontal ? Self.length : nil, height: axis == .vertical ? Self.length : nil)
     }
 }
