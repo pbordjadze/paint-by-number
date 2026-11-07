@@ -54,7 +54,14 @@ final class ScratchUITests: XCTestCase {
             // A sheet there, with no close button: a tap above it, at the status bar, closed nothing,
             // and Done's tap after it only closed the sheet (main's iPhone job, November 6). It goes
             // as a painter sends it, dragged down by its header.
-            let header = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: picker.frame.midX, dy: picker.frame.minY - 40))
+            // Read once the sheet has stopped rising.
+            var frame = CGRect.null
+            _ = waitUntil(timeout: 5) {
+                let now = picker.frame
+                defer { frame = now }
+                return now == frame && picker.isHittable
+            }
+            let header = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.minY - 40))
             header.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.99)))
         } else {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
