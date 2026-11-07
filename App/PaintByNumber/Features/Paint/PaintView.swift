@@ -139,6 +139,7 @@ struct PaintView: View {
         .onAppear {
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
+            chrome.hasPhoto = photoLoader != nil
             // A painting just started is opened under the create flow's cover, where a tip's
             // popover can't present: the bench and its tips begin once the cover is gone.
             if startHandoff?.isRunning != true { chrome.observe(session) }

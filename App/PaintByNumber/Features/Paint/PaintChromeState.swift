@@ -29,6 +29,9 @@ final class PaintChromeState {
     @ObservationIgnored private var singleFills = 0
     @ObservationIgnored private var fillsThisVisit = 0
     @ObservationIgnored private var passedQuarter = false
+    /// Whether the painting has a photo to show: one sent without it has no Photo button, and
+    /// nothing to say about it.
+    @ObservationIgnored var hasPhoto = true
     @ObservationIgnored private var idle: Task<Void, Never>?
     @ObservationIgnored private var afterShine: Task<Void, Never>?
 
@@ -162,7 +165,7 @@ final class PaintChromeState {
         guard !passedQuarter, let session = tipSession, session.fractionComplete >= Self.quarter else { return }
         passedQuarter = true
         PaintTips.donate(TipEvents.quarters, limit: 2)
-        offer([.benchShowPhoto])
+        if hasPhoto { offer([.benchShowPhoto]) }
     }
 
     /// The painting opens: a fresh one says how to paint; the third painting, or one past a
@@ -172,7 +175,7 @@ final class PaintChromeState {
         guard !session.isComplete else { return }
         let fresh = session.progress.paintedCount == 0
         if passedQuarter { PaintTips.donate(TipEvents.quarters, limit: 2) }
-        let due = TipMoments.benchOpened(fresh: fresh, feedbackIsDue: PaintTips.desk.feedbackIsDue, pastQuarter: passedQuarter)
+        let due = TipMoments.benchOpened(fresh: fresh, feedbackIsDue: PaintTips.desk.feedbackIsDue, pastQuarter: passedQuarter && hasPhoto)
         offer(due, rest: fresh ? .milliseconds(700) : .seconds(2))
     }
 

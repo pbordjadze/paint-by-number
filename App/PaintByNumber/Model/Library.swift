@@ -534,10 +534,10 @@ final class Library {
             return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), refinements)
         }
         let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
-        let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
+        let (progress, thumbnail, hasPhoto) = await Background.run { () -> (PaintProgress, Data?, Bool) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
-            return (progress, Library.thumbnailPNG(template, painted: progress.painted))
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted), store.hasSource(id))
         }
         try Task.checkCancellation()
 
@@ -556,7 +556,9 @@ final class Library {
         unsavedMeta.remove(id)
         clearWriteFailure(id)
         replace(updated)
-        return PaintingDocument(template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0))
+        return PaintingDocument(
+            template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0),
+            hasPhoto: hasPhoto)
     }
 
     /// The photo an artwork was made from (the painting screen's photo peek), decoded off the main actor.
