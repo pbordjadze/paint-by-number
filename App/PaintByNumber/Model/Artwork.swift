@@ -180,6 +180,8 @@ nonisolated enum SettingsOrigin: String, Sendable {
 
 /// Everything needed to add a new artwork to the library.
 nonisolated struct ArtworkDraft: Sendable {
+    /// The new artwork's id: a create flow's own (`CreateModel.paintingID`), else a new one.
+    var id = UUID()
     var title: String
     var template: Template
     var settings: GenerationSettings
