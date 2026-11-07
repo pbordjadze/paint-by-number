@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import CryptoKit
 import Observation
 import os
 import PaintCore
@@ -179,10 +180,11 @@ final class Library {
 
     @discardableResult
     func create(_ draft: ArtworkDraft) async throws -> Artwork {
-        let artwork = Artwork(
+        var artwork = Artwork(
             id: draft.id, title: draft.title, createdAt: draft.date, template: draft.template, settings: draft.settings,
             settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName)
+        artwork.receivedDigest = draft.receivedDigest
         let store = self.store
         try await Background.run {
             let progress = draft.progress ?? PaintProgress(regionCount: draft.template.regions.count)
@@ -202,8 +204,13 @@ final class Library {
     /// with its sender's title (else `fallbackTitle`, the file's name), and its colors' nicknames
     /// its own. With the sender's photo (or library picture) it has the photo peek, and a damaged
     /// template is made again from it, without the sender's edits, which never travel; without,
-    /// neither. A photo that doesn't decode is left out.
+    /// neither. A photo that doesn't decode is left out. The same file opened again (tapped twice
+    /// in Messages, say) opens the painting it made, painted or not, rather than adding a copy.
     func receive(_ data: Data, fallbackTitle: String?) async throws -> Artwork {
+        let digest = await Background.run { Library.digest(of: data) }
+        if let received = artworks.first(where: { $0.receivedDigest == digest && !$0.needsNewerApp }) {
+            return received
+        }
         let decoded: (SharedPainting, CGImage?)
         do {
             decoded = try await Background.run {
@@ -225,11 +232,16 @@ final class Library {
                 title: title, template: shared.template, settings: settings, photo: photo,
                 // A library picture's name only beside its photo: alone it could name any picture,
                 // which a damaged template would then be made again from.
-                sampleName: photo == nil ? nil : shared.sampleName))
+                sampleName: photo == nil ? nil : shared.sampleName, receivedDigest: digest))
         } catch {
             Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
             throw ReceiveError.saveFailed
         }
+    }
+
+    /// The SHA-256 of a received file, in hex (`Artwork.receivedDigest`).
+    nonisolated static func digest(of data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     /// First launch: prepares a couple of ready-to-paint samples in the background (shown
