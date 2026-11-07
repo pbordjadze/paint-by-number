@@ -21,7 +21,7 @@ final class PaintingTipsTests: XCTestCase {
         XCTAssertTrue(waitUntil(timeout: 5) { tip.isHittable }, "The tip isn't settled on screen")
         let words = tip.frame.union(message.frame)
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
-        let covered = swatches.filter { $0.isHittable || $0.frame.intersects(words) }.filter { $0.frame.intersects(words) }
+        let covered = swatches.filter { $0.frame.intersects(words) }
         XCTAssertTrue(covered.isEmpty, "The tip covers \(covered.map(\.identifier))")
 
         // Outside the popover, which sits over the canvas above the palette at the bottom.
