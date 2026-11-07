@@ -63,6 +63,28 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(wait(for: badge, toMatch: NSPredicate(format: "label != %@", before)), "Undo didn't take anything back")
     }
 
+    /// Turning Zen Mode on says what it does to the page (QA, November 7: a newcomer who found
+    /// the switch took the page moving after each fill for a fault); turning it off says nothing.
+    @MainActor
+    func testZenModeSaysWhatItDoesWhenTurnedOn() throws {
+        let app = openSeededPainting()
+        let more = app.buttons["More"]
+        more.tap()
+        let zen = app.buttons["Zen Mode"].firstMatch
+        XCTAssertTrue(zen.waitForExistence(timeout: 5), "More has no Zen Mode")
+        zen.tap()
+        let note = app.descendants(matching: .any)["zen-note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 5), "Turning Zen Mode on said nothing")
+        XCTAssertTrue(note.label.contains("next area"), "The note doesn't say what Zen does: \(note.label)")
+        attachScreenshot(of: app, named: "zen-note")
+        XCTAssertTrue(note.waitForNonExistence(timeout: 10), "The note stayed")
+        // Off again, for the tests after this one.
+        more.tap()
+        XCTAssertTrue(zen.waitForExistence(timeout: 5))
+        zen.tap()
+        XCTAssertFalse(note.waitForExistence(timeout: 2), "Turning Zen Mode off said something")
+    }
+
     /// More › Restart asks beside the More button, not over the middle of the painting.
     @MainActor
     func testRestartConfirmationPointsAtMore() throws {
