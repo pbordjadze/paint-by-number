@@ -76,6 +76,7 @@ struct PaintView: View {
     /// What Zen Mode does, said as the painter turns it on: the page moving after a fill read as
     /// a fault to a newcomer who had found the switch without its tip (QA, November 7).
     @State private var zenNote: String?
+    @State private var zenNoteShowing = 0
     /// The thanks for feedback just sent or shared, waiting for the review sheet to be gone.
     @State private var pendingThanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
@@ -782,10 +783,13 @@ struct PaintView: View {
             localized: "paint.zen.on", defaultValue: "Zen Mode is on: after each fill, the page glides to the next area of your color.",
             comment: "Painting screen: a toast for a few seconds after Zen Mode is turned on in the More menu, saying what it does to the view")
         Announcer.announce(message)
+        zenNoteShowing += 1
+        let showing = zenNoteShowing
         Task {
             zenNote = message
             try? await Task.sleep(for: .seconds(4))
-            if zenNote == message { zenNote = nil }
+            // Only this showing's: Zen turned off and on again meanwhile showed it anew.
+            if zenNoteShowing == showing { zenNote = nil }
         }
     }
 
