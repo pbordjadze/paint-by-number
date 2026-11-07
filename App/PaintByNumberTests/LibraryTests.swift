@@ -185,6 +185,8 @@ struct LibraryTests {
         let pixels = PixelReader(try #require(relaunched.store.thumbnail(artwork.id)))
         #expect(pixels[pixels.width / 6, pixels.height / 2] == SIMD3(255, 0, 0))
         #expect(await makeLibrary().refreshStaleThumbnails().isEmpty, "The thumbnail was made again a second time")
+    }
+
     /// A painting with no photo (one sent without it) opens with none to peek at, so the painting
     /// screen offers no Photo button that does nothing (QA, November 6).
     @Test func aPaintingWithoutAPhotoOpensWithoutOne() async throws {
