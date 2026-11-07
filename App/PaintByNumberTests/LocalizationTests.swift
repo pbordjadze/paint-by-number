@@ -78,6 +78,16 @@ struct LocalizationTests {
         #expect(TemplateCounts.areas(24) == "24 areas")
     }
 
+    /// The summary under the Colors slider says how many of the asked colors were kept, only when
+    /// some went unused.
+    @Test func theSummarySaysWhenColorsWentUnused() {
+        #expect(TemplateCounts.colors(21, of: 24) == "21 of 24 colors")
+        #expect(TemplateCounts.summary(colors: 21, asked: 24, areas: 2, seconds: 0).hasPrefix("21 of 24 colors · 2 areas"))
+        #expect(TemplateCounts.summary(colors: 24, asked: 24, areas: 2, seconds: 0).hasPrefix("24 colors · 2 areas"))
+        #expect(TemplateCounts.summary(colors: 26, asked: 24, areas: 2, seconds: 0).hasPrefix("26 colors · 2 areas"))
+        #expect(TemplateCounts.summary(colors: 21, areas: 2, seconds: 0).hasPrefix("21 colors · 2 areas"))
+    }
+
     @Test func pluralKeysYieldDifferentStringsForOneAndTwo() {
         func sheets(_ count: Int) -> String {
             String(localized: "pdf.sheets", defaultValue: "\(count) sheets", comment: "")

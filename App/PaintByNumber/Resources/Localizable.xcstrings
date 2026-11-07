@@ -5725,6 +5725,18 @@
         }
       }
     },
+    "template.colorsOf" : {
+      "comment" : "How many colors a template kept of the number the Colors slider asked for, the rest unused; the arguments are the kept count and the asked count, e.g. 21 of 24 colors",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld colors"
+          }
+        }
+      }
+    },
     "Thanks for the feedback!" : {
       "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared through the share sheet (Share Instead in the alert after sending failed)",
       "extractionState" : "manual"

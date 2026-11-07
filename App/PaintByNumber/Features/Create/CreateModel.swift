@@ -55,16 +55,20 @@ final class CreateModel {
 
     nonisolated struct Stats: Equatable, Sendable {
         var colors: Int
+        /// The Colors slider's count it was made with, where that is what its paints were asked
+        /// of (not a drawing's set); a template keeps fewer when some go unused.
+        var asked: Int?
         var areas: Int
         var estimate: TimeInterval
 
-        init(_ t: Template) {
+        init(_ t: Template, settings: GenerationSettings?) {
             colors = t.palette.count
+            asked = settings.flatMap { $0.drawing == nil ? $0.colorCount : nil }
             areas = t.regions.count
             estimate = PaintingTime.estimate(regionCount: t.regions.count)
         }
 
-        var summary: String { TemplateCounts.summary(colors: colors, areas: areas, seconds: estimate) }
+        var summary: String { TemplateCounts.summary(colors: colors, asked: asked, areas: areas, seconds: estimate) }
     }
 
     enum Phase: Equatable {
@@ -1053,7 +1057,7 @@ final class CreateModel {
             // Drafts follow the finger as they come: a crossfade would blur one into the next.
             withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
                 preview = shown.preview
-                if !draft { stats = Stats(shown.preview.template) }
+                if !draft { stats = Stats(shown.preview.template, settings: shown.preview.settings) }
             }
             if let current = shown.trail {
                 trail = current
@@ -1366,7 +1370,7 @@ final class CreateModel {
     /// Shows a template with its edits laid. No crossfade: an edit is there the moment it lands.
     private func show(_ shown: Shown) {
         preview = shown.preview
-        stats = Stats(shown.preview.template)
+        stats = Stats(shown.preview.template, settings: shown.preview.settings)
         trail = shown.trail
     }
 
