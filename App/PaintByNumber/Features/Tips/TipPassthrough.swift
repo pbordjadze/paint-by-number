@@ -10,7 +10,11 @@ import UIKit.UIGestureRecognizerSubclass
 /// Once the popover is up, its presentation lets every touch through to the screen that presented
 /// it (`passthroughViews`), and a watcher on the window, which never takes a touch from anyone,
 /// calls `close` when a touch outside the popover ends. A touch inside it (its ×, its words) is
-/// the popover's own.
+/// the popover's own. A tip over a sheet lets touches through to that sheet alone: outside it,
+/// the sheet's own dimming takes them, and the tip still closes.
+///
+/// Ravenna keeps its own copy of the tips (App/CLAUDE.md › Ravenna: it follows none of this app's
+/// later changes), so its tips are as they were.
 struct TipPassthrough: UIViewRepresentable {
     /// Whether a tip's popover is meant to be up now.
     var isShown: Bool
@@ -58,7 +62,7 @@ struct TipPassthrough: UIViewRepresentable {
         }
 
         private func attach() -> Bool {
-            guard let window, let popover = Self.topPopover(in: window),
+            guard let window, let popover = Self.topPopover(in: window), points(at: popover, in: window),
                   let presented = popover.presentedView, let screen = popover.presentingViewController.view else { return false }
             popover.passthroughViews = [screen]
             let watcher = TouchWatcher(inside: presented) { [weak self] in
@@ -68,6 +72,16 @@ struct TipPassthrough: UIViewRepresentable {
             window.addGestureRecognizer(watcher)
             self.watcher = watcher
             return true
+        }
+
+        /// Whether `popover` is this tip's: it hangs from the view this probe lies behind, not from
+        /// another popover (a swatch's details) up meanwhile.
+        private func points(at popover: UIPopoverPresentationController, in window: UIWindow) -> Bool {
+            guard let source = popover.sourceView ?? (popover.sourceItem as? UIView) else { return false }
+            let rect = popover.sourceRect.isNull || popover.sourceRect.isEmpty ? source.bounds : popover.sourceRect
+            let anchor = source.convert(rect, to: window)
+            let mine = convert(bounds, to: window)
+            return anchor.insetBy(dx: -8, dy: -8).intersects(mine)
         }
 
         private func stop() {
