@@ -693,8 +693,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
     top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
-    28, in place of the views): the stack from the top, Numbers, Ink, Paint, Photo, over the
-    paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
+    28, in place of the views; at night it and an area's card lie on the card's surface,
+    `RefinePopoverBacking`, as the glass alone took on the paint behind): the stack from the top,
+    Numbers, Ink, Paint, Photo, over the paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
     the picked tool's layer is marked (`RefineTool.layer`), and a tool that changes a hidden layer
     shows it again. `create-refine-layers` (with `-dark`) opens it, tracing. Until the first edit a
     Start From control at the canvas's top, trailing end (the leading one is where the first tip

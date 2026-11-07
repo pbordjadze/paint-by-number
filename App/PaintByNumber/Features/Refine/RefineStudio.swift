@@ -119,6 +119,7 @@ struct RefineAreaCard: View {
             }
         }
         .onDisappear { pending.flush() }
+        .modifier(RefinePopoverBacking(applies: !inBar))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-card")
     }
@@ -285,6 +286,23 @@ struct RefineAreaCard: View {
                     }
                 }
             })
+    }
+}
+
+/// Refine's popovers (an area's card, the Layers panel) at night lie on the card's surface: the
+/// glass alone took on the paint behind them and lost its contrast there, the card's lower half
+/// olive over bright paint, its gold words and a yellow swatch almost gone, the Photo switch,
+/// off, glowing orange over red paint (QA, November 7). By day the glass reads, and stays.
+struct RefinePopoverBacking: ViewModifier {
+    var applies = true
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        if applies, colorScheme == .dark {
+            content.presentationBackground(Theme.surface)
+        } else {
+            content
+        }
     }
 }
 

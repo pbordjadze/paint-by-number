@@ -89,6 +89,7 @@ struct RefineLayersPanel: View {
         .frame(width: 320)
         // As Refine's other bars, its text grows no further than this.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .modifier(RefinePopoverBacking())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("refine-layers-panel")
     }
