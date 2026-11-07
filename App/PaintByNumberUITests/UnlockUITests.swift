@@ -53,6 +53,22 @@ final class UnlockUITests: XCTestCase {
         XCTAssertTrue(restore.isHittable, "Restore Purchases can't be reached at the largest text size")
     }
 
+    /// Restore Purchases answers a fingertip beside its words, not the words alone (110 by 16
+    /// points, QA, November 7): a tap above them restores, and with nothing bought says so.
+    @MainActor
+    func testRestorePurchasesTakesATapBesideItsWords() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-unlock"]
+        app.launch()
+
+        let restore = app.buttons["unlock-restore"]
+        XCTAssertTrue(restore.waitForExistence(timeout: 120), "create-unlock didn't open the sheet")
+        XCTAssertTrue(waitUntil(timeout: 10) { restore.isHittable }, "Restore Purchases isn't on screen")
+        restore.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -15)).tap()
+        let note = app.descendants(matching: .any)["unlock-note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 10), "A tap just above Restore Purchases restored nothing")
+    }
+
     /// A library picture takes a free painting as any new painting does (1.1, the owner's decision
     /// of November 5; Debug builds count as 1.1 does): with none left, its preview says when the
     /// next comes and Start Painting offers the unlock.

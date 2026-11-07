@@ -155,6 +155,7 @@ struct UnlockSheet: View {
 
     private var restoreButton: some View {
         Button("Restore Purchases", action: restore)
+            .buttonStyle(ReachingButtonStyle())
             .disabled(isBuying || isRestoring)
             .accessibilityIdentifier("unlock-restore")
     }

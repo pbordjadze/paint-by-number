@@ -28,6 +28,8 @@ struct Toast<Trailing: View>: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
+                // 38 by 18 points alone (QA, November 7).
+                .buttonStyle(ReachingButtonStyle())
         }
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 20)
