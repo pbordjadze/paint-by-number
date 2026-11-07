@@ -294,7 +294,8 @@ synchronized folder would bundle it into the app.
 The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
 and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
 Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
-October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`),
+October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`;
+beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`

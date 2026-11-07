@@ -548,6 +548,28 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-card-in-band")
     }
 
+    /// iPhone: Draw Your Own Lines hangs from the top of the Pen's options, over the picture,
+    /// leaving Snap, Color from Photo, the groups and the Pen clear (it hung from the Pen and
+    /// covered them: QA, November 7).
+    @MainActor
+    func testTheDrawTipLeavesThePensOptionsClear() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "The iPad's tip hangs beside the Pen in the rail")
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine--tip-refineDraw"]
+        app.launch()
+        let tip = app.staticTexts["Draw Your Own Lines"].firstMatch
+        XCTAssertTrue(tip.waitForExistence(timeout: 180), "The tip never came up")
+        sleep(1)
+        attachScreenshot(of: app, named: "refine-draw-tip")
+        let popover = app.popovers.firstMatch
+        let tipFrame = popover.exists ? popover.frame : tip.frame
+        for id in ["refine-snap", "refine-pen-colors", "refine-groups", "refine-tool-pen"] {
+            let control = app.descendants(matching: .any)[id].firstMatch
+            XCTAssertTrue(control.exists, "Refine has no \(id)")
+            XCTAssertFalse(tipFrame.intersects(control.frame), "The tip covers \(id): tip \(tipFrame), \(id) \(control.frame)")
+        }
+    }
+
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).

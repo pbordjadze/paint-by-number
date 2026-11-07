@@ -1376,6 +1376,10 @@ struct RefineView: View {
             }
             studioBar
         }
+        // On iPhone the tip on drawing hangs from the top of the Pen's options, over the picture
+        // above them: from the Pen, under them, it covered Snap, Color from Photo and the groups
+        // (QA, November 7). The iPad's hangs beside the Pen in the rail.
+        .gentleTip(.refineDraw, active: !usesRail && !isPractice, arrowEdge: .bottom)
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 8)
@@ -1751,7 +1755,6 @@ extension RefineView {
     private func studioButton(_ kind: RefineTool) -> some View {
         let button = toolButton(kind, systemImage: symbol(kind), label: Self.toolName(kind), id: Self.toolID(kind))
         switch kind {
-        case .pen: button.gentleTip(.refineDraw, arrowEdge: .bottom)
         case .fill: button.gentleTip(.refineFill, arrowEdge: .bottom)
         case .shape: button.accessibilityValue(shapeName(shape))
         default: button
