@@ -1,0 +1,80 @@
+import XCTest
+
+/// The screens a painter meets first, at the largest text size (AX5): the accessibility audit
+/// finds no text cut short on them. The completion bar keeps the painting's name, the gallery and
+/// New Painting their titles, the sample tiles their captions; Refine's tiny-numbers badge and the
+/// Pen's options stay whole (painting-company row 263).
+final class DynamicTypeUITests: XCTestCase {
+    private static let largest = "UICTContentSizeCategoryAccessibilityXXXL"
+
+    @MainActor
+    func testFinishedBarKeepsThePaintingsName() throws {
+        let app = launch("paint-complete")
+        XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 60), "The finished painting didn't open")
+        try assertNoClippedText(in: app, named: "paint-complete-ax5")
+    }
+
+    @MainActor
+    func testGalleryTitleWraps() throws {
+        let app = launch("gallery-first-run")
+        let card = app.buttons.matching(NSPredicate(format: "value BEGINSWITH 'Not started'")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 150), "The gallery's starters never came")
+        try assertNoClippedText(in: app, named: "gallery-ax5")
+    }
+
+    @MainActor
+    func testNewPaintingTitleAndSamples() throws {
+        let app = launch("create-samples")
+        let sample = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: '")).firstMatch
+        XCTAssertTrue(sample.waitForExistence(timeout: 60), "The samples never showed")
+        XCTAssertTrue(app.staticTexts["New Painting"].exists, "New Painting's title is gone")
+        try assertNoClippedText(in: app, named: "create-samples-ax5")
+    }
+
+    @MainActor
+    func testRefineBadgeAndPenOptions() throws {
+        let app = launch("create-refine")
+        XCTAssertTrue(app.sliders["refine-pen-smoothing"].waitForExistence(timeout: 240), "Refine never opened on the Pen")
+        _ = app.buttons["refine-tiny"].waitForExistence(timeout: 30)
+        sleep(2)
+        let window = app.windows.firstMatch.frame
+        let smoothing = app.sliders["refine-pen-smoothing"]
+        XCTAssertTrue(window.contains(smoothing.frame), "Smoothing runs off the screen")
+        try assertNoClippedText(in: app, named: "create-refine-ax5")
+    }
+
+    // MARK: -
+
+    @MainActor
+    private func launch(_ scenario: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", scenario, "-UIPreferredContentSizeCategoryName", Self.largest]
+        app.launch()
+        return app
+    }
+
+    /// Audits the screen for clipped text, again after a pause when the audit itself ran out of
+    /// time (a busy simulator), and attaches the screen.
+    @MainActor
+    private func assertNoClippedText(in app: XCUIApplication, named name: String) throws {
+        sleep(2)
+        attachScreenshot(of: app, named: name)
+        var clipped: [String] = []
+        func audit() throws {
+            clipped = []
+            try app.performAccessibilityAudit(for: .textClipped) { issue in
+                MainActor.assumeIsolated {
+                    clipped.append(issue.element.map { "'\($0.label)'" } ?? "no element")
+                }
+                return true
+            }
+        }
+        do {
+            try audit()
+        } catch let error as NSError where error.domain == "com.apple.xcode.xctest.accessibilityAudit" && error.code == -56 {
+            sleep(3)
+            try audit()
+        }
+        XCTAssertTrue(clipped.isEmpty, "Text cut short: \(clipped.joined(separator: ", "))")
+    }
+}

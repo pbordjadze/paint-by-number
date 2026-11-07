@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(UnlimitedPaintings.self) private var paintings
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -192,6 +193,17 @@ struct AppShellView: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
+        // At accessibility sizes the system's large title, one line, cut the app's name short
+        // ("Paint by Mo…"): this one wraps instead. Smaller sizes keep the system's.
+        if dynamicTypeSize.isAccessibilitySize {
+            ToolbarItem(placement: .largeTitle) {
+                Text("Paint by Moonlight")
+                    .font(.display(.largeTitle))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
+            }
+        }
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
         }

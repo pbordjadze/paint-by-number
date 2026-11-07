@@ -234,6 +234,9 @@ struct RefineView: View {
     /// Cancel asks first when there are changes to lose.
     @State private var confirmsCancel = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The painter's text size: the Studio clamps its own at `.xxLarge`, and its options lay out
+    /// as a column from the accessibility sizes on.
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// Whether a line's ends join the lines they land near (`PenAssist`): the Toolbox's Snap.
     @AppStorage(SettingsKey.refineSnaps) private var snaps = SettingsDefault.refineSnaps
     /// Whether a drawn line gives the pieces it cuts the photo's colors (`TemplateEditor.painted`):
@@ -1666,8 +1669,8 @@ extension RefineView {
                     .frame(width: 24)
                 Self.toolName(kind)
                     .font(.subheadline.weight(selected ? .semibold : .regular))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    // A long name wraps at larger text rather than shrinking below the others.
+                    .lineLimit(2)
                 Spacer(minLength: 0)
             }
             .foregroundStyle(selected ? Color.white : Color.primary)
@@ -1832,22 +1835,40 @@ extension RefineView {
         optionBar(content, more: { EmptyView() })
     }
 
-    /// The tool's options in a capsule; `more` beside them where the width holds both, else under them.
+    /// The tool's options in a capsule; `more` beside them where the width holds both, else under
+    /// them, else a column. From the accessibility sizes on, each option has a line of its own
+    /// and a slider's name stands over it: the rows ran into each other and out of their capsule.
     private func optionBar<Content: View, More: View>(
         @ViewBuilder _ content: () -> Content, @ViewBuilder more: () -> More
     ) -> some View {
         let content = content(), more = more()
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) {
-                content
-                more
+        let column = VStack(alignment: .leading, spacing: 10) {
+            content
+            more
+        }
+        .frame(maxWidth: 320)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 6)
+        return Group {
+            if typeSize.isAccessibilitySize {
+                column
+            } else {
+                // The column also where long words (a translation) leave even two rows wider
+                // than a phone: fixed, they laid the whole screen out wider than the window.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) {
+                        content
+                        more
+                    }
+                    .fixedSize()
+                    VStack(spacing: 8) {
+                        HStack(spacing: 16) { content }
+                        HStack(spacing: 10) { more }
+                    }
+                    .fixedSize()
+                    column
+                }
             }
-            .fixedSize()
-            VStack(spacing: 8) {
-                HStack(spacing: 16) { content }
-                HStack(spacing: 10) { more }
-            }
-            .fixedSize()
         }
         .font(.footnote)
         .toggleStyle(.switch)
@@ -2344,6 +2365,8 @@ extension RefineView {
     /// don't fit (larger text), the badge under the chooser: the leading end is where the first
     /// tip opens beside the Pen on iPad, and it hid Blank there (QA, November 3).
     private var topControls: some View {
+        // Clamped as the rest of Refine is: the badge grew to cover the picture. The Large
+        // Content Viewer shows it enlarged.
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 8) {
                 Spacer(minLength: 0)
@@ -2361,6 +2384,7 @@ extension RefineView {
                 }
             }
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     /// Where the template starts from, asked until the first edit: what the generator made (the
@@ -2400,6 +2424,7 @@ extension RefineView {
                     .font(.footnote.weight(.semibold))
             }
             .buttonStyle(.glass)
+            .accessibilityShowsLargeContentViewer()
             .accessibilityHint(Text(String(
                 localized: "refine.tiny.hint", defaultValue: "Shows the next one up close.",
                 comment: "Refine screen: VoiceOver hint of the badge that counts the areas whose numbers are near the smallest size; a tap zooms in on the next one")))

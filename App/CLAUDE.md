@@ -153,7 +153,12 @@ synchronized folder would bundle it into the app.
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests
   (menu-bar keys, landscape) skip on iPhone, and the system-picker tests skip where synthesized taps
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
-  on screen under doubled strings.
+  on screen under doubled strings; `DynamicTypeUITests` audits the finished bar, the gallery, New
+  Painting's samples and Refine at the largest text size for text cut short (no `textClipped`).
+  At accessibility sizes the gallery's large title is a wrapping `.largeTitle` toolbar item, New
+  Painting's title leaves the bar for the page, sample captions go under their pictures and
+  Refine's options stack in a column; `tools/screenshot_diff.swift` shows a default-size
+  screenshot unchanged.
 - On CI's iPad simulator the screenshots take about 8 minutes, the unit and Settings UI tests about
   8 (job `ipad`), the other UI tests about 22 (job `ipad-ui`: a slow new UI test lengthens every
   push's wait). Demo and test launches seed their pictures from templates kept on disk (DEBUG

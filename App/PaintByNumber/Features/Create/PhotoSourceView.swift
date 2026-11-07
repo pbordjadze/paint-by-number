@@ -50,6 +50,7 @@ struct PhotoSourceView: View {
     @Environment(UnlimitedPaintings.self) private var paintings
     #endif
     @State private var width: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
 
@@ -67,6 +68,9 @@ struct PhotoSourceView: View {
     private var showsSamples: Bool { isWide || pane == .samples }
     /// Wide windows pad only the samples' side: the picker's card meets the leading edge.
     private var samplesWidth: CGFloat { max(0, (width - horizontalPadding - paneSpacing) * 0.4) }
+    /// At accessibility sizes the title leaves the bar, where Close, Take Photo and From Scratch
+    /// cut it short or crowded it out, for a line of its own atop the page, where it wraps.
+    private var titleOnPage: Bool { dynamicTypeSize.isAccessibilitySize }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -74,6 +78,13 @@ struct PhotoSourceView: View {
         // cannot arbitrate between its pan and an in-process ancestor's pan across that
         // boundary, so a drag that started on the picker moved neither.
         VStack(alignment: .leading, spacing: 14) {
+            if titleOnPage {
+                Text("New Painting")
+                    .font(.display(.title))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, horizontalPadding)
+                    .accessibilityAddTraits(.isHeader)
+            }
             if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
@@ -85,6 +96,7 @@ struct PhotoSourceView: View {
         .navigationTitle("New Painting")
         // Nothing scrolls to collapse a large title, and the picker needs the height.
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(removing: titleOnPage ? .title : nil)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
@@ -420,6 +432,7 @@ private struct SectionTitle: View {
 private struct SampleTile: View {
     let sample: Sample
     @State private var image: CGImage?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Color.clear
@@ -449,7 +462,9 @@ private struct SampleTile: View {
                             startPoint: .top, endPoint: .bottom)
                             .padding(.top, -28)
                     }
+                    .opacity(captionsBelow ? 0 : 1)
             }
+            .modifier(CaptionBelow(shows: captionsBelow) { captionBelow })
             .background(Theme.surface)
             .clipShape(.rect(cornerRadius: 18, style: .continuous))
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
@@ -462,6 +477,25 @@ private struct SampleTile: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityLabel)
             .accessibilityAddTraits(.isButton)
+    }
+
+    /// At accessibility sizes the caption on the picture ran out of room and was cut short: it
+    /// goes under the picture, as the gallery's cards have theirs, and wraps whole.
+    private var captionsBelow: Bool { dynamicTypeSize.isAccessibilitySize }
+
+    private var captionBelow: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(sample.title)
+                .font(.subheadline.weight(.semibold))
+            if let painter {
+                Text(painter)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The title, and under a painting's its painter when the tile has room for both: long
@@ -501,5 +535,22 @@ private struct SampleTile: View {
         }
         return String(localized: "create.sample.labelWithCreator", defaultValue: "Sample: \(sample.title), \(creator)",
                       comment: "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”")
+    }
+}
+
+/// A sample tile's caption under its picture rather than on it (`SampleTile.captionsBelow`).
+private struct CaptionBelow<Caption: View>: ViewModifier {
+    let shows: Bool
+    @ViewBuilder let caption: () -> Caption
+
+    func body(content: Content) -> some View {
+        if shows {
+            VStack(alignment: .leading, spacing: 0) {
+                content.clipped()
+                caption()
+            }
+        } else {
+            content
+        }
     }
 }
