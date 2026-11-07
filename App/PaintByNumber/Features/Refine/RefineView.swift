@@ -175,6 +175,10 @@ struct RefineView: View {
     @State private var layers = RefineLayers.painting
     /// The Layers panel is open.
     @State private var showsLayers = false
+    /// Where the bar's Layers button is on the screen, which the panel hangs from (`layersHook`).
+    @State private var layersAnchor = RefineLayersAnchor()
+    /// The button's frame on the screen as last measured; nil until it is in the window.
+    @State private var layersButtonFrame: CGRect?
     /// The template on screen painted, for the paint layer, with its preview's id.
     @State private var painting: (preview: UUID, image: CGImage)?
     /// The template the screen draws over: the newest at full resolution.
@@ -413,6 +417,7 @@ struct RefineView: View {
                     if usesRail, !fullScreen { toolRail }
                 }
                 .background(Theme.paper)
+                .overlay { layersHook }
                 .navigationTitle("Refine")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
@@ -1922,8 +1927,44 @@ extension RefineView {
         group = next
     }
 
-    /// The Layers button and its panel (`RefineLayersPanel`), the picked tool's layer marked.
+    /// The Layers button and its panel (`RefineLayersPanel`), the picked tool's layer marked: from
+    /// the button on a practice canvas, from `layersHook` under the bar's (`RefineLayersAnchor`).
+    @ViewBuilder
     private var layersButton: some View {
+        if isPractice {
+            layersButtonAlone.popover(isPresented: $showsLayers) { layersPanel }
+        } else {
+            layersButtonAlone
+        }
+    }
+
+    private var layersPanel: some View {
+        RefineLayersPanel(layers: $layers, working: tool.layer)
+            .presentationCompactAdaptation(.popover)
+    }
+
+    /// The screen's side of `RefineLayersAnchor`: the panel points up at the Layers button's place
+    /// and opens below the bar, once the button has one (a demo opens the panel before).
+    private var layersHook: some View {
+        Color.clear
+            .refineLayersAnchor(layersAnchor)
+            .popover(
+                isPresented: Binding(get: { showsLayers && layersButtonFrame != nil }, set: { showsLayers = $0 }),
+                // Its arrow a little under the button, not flush with the bar's glass.
+                attachmentAnchor: .rect(.rect((layersButtonFrame ?? .zero).offsetBy(dx: 0, dy: 4))), arrowEdge: .top
+            ) { layersPanel }
+            .ignoresSafeArea()
+            .onAppear {
+                layersAnchor.moved = { [layersAnchor] in
+                    if let frame = layersAnchor.buttonOnScreen, frame != layersButtonFrame { layersButtonFrame = frame }
+                }
+                layersAnchor.moved()
+            }
+            // The bar may have moved its buttons since the screen was last laid out.
+            .onChange(of: showsLayers) { if showsLayers { layersAnchor.moved() } }
+    }
+
+    private var layersButtonAlone: some View {
         Button("Layers", systemImage: "square.3.layers.3d") {
             FeedbackEngine.shared.selectionChanged()
             showsLayers = true
@@ -1932,10 +1973,6 @@ extension RefineView {
             localized: "refine.layers.hint", defaultValue: "Shows or hides the numbers, the ink, the paint and the photo.",
             comment: "Refine screen: VoiceOver hint of the Layers button, which opens a panel of what shows (numbers, ink, paint, photo)")))
         .accessibilityIdentifier("refine-layers")
-        .popover(isPresented: $showsLayers) {
-            RefineLayersPanel(layers: $layers, working: tool.layer)
-                .presentationCompactAdaptation(.popover)
-        }
     }
 
     // MARK: Full screen

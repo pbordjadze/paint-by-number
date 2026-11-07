@@ -72,6 +72,7 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-painting")
         let paint = layerSwitch("paint", in: app)
         XCTAssertEqual(paint.value as? String, "1", "Refine didn't open with the paint showing")
+        assertLayersClearOfTheBar(in: app)
         XCTAssertTrue(flip(paint, on: false), "The paint layer didn't hide")
         attachScreenshot(of: app, named: "refine-layers")
         XCTAssertTrue(flip(paint, on: true), "The paint layer didn't show again")
@@ -483,7 +484,44 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-guide-writing-row")
     }
 
+    /// The Layers panel opens below the bar, clear of Done, Undo, Redo and its own button, in
+    /// both appearances: hung from the button in the bar, it grew out of it over all four (QA,
+    /// November 7).
+    @MainActor
+    func testTheLayersPanelOpensBelowTheBar() throws {
+        defer { XCUIDevice.shared.appearance = .light }
+        for (scenario, appearance) in [("create-refine-layers", XCUIDevice.Appearance.light), ("create-refine-layers-dark", .dark)] {
+            XCUIDevice.shared.appearance = appearance
+            let app = XCUIApplication()
+            app.launchArguments = ["-demo", scenario]
+            app.launch()
+            let panel = app.descendants(matching: .any)["refine-layers-panel"]
+            XCTAssertTrue(panel.waitForExistence(timeout: 150), "\(scenario) didn't open the Layers panel")
+            assertLayersClearOfTheBar(in: app)
+            attachScreenshot(of: app, named: scenario)
+            app.terminate()
+        }
+    }
+
     // MARK: - Helpers
+
+    /// The open Layers panel, popover and all, covers none of the bar's Done, Undo, Redo and
+    /// Layers buttons, and they are all still there to tap.
+    @MainActor
+    private func assertLayersClearOfTheBar(in app: XCUIApplication) {
+        let panel = app.descendants(matching: .any)["refine-layers-panel"]
+        XCTAssertTrue(panel.waitForExistence(timeout: 5), "The Layers panel isn't open")
+        let popover = app.popovers.firstMatch
+        let covering = popover.exists ? panel.frame.union(popover.frame) : panel.frame
+        for control in ["refine-done", "refine-undo", "refine-redo", "refine-layers"] {
+            let button = app.buttons[control].firstMatch
+            guard button.exists else {
+                XCTFail("\(control) is gone under the Layers panel")
+                continue
+            }
+            XCTAssertFalse(button.frame.intersects(covering), "The Layers panel covers \(control): \(covering) over \(button.frame)")
+        }
+    }
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).
     @MainActor
