@@ -481,7 +481,7 @@ final class RefineUITests: XCTestCase {
         app.launch()
         let page = app.descendants(matching: .any)["refine-guide-page"]
         XCTAssertTrue(page.waitForExistence(timeout: 120), "The guide didn't open on Writing")
-        let row = app.cells.containing(NSPredicate(format: "label == %@", "Writing")).firstMatch
+        let row = app.descendants(matching: .any)["refine-guide-topic-text"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "The list has no Writing row")
         XCTAssertTrue(
             waitUntil(timeout: 10) { app.windows.firstMatch.frame.contains(row.frame) && row.isHittable },
