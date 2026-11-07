@@ -24,8 +24,9 @@ final class TipDesk {
     /// Counts the changes of the Tips switch; a screen that offers when tips come on (the shelf,
     /// after Show Tips Again) watches it.
     private(set) var answers = 0
-    /// Counts the times the shelf came back into view under a screen that went (a painting): the
-    /// shelf appears before the painting screen has left, so its own appearance offers nothing.
+    /// Counts the times the shelf came back into view under a screen that went (a painting,
+    /// New Painting, Settings): back from a painting the shelf appears before the painting screen
+    /// has left, so its own appearance offered nothing. Pacing still judges what it offers.
     private(set) var shelfReturns = 0
 
     /// Tests and demos that show no tips: nothing is offered.
@@ -439,22 +440,23 @@ private struct GentleTipModifier: ViewModifier {
         // the popover was presented by the tip's status or by this binding).
         // A view that has never pointed a tip carries no popover tip at all: TipKit's modifier parses
         // a Regex on every body update even for a nil tip, and every palette swatch carries this one
-        // (Instruments, painting-company row 263: part of a 15.9 s hang).
+        // (Instruments, painting-company row 263: part of a 15.9 s hang). The popover hangs from a
+        // clear view behind the content, its frame, so the content keeps its identity (a drag on
+        // it, its state, a tip modifier inside) when the first tip comes.
         let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
         let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
-        Group {
-            if let tip = (shown ?? pointed)?.tip {
-                content
-                    .popoverTip(tip, isPresented: isPresented, arrowEdge: arrowEdge)
-                    // A tap outside the popover does what it was aimed at and closes the tip.
-                    .background { TipPassthrough(isShown: shown != nil) { isPresented.wrappedValue = false } }
-            } else {
-                content
+        content
+            .background {
+                if let tip = (shown ?? pointed)?.tip {
+                    Color.clear
+                        .popoverTip(tip, isPresented: isPresented, arrowEdge: arrowEdge)
+                        // A tap outside the popover does what it was aimed at and closes the tip.
+                        .background { TipPassthrough(isShown: shown != nil) { isPresented.wrappedValue = false } }
+                }
             }
-        }
-        .onChange(of: shown, initial: true) { _, now in
-            if let now { pointed = now }
-        }
+            .onChange(of: shown, initial: true) { _, now in
+                if let now { pointed = now }
+            }
     }
 }
 

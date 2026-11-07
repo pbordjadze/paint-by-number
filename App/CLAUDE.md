@@ -327,7 +327,7 @@ where they live.
   hints (a fill, a slider, a screen), 3 a session (a stretch without a 30-minute break), 5 a day, 3 on
   the first painting (counted from its opening, in place of the session's), silence while a finger or
   the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
-  Feedback is on, and after a finish only Replay Painting. Tap to Paint and Draw Your Own Lines alone wait for
+  Feedback is on, and after a finish only Replay Painting, which waits for none of the limits. Tap to Paint and Draw Your Own Lines alone wait for
   neither the gap nor something done (`TipID.isHowTo`). State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
   `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
