@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 /// From Scratch (SideStore and Debug builds, painting-company row 231): the New Painting
 /// screen's button opens Refine on a blank page, with no Start From (nothing to generate), named
@@ -47,7 +48,17 @@ final class ScratchUITests: XCTestCase {
         attachScreenshot(of: app, named: "scratch-new-paint")
         XCTAssertTrue(picks, "New Paint opened no color picker on its first tap")
         let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Close")).firstMatch
-        if close.exists { close.tap() } else { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap() }
+        if close.exists {
+            close.tap()
+        } else if UIDevice.current.userInterfaceIdiom == .phone {
+            // A sheet there, with no close button: a tap above it, at the status bar, closed nothing,
+            // and Done's tap after it only closed the sheet (main's iPhone job, November 6). It goes
+            // as a painter sends it, dragged down by its header.
+            let header = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: picker.frame.midX, dy: picker.frame.minY - 40))
+            header.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.99)))
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
+        }
         XCTAssertTrue(waitUntil(timeout: 10) { !picker.exists }, "New Paint's picker didn't close")
 
         app.buttons["refine-done"].tap()
