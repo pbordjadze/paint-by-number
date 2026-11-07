@@ -16,6 +16,13 @@ final class PaintingTipsTests: XCTestCase {
             app.staticTexts["Pick a color, then tap an area marked with its number to fill it."].exists,
             "The first tip doesn't say what to do")
         attachScreenshot(of: app, named: "first-tip")
+        // It asks for a color: it covers none (QA, November 7: on iPad it hid a line of swatches).
+        let message = app.staticTexts["Pick a color, then tap an area marked with its number to fill it."]
+        XCTAssertTrue(waitUntil(timeout: 5) { tip.isHittable }, "The tip isn't settled on screen")
+        let words = tip.frame.union(message.frame)
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
+        let covered = swatches.filter { $0.isHittable || $0.frame.intersects(words) }.filter { $0.frame.intersects(words) }
+        XCTAssertTrue(covered.isEmpty, "The tip covers \(covered.map(\.identifier))")
 
         // Outside the popover, which sits over the canvas above the palette at the bottom.
         app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()

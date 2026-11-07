@@ -241,6 +241,10 @@ struct PaletteBar: View {
         }
         .clipShape(.rect(cornerRadius: radius))
         .glassEffect(.regular, in: .rect(cornerRadius: radius))
+        // Tap to Paint asks for a color, then an area: it hangs from the whole bar, clear of the
+        // swatches. From the selected swatch it covered the line of swatches above it on iPad, the
+        // colors it asked for (QA, November 7).
+        .gentleTip(.benchTap, arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
     }
 
@@ -319,11 +323,11 @@ struct PaletteBar: View {
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
-        // The tips about the selected color (Tap to Paint, Can't Find It?) point at its swatch: over
-        // a bottom bar, beside a trailing one, and over it again at the largest text sizes, where
-        // beside would leave no room for the words.
+        // The tip about the selected color (Can't Find It?) points at its swatch: over a bottom
+        // bar, beside a trailing one, and over it again at the largest text sizes, where beside
+        // would leave no room for the words.
         .gentleTip(
-            .benchTap, .benchFind, active: selected,
+            .benchFind, active: selected,
             arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
