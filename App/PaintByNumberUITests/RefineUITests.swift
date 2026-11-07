@@ -72,6 +72,12 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-painting")
         let paint = layerSwitch("paint", in: app)
         XCTAssertEqual(paint.value as? String, "1", "Refine didn't open with the paint showing")
+        // The panel hangs below the bar, clear of Done, Undo and Redo (QA, November 7).
+        let panel = app.descendants(matching: .any)["refine-layers-panel"].frame
+        for control in ["refine-done", "refine-undo", "refine-redo"] {
+            let frame = app.buttons[control].firstMatch.frame
+            XCTAssertFalse(frame.intersects(panel), "The Layers panel covers \(control)")
+        }
         XCTAssertTrue(flip(paint, on: false), "The paint layer didn't hide")
         attachScreenshot(of: app, named: "refine-layers")
         XCTAssertTrue(flip(paint, on: true), "The paint layer didn't show again")
@@ -463,6 +469,24 @@ final class RefineUITests: XCTestCase {
         let merged = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == %@", NSNumber(value: paints - 1)), object: swatches)
         XCTAssertEqual(XCTWaiter.wait(for: [merged], timeout: 10), .completed, "The palette still has \(swatches.count) paints of \(paints)")
         attachScreenshot(of: app, named: "refine-edit-paint-merged")
+    }
+
+    /// The Tool Guide opened on its last page shows that page's row whole in the list, where it
+    /// was cut in half under the sidebar's bottom edge (QA, November 7). iPad: a sidebar.
+    @MainActor
+    func testTheGuideShowsTheRowOfThePageItOpensOn() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "A phone's guide opens on the page, not the list")
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine-guide-writing"]
+        app.launch()
+        let page = app.descendants(matching: .any)["refine-guide-page"]
+        XCTAssertTrue(page.waitForExistence(timeout: 120), "The guide didn't open on Writing")
+        let row = app.descendants(matching: .any)["refine-guide-topic-text"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "The list has no Writing row")
+        XCTAssertTrue(
+            waitUntil(timeout: 10) { app.windows.firstMatch.frame.contains(row.frame) && row.isHittable },
+            "Writing's row isn't whole on screen: \(row.frame)")
+        attachScreenshot(of: app, named: "refine-guide-writing-row")
     }
 
     // MARK: - Helpers

@@ -814,10 +814,12 @@ struct TemplatePreviewView: View {
             }
         }
         .accessibilityIdentifier("settings-origin")
-        // Already Chosen for You hangs above the chip; You Can Always Go Back below it, where the
-        // preview is left in view to watch. Before the frame: they point at the chip, not the row.
+        // Already Chosen for You hangs above the chip; You Can Always Go Back where it has room,
+        // below while it fits, leaving the preview in view to watch: held below, its long words
+        // ran past the screen's foot over Start Painting (QA, November 7, doubled strings on
+        // iPhone). Before the frame: they point at the chip, not the row.
         .gentleTip(.newPaintingSuggested, active: model.settingsOrigin != .custom, arrowEdge: .bottom)
-        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, arrowEdge: .top)
+        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom)
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(model.settingsOrigin == nil ? 0 : 1)
         .accessibilityHidden(model.settingsOrigin == nil)
