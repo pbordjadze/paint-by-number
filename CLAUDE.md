@@ -433,7 +433,7 @@ Saved paintings must open in every later build. The format history is documented
   collected data not linked to them and used only for App Functionality: customer support, other
   diagnostic data, photos or videos; `AboutTests` pins the list and `PRIVACY.md` says the same, so
   a change to what Send uploads changes all three; required-reason APIs: UserDefaults `CA92.1`, file
-  timestamps `C617.1` for purging the app's own export folders). Using another required-reason API (file timestamps, disk space, boot time via
+  timestamps `C617.1` for purging the app's own export folders and finding a thumbnail older than its painting's progress). Using another required-reason API (file timestamps, disk space, boot time via
   `systemUptime`/`mach_absolute_time`, active keyboards) means adding its category and reason code
   there; `AboutTests` fails when the sources of the app or of `Sources/PaintCore` (not `pbn`) and
   the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category

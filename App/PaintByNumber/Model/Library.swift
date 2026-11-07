@@ -142,6 +142,7 @@ final class Library {
         #endif
         let library = Library(store: ArtworkStore(root: ArtworkStore.defaultRoot))
         library.seedIfNeeded()
+        Task { await library.refreshStaleThumbnails() }
         return library
     }
 
@@ -389,6 +390,24 @@ final class Library {
         replace(artwork, resort: false)
         persistMeta(artwork)
         return true
+    }
+
+    /// Makes again the thumbnails their paintings' saved progress has outrun: a painting the app
+    /// ended in (a crash) kept every fill, and its gallery tile showed none of them beside its
+    /// percentage until the next fill (QA, November 6). Returns the paintings it made them for.
+    @discardableResult
+    func refreshStaleThumbnails() async -> [UUID] {
+        let store = self.store
+        let started = artworks.filter { $0.isStarted && !$0.needsNewerApp }.map { ($0.id, $0.regionCount) }
+        let stale = await Background.run { started.filter { store.thumbnailIsBehindProgress($0.0) } }
+        var refreshed: [UUID] = []
+        for (id, regionCount) in stale {
+            guard artwork(with: id) != nil else { continue }
+            guard let saved = try? await Background.run({ try store.readProgress(id, regionCount: regionCount) }),
+                  saved.problem == nil else { continue }
+            if await refreshThumbnail(id, progress: saved.progress) { refreshed.append(id) }
+        }
+        return refreshed
     }
 
     // MARK: Deleting (undoable)

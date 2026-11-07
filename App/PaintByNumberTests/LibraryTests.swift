@@ -161,6 +161,32 @@ struct LibraryTests {
         #expect(makeLibrary().artwork(with: artwork.id)?.thumbnailVersion == 2)
     }
 
+    /// A painting the app ended in (a crash) kept its fills and never made the thumbnail that
+    /// closing it makes: the next launch makes it, once (QA, November 6: "1% painted" beside a
+    /// tile with no paint).
+    @Test func aThumbnailBehindItsProgressIsMadeAgain() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        #expect(await library.refreshStaleThumbnails().isEmpty, "A new painting's thumbnail was made again")
+        var progress = PaintProgress(regionCount: 3)
+        for region in 0..<3 { progress.paint(region) }
+        library.saveProgress(progress, for: artwork.id)
+        await library.flush()
+        // The thumbnail as the painting's opening left it, a minute before the fills.
+        let thumbnailURL = library.store.url(.thumbnail, of: artwork.id)
+        try FileManager.default.setAttributes([.modificationDate: Date.now.addingTimeInterval(-60)], ofItemAtPath: thumbnailURL.path)
+        let before = PixelReader(try #require(library.store.thumbnail(artwork.id)))
+        #expect(before[before.width / 6, before.height / 2] != SIMD3(255, 0, 0))
+
+        let relaunched = makeLibrary()
+        #expect(await relaunched.refreshStaleThumbnails() == [artwork.id])
+        await relaunched.flush()
+        #expect(relaunched.artwork(with: artwork.id)?.thumbnailVersion == 2)
+        let pixels = PixelReader(try #require(relaunched.store.thumbnail(artwork.id)))
+        #expect(pixels[pixels.width / 6, pixels.height / 2] == SIMD3(255, 0, 0))
+        #expect(await makeLibrary().refreshStaleThumbnails().isEmpty, "The thumbnail was made again a second time")
+    }
+
     @Test func exportsShareFiles() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(title: "Stripes: Blue/Red", painted: [2, 0, 1]))
