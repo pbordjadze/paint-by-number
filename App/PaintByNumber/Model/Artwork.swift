@@ -48,6 +48,10 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// metadata means v1; keep unknown future versions as written, even if this build uses
     /// its newest known vocabulary to display them.
     var nicknameVersion: Int
+    /// The SHA-256 (hex) of the `.moonlight` file this painting was received from: opening the
+    /// same file again opens this painting rather than adding a copy (`Library.receive`). Nil for
+    /// paintings not received, and for those received before it was kept.
+    var receivedDigest: String?
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -111,7 +115,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
-        case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion
+        case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion, receivedDigest
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -146,6 +150,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             isFavorite = field(.isFavorite, false)
             settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
             paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
+            receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -166,6 +171,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
         settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
         paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
+        receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }
@@ -197,4 +203,6 @@ nonisolated struct ArtworkDraft: Sendable {
     /// What the painter refined before painting (the create flow's Refine step); kept with the
     /// painting so regenerating it reproduces them.
     var refinements = TemplateRefinements()
+    /// The received file's digest (`Artwork.receivedDigest`), for a painting someone sent.
+    var receivedDigest: String?
 }

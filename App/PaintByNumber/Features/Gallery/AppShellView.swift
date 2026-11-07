@@ -93,6 +93,10 @@ struct AppShellView: View {
                     // The zoom is for pushes from a card and for the way back to it; the painting
                     // Start Painting makes is pushed under the cover (`startPainting`).
                     ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
+                        // One view per painting: a painting someone sent replaces the open one
+                        // in the path (`presentReceivedPainting`), and without its own identity
+                        // the screen kept the first painting, which its task opens once.
+                        .id(id)
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }

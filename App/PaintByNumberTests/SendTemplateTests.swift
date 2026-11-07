@@ -129,7 +129,27 @@ struct SendTemplateTests {
         let library = makeLibrary()
         let data = try SharedPaintingCodec.encode(SharedPainting(title: "  ", settings: nil, template: Fixtures.stripes()))
         #expect(try await library.receive(data, fallbackTitle: "From Mum").title == "From Mum")
-        #expect(try await library.receive(data, fallbackTitle: nil).title == String(localized: "Painting"))
+        // Another file (the same one would open the painting it made, `theSameFileOpenedAgainAddsNoCopy`).
+        let other = try SharedPaintingCodec.encode(SharedPainting(title: " ", settings: nil, template: Fixtures.stripes()))
+        #expect(try await library.receive(other, fallbackTitle: nil).title == String(localized: "Painting"))
+    }
+
+    /// The same file opened twice (tapped again in Messages) opens the painting it made, painted
+    /// on or not, and adds no copy; after a relaunch too. Another file adds its own.
+    @Test func theSameFileOpenedAgainAddsNoCopy() async throws {
+        let library = makeLibrary()
+        let data = try SharedPaintingCodec.encode(SharedPainting(title: "A", settings: nil, template: Fixtures.stripes()))
+        let first = try await library.receive(data, fallbackTitle: nil)
+        #expect(try await library.receive(data, fallbackTitle: nil).id == first.id)
+        var progress = PaintProgress(regionCount: first.regionCount)
+        progress.paint(0)
+        library.saveProgress(progress, for: first.id)
+        #expect(try await makeLibrary().receive(data, fallbackTitle: nil).id == first.id)
+        #expect(library.artworks.count == 1)
+
+        let other = try SharedPaintingCodec.encode(SharedPainting(title: "B", settings: nil, template: Fixtures.stripes()))
+        #expect(try await library.receive(other, fallbackTitle: nil).id != first.id)
+        #expect(library.artworks.count == 2)
     }
 
     @Test func unreadableFilesAddNothing() async throws {
