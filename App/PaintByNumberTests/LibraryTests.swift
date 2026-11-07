@@ -161,6 +161,16 @@ struct LibraryTests {
         #expect(makeLibrary().artwork(with: artwork.id)?.thumbnailVersion == 2)
     }
 
+    /// A painting with no photo (one sent without it) opens with none to peek at, so the painting
+    /// screen offers no Photo button that does nothing (QA, November 6).
+    @Test func aPaintingWithoutAPhotoOpensWithoutOne() async throws {
+        let library = makeLibrary()
+        let bare = try await library.create(draft())
+        #expect(try await library.loadForPainting(bare.id).hasPhoto == false)
+        let photographed = try await library.create(draft(photo: try stripesPhoto()))
+        #expect(try await library.loadForPainting(photographed.id).hasPhoto)
+    }
+
     @Test func exportsShareFiles() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(title: "Stripes: Blue/Red", painted: [2, 0, 1]))

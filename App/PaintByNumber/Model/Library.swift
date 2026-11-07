@@ -10,6 +10,8 @@ nonisolated struct PaintingDocument: Sendable {
     var progress: PaintProgress
     /// Something the painter should be told once the painting is on screen.
     var notice: OpenNotice? = nil
+    /// Whether the painting keeps a photo to peek at: one sent without its photo has none.
+    var hasPhoto = true
 }
 
 /// What happened to a painting on its way to the screen.
@@ -460,11 +462,11 @@ final class Library {
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }
         _ = await writes[id]?.value
         let store = self.store
-        let (template, saved) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress) in
+        let (template, saved, hasPhoto) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress, Bool) in
             guard let template = try Library.readTemplate(id, from: store) else {
                 throw OpenError.damaged(canRegenerate: ArtworkFactory.canRegenerate(artwork, store: store))
             }
-            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store))
+            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store), store.hasSource(id))
         }
 
         let reset: Bool
@@ -491,7 +493,7 @@ final class Library {
                 }
             }
         }
-        return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil)
+        return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil, hasPhoto: hasPhoto)
     }
 
     /// Generates an artwork's template again from its photo (`ArtworkFactory.sourcePhoto`:
