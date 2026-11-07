@@ -50,6 +50,7 @@ struct PhotoSourceView: View {
     @Environment(UnlimitedPaintings.self) private var paintings
     #endif
     @State private var width: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
 
@@ -67,6 +68,9 @@ struct PhotoSourceView: View {
     private var showsSamples: Bool { isWide || pane == .samples }
     /// Wide windows pad only the samples' side: the picker's card meets the leading edge.
     private var samplesWidth: CGFloat { max(0, (width - horizontalPadding - paneSpacing) * 0.4) }
+    /// At accessibility sizes the title leaves the bar, where Close, Take Photo and From Scratch
+    /// cut it short or crowded it out, for a line of its own atop the page, where it wraps.
+    private var titleOnPage: Bool { dynamicTypeSize.isAccessibilitySize }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -74,6 +78,13 @@ struct PhotoSourceView: View {
         // cannot arbitrate between its pan and an in-process ancestor's pan across that
         // boundary, so a drag that started on the picker moved neither.
         VStack(alignment: .leading, spacing: 14) {
+            if titleOnPage {
+                Text("New Painting")
+                    .font(.display(.title))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, horizontalPadding)
+                    .accessibilityAddTraits(.isHeader)
+            }
             if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
@@ -85,6 +96,7 @@ struct PhotoSourceView: View {
         .navigationTitle("New Painting")
         // Nothing scrolls to collapse a large title, and the picker needs the height.
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(removing: titleOnPage ? .title : nil)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
