@@ -295,6 +295,8 @@ struct RefineView: View {
     @State private var tinyMarked: Int?
     /// The top controls' height (Start From, the badge), for where they lie over the picture.
     @State private var topControlsHeight: CGFloat = 0
+    /// Whether the rail scrolls and has tools below what shows.
+    @State private var railHasMore = false
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -1659,12 +1661,27 @@ extension RefineView {
     }
 
     /// Every tool, in its group's labelled section, a name beside each (iPad); it scrolls where
-    /// the screen is too short for all of them.
+    /// the screen is too short for all of them (an iPad on its side), its indicator flashing as it
+    /// comes and its foot fading while there is more below: it ended at Looks, cut in half, with
+    /// nothing to say Move Number, Writing and Try Painting were there (QA, November 7).
     private var toolRail: some View {
         ViewThatFits(in: .vertical) {
             railTools
             ScrollView { railTools }
-                .scrollIndicators(.hidden)
+                .scrollIndicatorsFlash(onAppear: true)
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y + geometry.containerSize.height < geometry.contentSize.height - 1
+                } action: { _, more in
+                    railHasMore = more
+                }
+                .mask {
+                    VStack(spacing: 0) {
+                        Color.black
+                        LinearGradient(colors: [.black, .black.opacity(railHasMore ? 0 : 1)], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 56)
+                    }
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: railHasMore)
+                }
         }
         .frame(width: 184)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))

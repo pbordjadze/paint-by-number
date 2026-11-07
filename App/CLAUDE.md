@@ -662,7 +662,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
     (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
-    in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
+    in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
+    on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
+    is more below), on iPhone the groups are tabs over a row of the
     group's tools. The tools along the bottom keep the room of the tallest they have been, and a
     taller one (Select's band, a card, the looks) rises over the paper under the picture where
     that holds it, so the picture moves only where it would be covered (`reservedTools`); an
