@@ -17,7 +17,13 @@ import Synchronization
 nonisolated enum MainThreadWatchdog {
     static let threshold: Duration = .seconds(2)
     static let interval: Duration = .seconds(5)
-    private static let maximumFrames = 128
+    /// How deep a stack is walked: SwiftUI's view building nests hundreds of frames deep, and the
+    /// app's own frames, where the work came from, are the outermost (a cap of 128 kept only
+    /// SwiftUI's; the Mac's capture of November 7).
+    private static let maximumFrames = 1024
+    /// How many of a deep stack's frames are logged from each end (the innermost, where it is
+    /// stuck, and the outermost); between them only the app's own frames are.
+    private static let loggedInnermost = 96, loggedOutermost = 48
     /// Bumped by the main queue each time it answers a ping.
     private static let answers = Atomic<Int>(0)
 
@@ -86,8 +92,22 @@ nonisolated enum MainThreadWatchdog {
     /// dropped most of them.
     private static func parts(_ addresses: [UInt]) -> [String] {
         var parts: [String] = [], part = ""
+        let middle = loggedInnermost..<max(loggedInnermost, addresses.count - loggedOutermost)
+        var skipped = 0
         for (index, address) in addresses.enumerated() {
-            let frame = "#\(index) " + describe(address).prefix(240)
+            let name = describe(address)
+            // Between the ends, the app's own frames only: where its work entered SwiftUI's.
+            if middle.contains(index), !name.hasPrefix("PaintByNumber") {
+                skipped += 1
+                continue
+            }
+            if skipped > 0 {
+                // How many frames were left out: "#…+n" (log text, not prose).
+                let gap = "#…+\(skipped)"
+                part += part.isEmpty ? gap : " | " + gap
+                skipped = 0
+            }
+            let frame = "#\(index) " + name.prefix(240)
             if !part.isEmpty, part.utf8.count + frame.utf8.count > 800 {
                 parts.append(part)
                 part = ""
