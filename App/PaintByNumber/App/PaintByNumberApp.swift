@@ -8,7 +8,10 @@ struct PaintByNumberApp: App {
 
     init() {
         #if DEBUG
-        if DemoMode.isActive { MainThreadWatchdog.start() }
+        if DemoMode.isActive {
+            DemoStandardError.silence()
+            MainThreadWatchdog.start()
+        }
         #endif
         Preferences.removeRetiredSettings()
         PaintTips.configure()
