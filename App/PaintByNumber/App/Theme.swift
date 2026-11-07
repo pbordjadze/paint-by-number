@@ -22,6 +22,10 @@ enum Theme {
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
     /// `outline`: line work of unpainted outlines, hairlines.
     static let outline = Color("Outline")
+    /// Quieter text that still reads: 8:1 on the light paper and 9:1 on the dark. The system's
+    /// `.secondary` gives 3.3:1 on the light paper, under WCAG AA's 4.5:1 (QA, November 7: the
+    /// unlock sheet, Refine's rail).
+    static let quietInk = Color.primary.opacity(0.7)
 
     /// Navigation titles in New York, like the identity's headings.
     static func styleNavigationTitles() {

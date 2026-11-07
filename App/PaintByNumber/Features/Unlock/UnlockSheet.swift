@@ -57,7 +57,7 @@ struct UnlockSheet: View {
                         #endif
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.quietInk)
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .multilineTextAlignment(.center)
@@ -104,6 +104,8 @@ struct UnlockSheet: View {
         .scrollBounceBehavior(.basedOnSize)
         // At accessibility sizes the content outgrows any sheet: it opens full height, and scrolls.
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(contentHeight)])
+        // Opaque: on iPad the glass let the painting behind show through its words (QA, November 7).
+        .presentationBackground(Theme.surface)
         .besideTheFold()
         .task { await loadPrice() }
         // Bought here, restored, or approved while the sheet was up (Ask to Buy).
@@ -145,10 +147,10 @@ struct UnlockSheet: View {
             #if UNRELEASED
             // 1.1: Samples take a free painting as any new painting does.
             Text("Paintings someone sends you are always free.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
             #else
             Text("Everything in Samples is always free.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
             #endif
         }
     }
