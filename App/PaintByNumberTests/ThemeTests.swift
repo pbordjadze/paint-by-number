@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import Testing
 @testable import PaintByNumber
@@ -26,17 +27,21 @@ struct ThemeTests {
         }
     }
 
-    /// `top` laid over the opaque `bottom` by its opacity, in linear components.
+    /// `top` laid over the opaque `bottom` by its opacity, as the screen blends: in sRGB's encoded
+    /// components (blended in linear light, the light paper's ink came out at 3:1, which the
+    /// screen, measured, doesn't show).
     private static func over(_ top: Color.Resolved, _ bottom: Color.Resolved) -> (Float, Float, Float) {
         let a = top.opacity
-        return (top.linearRed * a + bottom.linearRed * (1 - a),
-                top.linearGreen * a + bottom.linearGreen * (1 - a),
-                top.linearBlue * a + bottom.linearBlue * (1 - a))
+        return (top.red * a + bottom.red * (1 - a), top.green * a + bottom.green * (1 - a), top.blue * a + bottom.blue * (1 - a))
     }
 
+    /// WCAG's contrast ratio of two sRGB colors, from their relative luminance.
     private static func contrast(_ a: (Float, Float, Float), _ b: Color.Resolved) -> Float {
-        func luminance(_ c: (Float, Float, Float)) -> Float { 0.2126 * c.0 + 0.7152 * c.1 + 0.0722 * c.2 }
-        let x = luminance(a), y = luminance((b.linearRed, b.linearGreen, b.linearBlue))
+        func linear(_ c: Float) -> Float { c <= 0.04045 ? c / 12.92 : powf((c + 0.055) / 1.055, 2.4) }
+        func luminance(_ c: (Float, Float, Float)) -> Float {
+            0.2126 * linear(c.0) + 0.7152 * linear(c.1) + 0.0722 * linear(c.2)
+        }
+        let x = luminance(a), y = luminance((b.red, b.green, b.blue))
         return (max(x, y) + 0.05) / (min(x, y) + 0.05)
     }
 }
