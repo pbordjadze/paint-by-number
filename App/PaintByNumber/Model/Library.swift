@@ -143,7 +143,11 @@ final class Library {
         }
         #endif
         let library = Library(store: ArtworkStore(root: ArtworkStore.defaultRoot))
-        library.seedIfNeeded()
+        // The first launch's pictures are made a moment after the gallery's first frame: started
+        // with the app, the line-art models' load and the pipeline on every core competed with
+        // the first frame, and a fresh install showed only the launch screen's paper for 5–7 s
+        // (Mac QA, painting-company row 263).
+        library.seedIfNeeded(after: .seconds(1))
         Task { await library.refreshStaleThumbnails() }
         return library
     }
@@ -235,7 +239,9 @@ final class Library {
     /// First launch: prepares a couple of ready-to-paint samples in the background (shown
     /// as placeholders meanwhile), so the gallery is never empty on day one.
     @discardableResult
-    func seedIfNeeded(_ samples: [Sample] = Sample.starters, defaults: UserDefaults = .standard) -> Task<Void, Never>? {
+    func seedIfNeeded(
+        _ samples: [Sample] = Sample.starters, defaults: UserDefaults = .standard, after delay: Duration = .zero
+    ) -> Task<Void, Never>? {
         guard !defaults.bool(forKey: Self.seededKey) else { return nil }
         guard artworks.isEmpty else {
             defaults.set(true, forKey: Self.seededKey)
@@ -252,7 +258,7 @@ final class Library {
             return nil
         }
         defaults.set(attempt, forKey: Self.seedFailuresKey)
-        return seed(samples.map { SeedItem(sample: $0) }) { created in
+        return seed(samples.map { SeedItem(sample: $0) }, after: delay) { created in
             guard created > 0 || attempt >= Self.maxSeedAttempts else { return }
             defaults.set(true, forKey: Self.seededKey)
             defaults.removeObject(forKey: Self.seedFailuresKey)
@@ -283,11 +289,15 @@ final class Library {
     /// At utility priority: nobody waits on a seed (its placeholder shows meanwhile), and the
     /// line-art models and the pipeline take every core, which at the caller's priority starved
     /// the main thread on CI's iPad simulator until UI tests timed out querying the app.
+    /// `delay` holds the work back while the placeholders, set at once, reach the screen.
     @discardableResult
-    func seed(_ items: [SeedItem], completion: ((_ created: Int) -> Void)? = nil) -> Task<Void, Never> {
+    func seed(
+        _ items: [SeedItem], after delay: Duration = .zero, completion: ((_ created: Int) -> Void)? = nil
+    ) -> Task<Void, Never> {
         let now = Date.now
         placeholders = items.map { Placeholder(sample: $0.sample) }
         return Task(priority: .utility) {
+            if delay > .zero { try? await Task.sleep(for: delay) }
             var created = 0
             for (index, item) in items.enumerated() {
                 // Earlier items sort first when ages tie.
