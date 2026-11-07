@@ -1643,7 +1643,7 @@ extension RefineView {
                 Self.groupName(kind)
                     .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.quietInk)
                     .padding(.horizontal, 12)
                     .padding(.top, kind == RefineGroup.allCases.first ? 4 : 14)
                     .padding(.bottom, 2)

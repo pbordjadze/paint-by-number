@@ -439,11 +439,13 @@ private struct SampleTile: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     // Starts above the caption and is dark by its first line: white spray or sky
-                    // behind a title (The Great Wave's) left it unreadable.
+                    // behind a title (The Great Wave's) left it unreadable. Dark enough there for
+                    // white words over a white picture to pass WCAG AA (QA, November 7: 0.5 gave
+                    // 3.9:1).
                     .background(alignment: .bottom) {
                         LinearGradient(
-                            stops: [.init(color: .clear, location: 0), .init(color: .black.opacity(0.5), location: 0.45),
-                                    .init(color: .black.opacity(0.72), location: 1)],
+                            stops: [.init(color: .clear, location: 0), .init(color: .black.opacity(0.62), location: 0.45),
+                                    .init(color: .black.opacity(0.8), location: 1)],
                             startPoint: .top, endPoint: .bottom)
                             .padding(.top, -28)
                     }
