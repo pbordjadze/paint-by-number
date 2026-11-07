@@ -68,13 +68,17 @@ struct CompletionBar: View {
                 .lineLimit(titleLines)
             }
             Spacer(minLength: 0)
-            if session.isReplaying {
-                GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
-            } else {
-                GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
-                    // The only hint after a finish: over the bar, which sits at the bottom.
-                    .gentleTip(.benchReplay, arrowEdge: .bottom)
+            Group {
+                if session.isReplaying {
+                    GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
+                } else {
+                    GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
+                }
             }
+            // The only hint after a finish: over the bar, which sits at the bottom. On the place
+            // both buttons share: hung from Replay alone, it stayed up over the replay it started,
+            // its view gone before its binding turned false.
+            .gentleTip(.benchReplay, arrowEdge: .bottom)
             if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 // UIImage keeps the picture's Display P3 colors.
