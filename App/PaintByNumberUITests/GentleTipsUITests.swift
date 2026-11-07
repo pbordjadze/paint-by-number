@@ -27,8 +27,8 @@ final class GentleTipsUITests: XCTestCase {
         XCTAssertTrue(badge.waitForExistence(timeout: 90), "The painting didn't open")
     }
 
-    /// The first visit to the shelf, once the starters show: A Page Is Waiting, with nothing asked
-    /// and no button but its close button.
+    /// The first visit to the shelf, once the starters show: A Page Is Waiting, under the pages,
+    /// with nothing asked and no button but its close button.
     @MainActor
     func testAPageIsWaitingComesWithNoQuestion() throws {
         let app = launch("gallery-tip")
@@ -41,6 +41,10 @@ final class GentleTipsUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Small Tips?"].exists, "The shelf asks whether to give tips")
         XCTAssertFalse(app.buttons["No Thanks"].exists, "The shelf has a No Thanks")
         XCTAssertFalse(app.buttons["Turn Off Tips"].exists, "The tip has a Turn Off Tips")
+        // Under the pages: above them it came as a newcomer reached for one and moved it away.
+        let card = app.buttons["The Great Wave"].firstMatch
+        XCTAssertTrue(card.exists, "No starter beside the tip")
+        XCTAssertGreaterThanOrEqual(tip.frame.minY, card.frame.maxY, "The tip sits above the pages it points to")
     }
 
     /// From the shelf into the first painting: opening the page ends the shelf's tip, and the bench

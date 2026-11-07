@@ -241,19 +241,22 @@ struct GalleryView: View {
                 .padding(.horizontal, 4)
                 .accessibilityAddTraits(.isHeader)
 
-            if let tip, PaintTips.desk.turn == tip {
-                GentleTipView(id: tip)
-                    .transition(.opacity)
-            }
-
             LazyVGrid(
                 columns: columns,
                 alignment: .leading, spacing: spacing + 8
             ) {
                 content()
             }
+
+            // Under the cards, never above them: the tip comes as the starters are made, the
+            // moment a newcomer reaches for one, and above the cards it moved the page out from
+            // under the finger (QA, November 7).
+            if let tip, PaintTips.desk.turn == tip {
+                GentleTipView(id: tip)
+                    .transition(.opacity)
+            }
         }
-        // A fade, with nothing moving but the cards making room, under Reduce Motion as well.
+        // A fade, with nothing moving but what lies below making room, under Reduce Motion as well.
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
     }
 
