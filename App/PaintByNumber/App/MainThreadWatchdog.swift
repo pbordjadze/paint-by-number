@@ -102,7 +102,9 @@ nonisolated enum MainThreadWatchdog {
                 continue
             }
             if skipped > 0 {
-                part += part.isEmpty ? "… \(skipped) frames …" : " | … \(skipped) frames …"
+                // How many frames were left out: "#…+n" (log text, not prose).
+                let gap = "#…+\(skipped)"
+                part += part.isEmpty ? gap : " | " + gap
                 skipped = 0
             }
             let frame = "#\(index) " + name.prefix(240)
