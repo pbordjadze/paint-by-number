@@ -707,7 +707,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     palette's place, so nothing covers the picture, the Lamplit Table's `factory/pieces/refine-phase3`;
     a long press opened it until October 28, when the hold became the Eyedropper): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
-    `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
+    `.paintArea`, the picker still moving one step; the whole row opens the system picker,
+    `RefineColorPickerPresenter`: a popover from its well on iPad, on iPhone a sheet at half
+    height with the picture above it undimmed) or another paint for it; its other areas in
     Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to

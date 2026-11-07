@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// The Refine Toolbox's groups of tools (the design:
 /// claude.ai/artifact/1RuRF7GYbjagg8AJHrVhUH, Paul, October 21, 2026: "a drawing app with the
@@ -77,6 +78,8 @@ struct RefineAreaCard: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The picker's last color, laid once it has rested a moment or as the card goes.
     @State private var pending = RefinePendingPick()
+    /// Whether the system color picker is open, from the Only This Area row.
+    @State private var picking = false
 
     private var region: Int? { template.region(at: at) }
 
@@ -120,21 +123,57 @@ struct RefineAreaCard: View {
         .accessibilityIdentifier("refine-card")
     }
 
-    /// Only This Area, or Color for an area that is its paint's only one: the system picker.
+    /// Only This Area, or Color for an area that is its paint's only one: the whole row opens the
+    /// system picker (`RefineColorPickerPresenter`), its well showing the area's color. SwiftUI's
+    /// `ColorPicker` opened from its well alone, though VoiceOver read the row as the button (QA,
+    /// November 7), and on iPhone its sheet covered the area being recolored.
     private func picker(paint: Int) -> some View {
-        ColorPicker(selection: color(paint: paint), supportsOpacity: false) {
-            Label {
-                if isolates { Text("Only This Area") } else { Text("Color") }
-            } icon: {
-                Image(systemName: "drop.halffull")
+        let title = isolates ? String(localized: "Only This Area") : String(localized: "Color")
+        let binding = color(paint: paint)
+        return Button {
+            FeedbackEngine.shared.selectionChanged()
+            picking = true
+        } label: {
+            HStack(spacing: 12) {
+                Label {
+                    Text(title)
+                } icon: {
+                    Image(systemName: "drop.halffull")
+                }
+                Spacer(minLength: 0)
+                Self.well(PaletteBar.paint(template, paint))
+                    .background {
+                        RefineColorPickerPresenter(
+                            isPresented: $picking, title: title, color: UIColor(binding.wrappedValue),
+                            picked: { binding.wrappedValue = Color(uiColor: $0) },
+                            finished: { pending.flush() })
+                    }
             }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(title))
+        .accessibilityValue(Text(ColorNameText.title(template.palette[paint].colorName)))
         .accessibilityHint(Text(isolates
             ? String(localized: "refine.card.only.hint", defaultValue: "Gives this area a color of its own; the other areas of its paint keep theirs.",
                      comment: "Refine screen, an area's card: VoiceOver hint of Only This Area, a color picker that gives the pressed area a paint of its own")
             : String(localized: "refine.card.color.hint", defaultValue: "Gives this paint a new color.",
                      comment: "Refine screen, an area's card: VoiceOver hint of Color, a color picker for the paint of an area that is its paint's only area")))
         .accessibilityIdentifier("refine-card-color")
+    }
+
+    /// The system's color well, as `ColorPicker` draws it: the color inside a ring of hues.
+    static func well(_ color: Color) -> some View {
+        Circle()
+            .fill(color)
+            .padding(5)
+            .background {
+                Circle().strokeBorder(
+                    AngularGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple, .red], center: .center),
+                    lineWidth: 3)
+            }
+            .frame(width: 28, height: 28)
+            .accessibilityHidden(true)
     }
 
     /// Show Its Other Areas, only for a card that isolates its area (its paint had others as it
