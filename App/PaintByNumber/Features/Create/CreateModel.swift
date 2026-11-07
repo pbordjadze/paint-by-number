@@ -1256,21 +1256,29 @@ final class CreateModel {
     var canUndo: Bool { !history.undo.isEmpty }
     var canRedo: Bool { !history.redo.isEmpty }
 
-    /// Refine opened: its history starts here.
+    /// Refine opened: Cancel goes back to here, and Undo reaches back past it to the changes of
+    /// the times it was open before in this flow, which only Refine makes (a painter back in it
+    /// found Undo empty and their last change out of reach, QA, November 7). Another photo starts
+    /// the history over (`forgetEdits`).
     func beginRefining() {
         refiningCancelled = false
         enqueue { [self] in
-            history = RefineHistory(opening: refinements)
+            history.opening = refinements
+            openingHistory = history
             dismissNote()
         }
     }
+
+    /// The history as Refine opened, which its Cancel puts back with the refinements.
+    private var openingHistory = RefineHistory()
 
     /// Refine's Cancel: back to what it opened with.
     func cancelRefining() {
         refiningCancelled = true
         enqueue { [self] in
             let opening = history.opening
-            history = RefineHistory(opening: opening)
+            // The steps of earlier openings stay undoable: the refinements are back where they were.
+            history = openingHistory.opening == opening ? openingHistory : RefineHistory(opening: opening)
             await settle(on: opening)
         }
     }
@@ -1314,6 +1322,7 @@ final class CreateModel {
         trail = nil
         trailKey = nil
         history = RefineHistory()
+        openingHistory = RefineHistory()
         historySteps = 0
         sentEdits = 0
         handledEdits = 0

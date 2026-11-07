@@ -779,8 +779,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     beneath it and the end of the pending ink in together, so nothing flickers.
   - **One queue.** Every change Refine makes (an edit, a text correction, Undo, Redo,
     Cancel) runs in its turn on `CreateModel`'s queue, from the state the ones before it left, and
-    the Undo and Redo stacks live there too (`RefineHistory`, 300 steps; Refine opening clears
-    them). Undo and Redo of edits cost no editing: `EditTrail` keeps the templates after the last
+    the Undo and Redo stacks live there too (`RefineHistory`, 300 steps; kept while the flow keeps
+    its photo, so Refine opened again undoes what it did before; Cancel goes back to where it
+    opened). Undo and Redo of edits cost no editing: `EditTrail` keeps the templates after the last
     few edits and lays a changed list only from where it parts from the one laid (`move(to:)`);
     deeper steps lay from the nearest kept template or the base. A tap in a filled area removes
     that fill's edit and lays the rest again.
