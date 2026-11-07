@@ -208,9 +208,13 @@ final class Library {
     /// in Messages, say) opens the painting it made, painted or not, rather than adding a copy.
     func receive(_ data: Data, fallbackTitle: String?) async throws -> Artwork {
         let digest = await Background.run { Library.digest(of: data) }
+        // The same file opened twice in quick succession: the second waits for the first's painting.
+        while receiving.contains(digest) { try? await Task.sleep(for: .milliseconds(50)) }
         if let received = artworks.first(where: { $0.receivedDigest == digest && !$0.needsNewerApp }) {
             return received
         }
+        receiving.insert(digest)
+        defer { receiving.remove(digest) }
         let decoded: (SharedPainting, CGImage?)
         do {
             decoded = try await Background.run {
@@ -238,6 +242,9 @@ final class Library {
             throw ReceiveError.saveFailed
         }
     }
+
+    /// The digests of the files `receive` is adding now.
+    @ObservationIgnored private var receiving: Set<String> = []
 
     /// The SHA-256 of a received file, in hex (`Artwork.receivedDigest`).
     nonisolated static func digest(of data: Data) -> String {

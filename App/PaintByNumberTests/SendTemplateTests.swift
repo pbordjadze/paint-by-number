@@ -129,8 +129,10 @@ struct SendTemplateTests {
         let library = makeLibrary()
         let data = try SharedPaintingCodec.encode(SharedPainting(title: "  ", settings: nil, template: Fixtures.stripes()))
         #expect(try await library.receive(data, fallbackTitle: "From Mum").title == "From Mum")
-        // Another file (the same one would open the painting it made, `theSameFileOpenedAgainAddsNoCopy`).
-        let other = try SharedPaintingCodec.encode(SharedPainting(title: " ", settings: nil, template: Fixtures.stripes()))
+        // Another file (the same one would open the painting it made, `theSameFileOpenedAgainAddsNoCopy`):
+        // titles are trimmed as they're written, so it differs in its settings.
+        let other = try SharedPaintingCodec.encode(
+            SharedPainting(title: " ", settings: GenerationSettings(), template: Fixtures.stripes()))
         #expect(try await library.receive(other, fallbackTitle: nil).title == String(localized: "Painting"))
     }
 
