@@ -4197,6 +4197,18 @@
         }
       }
     },
+    "paint.zen.on" : {
+      "comment" : "Painting screen: a toast for a few seconds after Zen Mode is turned on in the More menu, saying what it does to the view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zen Mode is on: after each fill, the page glides to the next area of your color."
+          }
+        }
+      }
+    },
     "Painting" : {
       "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
       "extractionState" : "manual"

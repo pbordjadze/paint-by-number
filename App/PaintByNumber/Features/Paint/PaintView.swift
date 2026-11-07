@@ -73,6 +73,9 @@ struct PaintView: View {
     @State private var flashes = false
     /// The thank-you toast's text while it shows.
     @State private var thanks: String?
+    /// What Zen Mode does, said as the painter turns it on: the page moving after a fill read as
+    /// a fault to a newcomer who had found the switch without its tip (QA, November 7).
+    @State private var zenNote: String?
     /// The thanks for feedback just sent or shared, waiting for the review sheet to be gone.
     @State private var pendingThanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
@@ -155,9 +158,10 @@ struct PaintView: View {
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
         .onChange(of: paletteOrder, initial: true) { _, order in session.advancesToFirstLeft = order.followsProgress }
         .onChange(of: autoAdvance, initial: true) { _, advance in session.autoAdvance = advance }
-        .onChange(of: zenMode, initial: true) { _, zen in
+        .onChange(of: zenMode, initial: true) { was, zen in
             session.flowsToNextArea = zen
             if zen { PaintTips.used(.benchZen) }
+            if zen && !was { sayWhatZenDoes() }
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // Choosing a color is something done: the tips' hand has not rested yet.
@@ -192,6 +196,7 @@ struct PaintView: View {
             }
         }
         .animation(.snappy, value: thanks)
+        .animation(.snappy, value: zenNote)
         #if DEBUG
         .task { await runFeedbackDemo() }
         #endif
@@ -311,6 +316,17 @@ struct PaintView: View {
                 }
                 .padding(controls)
                 .environment(\.colorScheme, chromeScheme)
+            }
+
+            if let zenNote {
+                Toast(text: zenNote, systemImage: "leaf", edge: .top)
+                    .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
+                    .padding(.horizontal, 20)
+                    .allowsHitTesting(false)
+                    .environment(\.colorScheme, chromeScheme)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(layout.mode == .whole ? controls : Self.padding(layout.canvasFrame, within: geo.safeAreaInsets))
+                    .accessibilityIdentifier("zen-note")
             }
 
             if let thanks {
@@ -758,6 +774,19 @@ struct PaintView: View {
         case .shared: String(localized: "Thanks for the feedback!")
         }
         feedback?.isReviewing = false
+    }
+
+    /// Zen Mode just turned on: what it will do to the page, for a few seconds.
+    private func sayWhatZenDoes() {
+        let message = String(
+            localized: "paint.zen.on", defaultValue: "Zen Mode is on: after each fill, the page glides to the next area of your color.",
+            comment: "Painting screen: a toast for a few seconds after Zen Mode is turned on in the More menu, saying what it does to the view")
+        Announcer.announce(message)
+        Task {
+            zenNote = message
+            try? await Task.sleep(for: .seconds(4))
+            if zenNote == message { zenNote = nil }
+        }
     }
 
     /// The review sheet is gone. Feedback ends and the thanks show only now, not after a guess at
