@@ -655,16 +655,24 @@ struct RefineGuideView: View {
 
     var body: some View {
         NavigationSplitView(preferredCompactColumn: $column) {
-            List(selection: $topic) {
-                ForEach(RefineGuideTopic.sections) { section in
-                    Section {
-                        ForEach(section.topics) { topic in
-                            // The guide's own width: its sidebar column is compact on iPad too.
-                            RefineGuideRow(topic: topic, showsSummary: sizeClass == .compact).tag(topic)
+            ScrollViewReader { reader in
+                List(selection: $topic) {
+                    ForEach(RefineGuideTopic.sections) { section in
+                        Section {
+                            ForEach(section.topics) { topic in
+                                // The guide's own width: its sidebar column is compact on iPad too.
+                                RefineGuideRow(topic: topic, showsSummary: sizeClass == .compact).tag(topic).id(topic)
+                            }
+                        } header: {
+                            if let group = section.group { RefineView.groupName(group) } else { Text("Start Here") }
                         }
-                    } header: {
-                        if let group = section.group { RefineView.groupName(group) } else { Text("Start Here") }
                     }
+                }
+                // The page open is in view: opened on Writing, the list's last row, it showed cut in
+                // half under the sidebar's bottom edge (QA, November 7).
+                .onAppear { if let topic { reader.scrollTo(topic) } }
+                .onChange(of: topic) { _, topic in
+                    if let topic { withAnimation { reader.scrollTo(topic) } }
                 }
             }
             .navigationTitle("Tool Guide")

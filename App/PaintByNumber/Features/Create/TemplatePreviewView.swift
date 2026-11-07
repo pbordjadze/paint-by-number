@@ -814,10 +814,10 @@ struct TemplatePreviewView: View {
             }
         }
         .accessibilityIdentifier("settings-origin")
-        // Already Chosen for You hangs above the chip; You Can Always Go Back below it, where the
-        // preview is left in view to watch. Before the frame: they point at the chip, not the row.
+        // Both hang above the chip. Below it, You Can Always Go Back covered Start Painting (QA,
+        // November 7). Before the frame: they point at the chip, not the row.
         .gentleTip(.newPaintingSuggested, active: model.settingsOrigin != .custom, arrowEdge: .bottom)
-        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, arrowEdge: .top)
+        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, arrowEdge: .bottom)
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(model.settingsOrigin == nil ? 0 : 1)
         .accessibilityHidden(model.settingsOrigin == nil)

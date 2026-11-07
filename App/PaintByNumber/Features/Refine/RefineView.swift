@@ -1932,7 +1932,8 @@ extension RefineView {
             localized: "refine.layers.hint", defaultValue: "Shows or hides the numbers, the ink, the paint and the photo.",
             comment: "Refine screen: VoiceOver hint of the Layers button, which opens a panel of what shows (numbers, ink, paint, photo)")))
         .accessibilityIdentifier("refine-layers")
-        .popover(isPresented: $showsLayers) {
+        // Below the bar, clear of Done, Undo and Redo beside it, which it covered (QA, November 7).
+        .popover(isPresented: $showsLayers, arrowEdge: .top) {
             RefineLayersPanel(layers: $layers, working: tool.layer)
                 .presentationCompactAdaptation(.popover)
         }
