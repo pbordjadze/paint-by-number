@@ -430,9 +430,6 @@ private struct GentleTipModifier: ViewModifier {
     var arrowEdge: Edge?
     /// The tip this view pointed last, which TipKit keeps being handed once its turn has gone.
     @State private var pointed: TipID?
-    /// The popover's anchor is in place: a popover inserted with its binding already true is never
-    /// presented, so the binding turns true only once the anchor has appeared.
-    @State private var anchored = false
 
     func body(content: Content) -> some View {
         // Read here, in the body, so the popover follows the desk's turn. Presented by a binding
@@ -441,31 +438,12 @@ private struct GentleTipModifier: ViewModifier {
         // false: iOS 27's TipKit left a presented popover up, its text and all, when its tip went to
         // nil (CI, November 4: Tap to Paint stayed over the swatch after the fill used it, whether
         // the popover was presented by the tip's status or by this binding).
-        // A view that has never pointed a tip carries no popover tip at all: TipKit's modifier parses
-        // a Regex on every body update even for a nil tip, and every palette swatch carries this one
-        // (Instruments, painting-company row 263: part of a 15.9 s hang). The popover hangs from a
-        // clear view behind the content, its frame, so the content keeps its identity (a drag on
-        // it, its state, a tip modifier inside) when the first tip comes; the popover comes a
-        // moment later, once that view is there (`anchored`).
         let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
-        let isPresented = Binding(
-            get: { shown != nil && anchored }, set: { if !$0, let shown { PaintTips.closed(shown) } })
+        let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
         content
-            .background {
-                if let tip = (shown ?? pointed)?.tip {
-                    Color.clear
-                        .popoverTip(tip, isPresented: isPresented, arrowEdge: arrowEdge)
-                        // A tap outside the popover does what it was aimed at and closes the tip.
-                        .background { TipPassthrough(isShown: shown != nil && anchored) { isPresented.wrappedValue = false } }
-                        .onAppear {
-                            Task { @MainActor in
-                                // After the frame that inserts it has been laid out.
-                                try? await Task.sleep(for: .milliseconds(100))
-                                anchored = true
-                            }
-                        }
-                }
-            }
+            .popoverTip((shown ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+            // A tap outside the popover does what it was aimed at and closes the tip.
+            .background { TipPassthrough(isShown: shown != nil) { isPresented.wrappedValue = false } }
             .onChange(of: shown, initial: true) { _, now in
                 if let now { pointed = now }
             }
