@@ -34,8 +34,12 @@ struct Toast<Trailing: View>: View {
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 20)
         .padding(.vertical, 13)
-        // The stacked toast is too tall for a capsule's ends: they would cut into the text.
-        .glassEffect(.regular, in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
+        // The stacked toast is too tall for a capsule's ends: they would cut into the text. Tinted
+        // with the paper: clear glass took the light of the thumbnails under it in dark mode,
+        // turned pale grey and left the white text and the Undo faint (QA, November 7). Enough
+        // paper to hold the text over a bright picture, little enough to stay glass.
+        .glassEffect(.regular.tint(Theme.paper.opacity(0.7)),
+                     in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
         .transition(reduceMotion ? .opacity : .move(edge: edge).combined(with: .opacity))
         // A toast's action stays a button of its own: combined into the message, a tap on "Undo"
         // by Voice Control or a test landed on the message's middle and undid nothing (QA,
