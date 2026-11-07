@@ -24,6 +24,48 @@ final class PaintingTipsTests: XCTestCase {
         XCTAssertFalse(tip.exists, "The dismissed tip came back")
     }
 
+    /// The tap the tip asks for paints: a popover took a newcomer's first tap on an area to close
+    /// itself and painted nothing (QA, November 6). The play harness names every area with its paint.
+    @MainActor
+    func testTheTapTheTipAsksForPaints() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "paint-tip", "-playHarness"]
+        app.launch()
+
+        let tip = app.staticTexts["Tap to Paint"]
+        XCTAssertTrue(tip.waitForExistence(timeout: 90), "The first tip didn't appear")
+        sleep(1)
+        func all(_ element: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
+            [element] + element.children.flatMap(all)
+        }
+        let elements = try all(app.snapshot())
+        let swatches = elements.filter { $0.identifier.hasPrefix("swatch-") }
+        let selected = try XCTUnwrap(swatches.first { $0.isSelected }, "No color is selected")
+        let paint = String(selected.identifier.dropFirst("swatch-".count))
+        // The tip's popover, which a tap on it would not pass on, and the bars stay clear.
+        let popover = elements.filter { $0.elementType == .popover }.map(\.frame).first ?? .null
+        let top = app.buttons["Back"].frame.maxY + 24
+        let bottom = (swatches.map { $0.frame.minY }.min() ?? app.frame.maxY) - 40
+        let canvas = try XCTUnwrap(elements.first { $0.identifier == "canvas" }?.frame, "The canvas has no frame")
+        let point = try XCTUnwrap(
+            elements.filter { $0.identifier.hasPrefix("area-") && ($0.value as? String) == paint }
+                .map { CGPoint(x: $0.frame.midX, y: $0.frame.midY) }
+                .first { canvas.insetBy(dx: 24, dy: 0).contains($0) && $0.y > top && $0.y < bottom && !popover.insetBy(dx: -24, dy: -24).contains($0) },
+            "No area of paint \(paint) on screen")
+        let state = app.descendants(matching: .any)["play-state"]
+        func filledAreas() -> Int {
+            guard let text = state.value as? String, let object = try? JSONSerialization.jsonObject(with: Data(text.utf8)),
+                  let filled = (object as? [String: Any])?["filled_areas"] as? [Any] else { return -1 }
+            return filled.count
+        }
+        let before = filledAreas()
+        XCTAssertGreaterThanOrEqual(before, 0, "The play harness has no state")
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+        XCTAssertTrue(waitUntil(timeout: 10) { filledAreas() > before }, "The tap under the tip painted nothing")
+        XCTAssertTrue(tip.waitForNonExistence(timeout: 10), "The tip stayed up after the tap")
+        attachScreenshot(of: app, named: "first-tip-tap-painted")
+    }
+
     /// Filling an area is using what the tip is about: the tip closes by itself and stays closed.
     @MainActor
     func testFirstTipClosesAfterAFill() throws {

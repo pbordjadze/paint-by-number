@@ -437,6 +437,8 @@ private struct GentleTipModifier: ViewModifier {
         let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
         content
             .popoverTip((shown ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+            // A tap outside the popover does what it was aimed at and closes the tip.
+            .background { TipPassthrough(isShown: shown != nil) { isPresented.wrappedValue = false } }
             .onChange(of: shown, initial: true) { _, now in
                 if let now { pointed = now }
             }
