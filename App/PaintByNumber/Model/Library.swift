@@ -180,11 +180,12 @@ final class Library {
 
     @discardableResult
     func create(_ draft: ArtworkDraft) async throws -> Artwork {
-        var artwork = Artwork(
+        var made = Artwork(
             id: draft.id, title: draft.title, createdAt: draft.date, template: draft.template, settings: draft.settings,
             settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName)
-        artwork.receivedDigest = draft.receivedDigest
+        made.receivedDigest = draft.receivedDigest
+        let artwork = made
         let store = self.store
         try await Background.run {
             let progress = draft.progress ?? PaintProgress(regionCount: draft.template.regions.count)
