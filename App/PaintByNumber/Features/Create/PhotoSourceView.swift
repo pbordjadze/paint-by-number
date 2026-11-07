@@ -432,6 +432,7 @@ private struct SectionTitle: View {
 private struct SampleTile: View {
     let sample: Sample
     @State private var image: CGImage?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Color.clear
@@ -459,7 +460,9 @@ private struct SampleTile: View {
                             startPoint: .top, endPoint: .bottom)
                             .padding(.top, -28)
                     }
+                    .opacity(captionsBelow ? 0 : 1)
             }
+            .modifier(CaptionBelow(shows: captionsBelow) { captionBelow })
             .background(Theme.surface)
             .clipShape(.rect(cornerRadius: 18, style: .continuous))
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
@@ -472,6 +475,25 @@ private struct SampleTile: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityLabel)
             .accessibilityAddTraits(.isButton)
+    }
+
+    /// At accessibility sizes the caption on the picture ran out of room and was cut short: it
+    /// goes under the picture, as the gallery's cards have theirs, and wraps whole.
+    private var captionsBelow: Bool { dynamicTypeSize.isAccessibilitySize }
+
+    private var captionBelow: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(sample.title)
+                .font(.subheadline.weight(.semibold))
+            if let painter {
+                Text(painter)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The title, and under a painting's its painter when the tile has room for both: long
@@ -511,5 +533,22 @@ private struct SampleTile: View {
         }
         return String(localized: "create.sample.labelWithCreator", defaultValue: "Sample: \(sample.title), \(creator)",
                       comment: "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”")
+    }
+}
+
+/// A sample tile's caption under its picture rather than on it (`SampleTile.captionsBelow`).
+private struct CaptionBelow<Caption: View>: ViewModifier {
+    let shows: Bool
+    @ViewBuilder let caption: () -> Caption
+
+    func body(content: Content) -> some View {
+        if shows {
+            VStack(alignment: .leading, spacing: 0) {
+                content.clipped()
+                caption()
+            }
+        } else {
+            content
+        }
     }
 }
