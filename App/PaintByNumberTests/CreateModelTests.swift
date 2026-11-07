@@ -888,6 +888,34 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// Refine opened again in the same flow keeps its history: the last change, made the time
+    /// before, is still undone by Undo (QA, November 7); Cancel goes back to where it opened.
+    @Test func refineOpenedAgainKeepsItsUndo() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let first = try #require(model.preview?.template)
+        model.beginRefining()
+        try await waitForEdits(model, model.edit(line(in: first)))
+        let drawn = model.refinements
+        #expect(model.canUndo)
+
+        // Done, and back in.
+        model.beginRefining()
+        await model.settled()
+        #expect(model.canUndo, "Refine opened again had nothing to undo")
+        model.undo()
+        await model.settled()
+        #expect(model.refinements.edits.isEmpty)
+        #expect(model.canRedo)
+
+        // Cancel goes back to what this opening had: the line, which Undo took out.
+        model.cancelRefining()
+        await model.settled()
+        #expect(model.refinements == drawn)
+        model.cancelAll()
+    }
+
     /// The sliders make the template again and the edits are laid on the new one, as the editor
     /// lays them: the painter's lines survive.
     @Test func aSliderChangeLaysTheEditsOnTheNewTemplate() async throws {
