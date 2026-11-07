@@ -293,6 +293,8 @@ struct RefineView: View {
     /// says, until the painter does something else: the zoom showed no number and marked nothing
     /// (QA, November 7). Move Number's numbers show so too.
     @State private var tinyMarked: Int?
+    /// The top controls' height (Start From, the badge), for where they lie over the picture.
+    @State private var topControlsHeight: CGFloat = 0
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -601,7 +603,11 @@ struct RefineView: View {
         // and the badge are elements of their own, the cells beneath the rest.
         .overlay { cellElements }
         .overlay(alignment: .top) {
-            if !isPractice, !fullScreen { topControls.padding(12) }
+            if !isPractice, !fullScreen {
+                topControls
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { topControlsHeight = $0 }
+                    .padding(topControlsInsets)
+            }
         }
         // A draft that couldn't be saved, with its Retry, under the note (a practice canvas keeps
         // no draft).
@@ -2399,6 +2405,23 @@ extension RefineView {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
+    /// Where Start From and the badge lie: at the canvas's top trailing corner, or, where that
+    /// would put them over the picture (it grows to the canvas's top when Select, the paint tools or
+    /// a card shrink it), just inside the picture's own corner, never hanging past its edge (QA,
+    /// November 7: the badge hung over the picture's corner and past its side).
+    private var topControlsInsets: EdgeInsets {
+        let standard = EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        let shown = picture.intersection(CGRect(origin: .zero, size: canvasSize))
+        guard !shown.isNull, shown.width > 0, topControlsHeight > 0, shown.minY < 12 + topControlsHeight + 4 else {
+            return standard
+        }
+        // Only the trailing edge follows the picture's: they lie at the trailing end, and a
+        // picture narrower than they are mustn't squeeze them.
+        return EdgeInsets(
+            top: max(12, shown.minY + 8), leading: 12, bottom: 12,
+            trailing: max(12, canvasSize.width - shown.maxX + 8))
+    }
+
     /// Where the template starts from, asked until the first edit: what the generator made (the
     /// default), or the photo as one area (Blank), which the painter's lines and paint then make
     /// into the picture. Out of the way while a note shows at the top.
@@ -2414,6 +2437,7 @@ extension RefineView {
             .fixedSize()
             .padding(6)
             .glassEffect(.regular, in: .capsule)
+            .background(Theme.surface, in: .capsule)
             .disabled(model.phase == .generating)
             .accessibilityIdentifier("refine-start")
             .transition(.opacity)
@@ -2437,6 +2461,9 @@ extension RefineView {
                     .font(.footnote.weight(.semibold))
             }
             .buttonStyle(.glass)
+            // The glass alone took the paint's light behind it, which washed out the gold label
+            // at night (QA, November 7): on the card's surface it reads over any paint.
+            .background(Theme.surface, in: .capsule)
             .accessibilityShowsLargeContentViewer()
             .accessibilityHint(Text(String(
                 localized: "refine.tiny.hint", defaultValue: "Shows the next one up close.",
