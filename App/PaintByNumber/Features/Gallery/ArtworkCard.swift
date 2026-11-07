@@ -29,8 +29,11 @@ struct ArtworkCard: View {
                 Text(artwork.title)
                     .font(.display(.headline, weight: .semibold))
                     .foregroundStyle(.primary)
-                    // Two lines, so a long title on a phone's narrow card reads whole.
+                    // Two lines, so a long title on a phone's narrow card reads whole, and smaller
+                    // before a word breaks: at the largest sizes on an SE, "Delicate" broke as
+                    // "Deli-" and was cut short still.
                     .lineLimit(2)
+                    .minimumScaleFactor(0.7)
                 ProgressCaption(artwork: artwork)
             }
             .padding(.horizontal, 4)
@@ -246,6 +249,7 @@ struct PlaceholderCard: View {
                 Text(placeholder.sample.title)
                     .font(.display(.headline, weight: .semibold))
                     .lineLimit(2)
+                    .minimumScaleFactor(0.7)
                 Text("Preparing…")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
