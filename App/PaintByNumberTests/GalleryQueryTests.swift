@@ -126,4 +126,13 @@ struct GalleryCountsTests {
         #expect(subtitle(0, 1, 2) == "1 ready · 2 finished")
         #expect(subtitle(3, 1, 2) == "3 in progress · 1 ready · 2 finished")
     }
+
+    /// The first launch's starters, still being made, say Preparing… on their cards: the
+    /// subtitle doesn't call them ready until they are.
+    @Test func paintingsBeingPreparedAreNotReady() {
+        #expect(GalleryCounts(preparing: 2).subtitle == "Preparing 2 paintings")
+        #expect(GalleryCounts(preparing: 1).subtitle == "Preparing 1 painting")
+        #expect(GalleryCounts(ready: 1, preparing: 1).subtitle == "1 ready · 1 preparing")
+        #expect(GalleryCounts(inProgress: 1, finished: 1, preparing: 2).subtitle == "1 in progress · 2 preparing · 1 finished")
+    }
 }
