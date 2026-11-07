@@ -8,9 +8,13 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
     let items: [URL]
     /// Called once the sheet closes; `completed` is false when the person backed out.
     let onFinish: (_ completed: Bool) -> Void
+    /// iPad: hang the popover below the view it is presented from, clear of what the view shows,
+    /// rather than centred over it.
+    var below = false
 
-    init(items: [URL], onFinish: @escaping (_ completed: Bool) -> Void) {
+    init(items: [URL], below: Bool = false, onFinish: @escaping (_ completed: Bool) -> Void) {
         self.items = items
+        self.below = below
         self.onFinish = onFinish
     }
 
@@ -23,6 +27,7 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.items = items
         controller.onFinish = onFinish
+        controller.below = below
         // Never inside SwiftUI's update pass: it can race the sheet's own presentation.
         Task { @MainActor [weak controller] in controller?.presentIfNeeded() }
     }
@@ -30,6 +35,7 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
     final class Controller: UIViewController {
         var items: [URL] = []
         var onFinish: ((Bool) -> Void)?
+        var below = false
         private var presentedItems: [URL] = []
 
         override func viewDidAppear(_ animated: Bool) {
@@ -42,10 +48,16 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
             presentedItems = items
             let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)
             if let popover = activity.popoverPresentationController {
-                // iPad: centred over the sheet, without an arrow.
                 popover.sourceView = view
-                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
-                popover.permittedArrowDirections = []
+                if below {
+                    // iPad: from the sheet's bottom edge, so the sheet's content stays in view.
+                    popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY, width: 1, height: 1)
+                    popover.permittedArrowDirections = [.up, .left, .right]
+                } else {
+                    // iPad: centred over the sheet, without an arrow.
+                    popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+                    popover.permittedArrowDirections = []
+                }
             }
             activity.completionWithItemsHandler = Self.completion { [weak self] completed in self?.onFinish?(completed) }
             present(activity, animated: true)
