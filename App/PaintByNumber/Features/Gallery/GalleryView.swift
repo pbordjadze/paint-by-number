@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 /// The gallery: paintings in progress, ready to paint (nobody has painted on them yet) and
 /// finished, each section an adaptive grid of cards.
@@ -412,8 +413,10 @@ struct GalleryView: View {
         }
     }
 
+    /// The share sheet's preview tile. A UIImage, as the completion bar's Share Picture has: an
+    /// image made from a CGImage reached the sheet as a blank white tile (Mac QA, 7 of 7).
     private func previewImage(_ artwork: Artwork) -> Image {
-        if let cached = ThumbnailCache.shared.bestCached(artwork) { return Image(decorative: cached, scale: 1) }
+        if let cached = ThumbnailCache.shared.bestCached(artwork) { return Image(uiImage: UIImage(cgImage: cached)) }
         return Image(systemName: "paintpalette")
     }
 
