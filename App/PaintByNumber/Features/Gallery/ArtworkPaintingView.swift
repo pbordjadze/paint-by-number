@@ -200,9 +200,11 @@ struct ArtworkPaintingView: View {
             failure = nil
             regenerationFailed = false
             autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
-            sourcePhotoLoader = SourcePhotoLoader { [library, artworkID] maxPixelSize in
+            // No Photo button for a painting with no photo (one sent without it): it showed
+            // enabled and did nothing (QA, November 6).
+            sourcePhotoLoader = document.hasPhoto ? SourcePhotoLoader { [library, artworkID] maxPixelSize in
                 await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
-            }
+            } : nil
             feedbackSource = artwork.map(makeFeedbackSource)
         }
         if let notice = document.notice { show(notice) }

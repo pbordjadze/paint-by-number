@@ -10,6 +10,8 @@ nonisolated struct PaintingDocument: Sendable {
     var progress: PaintProgress
     /// Something the painter should be told once the painting is on screen.
     var notice: OpenNotice? = nil
+    /// Whether the painting keeps a photo to peek at: one sent without its photo has none.
+    var hasPhoto = true
 }
 
 /// What happened to a painting on its way to the screen.
@@ -479,11 +481,11 @@ final class Library {
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }
         _ = await writes[id]?.value
         let store = self.store
-        let (template, saved) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress) in
+        let (template, saved, hasPhoto) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress, Bool) in
             guard let template = try Library.readTemplate(id, from: store) else {
                 throw OpenError.damaged(canRegenerate: ArtworkFactory.canRegenerate(artwork, store: store))
             }
-            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store))
+            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store), store.hasSource(id))
         }
 
         let reset: Bool
@@ -510,7 +512,7 @@ final class Library {
                 }
             }
         }
-        return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil)
+        return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil, hasPhoto: hasPhoto)
     }
 
     /// Generates an artwork's template again from its photo (`ArtworkFactory.sourcePhoto`:
@@ -551,10 +553,10 @@ final class Library {
             return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), refinements)
         }
         let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
-        let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
+        let (progress, thumbnail, hasPhoto) = await Background.run { () -> (PaintProgress, Data?, Bool) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
-            return (progress, Library.thumbnailPNG(template, painted: progress.painted))
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted), store.hasSource(id))
         }
         try Task.checkCancellation()
 
@@ -573,7 +575,9 @@ final class Library {
         unsavedMeta.remove(id)
         clearWriteFailure(id)
         replace(updated)
-        return PaintingDocument(template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0))
+        return PaintingDocument(
+            template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0),
+            hasPhoto: hasPhoto)
     }
 
     /// The photo an artwork was made from (the painting screen's photo peek), decoded off the main actor.
