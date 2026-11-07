@@ -582,7 +582,10 @@ struct RefineView: View {
             }
         }
         .clipped()
-        .overlay(alignment: .bottom) { status.padding(12) }
+        .overlay(alignment: .bottom) {
+            // Above a taller tool that rises over the canvas (`reservedTools`).
+            status.padding(12).padding(.bottom, fullScreen ? 0 : max(0, toolsMeasured - toolsHeight))
+        }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
@@ -1321,18 +1324,32 @@ struct RefineView: View {
         }
     }
 
-    /// The tools, keeping the room of the tallest they have been (`toolsHeight`).
+    /// The tools, keeping the room of the tallest they have been (`toolsHeight`). A taller tool
+    /// (Select's band with a cell picked, an area's card, the looks) rises over the canvas's empty
+    /// paper under the picture where that holds it, and takes more room only where it would cover
+    /// the picture: each new one moved and shrank the picture once (QA, November 7).
     private var reservedTools: some View {
         tools
+            .fixedSize(horizontal: false, vertical: true)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                 toolsMeasured = height
-                if height > toolsHeight { toolsHeight = height }
+                if height > toolsHeight, !risesUnderPicture(height) { toolsHeight = height }
             }
-            .frame(minHeight: toolsHeight, alignment: .bottom)
+            .frame(height: toolsHeight > 0 ? toolsHeight : nil, alignment: .bottom)
             // Another width (a rotation, a resized window) lays the tools out anew: measured again.
             // The tools as they are now count, though their height doesn't change with the width
             // (the picture jumped at the first change of group, QA, October 28).
             .onChange(of: canvasSize.width) { toolsHeight = toolsMeasured }
+    }
+
+    /// Whether tools `height` tall fit in the room kept for them and the paper under the picture
+    /// as it fits the canvas, leaving the picture's margin.
+    private func risesUnderPicture(_ height: CGFloat) -> Bool {
+        guard toolsHeight > 0, canvasSize.height > 0 else { return false }
+        let margin = RefineSurfaceView.margin
+        let fitted = CompareView.fitted(
+            aspectRatio, in: CGSize(width: canvasSize.width - 2 * margin, height: canvasSize.height - 2 * margin))
+        return height - toolsHeight <= (canvasSize.height - fitted.height) / 2 - margin
     }
 
     /// What the finger does, along the bottom (`studioBar`): the picked tool's options and, on
@@ -1872,15 +1889,18 @@ extension RefineView {
             } else {
                 // The column also where long words (a translation) leave even two rows wider
                 // than a phone: fixed, they laid the whole screen out wider than the window.
+                // Each option at its own width in a row: two switches shared the row in halves,
+                // Snap's word far from its switch and "Color from Photo" broken in two though the
+                // row had room (QA, November 7).
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 16) {
-                        content
-                        more
+                        Group { content }.fixedSize()
+                        Group { more }.fixedSize()
                     }
                     .fixedSize()
                     VStack(spacing: 8) {
-                        HStack(spacing: 16) { content }
-                        HStack(spacing: 10) { more }
+                        HStack(spacing: 16) { Group { content }.fixedSize() }
+                        HStack(spacing: 10) { Group { more }.fixedSize() }
                     }
                     .fixedSize()
                     column

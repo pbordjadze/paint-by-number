@@ -516,6 +516,38 @@ final class RefineUITests: XCTestCase {
         }
     }
 
+    /// iPhone: the picture keeps its place and size as the groups change, as Select picks a cell
+    /// and as the cell's card opens in Select's band (each moved and shrank it once: QA, November 7).
+    @MainActor
+    func testThePictureKeepsItsPlaceAcrossTools() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "The iPad's rail holds every group at once")
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine"]
+        app.launch()
+        XCTAssertTrue(app.sliders["refine-pen-smoothing"].waitForExistence(timeout: 180), "Refine never opened on the Pen")
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        sleep(1)
+        let opened = canvas.frame
+        func kept(_ step: String) {
+            XCTAssertTrue(
+                waitUntil(timeout: 3) { canvas.frame == opened },
+                "The picture moved at \(step): \(canvas.frame), opened at \(opened)")
+        }
+        for group in ["Cells", "Paint", "Numbers", "See", "Ink"] {
+            app.buttons[group].tap()
+            kept(group)
+        }
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
+        let change = app.buttons["refine-selection-color"]
+        XCTAssertTrue(change.waitForExistence(timeout: 10), "Select didn't offer Change Color")
+        kept("Select's cell")
+        change.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["refine-card"].waitForExistence(timeout: 10), "The card didn't open")
+        kept("the card")
+        attachScreenshot(of: app, named: "refine-card-in-band")
+    }
+
     // MARK: - Helpers
 
     /// Picks a tool: in the rail where it stands (iPad), else in its group's row (iPhone).

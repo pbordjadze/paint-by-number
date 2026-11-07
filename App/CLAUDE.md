@@ -663,7 +663,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
     in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
-    group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
+    group's tools. The tools along the bottom keep the room of the tallest they have been, and a
+    taller one (Select's band, a card, the looks) rises over the paper under the picture where
+    that holds it, so the picture moves only where it would be covered (`reservedTools`); an
+    option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
     Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied` on a string of
     `steadyString` points at full, 48 since October 29 (at 20 a painter saw nothing);
