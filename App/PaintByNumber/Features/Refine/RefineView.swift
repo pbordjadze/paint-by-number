@@ -1932,17 +1932,9 @@ extension RefineView {
             localized: "refine.layers.hint", defaultValue: "Shows or hides the numbers, the ink, the paint and the photo.",
             comment: "Refine screen: VoiceOver hint of the Layers button, which opens a panel of what shows (numbers, ink, paint, photo)")))
         .accessibilityIdentifier("refine-layers")
-        // Below the bar, clear of Done, Undo and Redo beside it: hung from the button itself, iOS
-        // 26's popover grew out of it over the bar and covered them (QA, November 7), whatever
-        // its arrow edge. It hangs from a point under the button instead.
-        .background(alignment: .bottom) {
-            Color.clear
-                .frame(width: 1, height: 1)
-                .offset(y: 14)
-                .popover(isPresented: $showsLayers, arrowEdge: .top) {
-                    RefineLayersPanel(layers: $layers, working: tool.layer)
-                        .presentationCompactAdaptation(.popover)
-                }
+        .popover(isPresented: $showsLayers) {
+            RefineLayersPanel(layers: $layers, working: tool.layer)
+                .presentationCompactAdaptation(.popover)
         }
     }
 

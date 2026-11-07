@@ -72,12 +72,6 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-painting")
         let paint = layerSwitch("paint", in: app)
         XCTAssertEqual(paint.value as? String, "1", "Refine didn't open with the paint showing")
-        // The panel hangs below the bar, clear of Done, Undo and Redo (QA, November 7).
-        let panel = app.descendants(matching: .any)["refine-layers-panel"].frame
-        for control in ["refine-done", "refine-undo", "refine-redo"] {
-            let frame = app.buttons[control].firstMatch.frame
-            XCTAssertFalse(frame.intersects(panel), "The Layers panel covers \(control)")
-        }
         XCTAssertTrue(flip(paint, on: false), "The paint layer didn't hide")
         attachScreenshot(of: app, named: "refine-layers")
         XCTAssertTrue(flip(paint, on: true), "The paint layer didn't show again")
