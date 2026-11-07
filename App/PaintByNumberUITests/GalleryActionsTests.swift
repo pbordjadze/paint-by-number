@@ -25,8 +25,9 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(card.waitForNonExistence(timeout: 5), "The painting is still in the gallery")
         attachScreenshot(of: app, named: "deleted")
 
-        // Undo brings it back.
-        undo.tap()
+        // Undo brings it back, from a tap above its word, where a fingertip lands: the word alone
+        // is 18 points tall, the button's reach 44 (QA, November 7).
+        undo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -15)).tap()
         XCTAssertTrue(card.waitForExistence(timeout: 10), "Undo didn't bring the painting back")
         XCTAssertTrue(undo.waitForNonExistence(timeout: 5), "The toast stayed after Undo")
     }

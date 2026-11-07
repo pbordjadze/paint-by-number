@@ -28,6 +28,7 @@ struct Toast<Trailing: View>: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
+                .buttonStyle(ToastActionStyle())
         }
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 20)
@@ -39,6 +40,22 @@ struct Toast<Trailing: View>: View {
         // by Voice Control or a test landed on the message's middle and undid nothing (QA,
         // November 6: a deletion's Undo did nothing in 1 of 3 tries).
         .accessibilityElement(children: Trailing.self == EmptyView.self ? .combine : .contain)
+    }
+}
+
+/// A toast's action as the system draws a plain button (the tint, dimmed while pressed), with a
+/// hit area grown to 44 points each way: its label alone was 38 by 18 (QA, November 7). The
+/// growth is padding laid out as nothing, so the toast keeps its size.
+private struct ToastActionStyle: ButtonStyle {
+    private static let reach: CGFloat = 13
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.tint)
+            .opacity(configuration.isPressed ? 0.35 : 1)
+            .padding(Self.reach)
+            .contentShape(.rect)
+            .padding(-Self.reach)
     }
 }
 
