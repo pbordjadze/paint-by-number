@@ -2857,6 +2857,30 @@
         }
       }
     },
+    "gallery.subtitle.count.preparing" : {
+      "comment" : "Part of the gallery subtitle: how many new paintings are still being made",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld preparing"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld preparing"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "gallery.subtitle.count.ready" : {
       "comment" : "Part of the gallery subtitle: how many paintings nobody has painted on yet and are ready to paint",
       "extractionState" : "manual",
@@ -2922,6 +2946,30 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld paintings in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.preparing" : {
+      "comment" : "Gallery subtitle on the first launch while its starter paintings are still being made; the argument is how many",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Preparing %lld painting"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Preparing %lld paintings"
                 }
               }
             }

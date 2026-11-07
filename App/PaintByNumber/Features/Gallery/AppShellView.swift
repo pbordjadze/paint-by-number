@@ -241,8 +241,9 @@ struct AppShellView: View {
     private var subtitle: String {
         GalleryCounts(
             inProgress: library.inProgress(matching: query).count,
-            ready: library.readyToPaint(matching: query).count + (query.isActive ? 0 : library.placeholders.count),
-            finished: library.finished(matching: query).count
+            ready: library.readyToPaint(matching: query).count,
+            finished: library.finished(matching: query).count,
+            preparing: query.isActive ? 0 : library.placeholders.count
         ).subtitle
     }
 
