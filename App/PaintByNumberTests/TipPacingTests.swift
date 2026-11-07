@@ -289,6 +289,17 @@ struct TipPacingTests {
         }
     }
 
+    /// A finish comes once a painting: Watch It Again waits for no limit, the day's included.
+    @Test func replayOnAFinishedPageWaitsForNoLimit() {
+        var pacing = TipPacing()
+        for k in 0..<TipPacing.hintsPerDay { shownAndDone(&pacing, .shelfStarter, at: Double(k) * 4) }
+        let last = Double(TipPacing.hintsPerDay - 1) * 4
+        #expect(refusal(pacing, .benchShowPhoto, at: last + 1) == .dayFull)
+        #expect(refusal(pacing, .benchReplay, at: last + 1, quiet: .pageFinished) == nil)
+        #expect(refusal(pacing, .benchReplay, at: last + 1) == .dayFull)
+        #expect(refusal(pacing, .benchReplay, at: last + 1, quiet: [.pageFinished, .shine]) == .quiet)
+    }
+
     @Test func theShineSilencesEvenReplay() {
         let pacing = TipPacing()
         #expect(refusal(pacing, .benchReplay, at: 0, quiet: [.pageFinished, .shine]) == .quiet)
