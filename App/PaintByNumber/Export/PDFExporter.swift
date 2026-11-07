@@ -262,7 +262,8 @@ nonisolated enum PDFExporter {
                 let size = min(28, frame.height * 0.3)
                 // On a disc of paper: printed straight on the line art, the number got lost in it.
                 let label = "\(row * sheets.columns + column + 1)"
-                let discWidth = size * (0.75 + 0.6 * CGFloat(label.count))
+                // At least as wide as tall: a rounded rect's corners may not be wider than half of it.
+                let discWidth = max(size * 1.4, size * (0.75 + 0.6 * CGFloat(label.count)))
                 ctx.setFillColor(gray(1, alpha: 0.9))
                 let disc = CGRect(x: frame.midX - discWidth / 2, y: frame.midY - size * 0.7, width: discWidth, height: size * 1.4)
                 ctx.addPath(CGPath(roundedRect: disc, cornerWidth: size * 0.7, cornerHeight: size * 0.7, transform: nil))

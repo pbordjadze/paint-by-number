@@ -68,7 +68,7 @@ struct CompletionBar: View {
                 .lineLimit(titleLines)
             }
             Spacer(minLength: 0)
-            Group {
+            ZStack {
                 if session.isReplaying {
                     GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
                 } else {
