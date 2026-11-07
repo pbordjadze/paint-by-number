@@ -260,7 +260,14 @@ nonisolated enum PDFExporter {
                 ctx.setStrokeColor(gray(0.3, alpha: 0.8))
                 ctx.stroke(frame.insetBy(dx: 1, dy: 1))
                 let size = min(28, frame.height * 0.3)
-                text(ctx, "\(row * sheets.columns + column + 1)", font: font(.emphasizedSystem, size), color: gray(0.3, alpha: 0.8),
+                // On a disc of paper: printed straight on the line art, the number got lost in it.
+                let label = "\(row * sheets.columns + column + 1)"
+                let discWidth = size * (0.75 + 0.6 * CGFloat(label.count))
+                ctx.setFillColor(gray(1, alpha: 0.9))
+                let disc = CGRect(x: frame.midX - discWidth / 2, y: frame.midY - size * 0.7, width: discWidth, height: size * 1.4)
+                ctx.addPath(CGPath(roundedRect: disc, cornerWidth: size * 0.7, cornerHeight: size * 0.7, transform: nil))
+                ctx.fillPath()
+                text(ctx, label, font: font(.emphasizedSystem, size), color: gray(0.3, alpha: 0.8),
                      at: CGPoint(x: frame.midX, y: frame.midY + size * 0.35), alignment: .center)
             }
         }
@@ -328,7 +335,8 @@ nonisolated enum PDFExporter {
             let dot = CGRect(x: x + 26.5 * s - diameter / 2, y: y + 7 * s - diameter / 2, width: diameter, height: diameter)
             ctx.setFillColor(TemplateRasterizer.cgColor(SIMD4(color.rgb, 1), space: t.colorSpace))
             ctx.fillEllipse(in: dot)
-            ctx.setStrokeColor(gray(0, alpha: 0.12))
+            // A ring dark enough that the palest paints (Marshmallow, Candle Wax) still show on white.
+            ctx.setStrokeColor(gray(0, alpha: 0.35))
             ctx.setLineWidth(0.5)
             ctx.strokeEllipse(in: dot)
             let textX = x + keyNameInset * s
