@@ -278,8 +278,9 @@ final class CreateModel {
     @ObservationIgnored private var refiningCancelled = false
     @ObservationIgnored private var noteTask: Task<Void, Never>?
 
-    /// How many full-resolution templates `made` keeps: a template is a megabyte or two.
-    static let madeKept = 6
+    /// How many full-resolution templates `made` keeps: a template is 10–20 MB, most of it the
+    /// region map; a setting further back is made again.
+    static let madeKept = 3
 
     /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
     init(
