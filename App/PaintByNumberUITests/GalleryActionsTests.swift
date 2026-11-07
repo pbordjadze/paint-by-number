@@ -20,10 +20,15 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(card.exists, "The painting was deleted before confirming")
 
         app.buttons["Delete “The Great Wave”"].tap()
-        let undo = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Undo'")).firstMatch
-        XCTAssertTrue(undo.waitForExistence(timeout: 5), "No undo after deleting")
+        let undo = app.buttons["Undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5), "No Undo button after deleting")
         XCTAssertTrue(card.waitForNonExistence(timeout: 5), "The painting is still in the gallery")
         attachScreenshot(of: app, named: "deleted")
+
+        // Undo brings it back.
+        undo.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "Undo didn't bring the painting back")
+        XCTAssertTrue(undo.waitForNonExistence(timeout: 5), "The toast stayed after Undo")
     }
 
     /// A photo shared in from another app while the gallery asks a question closes the question

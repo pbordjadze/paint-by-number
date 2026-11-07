@@ -41,12 +41,16 @@ final class LongTextTests: XCTestCase {
     @MainActor
     func testGalleryToastFitsTheScreen() {
         let app = launch("gallery-long-text")
-        let toast = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Undo'")).firstMatch
-        XCTAssertTrue(toast.waitForExistence(timeout: 150), "The gallery never showed the deletion's Undo toast")
-        // Measured at once: the toast leaves when the undo window closes.
-        let frame = toast.frame
+        let undo = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Undo'")).firstMatch
+        XCTAssertTrue(undo.waitForExistence(timeout: 150), "The gallery never showed the deletion's Undo toast")
+        let message = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Deleted'")).firstMatch
+        XCTAssertTrue(message.exists, "The toast has no message")
+        // Measured as soon as it has slid in (read mid-slide, it ran off the screen and passed only
+        // when run again), and before the undo window closes and it leaves.
+        let screen = app.windows.firstMatch.frame
+        let fits = waitUntil(timeout: 3) { screen.contains(undo.frame) && screen.contains(message.frame) }
         attachScreenshot(of: app, named: "gallery-long-text")
-        XCTAssertTrue(app.windows.firstMatch.frame.contains(frame), "The toast runs off the screen")
+        XCTAssertTrue(fits, "The toast runs off the screen: \(message.frame), \(undo.frame) in \(screen)")
     }
 
     /// The Favorites filter's empty state and the Show menu's button fit the screen when text doubles.

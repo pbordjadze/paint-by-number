@@ -35,7 +35,10 @@ struct Toast<Trailing: View>: View {
         // The stacked toast is too tall for a capsule's ends: they would cut into the text.
         .glassEffect(.regular, in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
         .transition(reduceMotion ? .opacity : .move(edge: edge).combined(with: .opacity))
-        .accessibilityElement(children: .combine)
+        // A toast's action stays a button of its own: combined into the message, a tap on "Undo"
+        // by Voice Control or a test landed on the message's middle and undid nothing (QA,
+        // November 6: a deletion's Undo did nothing in 1 of 3 tries).
+        .accessibilityElement(children: Trailing.self == EmptyView.self ? .combine : .contain)
     }
 }
 
