@@ -57,8 +57,14 @@ final class TipDesk {
     private static let needsAnchor: Set<TipID> = Set(TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar })
 
     /// How long TipKit gets to find a tip eligible (a donation or a parameter just changed), and
-    /// the least a moment waits before it takes the first one that is.
+    /// the least a moment waits before it takes the first one that is. Counted in looks, one each
+    /// `poll`, not by the clock alone: a stall of the main actor as a painting opens (seconds,
+    /// under load) used the whole window before TipKit had been asked twice, and the first tip
+    /// never came (`testTheFirstTipsLeadIntoThePainting`, painting-company row 263). The clock still
+    /// bounds it, at `eligibilityLimit`.
     private static let eligibilityWindow: Duration = .seconds(3)
+    private static let poll: Duration = .milliseconds(100)
+    private static let eligibilityLimit: Duration = .seconds(12)
     private static let settle: Duration = .milliseconds(350)
     /// The longest a moment waits for the hand to rest.
     private static let restWindow: Duration = .seconds(12)
@@ -232,7 +238,9 @@ final class TipDesk {
         let clock = ContinuousClock()
         let began = clock.now
         var chosen: TipID?
+        var looks = 0
         while !Task.isCancelled {
+            looks += 1
             // The rules read the tips-on parameter, which TipKit takes from here only once it has
             // loaded its datastore: say again what it should be until it does.
             let tipsOn = TipPreference.isEnabled(in: store.defaults)
@@ -252,17 +260,21 @@ final class TipDesk {
                 notice("no tip of \(Self.names(candidates)) is eligible: \(Self.statuses(candidates))")
                 return
             }
-            if clock.now - began >= Self.eligibilityWindow { break }
-            try? await Task.sleep(for: .milliseconds(100))
+            let waited = clock.now - began
+            if (waited >= Self.eligibilityWindow && Self.poll * looks >= Self.eligibilityWindow)
+                || waited >= Self.eligibilityLimit { break }
+            try? await Task.sleep(for: Self.poll)
         }
         guard let id = chosen, !Task.isCancelled else {
             notice("nothing was eligible in time: \(Self.statuses(candidates))")
             return
         }
 
-        // The hand rests: nothing done for `rest`, however long it takes (within reason).
+        // The hand rests: nothing done for `rest`, however long it takes (within reason, counted
+        // from here, so a long wait for TipKit leaves this its own).
+        let resting = clock.now
         while clock.now - lastActivity < rest {
-            guard !Task.isCancelled, clock.now - began < Self.restWindow else {
+            guard !Task.isCancelled, clock.now - resting < Self.restWindow else {
                 notice("\(id.rawValue) gave up waiting for the hand to rest")
                 return
             }
