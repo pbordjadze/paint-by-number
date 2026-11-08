@@ -403,7 +403,9 @@ extension EditWork {
     }
 
     /// Whether the moved chain of `plan`, and the strokes it carries, meet the rest of the
-    /// drawing (`lines`, the drawn strokes as they lie) only where they are meant to: a moved
+    /// drawing (every live edge, drawn or not, and `lines`, the drawn strokes as they lie) only
+    /// where they are meant to: a reshape moves points and never re-cuts areas, so it can't cross
+    /// an undrawn edge between paints either (Refine shows those while Bend Line is in hand): a moved
     /// step touches another line only at one of its own ends that is a joint of its line (the
     /// chain's held ends and where carried strokes meet it; a carried stroke's ends).
     func checkReshape(_ plan: Reshape, strokes lines: [(index: Int, points: [LatticePoint])]) throws {

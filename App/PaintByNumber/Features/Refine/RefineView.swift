@@ -526,7 +526,8 @@ struct RefineView: View {
                         base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
                         showsAreas: painted == nil)
                         .equatable()
-                    if group == .cells, let cellEdges {
+                    // Bend Line's too: a dashed edge stops a bend as a drawn line does.
+                    if group == .cells || tool == .bendLine, let cellEdges {
                         RefineCellEdges(id: cellEdges.id, size: templateSize, path: cellEdges.path, rect: picture)
                             .equatable()
                     }

@@ -290,7 +290,7 @@ nonisolated struct RefineGuidePage {
 
                     Start the drag on the line itself, within about 16 points of it, and away from where lines meet. A line grabbed right where it meets another won’t move. If your drag starts away from any line, a note at the top says “Start the drag on a line.”
 
-                    A line can’t bend across another line, off the picture, or so far that a cell has no room left for its number. If your drag would do that, the line stays where it was and the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
+                    A line can’t bend across another line, across a dashed edge between cells (they show while Bend Line is in your hand), off the picture, or so far that a cell has no room left for its number. If your drag would do that, the line stays where it was and the note says “That line couldn’t be moved there.” A shorter drag usually works, and you can drag the same line as many times as you like.
 
                     Bend Line moves the drawn lines. The dashed edges between cells, which have no ink, move with [Move Edge](guide:moveEdge). With this tool, touching and holding doesn’t pick up a color as it does with most others: you’re holding the line.
 

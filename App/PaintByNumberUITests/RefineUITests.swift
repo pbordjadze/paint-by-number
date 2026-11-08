@@ -413,13 +413,15 @@ final class RefineUITests: XCTestCase {
 
         // The Pen's line in the open sky under the crest, then Bend Line moves it, free at both
         // ends and short, whole to the right, clear of any ink there too. From x 0.50 the move
-        // laid it across the crest's spray, which the editor declines (CI run 649).
+        // laid it across the crest's spray, which the editor declines (CI run 649), and to 0.47
+        // it met a dashed edge between the sky's paints on the Mac's iPad (a bend crosses
+        // neither), so it moves a little.
         pickTool("pen", in: "Ink", of: app)
         drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The line didn't count: \(canvas.value ?? "")")
         pickTool("bendLine", in: "Ink", of: app)
-        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.47, 0.48))
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.455, 0.48))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-bend")
