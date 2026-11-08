@@ -620,6 +620,11 @@ struct RefineView: View {
                 topControls
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { topControlsHeight = $0 }
                     .padding(topControlsInsets)
+                    // They give way to a note at once and come back once it has slid away: back
+                    // at once, the badge lay under the leaving note (the Mac's Refine round 2).
+                    .animation(
+                        model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
+                        value: model.note)
             }
         }
         // A draft that couldn't be saved, with its Retry, under the note (a practice canvas keeps
@@ -2481,6 +2486,10 @@ extension RefineView {
         }
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
+
+    /// How long Start From and the badge wait to come back after a note: about as long as the
+    /// note's own snappy slide out.
+    static let afterNote: Double = 0.35
 
     /// Where Start From and the badge lie: at the canvas's top trailing corner, or, where that
     /// would put them over the picture (it grows to the canvas's top when Select, the paint tools or
