@@ -139,7 +139,9 @@ struct TemplatePreviewView: View {
         .toolbarVisibility(waitsForRefine ? .hidden : .automatic, for: .navigationBar)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         #if UNRELEASED
-        .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        // Modal: the system's ⌘. dismissed the cover itself, keeping the changes with no "Discard
+        // Your Changes?" and skipping Done's last curve; Refine's own Cancel and Done take its keys.
+        .fullScreenCover(isPresented: $isRefining) { RefineView(model: model).interactiveDismissDisabled() }
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock) { openRefine() })
         // A tap on Refine made while the painting was updating: it opens once it is made.
         .onChange(of: model.opensRefine) { _, opens in
