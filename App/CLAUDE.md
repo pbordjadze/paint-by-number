@@ -695,7 +695,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     it will join glow while the finger is down, found off the main actor as the editor finds them,
     `TemplateEditor.MergeProbe`; one that stays in one area says it is one area already), Move Edge
     (`.reshape` on a cell's boundary, inked or not), Make Cell; while
-    a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
+    a Cells tool or Bend Line (which they stop) is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
     which the first Bucket tap adds as a paint; every color it picks that no paint has waits
