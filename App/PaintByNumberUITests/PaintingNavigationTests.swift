@@ -329,8 +329,9 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(wait(for: photo, value: "Hidden"), "p didn't hide the photo")
     }
 
-    /// On its side the canvas runs under the safe area to both edges of the screen (on an iPhone
-    /// it stopped at the Dynamic Island's inset, the Mac's interruptions round).
+    /// On its side the canvas runs under the safe area to both edges of the screen. (A painting
+    /// panned to its own edge still stops clear of the side's inset, as its top does under the
+    /// bar: `CanvasView`'s content insets. The backdrop shows beyond it.)
     @MainActor
     func testCanvasFillsTheScreenOnItsSide() throws {
         let app = openSeededPainting()
