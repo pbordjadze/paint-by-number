@@ -337,7 +337,7 @@ final class PaintingNavigationTests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
         sleep(3)
-        let canvas = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-paper'")).firstMatch
+        let canvas = app.descendants(matching: .any)["canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 10), "The painting has no canvas")
         let window = app.windows.firstMatch.frame, frame = canvas.frame
         attachScreenshot(of: app, named: "landscape-canvas")
