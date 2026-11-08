@@ -293,6 +293,16 @@ struct TemplatePreviewView: View {
         withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
     }
 
+    /// Whether Close answers Esc: not while Refine covers the preview (Refine is in SideStore and
+    /// Debug builds only).
+    private var closeTakesEsc: Bool {
+        #if UNRELEASED
+        !isRefining
+        #else
+        true
+        #endif
+    }
+
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         if let onClose, !isEnlarged {
@@ -301,7 +311,7 @@ struct TemplatePreviewView: View {
                     // Not under Refine: keys reach a covered screen, and Esc in Refine's full
                     // screen or Try Painting would close the flow under it (Refine gives its own
                     // Cancel up there for the same reason).
-                    .keyboardShortcut(isRefining ? nil : .cancelAction)
+                    .keyboardShortcut(closeTakesEsc ? .cancelAction : nil)
                     .disabled(isStarting)
             }
         }
