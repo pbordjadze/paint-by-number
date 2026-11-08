@@ -165,7 +165,8 @@ synchronized folder would bundle it into the app.
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
   on screen under doubled strings; `DynamicTypeUITests` audits the finished bar, the gallery, New
   Painting's samples and Refine at the largest text size for text cut short (no `textClipped`).
-  At accessibility sizes the gallery's large title is a wrapping `.largeTitle` toolbar item, New
+  At accessibility sizes the gallery's large title is a wrapping `.largeTitle` toolbar item with
+  the count under it (the bar, scrolled, shows the title alone), New
   Painting's title leaves the bar for the page, sample captions go under their pictures and
   Refine's options stack in a column; `tools/screenshot_diff.swift` shows a default-size
   screenshot unchanged.

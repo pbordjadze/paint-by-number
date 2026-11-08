@@ -86,7 +86,8 @@ struct AppShellView: View {
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
                 .navigationTitle("Paint by Moonlight")
-                .navigationSubtitle(subtitle)
+                // At accessibility sizes the count goes with the large title (`toolbar`).
+                .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
@@ -205,14 +206,26 @@ struct AppShellView: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         // At accessibility sizes the system's large title, one line, cut the app's name short
-        // ("Paint by Mo…"): this one wraps instead. Smaller sizes keep the system's.
+        // ("Paint by Mo…"): this one wraps instead, the count under it in the system subtitle's
+        // style. Scrolled, the bar then shows the title alone, as large-title screens collapse in
+        // Apple's apps: the system's inline subtitle grows with the text size and its title and
+        // subtitle, taller than the bar, drew over the status bar's clock (an iPhone SE at AX5:
+        // the title 16 pt up into it). Smaller sizes keep the system's (painting-company row 263).
         if dynamicTypeSize.isAccessibilitySize {
             ToolbarItem(placement: .largeTitle) {
-                Text("Paint by Moonlight")
-                    .font(.display(.largeTitle))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityAddTraits(.isHeader)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Paint by Moonlight")
+                        .font(.display(.largeTitle))
+                        .accessibilityAddTraits(.isHeader)
+                    // The bar's content doesn't get the text size: this is told it, to be as
+                    // large as the system's subtitle under its own large title.
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .dynamicTypeSize(dynamicTypeSize)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         ToolbarItem(placement: .topBarLeading) {
