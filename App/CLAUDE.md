@@ -61,6 +61,12 @@ synchronized folder would bundle it into the app.
 - The modifiers that point a tip (`.gentleTip`, `.barTips`, `.cardTip`'s popover) hold their ids
   as a `TipSet` (bits), never an array: they are plain data, which SwiftUI compares bit for bit,
   skipping their bodies when their screen renders again unchanged.
+- TipKit's `popoverTip` parses a Regex on every call, with a tip or nil (TipKitCore's
+  `String(type:)` of its `AnyTip`), so a `.gentleTip` runs one at each render of its view: keep it
+  off views that come in numbers. The palette's two tips hang from places laid over the bar at
+  the selected swatch (`PaletteBar.TipAnchors`), not from each swatch: `popoverTip` ignored a
+  `.rect(.rect(_:))` attachment anchor and pointed at the bar's middle. `tools/tip_regex_count.py`
+  counts the parses in a simulator.
 - iOS 27's TipKit leaves a presented popover tip on screen, its text and all, when the tip handed
   to `popoverTip` turns nil (CI, November 4): `.gentleTip`'s modifier keeps handing it the tip it
   pointed last and closes the popover by its binding alone.

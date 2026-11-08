@@ -120,6 +120,9 @@ enum PaintTips {
         }
         // The rules of every tip read this: on unless Settings says otherwise.
         TipSwitch.tipsOn = TipPreference.isEnabled()
+        // A `@Parameter` is made, parsing a Regex, the first time it is touched: here, with the
+        // switch's, rather than as the first painting opens (painting-company row 263).
+        _ = FirstPaintTip.hasPaint
         desk.beginSession()
         #if DEBUG
         if let demo {

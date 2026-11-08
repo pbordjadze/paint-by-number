@@ -127,6 +127,51 @@ struct PaletteBar: View {
         var clip = CGRect.null
         /// A color to bring into view once both frames are known (the bar appearing).
         var pending: Int?
+        /// The selected swatch's global frame, and where the bar's tips last pointed.
+        var selectedSwatch = CGRect.null
+        var tipAnchors: TipAnchors?
+    }
+
+    /// Where the bar's two tips point, in the bar's own space: Can't Find It at the selected
+    /// swatch, Tap to Paint at its lane across the whole bar, so the popover hangs clear of the
+    /// swatches (from the swatch it covered the line above, the colors it asked for: QA, November
+    /// 7) yet its arrow is on the selected color (it pointed at the bar's middle: painting-company
+    /// row 263).
+    struct TipAnchors: Equatable {
+        var swatch: CGRect
+        var lane: CGRect
+    }
+
+    /// The anchors for a selected swatch at `swatch` in a bar at `bar` (both global), the swatch
+    /// cut to what the bar shows; nil while either is unknown or the swatch is out of view.
+    static func tipAnchors(swatch: CGRect, bar: CGRect, axis: Axis) -> TipAnchors? {
+        guard !swatch.isNull, !bar.isNull else { return nil }
+        let shown = swatch.offsetBy(dx: -bar.minX, dy: -bar.minY)
+            .intersection(CGRect(origin: .zero, size: bar.size))
+        guard !shown.isNull, shown.width > 0, shown.height > 0 else { return nil }
+        let lane = axis == .horizontal
+            ? CGRect(x: shown.minX, y: 0, width: shown.width, height: bar.height)
+            : CGRect(x: 0, y: shown.minY, width: bar.width, height: shown.height)
+        return TipAnchors(swatch: shown, lane: lane)
+    }
+
+    /// Where the bar's tips hang: measured as one of them takes the turn (the body reads the
+    /// turn), otherwise where they last did. The frames live in the scroll state, so the palette
+    /// scrolling renders nothing.
+    private var barTipAnchors: TipAnchors? {
+        guard let turn = PaintTips.desk.turn, turn == .benchTap || turn == .benchFind else { return scroll.tipAnchors }
+        if let anchors = Self.tipAnchors(swatch: scroll.selectedSwatch, bar: scroll.clip, axis: axis) {
+            scroll.tipAnchors = anchors
+        }
+        return scroll.tipAnchors
+    }
+
+    /// An invisible place for a tip to hang from: `rect`'s size, or the whole bar while it is nil.
+    private func tipPlace(_ rect: CGRect?) -> some View {
+        Color.clear
+            .frame(width: rect?.width, height: rect?.height)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The color whose swatch was just shaken (its count went up), the lowest if several were.
@@ -189,6 +234,8 @@ struct PaletteBar: View {
         // A caption needs room for a long name even when few swatches are left.
         let minLength = caption ? 260 * metrics.scale : 0
         let transition: AnyTransition = reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity)
+        let anchors = barTipAnchors
+        let tipEdge: Edge = axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing
         VStack(spacing: 0) {
             if caption {
                 CurrentColorLabel(session: session, font: .system(size: metrics.captionFontSize, weight: .semibold))
@@ -246,10 +293,17 @@ struct PaletteBar: View {
         }
         .clipShape(.rect(cornerRadius: radius))
         .glassEffect(.regular, in: .rect(cornerRadius: radius))
-        // Tap to Paint asks for a color, then an area: it hangs from the whole bar, clear of the
-        // swatches. From the selected swatch it covered the line of swatches above it on iPad, the
-        // colors it asked for (QA, November 7).
-        .gentleTip(.benchTap, arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
+        // Both palette tips hang from the bar, pointing at the selected swatch (`TipAnchors`):
+        // over a bottom bar, beside a trailing one, and over it again at the largest text sizes,
+        // where beside would leave no room for the words. One pair of tips for the bar, not one
+        // per swatch: every swatch's ran TipKit's popoverTip, and its Regex, as it rendered. Each
+        // hangs from a place laid over the bar, since popoverTip points at the whole of its view.
+        .overlay(alignment: .topLeading) {
+            tipPlace(anchors?.lane).gentleTip(.benchTap, arrowEdge: tipEdge).placed(at: anchors?.lane)
+        }
+        .overlay(alignment: .topLeading) {
+            tipPlace(anchors?.swatch).gentleTip(.benchFind, arrowEdge: tipEdge).placed(at: anchors?.swatch)
+        }
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
     }
 
@@ -328,12 +382,11 @@ struct PaletteBar: View {
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
-        // The tip about the selected color (Can't Find It?) points at its swatch: over a bottom
-        // bar, beside a trailing one, and over it again at the largest text sizes, where beside
-        // would leave no room for the words.
-        .gentleTip(
-            .benchFind, active: selected,
-            arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
+        // Where the bar's tips point (`TipAnchors`): kept in the scroll state, so a scroll
+        // renders nothing.
+        .onGeometryChange(for: CGRect.self) { selected ? $0.frame(in: .global) : .null } action: { frame in
+            if !frame.isNull { scroll.selectedSwatch = frame }
+        }
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(session.numberedColorNames[index])
@@ -510,5 +563,12 @@ private struct PaletteFade: View {
         LinearGradient(colors: [shown ? .black.opacity(0.15) : .black, .black], startPoint: edge,
                        endPoint: UnitPoint(x: 1 - edge.x, y: 1 - edge.y))
             .frame(width: axis == .horizontal ? Self.length : nil, height: axis == .vertical ? Self.length : nil)
+    }
+}
+
+private extension View {
+    /// Lays the view at `rect`'s origin in a top-leading overlay (at the overlay's own while nil).
+    func placed(at rect: CGRect?) -> some View {
+        padding(.leading, rect?.minX ?? 0).padding(.top, rect?.minY ?? 0)
     }
 }
