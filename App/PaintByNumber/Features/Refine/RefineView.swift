@@ -1744,6 +1744,8 @@ extension RefineView {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .contentShape(.hoverEffect, Capsule())
+        .hoverEffect(.highlight)
         .accessibilityLabel(Self.toolName(kind))
         .accessibilityHint(Text(hint(for: kind)))
         .accessibilityAddTraits(selected ? .isSelected : [])
