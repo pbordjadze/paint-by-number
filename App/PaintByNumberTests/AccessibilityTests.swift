@@ -289,6 +289,36 @@ struct CanvasViewAccessibilityTests {
         #expect(!canvas.paintForAccessibility(element.region))
     }
 
+    /// A fill VoiceOver makes is one step of the window's undo, as a tap's is, the one that
+    /// finishes its color too (the Mac's iPad input round saw ⌘Z leave such a fill painted).
+    @Test func anAreaPaintedByActivatingItUndoes() throws {
+        let session = PaintingSession(template: template)
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+        let chrome = PaintChromeState()
+        chrome.undoManager = undo
+        chrome.observe(session)
+        let canvas = makeCanvas(session)
+        let color = try #require(session.selectedColor)
+        // All of the color but one area painted beforehand, so the activation finishes it.
+        let own = regions(template, ofColor: color)
+        let element = try #require(areas(canvas).first)
+        undo.beginUndoGrouping()
+        session.paint(own.filter { $0 != element.region }, from: .zero, animated: false)
+        undo.endUndoGrouping()
+        undo.removeAllActions()
+
+        undo.beginUndoGrouping()
+        #expect(element.accessibilityActivate())
+        undo.endUndoGrouping()
+        #expect(session.isPainted(element.region) && session.remainingByColor[color] == 0)
+        #expect(undo.canUndo)
+        undo.undo()
+        #expect(!session.isPainted(element.region) && session.remainingByColor[color] == 1)
+        undo.redo()
+        #expect(session.isPainted(element.region))
+    }
+
     @Test func placeholderWhenNothingIsInView() throws {
         let session = PaintingSession(template: template)
         let color = try #require((0..<session.paletteCount).first { regions(template, ofColor: $0).count >= 2 })
