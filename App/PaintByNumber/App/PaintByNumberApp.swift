@@ -3,6 +3,7 @@ import TipKit
 
 @main
 struct PaintByNumberApp: App {
+    @UIApplicationDelegateAdaptor(AppKeys.self) private var keys
     @State private var library = Library.forLaunch()
     @State private var paintings = UnlimitedPaintings.forLaunch()
 

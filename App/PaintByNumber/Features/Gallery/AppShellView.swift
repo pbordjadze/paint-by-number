@@ -111,6 +111,12 @@ struct AppShellView: View {
             newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
             search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
+        // ⌘, (`AppKeys`).
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: AppKeys.openSettings) {
+                if !isShowingSettings { isShowingSettings = true }
+            }
+        }
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil

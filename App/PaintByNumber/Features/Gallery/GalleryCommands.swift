@@ -26,8 +26,8 @@ struct GalleryCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .appSettings) {
+            // Its ⌘, is `AppKeys`'s: iPadOS's own ⌘, wins over a menu command's.
             Button("Settings…") { gallery?.openSettings() }
-                .keyboardShortcut(",")
                 .disabled(gallery == nil)
         }
         CommandGroup(replacing: .newItem) {
