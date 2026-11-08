@@ -525,7 +525,15 @@ final class RefineUITests: XCTestCase {
         // The words, at the row's leading end, far from the well at its trailing end.
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
         let picker = app.otherElements["UIColorPicker"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 10), "A tap on the words didn't open the color picker")
+        // The picker's own process starts cold on a freshly booted simulator and its first
+        // presentation never shows (the Mac's Refine round 2): a second tap asks again, as a
+        // painter would, and must open it.
+        if !picker.waitForExistence(timeout: 10) {
+            attachScreenshot(of: app, named: "refine-card-picker-first-tap")
+            // Unless it came just now: a tap outside a picker that is up would close it.
+            if !picker.exists { row.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap() }
+        }
+        XCTAssertTrue(picker.waitForExistence(timeout: 15), "Taps on the words didn't open the color picker")
         sleep(1)
         attachScreenshot(of: app, named: "refine-card-picker")
         XCTAssertTrue(card.exists, "The picker closed the card")

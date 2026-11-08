@@ -80,6 +80,8 @@ struct RefineAreaCard: View {
     @State private var pending = RefinePendingPick()
     /// Whether the system color picker is open, from the Only This Area row.
     @State private var picking = false
+    /// Counts the row's taps, so a tap while a picker was asked for and never came asks again.
+    @State private var pickTaps = 0
 
     private var region: Int? { template.region(at: at) }
 
@@ -134,6 +136,7 @@ struct RefineAreaCard: View {
         return Button {
             FeedbackEngine.shared.selectionChanged()
             picking = true
+            pickTaps += 1
         } label: {
             HStack(spacing: 12) {
                 Label {
@@ -145,7 +148,7 @@ struct RefineAreaCard: View {
                 Self.well(PaletteBar.paint(template, paint))
                     .background {
                         RefineColorPickerPresenter(
-                            isPresented: $picking, title: title, color: UIColor(binding.wrappedValue),
+                            isPresented: $picking, asked: pickTaps, title: title, color: UIColor(binding.wrappedValue),
                             picked: { binding.wrappedValue = Color(uiColor: $0) },
                             finished: { pending.flush() })
                     }
