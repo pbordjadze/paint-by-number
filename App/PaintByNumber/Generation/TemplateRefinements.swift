@@ -278,7 +278,6 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         }
         // Each repaint moved before, back on its pinned paint: the moves in the edits' order, each
         // taken once, one of the same color first (a color picked again there keeps its move).
-        var restored = 0
         if !pin.moved.isEmpty {
             var unused = pin.moved
             next.edits = next.edits.map { edit in
@@ -286,7 +285,6 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
                       let k = unused.firstIndex(where: { $0.paint == from && $0.to == to }) ?? unused.firstIndex(where: { $0.paint == from })
                 else { return edit }
                 let move = unused.remove(at: k)
-                restored += 1
                 return .repaint(from: move.from, to: to, family: family)
             }
             pin.moved = []
@@ -302,8 +300,15 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             }
         }
         next.pin = pin
-        // Only repaints that weren't moved already are news.
-        return Rebase(refinements: next, repainted: max(0, moved - restored))
+        // News is a repaint now of another paint than it was, on paints chosen anew (one put back
+        // on its own paint is not, nor one moved to the same paint again).
+        var repainted = 0
+        if moved > 0 {
+            for (was, now) in zip(edits, next.edits) {
+                if case .repaint(let a, _, _) = was, case .repaint(let b, _, _) = now, a != b { repainted += 1 }
+            }
+        }
+        return Rebase(refinements: next, repainted: repainted)
     }
 
     // MARK: Strengths
