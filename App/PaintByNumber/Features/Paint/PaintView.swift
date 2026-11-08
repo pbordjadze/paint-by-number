@@ -139,7 +139,8 @@ struct PaintView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
-            isGivingFeedback: feedback != nil, giveFeedback: startFeedback))
+            zenMode: $zenMode, isGivingFeedback: feedback != nil, giveFeedback: startFeedback, replay: replay,
+            close: onClose))
         .onAppear {
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager

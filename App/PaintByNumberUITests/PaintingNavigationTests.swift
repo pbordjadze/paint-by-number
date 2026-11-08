@@ -335,6 +335,18 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(wait(for: photo, value: "Hidden"), "p didn't hide the photo")
     }
 
+    /// Hardware keyboard: ⌘[ goes back to the gallery (Paint ▸ Back), as Back does.
+    @MainActor
+    func testBackKey() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
+        let app = openSeededPainting()
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        app.typeKey("[", modifierFlags: .command)
+        let left = waitUntil(timeout: Self.stateTimeout) { !badge.exists }
+        if !left { attachScreenshot(of: app, named: "back-key-missed") }
+        XCTAssertTrue(left, "⌘[ didn't go back to the gallery")
+    }
+
     /// How long a check waits for the state an action leads to. The CI's iPad simulator can
     /// stall for seconds: a photo shown by a tap once took 5 s to appear (a 560 px image) and
     /// the control didn't read "Showing" within a 3 s wait; a tapped swatch once wasn't
