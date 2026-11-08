@@ -153,6 +153,8 @@ struct RefineAreaCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .contentShape(.hoverEffect, .rect(cornerRadius: 8))
+        .hoverEffect(.highlight)
         .accessibilityLabel(Text(title))
         .accessibilityValue(Text(ColorNameText.title(template.palette[paint].colorName)))
         .accessibilityHint(Text(isolates
@@ -251,6 +253,8 @@ struct RefineAreaCard: View {
                                 .overlay { Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5) }
                         }
                         .buttonStyle(.plain)
+                        .contentShape(.hoverEffect, Circle())
+                        .hoverEffect(.highlight)
                         .accessibilityLabel(Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName)))
                         .accessibilityHint(Text(String(
                             localized: "refine.card.use.hint", defaultValue: "Gives this area this paint.",

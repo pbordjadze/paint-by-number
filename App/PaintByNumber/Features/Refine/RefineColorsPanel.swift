@@ -148,6 +148,8 @@ struct RefineColorsPanel: View {
             .frame(minWidth: 64)
         }
         .buttonStyle(.plain)
+        .contentShape(.hoverEffect, .rect(cornerRadius: 12))
+        .hoverEffect(.highlight)
         .accessibilityLabel(Self.name(of: kind))
         .accessibilityHint(Text(kind == nil
             ? String(localized: "refine.colors.photo.hint", defaultValue: "Puts the photo’s own colors back.",

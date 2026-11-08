@@ -144,6 +144,8 @@ struct RefinePaletteBar: View {
                 RefineColorWheel.Swatch(color: current.map { RefinePalette.color($0, space: template.colorSpace) })
             }
             .buttonStyle(.plain)
+            .contentShape(.hoverEffect, Circle())
+            .hoverEffect(.highlight)
             .popover(isPresented: $picksNewPaint, arrowEdge: .bottom) {
                 RefineColorWheel(color: wheel, title: String(localized: "New Paint")) { picksNewPaint = false }
                     .frame(idealWidth: 360, idealHeight: 560)
@@ -175,6 +177,8 @@ struct RefinePaletteBar: View {
                 .overlay { Circle().stroke(selected ? Theme.signature : .clear, lineWidth: 2.5) }
         }
         .buttonStyle(.plain)
+        .contentShape(.hoverEffect, Circle())
+        .hoverEffect(.highlight)
         .accessibilityLabel(Text(ColorNameText.numbered(number: index + 1, name: template.palette[index].colorName)))
         .accessibilityHint(Text(String(
             localized: "refine.palette.paint.hint", defaultValue: "Makes this the current paint.",
@@ -269,6 +273,8 @@ struct RefinePaletteBar: View {
                 .overlay { Circle().stroke(selected ? Theme.signature : .clear, lineWidth: 2.5) }
         }
         .buttonStyle(.plain)
+        .contentShape(.hoverEffect, Circle())
+        .hoverEffect(.highlight)
         .draggable(Self.payload(of: color))
         .accessibilityLabel(Text("New Paint"))
         .accessibilityHint(Text(String(
