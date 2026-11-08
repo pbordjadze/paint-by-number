@@ -120,6 +120,8 @@ enum PaintTips {
         }
         // The rules of every tip read this: on unless Settings says otherwise.
         TipSwitch.tipsOn = TipPreference.isEnabled()
+        // A parameter parses a Regex when first touched: here, not on the first painting's open.
+        _ = FirstPaintTip.hasPaint
         desk.beginSession()
         #if DEBUG
         if let demo {

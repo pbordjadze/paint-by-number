@@ -149,7 +149,8 @@ struct SettingsView: View {
                         .accessibilityIdentifier("painting-length")
                         .id(Self.paintingLengthRow)
                         // Worth a Look Here, the first time Settings opens, once the row is there to point at.
-                        .gentleTip(.drawerWorthALook, arrowEdge: .top)
+                        // Above the row: hung below it, it covered the Making-of row it tells of.
+                        .gentleTip(.drawerWorthALook, arrowEdge: .bottom)
                         .onAppear { PaintTips.drawerRowReached() }
                     } header: {
                         Text("New Paintings")
