@@ -85,9 +85,12 @@ struct SendTemplateSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .presentationDetents([.height(contentHeight)])
+        // Solid: the sheet's glass smeared the gallery's card behind it into the page above.
+        .presentationBackground(Theme.surface)
         .besideTheFold()
         .background {
-            ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
+            // Below the sheet on iPad: centred over it, Send…'s popover covered the page it sends.
+            ActivityShareSheet(items: file.map { [$0] } ?? [], below: true) { completed in finishSharing(completed: completed) }
         }
         .task { await loadPreview() }
         // Swiped away with the file made, or still being made: it mustn't stay behind.
