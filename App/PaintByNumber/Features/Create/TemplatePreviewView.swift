@@ -346,7 +346,7 @@ struct TemplatePreviewView: View {
                 .disabled(!model.canAskForRefine || isStarting || !model.hasLineArtInput)
                 .accessibilityLabel("Refine")
                 .accessibilityValue(
-                    model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
+                    model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.shownChangeCount))
                 .accessibilityIdentifier("refine")
             }
         }

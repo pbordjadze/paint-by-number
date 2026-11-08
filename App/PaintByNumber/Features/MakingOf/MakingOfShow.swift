@@ -19,6 +19,8 @@ nonisolated struct MakingOfSource: Sendable {
     /// how the show begins.
     var photo: CGImage
     var seed: UInt64
+    /// The paints the base was made of (`TemplateRefinements.pin`), nil when they were chosen.
+    var palette: [PaletteColor]? = nil
 }
 
 /// A making-of show ready to play (`MakingOfPlayer`): MakingOf's `FieldShow`, the show with no crew
@@ -86,7 +88,7 @@ nonisolated struct MakingOfShow: Sendable {
         let base = try TemplateGenerator(settings: source.settings)
             .generate(
                 from: source.image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: cancel,
-                observer: { recorder.receive($0) })
+                observer: { recorder.receive($0) }, palette: source.palette)
             .template
         return (try ShowPictures(snapshots: recorder.snapshots), base)
     }

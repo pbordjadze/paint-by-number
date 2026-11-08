@@ -81,6 +81,57 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var points: [SIMD2<Float>]
     }
 
+    /// The base the `edits` are laid on, as far as a base made again needs it (painting-company
+    /// row 278): its paints, the number of paints they were chosen for (the Colors slider), and
+    /// its canvas, in whose units the edits are. Taken from the base the first edit was laid on
+    /// (`CreateModel`), or, for a draft refined before there were pins, from the first base laid
+    /// after; never for edits whose base is unknown (a painting refined before: no migration).
+    /// A base made again for as many paints is made of these (`pinnedPalette(for:)`, PaintCore's
+    /// `TemplateGenerator.generate(…palette:)`), so a repaint finds its paint and what the
+    /// change didn't reach keeps its paint; and the edits are laid where they were made, on a
+    /// canvas of another size too (`rebased(onto:colorCount:)`). Not a generator input: it
+    /// shapes only a base made after the first edit, and a base made again for its own settings
+    /// in the same flow is the base it was taken from.
+    nonisolated struct Pin: Codable, Equatable, Sendable {
+        var palette: [PaletteColor]
+        var colorCount: Int
+        var width: Int
+        var height: Int
+
+        /// At most as many paints as a template can number, and a canvas the generator makes.
+        static let maximumPaints = 999
+        static let sizeRange = 1...100_000
+
+        init(palette: [PaletteColor], colorCount: Int, width: Int, height: Int) {
+            self.palette = palette
+            self.colorCount = colorCount
+            self.width = width
+            self.height = height
+        }
+
+        /// The pin of `base`, made for `colorCount` paints.
+        init(base: Template, colorCount: Int) {
+            self.init(palette: base.palette, colorCount: colorCount, width: base.width, height: base.height)
+        }
+
+        private enum CodingKeys: String, CodingKey { case palette, colorCount, width, height }
+
+        /// Hostile input: a pin that doesn't hold up (too many paints, a color that isn't finite,
+        /// a canvas out of range) throws, and the refinements read on without it.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let paints = try c.decode([PaletteColor].self, forKey: .palette)
+            colorCount = try c.decode(Int.self, forKey: .colorCount)
+            width = try c.decode(Int.self, forKey: .width)
+            height = try c.decode(Int.self, forKey: .height)
+            func finite(_ v: SIMD3<Float>) -> Bool { v.x.isFinite && v.y.isFinite && v.z.isFinite }
+            guard !paints.isEmpty, paints.count <= Self.maximumPaints, paints.allSatisfy({ finite($0.oklab) && finite($0.rgb) }),
+                  Self.sizeRange.contains(width), Self.sizeRange.contains(height), colorCount > 0
+            else { throw DecodingError.dataCorruptedError(forKey: .palette, in: c, debugDescription: "an unusable pin") }
+            palette = paints
+        }
+    }
+
     /// What the base starts from.
     nonisolated enum Start: String, Codable, Sendable {
         /// The template the generator makes of the photo (every painting before Start From).
@@ -113,6 +164,9 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// Lines of text the painter marked: rectangles (top left, top right, bottom right, bottom
     /// left), normalized like `LineArtInput.writing`.
     var addedText: [[SIMD2<Float>]] = []
+    /// The base the edits are laid on (`Pin`); nil until there are edits, and for edits from
+    /// before there were pins.
+    var pin: Pin?
 
     init() {}
 
@@ -133,7 +187,55 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var inputs = self
         inputs.edits = []
         inputs.editorVersion = TemplateEditor.version
+        inputs.pin = nil
         return inputs
+    }
+
+    // MARK: Pin
+
+    /// The paints a base of `settings` is made of: the pin's, while the edits it keeps are there
+    /// and the number of paints is the one they were chosen for; nil otherwise (the paints are
+    /// chosen, as for a painting nobody refined).
+    func pinnedPalette(for settings: GenerationSettings) -> [PaletteColor]? {
+        guard let pin, !edits.isEmpty, start == .generated, settings.drawing == nil,
+              settings.colorCount == pin.colorCount else { return nil }
+        return pin.palette
+    }
+
+    /// What carrying the edits onto another base did (`rebased(onto:colorCount:)`).
+    struct Rebase {
+        var refinements: TemplateRefinements
+        /// Repaints sent on to the paint nearest theirs, the paints having been chosen anew.
+        var repainted = 0
+    }
+
+    /// These refinements with their edits carried onto `base`, a base of `colorCount` paints made
+    /// for them: scaled to its canvas where it is another size (the Detail slider), and, where
+    /// its paints were chosen anew (the number of paints changed), each repaint of a pinned
+    /// paint made of the paint of `base` nearest it, the pin then `base`'s. Without a pin, or on
+    /// the base it pins, they are as they are; a pin is kept for as many paints, so paints a
+    /// base made of it left out come back on the next.
+    func rebased(onto base: Template, colorCount: Int) -> Rebase {
+        guard let pin, base.width > 0, base.height > 0 else { return Rebase(refinements: self) }
+        var next = self
+        var repainted = 0
+        let resized = base.width != pin.width || base.height != pin.height
+        let chosenAnew = colorCount != pin.colorCount
+        guard resized || chosenAnew else { return Rebase(refinements: self) }
+        if resized {
+            let x = Float(base.width) / Float(pin.width), y = Float(base.height) / Float(pin.height)
+            next.edits = next.edits.map { $0.scaled(x: x, y: y) }
+        }
+        if chosenAnew {
+            let nearest = TemplateEditor.nearestPaints(from: pin.palette, to: base.palette)
+            repainted = next.edits.count(where: { $0.isRepainted(by: nearest) })
+            next.edits = next.edits.map { $0.repainting(nearest) }
+            next.pin = Pin(base: base, colorCount: colorCount)
+        } else {
+            next.pin?.width = base.width
+            next.pin?.height = base.height
+        }
+        return Rebase(refinements: next, repainted: repainted)
     }
 
     // MARK: Strengths
@@ -342,7 +444,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Coding
 
-    private enum CodingKeys: String, CodingKey { case start, lines, edits, editorVersion, strokes, hiddenText, addedText }
+    private enum CodingKeys: String, CodingKey { case start, lines, edits, editorVersion, strokes, hiddenText, addedText, pin }
 
     /// Tolerant: a field, line, edit or stroke it can't read (a kind from a newer app) is left out
     /// rather than costing the rest, a file without `edits` (a painting refined before they
@@ -361,11 +463,13 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         strokes = ((try? c.decodeIfPresent([Lossy<Stroke>].self, forKey: .strokes)) ?? []).compactMap(\.value)
         hiddenText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .hiddenText)) ?? []
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []
+        pin = try? c.decodeIfPresent(Pin.self, forKey: .pin)
     }
 
     /// The fields in their order; `start` only for a blank start, so a file that starts from the
-    /// generator's template is byte for byte what it was before there were starts, and
-    /// `editorVersion` only with edits, so one without any is too.
+    /// generator's template is byte for byte what it was before there were starts,
+    /// `editorVersion` only with edits, so one without any is too, and `pin` only with one, so
+    /// refinements from before pins write as they did.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         if start == .blank { try c.encode(start, forKey: .start) }
@@ -375,6 +479,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         try c.encode(strokes, forKey: .strokes)
         try c.encode(hiddenText, forKey: .hiddenText)
         try c.encode(addedText, forKey: .addedText)
+        if let pin { try c.encode(pin, forKey: .pin) }
     }
 
     private struct Lossy<Value: Decodable>: Decodable {

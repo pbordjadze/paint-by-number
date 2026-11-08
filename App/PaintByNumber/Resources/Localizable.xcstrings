@@ -4817,6 +4817,30 @@
         }
       }
     },
+    "refine.note.repainted" : {
+      "comment" : "Refine and preview toast after the Colors slider changed how many paints the painting has, so its paints were chosen again: how many of the painter's color changes now apply to the new paint nearest the one they changed; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld color change moved to the nearest of the new colors."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld color changes moved to the nearest of the new colors."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "refine.note.notDrawn" : {
       "comment" : "Refine screen toast: a line the painter drew could not be added to the drawing (it lay too close to other lines; a line that doubles back on itself has its own note); nothing changed",
       "extractionState" : "manual",

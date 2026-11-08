@@ -604,7 +604,7 @@ struct RefineView: View {
         .accessibilityLabel(Text(String(
             localized: "refine.canvas", defaultValue: "Painting to refine",
             comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
-        .accessibilityValue(Self.changes(model.refinements.changeCount))
+        .accessibilityValue(Self.changes(model.shownChangeCount))
         .accessibilityActions {
             if model.canRedo { Button("Redo", action: redo) }
             if !isPractice {

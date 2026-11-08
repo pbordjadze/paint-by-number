@@ -470,6 +470,82 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-edit-paint-merged")
     }
 
+    /// A painter's edits survive a base made again (painting-company row 278): a repaint (Edit
+    /// Paint's swatch dropped on another, on iPad; a look on iPhone, where a swatch isn't dragged),
+    /// a merge, a rub of the Eraser and an Only This Area from an area's card, then a Writing mark,
+    /// which makes the base again: the count still says every change, none is said to be left
+    /// out, and Done keeps them all.
+    @MainActor
+    func testEditsSurviveAWritingMark() throws {
+        let app = launchPreview()
+        let refine = app.buttons["refine"]
+        refine.tap()
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
+
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            pickTool("editPaint", in: "Paint", of: app)
+            let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
+            XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
+            let dragged = { from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0) }
+            dragged()
+            if !waitFor(canvas, toMatch: changes("1 change"), timeout: 20), canvas.value as? String == "No changes" {
+                retapIfLost("swatch drag", dragged)
+            }
+        } else {
+            pickTool("looks", in: "Paint", of: app)
+            let look = app.buttons["refine-look-moonlit"]
+            XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
+            look.tap()
+        }
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The repaint didn't count: \(canvas.value ?? "")")
+
+        // From the open sky above the wave into the cloud beside it.
+        pickTool("merge", in: "Cells", of: app)
+        drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.85, 0.25))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "The merge didn't count: \(canvas.value ?? "")")
+
+        // Across little Fuji's outline.
+        let eraser = app.buttons["refine-tool-eraser"]
+        pickTool("eraser", in: "Ink", of: app)
+        XCTAssertTrue(eraser.isSelected)
+        drag(on: canvas, from: onPicture(canvas, 0.637, 0.6), to: onPicture(canvas, 0.637, 0.72))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The rub didn't count: \(canvas.value ?? "")")
+
+        // Only This Area: the sky left of the crest, another paint from its card.
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.3, 0.08)).tap()
+        let change = app.buttons["refine-selection-color"]
+        XCTAssertTrue(change.waitForExistence(timeout: 10), "Select didn't offer Change Color")
+        change.tap()
+        let card = app.descendants(matching: .any)["refine-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "Change Color didn't open the area's card")
+        let paint = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "refine-card-paint-")).firstMatch
+        XCTAssertTrue(paint.waitForExistence(timeout: 5), "The card offers no other paint")
+        paint.tap()
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "Only This Area didn't count: \(canvas.value ?? "")")
+        let outside = app.otherElements["PopoverDismissRegion"]
+        if outside.exists { outside.tap() } else { change.tap() }
+        XCTAssertTrue(waitFor(card, toMatch: NSPredicate(format: "exists == false")), "The card didn't close")
+        attachScreenshot(of: app, named: "refine-remake-before")
+
+        // A Writing mark: the base is made again, the four edits laid on it.
+        pickTool("text", in: "See", of: app)
+        drag(on: canvas, from: CGVector(dx: 0.2, dy: 0.55), to: CGVector(dx: 0.55, dy: 0.6))
+        let updating = app.staticTexts["Updating…"]
+        _ = updating.waitForExistence(timeout: 10)
+        XCTAssertTrue(waitFor(updating, toMatch: NSPredicate(format: "exists == false"), timeout: 180), "The base was never made again")
+        XCTAssertTrue(
+            waitFor(canvas, toMatch: changes("5 changes")), "An edit was left out of the base made again: \(canvas.value ?? "")")
+        let note = app.descendants(matching: .any)["refine-note"]
+        XCTAssertFalse(
+            note.exists && note.label.contains("left out"), "Refine said edits were left out: \(note.label)")
+        attachScreenshot(of: app, named: "refine-remake-after")
+
+        app.buttons["refine-done"].tap()
+        XCTAssertTrue(waitFor(refine, toMatch: changes("5 changes")), "Done didn't keep the changes")
+    }
+
     /// The Tool Guide opened on its last page shows that page's row whole in the list, where it
     /// was cut in half under the sidebar's bottom edge (QA, November 7). iPad: a sidebar.
     @MainActor

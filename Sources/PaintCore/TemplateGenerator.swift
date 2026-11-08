@@ -36,14 +36,23 @@ public struct TemplateGenerator: Sendable {
     ///   - progress: Called with a rough 0...1 completion fraction.
     ///   - observer: Synchronous making-of pictures in stage order, at most 1024 px on
     ///     the long side. Nil skips all snapshot work; observing never changes the template.
+    ///   - pinned: The paints to make the template with, in their order, instead of choosing
+    ///     them (`Segmenter`): a refined painting's paints when the app makes its base again
+    ///     (the app's `TemplateRefinements.pin`), so the painter's color changes find their paints
+    ///     and what the change didn't reach keeps its own. The paints keep their bits, kit paint's
+    ///     mixing included (they are mixed already); a paint no area takes leaves. Nil or empty
+    ///     chooses them, byte for byte as without. A drawing's settings ignore it (its paints
+    ///     are its set's).
     public func generate(
         from image: RGBAImage,
         importance: Grid<Float>? = nil,
         lineArt: LineArtInput? = nil,
         cancel: CancellationCheck = .task,
         progress: (@Sendable (Float) -> Void)? = nil,
-        observer: PipelineSnapshot.Observer? = nil
+        observer: PipelineSnapshot.Observer? = nil,
+        palette pinned: [PaletteColor]? = nil
     ) throws -> Output {
+        let pinned = pinned.flatMap { $0.isEmpty ? nil : $0 }
         if let drawing = settings.drawing {
             return try DrawingGenerator.generate(
                 from: image, settings: settings, drawing: drawing, cancel: cancel, progress: progress, observer: observer)
@@ -78,7 +87,7 @@ public struct TemplateGenerator: Sendable {
         var (segmentation, weights) = try clock.measure("segment") {
             try Segmenter.segment(
                 working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
-                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer)
+                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer, pinned: pinned)
         }
         try cancel.throwIfCancelled()
         progress?(segmentEnd)
@@ -97,7 +106,8 @@ public struct TemplateGenerator: Sendable {
             progress?(0.7)
         }
         // Which paints are on a face, for kit paint's skin, while the importance is at hand.
-        let faces = settings.paintMix == .kit
+        let mixes = settings.paintMix == .kit && pinned == nil
+        let faces = mixes
             ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
@@ -110,7 +120,7 @@ public struct TemplateGenerator: Sendable {
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         // Before the line art's annotation, which reads the paints' lightness (writing on dark paint).
-        if settings.paintMix == .kit {
+        if mixes {
             vector.template.palette = KitPaint.mix(
                 vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
                 faces: faces)
