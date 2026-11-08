@@ -154,7 +154,14 @@ struct AppShellView: View {
             #endif
         }
         #if DEBUG
-        .onAppear { if ShellDemo.current?.showsFavoritesOnly == true { filter = .favorites } }
+        // Every demo and test sets the filter: it is scene storage, so a favorites scenario left it on
+        // Favorites for the next launch on the same simulator, and a starters' gallery opened on
+        // No Favorites (CI, November 7: three UI tests after a warm-up).
+        .onAppear {
+            if DemoMode.isActive || DemoMode.isTestHost {
+                filter = ShellDemo.current?.showsFavoritesOnly == true ? .favorites : .all
+            }
+        }
         .onChange(of: galleryAsks) { _, asks in
             guard asks, DemoMode.opensFileOnQuestion, !demoOpenedFile, let file = DemoMode.openFileURL else { return }
             demoOpenedFile = true
