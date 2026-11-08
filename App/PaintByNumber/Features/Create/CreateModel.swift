@@ -115,9 +115,13 @@ final class CreateModel {
     /// Whether the settings are the suggestion for this photo or the painter's own; nil until
     /// a suggestion exists.
     private(set) var settingsOrigin: SettingsOrigin?
-    /// The suggestion for the current photo, kept so Reset to Suggested restores it without
-    /// choosing again. Reproducible from the photo and the painting length, so never saved.
+    /// The suggestion for the current photo. Reproducible from the photo and the painting
+    /// length, so never saved.
     private(set) var decision: AutoDecision?
+    /// The suggestion's settings as the sliders take them (`mixed`): what the chip, the detents
+    /// and Reset to Suggested go by. A resumed draft's are the ones it recorded
+    /// (`CreateDraft.suggested`): its photo is a JPEG now, whose suggestion can differ.
+    private(set) var suggested: GenerationSettings?
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
     /// What the comparison shows beside the photo (Settings › Preview).
@@ -215,7 +219,8 @@ final class CreateModel {
         guard !isScratch || refinements.changeCount > 0 else { return nil }
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
-            sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil)
+            sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil,
+            suggested: suggested)
     }
 
     var colorCount: Double
@@ -585,6 +590,7 @@ final class CreateModel {
         lineArtInput = nil
         draftImage = nil
         decision = nil
+        suggested = nil
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
@@ -626,6 +632,7 @@ final class CreateModel {
         preview = nil
         stats = nil
         decision = nil
+        suggested = nil
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
@@ -664,6 +671,7 @@ final class CreateModel {
         lineArtInput = nil
         draftImage = nil
         decision = nil
+        suggested = nil
         settingsOrigin = nil
         // A new photo's mix and tuning, unless it is a draft's (`resume` puts those back).
         paintMix = Self.newPaintMix
@@ -780,7 +788,7 @@ final class CreateModel {
         refineAsked = false
         startAsked = false
         trace("Settings changed to \(settings.colorCount) colors, detail \(settings.detail), lines \(lines)")
-        if let decision { settingsOrigin = settings == mixed(decision.settings) ? .suggested : .custom }
+        if let suggested { settingsOrigin = settings == suggested ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
             scheduleFull(after: Self.restDelay)
@@ -825,10 +833,10 @@ final class CreateModel {
 
     /// Back to the suggestion's settings, without choosing again.
     func resetToSuggested() {
-        guard let decision else { return }
+        guard let suggested else { return }
         // Other settings than the ones Start was tapped on.
         startAsked = false
-        apply(decision.settings)
+        apply(suggested)
         settingsOrigin = .suggested
         startGeneration(draftFirst: true)
     }
@@ -899,6 +907,7 @@ final class CreateModel {
         self.decision = decision
         paintMix = Self.newPaintMix
         tuning = decision.settings.tuning
+        suggested = mixed(decision.settings)
         apply(decision.settings)
         settingsOrigin = .suggested
         phase = .generating
@@ -907,16 +916,18 @@ final class CreateModel {
     }
 
     /// Puts a draft's settings on the sliders and generates them with its refinements at full
-    /// resolution. The suggestion is kept (nil if it failed), so the chip says whether the
-    /// draft's settings are still it.
+    /// resolution. The suggestion the draft recorded is the one the chip goes by, or, in a draft
+    /// before it, the one made now (nil if it failed), so the chip says whether the draft's
+    /// settings are still it.
     private func resume(_ saved: CreateDraft, suggestion: AutoDecision?) {
         decision = suggestion
         paintMix = saved.settings.paintMix
         tuning = saved.settings.tuning
+        suggested = saved.suggested ?? suggestion.map(mixed)
         apply(saved.settings)
         lines = saved.lines
         if let set = saved.settings.drawing?.palette { drawingPalette = set }
-        if let suggestion { settingsOrigin = settings == mixed(suggestion.settings) ? .suggested : .custom }
+        if let suggested { settingsOrigin = settings == suggested ? .suggested : .custom }
         phase = .generating
         startGeneration(draftFirst: false)
     }

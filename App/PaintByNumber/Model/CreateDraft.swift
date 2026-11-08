@@ -28,6 +28,11 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     /// A page From Scratch (`CreateModel.loadScratch()`): resumed as one, not as a photo. Absent
     /// (nil) in every draft before it, and in a photo's.
     var scratch: Bool? = nil
+    /// The suggestion's settings as the flow showed them (`CreateModel.suggested`), so a resumed
+    /// draft's chip, detents and Reset to Suggested measure against the suggestion the painter
+    /// saw, not one made again from `source.jpg`, a JPEG that can suggest otherwise. Absent (nil)
+    /// in drafts before it, a drawing's and a page from scratch's.
+    var suggested: GenerationSettings? = nil
 
     var resolvedTitle: String { Self.resolvedTitle(typed: title, default: defaultTitle) }
 
@@ -38,7 +43,7 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case photoID, title, defaultTitle, settings, lines, sampleName, scratch
+        case photoID, title, defaultTitle, settings, lines, sampleName, scratch, suggested
     }
 }
 

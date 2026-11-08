@@ -779,7 +779,7 @@ struct TemplatePreviewView: View {
     }
 
     /// The suggestion's settings, where each slider has a detent.
-    private var suggested: GenerationSettings? { model.decision?.settings }
+    private var suggested: GenerationSettings? { model.suggested }
 
     /// Classic line art has no lines to tune.
     private var hasLines: Bool { model.baseLineArt.style != .classic }
