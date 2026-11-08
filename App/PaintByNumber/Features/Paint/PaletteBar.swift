@@ -298,11 +298,16 @@ struct PaletteBar: View {
         // where beside would leave no room for the words. One pair of tips for the bar, not one
         // per swatch: every swatch's ran TipKit's popoverTip, and its Regex, as it rendered. Each
         // hangs from a place laid over the bar, since popoverTip points at the whole of its view.
+        // The places take no touch, TipKit's anchor included: over the bar (all of it until a tip
+        // first measures them, then the selected swatch's lane) they took the swatches' taps and
+        // long presses (CI, polish6's full run). The popover is presented apart and keeps its own.
         .overlay(alignment: .topLeading) {
             tipPlace(anchors?.lane).gentleTip(.benchTap, arrowEdge: tipEdge).placed(at: anchors?.lane)
+                .allowsHitTesting(false)
         }
         .overlay(alignment: .topLeading) {
             tipPlace(anchors?.swatch).gentleTip(.benchFind, arrowEdge: tipEdge).placed(at: anchors?.swatch)
+                .allowsHitTesting(false)
         }
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
     }
