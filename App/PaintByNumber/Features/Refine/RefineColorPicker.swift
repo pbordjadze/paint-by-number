@@ -8,6 +8,12 @@ import UIKit
 /// so the color is seen landing on the area as it is picked, as Notes' and Freeform's pickers do.
 struct RefineColorPickerPresenter: UIViewRepresentable {
     @Binding var isPresented: Bool
+    /// Changes with each tap that asks for the picker: one asked again while a picker presented
+    /// before is still not on screen replaces it. The picker's own process starts cold on a
+    /// freshly booted simulator (perhaps rarely on a device), and the first presentation never
+    /// showed; with `isPresented` already true, later taps did nothing until the card closed (the
+    /// Mac's Refine round 2: `testOnlyThisAreaRowOpensThePicker` passed only when run again).
+    var asked = 0
     let title: String
     /// The color the picker opens on.
     let color: UIColor
@@ -33,8 +39,22 @@ struct RefineColorPickerPresenter: UIViewRepresentable {
             isPresented = false
             finished()
         }
+        let askedAgain = asked != coordinator.asked
+        coordinator.asked = asked
         if isPresented, coordinator.picker == nil {
             coordinator.present(from: view, title: title, color: color)
+        } else if isPresented, askedAgain, let stale = coordinator.picker, stale.viewIfLoaded?.window == nil {
+            // Asked for and never shown: take it away and ask again.
+            coordinator.picker = nil
+            if stale.presentingViewController == nil {
+                coordinator.present(from: view, title: title, color: color)
+            } else {
+                let title = title, color = color
+                stale.dismiss(animated: false) { [weak coordinator, weak view] in
+                    guard let coordinator, let view, coordinator.picker == nil else { return }
+                    coordinator.present(from: view, title: title, color: color)
+                }
+            }
         } else if !isPresented, let picker = coordinator.picker {
             coordinator.picker = nil
             picker.dismiss(animated: true)
@@ -50,6 +70,8 @@ struct RefineColorPickerPresenter: UIViewRepresentable {
     final class Coordinator: NSObject, UIColorPickerViewControllerDelegate, UIPopoverPresentationControllerDelegate,
         UISheetPresentationControllerDelegate {
         var picker: UIColorPickerViewController?
+        /// The last `asked` the presenter saw.
+        var asked = 0
         var picked: (UIColor) -> Void = { _ in }
         var finished: () -> Void = {}
 
