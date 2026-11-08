@@ -126,7 +126,7 @@ struct PaletteArrangementTests {
         let cut = try #require(PaletteBar.tipAnchors(
             swatch: CGRect(x: 70, y: 1258, width: 66, height: 46), bar: bar, axis: .horizontal))
         #expect(cut.swatch.minX == 0 && cut.swatch.width == 36)
-        // Not yet measured, or scrolled out of view: the whole bar.
+        // Not yet measured, or scrolled out of view: no anchors (the bar keeps where they last were).
         #expect(PaletteBar.tipAnchors(swatch: .null, bar: bar, axis: .horizontal) == nil)
         #expect(PaletteBar.tipAnchors(swatch: swatch.offsetBy(dx: 900, dy: 0), bar: bar, axis: .horizontal) == nil)
     }
