@@ -2487,9 +2487,9 @@ extension RefineView {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    /// How long Start From and the badge wait to come back after a note: about as long as the
-    /// note's own snappy slide out.
-    static let afterNote: Double = 0.35
+    /// How long Start From and the badge wait to come back after a note: as long as the note's
+    /// own slide out (`.snappy`'s half second).
+    static let afterNote: Double = 0.5
 
     /// Where Start From and the badge lie: at the canvas's top trailing corner, or, where that
     /// would put them over the picture (it grows to the canvas's top when Select, the paint tools or
