@@ -356,7 +356,7 @@ struct RefineSelectionBar: View {
 }
 
 /// The cells' undrawn edges (the boundaries between colors with no ink: a cell edge, a soft edge
-/// of the photo), dashed over the drawing in `rect` while a Cells tool is picked, so every cell
+/// of the photo), dashed over the drawing in `rect` while a Cells tool or Bend Line is picked, so every cell
 /// shows whatever its paint. Their path is made once per template (`path(of:)`, in `land`), so a
 /// zoom only moves it.
 struct RefineCellEdges: View, Equatable {
