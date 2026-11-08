@@ -4,8 +4,11 @@ import Foundation
 /// until they switch them off there (the only way to), so unset means on: whoever updates from an
 /// earlier build has them too.
 nonisolated enum TipPreference {
+    /// Read with `bool(forKey:)` once set, so a launch argument's "NO" (a string, not a Bool) is
+    /// off too: it read as unset, and tips came up (the Mac's polish8 check).
     static func isEnabled(in defaults: UserDefaults = .standard) -> Bool {
-        defaults.object(forKey: SettingsKey.tipsEnabled) as? Bool ?? SettingsDefault.tipsEnabled
+        defaults.object(forKey: SettingsKey.tipsEnabled) == nil
+            ? SettingsDefault.tipsEnabled : defaults.bool(forKey: SettingsKey.tipsEnabled)
     }
 
     static func record(_ enabled: Bool, in defaults: UserDefaults = .standard) {

@@ -42,6 +42,16 @@ struct TipMomentsTests {
         #expect(!TipPreference.isEnabled(in: defaults))
     }
 
+    /// A launch argument (`-tipsEnabled NO`) arrives as a string, and is off as a Bool would be.
+    @Test func theSwitchReadsAStringAsABool() throws {
+        let (defaults, cleanup) = try defaults()
+        defer { cleanup() }
+        defaults.set("NO", forKey: SettingsKey.tipsEnabled)
+        #expect(!TipPreference.isEnabled(in: defaults))
+        defaults.set("YES", forKey: SettingsKey.tipsEnabled)
+        #expect(TipPreference.isEnabled(in: defaults))
+    }
+
     @Test func forgettingTheSwitchIsTheDefault() throws {
         let (defaults, cleanup) = try defaults()
         defer { cleanup() }
