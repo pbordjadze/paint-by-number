@@ -29,6 +29,9 @@ struct PaintByNumberApp: App {
                 // Where an iPhone Duo folds, for every screen and sheet (`FoldWatch`).
                 .watchesTheFold()
         }
-        .commands { PaintCommands() }
+        .commands {
+            PaintCommands()
+            GalleryCommands()
+        }
     }
 }
