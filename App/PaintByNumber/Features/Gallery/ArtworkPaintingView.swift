@@ -33,6 +33,8 @@ struct ArtworkPaintingView: View {
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
+    /// The painting's paints may come out different made again (`Library.regenerationMayRepaint`).
+    @State private var regenerationMayRepaint = false
     @State private var notice: ShownNotice?
     /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`): the toasts keep to
     /// the painting's page beside it.
@@ -101,9 +103,13 @@ struct ArtworkPaintingView: View {
                 PaintingRecoveryView(
                     artwork: artwork, failure: failure,
                     progress: regeneration == nil ? nil : (library.regenerating[artworkID] ?? 0),
-                    didFail: regenerationFailed,
+                    didFail: regenerationFailed, mayRepaint: regenerationMayRepaint,
                     onRegenerate: regenerate, onDelete: delete, onClose: onClose)
                     .transition(.opacity)
+                    .task(id: failure) {
+                        guard failure == .damaged(canRegenerate: true) else { return }
+                        regenerationMayRepaint = await library.regenerationMayRepaint(artworkID)
+                    }
                     #if DEBUG
                     .onAppear {
                         if ShellDemo.current == .galleryDamaged { DemoMode.markReady() }

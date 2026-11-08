@@ -339,11 +339,21 @@ struct TemplateRefinementsTests {
         #expect(smaller.refinements.pin?.palette == doubled.palette && smaller.refinements.pin?.width == base.width)
         #expect(smaller.refinements.rebased(onto: base, colorCount: 12).refinements == smaller.refinements)
 
-        // Another number of paints: the repaint goes to the base's nearest, the pin is the base's.
+        // Another number of paints: the repaint goes to the base's nearest, the pin keeping its
+        // paints and number and which repaint it moved; the number back puts it back exactly.
         let anew = refinements.rebased(onto: base, colorCount: 7)
         #expect(anew.repainted == 1)
         #expect(anew.refinements.edits[1] == .repaint(from: from, to: SIMD3(0.3, 0.1, 0), family: false))
-        #expect(anew.refinements.pin == TemplateRefinements.Pin(base: base, colorCount: 7))
+        let moved = try #require(anew.refinements.pin)
+        #expect(moved.palette == doubled.palette && moved.colorCount == 12 && moved.moved.count == 1)
+        #expect(anew.refinements.rebased(onto: base, colorCount: 7).repainted == 0, "told twice")
+        let back = anew.refinements.rebased(onto: base, colorCount: 12)
+        #expect(back.refinements.edits == [merge.scaled(x: 0.5, y: 0.5), repaint] && back.refinements.pin?.moved.isEmpty == true)
+        #expect(back.refinements == smaller.refinements)
+        // The moves are kept in the file, and a pin without any writes as it did.
+        let file = try JSONEncoder().encode(anew.refinements)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: file) == anew.refinements)
+        #expect(!String(decoding: try JSONEncoder().encode(smaller.refinements), as: UTF8.self).contains("moved"))
     }
 
     /// A line drawn on a template draws: one across the middle of a coloring book adds to its

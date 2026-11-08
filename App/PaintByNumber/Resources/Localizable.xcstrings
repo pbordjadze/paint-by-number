@@ -2761,6 +2761,18 @@
         }
       }
     },
+    "gallery.recovery.mayRepaint" : {
+      "comment" : "Recovery screen text added for a damaged painting the painter refined in an earlier version: regenerating it keeps their edits, but its paints are chosen again and may differ",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your changes will be made again, but some of its colors may come out different."
+          }
+        }
+      }
+    },
     "gallery.recovery.retry" : {
       "comment" : "Recovery screen text added after a failed regeneration attempt",
       "extractionState" : "manual",

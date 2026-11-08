@@ -97,6 +97,17 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var colorCount: Int
         var width: Int
         var height: Int
+        /// Repaints sent on to another paint while the number of paints is another than
+        /// `colorCount` (`rebased(onto:colorCount:)`): each one's paint now (`moved`), its color
+        /// (`to`) and the pinned paint it was made of (`from`), so the number put back puts it back.
+        var moved: [Moved] = []
+
+        /// A repaint sent on to another paint: of `from`, a pinned paint, now of `to`'s paint `paint`.
+        nonisolated struct Moved: Codable, Equatable, Sendable {
+            var from: SIMD3<Float>
+            var paint: SIMD3<Float>
+            var to: SIMD3<Float>
+        }
 
         /// At most as many paints as a template can number, and a canvas the generator makes.
         static let maximumPaints = 999
@@ -114,7 +125,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             self.init(palette: base.palette, colorCount: colorCount, width: base.width, height: base.height)
         }
 
-        private enum CodingKeys: String, CodingKey { case palette, colorCount, width, height }
+        private enum CodingKeys: String, CodingKey { case palette, colorCount, width, height, moved }
 
         /// Hostile input: a pin that doesn't hold up (too many paints, a color that isn't finite,
         /// a canvas out of range) throws, and the refinements read on without it.
@@ -129,6 +140,20 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
                   Self.sizeRange.contains(width), Self.sizeRange.contains(height), colorCount > 0
             else { throw DecodingError.dataCorruptedError(forKey: .palette, in: c, debugDescription: "an unusable pin") }
             palette = paints
+            // Without the moves the pin still holds: a repaint just stays on its new paint.
+            let moves = (try? c.decodeIfPresent([Moved].self, forKey: .moved)) ?? []
+            moved = moves.count <= TemplateRefinements.maximumEdits && moves.allSatisfy({ finite($0.from) && finite($0.paint) && finite($0.to) })
+                ? moves : []
+        }
+
+        /// `moved` only when there are some, so a pin without writes its first shape.
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(palette, forKey: .palette)
+            try c.encode(colorCount, forKey: .colorCount)
+            try c.encode(width, forKey: .width)
+            try c.encode(height, forKey: .height)
+            if !moved.isEmpty { try c.encode(moved, forKey: .moved) }
         }
     }
 
@@ -205,36 +230,50 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// What carrying the edits onto another base did (`rebased(onto:colorCount:)`).
     struct Rebase {
         var refinements: TemplateRefinements
-        /// Repaints sent on to the paint nearest theirs, the paints having been chosen anew.
+        /// Repaints newly sent on to the paint nearest theirs, the paints having been chosen anew.
         var repainted = 0
     }
 
     /// These refinements with their edits carried onto `base`, a base of `colorCount` paints made
     /// for them: scaled to its canvas where it is another size (the Detail slider), and, where
-    /// its paints were chosen anew (the number of paints changed), each repaint of a pinned
-    /// paint made of the paint of `base` nearest it, the pin then `base`'s. Without a pin, or on
-    /// the base it pins, they are as they are; a pin is kept for as many paints, so paints a
-    /// base made of it left out come back on the next.
+    /// its paints were chosen anew (another number of paints than the pin's), each repaint of a
+    /// pinned paint made of the paint of `base` nearest it (`Pin.moved` remembers which). The
+    /// pin's paints and number stay the first base's: with its number back, every repaint moved
+    /// is of its own paint again, exactly. Without a pin, or on the base it pins, they are as
+    /// they are; paints a base made of the pin left out come back on the next.
     func rebased(onto base: Template, colorCount: Int) -> Rebase {
-        guard let pin, base.width > 0, base.height > 0 else { return Rebase(refinements: self) }
+        guard var pin, base.width > 0, base.height > 0 else { return Rebase(refinements: self) }
         var next = self
-        var repainted = 0
-        let resized = base.width != pin.width || base.height != pin.height
-        let chosenAnew = colorCount != pin.colorCount
-        guard resized || chosenAnew else { return Rebase(refinements: self) }
-        if resized {
+        if base.width != pin.width || base.height != pin.height {
             let x = Float(base.width) / Float(pin.width), y = Float(base.height) / Float(pin.height)
             next.edits = next.edits.map { $0.scaled(x: x, y: y) }
+            pin.width = base.width
+            pin.height = base.height
         }
-        if chosenAnew {
+        // Each repaint moved before, back on its pinned paint.
+        if !pin.moved.isEmpty {
+            next.edits = next.edits.map { edit in
+                guard case .repaint(let from, let to, let family) = edit,
+                      let move = pin.moved.first(where: { $0.paint == from && $0.to == to }) else { return edit }
+                return .repaint(from: move.from, to: to, family: family)
+            }
+            pin.moved = []
+        }
+        var repainted = 0
+        if colorCount != pin.colorCount {
             let nearest = TemplateEditor.nearestPaints(from: pin.palette, to: base.palette)
-            repainted = next.edits.count(where: { $0.isRepainted(by: nearest) })
-            next.edits = next.edits.map { $0.repainting(nearest) }
-            next.pin = Pin(base: base, colorCount: colorCount)
-        } else {
-            next.pin?.width = base.width
-            next.pin?.height = base.height
+            next.edits = next.edits.map { edit in
+                guard edit.isRepainted(by: nearest), case .repaint(let from, let to, _) = edit, let paint = nearest[from] else { return edit }
+                repainted += 1
+                if !pin.moved.contains(where: { $0.paint == paint && $0.to == to }) {
+                    pin.moved.append(Pin.Moved(from: from, paint: paint, to: to))
+                }
+                return edit.repainting(nearest)
+            }
         }
+        next.pin = pin
+        // Already carried onto this base: nothing to say again.
+        if next == self { repainted = 0 }
         return Rebase(refinements: next, repainted: repainted)
     }
 

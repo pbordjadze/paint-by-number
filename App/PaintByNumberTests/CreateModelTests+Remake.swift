@@ -185,6 +185,8 @@ extension CreateModelTests {
         #expect(model.leftOut == 0)
         expectEditsHold(r, on: try #require(model.preview?.template))
 
+        let smoothed = try #require(model.preview?.template)
+        let count = model.colorCount
         model.colorCount += 4
         model.settingsChanged()
         try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
@@ -195,15 +197,24 @@ extension CreateModelTests {
             return
         }
         #expect(paints.contains { $0.oklab == from }, "the repaint isn't of a paint the new base has")
-        #expect(model.refinements.pin?.colorCount == model.settings.colorCount && model.refinements.pin?.palette == paints)
+        // The pin stays the first base's, with the move remembered.
+        #expect(model.refinements.pin?.palette == r.base.palette && model.refinements.pin?.moved.count == 1)
         #expect(model.leftOut == 0)
         let repainted = TemplateEditor.recolor(from, by: try #require(model.refinements.edits.first))
         expectEditsHold(r, on: try #require(model.preview?.template), repainted: repainted)
+
+        // The number put back: the repaint is of its own paint again, the template as it was.
+        model.colorCount = count
+        model.settingsChanged()
+        try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
+        #expect(model.refinements.edits.first == r.repaint && model.refinements.pin?.moved.isEmpty == true)
+        #expect(model.preview?.template == smoothed)
         model.cancelAll()
     }
 
     /// Item 5: a repaint with Similar Colors keeps to the same paints on a base made again, whose
-    /// paints are the first base's.
+    /// paints are the first base's; after a Colors change it moves to the nearest paints, said so,
+    /// and the number put back gives the template as it was.
     @Test func aRepaintWithSimilarColorsKeepsItsPaints() async throws {
         let r = try await refined(family: true)
         let model = r.model
@@ -216,6 +227,21 @@ extension CreateModelTests {
         let laid = try #require(model.preview?.template)
         #expect(Set(laid.palette).isSubset(of: Set(firstLaid.palette)))
         #expect(model.leftOut == 0)
+
+        let count = model.colorCount
+        model.colorCount += 4
+        model.settingsChanged()
+        try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
+        #expect(model.note?.kind == .repainted(1) && model.leftOut == 0)
+        guard case .repaint(let from, _, true)? = model.refinements.edits.first else {
+            Issue.record("the repaint with Similar Colors is gone")
+            return
+        }
+        #expect(model.paintsBeforeEdits.contains { $0.oklab == from })
+        model.colorCount = count
+        model.settingsChanged()
+        try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
+        #expect(model.refinements.edits.first == r.repaint && model.preview?.template == laid)
         model.cancelAll()
     }
 
@@ -237,7 +263,10 @@ extension CreateModelTests {
         #expect(Set(resumed.paintsBeforeEdits).isSubset(of: Set(r.base.palette)))
         #expect(resumed.leftOut == 0 && resumed.refinements.edits.count == 4)
         expectEditsHold(r, on: after)
-        #expect(Self.samePaint(before, after) > 0.8)
+        let same = Self.samePaint(before, after)
+        // The audit's replay without a pin: 49 % of the picture changed paint.
+        Log.create.notice("Row 278: continuing without a kept trail kept the paint of \(same, privacy: .public) of the picture")
+        #expect(same > 0.8)
         r.model.cancelAll()
         resumed.cancelAll()
     }
@@ -256,7 +285,28 @@ extension CreateModelTests {
         let template = document.template
         #expect(Set(template.palette).isSubset(of: Set(made.template.palette).union(r.base.palette)))
         expectEditsHold(r, on: template)
-        #expect(Self.samePaint(made.template, template) > 0.8)
+        let same = Self.samePaint(made.template, template)
+        Log.create.notice("Row 278: recovery kept the paint of \(same, privacy: .public) of the picture")
+        #expect(same > 0.8)
+        #expect(!(await library.regenerationMayRepaint(artwork.id)), "a pinned painting is said to change")
         r.model.cancelAll()
+    }
+
+    /// A painting refined before refinements kept their paints has no pin: made again it keeps
+    /// today's re-make, and its recovery says the paints may come out different.
+    @Test func recoveringAPaintingWithoutAPinSaysItsPaintsMayChange() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "remake-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = Library(store: ArtworkStore(root: root))
+        var refinements = TemplateRefinements()
+        refinements.edits = [.repaint(from: SIMD3(0.5, 0, 0), to: SIMD3(0.4, 0.1, 0), family: false)]
+        var older = ArtworkDraft(
+            title: "Older", template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12), photo: nil, sampleName: nil)
+        older.refinements = refinements
+        let artwork = try await library.create(older)
+        #expect(await library.regenerationMayRepaint(artwork.id))
+        let plain = try await library.create(ArtworkDraft(
+            title: "Plain", template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12), photo: nil, sampleName: nil))
+        #expect(!(await library.regenerationMayRepaint(plain.id)))
     }
 }
