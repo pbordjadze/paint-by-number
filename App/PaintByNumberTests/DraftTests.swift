@@ -463,7 +463,8 @@ struct DraftTests {
         try await waitUntil { model.isFinal }
         let saved = try #require(model.draft)
         #expect(saved.suggested == model.suggested)
-        let jpeg = try #require(ImageCodec.jpegData(try #require(model.source?.preview), quality: 0.88))
+        let preview = try #require(model.source?.preview)
+        let jpeg = try #require(ImageCodec.jpegData(preview, quality: 0.88))
         model.cancelAll()
 
         // Settings the suggestion made now won't pick, recorded as the draft's suggestion.
