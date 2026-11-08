@@ -298,7 +298,10 @@ struct TemplatePreviewView: View {
         if let onClose, !isEnlarged {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
-                    .keyboardShortcut(.cancelAction)
+                    // Not under Refine: keys reach a covered screen, and Esc in Refine's full
+                    // screen or Try Painting would close the flow under it (Refine gives its own
+                    // Cancel up there for the same reason).
+                    .keyboardShortcut(isRefining ? nil : .cancelAction)
                     .disabled(isStarting)
             }
         }
