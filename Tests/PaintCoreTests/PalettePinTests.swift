@@ -93,6 +93,7 @@ struct PalettePinTests {
         var changed = image
         for y in 0..<40 { for x in 0..<60 { changed[x, y] = SIMD4(250, 250, 250, 255) } }
         let remade = try Self.generate(changed, kit, palette: base.palette)
+        #expect(remade.encoded() != base.encoded(), "the changed photo was made again")
         #expect(Self.isOrderedSubset(remade.palette, of: base.palette))
         #expect(!remade.palette.isEmpty)
         var same = 0, far = 0

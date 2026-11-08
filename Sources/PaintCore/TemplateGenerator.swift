@@ -88,16 +88,19 @@ public struct TemplateGenerator: Sendable {
         // The segmentation and the line art cut from it, of the pinned paints when there are,
         // which `centers` (true OKLab, one per pinned paint) stand in for while pixels are assigned.
         func segmented(
-            _ pinned: [PaletteColor]?, centers: [SIMD3<Float>]?, observer: PipelineSnapshot.Observer?
+            _ pinned: [PaletteColor]?, centers: [SIMD3<Float>]?, observer: PipelineSnapshot.Observer?,
+            spanning span: ClosedRange<Float> = 0.1...0.7
         ) throws -> (Segmentation, [Float], LayeredLines.Plan?) {
+            // Progress from 0.1 to 0.7, laid on `span`.
+            let report = { (f: Float) in progress?(span.lowerBound + (f - 0.1) / 0.6 * (span.upperBound - span.lowerBound)) }
             var (segmentation, weights) = try clock.measure("segment") {
                 try Segmenter.segment(
                     working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
-                    progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer, pinned: pinned,
+                    progress: { report(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer, pinned: pinned,
                     centers: centers)
             }
             try cancel.throwIfCancelled()
-            progress?(segmentEnd)
+            report(segmentEnd)
             guard let input else { return (segmentation, weights, nil) }
             let result = try clock.measure("lineArt") {
                 try LayeredLines.apply(
@@ -107,7 +110,7 @@ public struct TemplateGenerator: Sendable {
             segmentation = result.segmentation
             try cancel.throwIfCancelled()
             if let observer { try observer(SnapshotPictures.lineArt(result)) }
-            progress?(0.7)
+            report(0.7)
             return (segmentation, weights, result)
         }
         // Kit paint's paints are mixed bolder than the regions' colors the segmentation fits, so
@@ -117,9 +120,10 @@ public struct TemplateGenerator: Sendable {
         // for byte. Otherwise each pinned paint is fitted as its color before mixing, by the mix
         // of the paint chosen here nearest it (painting-company row 278).
         let kit = settings.paintMix == .kit
-        let buffer = kit && pinned != nil && observer != nil ? SnapshotBuffer() : nil
+        let twice = kit && pinned != nil
+        let buffer = twice && observer != nil ? SnapshotBuffer() : nil
         var (segmentation, weights, plan) = try segmented(
-            kit ? nil : pinned, centers: nil, observer: buffer?.observer ?? observer)
+            kit ? nil : pinned, centers: nil, observer: buffer?.observer ?? observer, spanning: twice ? 0.1...0.4 : 0.1...0.7)
         // Which paints are on a face, for kit paint's skin, while the importance is at hand.
         var faces = kit
             ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
@@ -134,12 +138,18 @@ public struct TemplateGenerator: Sendable {
                     }!
                     return paint.oklab - mixed[j].oklab + means[j].oklab
                 }
+                // The first attempt's canvas-sized maps go before the second's are made.
                 weights = []
-                (segmentation, weights, plan) = try segmented(pinned, centers: centers, observer: observer)
+                segmentation = Segmentation(
+                    labels: RegionMap(width: 0, height: 0, repeating: 0), regionColor: [], palette: [],
+                    colorSpace: segmentation.colorSpace)
+                plan = nil
+                (segmentation, weights, plan) = try segmented(pinned, centers: centers, observer: observer, spanning: 0.4...0.7)
                 faces = nil
                 mixes = false
-            } else if let buffer, let observer {
-                for shot in buffer.shots { try observer(shot) }
+            } else {
+                if let buffer, let observer { for shot in buffer.shots { try observer(shot) } }
+                progress?(0.7)
             }
         }
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
