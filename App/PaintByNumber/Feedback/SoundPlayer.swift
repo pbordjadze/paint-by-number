@@ -30,6 +30,12 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private var isBuilt = false
     private var isSetUp = false
     private let clock = ContinuousClock()
+    /// When the last sound was asked for: the engine rests once nothing has played for `restAfter`.
+    private var lastSound: ContinuousClock.Instant?
+    /// Longer than any sound and its delay. Running, the engine kept the audio hardware awake and
+    /// the app at about 1% CPU on the gallery after any painting (Mac's sweep, painting-company
+    /// row 263); `setUpIfNeeded` starts it again for the next sound.
+    private static let restAfter: Duration = .seconds(8)
 
     /// Sun: D major pentatonic over two octaves from D4, a tone above the C the app first played.
     static let sunScale: [Double] = [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.26, 739.99, 880.00, 987.77, 1174.66, 1318.51]
@@ -56,6 +62,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         queue.async { [self] in
             guard setUpIfNeeded() else { return }
             _ = notes(of: sky)
+            restWhenQuiet()
         }
     }
 
@@ -188,6 +195,16 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             voice.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         }
         if !voice.isPlaying { voice.play() }
+        restWhenQuiet()
+    }
+
+    /// Pauses the engine once `restAfter` has passed with no sound asked for.
+    private func restWhenQuiet() {
+        lastSound = clock.now
+        queue.asyncAfter(deadline: .now() + .milliseconds(8_500)) { [self] in
+            guard let lastSound, clock.now - lastSound >= Self.restAfter, engine.isRunning else { return }
+            engine.pause()
+        }
     }
 
     private func buffer(_ samples: [Float]) -> AVAudioPCMBuffer {
