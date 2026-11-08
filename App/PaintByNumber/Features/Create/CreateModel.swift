@@ -923,7 +923,7 @@ final class CreateModel {
         decision = suggestion
         paintMix = saved.settings.paintMix
         tuning = saved.settings.tuning
-        suggested = saved.suggested ?? suggestion.map(mixed)
+        suggested = saved.suggested ?? suggestion.map { mixed($0.settings) }
         apply(saved.settings)
         lines = saved.lines
         if let set = saved.settings.drawing?.palette { drawingPalette = set }
