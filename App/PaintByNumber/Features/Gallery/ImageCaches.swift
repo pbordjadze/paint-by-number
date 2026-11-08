@@ -60,6 +60,13 @@ final class ImageCache<Key: Hashable> {
         totalCost = 0
     }
 
+    /// Drops the images whose keys match.
+    func removeAll(where matches: (Key) -> Bool) {
+        for key in entries.keys where matches(key) {
+            if let old = entries.removeValue(forKey: key) { totalCost -= old.cost }
+        }
+    }
+
     /// Bytes of the decoded bitmap.
     nonisolated static func cost(of image: CGImage) -> Int {
         image.bytesPerRow * image.height
@@ -116,6 +123,9 @@ final class ThumbnailCache {
         // A tile scrolled away before its turn came decodes nothing.
         guard let image = await Background.run({ Task.isCancelled ? nil : store.thumbnail(id, maxPixelSize: maxPixelSize) })
         else { return nil }
+        // A painting's older thumbnails won't show again: kept, each repaint left about 10 MB
+        // decoded until the cache filled (the Mac's sweep, painting-company row 263).
+        images.removeAll { $0.id == id && $0.version != key.version }
         images.insert(image, for: key)
         return image
     }
