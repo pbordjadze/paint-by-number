@@ -206,6 +206,14 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         restWhenQuiet()
     }
 
+    /// Pauses the engine now: the app left the foreground, where it kept rendering (the Mac's
+    /// interruptions round, painting-company row 263). The next sound starts it again.
+    func rest() {
+        queue.async { [self] in
+            if engine.isRunning { engine.pause() }
+        }
+    }
+
     /// A buffer carried to a later turn of `queue`, which alone touches it.
     private struct Held: @unchecked Sendable {
         let buffer: AVAudioPCMBuffer

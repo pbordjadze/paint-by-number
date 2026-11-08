@@ -49,6 +49,9 @@ final class FeedbackEngine {
         prepare()
     }
 
+    /// The app left the foreground: the sounds rest until the next one.
+    func rest() { sounds.rest() }
+
     private func prepare() {
         if hapticsEnabled { haptics.prepare() }
         if soundsEnabled { sounds.prepare(sky: Sky.current()) }
