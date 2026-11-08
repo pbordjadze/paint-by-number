@@ -100,6 +100,7 @@ struct PhotoSourceView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
+                    .keyboardShortcut(.cancelAction)
             }
             // iPhone's Photos pane is Choose Photo, the same picker: no second way to it here.
             if embedsPicker {

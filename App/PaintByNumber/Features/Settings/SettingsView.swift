@@ -243,6 +243,8 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                         .tint(Theme.signature)
+                        // Esc closes it, as ⌘. did.
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
