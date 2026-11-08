@@ -73,6 +73,28 @@ final class PaintingTipsTests: XCTestCase {
         attachScreenshot(of: app, named: "first-tip-tap-painted")
     }
 
+    /// A Calmer Way to Paint hangs from More: one tap on More opens its menu, the tip closing as it
+    /// does. The tap closed only the tip, the menu opening and closing again unseen as the tip's
+    /// popover went (QA, November 7).
+    @MainActor
+    func testOneTapOnMoreOpensItsMenuUnderTheTip() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "paint--tip-benchZen"]
+        app.launch()
+
+        let tip = app.staticTexts["A Calmer Way to Paint"]
+        XCTAssertTrue(tip.waitForExistence(timeout: 90), "The tip about Zen Mode didn't appear")
+        XCTAssertTrue(waitUntil(timeout: 5) { tip.isHittable }, "The tip isn't settled on screen")
+        app.buttons["More"].tap()
+        let restart = app.buttons["Restart"]
+        XCTAssertTrue(restart.waitForExistence(timeout: 5), "One tap on More didn't open its menu")
+        // Still open once the tip's popover has gone.
+        XCTAssertTrue(tip.waitForNonExistence(timeout: 5), "The tip stayed up over the menu")
+        sleep(1)
+        attachScreenshot(of: app, named: "more-under-the-zen-tip")
+        XCTAssertTrue(restart.exists, "More's menu closed with the tip")
+    }
+
     /// Filling an area is using what the tip is about: the tip closes by itself and stays closed.
     @MainActor
     func testFirstTipClosesAfterAFill() throws {
