@@ -105,18 +105,12 @@ struct AppShellView: View {
                 }
         }
         .environment(\.startHandoff, handoff)
-        // The app's menu bar commands (⌘, ⌘N ⌘F): the gear's sheet, the + and the search field.
+        // The app's menu bar commands (Settings…, ⌘N, ⌘F): the gear's sheet, the + and the search field.
         .focusedSceneValue(\.gallery, GalleryFocus(
             openSettings: { if !isShowingSettings { isShowingSettings = true } },
             newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
             search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
-        // ⌘, (`AppKeys`).
-        .task {
-            for await _ in NotificationCenter.default.notifications(named: AppKeys.openSettings) {
-                if !isShowingSettings { isShowingSettings = true }
-            }
-        }
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil

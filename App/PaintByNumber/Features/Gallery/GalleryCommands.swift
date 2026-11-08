@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The gallery in the focused window, for the app's own menu bar commands: Settings… (⌘,), New
-/// Painting (⌘N) and Search Paintings (⌘F), the shortcuts iPadOS apps share. Without them ⌘,
-/// opened the iPad's Settings app, not the gear's sheet (Mac QA, painting-company row 263).
+/// The gallery in the focused window, for the app's own menu bar commands: Settings…, New
+/// Painting (⌘N) and Search Paintings (⌘F), the shortcuts iPadOS apps share (Mac QA,
+/// painting-company row 263).
 ///
 /// Equatable by what the menu shows, not by its closures, as `PaintingFocus` is.
 struct GalleryFocus: Equatable {
@@ -26,7 +26,8 @@ struct GalleryCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .appSettings) {
-            // Its ⌘, is `AppKeys`'s: iPadOS's own ⌘, wins over a menu command's.
+            // No ⌘,: iPadOS keeps it for its own Settings app, over a menu command and over a key
+            // command that asks for priority alike (the Mac's checks, painting-company row 263).
             Button("Settings…") { gallery?.openSettings() }
                 .disabled(gallery == nil)
         }
