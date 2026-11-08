@@ -12,8 +12,8 @@ struct PaintingFocus: Equatable {
     let showsNumbers: Binding<Bool>
     /// Nil when the painting has no photo to show.
     let showsPhoto: Binding<Bool>?
-    /// Feedback mode: painting is off, so are the commands.
     let zenMode: Binding<Bool>
+    /// Feedback mode: painting is off, so are the commands.
     let isGivingFeedback: Bool
     let giveFeedback: () -> Void
     /// The finished painting's Replay (Watch It Again's).
@@ -21,8 +21,9 @@ struct PaintingFocus: Equatable {
     /// Back to the gallery; nil when the screen has no Back.
     let close: (() -> Void)?
     /// What the three toggles showed when this focus was made: their bindings read the current
-    /// state, so an older focus would always agree with a newer one.
-    private let shown: (numbers: Bool, photo: Bool?, zen: Bool)
+    /// state, so an older focus would always agree with a newer one. And whether there is a Back,
+    /// kept as a Bool: the nonisolated `==` can't read the closure.
+    private let shown: (numbers: Bool, photo: Bool?, zen: Bool, back: Bool)
 
     init(
         session: PaintingSession, controller: CanvasController, showsNumbers: Binding<Bool>,
@@ -38,14 +39,14 @@ struct PaintingFocus: Equatable {
         self.giveFeedback = giveFeedback
         self.replay = replay
         self.close = close
-        shown = (showsNumbers.wrappedValue, showsPhoto?.wrappedValue, zenMode.wrappedValue)
+        shown = (showsNumbers.wrappedValue, showsPhoto?.wrappedValue, zenMode.wrappedValue, close != nil)
     }
 
     nonisolated static func == (lhs: PaintingFocus, rhs: PaintingFocus) -> Bool {
         lhs.session === rhs.session && lhs.controller === rhs.controller
-            && lhs.isGivingFeedback == rhs.isGivingFeedback && (lhs.close == nil) == (rhs.close == nil)
+            && lhs.isGivingFeedback == rhs.isGivingFeedback
             && lhs.shown.numbers == rhs.shown.numbers && lhs.shown.photo == rhs.shown.photo
-            && lhs.shown.zen == rhs.shown.zen
+            && lhs.shown.zen == rhs.shown.zen && lhs.shown.back == rhs.shown.back
     }
 }
 
