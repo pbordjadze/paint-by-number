@@ -9,7 +9,8 @@ import UIKit.UIGestureRecognizerSubclass
 ///
 /// Once the popover is up, its presentation lets every touch through to the screen that presented
 /// it (`passthroughViews`), and a watcher on the window, which never takes a touch from anyone,
-/// calls `close` when a touch outside the popover ends. A touch inside it (its ×, its words) is
+/// dismisses the popover and calls `close` when a touch outside it ends, before the touch's own
+/// target answers: a menu that opens then (More's) stays open. A touch inside it (its ×, its words) is
 /// the popover's own. The popover takes the appearance of the view it hangs from. A tip over a sheet lets touches through to that sheet alone: outside it,
 /// the sheet's own dimming takes them, and the tip still closes.
 ///
@@ -69,8 +70,12 @@ struct TipPassthrough: UIViewRepresentable {
             // bars are dark on a light system (`PaintView.chromeScheme`), and the tip, presented
             // in the window's light, read as a grey slab there (QA, November 7).
             popover.presentedViewController.overrideUserInterfaceStyle = traitCollection.userInterfaceStyle
-            let watcher = TouchWatcher(inside: presented) { [weak self] in
+            let watcher = TouchWatcher(inside: presented) { [weak self, weak tip = popover.presentedViewController] in
                 guard let self, self.isShown else { return }
+                // The popover goes now, before what the tap was aimed at answers it: left to SwiftUI,
+                // its dismissal began a moment later and took down the menu the tap had opened
+                // meanwhile (More's, under A Calmer Way to Paint; painting-company row 267).
+                if let tip, !tip.isBeingDismissed { tip.dismiss(animated: true) }
                 self.close()
             }
             window.addGestureRecognizer(watcher)
