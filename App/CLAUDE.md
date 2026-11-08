@@ -45,6 +45,10 @@ synchronized folder would bundle it into the app.
   Deletes say: `DeleteConfirmation`). `checkDialog` (`UITestSupport`) measures a dialog
   against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests`,
   `FeedbackUITests` and `RecoveryTests`. Alerts (`.alert`) are centered and need none of this.
+- A `.popover` on anything in a toolbar is the bar button's, and iOS 26 grows it out of the
+  button over the bar (a view under the button, or an arrow edge, changes nothing); SwiftUI's
+  frames of a bar item's content aren't where it shows. Refine's Layers panel hangs from the
+  screen under the bar, at the bar button item's `frame(in:)` (`RefineLayersAnchor`).
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
   change both in the same order, 16-byte vectors only
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). A frame's constants are
@@ -693,7 +697,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
     top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
-    28, in place of the views): the stack from the top, Numbers, Ink, Paint, Photo, over the
+    28, in place of the views; hung under the bar, `RefineLayersAnchor`): the stack from the top, Numbers, Ink, Paint, Photo, over the
     paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
     the picked tool's layer is marked (`RefineTool.layer`), and a tool that changes a hidden layer
     shows it again. `create-refine-layers` (with `-dark`) opens it, tracing. Until the first edit a
