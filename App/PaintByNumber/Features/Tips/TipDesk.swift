@@ -436,6 +436,16 @@ final class TipDesk {
 
 /// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
 /// at a time.
+///
+/// TipKit's `popoverTip` parses a Regex each time it is called, with a tip or nil (the type name
+/// of its `AnyTip`, in TipKitCore's `String.init(type:)`; on a painting with every tip hidden, 25
+/// parses in 24 calls, no tip made: `tools/tip_regex_count.py`), so a tip built once and kept
+/// would save nothing; this modifier goes on as few views as can point instead: one per place on
+/// a screen, never one per swatch (painting-company row 263). Its popover stays attached all the
+/// while, presented by its binding turning true: one attached at the turn, its binding true
+/// already, never came up. To point at part of a view, modify a view laid over that part: iOS
+/// 27.2's `popoverTip` pointed at the whole palette bar handed `.rect(.rect(_:))` for its
+/// `attachmentAnchor` (`PaletteBar.TipAnchors`).
 private struct GentleTipModifier: ViewModifier {
     let ids: TipSet
     var active: Bool
@@ -463,8 +473,8 @@ private struct GentleTipModifier: ViewModifier {
 }
 
 extension View {
-    /// A popover tip of whichever of `ids` has the turn, while `active` (a view that stands for
-    /// others, like the selected swatch, is active for one). `arrowEdge` is the popover's side of
+    /// A popover tip of whichever of `ids` has the turn, while `active` (of views that stand in
+    /// for one another, like the preview's two places for the sliders, one is active). `arrowEdge` is the popover's side of
     /// the view it points at: `.top` hangs it below, `.bottom` above, `.trailing` beside; nil lets
     /// the system choose.
     func gentleTip(_ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil) -> some View {

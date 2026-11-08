@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import SwiftUI
 import Testing
 @testable import PaintByNumber
 
@@ -105,6 +106,29 @@ struct PaletteArrangementTests {
             #expect(shownFrom <= CGFloat(16 + 12 * 56 - 16), "the swatch is still hidden on the leading side")
         }
         #expect(bar.offset(revealing: 15, metrics: metrics) == nil, "a swatch the glass shows moved the bar")
+    }
+
+    /// The bar's tips point at the selected swatch (painting-company row 263): Can't Find It at the
+    /// swatch, Tap to Paint at its lane across the bar, in the bar's own space: a two-line iPad bar
+    /// with the selected swatch at x 186–252 of the window, where the tip pointed at x 514.
+    @Test func theBarsTipsPointAtTheSelectedSwatch() throws {
+        let bar = CGRect(x: 100, y: 1199, width: 640, height: 115)
+        let swatch = CGRect(x: 186, y: 1258, width: 66, height: 46)
+        let anchors = try #require(PaletteBar.tipAnchors(swatch: swatch, bar: bar, axis: .horizontal))
+        #expect(anchors.swatch == CGRect(x: 86, y: 59, width: 66, height: 46))
+        #expect(anchors.lane == CGRect(x: 86, y: 0, width: 66, height: 115))
+        // A side bar's lane runs across it.
+        let side = try #require(PaletteBar.tipAnchors(
+            swatch: CGRect(x: 960, y: 400, width: 60, height: 60), bar: CGRect(x: 950, y: 100, width: 140, height: 800),
+            axis: .vertical))
+        #expect(side.lane == CGRect(x: 0, y: 300, width: 140, height: 60))
+        // Half under the glass's edge: only what shows.
+        let cut = try #require(PaletteBar.tipAnchors(
+            swatch: CGRect(x: 70, y: 1258, width: 66, height: 46), bar: bar, axis: .horizontal))
+        #expect(cut.swatch.minX == 0 && cut.swatch.width == 36)
+        // Not yet measured, or scrolled out of view: the whole bar.
+        #expect(PaletteBar.tipAnchors(swatch: .null, bar: bar, axis: .horizontal) == nil)
+        #expect(PaletteBar.tipAnchors(swatch: swatch.offsetBy(dx: 900, dy: 0), bar: bar, axis: .horizontal) == nil)
     }
 
     @Test func theNextColorFollowsThePalettesOrder() {
