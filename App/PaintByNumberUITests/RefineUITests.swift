@@ -500,9 +500,9 @@ final class RefineUITests: XCTestCase {
         }
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The repaint didn't count: \(canvas.value ?? "")")
 
-        // From the open sky above the wave into the cloud beside it.
+        // From the open sky down into the band of sea under it (the sky is one area already).
         pickTool("merge", in: "Cells", of: app)
-        drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.85, 0.25))
+        drag(on: canvas, from: onPicture(canvas, 0.75, 0.3), to: onPicture(canvas, 0.75, 0.64))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("2 changes")), "The merge didn't count: \(canvas.value ?? "")")
 
         // Across little Fuji's outline.

@@ -80,15 +80,30 @@ struct PalettePinTests {
         #expect(Self.isOrderedSubset(larger.palette, of: small.palette))
     }
 
-    /// Kit paint mixes the paints it chooses; pinned ones are mixed already, and keep their bits.
+    /// Kit paint mixes the paints it chooses bolder than the colors the segmentation fits: the
+    /// same photo pinned is the template made before, byte for byte, and a changed one keeps the
+    /// pinned paints and, far from the change, the areas' paints, as with the photo's paints.
     @Test func kitPaintKeepsPinnedPaints() throws {
-        let image = TestScenes.scene(width: 240, height: 180)
+        let image = TestScenes.colorful()
         var kit = Self.classic
         kit.paintMix = .kit
         let base = try Self.generate(image, kit)
-        let again = try Self.generate(image, kit, palette: base.palette)
-        #expect(Self.isOrderedSubset(again.palette, of: base.palette))
-        #expect(!again.palette.isEmpty)
+        #expect(try Self.generate(image, kit, palette: base.palette).encoded() == base.encoded())
+
+        var changed = image
+        for y in 0..<40 { for x in 0..<60 { changed[x, y] = SIMD4(250, 250, 250, 255) } }
+        let remade = try Self.generate(changed, kit, palette: base.palette)
+        #expect(Self.isOrderedSubset(remade.palette, of: base.palette))
+        #expect(!remade.palette.isEmpty)
+        var same = 0, far = 0
+        for y in 100..<base.height { for x in 150..<base.width {
+            far += 1
+            let a = base.palette[Int(base.regions[Int(base.regionMap[x, y])].colorIndex)]
+            let b = remade.palette[Int(remade.regions[Int(remade.regionMap[x, y])].colorIndex)]
+            if a == b { same += 1 }
+        } }
+        #expect(Double(same) > 0.8 * Double(far), "kept \(same) of \(far)")
+        #expect(remade.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
     }
 
     @Test func editsScaleToAnotherCanvas() {

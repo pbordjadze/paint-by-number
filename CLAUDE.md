@@ -20,7 +20,8 @@ before planning app work).
   `TemplateGenerator.generate(from:importance:lineArt:…)` composes the stages, timed by
   `StageClock`; `TemplateGenerator.pipelineVersion` is recorded in every template. Its `palette`
   pins the paints (a refined painting's base made again, the app's `TemplateRefinements.pin`):
-  nil is byte for byte the generation without.
+  nil is byte for byte the generation without; kit paint's pinned paints are fitted as the
+  colors they were mixed from (its doc comment).
   - `Foundation/`: grids, `ColorScience` (OKLab, Display P3), resampling, morphology, `DisjointSet`,
     `MinHeap`, `Netpbm` (pbn's only image input off Apple platforms), `SplitMix64` (the only RNG),
     `Parallel` (bands, chunks, `CancellationCheck`; its doc comment is the determinism contract),

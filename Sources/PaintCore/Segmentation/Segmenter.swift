@@ -26,7 +26,8 @@ import Foundation
 /// `palette`), stage 3 is those paints and stage 6 is skipped: pixels and regions take the pinned
 /// paints alone, which keep their colors bit for bit and their order, those left with no region
 /// dropping out, so the painter's color changes still find their paints and an area far from what
-/// changed keeps its paint.
+/// changed keeps its paint. `centers` are the colors the pinned paints are fitted as, when those
+/// aren't the paints' own (kit paint's, mixed from them).
 enum Segmenter {
     /// The pipeline with explicit knobs (tests switch stages off through them), also returning
     /// the importance weights it worked with (0...1 per working pixel: the given map
@@ -40,9 +41,13 @@ enum Segmenter {
         clock: StageClock,
         progress: (Float) -> Void,
         observer: PipelineSnapshot.Observer? = nil,
-        pinned: [PaletteColor]? = nil
+        pinned: [PaletteColor]? = nil,
+        centers: [SIMD3<Float>]? = nil
     ) throws -> (segmentation: Segmentation, importance: [Float]) {
         let pinned = pinned.flatMap { $0.isEmpty ? nil : $0 }
+        // What the pinned paints are fitted as (true OKLab): their own colors, or the colors
+        // kit paint mixed them from.
+        let fitted = pinned.map { pinned in centers.flatMap { $0.count == pinned.count ? $0 : nil } ?? pinned.map(\.oklab) }
         let w = image.width, h = image.height
         guard w > 0, h > 0 else {
             let empty = Segmentation(
@@ -79,7 +84,7 @@ enum Segmenter {
         progress(0.25)
 
         let palette = try clock.measure("segment.palette") { () throws -> [SIMD3<Float>] in
-            if let pinned { return pinned.map { $0.oklab * SIMD3(1, p.chromaScale, p.chromaScale) } }
+            if let fitted { return fitted.map { $0 * SIMD3(1, p.chromaScale, p.chromaScale) } }
             return try PaletteBuilder.build(colors: smooth, importance: weights, parameters: p, cancel: cancel)
         }
         try cancel.throwIfCancelled()
@@ -162,7 +167,7 @@ enum Segmenter {
                     roots: (0..<regions.count).map { Int32($0) }, paint: regions.classOf.map { remap[Int($0)] },
                     adjacency: &adjacency, classes: &classes)
             }
-            finalPalette = pinnedKept.map { pinned[$0].oklab }
+            finalPalette = pinnedKept.map { fitted![$0] }
         } else {
             finalPalette = try clock.measure("segment.refine") {
                 try PaletteRefiner.refine(
