@@ -450,6 +450,50 @@ struct DraftTests {
         #expect(made.sampleName == "red-fox")
     }
 
+    /// A draft keeps the suggestion its flow showed, and the resumed flow's chip, detents and Reset
+    /// to Suggested go by it, not by a suggestion made again from the draft's JPEG (the Mac's
+    /// interruptions round: a draft nobody adjusted came back "Custom"). A draft before it falls
+    /// back on the suggestion made now.
+    @Test func aResumedDraftKeepsTheSuggestionItWasMadeUnder() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.suggested != nil && model.settingsOrigin == .suggested)
+        model.refine(refinements())
+        try await waitUntil { model.isFinal }
+        let saved = try #require(model.draft)
+        #expect(saved.suggested == model.suggested)
+        let jpeg = try #require(ImageCodec.jpegData(try #require(model.source?.preview), quality: 0.88))
+        model.cancelAll()
+
+        // Settings the suggestion made now won't pick, recorded as the draft's suggestion.
+        var unadjusted = saved
+        unadjusted.settings.detail = saved.settings.detail < 0.75 ? saved.settings.detail + 0.25 : saved.settings.detail - 0.25
+        unadjusted.suggested = unadjusted.settings
+        let resumed = CreateModel()
+        resumed.load(draft: unadjusted, photo: jpeg)
+        try await waitUntil { resumed.isFinal }
+        #expect(resumed.decision != nil && resumed.settings == unadjusted.settings)
+        #expect(resumed.suggested == unadjusted.settings && resumed.settingsOrigin == .suggested)
+        #expect(resumed.draft == unadjusted)
+        resumed.detail = Double(saved.settings.detail)
+        resumed.settingsChanged()
+        #expect(resumed.settingsOrigin == .custom)
+        resumed.resetToSuggested()
+        #expect(resumed.settings == unadjusted.settings && resumed.settingsOrigin == .suggested)
+        resumed.cancelAll()
+
+        var older = unadjusted
+        older.suggested = nil
+        let fallback = CreateModel()
+        fallback.load(draft: older, photo: jpeg)
+        try await waitUntil { fallback.isFinal }
+        let decision = try #require(fallback.decision)
+        #expect(fallback.suggested == fallback.mixed(decision.settings))
+        #expect(fallback.settingsOrigin == (fallback.settings == fallback.suggested ? .suggested : .custom))
+        fallback.cancelAll()
+    }
+
     /// A blank start is a refinement of its own: the flow keeps a draft of it before any edit, and
     /// the draft resumes blank, the photo as one area.
     @Test func aBlankStartIsKeptAndResumesBlank() async throws {

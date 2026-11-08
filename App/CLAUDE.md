@@ -865,7 +865,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   filter or a search narrows it, like placeholders); Continue Refining reads the draft off the
   main actor (`Drafts.open`) and opens the create flow on its preview (`CreateFlowView.resuming`,
   `CreateModel.load(draft:photo:)`): the photo goes through the usual steps including the
-  suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
+  suggestion, but the chip, the detents and Reset to Suggested go by the suggestion the draft
+  recorded (`CreateDraft.suggested`; the suggestion made now from its JPEG in a draft before it),
+  and the draft's settings are what is generated,
   with its refinements, at full resolution: the base, then its `edits` laid on it in order
   (`DraftTests.resumingADraftLaysItsEditsAgain`), unless the draft kept the trail they made
   (`CreateModel.keptTrail`, `DraftStore.KeptFile`): then the draft's own settings show its kept
