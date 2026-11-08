@@ -30,8 +30,10 @@ public struct EditTrail: Sendable {
     /// last few counts.
     private var earlier: [Int: Template] = [:]
 
-    /// How many templates before the newest are kept: a template is a megabyte or two.
-    public static let snapshotsKept = 8
+    /// How many templates before the newest are kept: a full canvas's template is 10–20 MB, most
+    /// of it the region map (Instruments, painting-company row 263: the create flow peaked at
+    /// 1.3 GB), and an undo further back lays its few edits again.
+    public static let snapshotsKept = 3
 
     /// The templates kept besides the base and the newest (the tests' check of the bound).
     var snapshotCount: Int { earlier.count }

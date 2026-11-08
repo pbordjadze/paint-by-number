@@ -186,10 +186,13 @@ extension EditWork {
 
         // The pixel map and the lines.
         var map = t.regionMap.storage
+        // Written only where a number moves, so an edit that renumbers nothing shares the map
+        // (10–15 MB on a full canvas) with the template it was laid on, and the trail's
+        // snapshots with each other.
         for i in map.indices {
             let n = newIndex[Int(map[i])]
             guard n >= 0 else { throw EditFailure.invalid("a pixel belongs to a region that was removed") }
-            map[i] = UInt32(n)
+            if map[i] != UInt32(n) { map[i] = UInt32(n) }
         }
         var strokePoints: [SIMD2<Float>] = []
         var outStrokes: [InteriorStroke] = []
