@@ -149,11 +149,13 @@ struct SettingsView: View {
                         .accessibilityIdentifier("painting-length")
                         .id(Self.paintingLengthRow)
                         // Worth a Look Here, the first time Settings opens, once the row is there to point at.
-                        // Above the row: hung below it, it covered the Making-of row it tells of.
-                        .gentleTip(.drawerWorthALook, arrowEdge: .bottom)
                         .onAppear { PaintTips.drawerRowReached() }
                     } header: {
+                        // Above the section's title, over the rows before it, which it doesn't tell of:
+                        // from Painting Length's row it covered the Making-of row (hung below) or the
+                        // Preview row and this title (hung above).
                         Text("New Paintings")
+                            .gentleTip(.drawerWorthALook, arrowEdge: .bottom)
                     } footer: {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")
