@@ -28,7 +28,7 @@ struct LeakTests {
     private func show(_ make: () -> AnyView) async throws {
         let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
         let window = UIWindow(windowScene: scene)
-        window.frame = scene.coordinateSpace.bounds
+        window.frame = scene.effectiveGeometry.coordinateSpace.bounds
         window.rootViewController = UIHostingController(rootView: make())
         window.makeKeyAndVisible()
         try await Task.sleep(for: .seconds(2))
