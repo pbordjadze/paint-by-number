@@ -4394,7 +4394,7 @@
       }
     },
     "Paper" : {
-      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic); From Scratch spike, round 2 (the Easel): the blank easel's button that picks a photo of a drawing on paper",
       "extractionState" : "manual"
     },
     "paper.automatic" : {
@@ -4518,7 +4518,7 @@
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's Layers panel's layer of the photo",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's Layers panel's layer of the photo; From Scratch spike, round 2 (the Easel): the blank easel's button that goes to the photos",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -6108,6 +6108,42 @@
           }
         }
       }
+    },
+    "Easel" : {
+      "comment" : "From Scratch spike, round 2 (the Easel): title of the drawing space every new painting opens on",
+      "extractionState" : "manual"
+    },
+    "Draw here, or start from" : {
+      "comment" : "From Scratch spike, round 2 (the Easel): line over the blank easel's ways to start from a photo, the library or a drawing on paper",
+      "extractionState" : "manual"
+    },
+    "Library" : {
+      "comment" : "From Scratch spike, round 2 (the Easel): the blank easel's button that goes to the library's pictures",
+      "extractionState" : "manual"
+    },
+    "Make It Mine" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): the preview's button that opens the drawing tools on the picture",
+      "extractionState" : "manual"
+    },
+    "Tonight’s Picture" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): title over the large picture leading New Painting",
+      "extractionState" : "manual"
+    },
+    "A new one every evening" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): line under Tonight's Picture",
+      "extractionState" : "manual"
+    },
+    "A Photo" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): card under Your Own that opens the photo picker",
+      "extractionState" : "manual"
+    },
+    "A Drawing" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): card under Your Own that picks a photo of a drawing on paper",
+      "extractionState" : "manual"
+    },
+    "The Library" : {
+      "comment" : "From Scratch spike, round 2 (the Shelf): title over the library's pictures on New Painting",
+      "extractionState" : "manual"
     }
   },
   "version" : "1.0"

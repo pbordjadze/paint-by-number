@@ -150,12 +150,16 @@ struct TemplatePreviewView: View {
         .onChange(of: model.opensRefine) { _, opens in
             if opens && hasSettled { openRefine() }
         }
+        // The Easel (the spike's round 2): every picture opens on the easel once it is made.
+        .onChange(of: model.canRefine) { _, can in
+            if can && hasSettled && opensOnTheEasel { openRefine() }
+        }
         // A page from scratch asks for Refine as it loads and may be made before this shows: it
         // opens once the push has landed (a cover presented mid-push can be dropped).
         .task {
             guard (try? await Task.sleep(for: model.isScratch ? Self.scratchSettles : Self.pushSettles)) != nil else { return }
             hasSettled = true
-            if model.opensRefine { openRefine() }
+            if model.opensRefine || (model.canRefine && opensOnTheEasel) { openRefine() }
         }
         #endif
     }
@@ -283,8 +287,8 @@ struct TemplatePreviewView: View {
     /// Refine closed over a page from scratch (the spike, painting-company row 239): B's Start
     /// Painting starts the painting, and A and B leave a page with nothing drawn for New Painting.
     private func refineClosed() {
-        guard model.isScratch else { return }
         let design = ScratchDesign.chosen
+        guard model.isScratch || design.isEasel else { return }
         if design.startsFromDrawing {
             if model.startsAfterRefine {
                 model.startsAfterRefine = false
@@ -297,6 +301,12 @@ struct TemplatePreviewView: View {
         guard design.closesBackToStart else { return }
         let nothingDrawn = model.refineWasCancelled ? changesAtOpen == 0 : model.refinements.changeCount == 0
         if nothingDrawn { dismiss() }
+    }
+
+    /// The Easel: a picture not yet on the easel goes there as soon as it is made (once: back from
+    /// the easel without starting leaves the flow, `refineClosed`).
+    private var opensOnTheEasel: Bool {
+        ScratchDesign.chosen.isEasel && !model.isScratch && !hasRefined && !isStarting && !paintings.locksRefine
     }
 
     /// Design C's blank page asks to be drawn on.
@@ -369,6 +379,8 @@ struct TemplatePreviewView: View {
                         }
                     } else if model.isScratch && ScratchDesign.chosen.namesItDraw {
                         if model.refinements.changeCount > 0 { Text("Keep Drawing") } else { Text("Draw") }
+                    } else if ScratchDesign.chosen.isShelf {
+                        Text("Make It Mine")
                     } else {
                         Text("Refine")
                     }

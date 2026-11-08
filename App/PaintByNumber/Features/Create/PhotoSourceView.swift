@@ -48,6 +48,8 @@ struct PhotoSourceView: View {
     /// From Scratch was tapped before Unlimited Paintings, which Refine comes with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
+    /// The Easel (the spike's round 2) has been opened on its blank page by this screen.
+    @State private var hasOpenedEasel = false
     #endif
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
@@ -63,8 +65,20 @@ struct PhotoSourceView: View {
     private var isWide: Bool { width >= 600 }
     private var horizontalPadding: CGFloat { isWide ? 32 : 20 }
     private let paneSpacing: CGFloat = 24
-    private var showsPhotos: Bool { isWide || pane == .photos }
-    private var showsSamples: Bool { isWide || pane == .samples }
+    private var showsPhotos: Bool { !isShelf && (isWide || pane == .photos) }
+    private var showsSamples: Bool { isShelf || isWide || pane == .samples }
+    /// The photos beside the samples: wide windows, but for the spike's Shelf.
+    private var isSideBySide: Bool { isWide && !isShelf }
+
+    /// The From Scratch spike's round 2 (painting-company row 239): the Shelf makes this screen one
+    /// shelf of pictures, the painter's own ways in among them.
+    private var isShelf: Bool {
+        #if UNRELEASED
+        ScratchDesign.chosen.isShelf
+        #else
+        false
+        #endif
+    }
     /// Wide windows pad only the samples' side: the picker's card meets the leading edge.
     private var samplesWidth: CGFloat { max(0, (width - horizontalPadding - paneSpacing) * 0.4) }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
@@ -74,7 +88,7 @@ struct PhotoSourceView: View {
         // cannot arbitrate between its pan and an in-process ancestor's pan across that
         // boundary, so a drag that started on the picker moved neither.
         VStack(alignment: .leading, spacing: 14) {
-            if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
+            if !isWide && !isShelf { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
         .padding(.top, 4)
@@ -110,7 +124,8 @@ struct PhotoSourceView: View {
             // Refine is: as an icon alone, newcomers found it only by its VoiceOver label (QA,
             // November 5).
             // Design C (painting-company row 239) has it among the samples instead.
-            if !ScratchDesign.chosen.isAPicture {
+            // Round 2's Easel opens on the blank page and the Shelf has it among its pictures.
+            if !ScratchDesign.chosen.isAPicture && !ScratchDesign.chosen.isEasel && !isShelf {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
@@ -144,7 +159,12 @@ struct PhotoSourceView: View {
             #endif
             pick(item)
         }
-        .onAppear { PaintTips.newPaintingOpened() }
+        .onAppear {
+            PaintTips.newPaintingOpened()
+            #if UNRELEASED
+            opensTheEasel()
+            #endif
+        }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
         #if UNRELEASED
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
@@ -183,7 +203,7 @@ struct PhotoSourceView: View {
     /// The page's horizontal padding is the samples' alone, so the picker reaches the window's
     /// leading edge: on compact widths it spans the window.
     private var panes: some View {
-        let layout = isWide
+        let layout = isSideBySide
             ? AnyLayout(HStackLayout(alignment: .top, spacing: paneSpacing))
             : AnyLayout(ZStackLayout(alignment: .top))
         return layout {
@@ -193,11 +213,11 @@ struct PhotoSourceView: View {
                 .accessibilityHidden(!showsPhotos)
             if showsSamples {
                 samplesPane
-                    .frame(width: isWide ? samplesWidth : nil)
-                    .padding(.horizontal, isWide ? 0 : horizontalPadding)
+                    .frame(width: isSideBySide ? samplesWidth : nil)
+                    .padding(.horizontal, isSideBySide ? 0 : horizontalPadding)
             }
         }
-        .padding(.trailing, isWide ? horizontalPadding : 0)
+        .padding(.trailing, isSideBySide ? horizontalPadding : 0)
     }
 
     private var photosPane: some View {
@@ -268,7 +288,7 @@ struct PhotoSourceView: View {
 
     private var samplesPane: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if isWide {
+            if isSideBySide {
                 // Wide windows show the samples beside the photos: the tip points at their title.
                 SectionTitle("Samples")
                     .gentleTip(.newPaintingSamples, arrowEdge: .top)
@@ -278,6 +298,7 @@ struct PhotoSourceView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         #if UNRELEASED
                         if ScratchDesign.chosen.isAPicture { blankPageSection }
+                        if isShelf { shelfTop }
                         #endif
                         ForEach(Sample.Kind.allCases, id: \.self) { kind in
                             let samples = Sample.all(of: kind)
@@ -320,6 +341,60 @@ struct PhotoSourceView: View {
     }
 
     #if UNRELEASED
+    /// The Shelf (the spike's round 2): tonight's picture large, then the painter's own ways in,
+    /// then the library as ever.
+    private var shelfTop: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            if let tonight = Sample.all(of: .painting).first {
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        SectionTitle("Tonight’s Picture", style: isWide ? .title2 : .title3)
+                        Text("A new one every evening")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button {
+                        PaintTips.photoChosen()
+                        model.load(sample: tonight)
+                        onPicked()
+                    } label: {
+                        SampleTile(sample: tonight)
+                    }
+                    .buttonStyle(PressableCardStyle())
+                    .frame(maxWidth: isWide ? CGFloat(640) : CGFloat.infinity, alignment: .leading)
+                }
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                SectionTitle("Your Own", style: isWide ? .headline : .title3)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 12) {
+                        Button { browseAll() } label: { OwnTile(title: Text("A Photo"), systemImage: "photo") }
+                        if cameraAvailable {
+                            Button { showCamera() } label: { OwnTile(title: Text("Take Photo"), systemImage: "camera") }
+                        }
+                        Button {
+                            picksDrawing = true
+                            isBrowsingAll = true
+                        } label: {
+                            OwnTile(title: Text("A Drawing"), systemImage: "doc.viewfinder")
+                        }
+                        Button {
+                            if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                        } label: {
+                            OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
+                        }
+                        .accessibilityIdentifier("from-scratch")
+                    }
+                    .buttonStyle(PressableCardStyle())
+                    .padding(.vertical, 2)
+                }
+                .scrollIndicators(.hidden)
+            }
+            SectionTitle("The Library", style: isWide ? .title2 : .title3)
+                .padding(.bottom, -14)
+        }
+    }
+
     /// Design C (painting-company row 239): a blank page leads the pictures, a picture of its own.
     private var blankPageSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -351,7 +426,7 @@ struct PhotoSourceView: View {
     /// The grid's minimum tile width, never wider than the column (the press-scale padding
     /// taken off), so a tile scaled up for a large text size still fits.
     private var tileWidth: CGFloat {
-        let column = (isWide ? samplesWidth : width - 2 * horizontalPadding) - 8
+        let column = (isSideBySide ? samplesWidth : width - 2 * horizontalPadding) - 8
         return column > 0 ? min(tileMinimumWidth, column) : tileMinimumWidth
     }
 
@@ -400,6 +475,18 @@ struct PhotoSourceView: View {
     }
 
     #if UNRELEASED
+    /// The Easel (the spike's round 2): New Painting opens on the blank easel, once; back from it
+    /// is this screen, its photos and library.
+    private func opensTheEasel() {
+        guard ScratchDesign.chosen.isEasel, !hasOpenedEasel, model.source == nil, !paintings.locksRefine else { return }
+        hasOpenedEasel = true
+        #if DEBUG
+        // The demos open it themselves (`ScratchDemo`).
+        if DemoMode.scenario != nil { return }
+        #endif
+        startFromScratch()
+    }
+
     /// A blank page, straight into Refine.
     private func startFromScratch() {
         PaintTips.photoChosen()
@@ -468,6 +555,34 @@ private struct BlankPageTile: View {
             .accessibilityLabel("Blank Page")
             .accessibilityHint("Draw your own picture on a blank page")
             .accessibilityAddTraits(.isButton)
+    }
+}
+#endif
+
+#if UNRELEASED
+/// The Shelf's way in of the painter's own: a small card with its symbol and name.
+private struct OwnTile: View {
+    let title: Text
+    let systemImage: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 26, weight: .light))
+                .foregroundStyle(Theme.accent)
+                .accessibilityHidden(true)
+            title
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+        }
+        .frame(width: 112, height: 96, alignment: .topLeading)
+        .padding(12)
+        .background(Theme.surface)
+        .clipShape(.rect(cornerRadius: 18, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1) }
+        .contentShape(.rect(cornerRadius: 18, style: .continuous))
+        .hoverEffect(.lift)
     }
 }
 #endif

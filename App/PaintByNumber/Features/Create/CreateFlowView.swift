@@ -231,6 +231,20 @@ struct CreateFlowView: View {
             return false
         }
         guard await pause(0.8) else { return }
+        if demo.step == .picture {
+            // A library picture picked: the Easel puts it on the easel once it is made, the Shelf
+            // shows its preview with Make It Mine.
+            guard let sample = Sample.all(of: .painting).first else { return }
+            model.load(sample: sample)
+            path = [.preview]
+            for _ in 0..<1800 {
+                if model.isFinal { break }
+                guard await pause(0.1) else { return }
+            }
+            guard model.isFinal, await pause(demo.design == .e ? 4 : 2) else { return }
+            DemoMode.markReady()
+            return
+        }
         model.loadScratch()
         var push = Transaction()
         push.disablesAnimations = model.isScratch && !Self.scratchIsAPicture
@@ -261,7 +275,7 @@ struct CreateFlowView: View {
         }
         model.demoFinishesRefine = true
         // B opens the painting, which marks itself ready (`ArtworkPaintingView`).
-        guard demo.design != .b, await pause(2.5) else { return }
+        guard !demo.design.startsFromDrawing, await pause(2.5) else { return }
         DemoMode.markReady()
     }
     #endif

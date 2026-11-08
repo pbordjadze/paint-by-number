@@ -10,9 +10,10 @@ import PaintCore
 /// - `drawn`: the drawing space with a picture drawn as a painter would, the Pen's lines and
 ///   the Bucket's pours laid one by one (`drawing(side:)`);
 /// - `after`: what the drawing space's finishing button leads to (A, C: the preview; B: the
-///   painting).
+///   painting);
+/// - `picture`: a library picture picked (E: on the easel; S: its preview, Make It Mine).
 struct ScratchDemo {
-    enum Step: String { case entry, blank, drawn, after }
+    enum Step: String { case entry, blank, drawn, after, picture }
 
     let design: ScratchDesign
     let step: Step

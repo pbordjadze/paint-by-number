@@ -414,6 +414,7 @@ struct RefineView: View {
     private var refineScreen: some View {
         NavigationStack {
             canvas
+                .overlay(alignment: .bottom) { easelStarts }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if !fullScreen { reservedTools }
                 }
@@ -421,7 +422,7 @@ struct RefineView: View {
                     if usesRail, !fullScreen { toolRail }
                 }
                 .background(Theme.paper)
-                .navigationTitle(drawsFromNothing ? String(localized: "Draw") : String(localized: "Refine"))
+                .navigationTitle(screenTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
                 .toolbarVisibility(fullScreen ? .hidden : .visible, for: .navigationBar)
@@ -1262,8 +1263,43 @@ struct RefineView: View {
         drawsFromNothing ? kind.tools.filter { Self.drawingTools.contains($0) } : kind.tools
     }
 
-    /// Design B: the space's own Start Painting, with no preview between.
-    private var startsPainting: Bool { model.isScratch && ScratchDesign.chosen.startsFromDrawing }
+    /// Design B: the space's own Start Painting, with no preview between (the Easel: for every
+    /// picture).
+    private var startsPainting: Bool {
+        (model.isScratch && ScratchDesign.chosen.startsFromDrawing) || ScratchDesign.chosen.isEasel
+    }
+
+    private var screenTitle: String {
+        if ScratchDesign.chosen.isEasel { return String(localized: "Easel") }
+        return drawsFromNothing ? String(localized: "Draw") : String(localized: "Refine")
+    }
+
+    /// The Easel's blank page (the spike's round 2): draw on it, or start from something else.
+    /// Each way leaves the easel for New Painting's picker, library or drawing (a spike: the real
+    /// design would open them over the easel).
+    @ViewBuilder
+    private var easelStarts: some View {
+        if ScratchDesign.chosen.isEasel, model.isScratch, model.refinements.changeCount == 0, !fullScreen {
+            VStack(spacing: 10) {
+                Text("Draw here, or start from")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                GlassEffectContainer(spacing: 10) {
+                    HStack(spacing: 10) {
+                        Button("Photo", systemImage: "photo") { dismiss() }
+                        Button("Library", systemImage: "books.vertical") { dismiss() }
+                        Button("Paper", systemImage: "doc.viewfinder") { dismiss() }
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.large)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("easel-starts")
+        }
+    }
 
     /// Design B's Start Painting: the drawing kept, and the painting starts as the space closes.
     private func startPainting() {
@@ -1334,7 +1370,7 @@ struct RefineView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
-                .disabled(model.refinements.changeCount == 0)
+                .disabled(model.isScratch && model.refinements.changeCount == 0)
                 .keyboardShortcut(isCovered ? nil : .defaultAction)
                 .accessibilityIdentifier("refine-done")
             }
