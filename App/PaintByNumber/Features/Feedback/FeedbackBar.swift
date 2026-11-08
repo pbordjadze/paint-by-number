@@ -17,6 +17,7 @@ struct FeedbackBar: View {
         GlassEffectContainer(spacing: 10) {
             HStack(spacing: 8) {
                 GlassIconButton(systemImage: "xmark", label: "Cancel", action: cancel)
+                    .keyboardShortcut(.cancelAction)
                     .accessibilityIdentifier("feedback-cancel")
                     .confirmationDialog("Discard Your Feedback?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
                         Button("Discard", role: .destructive, action: onDiscard)
