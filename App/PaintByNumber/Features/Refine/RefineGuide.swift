@@ -704,6 +704,7 @@ struct RefineGuideView: View {
     private var doneButton: some View {
         Button("Done", systemImage: "checkmark") { dismiss() }
             .tint(Theme.signature)
+            .keyboardShortcut(.cancelAction)
             .accessibilityIdentifier("refine-guide-done")
     }
 }

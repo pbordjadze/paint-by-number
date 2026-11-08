@@ -298,6 +298,7 @@ struct TemplatePreviewView: View {
         if let onClose, !isEnlarged {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
+                    .keyboardShortcut(.cancelAction)
                     .disabled(isStarting)
             }
         }
