@@ -1291,7 +1291,8 @@ struct RefineView: View {
                         Button("Paper", systemImage: "doc.viewfinder") { dismiss() }
                     }
                     .buttonStyle(.glass)
-                    .controlSize(.large)
+                    .lineLimit(1)
+                    .fixedSize()
                 }
             }
             .padding(.horizontal, 16)
