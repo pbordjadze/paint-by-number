@@ -355,6 +355,20 @@ struct TemplateRefinementsTests {
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: file) == anew.refinements)
         #expect(!String(decoding: try JSONEncoder().encode(smaller.refinements), as: UTF8.self).contains("moved"))
 
+        // A moved repaint whose color is picked again at the other number goes back too, and two
+        // repaints of two paints to one color each go back to their own.
+        var picked = anew.refinements
+        picked.edits[1] = .repaint(from: from, to: SIMD3(0.2, 0.2, 0), family: false)
+        #expect(picked.rebased(onto: base, colorCount: 12).refinements.edits[1]
+            == .repaint(from: SIMD3(from.x + 0.01, from.y, from.z), to: SIMD3(0.2, 0.2, 0), family: false))
+        var twice = refinements
+        let other = SIMD3<Float>(from.x - 0.01, from.y, from.z)
+        twice.pin?.palette.append(PaletteColor(oklab: other, space: .sRGB))
+        twice.edits.append(.repaint(from: other, to: SIMD3(0.3, 0.1, 0), family: false))
+        let both7 = twice.rebased(onto: base, colorCount: 7)
+        #expect(both7.repainted == 2 && both7.refinements.pin?.moved.count == 2)
+        #expect(both7.refinements.rebased(onto: base, colorCount: 12).refinements.edits == twice.rebased(onto: base, colorCount: 12).refinements.edits)
+
         // Another number's paints, taken once a base of it was laid with edits, make its bases.
         var both = refinements
         let seven = [PaletteColor(oklab: SIMD3(0.4, 0, 0.05), space: .sRGB)]

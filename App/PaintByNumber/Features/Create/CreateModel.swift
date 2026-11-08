@@ -298,6 +298,8 @@ final class CreateModel {
         guard refinements.pin?.palette(for: count) == nil else { return }
         let unpinned = refinements
         if refinements.pin == nil {
+            // A pin taken again (the edits were undone to none) has origins of its own.
+            pinOrigins = []
             refinements.pin = TemplateRefinements.Pin(base: trail.base, colorCount: count)
         } else {
             refinements.pin?.others.append(.init(colorCount: count, palette: trail.base.palette))

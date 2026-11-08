@@ -303,7 +303,13 @@ extension CreateModelTests {
         try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
         let paints = model.paintsBeforeEdits
         #expect(model.refinements.pin?.palette(for: model.settings.colorCount) == paints)
-        let from = try #require(paints.last?.oklab)
+        // A paint of the template on screen that the moved repaint doesn't already use.
+        let shownPaints = try #require(model.preview?.template.palette)
+        guard case .repaint(let movedFrom, _, _)? = model.refinements.edits.first else {
+            Issue.record("the repaint is gone")
+            return
+        }
+        let from = try #require(paints.last { paint in shownPaints.contains(paint) && paint.oklab != movedFrom }?.oklab)
         let repaint = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.3, -0.05, -0.12), family: false)
         model.recolor(.repaint(from: from, to: SIMD3(0.3, -0.05, -0.12), family: false))
         await model.settled()

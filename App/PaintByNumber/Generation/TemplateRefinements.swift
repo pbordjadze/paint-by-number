@@ -98,8 +98,9 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var width: Int
         var height: Int
         /// Repaints sent on to another paint while the number of paints is another than
-        /// `colorCount` (`rebased(onto:colorCount:)`): each one's paint now (`moved`), its color
-        /// (`to`) and the pinned paint it was made of (`from`), so the number put back puts it back.
+        /// `colorCount` (`rebased(onto:colorCount:)`), one for each in the order of the edits: its
+        /// paint now, its color and the pinned paint it was made of, so the number put back puts
+        /// it back (one whose color was picked again there too).
         var moved: [Moved] = []
         /// The paints of a base made for another number of paints, the first laid with edits for
         /// that number (the Colors slider moved after refining, a painting finished there): a base
@@ -275,31 +276,34 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             pin.width = base.width
             pin.height = base.height
         }
-        // Each repaint moved before, back on its pinned paint.
+        // Each repaint moved before, back on its pinned paint: the moves in the edits' order, each
+        // taken once, one of the same color first (a color picked again there keeps its move).
+        var restored = 0
         if !pin.moved.isEmpty {
+            var unused = pin.moved
             next.edits = next.edits.map { edit in
                 guard case .repaint(let from, let to, let family) = edit,
-                      let move = pin.moved.first(where: { $0.paint == from && $0.to == to }) else { return edit }
+                      let k = unused.firstIndex(where: { $0.paint == from && $0.to == to }) ?? unused.firstIndex(where: { $0.paint == from })
+                else { return edit }
+                let move = unused.remove(at: k)
+                restored += 1
                 return .repaint(from: move.from, to: to, family: family)
             }
             pin.moved = []
         }
-        var repainted = 0
+        var moved = 0
         if colorCount != pin.colorCount {
             let nearest = TemplateEditor.nearestPaints(from: pin.palette, to: base.palette)
             next.edits = next.edits.map { edit in
                 guard edit.isRepainted(by: nearest), case .repaint(let from, let to, _) = edit, let paint = nearest[from] else { return edit }
-                repainted += 1
-                if !pin.moved.contains(where: { $0.paint == paint && $0.to == to }) {
-                    pin.moved.append(Pin.Moved(from: from, paint: paint, to: to))
-                }
+                moved += 1
+                pin.moved.append(Pin.Moved(from: from, paint: paint, to: to))
                 return edit.repainting(nearest)
             }
         }
         next.pin = pin
-        // Already carried onto this base: nothing to say again.
-        if next == self { repainted = 0 }
-        return Rebase(refinements: next, repainted: repainted)
+        // Only repaints that weren't moved already are news.
+        return Rebase(refinements: next, repainted: max(0, moved - restored))
     }
 
     // MARK: Strengths
