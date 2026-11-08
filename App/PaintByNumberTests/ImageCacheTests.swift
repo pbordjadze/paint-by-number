@@ -37,6 +37,16 @@ struct ImageCacheTests {
         #expect(cache.totalCost == cache.costLimit)
     }
 
+    @Test func removesTheImagesItIsAskedTo() throws {
+        let cache = ImageCache<Int>(costLimit: 1 << 20)
+        for key in 1...4 { cache.insert(try image(50), for: key) }
+        let one = cache.totalCost / 4
+        cache.removeAll { $0.isMultiple(of: 2) }
+        #expect(cache.image(for: 2) == nil && cache.image(for: 4) == nil)
+        #expect(cache.image(for: 1) != nil && cache.image(for: 3) != nil)
+        #expect(cache.totalCost == 2 * one)
+    }
+
     @Test func memoryWarningEmptiesTheCache() throws {
         let cache = ImageCache<Int>(costLimit: 1 << 20)
         cache.insert(try image(50), for: 1)
