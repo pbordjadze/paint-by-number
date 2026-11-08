@@ -11,6 +11,8 @@ struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(UnlimitedPaintings.self) private var paintings
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// The search field has the keyboard (⌘F, `GalleryCommands`).
+    @FocusState private var isSearchFocused: Bool
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -90,6 +92,7 @@ struct AppShellView: View {
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search paintings"))
+                .searchFocused($isSearchFocused)
                 .navigationDestination(for: UUID.self) { id in
                     // The zoom is for pushes from a card and for the way back to it; the painting
                     // Start Painting makes is pushed under the cover (`startPainting`).
@@ -102,6 +105,12 @@ struct AppShellView: View {
                 }
         }
         .environment(\.startHandoff, handoff)
+        // The app's menu bar commands (⌘, ⌘N ⌘F): the gear's sheet, the + and the search field.
+        .focusedSceneValue(\.gallery, GalleryFocus(
+            openSettings: { if !isShowingSettings { isShowingSettings = true } },
+            newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
+            search: { isSearchFocused = true },
+            isCovered: isCovered || !path.isEmpty))
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil

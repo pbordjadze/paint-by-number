@@ -5469,6 +5469,10 @@
       "comment" : "Feedback's review sheet: footer under the note field",
       "extractionState" : "manual"
     },
+    "Search Paintings" : {
+      "comment" : "iPad menu bar command (⌘F) that puts the cursor in the gallery's search field",
+      "extractionState" : "manual"
+    },
     "Search paintings" : {
       "comment" : "Placeholder of the gallery's search field",
       "extractionState" : "manual"
@@ -5536,6 +5540,10 @@
           }
         }
       }
+    },
+    "Settings…" : {
+      "comment" : "iPad menu bar command (⌘,) in the app menu that opens the app's Settings sheet",
+      "extractionState" : "manual"
     },
     "Shade" : {
       "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
