@@ -101,6 +101,22 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         /// `colorCount` (`rebased(onto:colorCount:)`): each one's paint now (`moved`), its color
         /// (`to`) and the pinned paint it was made of (`from`), so the number put back puts it back.
         var moved: [Moved] = []
+        /// The paints of a base made for another number of paints, the first laid with edits for
+        /// that number (the Colors slider moved after refining, a painting finished there): a base
+        /// made again for that number is made of them, so what was done on it keeps its paints.
+        var others: [Paints] = []
+
+        /// The paints a base of `colorCount` paints keeps.
+        nonisolated struct Paints: Codable, Equatable, Sendable {
+            var colorCount: Int
+            var palette: [PaletteColor]
+        }
+
+        /// The paints a base of `colorCount` paints is made of, nil when no base of that number
+        /// was laid with edits.
+        func palette(for count: Int) -> [PaletteColor]? {
+            count == colorCount ? palette : others.first { $0.colorCount == count }?.palette
+        }
 
         /// A repaint sent on to another paint: of `from`, a pinned paint, now of `to`'s paint `paint`.
         nonisolated struct Moved: Codable, Equatable, Sendable {
@@ -125,7 +141,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             self.init(palette: base.palette, colorCount: colorCount, width: base.width, height: base.height)
         }
 
-        private enum CodingKeys: String, CodingKey { case palette, colorCount, width, height, moved }
+        private enum CodingKeys: String, CodingKey { case palette, colorCount, width, height, moved, others }
 
         /// Hostile input: a pin that doesn't hold up (too many paints, a color that isn't finite,
         /// a canvas out of range) throws, and the refinements read on without it.
@@ -144,7 +160,16 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             let moves = (try? c.decodeIfPresent([Moved].self, forKey: .moved)) ?? []
             moved = moves.count <= TemplateRefinements.maximumEdits && moves.allSatisfy({ finite($0.from) && finite($0.paint) && finite($0.to) })
                 ? moves : []
+            // A number's paints that don't hold up are left out: its base chooses them again.
+            let more = (try? c.decodeIfPresent([Paints].self, forKey: .others)) ?? []
+            others = Array(more.prefix(Self.maximumOthers)).filter { paints in
+                paints.colorCount > 0 && !paints.palette.isEmpty && paints.palette.count <= Self.maximumPaints
+                    && paints.palette.allSatisfy { finite($0.oklab) && finite($0.rgb) }
+            }
         }
+
+        /// How many other numbers' paints a pin keeps: far more than a painter moves the slider through.
+        static let maximumOthers = 64
 
         /// `moved` only when there are some, so a pin without writes its first shape.
         func encode(to encoder: Encoder) throws {
@@ -154,6 +179,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             try c.encode(width, forKey: .width)
             try c.encode(height, forKey: .height)
             if !moved.isEmpty { try c.encode(moved, forKey: .moved) }
+            if !others.isEmpty { try c.encode(others, forKey: .others) }
         }
     }
 
@@ -218,13 +244,12 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Pin
 
-    /// The paints a base of `settings` is made of: the pin's, while the edits it keeps are there
-    /// and the number of paints is the one they were chosen for; nil otherwise (the paints are
-    /// chosen, as for a painting nobody refined).
+    /// The paints a base of `settings` is made of: the pin's for its number of paints
+    /// (`Pin.palette(for:)`), while there are edits; nil otherwise (the paints are chosen, as for
+    /// a painting nobody refined, or a number no base was laid with edits at).
     func pinnedPalette(for settings: GenerationSettings) -> [PaletteColor]? {
-        guard let pin, !edits.isEmpty, start == .generated, settings.drawing == nil,
-              settings.colorCount == pin.colorCount else { return nil }
-        return pin.palette
+        guard let pin, !edits.isEmpty, start == .generated, settings.drawing == nil else { return nil }
+        return pin.palette(for: settings.colorCount)
     }
 
     /// What carrying the edits onto another base did (`rebased(onto:colorCount:)`).

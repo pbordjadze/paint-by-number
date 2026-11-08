@@ -826,7 +826,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     count changed, and the edits are carried onto it (`TemplateRefinements.rebased`): scaled to
     a canvas Detail made another size, and on paints chosen anew each repaint sent to the
     nearest one, which a toast says (`Pin.moved`: the pin stays the first base's, so the Colors
-    count put back puts each repaint back exactly). A damaged painting refined before pins
+    count put back puts each repaint back exactly; the first base laid with edits at another
+    count gives that count's paints, `Pin.others`, so a painting finished there keeps them). A
+    damaged painting refined before pins
     says on its recovery screen that its colors may come out different
     (`Library.regenerationMayRepaint`). The pin is taken from the first edit's base (or a draft's
     from before pins, from its first base laid), kept in drafts and `refinements.json`, so

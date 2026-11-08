@@ -270,28 +270,39 @@ final class CreateModel {
     }
 
     /// The paints a base of `settings` and `inputs` is made of now (`TemplateRefinements.pinnedPalette`),
-    /// but for the base the pin was taken from in this flow (`pinOrigin`): made of this photo
-    /// again, it is that base, paints chosen and all, so a slider put back gives it back bit for bit.
+    /// but for a base the pin's paints were taken from in this flow (`pinOrigins`): made of this
+    /// photo again, it is that base, paints chosen and all, so a slider put back gives it back bit
+    /// for bit.
     private func pinnedPalette(for settings: GenerationSettings, inputs: TemplateRefinements) -> [PaletteColor]? {
-        guard BaseKey(settings: settings, inputs: inputs) != pinOrigin else { return nil }
+        guard !pinOrigins.contains(BaseKey(settings: settings, inputs: inputs)) else { return nil }
         return refinements.pinnedPalette(for: settings)
     }
 
-    /// The settings and inputs of the base the pin was taken from, when that base was made of this
-    /// flow's photo (not a resumed draft's kept base, made of the photo before its JPEG).
-    @ObservationIgnored private var pinOrigin: BaseKey?
+    /// The settings and inputs of the bases the pin's paints were taken from that chose their own
+    /// paints of this flow's photo (not a resumed draft's kept base, made of the photo before its
+    /// JPEG, nor a base made of a pin).
+    @ObservationIgnored private var pinOrigins: [BaseKey] = []
+    /// Whether the base on screen chose its own paints of this flow's photo (`pinOrigins`).
+    @ObservationIgnored private var trailMadeHere = false
     /// A resumed draft's settings and inputs, whose base (the one it kept, made of the photo
     /// itself) `made` keeps for as long as the flow has the photo.
     @ObservationIgnored private var homeKey: BaseKey?
 
     /// Takes the pin (`TemplateRefinements.Pin`) from the base the edits are laid on, once there
     /// are edits and none was taken: the first edit's, or a draft's from before pins, whose
-    /// first base laid is the one its later bases keep the paints of.
+    /// first base laid is the one its later bases keep the paints of; and a base laid with edits
+    /// for another number of paints than any the pin keeps gives that number's (`Pin.others`).
     private func takePin() {
-        guard refinements.pin == nil, !refinements.edits.isEmpty, let trail, let key = trailKey else { return }
+        guard !refinements.edits.isEmpty, let trail, let key = trailKey else { return }
+        let count = key.settings.colorCount
+        guard refinements.pin?.palette(for: count) == nil else { return }
         let unpinned = refinements
-        refinements.pin = TemplateRefinements.Pin(base: trail.base, colorCount: key.settings.colorCount)
-        pinOrigin = key == homeKey ? nil : key
+        if refinements.pin == nil {
+            refinements.pin = TemplateRefinements.Pin(base: trail.base, colorCount: count)
+        } else {
+            refinements.pin?.others.append(.init(colorCount: count, palette: trail.base.palette))
+        }
+        if trailMadeHere, key != homeKey { pinOrigins.append(key) }
         // The template on screen is still these refinements' (Start compares them).
         if var shown = preview, !shown.isDraft, shown.refinements == unpinned {
             shown.refinements = refinements
@@ -641,6 +652,8 @@ final class CreateModel {
         isPractice = true
         isDrawing = false
         isScratch = false
+        homeKey = nil
+        pinOrigins = []
         photoDefaultTitle = ""
         blankTitle = ""
         title = ""
@@ -672,7 +685,8 @@ final class CreateModel {
             do {
                 let shown = try await Self.laid(base, settings: settings, refinements: inputs, style: style)
                 guard load == loadID else { return }
-                remember(base, settings: settings, refinements: inputs.generatorInputs)
+                remember(base, settings: settings, refinements: inputs.generatorInputs, palette: nil)
+                trailMadeHere = false
                 show(shown)
                 trailKey = BaseKey(settings: settings, inputs: inputs.generatorInputs)
                 phase = .ready
@@ -719,7 +733,7 @@ final class CreateModel {
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
         }
         homeKey = resumeKept?.key
-        pinOrigin = nil
+        pinOrigins = []
         // A new photo gets a new default name, and anything typed for the last one goes.
         photoDefaultTitle = defaultTitle
         #if UNRELEASED
@@ -1103,10 +1117,14 @@ final class CreateModel {
             // A refined painting's base keeps its paints (painting-company row 278).
             let palette = pinnedPalette(for: settings, inputs: inputs)
             var shown: Shown
+            // Whether the base chose its own paints of this flow's photo (`pinOrigins`).
+            var madeHere = palette == nil
             if !draft, let resumed = resumeKept, resumed.key == BaseKey(settings: settings, inputs: inputs) {
+                madeHere = false
                 shown = try await Self.laid(
                     resumed.trail.base, settings: settings, refinements: refinements, style: previewStyle, kept: resumed.trail)
             } else if !draft, let earlier = madeBase(settings: settings, inputs: inputs) {
+                madeHere = earlier.palette == nil && BaseKey(settings: settings, inputs: inputs) != homeKey
                 shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
@@ -1144,6 +1162,11 @@ final class CreateModel {
                 left += shown.replay.left
                 try Task.checkCancellation()
             }
+            // And a first edit sent while they were laid pins too.
+            if !draft, self.refinements.generatorInputs == inputs, pinnedPalette(for: settings, inputs: inputs) != palette {
+                await generate(draft: false, settings: settings)
+                return
+            }
             if let base = shown.trail?.base { rebase(onto: base, colorCount: settings.colorCount) }
             // Drafts follow the finger as they come: a crossfade would blur one into the next.
             withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
@@ -1152,6 +1175,7 @@ final class CreateModel {
             }
             if let current = shown.trail {
                 trail = current
+                trailMadeHere = madeHere
                 let key = BaseKey(settings: settings, inputs: inputs)
                 // Only its own settings' trail stands in for it: a slider moved meanwhile leaves it
                 // for when they come back.

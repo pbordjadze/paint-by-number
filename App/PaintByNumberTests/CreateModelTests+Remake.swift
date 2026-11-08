@@ -292,6 +292,34 @@ extension CreateModelTests {
         r.model.cancelAll()
     }
 
+    /// The critic's case: refined at one Colors count, repainted after moving it, and started there.
+    /// The base laid with edits at the new count gives that count's paints to the pin
+    /// (`Pin.others`), so the painting made again keeps them and the repaint made on them.
+    @Test func aPaintingFinishedAtAnotherColorsCountKeepsThosePaints() async throws {
+        let r = try await refined()
+        let model = r.model
+        model.colorCount += 4
+        model.settingsChanged()
+        try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
+        let paints = model.paintsBeforeEdits
+        #expect(model.refinements.pin?.palette(for: model.settings.colorCount) == paints)
+        let from = try #require(paints.last?.oklab)
+        let repaint = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.3, -0.05, -0.12), family: false)
+        model.recolor(.repaint(from: from, to: SIMD3(0.3, -0.05, -0.12), family: false))
+        await model.settled()
+        try await waitUntil { model.isFinal && model.refinements.edits.count == 5 }
+        let made = try await model.makeDraft()
+        let root = FileManager.default.temporaryDirectory.appending(path: "remake-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = Library(store: ArtworkStore(root: root))
+        let artwork = try await library.create(made)
+        #expect(!(await library.regenerationMayRepaint(artwork.id)))
+        let document = try await library.regenerate(artwork: artwork.id, settings: made.settings)
+        #expect(Set(document.template.palette).isSubset(of: Set(made.template.palette).union(paints)))
+        #expect(document.template.palette.contains { $0.oklab == TemplateEditor.recolor(from, by: repaint) }, "the repaint made at the new count was lost")
+        model.cancelAll()
+    }
+
     /// A painting refined before refinements kept their paints has no pin: made again it keeps
     /// today's re-make, and its recovery says the paints may come out different.
     @Test func recoveringAPaintingWithoutAPinSaysItsPaintsMayChange() async throws {

@@ -607,15 +607,18 @@ final class Library {
     }
 
     /// Whether making the painting again may give it other paints than it has: a painting
-    /// refined by hand before refinements kept its paints (`TemplateRefinements.pin`,
-    /// painting-company row 278), whose base is made again of its stored JPEG and chooses its
-    /// paints anew, so its color changes may land elsewhere. Read off the main actor; a file
-    /// that can't be read says nothing.
+    /// refined by hand whose refinements keep no paints for its settings
+    /// (`TemplateRefinements.pinnedPalette(for:)`, painting-company row 278; one refined before
+    /// they kept any), whose base is made again of its stored JPEG and chooses its paints anew,
+    /// so its color changes may land elsewhere. Read off the main actor; a file that can't be
+    /// read says nothing.
     func regenerationMayRepaint(_ id: UUID) async -> Bool {
-        let store = self.store
+        guard let artwork = artwork(with: id) else { return false }
+        let store = self.store, settings = artwork.settings
         return await Background.run {
             guard let refinements = try? store.readRefinements(id) else { return false }
-            return !refinements.edits.isEmpty && refinements.pin == nil && refinements.start == .generated
+            return !refinements.edits.isEmpty && refinements.start == .generated && settings.drawing == nil
+                && refinements.pinnedPalette(for: settings) == nil
         }
     }
 

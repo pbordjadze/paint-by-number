@@ -354,6 +354,19 @@ struct TemplateRefinementsTests {
         let file = try JSONEncoder().encode(anew.refinements)
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: file) == anew.refinements)
         #expect(!String(decoding: try JSONEncoder().encode(smaller.refinements), as: UTF8.self).contains("moved"))
+
+        // Another number's paints, taken once a base of it was laid with edits, make its bases.
+        var both = refinements
+        let seven = [PaletteColor(oklab: SIMD3(0.4, 0, 0.05), space: .sRGB)]
+        both.pin?.others = [.init(colorCount: 7, palette: seven)]
+        #expect(both.pinnedPalette(for: GenerationSettings(colorCount: 7)) == seven)
+        #expect(both.pinnedPalette(for: settings) == doubled.palette)
+        #expect(both.pinnedPalette(for: GenerationSettings(colorCount: 8)) == nil)
+        let written = try JSONEncoder().encode(both)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: written) == both)
+        let damaged = String(decoding: written, as: UTF8.self).replacingOccurrences(of: #""colorCount":7"#, with: #""colorCount":-7"#)
+        let read = try JSONDecoder().decode(TemplateRefinements.self, from: Data(damaged.utf8))
+        #expect(read.pin?.others.isEmpty == true && read.pin?.palette == doubled.palette, "a damaged number's paints cost the pin")
     }
 
     /// A line drawn on a template draws: one across the middle of a coloring book adds to its
