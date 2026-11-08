@@ -49,7 +49,11 @@ for entry in "${SCENARIOS[@]}"; do
   else
     step "$scenario: no ready marker within $delay s"
   fi
-  xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null
+  # A screenshot the simulator fails to take (exit 60 after a ready gallery, November 8) is logged,
+  # not the end of the run: the warm-up and the scenarios after it still need their launches.
+  if ! xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null; then
+    step "$scenario: the simulator took no screenshot"
+  fi
   # A crash leaves a new report in the host's DiagnosticReports (simulator apps are host processes).
   reports=$(count_reports)
   if [[ "$reports" -gt "${seen_reports:-0}" ]]; then
