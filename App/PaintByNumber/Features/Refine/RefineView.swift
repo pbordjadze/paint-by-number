@@ -177,8 +177,6 @@ struct RefineView: View {
     @State private var showsLayers = false
     /// Where the bar's Layers button is on the screen, which the panel hangs from (`layersHook`).
     @State private var layersAnchor = RefineLayersAnchor()
-    /// The button's frame on the screen as last measured; nil until it is in the window.
-    @State private var layersButtonFrame: CGRect?
     /// The panel opens from the Layers button itself: on a practice canvas, and when a tap found
     /// no bar button to hang it under (the bar built otherwise, its items in an overflow menu), so
     /// the button never opens nothing.
@@ -1951,20 +1949,15 @@ extension RefineView {
             .refineLayersAnchor(layersAnchor)
             .popover(
                 isPresented: Binding(
-                    get: { showsLayers && !isPractice && !layersFromButton && layersButtonFrame != nil },
+                    get: { showsLayers && !isPractice && !layersFromButton && layersAnchor.buttonFrame != nil },
                     set: { showsLayers = $0 }),
                 // Its arrow a little under the button, not flush with the bar's glass.
-                attachmentAnchor: .rect(.rect((layersButtonFrame ?? .zero).offsetBy(dx: 0, dy: 4))), arrowEdge: .top
+                attachmentAnchor: .rect(.rect((layersAnchor.buttonFrame ?? .zero).offsetBy(dx: 0, dy: 4))), arrowEdge: .top
             ) { layersPanel }
             .ignoresSafeArea()
-            .onAppear {
-                layersAnchor.moved = { [layersAnchor] in
-                    if let frame = layersAnchor.buttonOnScreen, frame != layersButtonFrame { layersButtonFrame = frame }
-                }
-                layersAnchor.moved()
-            }
+            .onAppear { layersAnchor.refresh() }
             // The bar may have moved its buttons since the screen was last laid out.
-            .onChange(of: showsLayers) { if showsLayers { layersAnchor.moved() } }
+            .onChange(of: showsLayers) { if showsLayers { layersAnchor.refresh() } }
     }
 
     private var layersButtonAlone: some View {

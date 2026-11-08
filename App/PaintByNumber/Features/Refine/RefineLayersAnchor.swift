@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 import UIKit
 
@@ -7,12 +8,22 @@ import UIKit
 /// and the button itself, whatever its arrow edge, as did one put on a view under the button (QA,
 /// November 7). So the screen presents it, pointing up at the button's place. That place is
 /// UIKit's bar button item's (`frame(in:)`): SwiftUI lays a bar item's content out away from
-/// the window, so no frame of it, global or UIKit's, is where the button shows. A reference, so
-/// that neither view invalidates the other.
+/// the window, so no frame of it, global or UIKit's, is where the button shows. It keeps the
+/// button's place itself, observed, and holds nothing of the screen's: a closure of the screen's
+/// kept here held Refine's view, and with it the create flow, past every trip into Refine (Mac's
+/// measurement, painting-company row 263: 150–200 MB a trip, never freed).
+@Observable
 final class RefineLayersAnchor {
-    fileprivate weak var screen: UIView?
-    /// Called when the screen is laid out or moves to a window.
-    var moved: () -> Void = {}
+    @ObservationIgnored fileprivate weak var screen: UIView?
+    /// The Layers button in the screen's coordinates, as last measured (`refresh`).
+    private(set) var buttonFrame: CGRect?
+
+    /// Measures the button again: when the screen is laid out or moves to a window, and when the
+    /// panel is asked for.
+    func refresh() {
+        let frame = buttonOnScreen
+        if let frame, frame != buttonFrame { buttonFrame = frame }
+    }
 
     /// The Layers button in the screen's coordinates; nil until the screen and its bar are in a
     /// window.
@@ -74,7 +85,7 @@ private struct RefineLayersProbe: UIViewRepresentable {
 
         /// After the layout pass (the bar's too), which mustn't change SwiftUI's state.
         private func tell() {
-            Task { @MainActor [weak anchor] in anchor?.moved() }
+            Task { @MainActor [weak anchor] in anchor?.refresh() }
         }
     }
 }
