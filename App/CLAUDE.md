@@ -1003,9 +1003,12 @@ own, so it follows none of this app's later changes and needs none of its gates.
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try
 Again; `TimelapseSchedule` eases the strokes in and out) and goes to `ActivityShareSheet`, which
 reports when the share sheet closes so the movie is deleted. Every export lives in
-`tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template `ShareLink`s can't report
-completion, so they rely on the launch purge and the sweep of stale exports each new export runs
-(`ArtworkExporter.staleExportAge`). The completion share picture and the time-lapse stay on light
+`tmp/Exports/<uuid>/` (`ArtworkExporter`). A gallery card's Share Progress, Share Painting and
+Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
+when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
+written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
+(a blank white tile; `GalleryView.share`). The launch purge and the sweep of stale exports each
+new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),
 then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPainting`): PaintCore's

@@ -1,4 +1,3 @@
-import CoreTransferable
 import Foundation
 import PaintCore
 import UniformTypeIdentifiers
@@ -73,8 +72,8 @@ nonisolated enum ArtworkExporter {
 
     /// A fresh temporary location, in its own folder so the file keeps a readable name.
     static func temporaryURL(name: String, pathExtension: String, root: URL = exportsRoot) throws -> URL {
-        // Picture and template share links can't tell when their share sheet closes, and the
-        // app may not relaunch for days, so each new export sweeps the old ones. The share sheet
+        // An app ended while its share sheet was up leaves its export behind, and may not
+        // relaunch for days, so each new export sweeps the old ones. The share sheet
         // is modal and hands receivers copies, so by the time another export starts the earlier
         // ones are done with; the age only leaves a margin.
         purgeExports(createdBefore: Date.now - staleExportAge, in: root)
@@ -125,16 +124,10 @@ nonisolated enum ArtworkExporter {
     }
 }
 
-/// "Share Painting": a PNG rendered when the share sheet asks for it.
-nonisolated struct PaintingImageFile: Transferable, Sendable {
+/// "Share Painting" and "Share Progress": a PNG, written before the share sheet opens on it.
+nonisolated struct PaintingImageFile: Sendable {
     let store: ArtworkStore
     let artwork: Artwork
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .png) { item in
-            SentTransferredFile(try await item.export())
-        }
-    }
 
     @concurrent
     func export() async throws -> URL {
@@ -144,17 +137,11 @@ nonisolated struct PaintingImageFile: Transferable, Sendable {
 }
 
 /// "Printable Template": a PDF (the template, on several sheets when it is detailed, then the
-/// color key) rendered when the share sheet asks for it.
-nonisolated struct PrintableTemplateFile: Transferable, Sendable {
+/// color key), written before the share sheet opens on it.
+nonisolated struct PrintableTemplateFile: Sendable {
     let store: ArtworkStore
     let artwork: Artwork
     let paper: PDFExporter.Paper
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .pdf) { item in
-            SentTransferredFile(try await item.export())
-        }
-    }
 
     @concurrent
     func export() async throws -> URL {
