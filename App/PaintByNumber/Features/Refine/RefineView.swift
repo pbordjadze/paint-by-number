@@ -295,6 +295,14 @@ struct RefineView: View {
     /// The areas whose numbers are near the smallest (`RefineTinyAreas`), and the one shown last.
     @State private var tiny: [(region: Int, label: PaintCore.Label)] = []
     @State private var tinyShown = -1
+    /// The tiny area the badge brought up close, glowing with the numbers shown, whatever Layers
+    /// says, until the painter does something else: the zoom showed no number and marked nothing
+    /// (QA, November 7). Move Number's numbers show so too.
+    @State private var tinyMarked: Int?
+    /// The top controls' height (Start From, the badge), for where they lie over the picture.
+    @State private var topControlsHeight: CGFloat = 0
+    /// Whether the rail scrolls and has tools below what shows.
+    @State private var railHasMore = false
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -535,7 +543,7 @@ struct RefineView: View {
                     if let bend {
                         RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
                     }
-                    if layers.numbers || group == .numbers, let base {
+                    if layers.numbers || group == .numbers || tinyMarked != nil, let base {
                         RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
                             .equatable()
                     }
@@ -583,7 +591,10 @@ struct RefineView: View {
             }
         }
         .clipped()
-        .overlay(alignment: .bottom) { status.padding(12) }
+        .overlay(alignment: .bottom) {
+            // Above a taller tool that rises over the canvas (`reservedTools`).
+            status.padding(12).padding(.bottom, fullScreen ? 0 : max(0, toolsMeasured - toolsHeight))
+        }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         .animation(.easeInOut(duration: 0.2), value: model.phase)
         .animation(reduceMotion ? nil : .snappy, value: model.note)
@@ -604,7 +615,11 @@ struct RefineView: View {
         // and the badge are elements of their own, the cells beneath the rest.
         .overlay { cellElements }
         .overlay(alignment: .top) {
-            if !isPractice, !fullScreen { topControls.padding(12) }
+            if !isPractice, !fullScreen {
+                topControls
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { topControlsHeight = $0 }
+                    .padding(topControlsInsets)
+            }
         }
         // A draft that couldn't be saved, with its Retry, under the note (a practice canvas keeps
         // no draft).
@@ -769,7 +784,10 @@ struct RefineView: View {
     // MARK: Touches
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
-        if touch == .began { revealLayer() }
+        if touch == .began {
+            tinyMarked = nil
+            revealLayer()
+        }
         switch tool {
         case .pen, .cellEdge, .merge, .brush, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
@@ -1044,6 +1062,8 @@ struct RefineView: View {
             // Bedtime); every other edit is there the moment it lands.
             let fades = tool.paints && !reduceMotion && painting != nil && image?.preview != painting?.preview
             let before = base?.template.palette
+            // Another template may number its areas anew: the mark goes with the one it was on.
+            if base?.id != preview.id { tinyMarked = nil }
             withAnimation(fades ? .easeInOut(duration: 0.35) : nil) {
                 base = preview
                 // Only a painting of this template: an older one would show lines that are gone.
@@ -1110,6 +1130,7 @@ struct RefineView: View {
     }
 
     private func tap(at point: SIMD2<Float>) {
+        tinyMarked = nil
         revealLayer()
         switch tool {
         case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
@@ -1312,18 +1333,32 @@ struct RefineView: View {
         }
     }
 
-    /// The tools, keeping the room of the tallest they have been (`toolsHeight`).
+    /// The tools, keeping the room of the tallest they have been (`toolsHeight`). A taller tool
+    /// (Select's band with a cell picked, an area's card, the looks) rises over the canvas's empty
+    /// paper under the picture where that holds it, and takes more room only where it would cover
+    /// the picture: each new one moved and shrank the picture once (QA, November 7).
     private var reservedTools: some View {
         tools
+            .fixedSize(horizontal: false, vertical: true)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                 toolsMeasured = height
-                if height > toolsHeight { toolsHeight = height }
+                if height > toolsHeight, !risesUnderPicture(height) { toolsHeight = height }
             }
-            .frame(minHeight: toolsHeight, alignment: .bottom)
+            .frame(height: toolsHeight > 0 ? toolsHeight : nil, alignment: .bottom)
             // Another width (a rotation, a resized window) lays the tools out anew: measured again.
             // The tools as they are now count, though their height doesn't change with the width
             // (the picture jumped at the first change of group, QA, October 28).
             .onChange(of: canvasSize.width) { toolsHeight = toolsMeasured }
+    }
+
+    /// Whether tools `height` tall fit in the room kept for them and the paper under the picture
+    /// as it fits the canvas, leaving the picture's margin.
+    private func risesUnderPicture(_ height: CGFloat) -> Bool {
+        guard toolsHeight > 0, canvasSize.height > 0 else { return false }
+        let margin = RefineSurfaceView.margin
+        let fitted = CompareView.fitted(
+            aspectRatio, in: CGSize(width: canvasSize.width - 2 * margin, height: canvasSize.height - 2 * margin))
+        return height - toolsHeight <= (canvasSize.height - fitted.height) / 2 - margin
     }
 
     /// What the finger does, along the bottom (`studioBar`): the picked tool's options and, on
@@ -1348,6 +1383,10 @@ struct RefineView: View {
             }
             studioBar
         }
+        // On iPhone the tip on drawing hangs from the top of the Pen's options, over the picture
+        // above them: from the Pen, under them, it covered Snap, Color from Photo and the groups
+        // (QA, November 7). The iPad's hangs beside the Pen in the rail.
+        .gentleTip(.refineDraw, active: !usesRail && !isPractice, arrowEdge: .bottom)
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 8)
@@ -1507,6 +1546,7 @@ struct RefineView: View {
         pencilPalette = nil
         hovering = nil
         guard tool != self.tool else { return }
+        tinyMarked = nil
         // A practice canvas keeps the tool its page teaches (the card's link, the Pencil's double tap).
         if let practice, tool != practice.tool { return }
         FeedbackEngine.shared.selectionChanged()
@@ -1632,12 +1672,27 @@ extension RefineView {
     }
 
     /// Every tool, in its group's labelled section, a name beside each (iPad); it scrolls where
-    /// the screen is too short for all of them.
+    /// the screen is too short for all of them (an iPad on its side), its indicator flashing as it
+    /// comes and its foot fading while there is more below: it ended at Looks, cut in half, with
+    /// nothing to say Move Number, Writing and Try Painting were there (QA, November 7).
     private var toolRail: some View {
         ViewThatFits(in: .vertical) {
             railTools
             ScrollView { railTools }
-                .scrollIndicators(.hidden)
+                .scrollIndicatorsFlash(onAppear: true)
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y + geometry.containerSize.height < geometry.contentSize.height - 1
+                } action: { _, more in
+                    railHasMore = more
+                }
+                .mask {
+                    VStack(spacing: 0) {
+                        Color.black
+                        LinearGradient(colors: [.black, .black.opacity(railHasMore ? 0 : 1)], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 56)
+                    }
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: railHasMore)
+                }
         }
         .frame(width: 184)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
@@ -1707,7 +1762,6 @@ extension RefineView {
     private func studioButton(_ kind: RefineTool) -> some View {
         let button = toolButton(kind, systemImage: symbol(kind), label: Self.toolName(kind), id: Self.toolID(kind))
         switch kind {
-        case .pen: button.gentleTip(.refineDraw, arrowEdge: .bottom)
         case .fill: button.gentleTip(.refineFill, arrowEdge: .bottom)
         case .shape: button.accessibilityValue(shapeName(shape))
         default: button
@@ -1862,15 +1916,18 @@ extension RefineView {
             } else {
                 // The column also where long words (a translation) leave even two rows wider
                 // than a phone: fixed, they laid the whole screen out wider than the window.
+                // Each option at its own width in a row: two switches shared the row in halves,
+                // Snap's word far from its switch and "Color from Photo" broken in two though the
+                // row had room (QA, November 7).
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 16) {
-                        content
-                        more
+                        Group { content }.fixedSize()
+                        Group { more }.fixedSize()
                     }
                     .fixedSize()
                     VStack(spacing: 8) {
-                        HStack(spacing: 16) { content }
-                        HStack(spacing: 10) { more }
+                        HStack(spacing: 16) { Group { content }.fixedSize() }
+                        HStack(spacing: 10) { Group { more }.fixedSize() }
                     }
                     .fixedSize()
                     column
@@ -2240,10 +2297,11 @@ extension RefineView {
             })
     }
 
-    /// The areas that glow: those a Merge drag joins, a card's paint's, the cell Select picked,
-    /// or Edit Paint's paint's.
+    /// The areas that glow: the tiny one the badge brought up close, those a Merge drag joins, a
+    /// card's paint's, the cell Select picked, or Edit Paint's paint's.
     private var glowAreas: [Int] {
         guard let template = base?.template else { return [] }
+        if let tinyMarked, tinyMarked < template.regions.count { return [tinyMarked] }
         if tool == .merge, trace != nil, let probe = mergeProbe, probe.preview == base?.id { return mergeAreas }
         if let card = card ?? barCard, let region = template.region(at: card.at) {
             return RefinePaintGlow.areas(of: Int(template.regions[region].colorIndex), in: template)
@@ -2421,6 +2479,23 @@ extension RefineView {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
+    /// Where Start From and the badge lie: at the canvas's top trailing corner, or, where that
+    /// would put them over the picture (it grows to the canvas's top when Select, the paint tools or
+    /// a card shrink it), just inside the picture's own corner, never hanging past its edge (QA,
+    /// November 7: the badge hung over the picture's corner and past its side).
+    private var topControlsInsets: EdgeInsets {
+        let standard = EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        let shown = picture.intersection(CGRect(origin: .zero, size: canvasSize))
+        guard !shown.isNull, shown.width > 0, topControlsHeight > 0, shown.minY < 12 + topControlsHeight + 4 else {
+            return standard
+        }
+        // Only the trailing edge follows the picture's: they lie at the trailing end, and a
+        // picture narrower than they are mustn't squeeze them.
+        return EdgeInsets(
+            top: max(12, shown.minY + 8), leading: 12, bottom: 12,
+            trailing: max(12, canvasSize.width - shown.maxX + 8))
+    }
+
     /// Where the template starts from, asked until the first edit: what the generator made (the
     /// default), or the photo as one area (Blank), which the painter's lines and paint then make
     /// into the picture. Out of the way while a note shows at the top.
@@ -2436,6 +2511,7 @@ extension RefineView {
             .fixedSize()
             .padding(6)
             .glassEffect(.regular, in: .capsule)
+            .background(Theme.surface, in: .capsule)
             .disabled(model.phase == .generating)
             .accessibilityIdentifier("refine-start")
             .transition(.opacity)
@@ -2450,6 +2526,7 @@ extension RefineView {
             Button {
                 tinyShown = (tinyShown + 1) % tiny.count
                 let label = tiny[tinyShown].label
+                tinyMarked = tiny[tinyShown].region
                 focus = RefineFocus(
                     id: (focus?.id ?? 0) + 1, rect: RefineTinyAreas.focus(on: label, in: template), animated: !reduceMotion)
                 FeedbackEngine.shared.selectionChanged()
@@ -2458,6 +2535,9 @@ extension RefineView {
                     .font(.footnote.weight(.semibold))
             }
             .buttonStyle(.glass)
+            // The glass alone took the paint's light behind it, which washed out the gold label
+            // at night (QA, November 7): on the card's surface it reads over any paint.
+            .background(Theme.surface, in: .capsule)
             .accessibilityShowsLargeContentViewer()
             .accessibilityHint(Text(String(
                 localized: "refine.tiny.hint", defaultValue: "Shows the next one up close.",

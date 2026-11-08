@@ -298,7 +298,8 @@ synchronized folder would bundle it into the app.
 The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
 and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
 Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
-October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`),
+October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`;
+beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
@@ -666,8 +667,13 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
     (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
-    in labelled sections (`RefineView.toolRail`), on iPhone the groups are tabs over a row of the
-    group's tools. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
+    in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
+    on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
+    is more below), on iPhone the groups are tabs over a row of the
+    group's tools. The tools along the bottom keep the room of the tallest they have been, and a
+    taller one (Select's band, a card, the looks) rises over the paper under the picture where
+    that holds it, so the picture moves only where it would be covered (`reservedTools`); an
+    option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
     Procreate's StreamLine, off, `PaintCore`'s `RefineGestures.steadied` on a string of
     `steadyString` points at full, 48 since October 29 (at 20 a painter saw nothing);
@@ -697,8 +703,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
     top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
-    28, in place of the views; hung under the bar, `RefineLayersAnchor`): the stack from the top, Numbers, Ink, Paint, Photo, over the
-    paper, each with its switch, the paint and the photo with an opacity, opening on Ink and Paint;
+    28, in place of the views; hung under the bar, `RefineLayersAnchor`; at night it and an area's
+    card lie on the card's surface, `RefinePopoverBacking`, as the glass alone took on the paint
+    behind): the stack from the top, Numbers, Ink, Paint, Photo, over the paper, each with its
+    switch, the paint and the photo with an opacity, opening on Ink and Paint;
     the picked tool's layer is marked (`RefineTool.layer`), and a tool that changes a hidden layer
     shows it again. `create-refine-layers` (with `-dark`) opens it, tracing. Until the first edit a
     Start From control at the canvas's top, trailing end (the leading one is where the first tip
@@ -711,11 +719,16 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     palette's place, so nothing covers the picture, the Lamplit Table's `factory/pieces/refine-phase3`;
     a long press opened it until October 28, when the hold became the Eyedropper): its paint and how many areas
     share it, glowing; Only This Area (`CreateModel.paintArea(at:color:)`, PaintCore's
-    `.paintArea`, the picker still moving one step) or another paint for it; its other areas in
+    `.paintArea`, the picker still moving one step; the whole row opens the system picker,
+    `RefineColorPickerPresenter`: a popover from its well on iPad, on iPhone a sheet at half
+    height with the picture above it undimmed) or another paint for it; its other areas in
     Edit Paint. A line or a cell edge that cuts off an area pops two gold sparkles where its ends
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
-    each (`RefineFocus`). `create-refine-card` (with `-dark`, `-long-text`) selects the largest
+    each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
+    says, until the next touch, tool or template (`RefineView.tinyMarked`). The badge and Start
+    From lie in the canvas's top trailing corner, or just inside the picture's where it reaches
+    the top (`topControlsInsets`), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
     is the screen with doubled strings. With VoiceOver or Switch Control (and in demo launches, for
     the UI tests) a cell tool's cells in view are elements over the picture (`RefineCellElements`,

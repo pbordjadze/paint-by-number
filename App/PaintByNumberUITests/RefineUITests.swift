@@ -503,6 +503,93 @@ final class RefineUITests: XCTestCase {
         }
     }
 
+    /// An area's card: a tap on the words of its Only This Area row opens the color picker, as a
+    /// tap on its well does (only the well did, though VoiceOver read the row as the button: QA,
+    /// November 7); on iPhone the picker opens at half height, the picture above it undimmed, to
+    /// be seen as the color lands (its sheet covered the area), the card under it.
+    @MainActor
+    func testOnlyThisAreaRowOpensThePicker() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine-card"]
+        app.launch()
+        let card = app.descendants(matching: .any)["refine-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 180), "The area's card didn't open")
+        let row = app.buttons["refine-card-color"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "The card has no Only This Area")
+        XCTAssertEqual(row.label, "Only This Area", "The row isn't one button named Only This Area")
+        // The card's popover (iPad) or band (iPhone) settles before it takes a tap.
+        XCTAssertTrue(waitUntil(timeout: 10) { row.isHittable }, "Only This Area can't be tapped")
+        sleep(1)
+        // The words, at the row's leading end, far from the well at its trailing end.
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        let picker = app.otherElements["UIColorPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 10), "A tap on the words didn't open the color picker")
+        sleep(1)
+        attachScreenshot(of: app, named: "refine-card-picker")
+        XCTAssertTrue(card.exists, "The picker closed the card")
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            let grabber = app.buttons["Sheet Grabber"].firstMatch
+            XCTAssertTrue(grabber.exists, "The picker isn't a sheet")
+            XCTAssertGreaterThanOrEqual(
+                grabber.frame.minY, app.windows.firstMatch.frame.height * 0.45,
+                "The color picker opened over most of the screen: its top at \(grabber.frame.minY)")
+        }
+    }
+
+    /// iPhone: the picture keeps its place and size as the groups change, as Select picks a cell
+    /// and as the cell's card opens in Select's band (each moved and shrank it once: QA, November 7).
+    @MainActor
+    func testThePictureKeepsItsPlaceAcrossTools() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "The iPad's rail holds every group at once")
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine"]
+        app.launch()
+        XCTAssertTrue(app.sliders["refine-pen-smoothing"].waitForExistence(timeout: 180), "Refine never opened on the Pen")
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        sleep(1)
+        let opened = canvas.frame
+        func kept(_ step: String) {
+            XCTAssertTrue(
+                waitUntil(timeout: 3) { canvas.frame == opened },
+                "The picture moved at \(step): \(canvas.frame), opened at \(opened)")
+        }
+        for group in ["Cells", "Paint", "Numbers", "See", "Ink"] {
+            app.buttons[group].tap()
+            kept(group)
+        }
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
+        let change = app.buttons["refine-selection-color"]
+        XCTAssertTrue(change.waitForExistence(timeout: 10), "Select didn't offer Change Color")
+        kept("Select's cell")
+        change.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["refine-card"].waitForExistence(timeout: 10), "The card didn't open")
+        kept("the card")
+        attachScreenshot(of: app, named: "refine-card-in-band")
+    }
+
+    /// iPhone: Draw Your Own Lines hangs from the top of the Pen's options, over the picture,
+    /// leaving Snap, Color from Photo, the groups and the Pen clear (it hung from the Pen and
+    /// covered them: QA, November 7).
+    @MainActor
+    func testTheDrawTipLeavesThePensOptionsClear() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "The iPad's tip hangs beside the Pen in the rail")
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine--tip-refineDraw"]
+        app.launch()
+        let tip = app.staticTexts["Draw Your Own Lines"].firstMatch
+        XCTAssertTrue(tip.waitForExistence(timeout: 180), "The tip never came up")
+        sleep(1)
+        attachScreenshot(of: app, named: "refine-draw-tip")
+        let popover = app.popovers.firstMatch
+        let tipFrame = popover.exists ? popover.frame : tip.frame
+        for id in ["refine-snap", "refine-pen-colors", "refine-groups", "refine-tool-pen"] {
+            let control = app.descendants(matching: .any)[id].firstMatch
+            XCTAssertTrue(control.exists, "Refine has no \(id)")
+            XCTAssertFalse(tipFrame.intersects(control.frame), "The tip covers \(id): tip \(tipFrame), \(id) \(control.frame)")
+        }
+    }
+
     // MARK: - Helpers
 
     /// The open Layers panel, popover and all, covers none of the bar's Done, Undo, Redo and
