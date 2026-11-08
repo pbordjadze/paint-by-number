@@ -223,22 +223,28 @@ final class PaintingNavigationTests: XCTestCase {
         let newlySelected = try XCTUnwrap(selected().subtracting(before).first, "] didn't select another color")
         let swatch = swatches[newlySelected]
 
-        // The hint centres a region of the selected color in the canvas area: tap it, or (when
-        // the camera couldn't centre it) drag-paint across the middle.
+        // An unpainted area of the selected color, tapped on its number (the canvas offers each
+        // in view as an element): the Hint may leave the area it shows at an edge of the canvas
+        // rather than its middle (the Mac's iPad input round). Without one, drag-paint across
+        // the middle.
         app.buttons["Hint"].tap()
         sleep(2)
-        let top = app.buttons["Back"].frame.maxY + 6
-        let bottom = swatches.allElementsBoundByIndex.map(\.frame.minY).min().map { $0 - 20 } ?? app.frame.maxY
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
-            origin.withOffset(CGVector(dx: app.frame.minX + x * app.frame.width, dy: top + y * (bottom - top)))
-        }
         // A color whose last area gets painted is finished, and its swatch leaves the palette.
         func state() -> String? { swatch.exists ? swatch.value as? String : "finished" }
         let unpainted = state()
-        point(0.5, 0.5).tap()
-        sleep(1)
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let area = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-area-'")).firstMatch
+        if area.waitForExistence(timeout: 5) {
+            let frame = area.frame
+            origin.withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
+            sleep(1)
+        }
         if state() == unpainted {
+            let top = app.buttons["Back"].frame.maxY + 6
+            let bottom = swatches.allElementsBoundByIndex.map(\.frame.minY).min().map { $0 - 20 } ?? app.frame.maxY
+            func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
+                origin.withOffset(CGVector(dx: app.frame.minX + x * app.frame.width, dy: top + y * (bottom - top)))
+            }
             point(0.1, 0.5).press(forDuration: 0.5, thenDragTo: point(0.9, 0.5))
             point(0.5, 0.1).press(forDuration: 0.5, thenDragTo: point(0.5, 0.9))
             sleep(1)
