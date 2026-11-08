@@ -107,7 +107,9 @@ struct AppShellView: View {
         .environment(\.startHandoff, handoff)
         // The app's menu bar commands (Settings…, ⌘N, ⌘F): the gear's sheet, the + and the search field.
         .focusedSceneValue(\.gallery, GalleryFocus(
-            openSettings: { if !isShowingSettings { isShowingSettings = true } },
+            // Not over another sheet or the create flow: one presentation can't present another
+            // here, and the flag would stay set, leaving the shelf covered (review of polish7).
+            openSettings: { if !isCovered { isShowingSettings = true } },
             newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
             search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
