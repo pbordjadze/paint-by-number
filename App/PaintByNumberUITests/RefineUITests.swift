@@ -530,7 +530,8 @@ final class RefineUITests: XCTestCase {
         // painter would, and must open it.
         if !picker.waitForExistence(timeout: 10) {
             attachScreenshot(of: app, named: "refine-card-picker-first-tap")
-            row.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+            // Unless it came just now: a tap outside a picker that is up would close it.
+            if !picker.exists { row.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap() }
         }
         XCTAssertTrue(picker.waitForExistence(timeout: 15), "Taps on the words didn't open the color picker")
         sleep(1)

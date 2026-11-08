@@ -49,10 +49,17 @@ struct RefineColorPickerPresenter: UIViewRepresentable {
             if stale.presentingViewController == nil {
                 coordinator.present(from: view, title: title, color: color)
             } else {
+                // From its presenter, and with a fallback: UIKit may ignore a dismiss while the
+                // stuck presentation is still in progress and never call back.
                 let title = title, color = color
-                stale.dismiss(animated: false) { [weak coordinator, weak view] in
+                let again: () -> Void = { [weak coordinator, weak view] in
                     guard let coordinator, let view, coordinator.picker == nil else { return }
                     coordinator.present(from: view, title: title, color: color)
+                }
+                stale.presentingViewController?.dismiss(animated: false, completion: again)
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(300))
+                    again()
                 }
             }
         } else if !isPresented, let picker = coordinator.picker {
@@ -81,7 +88,10 @@ struct RefineColorPickerPresenter: UIViewRepresentable {
                 Task { @MainActor in self.finished() }
                 return
             }
-            while let shown = host.presentedViewController, !shown.isBeingDismissed { host = shown }
+            // Never from a controller that isn't on screen (a picker that never showed).
+            while let shown = host.presentedViewController, !shown.isBeingDismissed, shown.viewIfLoaded?.window != nil {
+                host = shown
+            }
             let picker = UIColorPickerViewController()
             picker.title = title
             picker.supportsAlpha = false
