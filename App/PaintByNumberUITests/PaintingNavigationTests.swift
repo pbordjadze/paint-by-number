@@ -347,6 +347,22 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(left, "⌘[ didn't go back to the gallery")
     }
 
+    /// On its side the canvas runs under the safe area to both edges of the screen (on an iPhone
+    /// it stopped at the Dynamic Island's inset, the Mac's interruptions round).
+    @MainActor
+    func testCanvasFillsTheScreenOnItsSide() throws {
+        let app = openSeededPainting()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+        sleep(3)
+        let canvas = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-paper'")).firstMatch
+        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "The painting has no canvas")
+        let window = app.windows.firstMatch.frame, frame = canvas.frame
+        attachScreenshot(of: app, named: "landscape-canvas")
+        XCTAssertEqual(frame.minX, window.minX, accuracy: 1, "The canvas stops short of the leading edge")
+        XCTAssertEqual(frame.maxX, window.maxX, accuracy: 1, "The canvas stops short of the trailing edge")
+    }
+
     /// How long a check waits for the state an action leads to. The CI's iPad simulator can
     /// stall for seconds: a photo shown by a tap once took 5 s to appear (a 560 px image) and
     /// the control didn't read "Showing" within a 3 s wait; a tapped swatch once wasn't

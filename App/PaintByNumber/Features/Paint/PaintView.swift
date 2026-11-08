@@ -128,6 +128,11 @@ struct PaintView: View {
                 CanvasUnavailableView(onClose: onClose)
             } else {
                 canvasAndChrome(geo: geo, layout: layout(in: geo))
+                    // The safe area's size, whatever a bar or a card asks: wider, the stack grew
+                    // to the right of the reader's leading edge, and the canvas, ignoring the safe
+                    // area within it, stopped short of the left one (iPhone landscape, the Mac's
+                    // interruptions round).
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
         }
         .readsTheFold { foldPlace = $0 }
