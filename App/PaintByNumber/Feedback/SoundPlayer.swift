@@ -191,11 +191,24 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
                 sampleTime: playerTime.sampleTime + AVAudioFramePosition(delay * format.sampleRate),
                 atRate: format.sampleRate)
             voice.scheduleBuffer(buffer, at: start, options: [], completionHandler: nil)
+        } else if delay > 0 {
+            // An engine just started again after resting has no render time yet: the note waits on
+            // the queue instead, so a flourish keeps its rhythm rather than sounding as one chord.
+            let held = Held(buffer: buffer)
+            queue.asyncAfter(deadline: .now() + delay) { [self] in
+                play(held.buffer, volume: volume)
+            }
+            return
         } else {
             voice.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         }
         if !voice.isPlaying { voice.play() }
         restWhenQuiet()
+    }
+
+    /// A buffer carried to a later turn of `queue`, which alone touches it.
+    private struct Held: @unchecked Sendable {
+        let buffer: AVAudioPCMBuffer
     }
 
     /// Pauses the engine once `restAfter` has passed with no sound asked for.
