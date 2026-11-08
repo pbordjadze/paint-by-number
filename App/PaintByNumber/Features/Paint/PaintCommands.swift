@@ -13,29 +13,39 @@ struct PaintingFocus: Equatable {
     /// Nil when the painting has no photo to show.
     let showsPhoto: Binding<Bool>?
     /// Feedback mode: painting is off, so are the commands.
+    let zenMode: Binding<Bool>
     let isGivingFeedback: Bool
     let giveFeedback: () -> Void
-    /// What the two toggles showed when this focus was made: their bindings read the current state,
-    /// so an older focus would always agree with a newer one.
-    private let shown: (numbers: Bool, photo: Bool?)
+    /// The finished painting's Replay (Watch It Again's).
+    let replay: () -> Void
+    /// Back to the gallery; nil when the screen has no Back.
+    let close: (() -> Void)?
+    /// What the three toggles showed when this focus was made: their bindings read the current
+    /// state, so an older focus would always agree with a newer one.
+    private let shown: (numbers: Bool, photo: Bool?, zen: Bool)
 
     init(
         session: PaintingSession, controller: CanvasController, showsNumbers: Binding<Bool>,
-        showsPhoto: Binding<Bool>?, isGivingFeedback: Bool, giveFeedback: @escaping () -> Void
+        showsPhoto: Binding<Bool>?, zenMode: Binding<Bool>, isGivingFeedback: Bool,
+        giveFeedback: @escaping () -> Void, replay: @escaping () -> Void, close: (() -> Void)?
     ) {
         self.session = session
         self.controller = controller
         self.showsNumbers = showsNumbers
         self.showsPhoto = showsPhoto
+        self.zenMode = zenMode
         self.isGivingFeedback = isGivingFeedback
         self.giveFeedback = giveFeedback
-        shown = (showsNumbers.wrappedValue, showsPhoto?.wrappedValue)
+        self.replay = replay
+        self.close = close
+        shown = (showsNumbers.wrappedValue, showsPhoto?.wrappedValue, zenMode.wrappedValue)
     }
 
     nonisolated static func == (lhs: PaintingFocus, rhs: PaintingFocus) -> Bool {
         lhs.session === rhs.session && lhs.controller === rhs.controller
-            && lhs.isGivingFeedback == rhs.isGivingFeedback
+            && lhs.isGivingFeedback == rhs.isGivingFeedback && (lhs.close == nil) == (rhs.close == nil)
             && lhs.shown.numbers == rhs.shown.numbers && lhs.shown.photo == rhs.shown.photo
+            && lhs.shown.zen == rhs.shown.zen
     }
 }
 
@@ -65,6 +75,8 @@ struct PaintCommands: Commands {
                 Toggle("Show Photo", isOn: painting?.showsPhoto ?? .constant(false))
                     .keyboardShortcut("p", modifiers: [])
                     .disabled(painting?.showsPhoto == nil)
+                Toggle("Zen Mode", isOn: painting?.zenMode ?? .constant(false))
+                    .keyboardShortcut("z", modifiers: [])
                 Divider()
                 Button("Zoom In") { painting?.controller.zoom(by: 2) }
                     .keyboardShortcut("+")
@@ -73,7 +85,21 @@ struct PaintCommands: Commands {
                 Button("Zoom to Fit") { painting?.controller.zoomToFit() }
                     .keyboardShortcut("0")
                 Divider()
+                // A finished painting's, as in More.
+                if painting?.session.isReplaying == true {
+                    Button("Stop Replay") { painting?.controller.stopReplay() }
+                        .keyboardShortcut("r", modifiers: [])
+                } else {
+                    Button("Replay Painting") { painting?.replay() }
+                        .keyboardShortcut("r", modifiers: [])
+                        .disabled(painting?.session.isComplete != true)
+                }
                 Button("Give Feedback…") { painting?.giveFeedback() }
+                Divider()
+                // Safari's and Files' Back.
+                Button("Back") { painting?.close?() }
+                    .keyboardShortcut("[", modifiers: .command)
+                    .disabled(painting?.close == nil)
             }
             .disabled(painting == nil || painting?.isGivingFeedback == true)
         }
