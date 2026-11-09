@@ -307,7 +307,8 @@ The gentle tips are the app's design panel's design of October 17 (its words, id
 and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
 Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
 October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`;
-beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture),
+beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture, or
+beside their column on its side),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
@@ -678,7 +679,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
     on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
     is more below), on iPhone the groups are tabs over a row of the
-    group's tools. The tools along the bottom keep the room of the tallest they have been, and a
+    group's tools. A phone on its side (compact height, every iPhone in landscape, the Pro Max
+    too; `RefineView.usesSide`) has no top bar: its controls head one column along the trailing
+    edge (`sideTools`, `sideBar`), with Start From, the badge, the tool's options, the palette,
+    the groups (each name at its own width, `sideGroups`) and the tools at its foot, scrolling
+    under a fixed head where they are taller than the screen, and the picture beside it at the
+    screen's full height; an area's card takes the room of all but Select's band there. The tools along the bottom keep the room of the tallest they have been, and a
     taller one (Select's band, a card, the looks) rises over the paper under the picture where
     that holds it, so the picture moves only where it would be covered (`reservedTools`); an
     option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
@@ -736,7 +742,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
     says, until the next touch, tool or template (`RefineView.tinyMarked`). The badge and Start
     From lie in the canvas's top trailing corner, or just inside the picture's where it reaches
-    the top (`topControlsInsets`), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
+    the top (`topControlsInsets`; on a phone on its side, in the tools' column), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
     is the screen with doubled strings. With VoiceOver or Switch Control (and in demo launches, for
     the UI tests) a cell tool's cells in view are elements over the picture (`RefineCellElements`,
