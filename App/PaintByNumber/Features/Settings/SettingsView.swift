@@ -187,7 +187,10 @@ struct SettingsView: View {
                             withAnimation { showsClock.toggle() }
                         } label: {
                             LabeledContent {
+                                // Tinted as the pickers' values beside it are: it, too, is tapped
+                                // to change (painting-company row 281).
                                 Text(verbatim: EraClock.text(of: EraYear.present))
+                                    .foregroundStyle(.tint)
                             } label: {
                                 SwiftUI.Label("Year", systemImage: "clock")
                             }

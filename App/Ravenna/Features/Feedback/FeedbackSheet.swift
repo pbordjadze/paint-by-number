@@ -156,9 +156,9 @@ struct FeedbackSheet: View {
             Text("Included")
         } footer: {
             if draft.canIncludePhoto {
-                Text("Send goes straight to the people who make Ravenna. Your photo helps us lay the mosaic again; it goes only if you turn it on.")
+                Text("Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on.")
             } else {
-                Text("Send goes straight to the people who make Ravenna.")
+                Text("Send goes straight to the people who make Paint by Mosaic.")
             }
         }
     }
