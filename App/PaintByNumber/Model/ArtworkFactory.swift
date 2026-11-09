@@ -92,6 +92,32 @@ nonisolated enum ArtworkFactory {
         return try laying(refinements, on: base, settings: settings)
     }
 
+    /// The settings Auto suggests for `photo` at `length`, as the create flow chooses them
+    /// (`CreateModel`'s suggestion: Vision's importance and hints, the photo's draft, the new
+    /// paintings' taste), with `kept`'s line art, paint mix and tuning: the painting's length
+    /// chip's re-cut (`Library.recut`). Polls task cancellation.
+    @concurrent
+    static func suggested(
+        for photo: RGBAImage, keeping kept: GenerationSettings, length: PaintingLength, maxCandidates: Int
+    ) async throws -> GenerationSettings {
+        var importance: PaintCore.Grid<Float>?
+        var hints: SubjectHints?
+        if let image = PhotoLoader.cgImage(from: photo) {
+            let subject = await SubjectImportance.analyze(image)
+            importance = subject.map
+            hints = subject.hints
+        }
+        let decision = try AutoSettings.choose(
+            image: AutoSettings.draftImage(from: photo), sourceSize: (photo.width, photo.height), importance: importance,
+            hints: hints, preference: length, maxCandidates: maxCandidates, lineArt: kept.lineArt, tuning: kept.tuning,
+            taste: CreateModel.newTaste, cancel: .task, firstDraft: nil)
+        var settings = decision.settings
+        settings.lineArt = kept.lineArt
+        settings.paintMix = kept.paintMix
+        settings.tuning = kept.tuning
+        return settings.normalized
+    }
+
     /// `base` with the painter's edits laid, carried onto it first (`TemplateRefinements.rebased`:
     /// where they were made on a canvas of another size, a repaint to the nearest paint chosen anew).
     private static func laying(_ refinements: TemplateRefinements, on base: Template, settings: GenerationSettings) throws -> Template {

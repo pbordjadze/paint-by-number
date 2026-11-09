@@ -34,6 +34,9 @@ struct PaintView: View {
     /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
     /// Read when the canvas is made.
     var onTemplateFrame: ((CGRect) -> Void)?
+    /// ✎ Change (painting-company row 239): the drawing tools on this painting, any time; nil
+    /// offers no button (the release, until the drawing tools ship).
+    var onChange: (() -> Void)?
 
     @State private var controller = CanvasController()
     @Environment(\.startHandoff) private var startHandoff
@@ -111,8 +114,9 @@ struct PaintView: View {
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil, onChange: (() -> Void)? = nil
     ) {
+        self.onChange = onChange
         self.session = session
         self.title = title
         self.onClose = onClose
@@ -443,6 +447,8 @@ struct PaintView: View {
     /// to `quietRow`.
     private func topBar(width: CGFloat, regular: Bool) -> some View {
         let badges = badgeVariants(regular)
+        // ✎ Change stays in the bar with Hint (the board's critic: it mustn't push Hint out); on
+        // the narrowest windows Hint goes first, as it did before, and Change keeps its place.
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) }
@@ -540,6 +546,13 @@ struct PaintView: View {
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
+            if let onChange {
+                GlassIconButton(systemImage: "pencil", label: "Change", action: onChange)
+                    .frame(width: barHeight, height: barHeight)
+                    .disabled(session.isReplaying)
+                    .accessibilityHint(Text("Draw or erase lines in this painting"))
+                    .accessibilityIdentifier("change-painting")
+            }
             moreMenu(regular)
         }
     }

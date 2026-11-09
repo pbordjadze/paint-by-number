@@ -269,14 +269,19 @@ nonisolated struct ArtworkStore: Sendable {
     /// Swaps in a regenerated template with its progress, thumbnail and metadata as one step:
     /// the new folder is assembled in staging (keeping the photo and any file this version
     /// doesn't know) and replaces the old one atomically, so a crash leaves either version.
-    /// A nil `thumbnailPNG` keeps the current thumbnail.
-    func replaceContents(of artwork: Artwork, template: Template, progress: PaintProgress, thumbnailPNG: Data?) throws {
+    /// A nil `thumbnailPNG` keeps the current thumbnail, and nil `refinements` the current ones
+    /// (the painting's ✎ Change gives its new ones: none, written as no file).
+    func replaceContents(
+        of artwork: Artwork, template: Template, progress: PaintProgress, thumbnailPNG: Data?,
+        refinements: TemplateRefinements? = nil
+    ) throws {
         let id = artwork.id
         let staging = stagingRoot.appending(path: id.uuidString, directoryHint: .isDirectory)
         try? fm.removeItem(at: staging)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
         do {
-            let rewritten = Set([File.meta, .template, .progress, .thumbnail].map(\.rawValue))
+            var rewritten = Set([File.meta, .template, .progress, .thumbnail].map(\.rawValue))
+            if refinements != nil { rewritten.insert(File.refinements.rawValue) }
             for item in try fm.contentsOfDirectory(at: directory(for: id), includingPropertiesForKeys: nil)
             where !rewritten.contains(item.lastPathComponent) {
                 try fm.copyItem(at: item, to: staging.appending(path: item.lastPathComponent))
@@ -288,6 +293,9 @@ nonisolated struct ArtworkStore: Sendable {
                 try thumbnailPNG.write(to: thumbnail, options: .atomic)
             } else if fm.fileExists(atPath: url(.thumbnail, of: id).path) {
                 try fm.copyItem(at: url(.thumbnail, of: id), to: thumbnail)
+            }
+            if let refinements, !refinements.isEmpty {
+                try JSONEncoder().encode(refinements).write(to: staging.appending(path: File.refinements.rawValue), options: .atomic)
             }
             try writeMeta(artwork, in: staging)
             _ = try fm.replaceItemAt(directory(for: id), withItemAt: staging)

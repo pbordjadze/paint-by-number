@@ -134,7 +134,10 @@ final class CreateModel {
     /// (`lineArt(_:lines:)`). Classic line art has no lines to tune.
     var lines = 0.5
     /// The line art the painting is made with: the base with the Lines slider applied.
-    var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
+    var lineArt: LineArtSettings { paintingLineArt ?? Self.lineArt(baseLineArt, lines: lines) }
+    /// A painting's own line art, for its ✎ Change (`load(artwork:…)`), which has no Lines slider:
+    /// the settings it was made with, whatever slider position made them.
+    private var paintingLineArt: LineArtSettings?
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
     /// The photo is a line drawing on paper (Start from a Drawing, painting-company row 190):
@@ -365,7 +368,7 @@ final class CreateModel {
     @ObservationIgnored private var refineEpoch = 0
     /// Refine was cancelled and hasn't opened again: a color its card or Edit Paint still had
     /// waiting as the screen went (`RefinePendingPick.flush`) isn't laid over what Cancel put back.
-    @ObservationIgnored private var refiningCancelled = false
+    @ObservationIgnored private(set) var refiningCancelled = false
     @ObservationIgnored private var noteTask: Task<Void, Never>?
 
     /// How many full-resolution templates `made` keeps: a template is 10–20 MB, most of it the
@@ -641,6 +644,7 @@ final class CreateModel {
     /// painter left on the sliders. The suggestion is still made, for Reset to Suggested and the
     /// sliders' detents, but the draft's settings are the ones generated.
     func load(draft: CreateDraft, photo: Data, kept: EditTrail.Kept? = nil) {
+        paintingLineArt = nil
         // A drawing's draft keeps the cleaned sheet as its photo: nothing to clean again.
         begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept,
               drawing: draft.settings.drawing != nil, cleaned: true, scratch: draft.scratch == true) {
@@ -649,6 +653,24 @@ final class CreateModel {
     }
 
     #if UNRELEASED
+    /// A painting's ✎ Change (painting-company row 239): its photo, settings and refinements,
+    /// ready for the drawing tools (`PaintingChangeView`). With no edits its template is its
+    /// base, kept as the trail, so nothing is made again; with edits the base is made again
+    /// from the photo with its pinned paints and the edits laid. Nothing is suggested and no
+    /// draft is kept: Done gives the painting its new template (`Library.adopt`).
+    func load(artwork: Artwork, photo: Data, template: Template, refinements: TemplateRefinements) {
+        let blank = refinements.start == .blank
+        let saved = CreateDraft(
+            photoID: UUID(), title: artwork.title, defaultTitle: artwork.title, settings: artwork.settings, lines: 0.5,
+            sampleName: artwork.sampleName, refinements: refinements, scratch: blank ? true : nil)
+        let kept = refinements.edits.isEmpty ? EditTrail.Kept(base: template, edits: [], made: [], template: template) : nil
+        begin(defaultTitle: artwork.title, sampleName: artwork.sampleName, resuming: saved, kept: kept,
+              drawing: artwork.settings.drawing != nil, cleaned: true, scratch: blank, suggests: false) {
+            try await Self.decode(data: photo)
+        }
+        paintingLineArt = artwork.settings.lineArt
+    }
+
     /// Refine's Tool Guide: a practice picture as the photo, ready to refine. The evening
     /// (PaintCore's `RefinePractice`) is its template of `scene` at once, never generated: its
     /// pages offer neither Start From nor the text corrections, and have no sliders. Writing's
@@ -730,9 +752,11 @@ final class CreateModel {
     /// `cleaned` already (a draft's photo).
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
-        drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, decode: @escaping () async throws -> Decoded
+        drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, suggests: Bool = true,
+        decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
+        paintingLineArt = nil
         isPractice = false
         isDrawing = drawing
         isScratch = scratch
@@ -828,13 +852,18 @@ final class CreateModel {
                 importance = prepared.importance
                 lineArtInput = prepared.lineArt
                 draftImage = prepared.draft
-                phase = .suggesting
+                if suggests { phase = .suggesting }
                 let chosen: AutoDecision?
                 do {
-                    chosen = try await Self.suggest(
-                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        lineArt: lineArt, tuning: Self.newTuning, taste: Self.newTaste, maxCandidates: Self.maxCandidates,
-                        firstDraft: firstDraft)
+                    // A painting's ✎ Change keeps its own settings: nothing to suggest.
+                    if suggests {
+                        chosen = try await Self.suggest(
+                            prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
+                            lineArt: lineArt, tuning: Self.newTuning, taste: Self.newTaste, maxCandidates: Self.maxCandidates,
+                            firstDraft: firstDraft)
+                    } else {
+                        chosen = nil
+                    }
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch {

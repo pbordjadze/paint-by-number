@@ -1,0 +1,67 @@
+import Foundation
+import PaintCore
+import SwiftUI
+
+/// The Painting Length chip (painting-company row 239, "Paint Now"): on a painting not begun,
+/// under its bar, "~20 min · 406 areas", which opens the Painting Lengths; picking another
+/// cuts the picture again in place (`Library.recut`). It is what the create flow's preview and
+/// its sliders did before a picked picture opened straight as a painting, and it goes with the
+/// first area painted.
+struct LengthChip: View {
+    let regionCount: Int
+    /// The length the painting was cut for; nil when none was recorded.
+    let length: PaintingLength?
+    /// The re-cut under way, 0…1; nil when none is.
+    let progress: Double?
+    let onPick: (PaintingLength) -> Void
+
+    var body: some View {
+        Menu {
+            Picker("Painting Length", selection: Binding(get: { length }, set: { if let new = $0 { onPick(new) } })) {
+                ForEach(PaintingLength.allCases, id: \.self) { choice in
+                    Text(choice.name).tag(Optional(choice))
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                if let progress {
+                    ProgressView(value: progress)
+                        .frame(width: 44)
+                    Text("Cutting again…")
+                } else {
+                    Image(systemName: "hourglass")
+                        .accessibilityHidden(true)
+                    Text(Self.summary(regionCount: regionCount))
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .accessibilityHidden(true)
+                }
+            }
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .contentShape(.capsule)
+        }
+        .disabled(progress != nil)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .accessibilityLabel(Text("Painting Length"))
+        .accessibilityValue(Text(progress == nil ? accessibilityValue : String(localized: "Cutting again…")))
+        .accessibilityHint(Text("Cuts the picture again for a shorter or longer painting"))
+        .accessibilityIdentifier("length-chip")
+    }
+
+    private var accessibilityValue: String {
+        let summary = Self.summary(regionCount: regionCount)
+        guard let length else { return summary }
+        return String(localized: "paint.lengthChip.value", defaultValue: "\(length.name), \(summary)",
+                      comment: "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas")
+    }
+
+    /// "~20 min · 406 areas".
+    static func summary(regionCount: Int) -> String {
+        let time = PaintingTimeText.approximate(PaintingTime.estimate(regionCount: regionCount))
+        let areas = TemplateCounts.areas(regionCount)
+        return String(localized: "paint.lengthChip", defaultValue: "\(time) · \(areas)",
+                      comment: "The painting's Painting Length chip, on a painting not begun; the arguments are the estimated time and the areas, e.g. ~20 min · 406 areas")
+    }
+}

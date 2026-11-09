@@ -553,6 +553,30 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
 
 ## Create flow
 
+- **Paint Now** (painting-company row 239, "Paint Now, through the Shelf's door"; ships in the
+  release but for its drawing-tool parts): New Painting is **Paint**, one shelf
+  (`PhotoSourceView`): Tonight's Picture (`Sample.tonight`, a library painting a calendar day),
+  Your Own (A Photo, the system picker; Take Photo; under `UNRELEASED` A Drawing on Paper and
+  Blank Page), The Library. No inline picker, segmented control or Browse All any more. A picture
+  picked (or a photo dropped or opened, outside demos) sets `CreateModel.paintsNow`: the pushed
+  preview is only the picture forming (`TemplatePreviewView.isWaitOnly`: no card, no Refine or
+  Enlarge) and starts by itself as it appears (the early start, free paintings asked at once;
+  declined, or an error cancelled, it goes back to Paint), at the painter's Painting Length.
+  Blank Page's drawing tools' Done goes straight into the painting, Cancel or a page left blank
+  back to Paint. A painting not begun shows the **length chip** under its bar (`LengthChip`,
+  "~20 min · 406 areas"), whose Painting Lengths cut it again in place (`Library.recut`:
+  `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
+  `regenerate`; the canvas takes no touches meanwhile). **✎ Change** (`UNRELEASED`, with the
+  drawing tools; `PaintView.onChange`, `change-painting`, beside Undo) opens `RefineView` over
+  the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
+  `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
+  unedited template kept as the trail so nothing is made again); Done saves the template and
+  refinements into the painting with its painted areas carried over (`Library.adopt`,
+  `PaintProgress.remapped`), Cancel changes nothing. Cut for 1.1, on purpose: the iPad drawer
+  with the palette staying (the tools are full screen), one undo across paint and edits, the
+  preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
+  base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
+  `PaintNowTests`.
 - `PhotoSourceView`: the inline picker fills the page (Gotchas). iPhone doesn't embed it: its grid
   never took a tap on a device, so the Photos pane is Choose Photo, which presents the full system
   picker as Browse All does (`embedsPicker`). Compact windows switch Photos and

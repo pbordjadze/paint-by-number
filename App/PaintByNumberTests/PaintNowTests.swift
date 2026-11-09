@@ -1,0 +1,111 @@
+import CoreGraphics
+import Foundation
+import PaintCore
+import Testing
+@testable import PaintByNumber
+
+/// Paint Now (painting-company row 239): the Paint page's Tonight's Picture, the painting's ✎
+/// Change saving its new template with the painted areas kept, and its length chip's re-cut.
+@MainActor
+struct PaintNowTests {
+    let root = Fixtures.temporaryDirectory()
+
+    private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root)) }
+
+    private func photo() throws -> CGImage {
+        try #require(TemplateRasterizer.image(Fixtures.stripes(), style: .painting, maxPixelSize: 120))
+    }
+
+    /// The stripes, painted where asked, with settings the drawing tools' model makes again exactly.
+    private func draft(painted: [Int] = [], photo: CGImage? = nil) -> ArtworkDraft {
+        var progress = PaintProgress(regionCount: 3)
+        for region in painted { _ = progress.paint(region) }
+        return ArtworkDraft(
+            title: "Stripes", template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12).normalized,
+            settingsOrigin: .suggested, paintingLength: .quick, photo: photo, progress: painted.isEmpty ? nil : progress)
+    }
+
+    @Test func tonightsPictureIsOneLibraryPaintingADay() throws {
+        let paintings = Sample.all(of: .painting)
+        try #require(paintings.count > 1)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+        let morning = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 9, hour: 7)))
+        let night = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 9, hour: 23)))
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: morning))
+        let today = try #require(Sample.tonight(on: morning, calendar: calendar))
+        #expect(paintings.contains(today))
+        #expect(Sample.tonight(on: night, calendar: calendar) == today, "Tonight's Picture changed within the day")
+        #expect(Sample.tonight(on: tomorrow, calendar: calendar) != today, "Tonight's Picture stayed the next day")
+        // Every painting comes round.
+        let days = (0..<paintings.count).compactMap { calendar.date(byAdding: .day, value: $0, to: morning) }
+        #expect(Set(days.compactMap { Sample.tonight(on: $0, calendar: calendar)?.id }) == Set(paintings.map(\.id)))
+    }
+
+    /// ✎ Change's Done: the new template and refinements replace the painting's, and the painted
+    /// areas are carried onto it.
+    @Test func adoptingAChangeKeepsThePaintedAreas() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(painted: [0, 2], photo: try photo()))
+        var refinements = TemplateRefinements()
+        refinements.edits = [.draw(points: [SIMD2(5, 5), SIMD2(30, 30)])]
+        var changed = draft()
+        changed.refinements = refinements
+
+        let document = try await library.adopt(changed, into: artwork.id)
+        #expect(document.progress.painted == [true, false, true])
+        #expect(document.notice == nil)
+        #expect(try library.store.readRefinements(artwork.id) == refinements)
+        #expect(library.artwork(with: artwork.id)?.paintedCount == 2)
+        let reopened = try await library.loadForPainting(artwork.id)
+        #expect(reopened.progress.painted == [true, false, true])
+
+        // Every edit undone: no refinements left on disk.
+        _ = try await library.adopt(draft(), into: artwork.id)
+        #expect(!FileManager.default.fileExists(atPath: library.store.url(.refinements, of: artwork.id).path))
+    }
+
+    @Test func changeOpensOnThePaintingsPhotoAndRefinements() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        let inputs = try await library.changeInputs(for: artwork.id)
+        #expect(!inputs.photo.isEmpty)
+        #expect(inputs.refinements.isEmpty)
+
+        let bare = try await library.create(draft())
+        await #expect(throws: ArtworkFactory.FactoryError.sourceUnavailable) {
+            _ = try await library.changeInputs(for: bare.id)
+        }
+    }
+
+    #if UNRELEASED
+    /// An unedited painting opens in the drawing tools as it stands: its template is the base,
+    /// nothing made again.
+    @Test func changeOpensOnTheTemplateAsItStands() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        let inputs = try await library.changeInputs(for: artwork.id)
+        let model = CreateModel(previewStyle: .painting)
+        model.load(artwork: artwork, photo: inputs.photo, template: Fixtures.stripes(), refinements: inputs.refinements)
+        await model.settled()
+        #expect(model.canRefine)
+        #expect(model.preview?.template == Fixtures.stripes())
+        #expect(model.settings == artwork.settings)
+        let made = try await model.makeDraft()
+        #expect(made.template == Fixtures.stripes())
+    }
+    #endif
+
+    /// The length chip's re-cut records the length it was cut for.
+    @Test func recuttingRecordsTheLength() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        let document = try await library.recut(artwork: artwork.id, length: .detailed)
+        #expect(document.notice == nil)
+        #expect(document.progress.paintedCount == 0)
+        let recut = try #require(library.artwork(with: artwork.id))
+        #expect(recut.paintingLength == PaintingLength.detailed.rawValue)
+        #expect(recut.regionCount == document.template.regions.count)
+        #expect(recut.settings.lineArt == artwork.settings.lineArt)
+    }
+}

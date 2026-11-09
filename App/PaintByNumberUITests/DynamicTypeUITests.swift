@@ -2,7 +2,7 @@ import XCTest
 
 /// The screens a painter meets first, at the largest text size (AX5): the accessibility audit
 /// finds no text cut short on them. The completion bar keeps the painting's name, the gallery and
-/// New Painting their titles (the gallery's under the status bar once it scrolls), the sample
+/// Paint their titles (the gallery's under the status bar once it scrolls), the sample
 /// tiles their captions; Refine's tiny-numbers badge and the Pen's options stay whole
 /// (painting-company row 263).
 final class DynamicTypeUITests: XCTestCase {
@@ -39,7 +39,7 @@ final class DynamicTypeUITests: XCTestCase {
         let app = launch("create-samples")
         let sample = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: '")).firstMatch
         XCTAssertTrue(sample.waitForExistence(timeout: 60), "The samples never showed")
-        XCTAssertTrue(app.staticTexts["New Painting"].exists, "New Painting's title is gone")
+        XCTAssertTrue(app.staticTexts["Paint"].exists, "The Paint page's title is gone")
         try assertNoClippedText(in: app, named: "create-samples-ax5")
     }
 

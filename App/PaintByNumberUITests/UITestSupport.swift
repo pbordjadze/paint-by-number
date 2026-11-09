@@ -98,7 +98,7 @@ extension XCTestCase {
         return slider
     }
 
-    /// Opens the New Painting card's settings where Adjust folds them away (SideStore and Debug
+    /// Opens the preview card's settings where Adjust folds them away (SideStore and Debug
     /// builds, so every UI test run), and leaves them as they are where they show.
     @MainActor
     func openPreviewSettings(in app: XCUIApplication) {
@@ -197,12 +197,45 @@ extension XCTestCase {
         return app
     }
 
-    /// Waits for the New Painting preview's settings to be chosen: its chip shows once they are.
+    /// Waits for the preview's settings to be chosen: its chip shows once they are.
     /// Start Painting is no sign of it, as it works from the first draft (SideStore and Debug
     /// builds, so every UI test run).
     @MainActor
     @discardableResult
     func waitForSuggestion(in app: XCUIApplication, timeout: TimeInterval = 120) -> Bool {
         app.descendants(matching: .any)["settings-origin"].waitForExistence(timeout: timeout)
+    }
+
+    /// Scrolls the Paint page until `element` can be tapped: up the page to its row, and along
+    /// Your Own's row (the tiles of a compact window run past its edge) by dragging the Photo
+    /// tile. Says whether it got there.
+    @MainActor
+    func reveal(_ element: XCUIElement, in app: XCUIApplication, attempts: Int = 8) -> Bool {
+        let photo = app.buttons["choose-photo"]
+        let window = app.windows.firstMatch
+        for _ in 0..<attempts {
+            if element.exists && element.isHittable { return true }
+            if element.exists, photo.exists, photo.isHittable, element.frame.minY < window.frame.maxY - 20 {
+                photo.swipeLeft()
+            } else {
+                app.swipeUp()
+            }
+        }
+        return element.exists && element.isHittable
+    }
+
+    /// Waits for a painting to open (its progress badge) and says so; fails the test if the
+    /// preview's Start Painting shows meanwhile: a picture picked on the Paint page opens by itself.
+    @MainActor
+    func waitForPaintingWithoutStart(in app: XCUIApplication, timeout: TimeInterval = 180) -> Bool {
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        let start = app.buttons["Start Painting"]
+        var startShown = false
+        let opened = waitUntil(timeout: timeout) {
+            if start.exists { startShown = true }
+            return badge.exists || startShown
+        }
+        XCTAssertFalse(startShown, "A Start Painting button showed on the way to the painting")
+        return opened && !startShown
     }
 }

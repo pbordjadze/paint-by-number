@@ -65,6 +65,10 @@
       "comment" : "Refine screen: the group of tools that shape the painting's areas (Select, Cell Edge, Merge, Move Edge, Make Cell); a section of the tool rail on iPad, a tab above the tools on iPhone",
       "extractionState" : "manual"
     },
+    "Change" : {
+      "comment" : "Painting screen: the ✎ button in the top bar that opens the drawing tools on the painting; its VoiceOver label and Large Content Viewer title",
+      "extractionState" : "manual"
+    },
     "Change Color" : {
       "comment" : "Refine screen, Select's bar: a button that opens the selected area's card, where it takes another color or paint",
       "extractionState" : "manual"
@@ -77,12 +81,36 @@
       "comment" : "Refine screen, the Pen's options: a switch; when on, the parts of an area a drawn line divides take the photo's colors there",
       "extractionState" : "manual"
     },
+    "Couldn’t change the painting" : {
+      "comment" : "Painting screen: toast (and VoiceOver announcement) when ✎ Change couldn't open, or its changes couldn't be kept; the painting stays as it was",
+      "extractionState" : "manual"
+    },
+    "Couldn’t cut the picture again" : {
+      "comment" : "Painting screen: toast (and VoiceOver announcement) when the Painting Length chip's re-cut failed; the painting stays as it was",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Open the Drawing Tools" : {
+      "comment" : "✎ Change (the drawing tools over a painting): title when the painting's photo couldn't be loaded for them",
+      "extractionState" : "manual"
+    },
+    "Cuts the picture again for a shorter or longer painting" : {
+      "comment" : "VoiceOver hint of the painting's Painting Length chip, on a painting not begun",
+      "extractionState" : "manual"
+    },
+    "Cutting again…" : {
+      "comment" : "Painting screen, the Painting Length chip while the picture is cut again at the length picked",
+      "extractionState" : "manual"
+    },
     "Discard Changes" : {
       "comment" : "Refine screen, the dialog Cancel opens: the destructive button that takes back every change since Refine opened and closes it",
       "extractionState" : "manual"
     },
     "Discard Your Changes?" : {
       "comment" : "Refine screen: title of the dialog Cancel opens when there are changes, which Cancel would take back",
+      "extractionState" : "manual"
+    },
+    "Draw or erase lines in this painting" : {
+      "comment" : "VoiceOver hint of the painting screen's ✎ Change button, which opens the drawing tools on the painting",
       "extractionState" : "manual"
     },
     "Draw Your Own Lines" : {
@@ -96,6 +124,30 @@
     "One purchase unlocks Refine and as many new paintings as you like." : {
       "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
       "extractionState" : "manual"
+    },
+    "paint.lengthChip" : {
+      "comment" : "The painting's Painting Length chip, on a painting not begun; the arguments are the estimated time and the areas, e.g. ~20 min · 406 areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "paint.lengthChip.value" : {
+      "comment" : "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
     },
     "Paintings someone sends you are always free." : {
       "comment" : "The Unlimited Paintings sheet, under its buttons, in builds where every new painting takes a free painting (1.1): what never takes one",

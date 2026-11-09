@@ -36,6 +36,19 @@ struct ArtworkPaintingView: View {
     /// The painting's paints may come out different made again (`Library.regenerationMayRepaint`).
     @State private var regenerationMayRepaint = false
     @State private var notice: ShownNotice?
+    /// The painting's length chip's re-cut, under way (`recut(to:)`).
+    @State private var recutting: Task<Void, Never>?
+    @State private var recutFailed = false
+    /// What the failure toast says: the re-cut's, or ✎ Change's.
+    @State private var recutFailedText = ""
+    #if UNRELEASED
+    /// ✎ Change's drawing tools, open over the painting (`PaintingChangeView`), with the
+    /// refinements they opened on.
+    @State private var change: PaintingChange?
+    /// ✎ Change was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
+    @State private var offersChangeUnlock = false
+    @Environment(UnlimitedPaintings.self) private var paintings
+    #endif
     /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`): the toasts keep to
     /// the painting's page beside it.
     @State private var foldPlace: FoldPlace?
@@ -94,10 +107,16 @@ struct ArtworkPaintingView: View {
             if let autosaver, hasLanded {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
-                    onTemplateFrame: canvasReport)
+                    onTemplateFrame: canvasReport, onChange: changeAction)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
+                    // A new template (a re-cut) is a new session: the screen starts afresh on it.
+                    .id(ObjectIdentifier(autosaver.session))
+                    // Nothing is painted while the picture is cut again: it would be lost.
+                    .overlay {
+                        if recutting != nil { Color.clear.contentShape(.rect) }
+                    }
                     .transition(.opacity)
             } else if let failure {
                 PaintingRecoveryView(
@@ -128,6 +147,13 @@ struct ArtworkPaintingView: View {
         // Below PaintView's top bar (6 pt inset + 44 pt buttons).
         .overlay(alignment: .top) {
             VStack(spacing: 8) {
+                if let chip = lengthChip {
+                    chip.transition(.opacity)
+                }
+                if recutFailed {
+                    Toast(text: recutFailedText, systemImage: "exclamationmark.triangle", edge: .top)
+                        .allowsHitTesting(false)
+                }
                 if let notice {
                     Toast(text: notice.notice.text, systemImage: notice.notice.systemImage, edge: .top)
                         // Taps reach the canvas under it.
@@ -150,11 +176,19 @@ struct ArtworkPaintingView: View {
         }
         .readsTheFold { foldPlace = $0 }
         .animation(.snappy, value: notice)
+        .animation(.snappy, value: showsLengthChip)
+        .animation(.snappy, value: recutFailed)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in
             if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
+        #if UNRELEASED
+        .fullScreenCover(item: $change, onDismiss: changeEnded) { change in
+            PaintingChangeView(model: change.model)
+        }
+        .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
+        #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
@@ -168,6 +202,7 @@ struct ArtworkPaintingView: View {
         }
         .onDisappear {
             regeneration?.cancel()
+            recutting?.cancel()
             autosaver?.saveNow(refreshThumbnail: true)
         }
     }
@@ -264,6 +299,125 @@ struct ArtworkPaintingView: View {
                 regenerationFailed = true
             }
             regeneration = nil
+        }
+    }
+
+    /// ✎ Change in the painting's bar: in SideStore and Debug builds while the drawing tools are,
+    /// for a painting with a photo to draw over (a library picture's file will do).
+    private var changeAction: (() -> Void)? {
+        #if UNRELEASED
+        guard let artwork, sourcePhotoLoader != nil || artwork.sampleName != nil else { return nil }
+        return {
+            if paintings.locksRefine { offersChangeUnlock = true } else { openChange() }
+        }
+        #else
+        nil
+        #endif
+    }
+
+    #if UNRELEASED
+    /// The drawing tools on this painting as it stands (`PaintingChangeView`).
+    private func openChange() {
+        guard change == nil, recutting == nil, let autosaver, let artwork else { return }
+        autosaver.saveNow()
+        let template = autosaver.session.template, id = artworkID
+        recutting = Task {
+            defer { recutting = nil }
+            do {
+                let inputs = try await library.changeInputs(for: id)
+                try Task.checkCancellation()
+                let model = CreateModel(previewStyle: .painting)
+                model.load(artwork: artwork, photo: inputs.photo, template: template, refinements: inputs.refinements)
+                change = PaintingChange(model: model, opened: inputs.refinements)
+            } catch is CancellationError {
+            } catch {
+                Log.library.error("Opening ✎ Change on \(id.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                showChangeFailed()
+            }
+        }
+    }
+
+    /// The drawing tools closed: with Done and something changed, the painting takes the new
+    /// template, its painted areas kept (`Library.adopt`).
+    private func changeEnded() {
+        guard let ended = change else { return }
+        change = nil
+        let model = ended.model
+        guard !model.refiningCancelled, model.refinements != ended.opened else {
+            model.cancelAll()
+            return
+        }
+        recutting = Task {
+            defer { recutting = nil }
+            do {
+                let draft = try await model.makeDraft()
+                let document = try await library.adopt(draft, into: artworkID)
+                _ = await RenderContext.ready()
+                await present(document)
+            } catch is CancellationError {
+            } catch {
+                Log.library.error("Keeping ✎ Change on \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                showChangeFailed()
+            }
+            model.cancelAll()
+        }
+    }
+
+    private func showChangeFailed() {
+        let text = String(localized: "Couldn’t change the painting")
+        Announcer.announce(text)
+        recutFailedText = text
+        recutFailed = true
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            recutFailed = false
+        }
+    }
+    #endif
+
+    /// The Painting Length chip shows on a painting not begun that was cut for a length (a
+    /// picture picked, not a drawing, a page drawn or a painting someone sent), and while a
+    /// re-cut is under way.
+    private var showsLengthChip: Bool {
+        guard let autosaver, hasLanded, let artwork else { return false }
+        if recutting != nil { return true }
+        return !autosaver.session.isStarted && artwork.paintingLength != nil && artwork.settings.drawing == nil
+            && artwork.receivedDigest == nil
+    }
+
+    private var lengthChip: LengthChip? {
+        guard showsLengthChip, let autosaver, let artwork else { return nil }
+        return LengthChip(
+            regionCount: autosaver.session.template.regions.count,
+            length: artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)),
+            progress: recutting == nil ? nil : (library.regenerating[artworkID] ?? 0),
+            onPick: recut(to:))
+    }
+
+    /// Cuts the painting again at `length` (`Library.recut`) and opens the new cut in place.
+    private func recut(to length: PaintingLength) {
+        guard recutting == nil, regeneration == nil, let autosaver,
+              length.rawValue != artwork?.paintingLength else { return }
+        autosaver.saveNow()
+        recutFailed = false
+        recutting = Task {
+            do {
+                let document = try await library.recut(artwork: artworkID, length: length)
+                _ = await RenderContext.ready()
+                await present(document)
+                Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
+            } catch is CancellationError {
+            } catch {
+                Log.library.error("Re-cutting \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                recutFailedText = String(localized: "Couldn’t cut the picture again")
+                recutFailed = true
+                Announcer.announce(recutFailedText)
+                Task {
+                    try? await Task.sleep(for: .seconds(4))
+                    recutFailed = false
+                }
+            }
+            recutting = nil
         }
     }
 
@@ -370,3 +524,12 @@ private extension OpenNotice {
         }
     }
 }
+
+#if UNRELEASED
+/// ✎ Change's drawing tools open on a painting: their model, and the refinements they opened on.
+private struct PaintingChange: Identifiable {
+    let id = UUID()
+    let model: CreateModel
+    let opened: TemplateRefinements
+}
+#endif
