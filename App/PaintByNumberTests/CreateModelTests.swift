@@ -787,23 +787,25 @@ struct CreateModelTests {
 
     /// A repaint sent while the template is being made again is kept, as an edit sent then is, and
     /// laid on the new template before it shows; the picker moving on meanwhile takes its place,
-    /// one step of the history.
+    /// one step of the history. It is a repaint of a paint of the template on screen, whose paints
+    /// the new one is made of (`TemplateRefinements.pin`), so it lands.
     @Test func aRepaintSentWhileTheTemplateIsMadeAgainLands() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
         let first = try #require(model.preview?.template)
         let detail = model.detail
-        // Another template, then back to the first one's settings: it is made again (from the one
-        // kept), and the repaints are of its paints.
+        // Another template, then back to the first one's settings, made again while the repaints
+        // of the template on screen are sent.
         model.detail = detail < 0.75 ? detail + 0.25 : detail - 0.25
         model.settingsChanged()
         try await waitUntil { model.isFinal }
-        #expect(model.preview?.template != first)
+        let other = try #require(model.preview?.template)
+        #expect(other != first)
         model.detail = detail
         model.settingsChanged()
 
-        let from = try #require(first.palette.first?.oklab)
+        let from = try #require(other.palette.first?.oklab)
         let moved = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false)
         model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
         model.recolor(.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: false))
@@ -812,12 +814,16 @@ struct CreateModelTests {
         #expect(!model.isFinal)
         try await waitUntil(polling: .milliseconds(2)) { model.refinements.edits == [moved] }
         try await waitUntil { model.isFinal }
-        #expect(model.preview?.refinements.edits == [moved])
-        #expect(model.preview?.template == (try TemplateEditor.apply(moved, to: first).template))
+        #expect(model.preview?.refinements.edits == [moved] && model.leftOut == 0)
+        #expect(model.refinements.pin?.palette == other.palette)
+        let shown = try #require(model.preview?.template)
+        #expect(shown.width == first.width)
 
         model.undo()
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
-        #expect(model.preview?.template == first && !model.canUndo)
+        let base = try #require(model.preview?.template)
+        #expect(Set(base.palette).isSubset(of: Set(other.palette)) && base.palette.contains { $0.oklab == from })
+        #expect(try TemplateEditor.apply(moved, to: base).template == shown && !model.canUndo)
         model.cancelAll()
     }
 
@@ -935,15 +941,18 @@ struct CreateModelTests {
         model.settingsChanged()
         try await waitUntil { model.isFinal }
         #expect(model.preview?.settings != settings && model.preview?.settings == model.settings)
-        #expect(model.preview?.refinements.edits == [edit] && model.refinements.edits == [edit])
         let shown = try #require(model.preview?.template)
         #expect(shown != drawn)
+        // Detail makes the canvas another size: the line is where it was drawn on it, its points
+        // scaled (`TemplateRefinements.rebased`).
+        let scaled = edit.scaled(x: Float(shown.width) / Float(first.width), y: Float(shown.height) / Float(first.height))
+        #expect(model.preview?.refinements.edits == [scaled] && model.refinements.edits == [scaled])
 
         // Taking the edit back shows the new template without it: the edit was laid on that one.
         model.undo()
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
         let base = try #require(model.preview?.template)
-        #expect(try TemplateEditor.apply(edit, to: base).template == shown)
+        #expect(try TemplateEditor.apply(scaled, to: base).template == shown)
         model.cancelAll()
     }
 
@@ -953,19 +962,22 @@ struct CreateModelTests {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
-        let edit = line(in: try #require(model.preview?.template))
+        let first = try #require(model.preview?.template)
+        let edit = line(in: first)
 
         model.detail = model.detail < 0.75 ? model.detail + 0.25 : model.detail - 0.25
         model.settingsChanged()
         let serial = model.edit(edit)
         try await waitUntil { model.settledEdits >= serial && model.isFinal }
         #expect(model.preview?.settings == model.settings)
-        #expect(model.refinements.edits == [edit] && model.preview?.refinements.edits == [edit])
         let shown = try #require(model.preview?.template)
+        // Drawn on the template on screen, it is where it was drawn on the new canvas.
+        let scaled = edit.scaled(x: Float(shown.width) / Float(first.width), y: Float(shown.height) / Float(first.height))
+        #expect(model.refinements.edits == [scaled] && model.preview?.refinements.edits == [scaled])
         model.undo()
         try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
         let base = try #require(model.preview?.template)
-        #expect(try TemplateEditor.apply(edit, to: base).template == shown)
+        #expect(try TemplateEditor.apply(scaled, to: base).template == shown)
         model.cancelAll()
     }
 

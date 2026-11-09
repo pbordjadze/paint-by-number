@@ -67,12 +67,12 @@ nonisolated enum ArtworkFactory {
     ) async throws -> Template {
         // The photo as one area needs neither Vision nor the line-art models.
         if refinements.start == .blank {
-            return try laying(refinements.edits, on: blank(from: photo, settings: settings))
+            return try laying(refinements, on: blank(from: photo, settings: settings), settings: settings)
         }
         // Nor does a drawing (the cleaned sheet stored as its photo): its own ink is the line art.
         if settings.drawing != nil {
             let base = try TemplateGenerator(settings: settings).generate(from: photo, cancel: .task, progress: progress).template
-            return try laying(refinements.edits, on: base)
+            return try laying(refinements, on: base, settings: settings)
         }
         // Side by side, so the line art's eyes and subjects share importance's pass of Vision
         // (`SubjectVision`).
@@ -81,10 +81,21 @@ nonisolated enum ArtworkFactory {
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
         let inputs = refinements.refining(
             importance: await importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
+        // A refined painting's base is made of its paints (`TemplateRefinements.pin`): the photo
+        // stored is a JPEG of the one its base was made from, whose paints chosen again would
+        // not be the ones the painter's color changes were made to.
         let base = try TemplateGenerator(settings: settings)
-            .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+            .generate(
+                from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress,
+                palette: refinements.pinnedPalette(for: settings))
             .template
-        return try laying(refinements.edits, on: base)
+        return try laying(refinements, on: base, settings: settings)
+    }
+
+    /// `base` with the painter's edits laid, carried onto it first (`TemplateRefinements.rebased`:
+    /// where they were made on a canvas of another size, a repaint to the nearest paint chosen anew).
+    private static func laying(_ refinements: TemplateRefinements, on base: Template, settings: GenerationSettings) throws -> Template {
+        try laying(refinements.rebased(onto: base, colorCount: settings.colorCount).refinements.edits, on: base)
     }
 
     private static func importance(of image: CGImage?) async -> PaintCore.Grid<Float>? {

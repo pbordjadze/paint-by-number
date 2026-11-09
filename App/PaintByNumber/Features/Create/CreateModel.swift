@@ -39,8 +39,8 @@ final class CreateModel {
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
         /// What it was refined with (none for a suggestion's first draft); a full-resolution
-        /// template has these edits laid.
-        let refinements: TemplateRefinements
+        /// template has these edits laid. The pin taken once it shows joins them (`takePin`).
+        var refinements: TemplateRefinements
         /// Generated from the reduced photo while adjusting.
         let isDraft: Bool
     }
@@ -254,7 +254,71 @@ final class CreateModel {
         let settings: GenerationSettings
         /// The generator inputs it was made with (`TemplateRefinements.generatorInputs`).
         let refinements: TemplateRefinements
+        /// The paints it was made of (`TemplateRefinements.pin`), nil when they were chosen.
+        let palette: [PaletteColor]?
         let template: Template
+    }
+
+    /// A base made earlier of these settings and inputs, and of the paints a base of them is made
+    /// of now: a base made before the pin chose its own paints, which a pinned one wouldn't. A
+    /// resumed draft's own base (`homeKey`) stands for its settings and inputs whatever its paints:
+    /// it is the base the painter refined.
+    private func madeBase(settings: GenerationSettings, inputs: TemplateRefinements) -> Made? {
+        let key = BaseKey(settings: settings, inputs: inputs)
+        let palette = pinnedPalette(for: settings, inputs: inputs)
+        return made.first { $0.settings == settings && $0.refinements == inputs && (key == homeKey || $0.palette == palette) }
+    }
+
+    /// The paints a base of `settings` and `inputs` is made of now (`TemplateRefinements.pinnedPalette`),
+    /// but for a base the pin's paints were taken from in this flow (`pinOrigins`): made of this
+    /// photo again, it is that base, paints chosen and all, so a slider put back gives it back bit
+    /// for bit.
+    private func pinnedPalette(for settings: GenerationSettings, inputs: TemplateRefinements) -> [PaletteColor]? {
+        guard !pinOrigins.contains(BaseKey(settings: settings, inputs: inputs)) else { return nil }
+        return refinements.pinnedPalette(for: settings)
+    }
+
+    /// The settings and inputs of the bases the pin's paints were taken from that chose their own
+    /// paints of this flow's photo (not a resumed draft's kept base, made of the photo before its
+    /// JPEG, nor a base made of a pin).
+    @ObservationIgnored private var pinOrigins: [BaseKey] = []
+    /// Whether the base on screen chose its own paints of this flow's photo (`pinOrigins`).
+    @ObservationIgnored private var trailMadeHere = false
+    /// A resumed draft's settings and inputs, whose base (the one it kept, made of the photo
+    /// itself) `made` keeps for as long as the flow has the photo.
+    @ObservationIgnored private var homeKey: BaseKey?
+
+    /// Takes the pin (`TemplateRefinements.Pin`) from the base the edits are laid on, once there
+    /// are edits and none was taken: the first edit's, or a draft's from before pins, whose
+    /// first base laid is the one its later bases keep the paints of; and a base laid with edits
+    /// for another number of paints than any the pin keeps gives that number's (`Pin.others`).
+    private func takePin() {
+        guard !refinements.edits.isEmpty, let trail, let key = trailKey else { return }
+        let count = key.settings.colorCount
+        guard refinements.pin?.palette(for: count) == nil else { return }
+        let unpinned = refinements
+        if refinements.pin == nil {
+            // A pin taken again (the edits were undone to none) has origins of its own.
+            pinOrigins = []
+            refinements.pin = TemplateRefinements.Pin(base: trail.base, colorCount: count)
+        } else {
+            refinements.pin?.others.append(.init(colorCount: count, palette: trail.base.palette))
+        }
+        if trailMadeHere, key != homeKey { pinOrigins.append(key) }
+        // The template on screen is still these refinements' (Start compares them).
+        if var shown = preview, !shown.isDraft, shown.refinements == unpinned {
+            shown.refinements = refinements
+            preview = shown
+        }
+    }
+
+    /// The refinements carried onto `base` (`TemplateRefinements.rebased`), made theirs, and the
+    /// painter told of repaints sent on to another paint.
+    private func rebase(onto base: Template, colorCount: Int) {
+        let rebase = refinements.rebased(onto: base, colorCount: colorCount)
+        guard rebase.refinements != refinements else { return }
+        refinements = rebase.refinements
+        if rebase.repainted > 0 { say(.repainted(rebase.repainted)) }
     }
 
     /// What a base template is made of: the settings and the refinements' generator inputs.
@@ -266,7 +330,18 @@ final class CreateModel {
     private var currentKey: BaseKey { BaseKey(settings: settings, inputs: refinements.generatorInputs) }
 
     /// The base template on screen with the edits laid on it, and what it is the base of.
-    @ObservationIgnored private var trail: EditTrail?
+    @ObservationIgnored private var trail: EditTrail? {
+        didSet {
+            let left = trail?.replayed.left ?? 0
+            if left != leftOut { leftOut = left }
+        }
+    }
+    /// How many of the edits the template on screen leaves out (they no longer fit a base made
+    /// again): they stay in the refinements, so a correction undone brings them back, but they
+    /// aren't changes the painting shows.
+    private(set) var leftOut = 0
+    /// The painter's changes the template on screen shows: Refine's and the preview's "N changes".
+    var shownChangeCount: Int { max(0, refinements.changeCount - leftOut) }
     /// A resumed draft's trail as it kept it (`Drafts.Opened.kept`), and the settings and inputs
     /// its base was made of (the draft's): the first full resolution of those is the kept base
     /// with its edits as laid, nothing made or laid again. The base was made of the photo
@@ -579,6 +654,8 @@ final class CreateModel {
         isPractice = true
         isDrawing = false
         isScratch = false
+        homeKey = nil
+        pinOrigins = []
         photoDefaultTitle = ""
         blankTitle = ""
         title = ""
@@ -610,7 +687,8 @@ final class CreateModel {
             do {
                 let shown = try await Self.laid(base, settings: settings, refinements: inputs, style: style)
                 guard load == loadID else { return }
-                remember(base, settings: settings, refinements: inputs.generatorInputs)
+                remember(base, settings: settings, refinements: inputs.generatorInputs, palette: nil)
+                trailMadeHere = false
                 show(shown)
                 trailKey = BaseKey(settings: settings, inputs: inputs.generatorInputs)
                 phase = .ready
@@ -656,6 +734,8 @@ final class CreateModel {
         resumeKept = saved.flatMap { saved in
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
         }
+        homeKey = resumeKept?.key
+        pinOrigins = []
         // A new photo gets a new default name, and anything typed for the last one goes.
         photoDefaultTitle = defaultTitle
         #if UNRELEASED
@@ -681,7 +761,9 @@ final class CreateModel {
         made = []
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would
         // not make again: kept for coming back to them too.
-        if let resumed = resumeKept { remember(resumed.trail.base, settings: resumed.key.settings, refinements: resumed.key.inputs) }
+        if let resumed = resumeKept {
+            remember(resumed.trail.base, settings: resumed.key.settings, refinements: resumed.key.inputs, palette: nil)
+        }
         forgetEdits()
         progress = 0
         phase = .loading
@@ -897,7 +979,8 @@ final class CreateModel {
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
-            seed: ColorNickname.seed(for: artworkID))
+            seed: ColorNickname.seed(for: artworkID),
+            palette: pinnedPalette(for: draft.settings, inputs: draft.refinements.generatorInputs))
     }
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
@@ -1033,23 +1116,35 @@ final class CreateModel {
             #endif
             let refinements = self.refinements
             let inputs = refinements.generatorInputs
+            // A refined painting's base keeps its paints (painting-company row 278).
+            let palette = pinnedPalette(for: settings, inputs: inputs)
             var shown: Shown
+            // Whether the base chose its own paints of this flow's photo (`pinOrigins`).
+            var madeHere = palette == nil
             if !draft, let resumed = resumeKept, resumed.key == BaseKey(settings: settings, inputs: inputs) {
+                madeHere = false
                 shown = try await Self.laid(
                     resumed.trail.base, settings: settings, refinements: refinements, style: previewStyle, kept: resumed.trail)
-            } else if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == inputs }) {
+            } else if !draft, let earlier = madeBase(settings: settings, inputs: inputs) {
+                madeHere = earlier.palette == nil && BaseKey(settings: settings, inputs: inputs) != homeKey
                 shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
                 shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
-                    isDraft: draft, style: previewStyle, progress: draft ? nil : report)
+                    isDraft: draft, style: previewStyle, palette: palette, progress: draft ? nil : report)
             }
             // Kept even if cancelled meanwhile: it is what these settings and inputs make of this
             // photo, not of the one that replaced it (`made` was cleared for that one).
-            if load == loadID, let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs) }
+            if load == loadID, let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs, palette: palette) }
             try Task.checkCancellation()
+            // The first edit, sent while this was being made, pinned the paints of the template
+            // it was made on: a base of chosen paints would lose what it did to them.
+            if !draft, self.refinements.generatorInputs == inputs, pinnedPalette(for: settings, inputs: inputs) != palette {
+                await generate(draft: false, settings: settings)
+                return
+            }
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less, and one finishing after the full resolution
             // of the sliders' settings is shown would take it back: Refine would never open.
@@ -1059,13 +1154,22 @@ final class CreateModel {
             }
             // Edits sent while this was being made are laid before it shows, so it never takes
             // one back.
+            // They are carried onto the new base as all of them are (`TemplateRefinements.rebased`).
             var left = shown.replay.left
-            while let trail = shown.trail, self.refinements.edits != shown.preview.refinements.edits {
+            while let trail = shown.trail {
                 guard self.refinements.generatorInputs == inputs else { return }
-                shown = try await Self.follow(trail, to: self.refinements, settings: settings, style: previewStyle)
+                let target = self.refinements.rebased(onto: trail.base, colorCount: settings.colorCount).refinements
+                guard target.edits != shown.preview.refinements.edits else { break }
+                shown = try await Self.follow(trail, to: target, settings: settings, style: previewStyle)
                 left += shown.replay.left
                 try Task.checkCancellation()
             }
+            // And a first edit sent while they were laid pins too.
+            if !draft, self.refinements.generatorInputs == inputs, pinnedPalette(for: settings, inputs: inputs) != palette {
+                await generate(draft: false, settings: settings)
+                return
+            }
+            if let base = shown.trail?.base { rebase(onto: base, colorCount: settings.colorCount) }
             // Drafts follow the finger as they come: a crossfade would blur one into the next.
             withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
                 preview = shown.preview
@@ -1073,6 +1177,7 @@ final class CreateModel {
             }
             if let current = shown.trail {
                 trail = current
+                trailMadeHere = madeHere
                 let key = BaseKey(settings: settings, inputs: inputs)
                 // Only its own settings' trail stands in for it: a slider moved meanwhile leaves it
                 // for when they come back.
@@ -1082,6 +1187,7 @@ final class CreateModel {
                 // Told once: not again while the same edits stay out.
                 if left != leftOutEdits, left > 0 { say(.left(left)) }
                 leftOutEdits = left
+                takePin()
             }
             trace("\(kind) #\(id) shown")
             // Ready with the newest full resolution, or with a draft when none is under way: the
@@ -1104,10 +1210,14 @@ final class CreateModel {
 
     /// Keeps a full-resolution base template (made with the generator inputs `refinements`) for
     /// stepping back to it.
-    private func remember(_ template: Template, settings: GenerationSettings, refinements: TemplateRefinements) {
-        made.removeAll { $0.settings == settings && $0.refinements == refinements }
-        made.insert(Made(settings: settings, refinements: refinements, template: template), at: 0)
-        if made.count > Self.madeKept { made.removeLast(made.count - Self.madeKept) }
+    /// A resumed draft's own base is never the one let go (`homeKey`): made again, of the draft's
+    /// JPEG, it would not be the base the painter refined.
+    private func remember(_ template: Template, settings: GenerationSettings, refinements: TemplateRefinements, palette: [PaletteColor]?) {
+        made.removeAll { $0.settings == settings && $0.refinements == refinements && $0.palette == palette }
+        made.insert(Made(settings: settings, refinements: refinements, palette: palette, template: template), at: 0)
+        while made.count > Self.madeKept, let last = made.lastIndex(where: { BaseKey(settings: $0.settings, inputs: $0.refinements) != homeKey }) {
+            made.remove(at: last)
+        }
     }
 
     // MARK: Refine
@@ -1391,6 +1501,8 @@ final class CreateModel {
     /// putting it back lays nothing.
     private func converge() async {
         guard let current = trail, let key = trailKey, key == currentKey else { return }
+        // Refinements put back (Undo, Redo, Cancel) may be in another base's units and paints.
+        rebase(onto: current.base, colorCount: key.settings.colorCount)
         let target = refinements
         guard current.edits != target.edits || preview?.refinements != target else { return }
         do {
@@ -1399,6 +1511,7 @@ final class CreateModel {
             guard refinements == target, trailKey == key else { return }
             show(moved)
             settledEdits = handledEdits
+            takePin()
         } catch is CancellationError {
         } catch {
             Log.create.error("Following the edits failed: \(String(describing: error), privacy: .public)")
@@ -1454,6 +1567,8 @@ final class CreateModel {
             } else {
                 history.take(now, step: placement.isStep)
                 refinements.edits = edits
+                // Made on the template on screen: its base is the one the edit is in the units of.
+                takePin()
             }
             handled(serial, shown: false)
             return
@@ -1493,6 +1608,7 @@ final class CreateModel {
                 // Something else changed the refinements meanwhile: the edit joins them.
                 history.take(refinements, step: placement.isStep)
                 refinements.edits = placement.prior(refinements.edits) + [laid.edit]
+                takePin()
                 await converge()
                 handled(serial)
                 return
@@ -1502,6 +1618,7 @@ final class CreateModel {
                 history.take(before, step: placement.isStep)
                 refinements = next
                 if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
+                takePin()
                 handled(serial)
                 // What a merge joined, for a QA report's log: once, in QA, one took the sky
                 // into a hat it never crossed, which replaying its gestures doesn't do
@@ -1670,7 +1787,7 @@ final class CreateModel {
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
-        progress: (@Sendable (Float) -> Void)?
+        palette: [PaletteColor]?, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Shown {
         let template: Template
         if refinements.start == .blank {
@@ -1678,7 +1795,9 @@ final class CreateModel {
         } else {
             let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
             template = try TemplateGenerator(settings: settings)
-                .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
+                .generate(
+                    from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress,
+                    palette: palette)
                 .template
         }
         try Task.checkCancellation()
@@ -1695,11 +1814,13 @@ final class CreateModel {
     }
 
     /// `kept`, a resumed draft's trail, stands for the laying when it was laid on this base and
-    /// laid these edits.
+    /// laid these edits. The edits are carried onto the base first (`TemplateRefinements.rebased`),
+    /// and the preview records them so.
     nonisolated private static func composed(
         _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, isDraft: Bool, style: PreviewStyle,
         kept: EditTrail.Kept? = nil
     ) throws -> Shown {
+        let refinements = isDraft ? refinements : refinements.rebased(onto: base, colorCount: settings.colorCount).refinements
         guard !isDraft else {
             return Shown(preview: try makePreview(base, settings: settings, refinements: refinements, isDraft: true, style: style))
         }

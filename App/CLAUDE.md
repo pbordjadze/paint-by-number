@@ -819,7 +819,22 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
     a tap turning a found line off or on, a drag marking one it missed), and the sliders, are image settings: they make the base again (`startGeneration`,
     reusing a base made before, `made`) and the edits are laid on the new one, those that no
     longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
-    drawing"); they stay in the list, so a correction undone brings them back. Refine's detail
+    drawing") and out of the "N changes" (`CreateModel.shownChangeCount`); they stay in the
+    list, so a correction undone brings them back. Once there are edits, a base made again
+    keeps the paints of the base they were made on (`TemplateRefinements.pin`, PaintCore's
+    `TemplateGenerator.generate(…palette:)`; painting-company row 278), unless the Colors
+    count changed, and the edits are carried onto it (`TemplateRefinements.rebased`): scaled to
+    a canvas Detail made another size, and on paints chosen anew each repaint sent to the
+    nearest one, which a toast says (`Pin.moved`: the pin stays the first base's, so the Colors
+    count put back puts each repaint back exactly; the first base laid with edits at another
+    count gives that count's paints, `Pin.others`, so a painting finished there keeps them). A
+    damaged painting refined before pins
+    says on its recovery screen that its colors may come out different
+    (`Library.regenerationMayRepaint`). The pin is taken from the first edit's base (or a draft's
+    from before pins, from its first base laid), kept in drafts and `refinements.json`, so
+    Continue Refining without a kept trail and `Library.regenerate` keep the paints too; in the
+    flow that took it, its own settings make the base it was taken from again, unpinned, and a
+    resumed draft's kept base is never let go of `made` (`homeKey`). Refine's detail
     brushes are gone (Paul, October 18, for the Color Splitter, itself retired October 23); areas a build
     with them brushed stay in `TemplateRefinements.strokes` and still shape the base, so those
     paintings and drafts regenerate as they were. A draft (a slider being

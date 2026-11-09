@@ -273,6 +273,116 @@ struct TemplateRefinementsTests {
         #expect(wrong.start == .generated && wrong.isEmpty)
     }
 
+    /// The pin (`TemplateRefinements.Pin`, painting-company row 278) is written only with one, so
+    /// refinements without it write as they did, reads back as written (the literal is its first
+    /// shape, which every later build reads), and one that doesn't hold up is left out, never the
+    /// rest. It is no generator input and no change.
+    @Test func thePinIsWrittenOnlyWithOneAndReadTolerantly() throws {
+        var edited = TemplateRefinements()
+        edited.edits = [.merge(points: [SIMD2(1, 2), SIMD2(30, 4)])]
+        let without = try JSONEncoder().encode(edited)
+        #expect(!String(decoding: without, as: UTF8.self).contains("pin"))
+
+        let first = #"{"lines":[],"edits":[{"kind":"merge","points":[[1,2],[30,4]]}],"strokes":[],"hiddenText":[],"addedText":[],"#
+            + #""pin":{"palette":[{"oklab":[0.5,0.1,0],"rgb":[0.75,0.375,0.25]}],"colorCount":12,"width":1200,"height":800}}"#
+        let read = try JSONDecoder().decode(TemplateRefinements.self, from: Data(first.utf8))
+        let pin = try #require(read.pin)
+        #expect(pin.colorCount == 12 && pin.width == 1200 && pin.height == 800)
+        #expect(pin.palette == [PaletteColor(oklab: SIMD3(0.5, 0.1, 0), rgb: SIMD3(0.75, 0.375, 0.25))])
+        #expect(read.edits == edited.edits && read.changeCount == 1)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: JSONEncoder().encode(read)) == read)
+        #expect(read.generatorInputs == edited.generatorInputs && read.generatorInputs.pin == nil)
+
+        for hostile in [
+            #""pin":{"palette":[],"colorCount":12,"width":1200,"height":800}"#,
+            #""pin":{"palette":[{"oklab":[0.5,0.1,0],"rgb":[0.7,0.3,0.2]}],"colorCount":0,"width":1200,"height":800}"#,
+            #""pin":{"palette":[{"oklab":[0.5,0.1,0],"rgb":[0.7,0.3,0.2]}],"colorCount":12,"width":0,"height":800}"#,
+            #""pin":{"palette":[{"oklab":[0.5,0.1,0],"rgb":[0.7,0.3,0.2]}],"colorCount":12,"width":1200,"height":9000000}"#,
+            #""pin":{"palette":"nope"}"#,
+        ] {
+            let json = #"{"edits":[{"kind":"merge","points":[[1,2],[30,4]]}],"# + hostile + "}"
+            let damaged = try JSONDecoder().decode(TemplateRefinements.self, from: Data(json.utf8))
+            #expect(damaged.pin == nil && damaged.edits == edited.edits, "\(hostile)")
+        }
+    }
+
+    /// The pin's paints make a base of as many paints while there are edits on a generated start;
+    /// the edits are carried onto a base of another canvas scaled, and onto one of paints chosen
+    /// anew with each repaint sent to the nearest paint, the pin then that base's.
+    @Test func editsAreCarriedOntoAnotherBase() throws {
+        let base = Fixtures.stripes()
+        let settings = GenerationSettings(colorCount: 12)
+        var refinements = TemplateRefinements()
+        #expect(refinements.rebased(onto: base, colorCount: 12).refinements == refinements)
+        let from = try #require(base.palette.first?.oklab)
+        let merge = TemplateEditor.Edit.merge(points: [SIMD2(10, 20), SIMD2(40, 20)])
+        let repaint = TemplateEditor.Edit.repaint(from: SIMD3(from.x + 0.01, from.y, from.z), to: SIMD3(0.3, 0.1, 0), family: false)
+        refinements.edits = [merge, repaint]
+        #expect(refinements.pinnedPalette(for: settings) == nil, "no pin, no pinned paints")
+        let doubled = TemplateRefinements.Pin(
+            palette: [PaletteColor(oklab: SIMD3(from.x + 0.01, from.y, from.z), space: .sRGB)], colorCount: 12,
+            width: base.width * 2, height: base.height * 2)
+        refinements.pin = doubled
+        #expect(refinements.pinnedPalette(for: settings) == doubled.palette)
+        #expect(refinements.pinnedPalette(for: GenerationSettings(colorCount: 13)) == nil)
+        var blank = refinements
+        blank.start = .blank
+        #expect(blank.pinnedPalette(for: settings) == nil)
+        var none = refinements
+        none.edits = []
+        #expect(none.pinnedPalette(for: settings) == nil)
+
+        // The same paints on a canvas half the size: points halved, the paints' pin kept.
+        let smaller = refinements.rebased(onto: base, colorCount: 12)
+        #expect(smaller.repainted == 0)
+        #expect(smaller.refinements.edits == [merge.scaled(x: 0.5, y: 0.5), repaint])
+        #expect(smaller.refinements.pin?.palette == doubled.palette && smaller.refinements.pin?.width == base.width)
+        #expect(smaller.refinements.rebased(onto: base, colorCount: 12).refinements == smaller.refinements)
+
+        // Another number of paints: the repaint goes to the base's nearest, the pin keeping its
+        // paints and number and which repaint it moved; the number back puts it back exactly.
+        let anew = refinements.rebased(onto: base, colorCount: 7)
+        #expect(anew.repainted == 1)
+        #expect(anew.refinements.edits[1] == .repaint(from: from, to: SIMD3(0.3, 0.1, 0), family: false))
+        let moved = try #require(anew.refinements.pin)
+        #expect(moved.palette == doubled.palette && moved.colorCount == 12 && moved.moved.count == 1)
+        #expect(anew.refinements.rebased(onto: base, colorCount: 7).repainted == 0, "told twice")
+        let back = anew.refinements.rebased(onto: base, colorCount: 12)
+        #expect(back.refinements.edits == [merge.scaled(x: 0.5, y: 0.5), repaint] && back.refinements.pin?.moved.isEmpty == true)
+        #expect(back.refinements == smaller.refinements)
+        // The moves are kept in the file, and a pin without any writes as it did.
+        let file = try JSONEncoder().encode(anew.refinements)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: file) == anew.refinements)
+        #expect(!String(decoding: try JSONEncoder().encode(smaller.refinements), as: UTF8.self).contains("moved"))
+
+        // A moved repaint whose color is picked again at the other number goes back too, and two
+        // repaints of two paints to one color each go back to their own.
+        var picked = anew.refinements
+        picked.edits[1] = .repaint(from: from, to: SIMD3(0.2, 0.2, 0), family: false)
+        #expect(picked.rebased(onto: base, colorCount: 12).refinements.edits[1]
+            == .repaint(from: SIMD3(from.x + 0.01, from.y, from.z), to: SIMD3(0.2, 0.2, 0), family: false))
+        var twice = refinements
+        let other = SIMD3<Float>(from.x - 0.01, from.y, from.z)
+        twice.pin?.palette.append(PaletteColor(oklab: other, space: .sRGB))
+        twice.edits.append(.repaint(from: other, to: SIMD3(0.3, 0.1, 0), family: false))
+        let both7 = twice.rebased(onto: base, colorCount: 7)
+        #expect(both7.repainted == 2 && both7.refinements.pin?.moved.count == 2)
+        #expect(both7.refinements.rebased(onto: base, colorCount: 12).refinements.edits == twice.rebased(onto: base, colorCount: 12).refinements.edits)
+
+        // Another number's paints, taken once a base of it was laid with edits, make its bases.
+        var both = refinements
+        let seven = [PaletteColor(oklab: SIMD3(0.4, 0, 0.05), space: .sRGB)]
+        both.pin?.others = [.init(colorCount: 7, palette: seven)]
+        #expect(both.pinnedPalette(for: GenerationSettings(colorCount: 7)) == seven)
+        #expect(both.pinnedPalette(for: settings) == doubled.palette)
+        #expect(both.pinnedPalette(for: GenerationSettings(colorCount: 8)) == nil)
+        let written = try JSONEncoder().encode(both)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: written) == both)
+        let damaged = String(decoding: written, as: UTF8.self).replacingOccurrences(of: #""colorCount":7"#, with: #""colorCount":-7"#)
+        let read = try JSONDecoder().decode(TemplateRefinements.self, from: Data(damaged.utf8))
+        #expect(read.pin?.others.isEmpty == true && read.pin?.palette == doubled.palette, "a damaged number's paints cost the pin")
+    }
+
     /// A line drawn on a template draws: one across the middle of a coloring book adds to its
     /// drawing; erased again it is gone.
     @Test func aDrawnLineShowsInTheTemplate() throws {

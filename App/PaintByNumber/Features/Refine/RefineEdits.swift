@@ -135,6 +135,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         /// Edits that no longer fit the drawing, left out of it (the sliders or a text correction
         /// made the template anew).
         case left(Int)
+        /// Color changes sent on to the nearest of the paints chosen anew (the Colors slider moved
+        /// after refining): changed, so not passed off as made as they were.
+        case repainted(Int)
         /// The painting has as many edits as Refine keeps (`TemplateRefinements.isFull`): this one
         /// was not made, whatever the tool.
         case full
@@ -222,6 +225,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
                    comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")
+        case .repainted(let count):
+            String(localized: "refine.note.repainted", defaultValue: "\(count) color changes moved to the nearest of the new colors.",
+                   comment: "Refine and preview toast after the Colors slider changed how many paints the painting has, so its paints were chosen again: how many of the painter's color changes now apply to the new paint nearest the one they changed; the argument is the count")
         }
     }
 
@@ -229,7 +235,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         switch kind {
         case .tooSmall: "circle.dotted"
         case .grabNumber, .grabLine, .grabEdge, .tapLine: "hand.point.up.left"
-        case .alike: "swatchpalette"
+        case .alike, .repainted: "swatchpalette"
         case .notDrawn, .doublesBack, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped,
              .notMoved, .notRecolored, .left, .full:
             "exclamationmark.circle"

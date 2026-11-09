@@ -476,7 +476,14 @@ struct DraftTests {
         try await waitUntil { resumed.isFinal }
         #expect(resumed.decision != nil && resumed.settings == unadjusted.settings)
         #expect(resumed.suggested == unadjusted.settings && resumed.settingsOrigin == .suggested)
-        #expect(resumed.draft == unadjusted)
+        // Its edits carried onto the canvas this Detail makes (painting-company row 278): scaled,
+        // the pin's canvas with them; the rest of the draft as recorded.
+        let shown = try #require(resumed.preview?.template)
+        #expect(shown.width != saved.refinements.pin?.width, "this Detail left the canvas as it was")
+        var carried = unadjusted
+        carried.refinements = unadjusted.refinements.rebased(onto: shown, colorCount: unadjusted.settings.colorCount).refinements
+        #expect(resumed.draft == carried)
+        #expect(resumed.draft?.refinements.pin?.width == shown.width)
         resumed.detail = Double(saved.settings.detail)
         resumed.settingsChanged()
         #expect(resumed.settingsOrigin == .custom)

@@ -12,6 +12,9 @@ struct PaintingRecoveryView: View {
     var progress: Double?
     /// The last attempt to regenerate failed.
     var didFail = false
+    /// A painting refined before its paints were kept with its refinements: made again, its paints
+    /// may differ, which the painter is told before choosing to (painting-company row 278).
+    var mayRepaint = false
     var onRegenerate: () -> Void
     var onDelete: () -> Void
     var onClose: () -> Void
@@ -106,6 +109,11 @@ struct PaintingRecoveryView: View {
             text = String(localized: "gallery.recovery.damaged.unavailable",
                           defaultValue: "Its file is damaged, and its photo is gone, so it can’t be made again.",
                           comment: "Recovery screen text for a damaged painting whose original photo is gone")
+        }
+        if canRegenerate, mayRepaint {
+            text += "\n\n" + String(localized: "gallery.recovery.mayRepaint",
+                                    defaultValue: "Your changes will be made again, but some of its colors may come out different.",
+                                    comment: "Recovery screen text added for a damaged painting the painter refined in an earlier version: regenerating it keeps their edits, but its paints are chosen again and may differ")
         }
         if didFail {
             text += "\n\n" + String(localized: "gallery.recovery.retry", defaultValue: "Regenerating didn’t work. Try again.",

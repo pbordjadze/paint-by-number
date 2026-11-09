@@ -606,6 +606,22 @@ final class Library {
         return await Background.run { store.source(id, maxPixelSize: maxPixelSize) }
     }
 
+    /// Whether making the painting again may give it other paints than it has: a painting
+    /// refined by hand whose refinements keep no paints for its settings
+    /// (`TemplateRefinements.pinnedPalette(for:)`, painting-company row 278; one refined before
+    /// they kept any), whose base is made again of its stored JPEG and chooses its paints anew,
+    /// so its color changes may land elsewhere. Read off the main actor; a file that can't be
+    /// read says nothing.
+    func regenerationMayRepaint(_ id: UUID) async -> Bool {
+        guard let artwork = artwork(with: id) else { return false }
+        let store = self.store, settings = artwork.settings
+        return await Background.run {
+            guard let refinements = try? store.readRefinements(id) else { return false }
+            return !refinements.edits.isEmpty && refinements.start == .generated && settings.drawing == nil
+                && refinements.pinnedPalette(for: settings) == nil
+        }
+    }
+
     /// Waits until every queued write has reached the disk.
     func flush() async {
         for task in Array(writes.values) { _ = await task.value }
