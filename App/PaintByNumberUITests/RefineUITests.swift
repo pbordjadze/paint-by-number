@@ -411,19 +411,18 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The curve didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-shapes")
 
-        // The Pen's line in the open sky under the crest, then Bend Line moves it, free at both
-        // ends and short, whole to the right, clear of any ink there too. From x 0.50 the move
-        // laid it across the crest's spray, which the editor declines (CI run 649), and to 0.47
-        // it met a dashed edge between the sky's paints on the Mac's iPad (a bend crosses
-        // neither), so it moves a little: 1.5% of the picture, but never under 12 points, which
-        // on an iPhone (6 points) a pan never began from (CI run 825).
+        // The Pen's line in the open sky under the crest, then Bend Line bows it, free at both
+        // ends, to the right across the sky's paints (a bend crosses those, re-cutting them, and
+        // one that would reach ink, the crest's spray, goes as far as it can). The drag is 4% of
+        // the picture, never under 12 points, which on an iPhone a pan never began from (CI run
+        // 825).
         pickTool("pen", in: "Ink", of: app)
         drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The line didn't count: \(canvas.value ?? "")")
         pickTool("bendLine", in: "Ink", of: app)
         let pictureWidth = min(canvas.frame.width, canvas.frame.height * 2048 / 1375)
-        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.44 + max(0.015, 12 / pictureWidth), 0.48))
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.44 + max(0.04, 12 / pictureWidth), 0.48))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-bend")

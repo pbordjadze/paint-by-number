@@ -187,10 +187,12 @@ extension EditWork {
     /// near; it is cut where it meets the drawing (the edges, itself, and the strokes it touches,
     /// `node`; never writing, `WorkStroke.joinsLines`) into chains; each chain, with the outline of
     /// the region it lies in, either closes off part of the region (`splitRegion`) or is a stroke.
-    mutating func drawRun(_ input: [LatticePoint], nudging: Bool = false) throws {
+    /// `ink`, a bent line laid again (`bendInk`): its ends stay exactly where they are, and it is
+    /// drawn in that layer and weight rather than as the painter's outline.
+    mutating func drawRun(_ input: [LatticePoint], nudging: Bool = false, ink: (layer: UInt8, weight: UInt8)? = nil) throws {
         var run = Self.dedupe(input)
         guard run.count >= 2 else { return }
-        if !(run.count >= 4 && run.first == run.last) {
+        if ink == nil, !(run.count >= 4 && run.first == run.last) {
             let reach = TemplateEditor.reach
             var length = 0.0
             for (a, b) in zip(run, run.dropFirst()) { length += Double(Lattice.distanceSquared(a, b)).squareRoot() }
@@ -287,8 +289,8 @@ extension EditWork {
         var all: [Chain] = []
         for points in Self.chains(of: lines[0].points, nodes: lines[0].nodes) {
             all.append(Chain(
-                points: points, layer: splitting ? LineLayer.color.rawValue : LineLayer.outline.rawValue, weight: splitting ? 0 : 255,
-                region: nil, fresh: true))
+                points: points, layer: ink?.layer ?? (splitting ? LineLayer.color.rawValue : LineLayer.outline.rawValue),
+                weight: ink?.weight ?? (splitting ? 0 : 255), region: nil, fresh: true))
         }
         for (k, a) in members.enumerated() {
             let stroke = strokes[candidates[a].index]

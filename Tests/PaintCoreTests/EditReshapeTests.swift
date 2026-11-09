@@ -90,20 +90,113 @@ struct EditReshapeTests {
     }
 
     /// A short stroke drawn in the ground touches nothing at either end, both within the bend's
-    /// spread: dragged, it moves whole, and nothing but it (and the ground's numbers, kept off
-    /// it) changes.
-    @Test func aShortStrokeFreeAtBothEndsMovesWhole() throws {
+    /// spread: dragged, it bows, the grabbed point under the finger and its ends following most of
+    /// the way (a free end is no longer moved whole, painting-company row 277), and nothing but it
+    /// (and the ground's numbers, kept off it) changes.
+    @Test func aShortStrokeFreeAtBothEndsBowsItsEndsFollowing() throws {
         let t = try TemplateEditorTests.apply(.draw(points: [SIMD2(60, 108), SIMD2(80, 108)]), to: Self.scene).0
         let k = try #require(t.lineArt!.strokes.indices.first { Self.strokePoints(t, $0).contains(SIMD2(60, 108)) })
-        let stroke = t.lineArt!.strokes[k], before = Self.strokePoints(t, k)
+        let stroke = t.lineArt!.strokes[k]
         let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(70, 108.5), to: SIMD2(70, 112)), to: t)
         #expect(outcome.reshaped == 1)
         let moved = u.lineArt!.strokes[k], after = Self.strokePoints(u, k)
         #expect(Int(moved.region) == outcome.continued[Int(stroke.region)] && moved.layer == stroke.layer && moved.weight == stroke.weight)
         #expect(after.contains(SIMD2(70, 112)), "the grabbed point lands under the finger")
-        #expect(before.allSatisfy { after.contains($0 + SIMD2(0, 4)) }, "\(before) \(after)")
+        for end in [after.first!, after.last!] {
+            #expect(end.y > 110 && end.y < 112, "an end follows most of the way, not all of it: \(after)")
+        }
+        #expect(abs(after.first!.x - 60) < 0.01 || abs(after.first!.x - 80) < 0.01, "the drag was straight down: \(after)")
+        #expect(after.allSatisfy { $0.y <= 112 }, "the grabbed point moves most: \(after)")
         #expect(u.polygons(ofRegion: Int(moved.region)) == t.polygons(ofRegion: Int(stroke.region)), "no outline moves")
         TemplateEditorTests.expectOthersUnchanged(t, u, outcome)
+    }
+
+    /// A line held at one end and free at the other, grabbed in its middle, bows: the held end
+    /// stays, the free one follows part of the way, and no stretch of it moves whole (it did,
+    /// a step rather than a bend, Mac QA of November 7).
+    @Test func aLineHeldAtOneEndBows() throws {
+        // Drawn down across the horizon left of the disc: the piece below it is held where it
+        // meets the horizon and free at its foot.
+        let t = try TemplateEditorTests.apply(.draw(points: [SIMD2(15, 60), SIMD2(15, 100)]), to: Self.scene).0
+        let k = try #require(t.lineArt!.strokes.indices.first { Self.strokePoints(t, $0).contains(SIMD2(15, 100)) })
+        let held = try #require(Self.strokePoints(t, k).min { $0.y < $1.y })
+        #expect(held.y > 66 && held.y < 80, "\(Self.strokePoints(t, k))")
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(15.3, 90), to: SIMD2(22, 90), target: .ink), to: t)
+        #expect(outcome.reshaped >= 1 && outcome.declined == nil)
+        let after = try #require(u.lineArt!.strokes.indices.map { Self.strokePoints(u, $0) }.first { $0.contains(SIMD2(22, 90)) })
+        let top = after.min { $0.y < $1.y }!, foot = after.max { $0.y < $1.y }!
+        #expect(simdLength(top - held) < 0.01, "the held end stays: \(after)")
+        #expect(foot.x > 16 && foot.x < 21.5, "the free end follows part of the way: \(after)")
+        // A bow: the points below the grab move less the farther down they are.
+        let below = after.filter { $0.y > 90 }.sorted { $0.y < $1.y }
+        #expect(!below.isEmpty && zip(below, below.dropFirst()).allSatisfy { $1.x <= $0.x + 0.01 }, "\(below)")
+        expectValid(u)
+    }
+
+    /// A pen line across the undrawn split (the sky's two paints, y = 40), free at both ends:
+    /// Bend Line takes it whole, through the point where only the split meets it, and bends it
+    /// as one line, past where the split crossed it.
+    @Test func aBendTakesTheWholeLineAcrossAnUndrawnBoundary() throws {
+        let t = try TemplateEditorTests.apply(.draw(points: [SIMD2(15, 22), SIMD2(15, 58)]), to: Self.base).0
+        let preview = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(15.3, 44), to: SIMD2(27, 44), target: .ink))
+        #expect(preview.original.contains(SIMD2(15, 22)) && preview.original.contains(SIMD2(15, 58)), "\(preview.original)")
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(15.3, 44), to: SIMD2(27, 44), target: .ink), to: t)
+        #expect(outcome.declined == nil && outcome.reshaped >= 1)
+        let strokes = u.lineArt!.strokes.indices.map { Self.strokePoints(u, $0) }
+        #expect(strokes.contains { $0.contains(SIMD2(27, 44)) }, "the grabbed point lands under the finger")
+        #expect(!strokes.contains { $0.contains(SIMD2(15, 22)) || $0.contains(SIMD2(15, 58)) }, "both free ends follow")
+        #expect(!strokes.contains { $0.contains(SIMD2(15, 40)) }, "nothing of it stays where it lay")
+        let upper = try Self.region(t, EditPaintAreaTests.upper), lower = try Self.region(t, EditPaintAreaTests.lower)
+        #expect(try Self.region(u, SIMD2(22, 36)) == outcome.continued[upper] && Self.region(u, SIMD2(22, 44)) == outcome.continued[lower],
+            "the split stays where it was")
+        expectValid(u)
+    }
+
+    /// A line drawn from the frame down to the horizon cuts the sky's two paints, each in two:
+    /// bent sideways past the split, it is laid again, and the strip it swept over takes the
+    /// paint of the side it came from, above the split and below, which stays.
+    @Test func aBendCrossesAnUndrawnBoundaryAndThePaintFollows() throws {
+        let t = try TemplateEditorTests.apply(.draw(points: [SIMD2(15, 0), SIMD2(15, 90)]), to: Self.base).0
+        let upperLeft = try Self.region(t, SIMD2(5, 20)), upperRight = try Self.region(t, SIMD2(25, 20))
+        let lowerLeft = try Self.region(t, SIMD2(5, 50)), lowerRight = try Self.region(t, SIMD2(25, 50))
+        #expect(Set([upperLeft, upperRight, lowerLeft, lowerRight]).count == 4, "the line cuts both paints")
+        // From the frame to the horizon, through the split: the classic rule took the stretch
+        // above the split alone.
+        let ink = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(15.3, 36), to: SIMD2(27, 36), target: .ink))
+        #expect(ink.original.contains(SIMD2(15, 0)) && ink.original.contains { $0.y > 65 }, "\(ink.original)")
+        let any = try #require(TemplateEditor.reshapedChain(on: t, from: SIMD2(15.3, 36), to: SIMD2(27, 36)))
+        #expect(any.original.allSatisfy { $0.y <= 40 }, "\(any.original)")
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(15.3, 36), to: SIMD2(27, 36), target: .ink), to: t)
+        #expect(outcome.declined == nil && outcome.reshaped >= 1)
+        #expect(try Self.region(u, SIMD2(22, 36)) == outcome.continued[upperLeft], "the upper strip follows the line")
+        #expect(try Self.region(u, SIMD2(22, 43)) == outcome.continued[lowerLeft], "and the lower")
+        #expect(try Self.region(u, SIMD2(30, 36)) == outcome.continued[upperRight])
+        #expect(try Self.region(u, SIMD2(30, 50)) == outcome.continued[lowerRight])
+        #expect(try Self.paint(u, SIMD2(22, 36)) == Self.paint(t, SIMD2(5, 20)))
+        #expect(try Self.paint(u, SIMD2(22, 43)) == Self.paint(t, SIMD2(5, 50)))
+        #expect(try Self.region(u, SIMD2(14, 20)) == Self.region(u, SIMD2(16, 20)), "no line is left where it lay")
+        let line = try #require(u.edges.indices.first { Array(u.points(of: u.edges[$0])).contains(SIMD2(27, 36)) })
+        #expect(LineLayer.isDrawn(u.lineArt!.edgeLayers[line]), "the bent line is ink")
+        expectValid(u)
+    }
+
+    /// A bend pulled into ink goes as far toward it as it can rather than being refused: the
+    /// horizon pulled up through box A stops short of the box, bent.
+    @Test func aBendPulledIntoInkGoesAsFarAsItCan() throws {
+        let t = Self.base
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(104, 72), to: SIMD2(104, 10), target: .ink), to: t)
+        #expect(outcome.declined == nil && outcome.changed && outcome.reshaped >= 1)
+        let art = try #require(u.lineArt)
+        let drawn: [Int] = u.edges.indices.filter { LineLayer.isDrawn(art.edgeLayers[$0]) }
+        var ys: [Float] = []
+        for e in drawn {
+            for p in u.points(of: u.edges[e]) where abs(p.x - 104) < 0.5 && p.y > 28 { ys.append(p.y) }
+        }
+        let top = ys.min()
+        #expect(top.map { $0 < 60 && $0 > 28 } == true, "the horizon rose most of the way to the box: \(top.map { "\($0)" } ?? "none")")
+        expectValid(u)
+        // A drag begun on no line is still nothing.
+        #expect(try Self.declined(.reshape(from: SIMD2(100, 20), to: SIMD2(100, 30), target: .ink), on: Self.scene)?.contains("no line") == true)
     }
 
     /// The ground's detail stroke runs the canvas's width, free at both ends: grabbed in the
@@ -306,5 +399,33 @@ struct EditReshapeTests {
             if outcome.changed { made += 1 }
         }
         #expect(made >= 12)
+    }
+
+    /// Bend Line's bends of drawn lines all over the crowded book, pulled far (up to 30 units, past
+    /// many paint boundaries): each is laid, re-cutting the areas it crosses, and validates, or
+    /// goes as far as it can; one is declined only for a line it can't hold, leaving the template
+    /// as it was.
+    @Test func inkBendsOnACrowdedBookValidate() throws {
+        let t = TemplateEditorTests.rich
+        let art = try #require(t.lineArt)
+        var rng = SplitMix64(seed: 11)
+        var made = 0, far = 0
+        for _ in 0..<24 {
+            let e = Int(rng.next() % UInt64(t.edges.count))
+            guard t.edges[e].right != BoundaryEdge.outside, LineLayer.isDrawn(art.edgeLayers[e]) else { continue }
+            let pts = Array(t.points(of: t.edges[e]))
+            let k = (pts.count - 1) / 2
+            let from = (pts[k] + pts[k + 1]) / 2
+            let to = from + SIMD2(Float(Int(rng.next() % 61) - 30), Float(Int(rng.next() % 61) - 30))
+            let (u, outcome) = try TemplateEditor.apply(.reshape(from: from, to: to, target: .ink), to: t)
+            if outcome.declined != nil {
+                #expect(u == t)
+                continue
+            }
+            expectValid(u)
+            if outcome.changed { made += 1 }
+            if outcome.changed && simdLength(to - from) > 15 { far += 1 }
+        }
+        #expect(made >= 12 && far >= 6, "made \(made), far \(far)")
     }
 }

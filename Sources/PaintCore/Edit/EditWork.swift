@@ -99,6 +99,9 @@ struct EditWork {
     /// The boundaries this edit's line laid (the chains of its line; `drawRun`): a split's
     /// undrawn ones, a drawn line's inked ones.
     var lineEdges: [Int] = []
+    /// The drawn edges a bend lifted off the drawing (`bendInk`), now undrawn, and the pieces later
+    /// lines cut them into.
+    var lifted: Set<Int> = []
 
     init(_ template: Template, snapRadius: Int64 = 1) throws {
         self.snapRadius = snapRadius
@@ -277,6 +280,7 @@ struct EditWork {
         }
         // A boundary of this edit's line cut by a later run of it stays the line's in every part.
         if lineEdges.contains(e) { lineEdges.append(contentsOf: pieces.dropFirst()) }
+        if lifted.contains(e) { lifted.formUnion(pieces) }
         if cut.grown { noteNewVertex(on: e) }
         return pieces
     }
