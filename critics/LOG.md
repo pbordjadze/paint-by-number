@@ -37,3 +37,9 @@
 6. Taken: the chip's text is the bar's ink, not the accent. The ✎ is in every real painting's
    bar, begun or not; `paint-progress` is a demo host without it. Its VoiceOver label is
    "Change", its hint "Draw or erase lines in this painting".
+
+### The Mac's QA of b048196 (relayed by the interviewer), and what changed
+
+Item 1 (a pick never opened the painting) fixed at 01e8711, its UI test green there; item 2 (✎
+Done kept nothing) at bbe9ec7; items 3-6, 8, 10 and 12 at d7101f4; 9 and 11 were this log's
+b048196 round (c2f20dd). Item 7 is the sweep's keyboard fix; 13 and 14 are outside this change.
