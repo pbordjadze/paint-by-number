@@ -510,9 +510,16 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   of the grabbed point, and at most to the chain's end there (a loop's far point, half its length
   round); where it ends the chain gets a vertex, and beyond it keeps its points exactly. So the
   bend is local, and the chain's ends stay on their junctions and the drawing connected; a
-  junction grabbed is held, so nothing moves. A stroke's end that touches no line is free: within
-  the spread, the stretch from the grabbed point to it moves whole (a short stroke free at both
-  ends moves as it is); beyond it, the end stays. Strokes ending on the chain are carried, their
+  junction grabbed is held, so nothing moves. A stroke's end that touches no line is free and not
+  held: its side bends as far as the held side does, so the bow is even under the finger and a free end that near
+  follows part of the way (until editor 6, November 9, 2026, the stretch to it moved whole: on a
+  phone a short line held at one end made a step, Mac QA of November 7); both ends free, the
+  spread; beyond it, the end stays. Bend Line first tries, where the bend ends on a junction, the
+  bow of a rod pinned there (`1 − 1.5u² + 0.5u³`, half the smoothstep's curvature under the
+  finger), so a long drag against a near junction rounds rather than points; where that is
+  declined (it leaves the junction at a slant, and a line meeting it there at a shallow angle
+  can be met: Move Edge on the iPhone's CI, November 9), the smoothstep, which leaves along the
+  line, and only then a shorter drag. Move Edge keeps the smoothstep. Strokes ending on the chain are carried, their
   end moving with the point of the chain they meet. A step whose ends move at least half a unit
   apart is bent: points are added along it so that, moved, they lie at most 3 units apart (the
   smoothstep is at its steepest 1.5 times its mean slope, which bounds a moved step's length), so
@@ -530,6 +537,29 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   its far ends. Bending within a spread of the grab (max(3 × the drag, 24 units) a side), three
   of the five were made; the two declined would have met a line beside them, which a bend that
   far must.
+
+  Bend Line (target `ink`, editor 6, painting-company row 277) bends the line the painter sees.
+  Moving points can't cross an undrawn boundary between paints, and a pen line drawn across a
+  cloud's paints was held at every boundary it crossed: a 42-point bend of a 110-point line was
+  declined (Mac QA, November 7). So Bend Line takes the drawn line as the Line Eraser does (drawn
+  edges and strokes through every point where exactly one other ends, undrawn boundaries
+  ignored), and `EditWork.bendInk` lays the stretch the bend moves again: cut where the bend
+  stops, its edges left as undrawn boundaries and its strokes taken out, the moved points drawn
+  as a line in the old layer and weight (`drawRun` with `ink`, its ends exactly where they are),
+  cutting the areas it crosses. Then the strip between the old line and the new takes the paint
+  of the side the line came from: an area is in the strip when the closed path of the old line
+  and the new one winds round its number; each strip area along the old line joins the area
+  across it it shares most of the old line with, and one that never met the old line joins the
+  strip area beside it. Only ink and the frame stop the line now (`checkReshape`), and a bend that
+  still can't be laid goes as far toward the finger as it can, found in five halvings of the drag
+  (`TemplateEditor.apply`), declined only for no line near or a held point. Refine no longer
+  shows the undrawn boundaries while Bend Line is in hand. On the crowded test book
+  (`TemplateEditorTests.rich`, drags drawn as `inkBendsOnACrowdedBookValidate` draws them, 40
+  tries), 29 drags of 9 to 41 units on drawn lines: the classic rule laid 12 and declined 17;
+  Bend Line laid all 29, 15 of them all the way. Known limits: the preview while the finger is down shows the
+  whole drag, though a bend that can't go all the way is laid shorter; such a bend costs up to seven
+  lays (the rounded bow, the bow along the line, five halvings); an area is in the strip by where its first number lies; writing is bent point by point
+  as before (letters over the drawing, never laid again as a line).
 - **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
   cell. The number nearest the drag's start, within its radius and the edit's reach (a finger's
   on screen, `RefineGestures.fingerReach`; `TemplateEditor.tapReach` in a file without one), goes
