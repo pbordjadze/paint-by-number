@@ -1045,7 +1045,7 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
-(a blank white tile; `GalleryView.share`). The launch purge and the sweep of stale exports each
+(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),

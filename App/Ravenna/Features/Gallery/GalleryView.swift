@@ -1,4 +1,5 @@
 import Foundation
+import os
 import SwiftUI
 
 /// The gallery: paintings in progress, ready to paint (nobody has painted on them yet) and
@@ -25,6 +26,8 @@ struct GalleryView: View {
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
     @State private var restartFailed = false
+    /// The picture or template the share sheet is up for (`share(_:)`), deleted once it closes.
+    @State private var sharedFile: URL?
     /// The top of the pages is in view, where the bar's tips lie.
     @State private var showsTop = true
 
@@ -88,6 +91,12 @@ struct GalleryView: View {
             }
         }
         .overlay(alignment: .bottom) { toasts }
+        .background {
+            ActivityShareSheet(item: sharedFile) {
+                if let sharedFile { ArtworkExporter.removeExport(at: sharedFile) }
+                sharedFile = nil
+            }
+        }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
@@ -303,15 +312,11 @@ struct GalleryView: View {
 
     @ViewBuilder
     private func shareItems(for artwork: Artwork) -> some View {
-        ShareLink(
-            item: PaintingImageFile(store: library.store, artwork: artwork),
-            preview: SharePreview(artwork.title, image: previewImage(artwork))
-        ) {
-            if artwork.isComplete {
-                Label("Share Mosaic", systemImage: "square.and.arrow.up")
-            } else {
-                Label("Share Progress", systemImage: "square.and.arrow.up")
-            }
+        let picture = PaintingImageFile(store: library.store, artwork: artwork)
+        if artwork.isComplete {
+            Button("Share Mosaic", systemImage: "square.and.arrow.up") { share { try await picture.export() } }
+        } else {
+            Button("Share Progress", systemImage: "square.and.arrow.up") { share { try await picture.export() } }
         }
         if artwork.isComplete {
             Button("Share Time-lapse", systemImage: "timelapse") {
@@ -320,13 +325,9 @@ struct GalleryView: View {
                 shareTimelapse(artwork)
             }
         }
-        ShareLink(
-            item: PrintableTemplateFile(
-                store: library.store, artwork: artwork, paper: .default(for: Locale.current.region)),
-            preview: SharePreview(ArtworkExporter.templateName(title: artwork.title), image: previewImage(artwork))
-        ) {
-            Label("Print Template…", systemImage: "printer")
-        }
+        let template = PrintableTemplateFile(
+            store: library.store, artwork: artwork, paper: .default(for: Locale.current.region))
+        Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
         // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
         // is for whoever hasn't the app.
         Button("Send Template…", systemImage: "paperplane") {
@@ -342,9 +343,19 @@ struct GalleryView: View {
         }
     }
 
-    private func previewImage(_ artwork: Artwork) -> Image {
-        if let cached = ThumbnailCache.shared.bestCached(artwork) { return Image(decorative: cached, scale: 1) }
-        return Image(systemName: "paintpalette")
+    /// Writes the file, then opens the share sheet on it. The sheet's tile is the thumbnail of a
+    /// file it is handed ready; a `ShareLink`'s file, written only when the sheet asks for it, left
+    /// the tile to `SharePreview`'s image, which iOS 27's sheet drops: a blank white tile, as Paint
+    /// by Moonlight's gallery found (painting-company rows 263 and 274).
+    private func share(_ export: @escaping @Sendable () async throws -> URL) {
+        PaintTips.used(.shelfHold)
+        Task {
+            do {
+                sharedFile = try await export()
+            } catch {
+                Log.library.error("Preparing a file to share failed: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     private func shareTimelapse(_ artwork: Artwork) {
