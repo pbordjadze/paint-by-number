@@ -1701,13 +1701,10 @@ extension RefineView {
     /// The column's width: the groups' five tabs and a group's five tools fit across it.
     private static let sideWidth: CGFloat = 300
 
-    /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
-    /// picture beside it the screen's whole height. The top bar's controls head it; at its foot,
-    /// under the thumb, Start From and the badge, off the picture, then the tool's options (bare
-    /// on the paper), the palette, the groups and the tools, as along the bottom, scrolling where
-    /// a tool's options are taller than the screen.
-    private var sideTools: some View {
-        let tools = VStack(spacing: 12) {
+    /// The column's foot: Start From and, with `badge`, the tiny-numbers badge, then the tool's
+    /// options, the palette, the groups and the tools.
+    private func sideToolsFoot(badge: Bool) -> some View {
+        VStack(spacing: 12) {
             Spacer(minLength: 0)
             // An area's card takes the room of everything but Select's band: under the badge,
             // over the groups and the tools, it was cut at the top of the smallest phone.
@@ -1715,11 +1712,11 @@ extension RefineView {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) {
                         startChooser
-                        tinyBadge
+                        if badge { tinyBadge }
                     }
                     VStack(spacing: 8) {
                         startChooser
-                        tinyBadge
+                        if badge { tinyBadge }
                     }
                 }
                 .animation(
@@ -1729,13 +1726,23 @@ extension RefineView {
             curveHint
             studioBar
         }
-        return VStack(spacing: 12) {
+    }
+
+    /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
+    /// picture beside it the screen's whole height. The top bar's controls head it; at its foot,
+    /// under the thumb, Start From and the badge, off the picture, then the tool's options (bare
+    /// on the paper), the palette, the groups and the tools, as along the bottom, scrolling where
+    /// a tool's options are taller than the screen.
+    private var sideTools: some View {
+        VStack(spacing: 12) {
             sideBar
             // The bar's controls stay put while the tools scroll: scrolled with them, Done and
-            // Undo left the screen with the looks.
+            // Undo left the screen with the looks. The badge gives way before the tools scroll:
+            // scrolled, it lay half faded under the head with the looks.
             ViewThatFits(in: .vertical) {
-                tools
-                ScrollView { tools }
+                sideToolsFoot(badge: true)
+                sideToolsFoot(badge: false)
+                ScrollView { sideToolsFoot(badge: false) }
                     .scrollIndicatorsFlash(onAppear: true)
                     .defaultScrollAnchor(.bottom)
                     // Its head fades while there is more above: cut off hard, an area's card
