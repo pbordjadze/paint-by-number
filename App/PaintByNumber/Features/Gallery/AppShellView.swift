@@ -263,7 +263,7 @@ struct AppShellView: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("New Painting", systemImage: "plus") { isCreating = true }
+                Button("Paint", systemImage: "plus") { isCreating = true }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
             }

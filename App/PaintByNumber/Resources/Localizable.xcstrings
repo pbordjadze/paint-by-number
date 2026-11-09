@@ -5,12 +5,28 @@
       "comment" : "Title of the tip at the More menu of the painting screen about Zen Mode",
       "extractionState" : "manual"
     },
+    "A different picture every day" : {
+      "comment" : "Paint page: subtitle under Tonight’s Picture",
+      "extractionState" : "manual"
+    },
+    "A Drawing on Paper" : {
+      "comment" : "Paint page, Your Own (SideStore and Debug builds): pick a photo of a drawing made on paper, which is traced into a painting",
+      "extractionState" : "manual"
+    },
     "A Page Is Waiting" : {
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
     "A free painting comes back each day, up to five. Paintings someone sends you are always free." : {
       "comment" : "Settings › Unlimited Paintings footer before the unlock is bought, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
+    "A Photo" : {
+      "comment" : "Paint page, Your Own: opens the system photo picker; the photo picked opens as a painting",
+      "extractionState" : "manual"
+    },
+    "A photo of a drawing, traced into a painting" : {
+      "comment" : "VoiceOver hint of the Paint page's A Drawing on Paper",
       "extractionState" : "manual"
     },
     "About" : {
@@ -27,6 +43,10 @@
     },
     "Blank" : {
       "comment" : "Refine screen, Start From: a blank start, the photo as one area of one paint, which the painter's lines then divide and the paint tools color",
+      "extractionState" : "manual"
+    },
+    "Blank Page" : {
+      "comment" : "Paint page, Your Own (SideStore and Debug builds): start a painting on a blank page with the drawing tools",
       "extractionState" : "manual"
     },
     "Brings back the other controls" : {
@@ -47,10 +67,6 @@
     },
     "Change Color" : {
       "comment" : "Refine screen, Select's bar: a button that opens the selected area's card, where it takes another color or paint",
-      "extractionState" : "manual"
-    },
-    "Choose Photo of a Drawing…" : {
-      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): pick a photo of a drawing on paper from the photo library, to start a painting from it",
       "extractionState" : "manual"
     },
     "Color" : {
@@ -83,6 +99,14 @@
     },
     "Paintings someone sends you are always free." : {
       "comment" : "The Unlimited Paintings sheet, under its buttons, in builds where every new painting takes a free painting (1.1): what never takes one",
+      "extractionState" : "manual"
+    },
+    "The Library" : {
+      "comment" : "Paint page: section title over the app's own pictures (paintings, then photographs), always free",
+      "extractionState" : "manual"
+    },
+    "Tonight’s Picture" : {
+      "comment" : "Paint page (the create flow's first screen): title over the one library painting shown large, another each day",
       "extractionState" : "manual"
     },
     "Try It in the Tool Guide" : {
@@ -153,10 +177,6 @@
         }
       }
     },
-    "Photograph a Drawing" : {
-      "comment" : "Item behind a long press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone; SideStore and Debug builds): take a photo of a drawing on paper with the camera, to start a painting from it",
-      "extractionState" : "manual"
-    },
     "Two fingers zoom and move. Tap with two to undo." : {
       "comment" : "Message of the tip titled Draw Your Own Lines in Refine (the two-finger tap undoes the last change)",
       "extractionState" : "manual"
@@ -171,10 +191,6 @@
     },
     "Eyedropper" : {
       "comment" : "Refine screen: the tool whose tap picks an area's paint, or the photo's color, as the current paint; its name in the tool rail and its VoiceOver label",
-      "extractionState" : "manual"
-    },
-    "From Scratch" : {
-      "comment" : "Toolbar button of the create flow's New Painting screen that starts a painting on a blank page, drawn in Refine",
       "extractionState" : "manual"
     },
     "Full Screen" : {
@@ -1553,14 +1569,6 @@
       "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
       "extractionState" : "manual"
     },
-    "Browse all photos and albums" : {
-      "comment" : "Pointer hover help of the Browse All button",
-      "extractionState" : "manual"
-    },
-    "Browse All…" : {
-      "comment" : "Toolbar button of the photo step in the create flow: opens the full system photo picker",
-      "extractionState" : "manual"
-    },
     "Cancel" : {
       "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with, and the alert shown when feedback couldn't be sent (it keeps what the painter wrote)",
       "extractionState" : "manual"
@@ -1579,10 +1587,6 @@
     },
     "Check your connection and try again, or share it another way. What you wrote is kept." : {
       "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
-      "extractionState" : "manual"
-    },
-    "Choose Photo" : {
-      "comment" : "Accessibility label of the inline photo library picker in the create flow",
       "extractionState" : "manual"
     },
     "Choosing settings…" : {
@@ -3709,10 +3713,6 @@
       "comment" : "Caption on the gallery card of a painting made by a newer version of the app",
       "extractionState" : "manual"
     },
-    "New Painting" : {
-      "comment" : "Button (and title of the create flow) that starts a new painting from a photo",
-      "extractionState" : "manual"
-    },
     "New Paintings" : {
       "comment" : "Header of the Settings section with the defaults for new paintings",
       "extractionState" : "manual"
@@ -3754,7 +3754,7 @@
       "extractionState" : "manual"
     },
     "Paint" : {
-      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area; on the Refine screen, the group of tools that give areas their paint (a section of the tool rail on iPad, a tab on iPhone) and the Layers panel's layer of the paint",
+      "comment" : "Gallery button and menu command that opens the Paint page to start a new painting; the Paint page's title; the Paint menu (iPad menu bar); the undo/redo action name for painting",
       "extractionState" : "manual"
     },
     "Paint by Moonlight" : {
@@ -4318,7 +4318,7 @@
       }
     },
     "Paintings" : {
-      "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
+      "comment" : "Paint page, The Library: subsection of the library's paintings; also in the picture menu of Settings",
       "extractionState" : "manual"
     },
     "Palette" : {
@@ -4562,7 +4562,7 @@
       "extractionState" : "manual"
     },
     "Draw your own picture on a blank page" : {
-      "comment" : "Pointer help of the New Painting screen's From Scratch button",
+      "comment" : "VoiceOver hint of the Paint page's Blank Page",
       "extractionState" : "manual"
     },
     "Drawing" : {
@@ -4573,16 +4573,8 @@
       "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's Layers panel's layer of the photo",
       "extractionState" : "manual"
     },
-    "Photo Source" : {
-      "comment" : "Accessibility label of the segmented control that switches between the photo library and the samples",
-      "extractionState" : "manual"
-    },
     "Photographs" : {
-      "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled photographs",
-      "extractionState" : "manual"
-    },
-    "Photos" : {
-      "comment" : "Segment of the create flow that shows the photo library",
+      "comment" : "Paint page, The Library: subsection of the library's photographs; also in the picture menu of Settings",
       "extractionState" : "manual"
     },
     "Pictures" : {
@@ -5497,10 +5489,6 @@
         }
       }
     },
-    "Samples" : {
-      "comment" : "Segment and section title for the bundled sample pictures (paintings and photographs) in the create flow",
-      "extractionState" : "manual"
-    },
     "Say what looks wrong or right, and why." : {
       "comment" : "Feedback's review sheet: footer under the note field",
       "extractionState" : "manual"
@@ -5762,7 +5750,7 @@
       "extractionState" : "manual"
     },
     "Take Photo" : {
-      "comment" : "Toolbar button of the create flow that opens the camera",
+      "comment" : "Paint page, Your Own: opens the camera; the photo taken opens as a painting",
       "extractionState" : "manual"
     },
     "Tap to Paint" : {
@@ -5977,8 +5965,8 @@
       "comment" : "The Unlimited Paintings sheet's button that closes it without buying",
       "extractionState" : "manual"
     },
-    "Everything in Samples is always free." : {
-      "comment" : "Note in the Unlimited Paintings sheet: paintings of the app's own pictures, under Samples in New Painting, never need the purchase or a free painting",
+    "Everything in The Library is always free." : {
+      "comment" : "Note in the Unlimited Paintings sheet: paintings of the app's own pictures, in The Library on the Paint page, never need the purchase or a free painting",
       "extractionState" : "manual"
     },
     "Restore Purchases" : {
@@ -6017,8 +6005,8 @@
       "comment" : "Footer of Settings › Unlimited Paintings once the purchase is bought",
       "extractionState" : "manual"
     },
-    "A free painting of your own photos comes back each day, up to three. Everything in Samples is always free." : {
-      "comment" : "Footer of Settings › Unlimited Paintings before the purchase is bought: how free paintings work (the app's own pictures, under Samples in New Painting, never need one)",
+    "A free painting of your own photos comes back each day, up to three. Everything in The Library is always free." : {
+      "comment" : "Footer of Settings › Unlimited Paintings before the purchase is bought: how free paintings work (the app's own pictures, in The Library on the Paint page, never need one)",
       "extractionState" : "manual"
     },
     "unlock.buy" : {
@@ -6157,12 +6145,12 @@
       "comment" : "Message of the confirmation before leaving feedback mode with marks or a note",
       "extractionState" : "manual"
     },
-    "Your painting with your marks" : {
-      "comment" : "Feedback's review sheet: VoiceOver label of the picture of the painting with the marks drawn on it",
+    "Your Own" : {
+      "comment" : "Paint page: section title over the painter's own ways in (a photo, the camera, a drawing on paper, a blank page)",
       "extractionState" : "manual"
     },
-    "Your Photos" : {
-      "comment" : "Section title above the photo library picker on wide screens in the create flow",
+    "Your painting with your marks" : {
+      "comment" : "Feedback's review sheet: VoiceOver label of the picture of the painting with the marks drawn on it",
       "extractionState" : "manual"
     },
     "Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking." : {

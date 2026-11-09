@@ -53,6 +53,15 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     /// The pictures of one kind, in the library's order: a section of the Samples pane.
     static func all(of kind: Kind) -> [Sample] { all.filter { $0.provenance?.kind == kind } }
 
+    /// The Paint page's Tonight's Picture (`PhotoSourceView`): the library's paintings in turn,
+    /// another each calendar day, the same all day; nil without paintings.
+    static func tonight(on date: Date = .now, calendar: Calendar = .current) -> Sample? {
+        let paintings = all(of: .painting)
+        guard !paintings.isEmpty else { return nil }
+        let day = calendar.dateComponents([.day], from: Date(timeIntervalSinceReferenceDate: 0), to: calendar.startOfDay(for: date)).day ?? 0
+        return paintings[((day % paintings.count) + paintings.count) % paintings.count]
+    }
+
     /// Prepared on first launch so the gallery starts with something to paint: a painting and
     /// a photograph, the library's best first impression.
     static let starters: [Sample] = ["great-wave", "delicate-arch"].compactMap(Sample.named)

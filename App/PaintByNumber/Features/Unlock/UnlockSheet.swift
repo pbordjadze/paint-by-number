@@ -149,7 +149,7 @@ struct UnlockSheet: View {
             Text("Paintings someone sends you are always free.")
                 .foregroundStyle(Theme.quietInk)
             #else
-            Text("Everything in Samples is always free.")
+            Text("Everything in The Library is always free.")
                 .foregroundStyle(Theme.quietInk)
             #endif
         }

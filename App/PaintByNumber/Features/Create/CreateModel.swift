@@ -179,6 +179,12 @@ final class CreateModel {
     /// as soon as it is (`startsNow`). Called off wherever a waiting Refine is, and by Reset to
     /// Suggested: a changed setting (a touch heard or not), a new photo, a failed generation.
     private(set) var startAsked = false
+    /// Paint Now (painting-company row 239): a picture picked on the Paint page opens as a
+    /// painting, at the painter's Painting Length, with no preview step: the preview shows only
+    /// the picture forming and starts by itself (`TemplatePreviewView`). Set by the page for each
+    /// pick; a resumed draft, a page from scratch and the demos that open on a preview leave it
+    /// off, and so keep the preview and its sliders.
+    var paintsNow = false
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo; a drawing on Blank's own name once the photo

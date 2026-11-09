@@ -22,7 +22,7 @@ struct EmptyGalleryView: View {
             .containerRelativeFrame(.horizontal) { length, _ in max(0, min(length - 64, 400)) }
 
             Button(action: onCreate) {
-                Label("New Painting", systemImage: "plus")
+                Label("Paint", systemImage: "plus")
                     .font(.headline)
                     .fixedSize()
                     .padding(.horizontal, 10)
