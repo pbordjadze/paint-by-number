@@ -116,6 +116,26 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(restart.exists, "More's menu closed by itself")
     }
 
+    /// The length chip's menu, on a painting not begun, raises no keyboard either (the Mac's
+    /// QA of Paint Now, November 9, item 7: on iPad it did, as More's had).
+    @MainActor
+    func testLengthChipRaisesNoKeyboard() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "gallery-open-new"]
+        app.launch()
+        let chip = app.buttons["length-chip"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 90), "The painting not begun has no length chip")
+        XCTAssertTrue(waitUntil(timeout: 15) { chip.isHittable })
+        sleep(2)
+        chip.tap()
+        let quick = app.buttons["Quick"]
+        XCTAssertTrue(quick.waitForExistence(timeout: 5), "The length chip's menu didn't open")
+        sleep(1)
+        attachScreenshot(of: app, named: "length-chip-open")
+        XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with the length chip's menu")
+        XCTAssertTrue(quick.exists, "The length chip's menu closed by itself")
+    }
+
     /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
     /// and a tap on the ring brings Undo and More back.
     @MainActor
