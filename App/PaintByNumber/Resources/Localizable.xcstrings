@@ -125,6 +125,10 @@
       "comment" : "VoiceOver hint of the Finished bar's name of a painting not yet named, which opens Name Your Painting",
       "extractionState" : "manual"
     },
+    "Name Painting" : {
+      "comment" : "VoiceOver label of a finished painting's name in its Finished bar while it has only the name the app gave it (its value is that name): a tap names it",
+      "extractionState" : "manual"
+    },
     "Name Your Painting" : {
       "comment" : "Title of the alert that names a finished painting, opened by a tap on its name (with a pencil) in its Finished bar while it has only the name the app gave it",
       "extractionState" : "manual"
@@ -181,8 +185,8 @@
       "comment" : "Paint page: section title over the app's own pictures (paintings, then photographs), always free",
       "extractionState" : "manual"
     },
-    "The name goes with it when you share or print it." : {
-      "comment" : "Message of the Name Your Painting alert, under its title",
+    "This name shows when you share or print the painting." : {
+      "comment" : "Message of the Name Your Painting (or Rename Painting) alert opened from a finished painting's name in its Finished bar",
       "extractionState" : "manual"
     },
     "title.numbered" : {

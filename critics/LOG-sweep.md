@@ -38,3 +38,16 @@ be cool later." So A (the Vision subject names) is out of 1.1, filed for later, 
 label: while unnamed, the Finished bar's second line is the name itself with a pencil, and a tap on
 it opens Name Your Painting. The capture-date name and ", No. 2" are built and await the
 interviewer's keep-or-drop.
+
+## Round 2: B without a label (November 9, ~6:35 PM ET, from the code; no screenshots yet)
+Verdict: ship, with changes. A tinted name with a pencil, as the line under "Finished!", reads as
+"you can change this" with no label: keep the cue. Changes: once named, the title there stays
+tappable, plain, opening Rename Painting (a control that just worked shouldn't stop working; a
+typo shouldn't send the painter to the gallery); the alert's message "This name shows when you
+share or print the painting." (two unclear "it"s before); the field starts empty, the current
+name its placeholder, and an empty Save keeps it; VoiceOver label "Name Painting", value the
+name, hint kept; the name twice (badge and bar) is fine while unnamed, and once named the bar
+goes back to "Every area is painted." where the badge has the title. Next round: the
+screenshots, dark and the largest text sizes.
+Maker's answer: all taken. Where the bar says "Every area is painted." the line isn't a
+button (a sentence that renames would surprise); the title stays tappable where it shows.

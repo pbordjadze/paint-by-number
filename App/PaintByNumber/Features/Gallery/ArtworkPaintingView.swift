@@ -76,13 +76,24 @@ struct ArtworkPaintingView: View {
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
 
-    /// Name Your Painting, from the Finished bar: the field starts with the name it was given.
+    /// Name Your Painting (Rename Painting once it has a name), from the Finished bar's name: the
+    /// field starts empty, the name it has as its placeholder, and Save with nothing typed keeps
+    /// that name as the painting's own.
     @State private var isNaming = false
     @State private var nameText = ""
+    @State private var namingTitle = ""
+    @State private var namingUnnamed = false
 
     private func startNaming() {
-        nameText = artwork?.title ?? ""
+        nameText = ""
+        namingTitle = artwork?.title ?? ""
+        namingUnnamed = artwork?.isNamed == false
         isNaming = true
+    }
+
+    private func saveName() {
+        let typed = nameText.trimmingCharacters(in: .whitespacesAndNewlines)
+        library.rename(artworkID, to: typed.isEmpty ? namingTitle : typed)
     }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
@@ -125,7 +136,7 @@ struct ArtworkPaintingView: View {
             if let autosaver, hasLanded {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
-                    onName: artwork?.isNamed == false ? { startNaming() } : nil,
+                    onName: { startNaming() }, isNamed: artwork?.isNamed ?? true,
                     onTemplateFrame: canvasReport, onChange: changeAction)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
@@ -213,13 +224,13 @@ struct ArtworkPaintingView: View {
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
         #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
-        .alert("Name Your Painting", isPresented: $isNaming) {
-            TextField("Title", text: $nameText)
+        .alert(namingUnnamed ? Text("Name Your Painting") : Text("Rename Painting"), isPresented: $isNaming) {
+            TextField("Title", text: $nameText, prompt: Text(namingTitle))
                 .submitLabel(.done)
             Button("Cancel", role: .cancel) {}
-            Button("Save") { library.rename(artworkID, to: nameText) }
+            Button("Save", action: saveName)
         } message: {
-            Text("The name goes with it when you share or print it.")
+            Text("This name shows when you share or print the painting.")
         }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in

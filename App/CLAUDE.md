@@ -529,7 +529,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   (`PhotoNaming`: the day the photo was taken, else today), made distinct from the paintings'
   names (", No. 2"), and records `Artwork.titled` false: finished, its bar's second line is that
   name with a pencil, no label (`CompletionBar.onName`), and a tap opens Name Your Painting
-  (`ArtworkPaintingView`); Rename or Save names it for good. Absent, `titled` reads as named.
+  (`ArtworkPaintingView`; its field empty, the name as placeholder); Rename or Save names it for
+  good. Named, the bar's title stays a plain way to Rename Painting. Absent, `titled` reads as named.
   A received painting keeps its sender's paint names (`Artwork.sentNicknameSeed`).
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
   (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it

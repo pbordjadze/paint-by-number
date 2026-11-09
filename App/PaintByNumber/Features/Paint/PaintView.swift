@@ -29,6 +29,8 @@ struct PaintView: View {
     /// Names a painting still under the name the app gave it (`Artwork.isNamed`): finished, its
     /// bar's name is tappable (`CompletionBar.onName`). Nil once it has a name.
     var onName: (() -> Void)?
+    /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
+    var isNamed = true
     /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
@@ -116,6 +118,7 @@ struct PaintView: View {
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
+        isNamed: Bool = true,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onChange: (() -> Void)? = nil
     ) {
@@ -124,6 +127,7 @@ struct PaintView: View {
         self.title = title
         self.onClose = onClose
         self.onName = onName
+        self.isNamed = isNamed
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
@@ -692,7 +696,7 @@ struct PaintView: View {
             CompletionBar(
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
-                onShareTimelapse: shareTimelapse, onName: onName, onClose: onClose)
+                onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose)
                 .transition(transition)
         } else {
             PaletteBar(

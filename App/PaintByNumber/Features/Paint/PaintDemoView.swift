@@ -75,7 +75,7 @@ struct PaintDemoView: View {
             if let demo {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
-                    onName: scenario == "paint-complete-unnamed" ? {} : nil, initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
+                    onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })
