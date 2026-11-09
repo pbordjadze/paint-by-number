@@ -295,6 +295,9 @@ final class Library {
         var age: TimeInterval = 0
         /// Demos use smaller photos so they are ready quickly even in Debug builds.
         var photoMaxPixelSize = ArtworkStore.sourceMaxPixelSize
+        /// The Painting Length it is recorded as cut for, as a picture picked on the Paint page is
+        /// (`gallery-open-new`: its length chip); nil as the starters have none.
+        var paintingLength: PaintingLength? = nil
     }
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
@@ -314,9 +317,13 @@ final class Library {
                 let date = now.addingTimeInterval(-item.age - Double(index))
                 let clock = ContinuousClock.now
                 do {
-                    let draft = try await ArtworkFactory.draft(
+                    var draft = try await ArtworkFactory.draft(
                         sample: item.sample, paintedFraction: item.painted, date: date,
                         photoMaxPixelSize: item.photoMaxPixelSize)
+                    if let length = item.paintingLength {
+                        draft.paintingLength = length
+                        draft.settingsOrigin = .suggested
+                    }
                     try await create(draft)
                     created += 1
                     Log.library.notice("Seeded \(item.sample.id, privacy: .public) in \(String(describing: ContinuousClock.now - clock), privacy: .public)")

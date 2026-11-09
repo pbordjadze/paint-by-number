@@ -181,7 +181,7 @@ struct AppShellView: View {
         }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
-            guard ShellDemo.current == .galleryOpen, !demoOpenedPainting, path.isEmpty, let id else { return }
+            guard ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew, !demoOpenedPainting, path.isEmpty, let id else { return }
             demoOpenedPainting = true
             path = [id]
         }
