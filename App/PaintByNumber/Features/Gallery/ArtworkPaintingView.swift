@@ -45,6 +45,9 @@ struct ArtworkPaintingView: View {
     /// ✎ Change's drawing tools, open over the painting (`PaintingChangeView`), with the
     /// refinements they opened on.
     @State private var change: PaintingChange?
+    /// The change the cover was opened for, read once it has gone: the cover's item is already
+    /// nil when its `onDismiss` runs (the Mac's QA, November 9: Done kept nothing).
+    @State private var presentedChange: PaintingChange?
     /// ✎ Change was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersChangeUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -329,7 +332,9 @@ struct ArtworkPaintingView: View {
                 try Task.checkCancellation()
                 let model = CreateModel(previewStyle: .painting)
                 model.load(artwork: artwork, photo: inputs.photo, template: template, refinements: inputs.refinements)
-                change = PaintingChange(model: model, opened: inputs.refinements)
+                let opened = PaintingChange(model: model, opened: inputs.refinements)
+                presentedChange = opened
+                change = opened
             } catch is CancellationError {
             } catch {
                 Log.library.error("Opening ✎ Change on \(id.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
@@ -341,7 +346,8 @@ struct ArtworkPaintingView: View {
     /// The drawing tools closed: with Done and something changed, the painting takes the new
     /// template, its painted areas kept (`Library.adopt`).
     private func changeEnded() {
-        guard let ended = change else { return }
+        guard let ended = presentedChange else { return }
+        presentedChange = nil
         change = nil
         let model = ended.model
         guard !model.refiningCancelled, model.refinements != ended.opened else {
