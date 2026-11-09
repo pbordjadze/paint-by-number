@@ -401,6 +401,55 @@ struct EditReshapeTests {
         #expect(made >= 12)
     }
 
+    /// Bend Line lays only the stretch it moves again. The horizon, a straight two-point edge
+    /// from the disc to the square, bent up: no ink is left where it lay and no cell is added
+    /// (the grabbed point lies inside its one step). A slanted line bent near its middle keeps
+    /// its ink beyond where the bend ends, though that point, rounded to the lattice, lies beside
+    /// the line's step rather than on it (review of November 9).
+    @Test func aBendLaysOnlyTheStretchItMoves() throws {
+        let t = Self.scene
+        let (u, outcome) = try TemplateEditorTests.apply(.reshape(from: SIMD2(104, 72), to: SIMD2(104, 62), target: .ink), to: t)
+        #expect(outcome.declined == nil && outcome.reshaped >= 1)
+        let art = try #require(u.lineArt)
+        let drawn = u.edges.indices.filter { LineLayer.isDrawn(art.edgeLayers[$0]) }
+        func inkNear(_ p: SIMD2<Float>, _ within: Float = 0.6) -> Bool {
+            drawn.contains { e in
+                let pts = Array(u.points(of: u.edges[e]))
+                return zip(pts, pts.dropFirst()).contains { a, b in
+                    let d = b - a, l = simdLengthSquared(d)
+                    let f = l > 0 ? min(max(simdDot(p - a, d) / l, 0), 1) : 0
+                    return simdLength(a + d * f - p) <= within
+                }
+            }
+        }
+        #expect(!inkNear(SIMD2(104, 72)) && !inkNear(SIMD2(95, 72)), "the horizon left where it lay")
+        #expect(inkNear(SIMD2(104, 62)))
+        #expect(u.regions.count == t.regions.count, "no cell added")
+        expectValid(u)
+
+        for dx in 4...7 {
+            let a = SIMD2<Float>(Float(5 + dx), 0), b = SIMD2<Float>(Float(40 + dx), 90)
+            let drawnLine = try TemplateEditorTests.apply(.draw(points: [a, b]), to: Self.base).0
+            func at(_ y: Float) -> SIMD2<Float> { a + (b - a) * (y / 90) }
+            let (bent, made) = try TemplateEditorTests.apply(.reshape(from: at(30), to: at(30) + SIMD2(4, -2), target: .ink), to: drawnLine)
+            #expect(made.declined == nil && made.reshaped >= 1)
+            let bentArt = try #require(bent.lineArt)
+            let ink = bent.edges.indices.filter { LineLayer.isDrawn(bentArt.edgeLayers[$0]) }
+            func onInk(_ p: SIMD2<Float>) -> Bool {
+                ink.contains { e in
+                    let pts = Array(bent.points(of: bent.edges[e]))
+                    return zip(pts, pts.dropFirst()).contains { a, b in
+                        let d = b - a, l = simdLengthSquared(d)
+                        let f = l > 0 ? min(max(simdDot(p - a, d) / l, 0), 1) : 0
+                        return simdLength(a + d * f - p) <= 0.6
+                    }
+                }
+            }
+            #expect(onInk(at(2)) && onInk(at(62)), "dx \(dx): the line beyond the bend keeps its ink")
+            expectValid(bent)
+        }
+    }
+
     /// Bend Line's bends of drawn lines all over the crowded book, pulled far (up to 30 units, past
     /// many paint boundaries): each is laid, re-cutting the areas it crosses, and validates, or
     /// goes as far as it can; one is declined only for a line it can't hold, leaving the template

@@ -74,12 +74,15 @@ extension EditWork {
     /// as it is, so a long outline bends near the finger rather than along its whole length.
     static var reshapeSpread: Int64 { 24 * Lattice.unit }
 
-    /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to a held
-    /// end: 1 at the grabbed point, 0 at the end, with no slope at either (a smoothstep, the
-    /// raised cosine's cubic twin, in `+ - *` alone, so it is the same on every device).
-    static func falloff(_ u: Double) -> Double {
+    /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to where
+    /// the bend ends: 1 at the grabbed point, 0 there, in `+ - *` alone, so it is the same on every
+    /// device. Where the line runs on unmoved (`pinned` false) it is a smoothstep, no slope at
+    /// either end, as a rod clamped there bends; where the bend ends on a junction (`pinned`) it
+    /// is the bow of a rod pinned there, half as sharp under the finger, meeting the junction at
+    /// a slant (editor 6: a long drag against a near junction made a point, not a bow).
+    static func falloff(_ u: Double, pinned: Bool = false) -> Double {
         let c = min(max(u, 0), 1)
-        return 1 - c * c * (3 - 2 * c)
+        return pinned ? 1 - c * c * (1.5 - 0.5 * c) : 1 - c * c * (3 - 2 * c)
     }
 
     /// Refine's Bend Line and Move Edge (`TemplateEditor.Edit.reshape`): the line nearest `from`
@@ -168,9 +171,9 @@ extension EditWork {
     /// or at the chain's end if that is nearer, which stays on its junction; beyond, the chain
     /// keeps its points, the first of them made a vertex. A loop through no junction is held at
     /// most at its far point, half its length round. A stroke's end that meets no line is free:
-    /// within the spread it isn't held, the weights falling off over the whole spread as if the
-    /// line ran on, so the end follows part of the way (a bow; until editor 6 the stretch to it
-    /// moved whole, a step); beyond it, it stays. Strokes ending on the chain are carried,
+    /// it isn't held, its side bending as far as the held side does (`bend`), so the end, if that
+    /// near, follows part of the way (a bow; until editor 6 the stretch to it moved whole, a
+    /// step); beyond, it stays. Strokes ending on the chain are carried,
     /// their end moving with the point of it they meet. Where a step's two ends move at least half
     /// a unit apart, it bends: points are added along it so that, moved, they are `reshapeStep` or
     /// less apart. With `checking`, the moved chain must lie on the canvas, be simple, and meet
@@ -235,15 +238,17 @@ extension EditWork {
             }
             return lines.contains { $0.index != i && on($0.points) }
         }
-        if target == .ink {
+        if target == .ink, !(grab.stroke.map { strokes[$0].writing } ?? false) {
             // The drawn line as the Line Eraser takes it (`eraseLine`): drawn edges and strokes
             // continued through every point where exactly one other of them ends, whatever
-            // undrawn boundaries meet it there, so the line seen bends as one.
+            // undrawn boundaries meet it there, so the line seen bends as one. Writing is letters
+            // over the drawing, not part of it: a stroke of it grabbed is moved point by point as
+            // before, keeping it writing, and no line runs on into one.
             var geometry: [(member: InkMember, points: [LatticePoint])] = []
             for e in t.edges.indices where !edgeDead[e] && isInked(e) && !isFrame(e) {
                 geometry.append((.edge(HalfEdge(edge: e, reversed: false)), lattice(of: e)))
             }
-            for line in lines where LineLayer.isDrawn(strokes[line.index].layer) {
+            for line in lines where LineLayer.isDrawn(strokes[line.index].layer) && !strokes[line.index].writing {
                 geometry.append((.stroke(line.index, reversed: false), line.points))
             }
             let first = geometry.firstIndex {
@@ -398,17 +403,31 @@ extension EditWork {
         guard closed || (sg > 0 || startFree) && (sg < total || endFree) else {
             throw EditFailure.invalid(TemplateEditor.lineHeldThere)
         }
-        // A free end within the bend's spread is not held: the line bends as one that ran on
-        // past it would, the end following part of the way (all of it only where it was grabbed),
-        // a bow rather than a step (painting-company row 277). One beyond the spread stays.
-        let freeBefore = !closed && startFree && sg <= spread, freeAfter = !closed && endFree && total - sg <= spread
         /// How far along the chain the bend runs before the grabbed point and after it: the
-        /// spread, at most to a held end (a loop's far point).
+        /// spread, at most to a held end (a loop's far point). A free end is not held (until
+        /// editor 6 the stretch to one within the spread moved whole, a step): its side bends as
+        /// far as the held side does, so the bow is even under the finger and the free end, if
+        /// that near, follows part of the way (painting-company row 277); with both ends free,
+        /// the spread.
         func bend(after: Bool) -> Double {
             if closed { return min(spread, total / 2) }
-            if after ? freeAfter : freeBefore { return spread }
+            let free = after ? endFree : startFree
+            if free {
+                if after ? startFree : endFree { return spread }
+                return max(bend(after: !after), min(spread, after ? total - sg : sg))
+            }
             return min(spread, after ? total - sg : sg)
         }
+        /// Whether the bend on that side ends on the chain's held end (a junction), not short of it;
+        /// a free side bends as the held one does, so the two halves of the bow match.
+        func pinned(after: Bool) -> Bool {
+            if closed { return false }
+            if after ? endFree : startFree { return !(after ? startFree : endFree) && pinned(after: !after) }
+            return (after ? total - sg : sg) <= spread
+        }
+        // A free end within the bend's reach moves; one beyond it stays.
+        let freeBefore = !closed && startFree && sg <= bend(after: false)
+        let freeAfter = !closed && endFree && total - sg <= bend(after: true)
         /// Makes the point `at` along the chain a vertex, so that the chain beyond it, which
         /// doesn't move, keeps its points exactly.
         func hold(_ at: Double) {
@@ -434,7 +453,7 @@ extension EditWork {
                 d = at - sg
             }
             let r = bend(after: at > sg)
-            return r > 0 ? Self.falloff(d / r) : 1
+            return r > 0 ? Self.falloff(d / r, pinned: pinned(after: at > sg)) : 1
         }
         func moved(_ p: LatticePoint, _ w: Double) -> LatticePoint {
             p &+ LatticePoint(Int64((w * Double(delta.x)).rounded()), Int64((w * Double(delta.y)).rounded()))
@@ -444,7 +463,7 @@ extension EditWork {
         var steps = [[LatticePoint]](repeating: [], count: flat.count)
         for i in flat.indices {
             if i > 0, abs(w[i] - w[i - 1]) * drag >= Double(Lattice.unit) / 2 {
-                // The falloff is at its steepest 1.5 times its mean slope over the side, so a
+                // Either falloff is at its steepest 1.5 times its mean slope over the side, so a
                 // moved step is at most this many times as long as it was.
                 let length = s[i] - s[i - 1], stretch = 1 + 1.5 * drag / bend(after: s[i - 1] + length / 2 > sg)
                 let n = Int64((length * stretch / step).rounded(.up))
@@ -606,6 +625,7 @@ extension EditWork {
         // Where the bend stops inside the line (cut there), and the points it moves.
         let stops = Set([order[0], order[order.count - 1]].filter { !moves[$0] }.map { flat[$0] })
         let moving = Set(order.filter { moves[$0] }.map { flat[$0] })
+        let stretch = Set(old)
 
         var layer = LineLayer.outline.rawValue, weight: UInt8 = 255
         for (k, member) in plan.members.enumerated() {
@@ -615,15 +635,23 @@ extension EditWork {
             case .edge(let h):
                 if points.contains(plan.grabbed) { (layer, weight) = (layers[h.edge], weights[h.edge]) }
                 guard points.contains(where: moving.contains) else { continue }
-                // Cut where the bend ends, inside the edge: the part beyond keeps its ink.
+                // Cut where the bend ends, inside the edge: the part beyond keeps its ink. The
+                // point where it ends was rounded to the lattice, so it may lie beside the edge's
+                // segment rather than on it (`split` takes it there).
                 let own = lattice(of: h.edge)
                 var cuts: [(segment: Int, point: LatticePoint)] = []
-                for p in stops where points.dropFirst().dropLast().contains(p) {
-                    if let j = (0..<(own.count - 1)).first(where: { Lattice.orient(own[$0], own[$0 + 1], p) == 0 && Lattice.between(own[$0], own[$0 + 1], p) }) {
-                        cuts.append((j, p))
-                    }
+                for p in stops where points.dropFirst().dropLast().contains(p) && !own.contains(p) {
+                    let j = (0..<(own.count - 1)).min { a, b in
+                        let x = Lattice.nearest(to: p, on: own[a], own[a + 1]).distanceSquared
+                        let y = Lattice.nearest(to: p, on: own[b], own[b + 1]).distanceSquared
+                        return x != y ? x < y : a < b
+                    }!
+                    cuts.append((j, p))
                 }
-                for e in split(edge: h.edge, at: cuts) where lattice(of: e).contains(where: moving.contains) {
+                cuts += stops.filter { own.dropFirst().dropLast().contains($0) }.map { p in (own.firstIndex(of: p)!, p) }
+                // A piece is in the stretch when all its points are: the grabbed point and the
+                // points a bend adds lie inside a step, so a straight edge has none of them.
+                for e in split(edge: h.edge, at: cuts) where lattice(of: e).allSatisfy(stretch.contains) {
                     layers[e] = LineLayer.color.rawValue
                     weights[e] = colorWeight(t.regions[left(e)].colorIndex, t.regions[right(e)!].colorIndex)
                     edgeDirty[e] = true
@@ -656,8 +684,9 @@ extension EditWork {
             movedStrokes.insert(c.stroke)
             summary.touched.insert(strokes[c.stroke].region)
         }
+        let lines = summary.lines
         try drawRun(laid, ink: (layer, weight))
-        summary.lines -= 1
+        summary.lines = lines
 
         // The swept strip: what lies between the line as it lay and as it lies now.
         let sweep = old + laid.reversed()

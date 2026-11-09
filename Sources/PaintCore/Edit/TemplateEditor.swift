@@ -74,7 +74,7 @@ import Foundation
 ///   drawn lines alone, Move Edge's boundaries between cells alone, or any), its point nearest the touch going where the finger lifts and
 ///   the rest following less the farther along the line, none past three times the drag (at
 ///   least 24 units) or at its ends, which stay on their junctions (a stroke's free end within
-///   that follows as the line would if it ran on, a bow). Points are added along the stretch that moves, so a big bend is smooth, and
+///   that follows part of the way, a bow, its side bending as far as the held side). Points are added along the stretch that moves, so a big bend is smooth, and
 ///   strokes ending on the line are carried with it. The line keeps its ink or its lack of it;
 ///   the regions on its sides keep their paints, their outlines follow it, and their numbers stay
 ///   while they have room. Declined when the line would cross itself or another, leave the
@@ -130,8 +130,10 @@ public enum TemplateEditor {
     /// 2026): a sliver beside ink there before (a circle poking a point into a box) is not cut
     /// off (`isSliver`). 6 (November 9, 2026): Bend Line's reshape takes the drawn line from ink
     /// junction to ink junction and lays it again across undrawn boundaries, the swept strip taking
-    /// the paint it was pulled from, going as far as it can rather than declining; a free end
-    /// follows the bend's falloff, a bow, rather than moving whole (painting-company row 277).
+    /// the paint it was pulled from, going as far as it can rather than declining; for every
+    /// reshape (Move Edge's too) a free end bends as far as the held side, a bow, rather than
+    /// moving whole, and a bend that ends on a junction takes a pinned rod's shape, rounder under
+    /// the finger (painting-company row 277).
     public static let version = 6
 
     /// Why a Merge whose drag never left the area it began in is declined.
