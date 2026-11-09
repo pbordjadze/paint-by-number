@@ -709,7 +709,7 @@ final class RefineUITests: XCTestCase {
             XCTAssertTrue(app.buttons["refine-done"].isHittable, "At \(step) Done is out of reach")
             holdForScreenshot("landscape-\(step)")
         }
-        XCTAssertTrue(app.buttons["refine-tiny"].exists, "The tiny-numbers badge isn't beside the picture")
+        XCTAssertTrue(app.buttons["refine-tiny"].waitForExistence(timeout: 10), "The tiny-numbers badge isn't beside the picture")
         clear("pen")
         pickTool("select", in: "Cells", of: app)
         canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()

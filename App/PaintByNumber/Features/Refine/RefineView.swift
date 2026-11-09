@@ -1726,23 +1726,31 @@ extension RefineView {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) {
                         startChooser
-                        if badge { tinyBadge }
+                        if badge { columnBadge }
                     }
                     VStack(spacing: 8) {
                         startChooser
-                        if badge { tinyBadge }
+                        if badge { columnBadge }
                     }
                 }
                 .animation(
                     model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
                     value: model.note)
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                    if badge { sideBadgeRoom = height + 12 }
-                }
             }
             curveHint
             studioBar
         }
+    }
+
+    /// The badge in the column, measured alone: the room it takes there is its own height and the
+    /// spacing before it, whatever Start From beside it does (measured with Start From, the room
+    /// stayed too large once Start From left, and the badge never came back). Kept while it isn't
+    /// drawn (a note, no tiny numbers), for when it is again.
+    private var columnBadge: some View {
+        tinyBadge
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                if height > 0 { sideBadgeRoom = height + 12 }
+            }
     }
 
     /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
