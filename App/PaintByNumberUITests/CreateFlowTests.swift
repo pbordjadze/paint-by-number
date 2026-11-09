@@ -230,9 +230,9 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// A swipe right across the preview's settings stays on the preview: iOS 26's swipe back from
-    /// anywhere on a pushed screen took the sliders' drags and left for the Paint page. The edge
-    /// swipe still goes back. (On the demo's preview: a picture picked on the Paint page has no
-    /// sliders.)
+    /// anywhere on a pushed screen took the sliders' drags and left for the photo step. On the
+    /// demo's preview, the flow's first page (a picture picked on the Paint page has no sliders),
+    /// so there is no page behind it for an edge swipe to go back to.
     @MainActor
     func testSwipeAcrossSettingsStaysOnPreview() throws {
         let app = XCUIApplication()
@@ -255,12 +255,6 @@ final class CreateFlowTests: XCTestCase {
         sleep(1)
         attachScreenshot(of: app, named: "preview-after-swipes")
         XCTAssertTrue(start.exists && start.isHittable, "A swipe across the settings left the preview")
-
-        window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
-            .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
-        let back = waitFor(start, toMatch: NSPredicate(format: "exists == false"))
-        attachScreenshot(of: app, named: "after-edge-swipe")
-        XCTAssertTrue(back, "The edge swipe didn't return to the Paint page")
     }
 
     /// At the largest text size the sample tiles widen for their captions (one column) but stay

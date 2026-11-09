@@ -170,8 +170,7 @@ struct TemplatePreviewView: View {
             .onAppear {
                 PaintTips.desk.enter(.preview)
                 if model.paintsNow {
-                    // The free paintings are asked now, the start goes once the painting is made.
-                    start()
+                    startPickedPicture()
                 } else if model.isFinal {
                     previewFinal()
                 }
@@ -182,6 +181,10 @@ struct TemplatePreviewView: View {
             }
             .onChange(of: model.isFinal) { _, isFinal in
                 if isFinal { previewFinal() }
+            }
+            // A picture picked on the Paint page starts once its photo is there to start from.
+            .onChange(of: model.source == nil) { _, isMissing in
+                if !isMissing && model.paintsNow { startPickedPicture() }
             }
             // A start asked for early goes once the painting is made, unless something called it off.
             .onChange(of: model.startsNow) { _, now in
@@ -928,6 +931,14 @@ struct TemplatePreviewView: View {
     #else
     private static let startsEarly = false
     #endif
+
+    /// Paint Now: the free paintings are asked at once and the start goes once the painting is
+    /// made; asked only once the photo has loaded, since a start asked for before has nothing to
+    /// start (`CreateModel.askForStart`).
+    private func startPickedPicture() {
+        guard model.source != nil else { return }
+        start()
+    }
 
     /// The preview is only a wait on the way to the painting: a picture picked on the Paint page
     /// (`CreateModel.paintsNow`), or a blank page, whose drawing tools' Done starts it.

@@ -83,16 +83,20 @@ struct PaintNowTests {
     /// nothing made again.
     @Test func changeOpensOnTheTemplateAsItStands() async throws {
         let library = makeLibrary()
-        let artwork = try await library.create(draft(photo: try photo()))
+        let created = try await library.create(draft(photo: try photo()))
+        // A template the generator made, as a painting's is (the stripes fixture's numbers are
+        // smaller than Debug builds' preview check allows).
+        let made = try await library.regenerate(artwork: created.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
+        let artwork = try #require(library.artwork(with: created.id))
         let inputs = try await library.changeInputs(for: artwork.id)
         let model = CreateModel(previewStyle: .painting)
-        model.load(artwork: artwork, photo: inputs.photo, template: Fixtures.stripes(), refinements: inputs.refinements)
+        model.load(artwork: artwork, photo: inputs.photo, template: made.template, refinements: inputs.refinements)
         await model.settled()
         #expect(model.canRefine)
-        #expect(model.preview?.template == Fixtures.stripes())
+        #expect(model.preview?.template == made.template)
         #expect(model.settings == artwork.settings)
-        let made = try await model.makeDraft()
-        #expect(made.template == Fixtures.stripes())
+        let draft = try await model.makeDraft()
+        #expect(draft.template == made.template)
     }
     #endif
 
