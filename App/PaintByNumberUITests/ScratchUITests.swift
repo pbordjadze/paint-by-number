@@ -1,30 +1,30 @@
 import XCTest
 import UIKit
 
-/// From Scratch (SideStore and Debug builds, painting-company row 231): the New Painting
-/// screen's button opens Refine on a blank page, with no Start From (nothing to generate), named
-/// a drawing of today; Done goes back to the preview and Start Painting opens the painting.
+/// Blank Page (SideStore and Debug builds, painting-company rows 231 and 239): the Paint page's
+/// tile opens Refine on a blank page, with no Start From (nothing to generate), named a drawing
+/// of today; Done goes straight into the painting, with no preview between.
 final class ScratchUITests: XCTestCase {
     @MainActor
-    func testFromScratchOpensRefineOnABlankPageAndPaints() throws {
+    func testBlankPageOpensRefineAndPaints() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "create"]
         app.launch()
         let scratch = app.buttons["from-scratch"]
-        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The Paint page has no Blank Page")
         // First use may explain limited library access.
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 2) { ok.tap() }
-        XCTAssertEqual(scratch.label, "From Scratch")
-        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
+        XCTAssertEqual(scratch.label, "Blank Page")
+        XCTAssertTrue(reveal(scratch, in: app), "Blank Page isn't ready")
         scratch.tap()
 
-        // Straight into Refine: no Refine tap, no sample picked.
+        // Straight into Refine: no Refine tap, no picture picked.
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         let opened = canvas.waitForExistence(timeout: 60)
         attachScreenshot(of: app, named: "scratch-refine")
         if !opened { attachTree(of: app, named: "scratch-refine-tree") }
-        XCTAssertTrue(opened, "From Scratch didn't open Refine")
+        XCTAssertTrue(opened, "Blank Page didn't open Refine")
         XCTAssertEqual(canvas.value as? String, "No changes")
         XCTAssertFalse(app.descendants(matching: .any)["refine-start"].exists, "A blank page still offers Start From")
 
@@ -70,41 +70,62 @@ final class ScratchUITests: XCTestCase {
 
         app.buttons["refine-done"].tap()
 
-        // Its own name: a drawing of today, not a sample's title.
-        let title = app.textFields["painting-title"]
-        XCTAssertTrue(title.waitForExistence(timeout: 20), "Done didn't go back to the preview")
-        let name = title.placeholderValue ?? ""
-        XCTAssertTrue(name.hasPrefix("Drawing, "), "The page is named \(name)")
-        for setting in ["Colors", "Detail", "Smoothness", "Lines"] {
-            XCTAssertFalse(app.sliders[setting].exists, "A blank page offers the \(setting) slider")
-        }
-        attachScreenshot(of: app, named: "scratch-preview")
-
-        let start = app.buttons["Start Painting"]
-        XCTAssertTrue(waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 60), "Start Painting stays off")
-        start.tap()
+        // Straight into the painting: no preview, no Start Painting, and its own name: a drawing
+        // of today, not a sample's title.
         let swatch = app.buttons["swatch-1"]
-        let painting = swatch.waitForExistence(timeout: 60)
+        let painting = swatch.waitForExistence(timeout: 90)
         attachScreenshot(of: app, named: "scratch-painting")
-        XCTAssertTrue(painting, "Start Painting didn't open the drawing to paint")
+        if !painting { attachTree(of: app, named: "scratch-painting-tree") }
+        XCTAssertTrue(painting, "Done didn't open the drawing to paint")
+        XCTAssertFalse(app.buttons["Start Painting"].exists, "A blank page still shows the preview's Start Painting")
+        XCTAssertFalse(app.textFields["painting-title"].exists, "A blank page still shows the preview")
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        XCTAssertTrue(badge.waitForExistence(timeout: 10), "The painting has no progress badge")
+        XCTAssertTrue(badge.label.hasPrefix("Drawing, "), "The page is named \(badge.label)")
     }
 
-    /// Where Unlimited Paintings is sold and not bought, From Scratch offers it, worded for Refine,
+    /// Done with nothing drawn goes back to the Paint page: no preview, no painting.
+    @MainActor
+    func testBlankPageDoneWithNothingDrawnGoesBack() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create"]
+        app.launch()
+        let scratch = app.buttons["from-scratch"]
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The Paint page has no Blank Page")
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        XCTAssertTrue(reveal(scratch, in: app), "Blank Page isn't ready")
+        scratch.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-canvas"].waitForExistence(timeout: 60), "Blank Page didn't open Refine")
+
+        let done = app.buttons["refine-done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 10), "Refine has no Done")
+        done.tap()
+        // Nothing drawn: back on the Paint page, whose own tiles are there again.
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-canvas"].waitForNonExistence(timeout: 30), "Done on a blank page left Refine open")
+        XCTAssertTrue(app.buttons["choose-photo"].waitForExistence(timeout: 30), "Done on a blank page didn't go back to the Paint page")
+        XCTAssertFalse(app.buttons["Start Painting"].exists)
+        XCTAssertFalse(app.buttons["swatch-1"].exists, "Done on a blank page opened a painting")
+    }
+
+    /// Where Unlimited Paintings is sold and not bought, Blank Page offers it, worded for Refine,
     /// with the Tool Guide free to try; bought there, the blank page opens in Refine.
     @MainActor
-    func testFromScratchWaitsForTheUnlockAndTheGuideIsFree() throws {
+    func testBlankPageWaitsForTheUnlockAndTheGuideIsFree() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "create", "-demoRefineLocked", "YES"]
         app.launch()
         let scratch = app.buttons["from-scratch"]
-        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The New Painting screen has no From Scratch")
+        XCTAssertTrue(scratch.waitForExistence(timeout: 20), "The Paint page has no Blank Page")
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 2) { ok.tap() }
-        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "From Scratch isn't ready")
+        XCTAssertTrue(reveal(scratch, in: app), "Blank Page isn't ready")
         scratch.tap()
 
         let buy = app.buttons["unlock-buy"]
-        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock")
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "Blank Page didn't offer the unlock")
         let guide = app.buttons["unlock-try-guide"]
         XCTAssertTrue(guide.exists, "The sheet doesn't offer the Tool Guide")
         attachScreenshot(of: app, named: "scratch-unlock")
@@ -113,9 +134,9 @@ final class ScratchUITests: XCTestCase {
             app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
         app.buttons["refine-guide-done"].tap()
 
-        XCTAssertTrue(waitUntil(timeout: 10) { scratch.isHittable }, "The guide didn't go back to the New Painting screen")
+        XCTAssertTrue(reveal(scratch, in: app), "The guide didn't go back to the Paint page")
         scratch.tap()
-        XCTAssertTrue(buy.waitForExistence(timeout: 10), "From Scratch didn't offer the unlock again")
+        XCTAssertTrue(buy.waitForExistence(timeout: 10), "Blank Page didn't offer the unlock again")
         XCTAssertTrue(waitFor(buy, toMatch: NSPredicate(format: "label CONTAINS '4.99'")), "The buy button never showed the price")
         buy.tap()
         XCTAssertTrue(
