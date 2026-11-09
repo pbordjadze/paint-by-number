@@ -10,10 +10,12 @@ extension TemplateEditor {
     public static func reshapedChain(
         on template: Template, from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = tapReach, target: ReshapeTarget = .any
     ) -> (original: [SIMD2<Float>], moved: [SIMD2<Float>])? {
-        guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite, var work = try? EditWork(template),
-              let plan = try? work.reshapePlan(
-                from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target,
-                checking: false)
+        guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite, var work = try? EditWork(template) else { return nil }
+        // Bend Line's bow as it is first tried (`TemplateEditor.apply`).
+        work.roundedBows = target == .ink
+        guard let plan = try? work.reshapePlan(
+            from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target,
+            checking: false)
         else { return nil }
         return (plan.original.map(Lattice.position), plan.path.map(Lattice.position))
     }
@@ -77,9 +79,11 @@ extension EditWork {
     /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to where
     /// the bend ends: 1 at the grabbed point, 0 there, in `+ - *` alone, so it is the same on every
     /// device. Where the line runs on unmoved (`pinned` false) it is a smoothstep, no slope at
-    /// either end, as a rod clamped there bends; where the bend ends on a junction (`pinned`) it
-    /// is the bow of a rod pinned there, half as sharp under the finger, meeting the junction at
-    /// a slant (editor 6: a long drag against a near junction made a point, not a bow).
+    /// either end, as a rod clamped there bends; where Bend Line's bend ends on a junction
+    /// (`pinned`, with `roundedBows`) it is the bow of a rod pinned there, half as sharp under the
+    /// finger, meeting the junction at a slant (editor 6: a long drag against a near junction made
+    /// a point, not a bow). Move Edge's and older reshapes keep the smoothstep: leaving a junction
+    /// along the line, they meet no line there at a shallow angle.
     static func falloff(_ u: Double, pinned: Bool = false) -> Double {
         let c = min(max(u, 0), 1)
         return pinned ? 1 - c * c * (1.5 - 0.5 * c) : 1 - c * c * (3 - 2 * c)
@@ -421,7 +425,7 @@ extension EditWork {
         /// Whether the bend on that side ends on the chain's held end (a junction), not short of it;
         /// a free side bends as the held one does, so the two halves of the bow match.
         func pinned(after: Bool) -> Bool {
-            if closed { return false }
+            if closed || !roundedBows { return false }
             if after ? endFree : startFree { return !(after ? startFree : endFree) && pinned(after: !after) }
             return (after ? total - sg : sg) <= spread
         }

@@ -102,6 +102,9 @@ struct EditWork {
     /// The drawn edges a bend lifted off the drawing (`bendInk`), now undrawn, and the pieces later
     /// lines cut them into.
     var lifted: Set<Int> = []
+    /// A reshape's bend ends on a junction as a rod pinned there bends, at a slant (`falloff`),
+    /// rather than along the line: Bend Line's first try (`TemplateEditor.apply`).
+    var roundedBows = false
 
     init(_ template: Template, snapRadius: Int64 = 1) throws {
         self.snapRadius = snapRadius

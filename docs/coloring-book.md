@@ -514,10 +514,12 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   held: its side bends as far as the held side does, so the bow is even under the finger and a free end that near
   follows part of the way (until editor 6, November 9, 2026, the stretch to it moved whole: on a
   phone a short line held at one end made a step, Mac QA of November 7); both ends free, the
-  spread; beyond it, the end stays. Where the bend ends on a junction the weight is the bow of a
-  rod pinned there (`1 − 1.5u² + 0.5u³`, half the smoothstep's curvature under the finger), so a
-  long drag against a near junction rounds rather than points; where the line runs on unmoved,
-  the smoothstep, a rod clamped there. Strokes ending on the chain are carried, their
+  spread; beyond it, the end stays. Bend Line first tries, where the bend ends on a junction, the
+  bow of a rod pinned there (`1 − 1.5u² + 0.5u³`, half the smoothstep's curvature under the
+  finger), so a long drag against a near junction rounds rather than points; where that is
+  declined (it leaves the junction at a slant, and a line meeting it there at a shallow angle
+  can be met: Move Edge on the iPhone's CI, November 9), the smoothstep, which leaves along the
+  line, and only then a shorter drag. Move Edge keeps the smoothstep. Strokes ending on the chain are carried, their
   end moving with the point of the chain they meet. A step whose ends move at least half a unit
   apart is bent: points are added along it so that, moved, they lie at most 3 units apart (the
   smoothstep is at its steepest 1.5 times its mean slope, which bounds a moved step's length), so
@@ -555,8 +557,8 @@ paint until October 21. Refine's Tool Guide makes its practice picture this way
   (`TemplateEditorTests.rich`, drags drawn as `inkBendsOnACrowdedBookValidate` draws them, 40
   tries), 29 drags of 9 to 41 units on drawn lines: the classic rule laid 12 and declined 17;
   Bend Line laid all 29, 15 of them all the way. Known limits: the preview while the finger is down shows the
-  whole drag, though a bend that can't go all the way is laid shorter; such a bend costs up to six
-  lays; an area is in the strip by where its first number lies; writing is bent point by point
+  whole drag, though a bend that can't go all the way is laid shorter; such a bend costs up to seven
+  lays (the rounded bow, the bow along the line, five halvings); an area is in the strip by where its first number lies; writing is bent point by point
   as before (letters over the drawing, never laid again as a line).
 - **Move number** (`moveLabel`, Refine's Move Number). Drag a number where you want it inside its
   cell. The number nearest the drag's start, within its radius and the edit's reach (a finger's

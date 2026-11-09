@@ -130,10 +130,10 @@ public enum TemplateEditor {
     /// 2026): a sliver beside ink there before (a circle poking a point into a box) is not cut
     /// off (`isSliver`). 6 (November 9, 2026): Bend Line's reshape takes the drawn line from ink
     /// junction to ink junction and lays it again across undrawn boundaries, the swept strip taking
-    /// the paint it was pulled from, going as far as it can rather than declining; for every
-    /// reshape (Move Edge's too) a free end bends as far as the held side, a bow, rather than
-    /// moving whole, and a bend that ends on a junction takes a pinned rod's shape, rounder under
-    /// the finger (painting-company row 277).
+    /// the paint it was pulled from, going as far as it can rather than declining, first tried
+    /// with a pinned rod's bow where it ends on a junction, rounder under the finger; for a
+    /// reshape of any target a stroke's free end bends as far as the held side, a bow, rather
+    /// than moving whole (painting-company row 277). Move Edge's reshapes make what they made.
     public static let version = 6
 
     /// Why a Merge whose drag never left the area it began in is declined.
@@ -299,10 +299,17 @@ public enum TemplateEditor {
     static func apply(
         _ edit: Edit, to template: Template, verify: Bool, reading: Bool
     ) throws -> (template: Template, outcome: Outcome) {
-        let laid = try lay(edit, on: template, verify: verify, reading: reading)
-        guard case .reshape(let from, let to, let reach, .ink) = edit, let declined = laid.outcome.declined,
+        let ink: Bool
+        if case .reshape(_, _, _, .ink) = edit { ink = true } else { ink = false }
+        let laid = try lay(edit, on: template, verify: verify, reading: reading, rounded: ink)
+        guard ink, case .reshape(let from, let to, let reach, _) = edit, let declined = laid.outcome.declined,
               declined.reason != noLineNear, declined.reason != lineHeldThere
         else { return laid }
+        // Bend Line's bow leaves a junction at a slant (`EditWork.falloff`'s pinned shape), which
+        // a line meeting it there at a shallow angle may not allow: then the bow that leaves it
+        // along the line, as every reshape before editor 6 did.
+        let along = try lay(edit, on: template, verify: verify, reading: reading, rounded: false)
+        guard along.outcome.declined != nil else { return along }
         // Bend Line never refuses a pull: a bend that can't go all the way (into ink, off the
         // canvas, leaving an area no room for its number) goes as far toward it as it can, found
         // in halves of the drag (to a 32nd of it), the same on every device (painting-company
@@ -311,7 +318,9 @@ public enum TemplateEditor {
         var near: Float = 0, far: Float = 1
         for _ in 0..<5 {
             let f = (near + far) / 2
-            let tried = try lay(.reshape(from: from, to: from + (to - from) * f, reach: reach, target: .ink), on: template, verify: verify, reading: reading)
+            let tried = try lay(
+                .reshape(from: from, to: from + (to - from) * f, reach: reach, target: .ink), on: template, verify: verify,
+                reading: reading, rounded: false)
             if tried.outcome.changed, tried.outcome.declined == nil {
                 best = tried
                 near = f
@@ -323,14 +332,14 @@ public enum TemplateEditor {
     }
 
     private static func lay(
-        _ edit: Edit, on template: Template, verify: Bool, reading: Bool
+        _ edit: Edit, on template: Template, verify: Bool, reading: Bool, rounded: Bool = false
     ) throws -> (template: Template, outcome: Outcome) {
         // A line that meets others closer than the lattice can tell apart is made again with ends
         // and crossings snapped to vertices farther off, up to a few hundredths of a unit.
         let radii: [Int64] = [1, 3, 9, 27]
         for (k, radius) in radii.enumerated() {
             do {
-                return try apply(edit, to: template, verify: verify, snapRadius: radius, reading: reading)
+                return try apply(edit, to: template, verify: verify, snapRadius: radius, reading: reading, rounded: rounded)
             } catch EditFailure.collision(let why) {
                 if k == radii.count - 1 {
                     var outcome = unchanged(template)
@@ -350,9 +359,10 @@ public enum TemplateEditor {
     }
 
     private static func apply(
-        _ edit: Edit, to template: Template, verify: Bool, snapRadius: Int64, reading: Bool
+        _ edit: Edit, to template: Template, verify: Bool, snapRadius: Int64, reading: Bool, rounded: Bool
     ) throws -> (template: Template, outcome: Outcome) {
         var work = try EditWork(template, snapRadius: snapRadius)
+        work.roundedBows = rounded
         switch edit {
         case .draw(let points, let closed, let paints):
             work.closedDraw = closed
