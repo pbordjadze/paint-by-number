@@ -136,7 +136,10 @@ struct PhotoSourceView: View {
             }
             Button { pick(tonight) } label: { SampleTile(sample: tonight) }
                 .buttonStyle(PressableCardStyle())
-                .frame(maxWidth: isWide ? CGFloat(640) : .infinity, alignment: .leading)
+                // Across the page, its height held to half the window's width so the shelf
+                // below still shows.
+                .frame(maxWidth: isWide ? min(width - 2 * horizontalPadding, width * 0.5 * 4 / 3) : .infinity)
+                .frame(maxWidth: .infinity)
                 .accessibilityIdentifier("tonights-picture")
         }
     }
@@ -146,42 +149,49 @@ struct PhotoSourceView: View {
     private var yourOwnSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle("Your Own", style: isWide ? .title2 : .title3)
-            ScrollView(.horizontal) {
-                HStack(spacing: 12) {
-                    Button(action: browseAll) {
-                        OwnTile(title: Text("A Photo"), systemImage: "photo.on.rectangle")
-                    }
-                    .accessibilityIdentifier("choose-photo")
-                    if cameraAvailable {
-                        Button(action: showCamera) {
-                            OwnTile(title: Text("Take Photo"), systemImage: "camera")
-                        }
-                        .accessibilityIdentifier("take-photo")
-                    }
-                    #if UNRELEASED
-                    Button {
-                        picksDrawing = true
-                        isBrowsingAll = true
-                    } label: {
-                        OwnTile(title: Text("A Drawing on Paper"), systemImage: "doc.viewfinder")
-                    }
-                    .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
-                    .accessibilityIdentifier("choose-drawing")
-                    Button {
-                        if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
-                    } label: {
-                        OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
-                    }
-                    .accessibilityHint(Text("Draw your own picture on a blank page"))
-                    .accessibilityIdentifier("from-scratch")
-                    #endif
-                }
-                .buttonStyle(PressableCardStyle())
-                .padding(4)
+            ViewThatFits(in: .horizontal) {
+                ownTiles(filling: true)
+                ScrollView(.horizontal) { ownTiles(filling: false).padding(4) }
+                    .scrollIndicators(.hidden)
+                    .padding(.horizontal, -4)
             }
-            .scrollIndicators(.hidden)
-            .padding(.horizontal, -4)
         }
+    }
+
+    /// Your Own's tiles: across the row where they fit at their least width, else in a row
+    /// that scrolls.
+    private func ownTiles(filling: Bool) -> some View {
+        HStack(spacing: 12) {
+            Button(action: browseAll) {
+                OwnTile(title: Text("A Photo"), systemImage: "photo.on.rectangle")
+            }
+            .accessibilityIdentifier("choose-photo")
+            if cameraAvailable {
+                Button(action: showCamera) {
+                    OwnTile(title: Text("Take Photo"), systemImage: "camera")
+                }
+                .accessibilityIdentifier("take-photo")
+            }
+            #if UNRELEASED
+            Button {
+                picksDrawing = true
+                isBrowsingAll = true
+            } label: {
+                OwnTile(title: Text("A Drawing on Paper"), systemImage: "doc.viewfinder")
+            }
+            .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
+            .accessibilityIdentifier("choose-drawing")
+            Button {
+                if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+            } label: {
+                OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
+            }
+            .accessibilityHint(Text("Draw your own picture on a blank page"))
+            .accessibilityIdentifier("from-scratch")
+            #endif
+        }
+        .buttonStyle(PressableCardStyle())
+        .environment(\.ownTileFills, filling)
     }
 
     /// The library: its paintings, then its photographs.
@@ -260,11 +270,24 @@ struct PhotoSourceView: View {
     #endif
 }
 
+private nonisolated struct OwnTileFillsKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+private extension EnvironmentValues {
+    /// Your Own's tiles share the row's width (`PhotoSourceView.ownTiles(filling:)`).
+    var ownTileFills: Bool {
+        get { self[OwnTileFillsKey.self] }
+        set { self[OwnTileFillsKey.self] = newValue }
+    }
+}
+
 /// One of Your Own's ways in: a small card with its symbol and name.
 private struct OwnTile: View {
     let title: Text
     let systemImage: String
     @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 112
+    @Environment(\.ownTileFills) private var fills
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -277,9 +300,10 @@ private struct OwnTile: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
-                .lineLimit(3)
         }
-        .frame(width: side, height: side * 0.8, alignment: .topLeading)
+        // At least its size, wider across a row that has room, taller for a name that wraps.
+        .frame(minWidth: side, maxWidth: fills ? .infinity : side, minHeight: side * 0.8, alignment: .topLeading)
+        .fixedSize(horizontal: !fills, vertical: true)
         .padding(12)
         .background(Theme.surface)
         .clipShape(.rect(cornerRadius: 18, style: .continuous))

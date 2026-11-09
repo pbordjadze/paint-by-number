@@ -503,7 +503,7 @@ struct TemplatePreviewView: View {
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name,
                     beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
-                    compares: !model.isScratch, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    compares: !model.isScratch && !isWaitOnly, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }

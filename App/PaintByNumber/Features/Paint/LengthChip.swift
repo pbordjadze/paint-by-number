@@ -38,6 +38,8 @@ struct LengthChip: View {
                 }
             }
             .font(.subheadline.weight(.medium))
+            // The bar's ink, never the accent: gold is for stars, sparkles and the crescent.
+            .foregroundStyle(.primary)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .contentShape(.capsule)

@@ -431,7 +431,7 @@ struct RefineView: View {
                 }
                 .background(Theme.paper)
                 .overlay { layersHook }
-                .navigationTitle("Refine")
+                .navigationTitle(screenTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
                 .toolbarVisibility(fullScreen ? .hidden : .visible, for: .navigationBar)
@@ -1276,6 +1276,12 @@ struct RefineView: View {
     private func done() {
         finishCurve()
         dismiss()
+    }
+
+    /// Named for the way in (painting-company row 239): a blank page's drawing, or ✎ Change
+    /// on a painting or a picture.
+    private var screenTitle: Text {
+        model.isScratch ? Text("Blank Page") : Text("Change")
     }
 
     /// The number of changes, for VoiceOver.
