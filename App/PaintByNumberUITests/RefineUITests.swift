@@ -678,6 +678,70 @@ final class RefineUITests: XCTestCase {
         }
     }
 
+    /// iPhone on its side: the picture takes most of the screen's height, and the tools, Start From
+    /// and the tiny-numbers badge stand beside it, covering none of it, Done within reach, with the
+    /// Pen, with Select's cell and its card, with the looks, and Layers opens: under the tools it
+    /// was about 190 × 130 points, the badge over its corner, and gone with the looks (QA,
+    /// November 7 and 9).
+    @MainActor
+    func testThePictureFillsAPhoneOnItsSide() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "An iPad on its side keeps its rail")
+        continueAfterFailure = true
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine"]
+        app.launch()
+        XCTAssertTrue(app.sliders["refine-pen-smoothing"].waitForExistence(timeout: 180), "Refine never opened on the Pen")
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        sleep(2)
+        func clear(_ step: String) {
+            let window = app.windows.firstMatch.frame, frame = canvas.frame
+            let aspect: CGFloat = 2048 / 1375
+            let width = min(frame.width, frame.height * aspect), height = width / aspect
+            let picture = CGRect(x: frame.midX - width / 2, y: frame.midY - height / 2, width: width, height: height)
+            XCTAssertGreaterThanOrEqual(
+                height, window.height * 0.6, "At \(step) the picture is \(picture.size) on a \(window.size) screen")
+            for id in ["refine-groups", "refine-tiny", "refine-start", "refine-snap", "refine-selection-color", "refine-card"] {
+                let control = app.descendants(matching: .any)[id].firstMatch
+                guard control.exists else { continue }
+                XCTAssertFalse(control.frame.intersects(picture), "At \(step) \(id) covers the picture: \(control.frame) over \(picture)")
+            }
+            XCTAssertTrue(app.buttons["refine-done"].isHittable, "At \(step) Done is out of reach")
+            holdForScreenshot("landscape-\(step)")
+        }
+        clear("pen")
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
+        let change = app.buttons["refine-selection-color"]
+        if change.waitForExistence(timeout: 10) {
+            change.tap()
+            XCTAssertTrue(app.descendants(matching: .any)["refine-card"].waitForExistence(timeout: 10), "The card didn't open")
+            sleep(1)
+        } else {
+            XCTFail("Select didn't offer Change Color")
+        }
+        clear("card")
+        pickTool("looks", in: "Paint", of: app)
+        sleep(1)
+        clear("looks")
+        app.buttons["refine-layers"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["refine-layers-panel"].waitForExistence(timeout: 10), "Layers didn't open")
+        sleep(1)
+        holdForScreenshot("landscape-layers")
+    }
+
+    /// Names the moment and holds it, for a screenshot taken from outside (`xcrun simctl io
+    /// <udid> screenshot` on the line `refine-shot: <name>` in the test's output): on its side,
+    /// the app's and the screen's own screenshots come out as the upright screen cropped to the
+    /// side's shape (iOS 27.2).
+    @MainActor
+    private func holdForScreenshot(_ name: String) {
+        print("refine-shot: \(name)")
+        fflush(stdout)
+        sleep(4)
+    }
+
     // MARK: - Helpers
 
     /// The open Layers panel, popover and all, covers none of the bar's Done, Undo, Redo and
