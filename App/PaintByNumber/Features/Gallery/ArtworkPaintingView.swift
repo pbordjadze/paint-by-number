@@ -39,6 +39,9 @@ struct ArtworkPaintingView: View {
     /// The painting's length chip's re-cut, under way (`recut(to:)`).
     @State private var recutting: Task<Void, Never>?
     @State private var recutFailed = false
+    /// The cuts this painting has had while open, by length: going back to one makes that cut
+    /// again, not another choice (the Mac's QA: Relaxed again came back as another painting).
+    @State private var cuts: [PaintingLength: GenerationSettings] = [:]
     /// What the failure toast says: the re-cut's, or ✎ Change's.
     @State private var recutFailedText = ""
     #if UNRELEASED
@@ -407,9 +410,14 @@ struct ArtworkPaintingView: View {
               length.rawValue != artwork?.paintingLength else { return }
         autosaver.saveNow()
         recutFailed = false
+        if let artwork, let current = artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)), cuts[current] == nil {
+            cuts[current] = artwork.settings
+        }
+        let known = cuts[length]
         recutting = Task {
             do {
-                let document = try await library.recut(artwork: artworkID, length: length)
+                let document = try await library.recut(artwork: artworkID, length: length, settings: known)
+                if let made = library.artwork(with: artworkID)?.settings { cuts[length] = made }
                 _ = await RenderContext.ready()
                 await present(document)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))

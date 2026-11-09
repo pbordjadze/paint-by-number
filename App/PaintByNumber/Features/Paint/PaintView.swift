@@ -504,6 +504,10 @@ struct PaintView: View {
             QuietRingButton(session: session, title: title) { chrome.wantsQuiet = false }
                 .frame(width: barHeight, height: barHeight)
             Spacer(minLength: 0)
+            // ✎ Change stays in the quiet bar: it is for any time, half painted too (the Mac's QA).
+            if let onChange {
+                changeButton(onChange, barHeight: barHeight)
+            }
             GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
                 .frame(width: barHeight, height: barHeight)
         }
@@ -547,14 +551,19 @@ struct PaintView: View {
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
             if let onChange {
-                GlassIconButton(systemImage: "pencil", label: "Change", action: onChange)
-                    .frame(width: barHeight, height: barHeight)
-                    .disabled(session.isReplaying)
-                    .accessibilityHint(Text("Draw or erase lines in this painting"))
-                    .accessibilityIdentifier("change-painting")
+                changeButton(onChange, barHeight: barHeight)
             }
             moreMenu(regular)
         }
+    }
+
+    /// ✎ Change: the drawing tools on this painting.
+    private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
+        GlassIconButton(systemImage: "pencil", label: "Change", action: action)
+            .frame(width: barHeight, height: barHeight)
+            .disabled(session.isReplaying)
+            .accessibilityHint(Text("Draw or erase lines in this painting"))
+            .accessibilityIdentifier("change-painting")
     }
 
     /// What the progress badge shows: the ring, plus any of the title (when it fits whole),

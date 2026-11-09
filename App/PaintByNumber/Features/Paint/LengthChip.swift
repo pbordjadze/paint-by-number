@@ -17,9 +17,22 @@ struct LengthChip: View {
 
     var body: some View {
         Menu {
-            Picker("Painting Length", selection: Binding(get: { length }, set: { if let new = $0 { onPick(new) } })) {
-                ForEach(PaintingLength.allCases, id: \.self) { choice in
-                    Text(choice.name).tag(Optional(choice))
+            // Each length with the time it aims for, so the choice isn't blind (the Mac's QA).
+            ForEach(PaintingLength.allCases, id: \.self) { choice in
+                Button {
+                    if choice != length { onPick(choice) }
+                } label: {
+                    if choice == length {
+                        Label {
+                            Text(choice.name)
+                            Text(Self.band(of: choice))
+                        } icon: {
+                            Image(systemName: "checkmark")
+                        }
+                    } else {
+                        Text(choice.name)
+                        Text(Self.band(of: choice))
+                    }
                 }
             }
         } label: {
@@ -57,6 +70,15 @@ struct LengthChip: View {
         guard let length else { return summary }
         return String(localized: "paint.lengthChip.value", defaultValue: "\(length.name), \(summary)",
                       comment: "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas")
+    }
+
+    /// "20 min – 50 min": the times a length aims for (`PaintingLength.timeBand`).
+    static func band(of length: PaintingLength) -> String {
+        let style = Duration.UnitsFormatStyle(allowedUnits: [.hours, .minutes], width: .abbreviated)
+        let low = Duration.seconds(length.timeBand.lowerBound).formatted(style)
+        let high = Duration.seconds(length.timeBand.upperBound).formatted(style)
+        return String(localized: "paint.lengthChip.band", defaultValue: "\(low) – \(high)",
+                      comment: "Under a Painting Length in the painting's length chip menu: the times it aims for; the arguments are durations, e.g. 20 min – 50 min")
     }
 
     /// "~20 min · 406 areas".

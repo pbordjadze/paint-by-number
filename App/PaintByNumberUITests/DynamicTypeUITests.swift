@@ -37,7 +37,7 @@ final class DynamicTypeUITests: XCTestCase {
     @MainActor
     func testNewPaintingTitleAndSamples() throws {
         let app = launch("create-samples")
-        let sample = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: '")).firstMatch
+        let sample = app.buttons.matching(identifier: "library-picture").firstMatch
         XCTAssertTrue(sample.waitForExistence(timeout: 60), "The samples never showed")
         XCTAssertTrue(app.staticTexts["Paint"].exists, "The Paint page's title is gone")
         try assertNoClippedText(in: app, named: "create-samples-ax5")

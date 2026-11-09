@@ -204,8 +204,8 @@ final class CreateFlowTests: XCTestCase {
         }
         let paintings = app.staticTexts["Paintings"]
         XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first library sample isn't under the Paintings title")
-        // "Sample: <title>, <creator>"
-        XCTAssertTrue(first.label.dropFirst("Sample: ".count).contains(", "), "The sample's label doesn't name its creator: \(first.label)")
+        // "<title>, <creator>"
+        XCTAssertTrue(first.label.contains(", "), "The picture's label doesn't name its creator: \(first.label)")
         attachScreenshot(of: app, named: "paint-page")
     }
 
@@ -368,13 +368,13 @@ final class CreateFlowTests: XCTestCase {
     /// (Tonight’s Picture is a sample too, and is left out).
     @MainActor
     private func firstLibrarySample(_ app: XCUIApplication) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: ' AND identifier != 'tonights-picture'")).firstMatch
+        app.buttons.matching(identifier: "library-picture").firstMatch
     }
 
     /// The first sample tile on the page, Tonight’s Picture.
     @MainActor
     private func firstSample(_ app: XCUIApplication) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: '")).firstMatch
+        app.buttons["tonights-picture"]
     }
 
     /// A sheet detector made once the page's A Photo tile is ready for a tap: a Cancel/Close that

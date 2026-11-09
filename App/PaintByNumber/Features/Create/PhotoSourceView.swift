@@ -32,9 +32,11 @@ struct PhotoSourceView: View {
     @Environment(UnlimitedPaintings.self) private var paintings
     #endif
     @State private var width: CGFloat = 0
+    @State private var height: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
+    @ScaledMetric(relativeTo: .subheadline) private var ownTileMinimumWidth: CGFloat = 140
 
     private var isWide: Bool { width >= 600 }
     private var horizontalPadding: CGFloat { isWide ? 32 : 20 }
@@ -70,7 +72,10 @@ struct PhotoSourceView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Theme.paper)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
+            width = size.width
+            height = size.height
+        }
         .navigationTitle("Paint")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(removing: titleOnPage ? .title : nil)
@@ -85,7 +90,7 @@ struct PhotoSourceView: View {
         .onChange(of: browsedItem) { _, item in
             guard let item else { return }
             browsedItem = nil
-            #if UNRELEASED
+                #if UNRELEASED
             if picksDrawing {
                 PaintTips.photoChosen()
                 model.paintsNow = true
@@ -93,7 +98,7 @@ struct PhotoSourceView: View {
                 onPicked()
                 return
             }
-            #endif
+                #endif
             PaintTips.photoChosen()
             model.paintsNow = true
             model.load(item: item)
@@ -136,9 +141,7 @@ struct PhotoSourceView: View {
             }
             Button { pick(tonight) } label: { SampleTile(sample: tonight) }
                 .buttonStyle(PressableCardStyle())
-                // Across the page, its height held to half the window's width so the shelf
-                // below still shows.
-                .frame(maxWidth: isWide ? min(width - 2 * horizontalPadding, width * 0.5 * 4 / 3) : .infinity)
+                .frame(maxWidth: tonightWidth)
                 .frame(maxWidth: .infinity)
                 .accessibilityIdentifier("tonights-picture")
         }
@@ -149,49 +152,54 @@ struct PhotoSourceView: View {
     private var yourOwnSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle("Your Own", style: isWide ? .title2 : .title3)
-            ViewThatFits(in: .horizontal) {
-                ownTiles(filling: true)
-                ScrollView(.horizontal) { ownTiles(filling: false).padding(4) }
-                    .scrollIndicators(.hidden)
-                    .padding(.horizontal, -4)
+            // A grid, not a row that scrolls: every way in shows, wrapping onto a second line on a
+            // phone and onto one each at the largest text sizes (the Mac's QA: Blank Page was
+            // never seen past the row's edge).
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: ownTileWidth), spacing: 12, alignment: .top)], spacing: 12) {
+                Button(action: browseAll) {
+                    OwnTile(title: Text("A Photo"), systemImage: "photo.on.rectangle")
+                }
+                .accessibilityIdentifier("choose-photo")
+                if cameraAvailable {
+                    Button(action: showCamera) {
+                        OwnTile(title: Text("Take Photo"), systemImage: "camera")
+                    }
+                    .accessibilityIdentifier("take-photo")
+                }
+                #if UNRELEASED
+                Button {
+                    picksDrawing = true
+                    isBrowsingAll = true
+                } label: {
+                    OwnTile(title: Text("A Drawing on Paper"), systemImage: "doc.viewfinder")
+                }
+                .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
+                .accessibilityIdentifier("choose-drawing")
+                Button {
+                    if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
+                } label: {
+                    OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
+                }
+                .accessibilityHint(Text("Draw your own picture on a blank page"))
+                .accessibilityIdentifier("from-scratch")
+                #endif
             }
+            .buttonStyle(PressableCardStyle())
         }
     }
 
-    /// Your Own's tiles: across the row where they fit at their least width, else in a row
-    /// that scrolls.
-    private func ownTiles(filling: Bool) -> some View {
-        HStack(spacing: 12) {
-            Button(action: browseAll) {
-                OwnTile(title: Text("A Photo"), systemImage: "photo.on.rectangle")
-            }
-            .accessibilityIdentifier("choose-photo")
-            if cameraAvailable {
-                Button(action: showCamera) {
-                    OwnTile(title: Text("Take Photo"), systemImage: "camera")
-                }
-                .accessibilityIdentifier("take-photo")
-            }
-            #if UNRELEASED
-            Button {
-                picksDrawing = true
-                isBrowsingAll = true
-            } label: {
-                OwnTile(title: Text("A Drawing on Paper"), systemImage: "doc.viewfinder")
-            }
-            .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
-            .accessibilityIdentifier("choose-drawing")
-            Button {
-                if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
-            } label: {
-                OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
-            }
-            .accessibilityHint(Text("Draw your own picture on a blank page"))
-            .accessibilityIdentifier("from-scratch")
-            #endif
-        }
-        .buttonStyle(PressableCardStyle())
-        .environment(\.ownTileFills, filling)
+    /// Tonight's Picture's width: across the page, but never taller than about 45% of the
+    /// window, so its name and Your Own show beneath it on a phone held sideways too.
+    private var tonightWidth: CGFloat {
+        let page = max(0, width - 2 * horizontalPadding)
+        guard height > 0 else { return page }
+        return min(page, height * 0.45 * 4 / 3)
+    }
+
+    /// Your Own's least tile width: two to a phone's row, one at the largest text sizes.
+    private var ownTileWidth: CGFloat {
+        let column = max(0, width - 2 * horizontalPadding - 8)
+        return min(column, ownTileMinimumWidth)
     }
 
     /// The library: its paintings, then its photographs.
@@ -213,6 +221,7 @@ struct PhotoSourceView: View {
                 ForEach(samples) { sample in
                     Button { pick(sample) } label: { SampleTile(sample: sample) }
                         .buttonStyle(PressableCardStyle())
+                        .accessibilityIdentifier("library-picture")
                 }
             }
         }
@@ -270,24 +279,11 @@ struct PhotoSourceView: View {
     #endif
 }
 
-private nonisolated struct OwnTileFillsKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-private extension EnvironmentValues {
-    /// Your Own's tiles share the row's width (`PhotoSourceView.ownTiles(filling:)`).
-    var ownTileFills: Bool {
-        get { self[OwnTileFillsKey.self] }
-        set { self[OwnTileFillsKey.self] = newValue }
-    }
-}
-
 /// One of Your Own's ways in: a small card with its symbol and name.
 private struct OwnTile: View {
     let title: Text
     let systemImage: String
-    @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 112
-    @Environment(\.ownTileFills) private var fills
+    @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 96
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -301,9 +297,8 @@ private struct OwnTile: View {
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        // At least its size, wider across a row that has room, taller for a name that wraps.
-        .frame(minWidth: side, maxWidth: fills ? .infinity : side, minHeight: side * 0.8, alignment: .topLeading)
-        .fixedSize(horizontal: !fills, vertical: true)
+        // Its grid cell's width, taller for a name that wraps.
+        .frame(maxWidth: .infinity, minHeight: side * 0.8, alignment: .topLeading)
         .padding(12)
         .background(Theme.surface)
         .clipShape(.rect(cornerRadius: 18, style: .continuous))
@@ -433,11 +428,10 @@ private struct SampleTile: View {
 
     private var accessibilityLabel: String {
         guard let creator = sample.provenance?.creator else {
-            return String(localized: "create.sample.label", defaultValue: "Sample: \(sample.title)",
-                          comment: "VoiceOver label of a sample picture's tile when nobody is credited for it; the argument is its title")
+            return sample.title
         }
-        return String(localized: "create.sample.labelWithCreator", defaultValue: "Sample: \(sample.title), \(creator)",
-                      comment: "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”")
+        return String(localized: "create.sample.labelWithCreator", defaultValue: "\(sample.title), \(creator)",
+                      comment: "VoiceOver label of a picture's tile on the Paint page (Tonight’s Picture, The Library), under its section's heading; the arguments are its title and who made it, e.g. “The Great Wave, Katsushika Hokusai”")
     }
 }
 

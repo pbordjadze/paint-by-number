@@ -668,12 +668,18 @@ final class Library {
     /// painting-company row 239): Auto chooses settings for its photo at `length`, as the Paint
     /// page's pick did at the painter's own (`ArtworkFactory.suggested`), keeping its line art,
     /// mix and tuning; then `regenerate` makes and saves it, and the artwork records the length.
-    func recut(artwork id: UUID, length: PaintingLength) async throws -> PaintingDocument {
+    /// `settings`, a cut made before at that length, is made again as it was, with no new choice.
+    func recut(artwork id: UUID, length: PaintingLength, settings known: GenerationSettings? = nil) async throws -> PaintingDocument {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
-        let store = self.store
-        let photo = try await Background.run { try ArtworkFactory.sourcePhoto(of: artwork, in: store) }
-        let settings = try await ArtworkFactory.suggested(
-            for: photo, keeping: artwork.settings, length: length, maxCandidates: CreateModel.maxCandidates)
+        let settings: GenerationSettings
+        if let known {
+            settings = known
+        } else {
+            let store = self.store
+            let photo = try await Background.run { try ArtworkFactory.sourcePhoto(of: artwork, in: store) }
+            settings = try await ArtworkFactory.suggested(
+                for: photo, keeping: artwork.settings, length: length, maxCandidates: CreateModel.maxCandidates)
+        }
         try Task.checkCancellation()
         var document = try await regenerate(artwork: id, settings: settings)
         if var updated = self.artwork(with: id) {

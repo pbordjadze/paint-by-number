@@ -7,20 +7,6 @@ synchronized folder would bundle it into the app.
 
 ## Gotchas
 
-- The inline `PhotosPicker` runs out of process: never put it inside a ScrollView (UIKit can't
-  arbitrate their pans across the process boundary: neither scrolls). It stays flush with the page's
-  left edge, the window's unless a safe area insets it (edge to edge on compact widths, its card
-  docked there on wide ones): inset from both the left and the top, its photo grid ignores taps on
-  iPhone for its first ten seconds or so, and a painter's iPad ignored them too, though the iPad
-  simulator doesn't (`PhotoSourceView`; `CreateFlowTests` picks an inline photo on both devices
-  and checks the left edge).
-- The inline picker's second pick of a photo it gave before in the flow (its selection is reset
-  after each pick so the same photo can be picked again) is an item with the photo's identifier and
-  no content types: `loadTransferable` answers nil, however often it is asked, and the preview
-  said "Couldn’t Open Photo" (CI, Oct 17). `CreateModel.load(item:)` keeps the data of the last
-  three library photos by identifier and uses the kept copy then. The preview opens either way, so
-  `CreateFlowTests` waits for Start Painting to enable after the second pick, and for the settings'
-  chip (`previewLoads`, `waitForSuggestion`: in SideStore and Debug builds Start works from the first draft).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
@@ -566,8 +552,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   back to Paint. A painting not begun shows the **length chip** under its bar (`LengthChip`,
   "~20 min · 406 areas"), whose Painting Lengths cut it again in place (`Library.recut`:
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
-  `regenerate`; the canvas takes no touches meanwhile). **✎ Change** (`UNRELEASED`, with the
-  drawing tools; `PaintView.onChange`, `change-painting`, beside Undo) opens `RefineView` over
+  `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time band, and
+a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (`UNRELEASED`, with the
+  drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
   the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
   `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
   unedited template kept as the trail so nothing is made again); Done saves the template and
@@ -577,13 +564,11 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
   `PaintNowTests`.
-- `PhotoSourceView`: the inline picker fills the page (Gotchas). iPhone doesn't embed it: its grid
-  never took a tap on a device, so the Photos pane is Choose Photo, which presents the full system
-  picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
-  Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
-  picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search; "Browse All…" (the toolbar, iPad only) presents the full system picker, the way in when the embedded
-  one doesn't take taps.
+- `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
+  of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
+  the library's tiles `library-picture`, labelled by title and creator. The inline photo picker is
+  gone (it scrolls out of process, which no scroll view around it arbitrates, and on iPhone its
+  grid never took a tap); A Photo presents the full system picker.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.
@@ -956,10 +941,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
-  PaintCore's `docs/start-from-a-drawing.md`): a long press of the photo step's photo button
-  (Browse All… on iPad, a `Menu` with a primary action; Choose Photo on iPhone, a context menu)
-  offers Choose Photo of a Drawing… and Photograph a Drawing, kept off the toolbar on purpose
-  (findable, not offered; painting-company row 190, October 30); they open the step's own picker and camera
+  PaintCore's `docs/start-from-a-drawing.md`): the Paint page's A Drawing on Paper (`choose-drawing`;
+  until row 239 a long press of the photo button) opens the system picker
   with `picksDrawing` set, so the pick calls `CreateModel.load(drawing:)` /
   `load(drawingData:)`, which cleans the sheet off the main actor (`DrawingScan.clean`: found,
   pulled square, the paper white) and makes the cleaned sheet the flow's photo, so the
@@ -973,10 +956,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   Refine works as on any book (`hasLineArtInput`); Color from Photo and Make Cell read the
   cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
-  covers the flow and regeneration, `DrawingEntryUITests` the long press and the bare toolbar.
+  covers the flow and regeneration, `DrawingEntryUITests` the tile.
 - From Scratch (SideStore and Debug builds, `#if UNRELEASED`, as Refine is; painting-company
-  row 231): the New Painting screen's toolbar button (`from-scratch`, beside Take Photo, its name in text: as an icon newcomers found it only by its VoiceOver label) calls
-  `CreateModel.loadScratch()`: a white square page (`blankPageSide`) is the flow's photo, the
+  row 231): the Paint page's Blank Page (`from-scratch`) calls
+  `CreateModel.loadScratch()` (the drawing tools' Done then starts the painting, row 239): a white square page (`blankPageSide`) is the flow's photo, the
   base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
   makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
   is asked for at once (`opensRefine`; the preview opens it once its push has landed, `pushSettles`). `isScratch`

@@ -137,6 +137,18 @@
         }
       }
     },
+    "paint.lengthChip.band" : {
+      "comment" : "Under a Painting Length in the painting's length chip menu: the times it aims for; the arguments are durations, e.g. 20 min – 50 min",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ – %2$@"
+          }
+        }
+      }
+    },
     "paint.lengthChip.value" : {
       "comment" : "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas",
       "extractionState" : "manual",
@@ -2189,26 +2201,14 @@
         }
       }
     },
-    "create.sample.label" : {
-      "comment" : "VoiceOver label of a sample picture's tile when nobody is credited for it; the argument is its title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample: %@"
-          }
-        }
-      }
-    },
     "create.sample.labelWithCreator" : {
-      "comment" : "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”",
+      "comment" : "VoiceOver label of a picture's tile on the Paint page (Tonight’s Picture, The Library), under its section's heading; the arguments are its title and who made it, e.g. “The Great Wave, Katsushika Hokusai”",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sample: %1$@, %2$@"
+            "value" : "%1$@, %2$@"
           }
         }
       }
