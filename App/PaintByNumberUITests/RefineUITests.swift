@@ -721,6 +721,9 @@ final class RefineUITests: XCTestCase {
             XCTFail("Select didn't offer Change Color")
         }
         clear("card")
+        // The card takes the groups' room beside the picture: closed, they are back.
+        if change.exists { change.tap() }
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 5), "The groups didn't come back after the card")
         pickTool("looks", in: "Paint", of: app)
         sleep(1)
         clear("looks")

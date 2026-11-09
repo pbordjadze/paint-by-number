@@ -1702,31 +1702,35 @@ extension RefineView {
     private static let sideWidth: CGFloat = 300
 
     /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
-    /// picture beside it the screen's whole height. The top bar's controls head it, then Start
-    /// From and the badge, off the picture; the tool's options, the palette, the groups and the
-    /// tools sit at its foot, under the thumb, as along the bottom, and scroll where a tool's
-    /// options are taller than the screen.
+    /// picture beside it the screen's whole height. The top bar's controls head it; at its foot,
+    /// under the thumb, Start From and the badge, off the picture, then the tool's options (bare
+    /// on the paper), the palette, the groups and the tools, as along the bottom, scrolling where
+    /// a tool's options are taller than the screen.
     private var sideTools: some View {
         let tools = VStack(spacing: 12) {
             Spacer(minLength: 0)
+            // An area's card takes the room of everything but Select's band: under the badge,
+            // over the groups and the tools, it was cut at the top of the smallest phone.
+            if barCard == nil {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        startChooser
+                        tinyBadge
+                    }
+                    VStack(spacing: 8) {
+                        startChooser
+                        tinyBadge
+                    }
+                }
+                .animation(
+                    model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
+                    value: model.note)
+            }
             curveHint
             studioBar
         }
         return VStack(spacing: 12) {
             sideBar
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    startChooser
-                    tinyBadge
-                }
-                VStack(spacing: 8) {
-                    startChooser
-                    tinyBadge
-                }
-            }
-            .animation(
-                model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
-                value: model.note)
             // The bar's controls stay put while the tools scroll: scrolled with them, Done and
             // Undo left the screen with the looks.
             ViewThatFits(in: .vertical) {
@@ -1783,7 +1787,8 @@ extension RefineView {
                 .disabled(base == nil)
                 .accessibilityIdentifier("refine-practice-try")
         }
-        if !usesRail, practice == nil {
+        // Beside the picture, an area's card takes their room (`sideTools`).
+        if !usesRail, practice == nil, !(usesSide && barCard != nil) {
             let groups = Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
                 ForEach(RefineGroup.allCases, id: \.self) { kind in
                     Self.groupName(kind).tag(kind)
@@ -1822,13 +1827,17 @@ extension RefineView {
                 Button { choose(kind) } label: {
                     Self.groupName(kind)
                         .fontWeight(selected ? .semibold : .regular)
-                        .foregroundStyle(selected ? Theme.signature : Color.primary)
+                        .foregroundStyle(Color.primary)
                         .lineLimit(1)
                         .fixedSize()
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 6)
                         .background {
-                            if selected { Capsule().fill(Theme.signature.opacity(0.12)) }
+                            if selected {
+                                Capsule()
+                                    .fill(Theme.surface)
+                                    .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+                            }
                         }
                         .contentShape(Capsule())
                 }
@@ -1836,6 +1845,8 @@ extension RefineView {
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
+        .padding(2)
+        .background(.fill.tertiary, in: .capsule)
         .fixedSize()
         .disabled(!model.hasLineArtInput)
         .accessibilityElement(children: .contain)
@@ -2126,7 +2137,8 @@ extension RefineView {
         .tint(Theme.signature)
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        // Beside the picture, on the paper: boxed, the column was all boxes.
+        .glassEffect(usesSide ? .identity : .regular, in: .rect(cornerRadius: 22))
         .disabled(!model.hasLineArtInput)
     }
 
