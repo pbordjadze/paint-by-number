@@ -307,6 +307,9 @@ struct RefineView: View {
     @State private var railHasMore = false
     /// Whether the column beside the picture scrolls and has more above what shows.
     @State private var sideHasMore = false
+    /// Whether the column's tools leave room for the tiny-numbers badge, and the room it takes.
+    @State private var sideBadge = true
+    @State private var sideBadgeRoom: CGFloat = 0
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -447,8 +450,12 @@ struct RefineView: View {
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
         .onChange(of: base?.id) { landedColors() }
-        // The tools along the bottom are measured afresh when they come back from the side.
-        .onChange(of: usesSide) { toolsHeight = 0 }
+        // The tools along the bottom are measured afresh when they come back from the side, and
+        // a Layers panel opened beside the picture hangs from the bar's button once upright.
+        .onChange(of: usesSide) {
+            toolsHeight = 0
+            layersFromButton = false
+        }
     }
 
     /// A color picked that a paint has now (poured) is that paint from then on: a look, a repaint
@@ -1698,6 +1705,14 @@ extension RefineView {
     /// widest phones' rail and card left it little more (QA, November 7 and 9).
     private var usesSide: Bool { heightClass == .compact && !isPractice }
 
+    /// What the column's scroll view reports: whether there is more above, and how tall its
+    /// tools are against its room.
+    private struct SideScroll: Equatable {
+        var above: Bool
+        var content: CGFloat
+        var room: CGFloat
+    }
+
     /// The column's width: the groups' five tabs and a group's five tools fit across it.
     private static let sideWidth: CGFloat = 300
 
@@ -1705,7 +1720,6 @@ extension RefineView {
     /// options, the palette, the groups and the tools.
     private func sideToolsFoot(badge: Bool) -> some View {
         VStack(spacing: 12) {
-            Spacer(minLength: 0)
             // An area's card takes the room of everything but Select's band: under the badge,
             // over the groups and the tools, it was cut at the top of the smallest phone.
             if barCard == nil {
@@ -1722,6 +1736,9 @@ extension RefineView {
                 .animation(
                     model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
                     value: model.note)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if badge { sideBadgeRoom = height + 12 }
+                }
             }
             curveHint
             studioBar
@@ -1737,30 +1754,32 @@ extension RefineView {
         VStack(spacing: 12) {
             sideBar
             // The bar's controls stay put while the tools scroll: scrolled with them, Done and
-            // Undo left the screen with the looks. The badge gives way before the tools scroll:
-            // scrolled, it lay half faded under the head with the looks.
-            ViewThatFits(in: .vertical) {
-                sideToolsFoot(badge: true)
-                sideToolsFoot(badge: false)
-                ScrollView { sideToolsFoot(badge: false) }
-                    .scrollIndicatorsFlash(onAppear: true)
-                    .defaultScrollAnchor(.bottom)
-                    // Its head fades while there is more above: cut off hard, an area's card
-                    // looked broken.
-                    .onScrollGeometryChange(for: Bool.self) { geometry in
-                        geometry.contentOffset.y + geometry.contentInsets.top > 1
-                    } action: { _, more in
-                        sideHasMore = more
+            // Undo left the screen with the looks. One scroll view, the tools at its foot where
+            // they fit: a choice of copies would make the area's card anew as it grew, closing
+            // its color picker.
+            ScrollView { sideToolsFoot(badge: sideBadge) }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicatorsFlash(onAppear: true)
+                .defaultScrollAnchor(.bottom)
+                // Its head fades while there is more above: cut off hard, an area's card looked
+                // broken. The badge gives way before the tools scroll: scrolled, it lay half
+                // faded under the head with the looks.
+                .onScrollGeometryChange(for: SideScroll.self) { geometry in
+                    SideScroll(
+                        above: geometry.contentOffset.y + geometry.contentInsets.top > 1,
+                        content: geometry.contentSize.height, room: geometry.containerSize.height)
+                } action: { _, scroll in
+                    sideHasMore = scroll.above
+                    sideBadge = scroll.content + (sideBadge ? 0 : sideBadgeRoom) <= scroll.room + 0.5
+                }
+                .mask {
+                    VStack(spacing: 0) {
+                        LinearGradient(colors: [.black.opacity(sideHasMore ? 0 : 1), .black], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 40)
+                        Color.black
                     }
-                    .mask {
-                        VStack(spacing: 0) {
-                            LinearGradient(colors: [.black.opacity(sideHasMore ? 0 : 1), .black], startPoint: .top, endPoint: .bottom)
-                                .frame(height: 40)
-                            Color.black
-                        }
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: sideHasMore)
-                    }
-            }
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: sideHasMore)
+                }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -2248,7 +2267,7 @@ extension RefineView {
     private var layersButtonAlone: some View {
         Button("Layers", systemImage: "square.3.layers.3d") {
             FeedbackEngine.shared.selectionChanged()
-            layersFromButton = !isPractice && layersAnchor.buttonOnScreen == nil
+            layersFromButton = !isPractice && !usesSide && layersAnchor.buttonOnScreen == nil
             showsLayers = true
         }
         .accessibilityHint(Text(String(
