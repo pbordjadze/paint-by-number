@@ -90,7 +90,8 @@ final class GalleryActionsTests: XCTestCase {
         }
     }
 
-    /// Send Template… opens its sheet: the page to send, Original Photo on, and Cancel closes it.
+    /// Send Template… opens its sheet: the page to send, Original Photo off until switched on, and
+    /// Cancel closes it.
     /// `ReceivePaintingTests` opens what it sends.
     @MainActor
     func testSendTemplateOffersThePhotoAndCancels() {
@@ -106,7 +107,7 @@ final class GalleryActionsTests: XCTestCase {
 
         let photo = app.switches["send-photo"]
         XCTAssertTrue(photo.waitForExistence(timeout: 10), "No Send Template sheet with the Original Photo switch")
-        XCTAssertEqual(photo.value as? String, "1", "Original Photo isn't on by default")
+        XCTAssertEqual(photo.value as? String, "0", "Original Photo is on by default")
         XCTAssertTrue(app.buttons["send-template"].isEnabled)
         attachScreenshot(of: app, named: "send-template")
         app.buttons["Cancel"].tap()

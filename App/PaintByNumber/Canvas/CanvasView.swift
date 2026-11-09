@@ -365,6 +365,53 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: Lifecycle
 
     override var canBecomeFirstResponder: Bool { true }
+
+    /// Whether the canvas means to be first responder: from the time it is in a window until
+    /// `releaseFocus` (feedback mode), and again from `focus`.
+    private var wantsFocus = true
+    /// What the canvas last took first responder back from, and when (`resignFirstResponder`).
+    private var reclaimed: (from: ObjectIdentifier?, at: ContinuousClock.Instant)?
+
+    func focus() {
+        wantsFocus = true
+        _ = becomeFirstResponder()
+    }
+
+    func releaseFocus() {
+        wantsFocus = false
+        _ = resignFirstResponder()
+    }
+
+    /// Taken by a menu (More, the Finished bar's Share), first responder comes straight back:
+    /// a menu opened over the canvas raised the software keyboard, with nothing to type into,
+    /// over the lower half of the painting until it closed (iPhone and iPad simulators without a
+    /// hardware keyboard: the Mac critic's sweep, November 9, and main's iPhone UI tests'
+    /// `more-under-the-zen-tip`). Never while anything is presented over the painting (a sheet,
+    /// an alert, the share sheet and the compose views it hosts out of process, a dialog): UIKit
+    /// gives first responder back when they go, and a canvas taking it under them would steal a
+    /// field's focus or let ⌘Z undo fills behind a modal. Nor from a text field or view. The same
+    /// responder is fought over once a second at most.
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        guard resigned, wantsFocus else { return resigned }
+        Task { @MainActor [weak self] in
+            guard let self, wantsFocus, window != nil, !isFirstResponder else { return }
+            if let presented = window?.rootViewController?.presentedViewController {
+                Log.canvas.notice("First responder left for \(String(describing: type(of: presented)), privacy: .public): not taken back")
+                return
+            }
+            let taker = UIResponder.current
+            if taker is UITextField || taker is UITextView { return }
+            let now = ContinuousClock.now
+            let id = taker.map { ObjectIdentifier($0) }
+            if let reclaimed, reclaimed.from == id, now - reclaimed.at < .seconds(1) { return }
+            reclaimed = (id, now)
+            let name = taker.map { String(describing: type(of: $0)) } ?? "nothing"
+            Log.canvas.notice("First responder taken by \(name, privacy: .public): the canvas takes it back")
+            _ = becomeFirstResponder()
+        }
+        return resigned
+    }
     /// None while a replay plays: ⌘Z, the Edit menu and three-finger undo would take fills off
     /// the painting being played back.
     override var undoManager: UndoManager? { isReplaying ? nil : super.undoManager }

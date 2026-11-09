@@ -388,6 +388,8 @@ struct CreateModelTests {
         model.load(sample: sample)
         #expect(model.title == "")
         #expect(model.defaultTitle == sample.title)
+        // A library picture's name is its own: the painting is named.
+        #expect(model.isNamed)
         model.title = "  Jungle \n"
         #expect(model.resolvedTitle == "Jungle")
         model.title = "   "
@@ -398,6 +400,12 @@ struct CreateModelTests {
         #expect(model.title == "")
         #expect(model.defaultTitle == Date.now.formatted(.dateTime.month(.wide).day()))
         #expect(model.resolvedTitle == model.defaultTitle)
+        // The date is a name the app gave: not named until the painter types one.
+        #expect(model.titleIsGiven && !model.isNamed)
+        model.title = "Harbor"
+        #expect(model.isNamed)
+        model.load(imageData: Data(), title: "IMG_0042")
+        #expect(!model.titleIsGiven && model.isNamed)
         model.cancelAll()
     }
 

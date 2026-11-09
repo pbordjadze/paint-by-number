@@ -101,6 +101,21 @@ final class PaintingNavigationTests: XCTestCase {
         dismissDialog(at: dialog, titled: "Restart this painting?", in: app)
     }
 
+    /// More's menu raises no keyboard over the painting, and stays open: the canvas takes back the
+    /// first responder the menu took (`CanvasView.resignFirstResponder`; the Mac critic's sweep of
+    /// November 9 saw a keyboard rise over the lower half while it was open, with nothing to type).
+    @MainActor
+    func testMoreRaisesNoKeyboard() throws {
+        let app = openSeededPainting()
+        app.buttons["More"].tap()
+        let restart = app.buttons["Restart"]
+        XCTAssertTrue(restart.waitForExistence(timeout: 5), "More has no Restart")
+        sleep(1)
+        attachScreenshot(of: app, named: "more-open")
+        XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with More's menu")
+        XCTAssertTrue(restart.exists, "More's menu closed by itself")
+    }
+
     /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
     /// and a tap on the ring brings Undo and More back.
     @MainActor

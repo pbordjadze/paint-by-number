@@ -194,6 +194,10 @@ synchronized folder would bundle it into the app.
   reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
   per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
+- The canvas is first responder (⌘Z, three-finger undo); a menu opened over it (More, the
+  Finished bar's Share) took it and raised the software keyboard with nothing to type into, so
+  the canvas takes it back from anything but a text field or view (`CanvasView.resignFirstResponder`;
+  `PaintingNavigationTests.testMoreRaisesNoKeyboard`). `focus`/`releaseFocus` say when it wants it.
 - Events: `PaintingSession.onEvent` has three observers registered when the screen appears:
   `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the shines, the finish) and
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
@@ -281,7 +285,7 @@ synchronized folder would bundle it into the app.
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
   hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
-  (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
+  (`ColorNickname.seed(for:)`; a received painting by its sender's: `Artwork.nicknameSeed`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
   feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
@@ -521,6 +525,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
+- Names: a painting of the painter's own photo that they haven't named is named by the app
+  (`PhotoNaming`: the day the photo was taken, else today), made distinct from the paintings'
+  names (", No. 2"), and records `Artwork.titled` false: finished, its bar's second line is that
+  name with a pencil, no label (`CompletionBar.onName`), and a tap opens Name Your Painting
+  (`ArtworkPaintingView`); Rename or Save names it for good. Absent, `titled` reads as named.
+  A received painting keeps its sender's paint names (`Artwork.sentNicknameSeed`).
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
   (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it
   filters) and `.searchable` make a `GalleryQuery`
@@ -990,9 +1000,9 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   Share Extension (a hand-written `.appex` target that can't open its app). A painting someone
   sent (a `.moonlight` file, the type `Config/Info.plist` exports, Owner rank) is told from a photo
   by its first bytes (`SharedPaintingCodec.isSharedPainting`): `Library.receive` adds it as a new,
-  blank painting with the sender's title and nicknames of its own, and with the sender's photo
-  (decoded like any opened image, stored as `source.jpg`) and library picture when they came, so
-  it has the photo peek and a damaged template is made again from the photo, without the sender's
+  blank painting with the sender's title and paint names (`Artwork.sentNicknameSeed`), and with
+  the sender's photo (decoded like any opened image, stored as `source.jpg`) and library picture
+  when they came, so it has the photo peek and a damaged template is made again from the photo, without the sender's
   edits, which never travel. It opens in place of any painting or create flow; one that can't be
   read adds nothing and says why in an alert (`Library.ReceiveError`).
 
@@ -1055,10 +1065,11 @@ written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 
 (a blank white tile; `GalleryView.share`). The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
-blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),
+blank page and the Original Photo switch, off until the painter turns it on (the sweep of
+November 9),
 then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPainting`): PaintCore's
-`SharedPainting`, the template as it is (the painter's refinements are in it) with its title and
-settings, LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
+`SharedPainting`, the template as it is (the painter's refinements are in it) with its title,
+settings and paint names (their seed and vocabulary: the receiver's `Artwork.sentNicknameSeed`), LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
 picture; never progress or refinements. The sheet deletes the file once the share sheet closes,
 and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
 instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter

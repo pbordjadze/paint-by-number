@@ -185,6 +185,16 @@ final class Library {
             settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName)
         made.receivedDigest = draft.receivedDigest
+        if !draft.isNamed {
+            made.title = PhotoNaming.distinct(draft.title, among: Set(artworks.map(\.title)))
+            made.titled = false
+        }
+        if let names = draft.nicknames {
+            made.sentNicknameSeed = names.seed
+            // A version beyond this build's is no sender's this build could name by, and kept it
+            // would rename the paints once a newer vocabulary ships.
+            made.nicknameVersion = min(names.version, ColorNickname.currentVersion)
+        }
         let artwork = made
         let store = self.store
         try await Background.run {
@@ -203,7 +213,7 @@ final class Library {
 
     /// A painting someone sent (`SharedPainting`, a `.moonlight` file) as a new painting, blank and
     /// with its sender's title (else `fallbackTitle`, the file's name), and its colors' nicknames
-    /// its own. With the sender's photo (or library picture) it has the photo peek, and a damaged
+    /// the sender's (`SharedPainting.nicknames`; a file without them, its own). With the sender's photo (or library picture) it has the photo peek, and a damaged
     /// template is made again from it, without the sender's edits, which never travel; without,
     /// neither. A photo that doesn't decode is left out. The same file opened again (tapped twice
     /// in Messages, say) opens the painting it made, painted or not, rather than adding a copy.
@@ -237,7 +247,8 @@ final class Library {
                 title: title, template: shared.template, settings: settings, photo: photo,
                 // A library picture's name only beside its photo: alone it could name any picture,
                 // which a damaged template would then be made again from.
-                sampleName: photo == nil ? nil : shared.sampleName, receivedDigest: digest))
+                sampleName: photo == nil ? nil : shared.sampleName, receivedDigest: digest, nicknames: shared.nicknames,
+                isNamed: !shared.title.isEmpty || fallbackTitle != nil))
         } catch {
             Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
             throw ReceiveError.saveFailed
@@ -338,10 +349,14 @@ final class Library {
 
     // MARK: Editing
 
+    /// Names the painting; kept as it is, the name it was given becomes its own all the same.
     func rename(_ id: UUID, to title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp, artwork.title != trimmed else { return }
+        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp,
+              artwork.title != trimmed || !artwork.isNamed
+        else { return }
         artwork.title = trimmed
+        if artwork.titled != nil { artwork.titled = true }
         replace(artwork, resort: false)
         persistMeta(artwork)
     }

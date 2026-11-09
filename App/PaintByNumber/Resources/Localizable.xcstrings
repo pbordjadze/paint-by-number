@@ -121,6 +121,14 @@
       "comment" : "The Unlimited Paintings sheet opened from the drawing tools (Blank Page, ✎ Change) or From Scratch, in builds where every new painting takes a free painting (1.1): what the purchase unlocks",
       "extractionState" : "manual"
     },
+    "Gives the painting a name for sharing and printing." : {
+      "comment" : "VoiceOver hint of the Finished bar's name of a painting not yet named, which opens Name Your Painting",
+      "extractionState" : "manual"
+    },
+    "Name Your Painting" : {
+      "comment" : "Title of the alert that names a finished painting, opened by a tap on its name (with a pencil) in its Finished bar while it has only the name the app gave it",
+      "extractionState" : "manual"
+    },
     "One purchase unlocks the drawing tools and as many new paintings as you like." : {
       "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
       "extractionState" : "manual"
@@ -165,9 +173,29 @@
       "comment" : "The Unlimited Paintings sheet, under its buttons, in builds where every new painting takes a free painting (1.1): what never takes one",
       "extractionState" : "manual"
     },
+    "Save" : {
+      "comment" : "Name Your Painting alert: keeps the name in the field as the painting's name",
+      "extractionState" : "manual"
+    },
     "The Library" : {
       "comment" : "Paint page: section title over the app's own pictures (paintings, then photographs), always free",
       "extractionState" : "manual"
+    },
+    "The name goes with it when you share or print it." : {
+      "comment" : "Message of the Name Your Painting alert, under its title",
+      "extractionState" : "manual"
+    },
+    "title.numbered" : {
+      "comment" : "Default name of a painting whose plain default name another painting already has; the arguments are that name and a number from 2, e.g. “Dog, No. 2”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, No. %2$lld"
+          }
+        }
+      }
     },
     "Tonight’s Picture" : {
       "comment" : "Paint page (the create flow's first screen): title over the one library painting shown large, another each day",

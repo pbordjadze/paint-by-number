@@ -95,6 +95,31 @@ struct SharedPaintingTests {
         }
     }
 
+    /// The sender's paint names travel as their seed and vocabulary version, the whole range of
+    /// the seed exactly; files from before they travelled, and halves or nonsense, carry none.
+    @Test func paintNamesTravel() throws {
+        let template = try Self.fixture().template
+        for names in [SharedPainting.Nicknames(seed: .max, version: 2), .init(seed: 0x9E37_79B9_7F4A_7C15, version: 1),
+                      .init(seed: 0, version: 7)] {
+            let sent = SharedPainting(title: "A", settings: nil, template: template, nicknames: names)
+            #expect(try SharedPainting(encoded: sent.encoded()).nicknames == names)
+        }
+        #expect(try Self.fixture().nicknames == nil)
+        #expect(try SharedPainting(encoded: TestFixtures.data("shared-v1-photo.moonlight")).nicknames == nil)
+        let body = Self.body(try Self.templateBytes())
+        for json in [#"{"title":"A","nicknameSeed":5}"#, #"{"title":"A","nicknameVersion":2}"#,
+                     #"{"title":"A","nicknameSeed":5,"nicknameVersion":0}"#,
+                     #"{"title":"A","nicknameSeed":5,"nicknameVersion":256}"#,
+                     #"{"title":"A","nicknameSeed":-5,"nicknameVersion":2}"#,
+                     #"{"title":"A","nicknameSeed":"5","nicknameVersion":2}"#] {
+            let shared = try SharedPainting(encoded: Self.file([Self.meta(json), body]))
+            #expect(shared.nicknames == nil, "\(json)")
+            #expect(shared.title == "A")
+        }
+        #expect(try SharedPainting(encoded: Self.file([Self.meta(#"{"title":"A","nicknameSeed":18446744073709551615,"nicknameVersion":2}"#), body]))
+            .nicknames == .init(seed: .max, version: 2))
+    }
+
     /// A META no reader would take is never written: the encoder throws instead of sending a
     /// file nobody can open. A title is never the reason, since it is written already cleaned.
     @Test func unreadableMetaThrows() throws {

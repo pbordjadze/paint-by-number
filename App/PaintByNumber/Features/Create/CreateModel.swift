@@ -199,8 +199,18 @@ final class CreateModel {
         #endif
         return photoDefaultTitle
     }
-    /// The photo's default name: the sample's, or the date.
+    /// The photo's default name: the sample's, a file's own, or one given (`titleIsGiven`).
     private var photoDefaultTitle = ""
+    /// The photo's default name is one the app gave it (the day it was taken, or today:
+    /// `PhotoNaming`), not a name it came with: a painting created under it isn't named
+    /// yet (`ArtworkDraft.isNamed`).
+    private(set) var titleIsGiven = false
+    /// Whether the painting is created with a name of its own: typed, or the photo's (a library
+    /// picture's, a file's), not one the app gave.
+    var isNamed: Bool {
+        !titleIsGiven || defaultTitle != photoDefaultTitle
+            || !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
     #if UNRELEASED
     /// The default name of a drawing on Blank, fixed for the flow so a draft resumed another day
     /// keeps it.
@@ -229,7 +239,7 @@ final class CreateModel {
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
             sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil,
-            suggested: suggested)
+            suggested: suggested, givenTitle: titleIsGiven ? true : nil)
     }
 
     var colorCount: Double
@@ -541,8 +551,9 @@ final class CreateModel {
     }
 
     func load(item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { [self] in
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, givenTitle: true) { [self] in
             let data = try await photoData(of: item)
+            await nameAfterCaptureDate(of: data)
             return try await Self.decode(data: data)
         }
     }
@@ -586,8 +597,9 @@ final class CreateModel {
     /// A photo of a drawing from the library: the sheet is cleaned and its lines become the
     /// painting (`isDrawing`).
     func load(drawing item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil, drawing: true) { [self] in
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, drawing: true, givenTitle: true) { [self] in
             let data = try await photoData(of: item)
+            await nameAfterCaptureDate(of: data)
             return try await Self.decode(data: data)
         }
     }
@@ -631,13 +643,19 @@ final class CreateModel {
 
     /// A photo of a drawing from the camera or a file (`isDrawing`).
     func load(drawingData: Data, title: String? = nil) {
-        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true) { try await Self.decode(data: drawingData) }
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true, givenTitle: title == nil) { [self] in
+            if title == nil { await nameAfterCaptureDate(of: drawingData) }
+            return try await Self.decode(data: drawingData)
+        }
     }
 
     /// `title` names the painting when the photo came with a name (an opened file); without
     /// one, the date does.
     func load(imageData: Data, title: String? = nil) {
-        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, givenTitle: title == nil) { [self] in
+            if title == nil { await nameAfterCaptureDate(of: imageData) }
+            return try await Self.decode(data: imageData)
+        }
     }
 
     /// Picks up a draft (`Drafts`): its photo, title and refinements, with the settings the
@@ -685,6 +703,7 @@ final class CreateModel {
         homeKey = nil
         pinOrigins = []
         photoDefaultTitle = ""
+        titleIsGiven = false
         blankTitle = ""
         title = ""
         let photo = scene == .note ? picture.note : picture.evening
@@ -753,7 +772,8 @@ final class CreateModel {
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
         drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, suggests: Bool = true,
-        lineArt paintings: LineArtSettings? = nil, decode: @escaping () async throws -> Decoded
+        lineArt paintings: LineArtSettings? = nil, givenTitle: Bool = false,
+        decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
         // A painting's own line art (its ✎ Change), read by the inputs prepared below too.
@@ -769,6 +789,7 @@ final class CreateModel {
         pinOrigins = []
         // A new photo gets a new default name, and anything typed for the last one goes.
         photoDefaultTitle = defaultTitle
+        titleIsGiven = saved.map { $0.givenTitle == true } ?? givenTitle
         #if UNRELEASED
         // A draft on Blank (or a page from scratch) saved its drawing's name as its default.
         blankTitle = scratch || saved?.refinements.start == .blank ? defaultTitle : Self.scratchTitle()
@@ -1001,7 +1022,7 @@ final class CreateModel {
         return ArtworkDraft(
             id: paintingID, title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
             paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName,
-            refinements: refinements)
+            refinements: refinements, isNamed: isNamed)
     }
 
     /// What the making-of show of `draft` (the painting Start saved, as `artworkID`) is made from:
@@ -1995,6 +2016,12 @@ final class CreateModel {
     }
 
     private static func photoTitle() -> String {
-        Date.now.formatted(.dateTime.month(.wide).day())
+        PhotoNaming.dateTitle(.now)
+    }
+
+    /// A photo the app names is named for the day it was taken, when it says (`PhotoNaming`).
+    private func nameAfterCaptureDate(of data: Data) async {
+        guard titleIsGiven, !Task.isCancelled, let taken = PhotoNaming.captureDate(ofImageData: data) else { return }
+        photoDefaultTitle = PhotoNaming.dateTitle(taken)
     }
 }

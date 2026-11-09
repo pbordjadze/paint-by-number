@@ -75,6 +75,15 @@ struct ArtworkPaintingView: View {
     }
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
+
+    /// Name Your Painting, from the Finished bar: the field starts with the name it was given.
+    @State private var isNaming = false
+    @State private var nameText = ""
+
+    private func startNaming() {
+        nameText = artwork?.title ?? ""
+        isNaming = true
+    }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
     /// Under the create flow's cover, waiting to be handed the screen (past the hand-off's time too,
@@ -116,6 +125,7 @@ struct ArtworkPaintingView: View {
             if let autosaver, hasLanded {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
+                    onName: artwork?.isNamed == false ? { startNaming() } : nil,
                     onTemplateFrame: canvasReport, onChange: changeAction)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
@@ -203,6 +213,14 @@ struct ArtworkPaintingView: View {
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
         #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
+        .alert("Name Your Painting", isPresented: $isNaming) {
+            TextField("Title", text: $nameText)
+                .submitLabel(.done)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") { library.rename(artworkID, to: nameText) }
+        } message: {
+            Text("The name goes with it when you share or print it.")
+        }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else { return }
@@ -239,7 +257,7 @@ struct ArtworkPaintingView: View {
         let session: PaintingSession
         do {
             session = try await PaintingSession.make(
-                template: document.template, progress: document.progress, nicknameSeed: ColorNickname.seed(for: artworkID),
+                template: document.template, progress: document.progress, nicknameSeed: artwork?.nicknameSeed ?? ColorNickname.seed(for: artworkID),
                 nicknameVersion: artwork?.nicknameVersion ?? 1)
         } catch is CancellationError {
             return
