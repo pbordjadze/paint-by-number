@@ -81,7 +81,7 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
-                .navigationTitle("Ravenna")
+                .navigationTitle("Paint by Mosaic")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search mosaics"))

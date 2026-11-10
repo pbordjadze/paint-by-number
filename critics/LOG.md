@@ -1,3 +1,30 @@
+# Critic log: claude/pbm-11-fixes (painting-company rows 226, 274, 277)
+
+Row 226 (Refine's three QA fixes) was already on main when this branch began (3dcd6b6, November 5:
+new colours wait in the palette, Start From at the top's trailing end, a drawing's own name), with
+tests; nothing to build, no round. Row 274 (Ravenna's share sheets) has no picture CI can take:
+the share sheet's tile is drawn outside the app (the Mac's note on row 263 item 67).
+
+## Round 0 · 2026-11-09 ~12:40 ET · plan (row 277, before building) · critic subagent a870db3b1501fa50d
+First: the whole visible line bows across the cloud and the paint flows in behind it; then the free tip following, a nice surprise; then the dashed boundaries look like scaffolding, and a pull still meets the old toast | Weakest: "anything doubtful is declined as now": a pull that looks free can still be refused after he lets go; and paint deeper in the strip might be left behind | Change: never decline a bend: lay the farthest valid bend, no toast; drop the dashed boundaries from Bend Line | Couldn't judge: the falloff's reach on long lines, preview speed, how many tiny areas the cuts make, the strip on crowded paint, iPhone vs iPad, saved bends replaying differently | Ship: yes, with the change
+Maker's answer: taken: a bend that can't go all the way goes as far as it can (five halvings of the drag, deterministic), declined only for no line near or a held point; Bend Line no longer shows the dashed edges; strip areas that never met the old line join the strip beside them. The preview still shows the full drag while the finger is down (a laid check every frame is too slow). · Conductor: continue (build)
+
+## Round 1 · 2026-11-09 11:35 AM ET · build 37b98f4 · critic subagent a7db83246e03f5826
+First: nothing refused, a bend crosses the sky's paints, the paint follows the lighthouse's side (round 0's strip fixed); then a fishhook in the sky and a grey fin off the lighthouse | Weakest: long drags make the grab point a corner, not the top of a curve: 02 a smooth half and a straight diagonal half, 05 a pointed teardrop | Change: any drag bows like 04's short line: one smooth, even curve, highest under the finger, eased toward both ends, free, fixed or joined | Couldn't judge: live feel, chrome, numbers in swept areas, undo, a bend cut short | Ship: no
+Maker's answer: taken: a side that ends on a junction bends as a rod pinned there (half the curvature under the finger), and a free side bends as far as the held side does, so the bow is even (02 is now one bow, the free tip still; 05 a rounded bulge). · Conductor: continue
+
+## Round 2 · 2026-11-09 11:55 AM ET · build 7a651ea · critic subagent a83fe815ba5084fd9
+First: 04's short line bows as wanted; then a tall S in the sky and a grey lobe off the lighthouse read as damage | Weakest: 02 still a mild fishhook: the free top leaves straight down before turning, the lower half a near-straight diagonal; 05's fin is gone, rounded, but lopsided and filled with the shadow's paint, the tower reshaped | Change: every bend 04's shape, symmetric and highest under the finger, easing into both ends, a joined end too | Couldn't judge: live feel; whether the grey lobe is what a painter expects from dragging a paint boundary; the loop where 01 joins the cloud at normal zoom | Ship: no
+Maker's answer: taken for 02: a free side takes the held side's shape as well as its reach, so the halves match (02 is now one even arc). Declined for 05's paint: the side of the lighthouse is its shadow's boundary, and the paint following the line is what row 277 asks; dragging a boundary that far is the painter's call, and Undo takes it back. Also fixed from the fresh reader: where the bend stops on a slanted step it now cuts the line (ink beyond it was being lifted), and a straight edge bent in its middle is laid again rather than left beside the new line. · Conductor: continue (one more round on the device's screenshots)
+
+## Round 3 · 2026-11-09 12:30 PM ET · build 5ffd411 · critic subagent a4261910ebe25fd6d
+First: reads as bending now: 04 an even arch, 02 a single rounded bow, no fishhook, no S, nothing refused | Weakest: 05 still not 04's shape: a long near-straight upper ramp and a short curl below, widest below the middle, a leaf more than a bow (round 2's lopsidedness, milder); 02's halves slightly straight, minor | Change: a long boundary held at both ends bows as 04 does, symmetric, widest under the finger | Couldn't judge: live tracking under the finger, haptics, whether 05's paint following surprises well or badly, the tool among the app's controls | Ship: no, but close; "if the next round's weakest is polish again, the loop is done"
+Maker's answer: declined: 05 was grabbed off-centre between junctions at very different distances (the lantern band far above, the roof near below), and a bow pinned so is lopsided as a rod bent there is; making it symmetric would move the bend off the finger or past a junction. · Conductor: done on the renders (the weakest has been the same kind of shape polish two rounds running, rounds 2 and 3); the device's screenshots get one look before merge.
+
+## Round 4 · 2026-11-09 4:30 PM ET · build e0584a2 (CI run 841, green with the iPhone) · critic subagent af24ddd490b53c711
+First: on iPhone and iPad the short pen line became one even, symmetric bow, peak where grabbed, ends in place; the ink matches the template's own; nothing left behind (no handle, ghost or toast) | Weakest: the test's bend is small (a short line in open sky, 4%), so the frames don't show a line bent across the picture, through cells and paint | Change: a long line bent across other cells, on a device | Couldn't judge: the feel during the drag, haptics, the off-centre grab, undo, dark | Ship: yes
+Maker's answer: the long bend across paint is the renders' proof (rounds 1–3); a long-line bend on a device goes to the 1.1 newcomer QA (row 237) as a named check. · Conductor: done.
+
 # Critic log — Paint Now (claude/scratch-paint-now)
 
 ## 2026-11-09 · Plan

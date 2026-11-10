@@ -299,7 +299,8 @@ The gentle tips are the app's design panel's design of October 17 (its words, id
 and Never list are the spec; its notes are the record, not UI): 22 tips, and Refine's Draw Your
 Own Lines (`RefineDrawTip`, the line that sat under Refine's tools until Paul's calmer menus,
 October 18; like Tap to Paint it waits for neither the gap nor something done, `TipID.isHowTo`;
-beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture),
+beside the Pen in the iPad's rail, on iPhone from the top of the tools, over the picture, or
+beside their column on its side),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
@@ -700,7 +701,12 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
     on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
     is more below), on iPhone the groups are tabs over a row of the
-    group's tools. The tools along the bottom keep the room of the tallest they have been, and a
+    group's tools. A phone on its side (compact height, every iPhone in landscape, the Pro Max
+    too; `RefineView.usesSide`) has no top bar: its controls head one column along the trailing
+    edge (`sideTools`, `sideBar`), with Start From, the badge, the tool's options, the palette,
+    the groups (each name at its own width, `sideGroups`) and the tools at its foot, scrolling
+    under a fixed head where they are taller than the screen, and the picture beside it at the
+    screen's full height; an area's card takes the room of all but Select's band there. The tools along the bottom keep the room of the tallest they have been, and a
     taller one (Select's band, a card, the looks) rises over the paper under the picture where
     that holds it, so the picture moves only where it would be covered (`reservedTools`); an
     option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
@@ -709,15 +715,15 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     `steadyString` points at full, 48 since October 29 (at 20 a painter saw nothing);
     `SettingsKey.refineSnaps`/`refinePenColors`/`refinePenSmoothing`), Shapes (its figures, Snap
     and Color from Photo, the Pen's switch, which a figure's pieces take as a line's do, above the
-    tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`: a drag moves the line under it, bending it near
-    the grab, previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint and area count in
+    tools), the Eraser and the Line Eraser (their Size, `refineEraserSize`), Bend Line (`.reshape`, target `.ink`: a drag bends the drawn line under it near
+    the grab, across the paint under it, which follows the line, as far as it can go (`EditWork.bendInk`), previewed as it will lie, `TemplateEditor.reshapedChain`; `RefineBendPreview`). Cells: Select (a tap selects a cell, outlined, its paint and area count in
     `RefineSelectionBar`, one band with the palette, whose Change Color opens its card), Cell Edge
     (PaintCore's `.cellEdge`: an undrawn boundary, both sides keeping the paint), Merge (`.merge`: a
     drag joins the cells it crosses into the first, boundaries and ink between them gone; the cells
     it will join glow while the finger is down, found off the main actor as the editor finds them,
     `TemplateEditor.MergeProbe`; one that stays in one area says it is one area already), Move Edge
     (`.reshape` on a cell's boundary, inked or not), Make Cell; while
-    a Cells tool or Bend Line (which they stop) is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
+    a Cells tool is picked the undrawn edges show dashed (`RefineCellEdges`). Paint: the palette
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
     which the first Bucket tap adds as a paint; every color it picks that no paint has waits
@@ -758,7 +764,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
     says, until the next touch, tool or template (`RefineView.tinyMarked`). The badge and Start
     From lie in the canvas's top trailing corner, or just inside the picture's where it reaches
-    the top (`topControlsInsets`), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
+    the top (`topControlsInsets`; on a phone on its side, in the tools' column), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
     is the screen with doubled strings. With VoiceOver or Switch Control (and in demo launches, for
     the UI tests) a cell tool's cells in view are elements over the picture (`RefineCellElements`,
@@ -1019,6 +1025,9 @@ pbordjadze/ravenna), is in SideStore and Debug builds only. Its app is the stati
 `MosaicEngine` and `MosaicCore`. It is Paint by Moonlight's app as copied at f1024441 with
 Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
 own, so it follows none of this app's later changes and needs none of its gates.
+The painter sees it as **Paint by Mosaic** (painting-company row 281: its gallery's title, the PDF
+footer, Settings, Feedback, its credits); code, module, target, files and the name of the city
+in its texts (the Ground and Sinopia captions) stay Ravenna.
 
 - **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About has a plain Year row
   (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
@@ -1065,7 +1074,7 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
-(a blank white tile; `GalleryView.share`). The launch purge and the sweep of stale exports each
+(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, off until the painter turns it on (the sweep of

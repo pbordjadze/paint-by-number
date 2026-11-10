@@ -411,19 +411,18 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The curve didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-shapes")
 
-        // The Pen's line in the open sky under the crest, then Bend Line moves it, free at both
-        // ends and short, whole to the right, clear of any ink there too. From x 0.50 the move
-        // laid it across the crest's spray, which the editor declines (CI run 649), and to 0.47
-        // it met a dashed edge between the sky's paints on the Mac's iPad (a bend crosses
-        // neither), so it moves a little: 1.5% of the picture, but never under 12 points, which
-        // on an iPhone (6 points) a pan never began from (CI run 825).
+        // The Pen's line in the open sky under the crest, then Bend Line bows it, free at both
+        // ends, to the right across the sky's paints (a bend crosses those, re-cutting them, and
+        // one that would reach ink, the crest's spray, goes as far as it can). The drag is 4% of
+        // the picture, never under 12 points, which on an iPhone a pan never began from (CI run
+        // 825).
         pickTool("pen", in: "Ink", of: app)
         drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The line didn't count: \(canvas.value ?? "")")
         pickTool("bendLine", in: "Ink", of: app)
         let pictureWidth = min(canvas.frame.width, canvas.frame.height * 2048 / 1375)
-        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.44 + max(0.015, 12 / pictureWidth), 0.48))
+        drag(on: canvas, from: onPicture(canvas, 0.44, 0.48), to: onPicture(canvas, 0.44 + max(0.04, 12 / pictureWidth), 0.48))
         count += 1
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-bend")
@@ -676,6 +675,87 @@ final class RefineUITests: XCTestCase {
             XCTAssertTrue(control.exists, "Refine has no \(id)")
             XCTAssertFalse(tipFrame.intersects(control.frame), "The tip covers \(id): tip \(tipFrame), \(id) \(control.frame)")
         }
+    }
+
+    /// iPhone on its side: the picture takes most of the screen's height, and the tools, Start From
+    /// and the tiny-numbers badge stand beside it, covering none of it, Done within reach, with the
+    /// Pen, with Select's cell and its card, with the looks, and Layers opens: under the tools it
+    /// was about 190 × 130 points, the badge over its corner, and gone with the looks (QA,
+    /// November 7 and 9).
+    @MainActor
+    func testThePictureFillsAPhoneOnItsSide() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "An iPad on its side keeps its rail")
+        continueAfterFailure = true
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-refine"]
+        app.launch()
+        XCTAssertTrue(app.sliders["refine-pen-smoothing"].waitForExistence(timeout: 180), "Refine never opened on the Pen")
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        sleep(2)
+        func clear(_ step: String) {
+            let window = app.windows.firstMatch.frame, frame = canvas.frame
+            let aspect: CGFloat = 2048 / 1375
+            let width = min(frame.width, frame.height * aspect), height = width / aspect
+            let picture = CGRect(x: frame.midX - width / 2, y: frame.midY - height / 2, width: width, height: height)
+            XCTAssertGreaterThanOrEqual(
+                height, window.height * 0.6, "At \(step) the picture is \(picture.size) on a \(window.size) screen")
+            for id in ["refine-groups", "refine-tiny", "refine-start", "refine-snap", "refine-selection-color", "refine-card"] {
+                let control = app.descendants(matching: .any)[id].firstMatch
+                guard control.exists else { continue }
+                XCTAssertFalse(control.frame.intersects(picture), "At \(step) \(id) covers the picture: \(control.frame) over \(picture)")
+            }
+            XCTAssertTrue(app.buttons["refine-done"].isHittable, "At \(step) Done is out of reach")
+            holdForScreenshot("landscape-\(step)")
+        }
+        // Whether the picture has tiny numbers at all is the generator's: CI's iPhone 17 Pro made the
+        // demo's picture with none, this Mac's simulators with one (painting-company row 276).
+        // Upright, with the Pen and no note, the badge shows whenever there are any: missing beside
+        // the picture, it must be missing upright too (else the column gave it way or lost it).
+        if !app.buttons["refine-tiny"].waitForExistence(timeout: 10) {
+            XCUIDevice.shared.orientation = .portrait
+            XCTAssertFalse(
+                app.buttons["refine-tiny"].waitForExistence(timeout: 10),
+                "The tiny-numbers badge shows upright but isn't beside the picture on its side")
+            XCUIDevice.shared.orientation = .landscapeLeft
+            XCTAssertTrue(
+                waitUntil(timeout: 10) { canvas.frame.width > canvas.frame.height }, "Refine didn't turn back on its side")
+            sleep(1)
+        }
+        clear("pen")
+        pickTool("select", in: "Cells", of: app)
+        canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
+        let change = app.buttons["refine-selection-color"]
+        if change.waitForExistence(timeout: 10) {
+            change.tap()
+            XCTAssertTrue(app.descendants(matching: .any)["refine-card"].waitForExistence(timeout: 10), "The card didn't open")
+            sleep(1)
+        } else {
+            XCTFail("Select didn't offer Change Color")
+        }
+        clear("card")
+        // The card takes the groups' room beside the picture: closed, they are back.
+        if change.exists { change.tap() }
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 5), "The groups didn't come back after the card")
+        pickTool("looks", in: "Paint", of: app)
+        sleep(1)
+        clear("looks")
+        app.buttons["refine-layers"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["refine-layers-panel"].waitForExistence(timeout: 10), "Layers didn't open")
+        sleep(1)
+        holdForScreenshot("landscape-layers")
+    }
+
+    /// Names the moment and holds it, for a screenshot taken from outside (`xcrun simctl io
+    /// <udid> screenshot` on the line `refine-shot: <name>` in the test's output): on its side,
+    /// the app's and the screen's own screenshots come out as the upright screen cropped to the
+    /// side's shape (iOS 27.2).
+    @MainActor
+    private func holdForScreenshot(_ name: String) {
+        print("refine-shot: \(name)")
+        fflush(stdout)
+        sleep(4)
     }
 
     // MARK: - Helpers

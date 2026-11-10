@@ -240,6 +240,8 @@ struct RefineView: View {
     /// Cancel asks first when there are changes to lose.
     @State private var confirmsCancel = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// Compact on a phone on its side, where the tools stand beside the picture (`usesSide`).
+    @Environment(\.verticalSizeClass) private var heightClass
     /// The painter's text size: the Studio clamps its own at `.xxLarge`, and its options lay out
     /// as a column from the accessibility sizes on.
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -303,6 +305,11 @@ struct RefineView: View {
     @State private var topControlsHeight: CGFloat = 0
     /// Whether the rail scrolls and has tools below what shows.
     @State private var railHasMore = false
+    /// Whether the column beside the picture scrolls and has more above what shows.
+    @State private var sideHasMore = false
+    /// Whether the column's tools leave room for the tiny-numbers badge, and the room it takes.
+    @State private var sideBadge = true
+    @State private var sideBadgeRoom: CGFloat = 0
     /// A Tool Guide page's practice canvas (`RefineGuideView`): the tool it teaches over the
     /// practice picture, with Undo, Redo, Layers and Reset above it in place of the screen's
     /// bars, and none of the other tools.
@@ -424,22 +431,31 @@ struct RefineView: View {
         NavigationStack {
             canvas
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if !fullScreen { reservedTools }
+                    if !fullScreen, !usesSide { reservedTools }
                 }
                 .safeAreaInset(edge: .leading, alignment: .top, spacing: 0) {
                     if usesRail, !fullScreen { toolRail }
+                }
+                .safeAreaInset(edge: .trailing, spacing: 0) {
+                    if usesSide, !fullScreen { sideTools }
                 }
                 .background(Theme.paper)
                 .overlay { layersHook }
                 .navigationTitle(screenTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
-                .toolbarVisibility(fullScreen ? .hidden : .visible, for: .navigationBar)
+                .toolbarVisibility(fullScreen || usesSide ? .hidden : .visible, for: .navigationBar)
                 .statusBarHidden(fullScreen)
                 .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
         .onChange(of: base?.id) { landedColors() }
+        // The tools along the bottom are measured afresh when they come back from the side, and
+        // a Layers panel opened beside the picture hangs from the bar's button once upright.
+        .onChange(of: usesSide) {
+            toolsHeight = 0
+            layersFromButton = false
+        }
     }
 
     /// A color picked that a paint has now (poured) is that paint from then on: a look, a repaint
@@ -526,8 +542,8 @@ struct RefineView: View {
                         base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
                         showsAreas: painted == nil)
                         .equatable()
-                    // Bend Line's too: a dashed edge stops a bend as a drawn line does.
-                    if group == .cells || tool == .bendLine, let cellEdges {
+                    // Not Bend Line's: a bend passes over them, re-cutting the cells it crosses.
+                    if group == .cells, let cellEdges {
                         RefineCellEdges(id: cellEdges.id, size: templateSize, path: cellEdges.path, rect: picture)
                             .equatable()
                     }
@@ -594,7 +610,7 @@ struct RefineView: View {
         .clipped()
         .overlay(alignment: .bottom) {
             // Above a taller tool that rises over the canvas (`reservedTools`).
-            status.padding(12).padding(.bottom, fullScreen ? 0 : max(0, toolsMeasured - toolsHeight))
+            status.padding(12).padding(.bottom, fullScreen || usesSide ? 0 : max(0, toolsMeasured - toolsHeight))
         }
         .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         .animation(.easeInOut(duration: 0.2), value: model.phase)
@@ -616,7 +632,8 @@ struct RefineView: View {
         // and the badge are elements of their own, the cells beneath the rest.
         .overlay { cellElements }
         .overlay(alignment: .top) {
-            if !isPractice, !fullScreen {
+            // Beside the picture, they head the tools' column (`sideTools`).
+            if !isPractice, !fullScreen, !usesSide {
                 topControls
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { topControlsHeight = $0 }
                     .padding(topControlsInsets)
@@ -643,7 +660,7 @@ struct RefineView: View {
             if fullScreen { exitFullScreen.padding(12) }
         }
         .popover(item: $card, attachmentAnchor: .rect(.rect(card?.anchor ?? .zero))) { pick in
-            // A sheet where a popover can't be (a wide iPhone in landscape uses the rail).
+            // A sheet where a popover can't be (only the rail's iPad opens it).
             areaCard(pick)
                 .presentationDetents([.medium, .large])
                 .presentationCompactAdaptation(.sheet)
@@ -1298,51 +1315,109 @@ struct RefineView: View {
 
     // MARK: Bars
 
+    /// The top bar's controls; a phone on its side has none, its controls heading the tools'
+    /// column (`sideBar`), so the picture has the screen's whole height.
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", action: askToCancel)
-                .keyboardShortcut(isCovered || fullScreen ? nil : .cancelAction)
-                .accessibilityIdentifier("refine-cancel")
-                .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
-                    Button("Discard Changes", role: .destructive, action: cancel)
-                    Button("Keep Refining", role: .cancel) {}
+        if !usesSide {
+            ToolbarItem(placement: .cancellationAction) { cancelButton }
+            ToolbarItem(placement: .topBarLeading) { guideButton }
+            ToolbarItemGroup(placement: .primaryAction) {
+                // ⌘Z and ⇧⌘Z are the canvas's (`keys`), the full screen's too, where this bar hides.
+                undoButton
+                redoButton
+                layersButton
+            }
+            // A phone's bar has room for its six controls but not the title, which showed as "R…"
+            // (QA, October 28): its middle is left empty there, as the views' menu once filled it.
+            if !usesRail {
+                ToolbarItem(placement: .principal) {
+                    Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
                 }
-        }
-        ToolbarItem(placement: .topBarLeading) {
-            Button("Tool Guide", systemImage: "questionmark.circle") {
-                FeedbackEngine.shared.selectionChanged()
-                guide = RefineGuideTopic.opening(at: tool)
+                .sharedBackgroundVisibility(.hidden)
             }
-            .accessibilityHint(Text(String(
-                localized: "refine.guide.open.hint", defaultValue: "What each tool does, with a picture to try it on.",
-                comment: "Refine screen: VoiceOver hint of the Tool Guide button, which opens a page per tool with a description and a practice canvas")))
-            .accessibilityIdentifier("refine-guide")
+            ToolbarItem(placement: .confirmationAction) { doneButton }
         }
-        ToolbarItemGroup(placement: .primaryAction) {
-            // ⌘Z and ⇧⌘Z are the canvas's (`keys`), the full screen's too, where this bar hides.
-            Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
-                .disabled(!model.canUndo)
-                .accessibilityIdentifier("refine-undo")
-            Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
-                .disabled(!model.canRedo)
-                .accessibilityIdentifier("refine-redo")
-            layersButton
-        }
-        // A phone's bar has room for its six controls but not the title, which showed as "R…"
-        // (QA, October 28): its middle is left empty there, as the views' menu once filled it.
-        if !usesRail {
-            ToolbarItem(placement: .principal) {
-                Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
+    }
+
+    private var cancelButton: some View {
+        Button("Cancel", systemImage: "xmark", action: askToCancel)
+            .keyboardShortcut(isCovered || fullScreen ? nil : .cancelAction)
+            .accessibilityIdentifier("refine-cancel")
+            .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
+                Button("Discard Changes", role: .destructive, action: cancel)
+                Button("Keep Refining", role: .cancel) {}
             }
-            .sharedBackgroundVisibility(.hidden)
+    }
+
+    private var guideButton: some View {
+        Button("Tool Guide", systemImage: "questionmark.circle") {
+            FeedbackEngine.shared.selectionChanged()
+            guide = RefineGuideTopic.opening(at: tool)
         }
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Done", systemImage: "checkmark", action: done)
-                .tint(Theme.signature)
-                .keyboardShortcut(isCovered ? nil : .defaultAction)
-                .accessibilityIdentifier("refine-done")
+        .accessibilityHint(Text(String(
+            localized: "refine.guide.open.hint", defaultValue: "What each tool does, with a picture to try it on.",
+            comment: "Refine screen: VoiceOver hint of the Tool Guide button, which opens a page per tool with a description and a practice canvas")))
+        .accessibilityIdentifier("refine-guide")
+    }
+
+    private var undoButton: some View {
+        Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
+            .disabled(!model.canUndo)
+            .accessibilityIdentifier("refine-undo")
+    }
+
+    private var redoButton: some View {
+        Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
+            .disabled(!model.canRedo)
+            .accessibilityIdentifier("refine-redo")
+    }
+
+    private var doneButton: some View {
+        Button("Done", systemImage: "checkmark", action: done)
+            .tint(Theme.signature)
+            .keyboardShortcut(isCovered ? nil : .defaultAction)
+            .accessibilityIdentifier("refine-done")
+    }
+
+    /// The top bar's controls at the head of the tools' column on a phone on its side: Cancel and
+    /// the Tool Guide, then Undo, Redo, Layers and Done, as the bar has them; two rows where one
+    /// doesn't fit (larger text).
+    private var sideBar: some View {
+        let leading = GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                cancelButton
+                guideButton
+            }
+            .buttonStyle(.glass)
         }
+        let trailing = HStack(spacing: 6) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    undoButton
+                    redoButton
+                    layersButton
+                }
+                .buttonStyle(.glass)
+            }
+            doneButton.buttonStyle(.glassProminent)
+        }
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 0) {
+                leading
+                Spacer(minLength: 6)
+                trailing
+            }
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack(spacing: 0) {
+                    leading
+                    Spacer(minLength: 0)
+                }
+                trailing
+            }
+        }
+        .labelStyle(.iconOnly)
+        .buttonBorderShape(.circle)
     }
 
     /// The tools, keeping the room of the tallest they have been (`toolsHeight`). A taller tool
@@ -1379,20 +1454,7 @@ struct RefineView: View {
     /// bent says what comes next.
     private var tools: some View {
         VStack(spacing: 12) {
-            // The hint keeps its room from the moment the Curve is picked, unseen until a curve
-            // waits to be bent: appearing then, it moved the picture up under the finger about to
-            // bend it (QA, October 29).
-            if tool == .shape, shape == .curve {
-                Text(hint(for: .shape))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 480)
-                    .opacity(curve != nil ? 1 : 0)
-                    .accessibilityHidden(curve == nil)
-                    .accessibilityIdentifier("refine-hint")
-            }
+            curveHint
             studioBar
         }
         // On iPhone the tip on drawing hangs from the top of the Pen's options, over the picture
@@ -1407,6 +1469,24 @@ struct RefineView: View {
         // Like the painting's bars: larger text sizes reach the buttons through the Large
         // Content Viewer.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    /// What comes next for a curve waiting to be bent. It keeps its room from the moment the Curve
+    /// is picked, unseen until then: appearing, it moved the picture up under the finger about to
+    /// bend it (QA, October 29).
+    @ViewBuilder
+    private var curveHint: some View {
+        if tool == .shape, shape == .curve {
+            Text(hint(for: .shape))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 480)
+                .opacity(curve != nil ? 1 : 0)
+                .accessibilityHidden(curve == nil)
+                .accessibilityIdentifier("refine-hint")
+        }
     }
 
     /// How `tool` works: its button's VoiceOver hint (a curve waiting to be bent also shows it).
@@ -1623,8 +1703,101 @@ struct RefineView: View {
 
 extension RefineView {
     /// Whether every tool stands in a rail along the leading edge (iPad), rather than in group tabs
-    /// over a row of the group's tools (iPhone).
-    private var usesRail: Bool { sizeClass == .regular }
+    /// over a row of the group's tools (iPhone, and a phone on its side however wide).
+    private var usesRail: Bool { sizeClass == .regular && !usesSide }
+
+    /// Whether the tools stand in a column beside the picture rather than under it: a phone on its
+    /// side, where under them the picture was about 190 × 130 points, gone with the looks, and the
+    /// widest phones' rail and card left it little more (QA, November 7 and 9).
+    private var usesSide: Bool { heightClass == .compact && !isPractice }
+
+    /// What the column's scroll view reports: whether there is more above, and how tall its
+    /// tools are against its room.
+    private struct SideScroll: Equatable {
+        var above: Bool
+        var content: CGFloat
+        var room: CGFloat
+    }
+
+    /// The column's width: the groups' five tabs and a group's five tools fit across it.
+    private static let sideWidth: CGFloat = 300
+
+    /// The column's foot: Start From and, with `badge`, the tiny-numbers badge, then the tool's
+    /// options, the palette, the groups and the tools.
+    private func sideToolsFoot(badge: Bool) -> some View {
+        VStack(spacing: 12) {
+            // An area's card takes the room of everything but Select's band: under the badge,
+            // over the groups and the tools, it was cut at the top of the smallest phone.
+            if barCard == nil {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        startChooser
+                        if badge { tinyBadge }
+                    }
+                    VStack(spacing: 8) {
+                        startChooser
+                        if badge { tinyBadge }
+                    }
+                }
+                .animation(
+                    model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
+                    value: model.note)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if badge { sideBadgeRoom = height + 12 }
+                }
+            }
+            curveHint
+            studioBar
+        }
+    }
+
+    /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
+    /// picture beside it the screen's whole height. The top bar's controls head it; at its foot,
+    /// under the thumb, Start From and the badge, off the picture, then the tool's options (bare
+    /// on the paper), the palette, the groups and the tools, as along the bottom, scrolling where
+    /// a tool's options are taller than the screen.
+    private var sideTools: some View {
+        VStack(spacing: 12) {
+            sideBar
+            // The bar's controls stay put while the tools scroll: scrolled with them, Done and
+            // Undo left the screen with the looks. One scroll view, the tools at its foot where
+            // they fit: a choice of copies would make the area's card anew as it grew, closing
+            // its color picker.
+            ScrollView { sideToolsFoot(badge: sideBadge) }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicatorsFlash(onAppear: true)
+                .defaultScrollAnchor(.bottom)
+                // Its head fades while there is more above: cut off hard, an area's card looked
+                // broken. The badge gives way before the tools scroll: scrolled, it lay half
+                // faded under the head with the looks.
+                .onScrollGeometryChange(for: SideScroll.self) { geometry in
+                    SideScroll(
+                        above: geometry.contentOffset.y + geometry.contentInsets.top > 1,
+                        content: geometry.contentSize.height, room: geometry.containerSize.height)
+                } action: { _, scroll in
+                    sideHasMore = scroll.above
+                    sideBadge = scroll.content + (sideBadge ? 0 : sideBadgeRoom) <= scroll.room + 0.5
+                }
+                .mask {
+                    VStack(spacing: 0) {
+                        LinearGradient(colors: [.black.opacity(sideHasMore ? 0 : 1), .black], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 40)
+                        Color.black
+                    }
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: sideHasMore)
+                }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(width: Self.sideWidth)
+        .gentleTip(.refineDraw, active: !isPractice, arrowEdge: .trailing)
+        // The room the badge was measured to need included Start From beside it: when Start From
+        // comes or goes, the badge is tried again, and gives way again, measured afresh, if it
+        // still doesn't fit (once the first edit took Start From away, it never came back).
+        .onChange(of: showsStartFrom) { sideBadge = true }
+        .background(Theme.paper)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
 
     /// Whether the palette shows: in Cells and Paint, but for Make Cell, whose cell takes the
     /// photo's color (QA, October 28: the palette there looked like the color it would use).
@@ -1650,16 +1823,27 @@ extension RefineView {
                 .disabled(base == nil)
                 .accessibilityIdentifier("refine-practice-try")
         }
-        if !usesRail, practice == nil {
-            Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
+        // Beside the picture, an area's card takes their room (`sideTools`).
+        if !usesRail, practice == nil, !(usesSide && barCard != nil) {
+            let groups = Picker("Tools", selection: Binding(get: { group }, set: { choose($0) })) {
                 ForEach(RefineGroup.allCases, id: \.self) { kind in
                     Self.groupName(kind).tag(kind)
                 }
             }
             .pickerStyle(.segmented)
-            .frame(maxWidth: 420)
             .disabled(!model.hasLineArtInput)
             .accessibilityIdentifier("refine-groups")
+            if usesSide {
+                // A segmented control's segments are as wide as its widest: in the column it cut
+                // "Numbers" short. Each name at its own width there, smaller where it must be.
+                ViewThatFits(in: .horizontal) {
+                    sideGroups.font(.subheadline)
+                    sideGroups.font(.footnote)
+                    groups
+                }
+            } else {
+                groups.frame(maxWidth: 420)
+            }
             // Centred where the row fits (a group holds at most five), scrolling where it doesn't
             // (larger text).
             ViewThatFits(in: .horizontal) {
@@ -1668,6 +1852,42 @@ extension RefineView {
                     .scrollIndicators(.hidden)
             }
         }
+    }
+
+    /// The groups in the column beside the picture: each name a button at its own width, the
+    /// group on screen marked.
+    private var sideGroups: some View {
+        HStack(spacing: 2) {
+            ForEach(RefineGroup.allCases, id: \.self) { kind in
+                let selected = kind == group
+                Button { choose(kind) } label: {
+                    Self.groupName(kind)
+                        .fontWeight(selected ? .semibold : .regular)
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 6)
+                        .background {
+                            if selected {
+                                Capsule()
+                                    .fill(Theme.surface)
+                                    .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(.fill.tertiary, in: .capsule)
+        .fixedSize()
+        .disabled(!model.hasLineArtInput)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Tools"))
+        .accessibilityIdentifier("refine-groups")
     }
 
     /// The group's tools, each a round button.
@@ -1953,7 +2173,8 @@ extension RefineView {
         .tint(Theme.signature)
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        // Beside the picture, on the paper: boxed, the column was all boxes.
+        .glassEffect(usesSide ? .identity : .regular, in: .rect(cornerRadius: 22))
         .disabled(!model.hasLineArtInput)
     }
 
@@ -2030,10 +2251,11 @@ extension RefineView {
     }
 
     /// The Layers button and its panel (`RefineLayersPanel`), the picked tool's layer marked: from
-    /// the button on a practice canvas, from `layersHook` under the bar's (`RefineLayersAnchor`).
+    /// the button on a practice canvas and in the column beside the picture (`sideBar`), from
+    /// `layersHook` under the bar's (`RefineLayersAnchor`).
     private var layersButton: some View {
         layersButtonAlone.popover(
-            isPresented: Binding(get: { showsLayers && (isPractice || layersFromButton) }, set: { showsLayers = $0 })
+            isPresented: Binding(get: { showsLayers && (isPractice || usesSide || layersFromButton) }, set: { showsLayers = $0 })
         ) { layersPanel }
     }
 
@@ -2049,7 +2271,7 @@ extension RefineView {
             .refineLayersAnchor(layersAnchor)
             .popover(
                 isPresented: Binding(
-                    get: { showsLayers && !isPractice && !layersFromButton && layersAnchor.buttonFrame != nil },
+                    get: { showsLayers && !isPractice && !usesSide && !layersFromButton && layersAnchor.buttonFrame != nil },
                     set: { showsLayers = $0 }),
                 // Its arrow a little under the button, not flush with the bar's glass.
                 attachmentAnchor: .rect(.rect((layersAnchor.buttonFrame ?? .zero).offsetBy(dx: 0, dy: 4))), arrowEdge: .top
@@ -2063,7 +2285,7 @@ extension RefineView {
     private var layersButtonAlone: some View {
         Button("Layers", systemImage: "square.3.layers.3d") {
             FeedbackEngine.shared.selectionChanged()
-            layersFromButton = !isPractice && layersAnchor.buttonOnScreen == nil
+            layersFromButton = !isPractice && !usesSide && layersAnchor.buttonOnScreen == nil
             showsLayers = true
         }
         .accessibilityHint(Text(String(
@@ -2522,13 +2744,19 @@ extension RefineView {
             trailing: max(12, canvasSize.width - shown.maxX + 8))
     }
 
+    /// Start From is asked until the first edit, on a template with a photo to generate from,
+    /// and out of the way while a note shows.
+    private var showsStartFrom: Bool {
+        model.refinements.edits.isEmpty && submitted.isEmpty && model.hasLineArtInput && !model.isScratch && model.note == nil
+    }
+
     /// Where the template starts from, asked until the first edit: what the generator made (the
     /// default), or the photo as one area (Blank), which the painter's lines and paint then make
     /// into the picture. Out of the way while a note shows at the top.
     @ViewBuilder
     private var startChooser: some View {
         // A page from scratch has nothing to generate: Blank is all it is.
-        if model.refinements.edits.isEmpty, submitted.isEmpty, model.hasLineArtInput, !model.isScratch, model.note == nil {
+        if showsStartFrom {
             Picker("Start From", selection: Binding(get: { model.refinements.start }, set: { model.start(from: $0) })) {
                 Text("Generated").tag(TemplateRefinements.Start.generated)
                 Text("Blank").tag(TemplateRefinements.Start.blank)

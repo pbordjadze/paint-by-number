@@ -1,6 +1,6 @@
 # Acknowledgements
 
-Ravenna builds on others' work. Everything here is credited with its source; nothing is invented.
+Paint by Mosaic builds on others' work. Everything here is credited with its source; nothing is invented.
 
 ## Pictures
 
@@ -84,8 +84,8 @@ Acknowledgements credits the published methods it implements as Paint by Moonlig
 domain transform (Eduardo Gastal and Manuel Oliveira, 2011), relative total variation (Li Xu,
 Qiong Yan, Yang Xia and Jiaya Jia, 2012), Potrace (Peter Selinger, 2003) and Douglas-Peucker
 (David Douglas and Thomas Peucker, 1973), beside the ones above. PaintCore's own ports of Earcut
-and Polylabel are under the same ISC License as Ravenna's (below). Paint by Moonlight's
-line-drawing model (Informative Drawings) and its picture library are not shipped in Ravenna.
+and Polylabel are under the same ISC License as Paint by Mosaic's (below). Paint by Moonlight's
+line-drawing model (Informative Drawings) and its picture library are not shipped in Paint by Mosaic.
 
 ## Sound
 

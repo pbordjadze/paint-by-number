@@ -10,10 +10,12 @@ extension TemplateEditor {
     public static func reshapedChain(
         on template: Template, from: SIMD2<Float>, to: SIMD2<Float>, reach: Float = tapReach, target: ReshapeTarget = .any
     ) -> (original: [SIMD2<Float>], moved: [SIMD2<Float>])? {
-        guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite, var work = try? EditWork(template),
-              let plan = try? work.reshapePlan(
-                from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target,
-                checking: false)
+        guard from.x.isFinite, from.y.isFinite, to.x.isFinite, to.y.isFinite, var work = try? EditWork(template) else { return nil }
+        // Bend Line's bow as it is first tried (`TemplateEditor.apply`).
+        work.roundedBows = target == .ink
+        guard let plan = try? work.reshapePlan(
+            from: Lattice.clampedPoint(from), to: Lattice.clampedPoint(to), reach: latticeReach(reach), target: target,
+            checking: false)
         else { return nil }
         return (plan.original.map(Lattice.position), plan.path.map(Lattice.position))
     }
@@ -44,6 +46,25 @@ extension EditWork {
         /// Where the moved chain meets the drawing: its ends that stay, and where the strokes it
         /// carries end on it.
         var joints: Set<LatticePoint> = []
+        /// Bend Line's chain (`ReshapeTarget.ink`): the drawn line from ink junction to ink
+        /// junction, its drawn edges and strokes in order along it, laid again where it goes
+        /// (`bendInk`) rather than moved point by point.
+        var members: [InkMember] = []
+        /// The chain's points from end to end with the bend's ends made vertices (a loop's first
+        /// again last), and where each piece starts among them.
+        var flat: [LatticePoint] = []
+        var starts: [Int] = []
+        /// The moved points of the step into each point of `flat`: the points laid along it, then
+        /// the point itself moved (the first point's alone).
+        var steps: [[LatticePoint]] = []
+        var closed = false
+        var ink: Bool { !members.isEmpty }
+    }
+
+    /// A drawn line of Bend Line's chain, walked from its first point to its last or back.
+    enum InkMember: Equatable {
+        case edge(HalfEdge)
+        case stroke(Int, reversed: Bool)
     }
 
     /// How far apart, at most, the points of a step of a chain that a reshape bends are laid,
@@ -55,12 +76,17 @@ extension EditWork {
     /// as it is, so a long outline bends near the finger rather than along its whole length.
     static var reshapeSpread: Int64 { 24 * Lattice.unit }
 
-    /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to a held
-    /// end: 1 at the grabbed point, 0 at the end, with no slope at either (a smoothstep, the
-    /// raised cosine's cubic twin, in `+ - *` alone, so it is the same on every device).
-    static func falloff(_ u: Double) -> Double {
+    /// The weight of a point a fraction `u` (0 to 1) of the way from the grabbed point to where
+    /// the bend ends: 1 at the grabbed point, 0 there, in `+ - *` alone, so it is the same on every
+    /// device. Where the line runs on unmoved (`pinned` false) it is a smoothstep, no slope at
+    /// either end, as a rod clamped there bends; where Bend Line's bend ends on a junction
+    /// (`pinned`, with `roundedBows`) it is the bow of a rod pinned there, half as sharp under the
+    /// finger, meeting the junction at a slant (editor 6: a long drag against a near junction made
+    /// a point, not a bow). Move Edge's and older reshapes keep the smoothstep: leaving a junction
+    /// along the line, they meet no line there at a shallow angle.
+    static func falloff(_ u: Double, pinned: Bool = false) -> Double {
         let c = min(max(u, 0), 1)
-        return 1 - c * c * (3 - 2 * c)
+        return pinned ? 1 - c * c * (1.5 - 0.5 * c) : 1 - c * c * (3 - 2 * c)
     }
 
     /// Refine's Bend Line and Move Edge (`TemplateEditor.Edit.reshape`): the line nearest `from`
@@ -74,6 +100,7 @@ extension EditWork {
     mutating func reshape(from: LatticePoint, to: LatticePoint, reach: Int64, target: TemplateEditor.ReshapeTarget) throws {
         let plan = try reshapePlan(from: from, to: to, reach: reach, target: target, checking: true)
         guard to != plan.grabbed else { return }
+        if plan.ink { return try bendInk(plan) }
         var areas = Set<Int>()
         if let i = plan.stroke {
             strokes[i].points = plan.moved[0].map(Lattice.position)
@@ -140,19 +167,21 @@ extension EditWork {
     /// frame), drawn or undrawn, continued through every vertex where it and one other edge alike
     /// (both drawn, or both undrawn) end, every edge counted and no stroke (the Line Eraser's
     /// `eraseLine` counts drawn edges and strokes alone, so its line runs on past an undrawn edge
-    /// and stops at a vertex where a stroke ends); or a drawn stroke. Its point nearest `from` goes to `to` and
+    /// and stops at a vertex where a stroke ends); or a drawn stroke. Bend Line's (`.ink`) takes
+    /// the Line Eraser's line, drawn edges and strokes alike (`members`), laid again by
+    /// `bendInk`. Its point nearest `from` goes to `to` and
     /// the rest follows, each point by the drag times its weight (`falloff`) along the chain's
     /// length: 1 at the grabbed point, 0 a spread away (`reshapeSpread`, or three times the drag)
     /// or at the chain's end if that is nearer, which stays on its junction; beyond, the chain
     /// keeps its points, the first of them made a vertex. A loop through no junction is held at
     /// most at its far point, half its length round. A stroke's end that meets no line is free:
-    /// within the spread, the stretch from the grabbed point to it moves whole (a short stroke free
-    /// at both ends moves as it is); beyond it, it stays. Strokes ending on the chain are carried,
+    /// it isn't held, its side bending as far as the held side does (`bend`), so the end, if that
+    /// near, follows part of the way (a bow; until editor 6 the stretch to it moved whole, a
+    /// step); beyond, it stays. Strokes ending on the chain are carried,
     /// their end moving with the point of it they meet. Where a step's two ends move at least half
     /// a unit apart, it bends: points are added along it so that, moved, they are `reshapeStep` or
-    /// less apart (a stretch moved whole stays as it was). With `checking`, the moved chain must
-    /// lie on the canvas, be simple, and meet the drawing only where it met it: at its held ends
-    /// and the strokes it carries.
+    /// less apart. With `checking`, the moved chain must lie on the canvas, be simple, and meet
+    /// the drawing only where it met it: at its held ends and the strokes it carries (`checkReshape`).
     mutating func reshapePlan(
         from: LatticePoint, to: LatticePoint, reach: Int64, target: TemplateEditor.ReshapeTarget, checking: Bool
     ) throws -> Reshape {
@@ -200,7 +229,85 @@ extension EditWork {
         var pieces: [[LatticePoint]]
         var closed = false, startFree = false, endFree = false
         var grabPiece = 0
-        if let e0 = grab.edge {
+        /// Whether `p` lies on a line other than stroke `i`: an edge, drawn or not, or another
+        /// drawn stroke.
+        func held(_ p: LatticePoint, besides i: Int) -> Bool {
+            func on(_ q: [LatticePoint]) -> Bool {
+                zip(q, q.dropFirst()).contains { a, b in Lattice.orient(a, b, p) == 0 && Lattice.between(a, b, p) }
+            }
+            for e in t.edges.indices where !edgeDead[e] {
+                let b = box(of: e)
+                guard p.x >= b.lo.x, p.x <= b.hi.x, p.y >= b.lo.y, p.y <= b.hi.y else { continue }
+                if on(lattice(of: e)) { return true }
+            }
+            return lines.contains { $0.index != i && on($0.points) }
+        }
+        if target == .ink, !(grab.stroke.map { strokes[$0].writing } ?? false) {
+            // The drawn line as the Line Eraser takes it (`eraseLine`): drawn edges and strokes
+            // continued through every point where exactly one other of them ends, whatever
+            // undrawn boundaries meet it there, so the line seen bends as one. Writing is letters
+            // over the drawing, not part of it: a stroke of it grabbed is moved point by point as
+            // before, keeping it writing, and no line runs on into one.
+            var geometry: [(member: InkMember, points: [LatticePoint])] = []
+            for e in t.edges.indices where !edgeDead[e] && isInked(e) && !isFrame(e) {
+                geometry.append((.edge(HalfEdge(edge: e, reversed: false)), lattice(of: e)))
+            }
+            for line in lines where LineLayer.isDrawn(strokes[line.index].layer) && !strokes[line.index].writing {
+                geometry.append((.stroke(line.index, reversed: false), line.points))
+            }
+            let first = geometry.firstIndex {
+                if let e = grab.edge { return $0.member == .edge(HalfEdge(edge: e, reversed: false)) }
+                return $0.member == .stroke(grab.stroke!, reversed: false)
+            }!
+            var ends: [LatticePoint: [(line: Int, atStart: Bool)]] = [:]
+            for (k, g) in geometry.enumerated() {
+                ends[g.points[0], default: []].append((k, true))
+                ends[g.points[g.points.count - 1], default: []].append((k, false))
+            }
+            /// The line going on from line `k`'s start or end, when it is the one other ending there.
+            func onward(_ k: Int, atStart: Bool) -> (line: Int, atStart: Bool)? {
+                let pts = geometry[k].points
+                guard let here = ends[atStart ? pts[0] : pts[pts.count - 1]], here.count == 2 else { return nil }
+                return here.first { !($0.line == k && $0.atStart == atStart) }
+            }
+            var chain = [(line: first, reversed: false)]
+            var seen: Set<Int> = [first]
+            var current = chain[0]
+            while let next = onward(current.line, atStart: current.reversed) {
+                if next.line == first {
+                    closed = true
+                    break
+                }
+                guard seen.insert(next.line).inserted else { break }
+                current = (next.line, !next.atStart)
+                chain.append(current)
+            }
+            if !closed {
+                current = chain[0]
+                while let next = onward(current.line, atStart: !current.reversed), seen.insert(next.line).inserted {
+                    current = (next.line, next.atStart)
+                    chain.insert(current, at: 0)
+                    grabPiece += 1
+                }
+            }
+            pieces = chain.map { c in
+                let pts = geometry[c.line].points
+                return c.reversed ? pts.reversed() : pts
+            }
+            plan.members = chain.map { c in
+                switch geometry[c.line].member {
+                case .edge(let h): .edge(HalfEdge(edge: h.edge, reversed: c.reversed))
+                case .stroke(let i, _): .stroke(i, reversed: c.reversed)
+                }
+            }
+            if !closed {
+                // An end is free where the line is a stroke that meets nothing there.
+                if case .stroke(let i, _) = plan.members[0] { startFree = !held(pieces[0][0], besides: i) }
+                if case .stroke(let i, _) = plan.members[plan.members.count - 1] {
+                    endFree = !held(pieces[pieces.count - 1][pieces[pieces.count - 1].count - 1], besides: i)
+                }
+            }
+        } else if let e0 = grab.edge {
             var ends: [LatticePoint: [(edge: Int, atStart: Bool)]] = [:]
             for e in t.edges.indices where !edgeDead[e] {
                 ends[latticePoint(e, 0), default: []].append((e, true))
@@ -246,20 +353,8 @@ extension EditWork {
             pieces = [pts]
             closed = pts.first == pts.last
             if !closed {
-                /// Whether `p` lies on a line other than the stroke.
-                func held(_ p: LatticePoint) -> Bool {
-                    func on(_ q: [LatticePoint]) -> Bool {
-                        zip(q, q.dropFirst()).contains { a, b in Lattice.orient(a, b, p) == 0 && Lattice.between(a, b, p) }
-                    }
-                    for e in t.edges.indices where !edgeDead[e] {
-                        let b = box(of: e)
-                        guard p.x >= b.lo.x, p.x <= b.hi.x, p.y >= b.lo.y, p.y <= b.hi.y else { continue }
-                        if on(lattice(of: e)) { return true }
-                    }
-                    return lines.contains { $0.index != i && on($0.points) }
-                }
-                startFree = !held(pts[0])
-                endFree = !held(pts[pts.count - 1])
+                startFree = !held(pts[0], besides: i)
+                endFree = !held(pts[pts.count - 1], besides: i)
             }
         }
         plan.original = pieces[0] + pieces.dropFirst().flatMap { $0.dropFirst() }
@@ -272,7 +367,11 @@ extension EditWork {
         var inserts = [[(segment: Int, point: LatticePoint)]](repeating: [], count: pieces.count)
         inserts[grabPiece].append((grab.segment, grab.point))
         var attached: [(stroke: Int, atStart: Bool, point: LatticePoint)] = []
-        for (i, pts) in lines where i != plan.stroke && pts.first != pts.last {
+        let chainStrokes = Set(plan.members.compactMap { m -> Int? in
+            if case .stroke(let i, _) = m { return i }
+            return nil
+        } + (plan.stroke.map { [$0] } ?? []))
+        for (i, pts) in lines where !chainStrokes.contains(i) && pts.first != pts.last {
             for atStart in [true, false] {
                 let p = atStart ? pts[0] : pts[pts.count - 1]
                 guard !plan.joints.contains(p) else { continue }
@@ -306,13 +405,33 @@ extension EditWork {
         func grabbedAt() -> Double { s[pieceStart[grabPiece] + pieces[grabPiece].firstIndex(of: grab.point)!] }
         var sg = grabbedAt()
         guard closed || (sg > 0 || startFree) && (sg < total || endFree) else {
-            throw EditFailure.invalid("the line is held where it was grabbed")
+            throw EditFailure.invalid(TemplateEditor.lineHeldThere)
         }
-        // A free end within the bend's spread moves whole with the grabbed point; one beyond it stays.
-        let freeBefore = !closed && startFree && sg <= spread, freeAfter = !closed && endFree && total - sg <= spread
         /// How far along the chain the bend runs before the grabbed point and after it: the
-        /// spread, at most to the chain's end (a loop's far point).
-        func bend(after: Bool) -> Double { closed ? min(spread, total / 2) : min(spread, after ? total - sg : sg) }
+        /// spread, at most to a held end (a loop's far point). A free end is not held (until
+        /// editor 6 the stretch to one within the spread moved whole, a step): its side bends as
+        /// far as the held side does, so the bow is even under the finger and the free end, if
+        /// that near, follows part of the way (painting-company row 277); with both ends free,
+        /// the spread.
+        func bend(after: Bool) -> Double {
+            if closed { return min(spread, total / 2) }
+            let free = after ? endFree : startFree
+            if free {
+                if after ? startFree : endFree { return spread }
+                return max(bend(after: !after), min(spread, after ? total - sg : sg))
+            }
+            return min(spread, after ? total - sg : sg)
+        }
+        /// Whether the bend on that side ends on the chain's held end (a junction), not short of it;
+        /// a free side bends as the held one does, so the two halves of the bow match.
+        func pinned(after: Bool) -> Bool {
+            if closed || !roundedBows { return false }
+            if after ? endFree : startFree { return !(after ? startFree : endFree) && pinned(after: !after) }
+            return (after ? total - sg : sg) <= spread
+        }
+        // A free end within the bend's reach moves; one beyond it stays.
+        let freeBefore = !closed && startFree && sg <= bend(after: false)
+        let freeAfter = !closed && endFree && total - sg <= bend(after: true)
         /// Makes the point `at` along the chain a vertex, so that the chain beyond it, which
         /// doesn't move, keeps its points exactly.
         func hold(_ at: Double) {
@@ -333,39 +452,42 @@ extension EditWork {
             if closed {
                 d = min(abs(at - sg), total - abs(at - sg))
             } else if at <= sg {
-                if freeBefore { return 1 }
                 d = sg - at
             } else {
-                if freeAfter { return 1 }
                 d = at - sg
             }
             let r = bend(after: at > sg)
-            return r > 0 ? Self.falloff(d / r) : 1
+            return r > 0 ? Self.falloff(d / r, pinned: pinned(after: at > sg)) : 1
         }
         func moved(_ p: LatticePoint, _ w: Double) -> LatticePoint {
             p &+ LatticePoint(Int64((w * Double(delta.x)).rounded()), Int64((w * Double(delta.y)).rounded()))
         }
         let w = s.map(weight)
         let step = Double(Self.reshapeStep)
-        for (k, piece) in pieces.enumerated() {
-            var out: [LatticePoint] = []
-            for j in piece.indices {
-                let i = pieceStart[k] + j
-                if j > 0, abs(w[i] - w[i - 1]) * drag >= Double(Lattice.unit) / 2 {
-                    // The falloff is at its steepest 1.5 times its mean slope over the side, so a
-                    // moved step is at most this many times as long as it was.
-                    let length = s[i] - s[i - 1], stretch = 1 + 1.5 * drag / bend(after: s[i - 1] + length / 2 > sg)
-                    let n = Int64((length * stretch / step).rounded(.up))
-                    let a = flat[i - 1], d = flat[i] &- a
-                    for q in stride(from: Int64(1), to: n, by: 1) {
-                        let p = LatticePoint(a.x + Lattice.mulDiv(d.x, q, n), a.y + Lattice.mulDiv(d.y, q, n))
-                        out.append(moved(p, weight(s[i - 1] + length * Double(q) / Double(n))))
-                    }
+        var steps = [[LatticePoint]](repeating: [], count: flat.count)
+        for i in flat.indices {
+            if i > 0, abs(w[i] - w[i - 1]) * drag >= Double(Lattice.unit) / 2 {
+                // Either falloff is at its steepest 1.5 times its mean slope over the side, so a
+                // moved step is at most this many times as long as it was.
+                let length = s[i] - s[i - 1], stretch = 1 + 1.5 * drag / bend(after: s[i - 1] + length / 2 > sg)
+                let n = Int64((length * stretch / step).rounded(.up))
+                let a = flat[i - 1], d = flat[i] &- a
+                for q in stride(from: Int64(1), to: n, by: 1) {
+                    let p = LatticePoint(a.x + Lattice.mulDiv(d.x, q, n), a.y + Lattice.mulDiv(d.y, q, n))
+                    steps[i].append(moved(p, weight(s[i - 1] + length * Double(q) / Double(n))))
                 }
-                out.append(moved(flat[i], w[i]))
             }
+            steps[i].append(moved(flat[i], w[i]))
+        }
+        for (k, piece) in pieces.enumerated() {
+            let start = pieceStart[k]
+            let out = [steps[start].last!] + (start + 1..<start + piece.count).flatMap { steps[$0] }
             plan.moved.append(Self.dedupe(out))
         }
+        plan.flat = flat
+        plan.starts = pieceStart
+        plan.steps = steps
+        plan.closed = closed
         plan.path = plan.moved[0] + plan.moved.dropFirst().flatMap { $0.dropFirst() }
         for a in attached {
             let i = flat.firstIndex(of: a.point)!
@@ -405,9 +527,10 @@ extension EditWork {
     /// Whether the moved chain of `plan`, and the strokes it carries, meet the rest of the
     /// drawing (every live edge, drawn or not, and `lines`, the drawn strokes as they lie) only
     /// where they are meant to: a reshape moves points and never re-cuts areas, so it can't cross
-    /// an undrawn edge between paints either (Refine shows those while Bend Line is in hand): a moved
-    /// step touches another line only at one of its own ends that is a joint of its line (the
-    /// chain's held ends and where carried strokes meet it; a carried stroke's ends).
+    /// an undrawn edge between paints either; Bend Line's chain is laid again, cutting the areas it
+    /// crosses (`bendInk`), so only ink and the frame stop it (the strokes it carries stay in their
+    /// areas). A moved step touches another line only at one of its own ends that is a joint of
+    /// its line (the chain's held ends and where carried strokes meet it; a carried stroke's ends).
     func checkReshape(_ plan: Reshape, strokes lines: [(index: Int, points: [LatticePoint])]) throws {
         struct Moving {
             var points: [LatticePoint]
@@ -423,8 +546,14 @@ extension EditWork {
             let steps = first && last ? 0..<n : first ? 0..<1 : (n - 1)..<n
             moving.append(Moving(points: c.points, steps: steps, joints: [c.points[0], c.points[n]]))
         }
-        let chainEdges = Set(plan.halves.map(\.edge))
-        let still = Set(plan.carried.map(\.stroke) + (plan.stroke.map { [$0] } ?? []))
+        var chainEdges = Set(plan.halves.map(\.edge))
+        var still = Set(plan.carried.map(\.stroke) + (plan.stroke.map { [$0] } ?? []))
+        for m in plan.members {
+            switch m {
+            case .edge(let h): chainEdges.insert(h.edge)
+            case .stroke(let i, _): still.insert(i)
+            }
+        }
         var fixed: [[LatticePoint]] = []
         var lo = plan.path[0], hi = lo
         for m in moving { for p in m.points { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) } }
@@ -433,9 +562,11 @@ extension EditWork {
             for p in pts { a = pointwiseMin(a, p); b = pointwiseMax(b, p) }
             return a.x <= hi.x && b.x >= lo.x && a.y <= hi.y && b.y >= lo.y
         }
+        var undrawn: [[LatticePoint]] = []
         for e in t.edges.indices where !edgeDead[e] && !chainEdges.contains(e) {
             let pts = lattice(of: e)
-            if near(pts) { fixed.append(pts) }
+            guard near(pts) else { continue }
+            if plan.ink && !isInked(e) && !isFrame(e) { undrawn.append(pts) } else { fixed.append(pts) }
         }
         for line in lines where !still.contains(line.index) && near(line.points) { fixed.append(line.points) }
 
@@ -453,7 +584,178 @@ extension EditWork {
         }
         for (i, m) in moving.enumerated() {
             for other in fixed { try check(m, against: other) }
+            if i > 0 { for other in undrawn { try check(m, against: other) } }
             for (j, n) in moving.enumerated() where j != i { try check(m, against: n.points) }
         }
+    }
+
+    /// Bend Line (`ReshapeTarget.ink`): the stretch of the drawn line the bend moves is lifted off
+    /// the drawing (its edges left as undrawn boundaries, its strokes taken out) and laid again
+    /// where it goes, in its own layer and weight, as a drawn line is (`drawRun`): cutting the
+    /// areas it crosses. The strip it swept over then takes the paint of the side it was pulled
+    /// from, as a reshape's does: each area of the strip along the old line joins the area across
+    /// it (the one it shares most of the old line with), and an area of the strip that doesn't
+    /// meet the old line joins the strip's area beside it. What still parts the strip's areas, and
+    /// what is left of the old line between areas that don't join, stays an undrawn boundary.
+    mutating func bendInk(_ plan: Reshape) throws {
+        let flat = plan.flat, n = flat.count
+        // A point moves when it lands elsewhere on the lattice (a loop's far point, where the
+        // bend stops both ways round, may keep a weight a hair above 0).
+        let moves = flat.indices.map { plan.steps[$0].last! != flat[$0] }
+        // The stretch that moves, in order along the line from one still point (a held end, where
+        // the bend stops, or a free end) to the other; a loop's from its far point round to it.
+        var order: [Int]
+        if !plan.closed {
+            guard let first = moves.firstIndex(of: true), let last = moves.lastIndex(of: true) else { return }
+            order = Array(max(first - 1, 0)...min(last + 1, n - 1))
+        } else {
+            let m = n - 1
+            guard moves.contains(true) else { return }
+            guard let z = (0..<m).first(where: { !moves[$0] && moves[($0 + 1) % m] }) else {
+                throw EditFailure.invalid("the loop would move whole")
+            }
+            order = [z]
+            var k = z
+            repeat {
+                k = (k + 1) % m
+                order.append(k)
+            } while moves[k] && k != z
+        }
+        /// The moved points of the step into point `k` of the stretch (a loop's step into its first
+        /// point is the one into its last).
+        func steps(into k: Int) -> [LatticePoint] { plan.closed && k == 0 ? plan.steps[n - 1] : plan.steps[k] }
+        let old = order.map { flat[$0] }
+        let laid = Self.dedupe([plan.steps[order[0]].last!] + order.dropFirst().flatMap { steps(into: $0) })
+        // Where the bend stops inside the line (cut there), and the points it moves.
+        let stops = Set([order[0], order[order.count - 1]].filter { !moves[$0] }.map { flat[$0] })
+        let moving = Set(order.filter { moves[$0] }.map { flat[$0] })
+        let stretch = Set(old)
+
+        var layer = LineLayer.outline.rawValue, weight: UInt8 = 255
+        for (k, member) in plan.members.enumerated() {
+            let start = plan.starts[k], end = k + 1 < plan.starts.count ? plan.starts[k + 1] : n - 1
+            let points = Array(flat[start...end])
+            switch member {
+            case .edge(let h):
+                if points.contains(plan.grabbed) { (layer, weight) = (layers[h.edge], weights[h.edge]) }
+                guard points.contains(where: moving.contains) else { continue }
+                // Cut where the bend ends, inside the edge: the part beyond keeps its ink. The
+                // point where it ends was rounded to the lattice, so it may lie beside the edge's
+                // segment rather than on it (`split` takes it there).
+                let own = lattice(of: h.edge)
+                var cuts: [(segment: Int, point: LatticePoint)] = []
+                for p in stops where points.dropFirst().dropLast().contains(p) && !own.contains(p) {
+                    let j = (0..<(own.count - 1)).min { a, b in
+                        let x = Lattice.nearest(to: p, on: own[a], own[a + 1]).distanceSquared
+                        let y = Lattice.nearest(to: p, on: own[b], own[b + 1]).distanceSquared
+                        return x != y ? x < y : a < b
+                    }!
+                    cuts.append((j, p))
+                }
+                cuts += stops.filter { own.dropFirst().dropLast().contains($0) }.map { p in (own.firstIndex(of: p)!, p) }
+                // A piece is in the stretch when all its points are: the grabbed point and the
+                // points a bend adds lie inside a step, so a straight edge has none of them.
+                for e in split(edge: h.edge, at: cuts) where lattice(of: e).allSatisfy(stretch.contains) {
+                    layers[e] = LineLayer.color.rawValue
+                    weights[e] = colorWeight(t.regions[left(e)].colorIndex, t.regions[right(e)!].colorIndex)
+                    edgeDirty[e] = true
+                    lifted.insert(e)
+                    summary.touched.formUnion([left(e), right(e)!])
+                }
+            case .stroke(let i, _):
+                let stroke = strokes[i]
+                if points.contains(plan.grabbed) { (layer, weight) = (stroke.layer, stroke.weight) }
+                guard points.contains(where: moving.contains) else { continue }
+                strokes[i].alive = false
+                summary.touched.insert(stroke.region)
+                // What of it the bend leaves where it lay stays, in pieces.
+                var piece: [LatticePoint] = []
+                for (j, p) in points.enumerated() {
+                    let still = !moving.contains(p)
+                    if still { piece.append(p) }
+                    guard !still || j == points.count - 1 else { continue }
+                    if piece.count >= 2 {
+                        strokes.append(WorkStroke(
+                            points: piece.map(Lattice.position), layer: stroke.layer, weight: stroke.weight, region: stroke.region,
+                            writing: stroke.writing))
+                    }
+                    piece = []
+                }
+            }
+        }
+        for c in plan.carried {
+            strokes[c.stroke].points = c.points.map(Lattice.position)
+            movedStrokes.insert(c.stroke)
+            summary.touched.insert(strokes[c.stroke].region)
+        }
+        let lines = summary.lines
+        try drawRun(laid, ink: (layer, weight))
+        summary.lines = lines
+
+        // The swept strip: what lies between the line as it lay and as it lies now.
+        let sweep = old + laid.reversed()
+        var lo = sweep[0], hi = lo
+        for p in sweep { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
+        var sweptCache: [Int: Bool] = [:]
+        func swept(_ r: Int) -> Bool {
+            if let known = sweptCache[r] { return known }
+            let own = labels[r] ?? (r < t.regions.count && t.regions[r].labelCount > 0 ? Array(t.labels(ofRegion: r)) : [])
+            let answer = own.first.map { Self.winding(of: sweep, around: Lattice.point($0.position)) != 0 } ?? false
+            sweptCache[r] = answer
+            return answer
+        }
+        var across: [Int: [Int: Int64]] = [:]
+        for e in lifted.sorted() where !edgeDead[e] {
+            guard let r = right(e), r != left(e) else { continue }
+            let a = left(e), aSwept = swept(a), bSwept = swept(r)
+            guard aSwept != bSwept else { continue }
+            let pts = lattice(of: e)
+            var length: Int64 = 0
+            for (p, q) in zip(pts, pts.dropFirst()) { length += Int64(Double(Lattice.distanceSquared(p, q)).squareRoot()) }
+            across[aSwept ? a : r, default: [:]][aSwept ? r : a, default: 0] += length
+        }
+        var target: [Int: Int] = [:]
+        for (strip, sides) in across {
+            target[strip] = sides.max { x, y in x.value != y.value ? x.value < y.value : x.key > y.key }!.key
+        }
+        // Areas of the strip that never met the old line join the strip's area beside them.
+        var grew = true
+        while grew {
+            grew = false
+            for e in t.edges.indices where !edgeDead[e] && !isInked(e) && !isFrame(e) {
+                guard let r = right(e) else { continue }
+                let a = left(e)
+                let b = box(of: e)
+                guard b.hi.x >= lo.x, b.lo.x <= hi.x, b.hi.y >= lo.y, b.lo.y <= hi.y else { continue }
+                for (from, to) in [(a, r), (r, a)] where target[to] == nil && target[from] != nil && swept(to) {
+                    target[to] = target[from]
+                    grew = true
+                }
+            }
+        }
+        var groups: [Int: [Int]] = [:]
+        for (strip, side) in target { groups[side, default: []].append(strip) }
+        let used = livePaints
+        for side in groups.keys.sorted() where regionAlive[side] {
+            let members = [side] + groups[side]!.sorted().filter { regionAlive[$0] }
+            guard members.count > 1 else { continue }
+            try merge(members, keep: side, color: t.regions[side].colorIndex, detail: regionDetail[side], inheritingDetail: false)
+        }
+        try dropPaints(emptiedFrom: used)
+        summary.reshaped += 1 + plan.carried.count
+    }
+
+    /// How many times the closed polygon `ring` winds round `p` (not on it).
+    static func winding(of ring: [LatticePoint], around p: LatticePoint) -> Int {
+        var count = 0
+        for (k, a) in ring.enumerated() {
+            let b = ring[(k + 1) % ring.count]
+            if a.y <= p.y {
+                if b.y > p.y && Lattice.orient(a, b, p) > 0 { count += 1 }
+            } else if b.y <= p.y && Lattice.orient(a, b, p) < 0 {
+                count -= 1
+            }
+        }
+        return count
     }
 }

@@ -25,6 +25,26 @@
       "comment": "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState": "manual"
     },
+    "Paint by Mosaic": {
+      "comment": "The gallery's navigation title: the app's name",
+      "extractionState": "manual"
+    },
+    "Send goes straight to the people who make Paint by Mosaic.": {
+      "comment": "Feedback's review sheet: footer under what is sent; Send delivers the feedback to the developers directly",
+      "extractionState": "manual"
+    },
+    "Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on.": {
+      "comment": "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
+      "extractionState": "manual"
+    },
+    "Thank you for supporting Paint by Mosaic.": {
+      "comment": "Footer of Settings › Unlimited Paintings once the purchase is bought",
+      "extractionState": "manual"
+    },
+    "Your photos and mosaics stay on this device unless you share them or choose to send feedback. Paint by Mosaic has no accounts, ads or tracking.": {
+      "comment": "Footer of the About section in Settings: the privacy statement",
+      "extractionState": "manual"
+    },
     "acknowledgements.codeFooter": {
       "comment": "Footer under the Open-Source Code list in Acknowledgements",
       "extractionState": "manual",
@@ -1368,7 +1388,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "“%@” was made with a newer version of Ravenna. Update the app to keep setting it."
+            "value": "“%@” was made with a newer version of Paint by Mosaic. Update the app to keep setting it."
           }
         }
       }
@@ -1380,7 +1400,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This mosaic was made with a newer version of Ravenna. Update the app to keep setting it."
+            "value": "This mosaic was made with a newer version of Paint by Mosaic. Update the app to keep setting it."
           }
         }
       }
@@ -1728,7 +1748,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This mosaic was sent from a newer version of Ravenna. Update the app to open it."
+            "value": "This mosaic was sent from a newer version of Paint by Mosaic. Update the app to open it."
           }
         }
       }
@@ -2753,10 +2773,6 @@
       "comment": "Footer under the list of published methods in Acknowledgements",
       "extractionState": "manual"
     },
-    "Ravenna": {
-      "comment": "The gallery's navigation title: the app's name",
-      "extractionState": "manual"
-    },
     "Ready to set": {
       "comment": "Caption on the gallery card of a painting that has no paint yet",
       "extractionState": "manual"
@@ -2899,14 +2915,6 @@
     },
     "Send Feedback": {
       "comment": "Title of the sheet that reviews and sends feedback on a painting",
-      "extractionState": "manual"
-    },
-    "Send goes straight to the people who make Ravenna.": {
-      "comment": "Feedback's review sheet: footer under what is sent; Send delivers the feedback to the developers directly",
-      "extractionState": "manual"
-    },
-    "Send goes straight to the people who make Ravenna. Your photo helps us lay the mosaic again; it goes only if you turn it on.": {
-      "comment": "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
       "extractionState": "manual"
     },
     "Send Template": {
@@ -3337,10 +3345,6 @@
         }
       }
     },
-    "Thank you for supporting Ravenna.": {
-      "comment": "Footer of Settings › Unlimited Paintings once the purchase is bought",
-      "extractionState": "manual"
-    },
     "Thanks for the feedback!": {
       "comment": "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared through the share sheet (Share Instead in the alert after sending failed)",
       "extractionState": "manual"
@@ -3711,10 +3715,6 @@
     },
     "Your Photos": {
       "comment": "Section title above the photo library picker on wide screens in the create flow",
-      "extractionState": "manual"
-    },
-    "Your photos and mosaics stay on this device unless you share them or choose to send feedback. Ravenna has no accounts, ads or tracking.": {
-      "comment": "Footer of the About section in Settings: the privacy statement",
       "extractionState": "manual"
     },
     "Zen Mode": {
