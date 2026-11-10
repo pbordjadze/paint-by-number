@@ -245,11 +245,22 @@ struct PaletteBar: View {
             }
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 along {
-                    ForEach(lanes.indices, id: \.self) { lane in
-                        across {
-                            ForEach(lanes[lane], id: \.self) { index in
-                                swatch(index).id(index)
-                                    .transition(transition)
+                    if lineCount == 1 {
+                        // One line: the swatches themselves, by color, so a finished color leaves and
+                        // the rest slide along. In lanes kept by position every later swatch moved to
+                        // another lane, and each ran its leaving and coming in at once: the whole strip
+                        // blinked at every finish (the Mac's QA, November 10).
+                        ForEach(colors, id: \.self) { index in
+                            swatch(index).id(index)
+                                .transition(transition)
+                        }
+                    } else {
+                        ForEach(lanes.indices, id: \.self) { lane in
+                            across {
+                                ForEach(lanes[lane], id: \.self) { index in
+                                    swatch(index).id(index)
+                                        .transition(transition)
+                                }
                             }
                         }
                     }

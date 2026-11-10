@@ -9,6 +9,21 @@ import Testing
 /// Renders the synthetic template offscreen with the canvas shaders and checks pixels.
 /// Rendered PNGs are attached to the results for visual inspection.
 struct CanvasRenderTests {
+    /// The paint is clipped to the sheet's pixels, inside the target (Paul's ragged top edge,
+    /// November 10).
+    @Test func paintKeepsToTheSheet() throws {
+        var u = CanvasUniforms()
+        u.viewport = SIMD4(100, 100, 30, 40)
+        u.transform = SIMD4(10.4, 20.6, 2, 1)
+        let sheet = try #require(RenderContext.sheetScissor(u))
+        #expect(sheet.x == 10 && sheet.y == 20 && sheet.width == 61 && sheet.height == 80)
+        u.transform = SIMD4(-15, 50, 4, 1)
+        let zoomed = try #require(RenderContext.sheetScissor(u))
+        #expect(zoomed.x == 0 && zoomed.y == 50 && zoomed.width == 100 && zoomed.height == 50)
+        u.transform = SIMD4(150, 0, 1, 1)
+        #expect(RenderContext.sheetScissor(u) == nil)
+    }
+
     @Test func shaderStructLayoutsMatchMetal() {
         #expect(MemoryLayout<CanvasUniforms>.stride == 320)
         #expect(MemoryLayout<RegionState>.stride == 32)

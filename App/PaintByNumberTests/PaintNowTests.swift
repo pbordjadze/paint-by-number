@@ -137,6 +137,17 @@ struct PaintNowTests {
         #expect(back.progress.paintedCount == 0)
     }
 
+    /// A painting made over in place (✎ Change's Done, a re-cut) keeps the paint in hand: the same
+    /// paint while it has areas left, else the nearest one that has; none when all are done.
+    @Test func thePaintInHandStaysInHand() {
+        let palette: [SIMD3<Float>] = [SIMD3(0.9, 0, 0), SIMD3(0.5, 0.1, 0), SIMD3(0.52, 0.1, 0.01), SIMD3(0.2, -0.1, 0.1)]
+        let open = [true, true, true, true]
+        #expect(ArtworkPaintingView.keptColor(palette[2], palette: palette, open: open) == 2)
+        #expect(ArtworkPaintingView.keptColor(palette[2], palette: palette, open: [true, true, false, true]) == 1)
+        #expect(ArtworkPaintingView.keptColor(SIMD3(0.21, -0.1, 0.1), palette: palette, open: open) == 3)
+        #expect(ArtworkPaintingView.keptColor(palette[0], palette: palette, open: [false, false, false, false]) == nil)
+    }
+
     /// The menu's time for the cut on screen and the cuts made while open is the chip's estimate;
     /// a length not cut yet shows the band it aims for.
     @Test func theLengthMenuSaysWhatTheChipSays() {

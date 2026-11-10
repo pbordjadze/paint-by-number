@@ -271,7 +271,15 @@ struct ArtworkPaintingView: View {
     }
 
     /// Callers await `RenderContext.ready()` first: the canvas this shows needs it.
-    private func present(_ document: PaintingDocument) async {
+    /// `replacing`: the painting on screen is made over in place (✎ Change's Done, a length's
+    /// re-cut, a regeneration): the paint in hand stays in hand, the same paint or the nearest
+    /// one left (`keptColor`), where a new session opened on its first color or largest area and
+    /// the strip went back to its start (the Mac's QA, November 10); and the old screen stays
+    /// over the new until its canvas has drawn (`holdOldScreen`), where the page went to bare
+    /// paper for a frame.
+    private func present(_ document: PaintingDocument, replacing: Bool = false) async {
+        let previous = replacing ? autosaver?.session : nil
+        let inHand = previous.flatMap { old in old.selectedColor.map { old.template.palette[$0].oklab } }
         let session: PaintingSession
         do {
             session = try await PaintingSession.make(
@@ -285,9 +293,16 @@ struct ArtworkPaintingView: View {
             failure = .damaged(canRegenerate: artwork.map { ArtworkFactory.canRegenerate($0, store: library.store) } ?? false)
             return
         }
+        if let inHand,
+           let kept = Self.keptColor(
+               inHand, palette: session.template.palette.map(\.oklab),
+               open: (0..<session.paletteCount).map { !session.isColorComplete($0) }) {
+            session.select(color: kept)
+        }
+        if previous != nil { Self.holdOldScreen() }
         // Before the painting screen appears: its first tip and the first painting's limit.
         PaintTips.artworkOpened(artworkID)
-        withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) {
+        withAnimation(isUnderCover || previous != nil ? nil : .easeOut(duration: 0.25)) {
             failure = nil
             regenerationFailed = false
             autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
@@ -303,6 +318,27 @@ struct ArtworkPaintingView: View {
         #if DEBUG
         markDemoReady()
         #endif
+    }
+
+    /// The paint nearest `oklab` among the `open` ones of `palette` (the same paint where it is
+    /// still there and open), or nil when none is open.
+    nonisolated static func keptColor(_ oklab: SIMD3<Float>, palette: [SIMD3<Float>], open: [Bool]) -> Int? {
+        palette.indices.filter { open.indices.contains($0) && open[$0] }
+            .min { ColorScience.distance(palette[$0], oklab) < ColorScience.distance(palette[$1], oklab) }
+    }
+
+    /// Lays a picture of the window as it is over it, and takes it away once the painting made
+    /// over beneath it has had time to draw (its canvas's first frame comes a few frames after it
+    /// is made), fading.
+    private static func holdOldScreen() {
+        let window = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first
+        guard let window, let picture = window.snapshotView(afterScreenUpdates: false) else { return }
+        picture.isUserInteractionEnabled = false
+        window.addSubview(picture)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(600))
+            UIView.animate(withDuration: 0.2, animations: { picture.alpha = 0 }, completion: { _ in picture.removeFromSuperview() })
+        }
     }
 
     /// The push finished: the painting, when loaded, takes the thumbnail's place.
@@ -340,7 +376,7 @@ struct ArtworkPaintingView: View {
             do {
                 let document = try await library.regenerate(artwork: artworkID, settings: artwork.settings)
                 _ = await RenderContext.ready()
-                await present(document)
+                await present(document, replacing: true)
             } catch is CancellationError {
             } catch let error as Library.OpenError {
                 failure = error
@@ -409,7 +445,7 @@ struct ArtworkPaintingView: View {
                 // The cuts kept were of the painting before the change.
                 cuts = [:]
                 _ = await RenderContext.ready()
-                await present(document)
+                await present(document, replacing: true)
             } catch is CancellationError {
             } catch {
                 Log.library.error("Keeping ✎ Change on \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
@@ -472,7 +508,7 @@ struct ArtworkPaintingView: View {
                     cuts[length] = Cut(template: document.template, settings: made)
                 }
                 _ = await RenderContext.ready()
-                await present(document)
+                await present(document, replacing: true)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
             } catch is CancellationError {
             } catch {

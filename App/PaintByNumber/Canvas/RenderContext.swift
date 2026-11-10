@@ -223,6 +223,19 @@ nonisolated final class RenderContext: @unchecked Sendable {
     /// Encodes one frame: outline coverage (RG16F, max blending), then a single multisampled
     /// pass with paper + shadow, all fills in one indexed draw, the outline composite, the
     /// numbers, the source photo while it shows and the brush.
+    /// The sheet's pixels in the target (`CanvasUniforms`: canvas units times `transform.z` plus
+    /// `transform.xy`, the target `viewport.xy`), or nil when none of it is in the target.
+    static func sheetScissor(_ u: CanvasUniforms) -> MTLScissorRect? {
+        let targetWidth = Double(u.viewport.x), targetHeight = Double(u.viewport.y)
+        let scale = Double(u.transform.z)
+        let left = Double(u.transform.x), top = Double(u.transform.y)
+        let x0 = max(0, (left).rounded(.down)), y0 = max(0, (top).rounded(.down))
+        let x1 = min(targetWidth, (left + Double(u.viewport.z) * scale).rounded(.up))
+        let y1 = min(targetHeight, (top + Double(u.viewport.w) * scale).rounded(.up))
+        guard [x0, y0, x1, y1].allSatisfy(\.isFinite), x1 > x0, y1 > y0 else { return nil }
+        return MTLScissorRect(x: Int(x0), y: Int(y0), width: Int(x1 - x0), height: Int(y1 - y0))
+    }
+
     func encode(
         _ commands: any MTLCommandBuffer, scene: CanvasScene, states: any MTLBuffer,
         uniforms: CanvasUniforms, targets: Targets, content: Content
@@ -274,7 +287,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
         enc.setFragmentBytes(&u, length: uniformSize, index: 0)
         enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
 
-        if scene.indexCount > 0 {
+        // The paint keeps to the sheet: an area's smoothed edge along the picture's border can bow
+        // past it, and the paint showed beyond the sheet's top as a ragged edge (Paul, November 10).
+        let sheet = Self.sheetScissor(u)
+        if scene.indexCount > 0, let sheet {
+            enc.setScissorRect(sheet)
             enc.setRenderPipelineState(fillPipeline)
             enc.setVertexBuffer(scene.positions, offset: 0, index: 0)
             enc.setVertexBuffer(scene.vertexRegions, offset: 0, index: 1)
@@ -285,6 +302,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
             enc.drawIndexedPrimitives(
                 type: .triangle, indexCount: scene.indexCount, indexType: .uint32,
                 indexBuffer: scene.indices, indexBufferOffset: 0)
+            enc.setScissorRect(MTLScissorRect(x: 0, y: 0, width: Int(u.viewport.x), height: Int(u.viewport.y)))
         }
 
         if drawOutlines {

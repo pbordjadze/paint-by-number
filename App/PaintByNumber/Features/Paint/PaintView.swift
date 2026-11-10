@@ -417,7 +417,11 @@ struct PaintView: View {
     private func layout(in geo: GeometryProxy) -> PaintingLayout {
         PaintingLayout(PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
-            dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
+            // The painting's colors, not those left: Auto's count of lines went with the colors
+            // left, so finishing one re-laid the whole palette (3 rows to 2 on an iPad, the bar
+            // wider than the picture and the picture taller; the Mac's QA, November 10). The
+            // create flow's hand-off counts them so too.
+            dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColorCount(session.template),
             isComplete: session.isComplete,
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
