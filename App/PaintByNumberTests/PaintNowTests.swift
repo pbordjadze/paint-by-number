@@ -119,4 +119,32 @@ struct PaintNowTests {
         #expect(recut.regionCount == document.template.regions.count)
         #expect(recut.settings.lineArt == artwork.settings.lineArt)
     }
+
+    /// Back to a length the painting had: that very cut, not one made again (the Mac's QA, 347
+    /// areas then 344), the length recorded and nothing painted.
+    @Test func aCutPutBackIsTheSameTemplate() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        let first = try await library.loadForPainting(artwork.id).template
+        _ = try await library.recut(artwork: artwork.id, length: .detailed)
+        let back = try await library.restoreCut(
+            artwork: artwork.id, length: .relaxed, template: first, settings: artwork.settings)
+        #expect(back.template == first)
+        #expect(try library.store.readTemplate(artwork.id) == first)
+        let restored = try #require(library.artwork(with: artwork.id))
+        #expect(restored.paintingLength == PaintingLength.relaxed.rawValue)
+        #expect(restored.settings == artwork.settings && restored.regionCount == first.regions.count)
+        #expect(back.progress.paintedCount == 0)
+    }
+
+    /// The menu's time for the cut on screen and the cuts made while open is the chip's estimate;
+    /// a length not cut yet shows the band it aims for.
+    @Test func theLengthMenuSaysWhatTheChipSays() {
+        let chip = PaintingTimeText.approximate(PaintingTime.estimate(regionCount: 406))
+        #expect(LengthChip.rowTime(of: .relaxed, chosen: .relaxed, regionCount: 406, cutAreas: [:]) == chip)
+        let quick = PaintingTimeText.approximate(PaintingTime.estimate(regionCount: 150))
+        #expect(LengthChip.rowTime(of: .quick, chosen: .relaxed, regionCount: 406, cutAreas: [.quick: 150]) == quick)
+        #expect(LengthChip.rowTime(of: .detailed, chosen: .relaxed, regionCount: 406, cutAreas: [.quick: 150])
+            == LengthChip.band(of: .detailed))
+    }
 }

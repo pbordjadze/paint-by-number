@@ -42,9 +42,16 @@ struct ArtworkPaintingView: View {
     /// goes, so Done's change is saved whatever comes after.
     @State private var changing: Task<Void, Never>?
     @State private var recutFailed = false
-    /// The cuts this painting has had while open, by length: going back to one makes that cut
-    /// again, not another choice (the Mac's QA: Relaxed again came back as another painting).
-    @State private var cuts: [PaintingLength: GenerationSettings] = [:]
+    /// The cuts this painting has had while open, by length, the one it opened with too: going
+    /// back to one puts that very template back (`Library.restoreCut`), never makes it again (the
+    /// Mac's QA: Relaxed again came back as another painting, 347 areas then 344, made again from
+    /// `source.jpg` where the first came from the photo itself). ✎ Change's Done forgets them.
+    @State private var cuts: [PaintingLength: Cut] = [:]
+
+    private struct Cut {
+        let template: Template
+        let settings: GenerationSettings
+    }
     /// What the failure toast says: the re-cut's, or ✎ Change's.
     @State private var recutFailedText = ""
     #if UNRELEASED
@@ -399,6 +406,8 @@ struct ArtworkPaintingView: View {
             do {
                 let draft = try await model.makeDraft()
                 let document = try await library.adopt(draft, into: artworkID)
+                // The cuts kept were of the painting before the change.
+                cuts = [:]
                 _ = await RenderContext.ready()
                 await present(document)
             } catch is CancellationError {
@@ -438,6 +447,7 @@ struct ArtworkPaintingView: View {
             regionCount: autosaver.session.template.regions.count,
             length: artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)),
             progress: recutting == nil ? nil : (library.regenerating[artworkID] ?? 0),
+            cutAreas: cuts.mapValues { $0.template.regions.count },
             onPick: recut(to:))
     }
 
@@ -448,13 +458,19 @@ struct ArtworkPaintingView: View {
         autosaver.saveNow()
         recutFailed = false
         if let artwork, let current = artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)), cuts[current] == nil {
-            cuts[current] = artwork.settings
+            cuts[current] = Cut(template: autosaver.session.template, settings: artwork.settings)
         }
-        let known = cuts[length]
+        let kept = cuts[length]
         recutting = Task {
             do {
-                let document = try await library.recut(artwork: artworkID, length: length, settings: known)
-                if let made = library.artwork(with: artworkID)?.settings { cuts[length] = made }
+                let document = if let kept {
+                    try await library.restoreCut(artwork: artworkID, length: length, template: kept.template, settings: kept.settings)
+                } else {
+                    try await library.recut(artwork: artworkID, length: length)
+                }
+                if let made = library.artwork(with: artworkID)?.settings {
+                    cuts[length] = Cut(template: document.template, settings: made)
+                }
                 _ = await RenderContext.ready()
                 await present(document)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))

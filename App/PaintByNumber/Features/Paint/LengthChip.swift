@@ -13,6 +13,9 @@ struct LengthChip: View {
     let length: PaintingLength?
     /// The re-cut under way, 0…1; nil when none is.
     let progress: Double?
+    /// The areas of the other lengths' cuts the painting has had while open: their rows say
+    /// what the chip would, not the band a length aims for.
+    var cutAreas: [PaintingLength: Int] = [:]
     let onPick: (PaintingLength) -> Void
 
     var body: some View {
@@ -25,13 +28,13 @@ struct LengthChip: View {
                     if choice == length {
                         Label {
                             Text(choice.name)
-                            Text(Self.band(of: choice))
+                            Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
                         } icon: {
                             Image(systemName: "checkmark")
                         }
                     } else {
                         Text(choice.name)
-                        Text(Self.band(of: choice))
+                        Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
                     }
                 }
             }
@@ -70,6 +73,16 @@ struct LengthChip: View {
         guard let length else { return summary }
         return String(localized: "paint.lengthChip.value", defaultValue: "\(length.name), \(summary)",
                       comment: "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas")
+    }
+
+    /// A length's row's time: the cut on screen's and those made while open, as the chip says it
+    /// (`PaintingTime`; the Mac's QA: "Relaxed, 20 min – 50 min" beside a chip saying ~15 min),
+    /// else the band a length not cut yet aims for.
+    static func rowTime(
+        of choice: PaintingLength, chosen: PaintingLength?, regionCount: Int, cutAreas: [PaintingLength: Int]
+    ) -> String {
+        let areas = choice == chosen ? regionCount : cutAreas[choice]
+        return areas.map { PaintingTimeText.approximate(PaintingTime.estimate(regionCount: $0)) } ?? Self.band(of: choice)
     }
 
     /// "20 min – 50 min": the times a length aims for (`PaintingLength.timeBand`).

@@ -689,18 +689,13 @@ final class Library {
     /// painting-company row 239): Auto chooses settings for its photo at `length`, as the Paint
     /// page's pick did at the painter's own (`ArtworkFactory.suggested`), keeping its line art,
     /// mix and tuning; then `regenerate` makes and saves it, and the artwork records the length.
-    /// `settings`, a cut made before at that length, is made again as it was, with no new choice.
-    func recut(artwork id: UUID, length: PaintingLength, settings known: GenerationSettings? = nil) async throws -> PaintingDocument {
+    /// A cut the painting had before at that length is put back instead (`restoreCut`).
+    func recut(artwork id: UUID, length: PaintingLength) async throws -> PaintingDocument {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
-        let settings: GenerationSettings
-        if let known {
-            settings = known
-        } else {
-            let store = self.store
-            let photo = try await Background.run { try ArtworkFactory.sourcePhoto(of: artwork, in: store) }
-            settings = try await ArtworkFactory.suggested(
-                for: photo, keeping: artwork.settings, length: length, maxCandidates: CreateModel.maxCandidates)
-        }
+        let store = self.store
+        let photo = try await Background.run { try ArtworkFactory.sourcePhoto(of: artwork, in: store) }
+        let settings = try await ArtworkFactory.suggested(
+            for: photo, keeping: artwork.settings, length: length, maxCandidates: CreateModel.maxCandidates)
         try Task.checkCancellation()
         var document = try await regenerate(artwork: id, settings: settings)
         if var updated = self.artwork(with: id) {
@@ -711,6 +706,27 @@ final class Library {
             enqueue(id) { store in try store.writeMeta(snapshot) }
         }
         // Nothing was painted, so nothing to tell: the painting is simply the new cut.
+        document.notice = nil
+        return document
+    }
+
+    /// Puts back a cut the painting had while open (`template`, made with `settings` at
+    /// `length`), as it was: never made again, which from `source.jpg` came out a few areas
+    /// different from the cut made from the photo itself (the Mac's QA, 347 areas then 344). The
+    /// painting's refinements stay as they are.
+    func restoreCut(artwork id: UUID, length: PaintingLength, template: Template, settings: GenerationSettings) async throws -> PaintingDocument {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        let store = self.store
+        var draft = ArtworkDraft(title: artwork.title, template: template, settings: settings)
+        draft.refinements = (try? await Background.run { try store.readRefinements(id) }) ?? TemplateRefinements()
+        var document = try await adopt(draft, into: id)
+        if var updated = self.artwork(with: id) {
+            updated.paintingLength = length.rawValue
+            updated.settingsOrigin = SettingsOrigin.suggested.rawValue
+            replace(updated, resort: false)
+            let snapshot = updated
+            enqueue(id) { store in try store.writeMeta(snapshot) }
+        }
         document.notice = nil
         return document
     }
