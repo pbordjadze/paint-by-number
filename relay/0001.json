@@ -1,0 +1,56 @@
+{
+ "n": 1,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn: 'The Great Wave'\n- waitForAnimationToEnd"
+   },
+   "seconds": 17.0,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":3,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/s01-wave\n"
+   },
+   "seconds": 0.4,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "inspect_screen",
+   "arguments": {},
+   "seconds": 0.6,
+   "isError": false,
+   "text": [
+    "{\"ui_schema\":{\"platform\":\"ios\",\"abbreviations\":{\"b\":\"bounds\",\"txt\":\"text\",\"rid\":\"resource-id\",\"a11y\":\"accessibilityText\",\"hint\":\"hintText\",\"val\":\"value\",\"c\":\"children\"},\"defaults\":{\"enabled\":true,\"focused\":false,\"selected\":false,\"checked\":false,\"txt\":\"\",\"hint\":\"\",\"rid\":\"\",\"val\":\"\",\"a11y\":\"\"}},\"elements\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Paint by Moonlight\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"dismiss popup\",\"rid\":\"PopoverDismissRegion\"},{\"b\":\"[10,1104][410,1220]\",\"c\":[{\"b\":\"[10,1104][410,1220]\",\"c\":[{\"b\":\"[10,1104][410,1220]\",\"c\":[{\"b\":\"[10,1104][410,1220]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"rid\":\"TipView\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[10,1104][410,1207]\",\"c\":[{\"b\":\"[82,1122][175,1142]\",\"a11y\":\"Tap to Paint\"},{\"b\":\"[82,1146][388,1184]\",\"a11y\":\"Pick a color, then tap an area marked with its number to fill it.\"}]}]},{\"b\":\"[369,1119][395,1145]\",\"a11y\":\"Close\",\"rid\":\"xmark.circle.fill\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1356]\"},{\"b\":\"[0,0][1032,1356]\"},{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Painting\",\"rid\":\"canvas\",\"c\":[{\"b\":\"[697,887][741,931]\",\"a11y\":\"Area 1\",\"txt\":\"not painted, bottom right\",\"val\":\"not painted, bottom right\",\"rid\":\"canvas-area-305\"},{\"b\":\"[715,884][759,928]\",\"a11y\":\"Area 1\",\"txt\":\"not painted, bottom right\",\"val\":\"not painted, bottom right\",\"rid\":\"canvas-area-304\"},{\"b\":\"[757,886][801,930]\",\"a11y\":\"Area 1\",\"txt\":\"not painted, bottom right\",\"val\":\"not painted, bottom right\",\"rid\":\"canvas-area-301\"},{\"b\":\"[692,893][736,937]\",\"a11y\":\"Area 1\",\"txt\":\"not painted, bottom right\",\"val\":\"not painted, bottom right\",\"rid\":\"canvas-area-306\"}]},{\"b\":\"[12,6][56,50]\",\"a11y\":\"Back\",\"rid\":\"chevron.backward\"},{\"b\":\"[80,17][253,38]\",\"a11y\":\"The Great Wave, 0 percent painted\",\"c\":[{\"b\":\"[108,19][221,37]\",\"a11y\":\"The Great Wave\"},{\"b\":\"[229,19][253,37]\",\"a11y\":\"0%\"}]},{\"b\":\"[752,6][796,50]\"},{\"b\":\"[752,6][796,50]\"},{\"b\":\"[752,6][796,50]\",\"a11y\":\"Photo\",\"txt\":\"Hidden\",\"val\":\"Hidden\",\"rid\":\"Photo\",\"c\":[{\"b\":\"[752,6][796,50]\",\"a11y\":\"Photo\",\"rid\":\"photo\"}]},{\"b\":\"[808,6][852,50]\",\"a11y\":\"Hint\",\"rid\":\"lightbulb\"},{\"b\":\"[864,6][908,50]\",\"a11y\":\"Undo\",\"rid\":\"arrow.uturn.backward\",\"enabled\":false},{\"b\":\"[920,6][964,50]\",\"a11y\":\"Change\",\"rid\":\"change-painting\"},{\"b\":\"[976,6][1020,50]\"},{\"b\":\"[976,6][1020,50]\"},{\"b\":\"[976,6][1020,50]\"},{\"b\":\"[976,6][1020,50]\"},{\"b\":\"[976,6][1020,50]\",\"a11y\":\"More\",\"c\":[{\"b\":\"[976,6][1020,50]\",\"c\":[{\"b\":\"[976,6][1020,50]\",\"a11y\":\"More\",\"rid\":\"ellipsis\"}]}]},{\"b\":\"[263,19][264,37]\"},{\"b\":\"[274,19][381,37]\",\"a11y\":\"Current color\",\"txt\":\"1, Driftwood, grayish red\",\"val\":\"1, Driftwood, grayish red\",\"rid\":\"current-color\",\"c\":[{\"b\":\"[290,19][381,37]\",\"a11y\":\"1 \u00b7 Driftwood\"}]},{\"b\":\"[168,1220][864,1352]\",\"c\":[{\"b\":\"[168,1220][864,1352]\",\"c\":[{\"b\":\"[180,1230][236,1286]\",\"a11y\":\"1, Driftwood, grayish red\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-1\",\"selected\":true},{\"b\":\"[236,1230][292,1286]\",\"a11y\":\"3, Hemp Rope, beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-3\"},{\"b\":\"[292,1230][348,1286]\",\"a11y\":\"5, Candle Wax, light beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-5\"},{\"b\":\"[348,1230][404,1286]\",\"a11y\":\"7, Dune Grass, beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-7\"},{\"b\":\"[404,1230][460,1286]\",\"a11y\":\"9, Slate Lake, blue\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-9\"},{\"b\":\"[460,1230][516,1286]\",\"a11y\":\"11, Mountain Haze, grayish blue\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-11\"},{\"b\":\"[516,1230][572,1286]\",\"a11y\":\"13, Slate Pencil, dark blue\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-13\"},{\"b\":\"[572,1230][628,1286]\",\"a11y\":\"15, Marshmallow, white\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-15\"},{\"b\":\"[628,1230][684,1286]\",\"a11y\":\"17, Moth Wing, pale gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-17\"},{\"b\":\"[684,1230][740,1286]\",\"a11y\":\"19, Silver Spoon, light gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-19\"},{\"b\":\"[740,1230][796,1286]\",\"a11y\":\"21, River Pebble, gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-21\"},{\"b\":\"[796,1230][852,1286]\",\"a11y\":\"23, Rainy Cobbles, gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-23\"},{\"b\":\"[180,1286][236,1342]\",\"a11y\":\"2, Apricot Fizz, beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-2\"},{\"b\":\"[236,1286][292,1342]\",\"a11y\":\"4, Fresh Linen, light beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-4\"},{\"b\":\"[292,1286][348,1342]\",\"a11y\":\"6, Shortbread, beige\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-6\"},{\"b\":\"[348,1286][404,1342]\",\"a11y\":\"8, Birch Bark, pale grayish green\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-8\"},{\"b\":\"[404,1286][460,1342]\",\"a11y\":\"10, Rainy Harbor, vivid blue\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-10\"},{\"b\":\"[460,1286][516,1342]\",\"a11y\":\"12, Blueprint, blue\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-12\"},{\"b\":\"[516,1286][572,1342]\",\"a11y\":\"14, Tarpaulin, navy\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-14\"},{\"b\":\"[572,1286][628,1342]\",\"a11y\":\"16, Seafoam Spray, pale grayish teal\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-16\"},{\"b\":\"[628,1286][684,1342]\",\"a11y\":\"18, Morning Haze, pale gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-18\"},{\"b\":\"[684,1286][740,1342]\",\"a11y\":\"20, Morning Lake, light gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-20\"},{\"b\":\"[740,1286][796,1342]\",\"a11y\":\"22, Weathered Fence, gray\",\"txt\":\"0 percent painted\",\"val\":\"0 percent painted\",\"rid\":\"swatch-22\"}]}]},{\"b\":\"[184,1220][232,1352]\"},{\"b\":\"[184,1220][232,1352]\"},{\"b\":\"[184,1220][232,1352]\"},{\"b\":\"[184,1234][232,1282]\"},{\"b\":\"[184,1234][232,1282]\"},{\"b\":\"[184,1234][232,1282]\"}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Toolbar\",\"rid\":\"Toolbar\",\"c\":[{\"b\":\"[0,0][1032,1376]\"}]}]}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\"}]}]}]},{\"b\":\"[0,0][1032,32]\"},{\"b\":\"[0,0][1032,32]\"}]}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.8,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0001-4-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 375098,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
