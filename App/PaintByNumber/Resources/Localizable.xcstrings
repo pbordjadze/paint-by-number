@@ -6037,20 +6037,8 @@
       "comment" : "Title of the sheet that sells Unlimited Paintings, the app's one purchase (paid once: as many paintings of the painter's own photos as they like), and the Settings row that opens it or says it is unlocked",
       "extractionState" : "manual"
     },
-    "Your next free painting comes tomorrow. One purchase unlocks as many paintings of your own photos as you like." : {
-      "comment" : "The Unlimited Paintings sheet's message when Start Painting found no free painting left for a painting of the painter's own photo (one free painting comes back each day)",
-      "extractionState" : "manual"
-    },
-    "One purchase unlocks as many paintings of your own photos as you like." : {
-      "comment" : "The Unlimited Paintings sheet's message when opened from Settings",
-      "extractionState" : "manual"
-    },
     "Not Now" : {
       "comment" : "The Unlimited Paintings sheet's button that closes it without buying",
-      "extractionState" : "manual"
-    },
-    "Everything in The Library is always free." : {
-      "comment" : "Note in the Unlimited Paintings sheet: paintings of the app's own pictures, in The Library on the Paint page, never need the purchase or a free painting",
       "extractionState" : "manual"
     },
     "Restore Purchases" : {
@@ -6087,10 +6075,6 @@
     },
     "Thank you for supporting Paint by Moonlight." : {
       "comment" : "Footer of Settings › Unlimited Paintings once the purchase is bought",
-      "extractionState" : "manual"
-    },
-    "A free painting of your own photos comes back each day, up to three. Everything in The Library is always free." : {
-      "comment" : "Footer of Settings › Unlimited Paintings before the purchase is bought: how free paintings work (the app's own pictures, in The Library on the Paint page, never need one)",
       "extractionState" : "manual"
     },
     "unlock.buy" : {
