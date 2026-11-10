@@ -1726,31 +1726,23 @@ extension RefineView {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) {
                         startChooser
-                        if badge { columnBadge }
+                        if badge { tinyBadge }
                     }
                     VStack(spacing: 8) {
                         startChooser
-                        if badge { columnBadge }
+                        if badge { tinyBadge }
                     }
                 }
                 .animation(
                     model.note == nil && !reduceMotion ? .easeIn(duration: 0.2).delay(Self.afterNote) : nil,
                     value: model.note)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if badge { sideBadgeRoom = height + 12 }
+                }
             }
             curveHint
             studioBar
         }
-    }
-
-    /// The badge in the column, measured alone: the room it takes there is its own height and the
-    /// spacing before it, whatever Start From beside it does (measured with Start From, the room
-    /// stayed too large once Start From left, and the badge never came back). Kept while it isn't
-    /// drawn (a note, no tiny numbers), for when it is again.
-    private var columnBadge: some View {
-        tinyBadge
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                if height > 0 { sideBadgeRoom = height + 12 }
-            }
     }
 
     /// A phone on its side: the tools in a column along the trailing edge, on the paper, the
@@ -1793,6 +1785,10 @@ extension RefineView {
         .padding(.vertical, 8)
         .frame(width: Self.sideWidth)
         .gentleTip(.refineDraw, active: !isPractice, arrowEdge: .trailing)
+        // The room the badge was measured to need included Start From beside it: when Start From
+        // comes or goes, the badge is tried again, and gives way again, measured afresh, if it
+        // still doesn't fit (once the first edit took Start From away, it never came back).
+        .onChange(of: showsStartFrom) { sideBadge = true }
         .background(Theme.paper)
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
@@ -2734,13 +2730,19 @@ extension RefineView {
             trailing: max(12, canvasSize.width - shown.maxX + 8))
     }
 
+    /// Start From is asked until the first edit, on a template with a photo to generate from,
+    /// and out of the way while a note shows.
+    private var showsStartFrom: Bool {
+        model.refinements.edits.isEmpty && submitted.isEmpty && model.hasLineArtInput && !model.isScratch && model.note == nil
+    }
+
     /// Where the template starts from, asked until the first edit: what the generator made (the
     /// default), or the photo as one area (Blank), which the painter's lines and paint then make
     /// into the picture. Out of the way while a note shows at the top.
     @ViewBuilder
     private var startChooser: some View {
         // A page from scratch has nothing to generate: Blank is all it is.
-        if model.refinements.edits.isEmpty, submitted.isEmpty, model.hasLineArtInput, !model.isScratch, model.note == nil {
+        if showsStartFrom {
             Picker("Start From", selection: Binding(get: { model.refinements.start }, set: { model.start(from: $0) })) {
                 Text("Generated").tag(TemplateRefinements.Start.generated)
                 Text("Blank").tag(TemplateRefinements.Start.blank)
