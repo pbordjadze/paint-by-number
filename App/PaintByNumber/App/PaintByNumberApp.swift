@@ -11,6 +11,7 @@ struct PaintByNumberApp: App {
         if DemoMode.isActive {
             DemoStandardError.silence()
             MainThreadWatchdog.start()
+            KeyboardWatch.start()
         }
         #endif
         Preferences.removeRetiredSettings()

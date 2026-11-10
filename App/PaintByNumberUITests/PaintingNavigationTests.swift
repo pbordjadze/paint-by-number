@@ -128,7 +128,8 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(waitUntil(timeout: 15) { chip.isHittable })
         sleep(2)
         chip.tap()
-        let quick = app.buttons["Quick"]
+        // Each length's row carries its time band too: "Quick, 8 min – 25 min".
+        let quick = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Quick'")).firstMatch
         XCTAssertTrue(quick.waitForExistence(timeout: 5), "The length chip's menu didn't open")
         sleep(1)
         attachScreenshot(of: app, named: "length-chip-open")

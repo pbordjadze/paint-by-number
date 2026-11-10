@@ -53,6 +53,7 @@ struct LibraryTests {
         given.isNamed = false
         let first = try await library.create(given)
         #expect(first.title == "November 9, No. 2" && !first.isNamed)
+        given.id = UUID()
         let second = try await library.create(given)
         #expect(second.title == "November 9, No. 3" && !second.isNamed)
         #expect(makeLibrary().artwork(with: first.id)?.isNamed == false)
