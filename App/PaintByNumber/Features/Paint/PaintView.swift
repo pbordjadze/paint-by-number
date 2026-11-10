@@ -39,6 +39,9 @@ struct PaintView: View {
     /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
     /// Read when the canvas is made.
     var onTemplateFrame: ((CGRect) -> Void)?
+    /// Told once the canvas has drawn this session's first frame (a painting made over in place:
+    /// `ArtworkPaintingView` keeps the old screen over it till then).
+    var onFirstFrame: (() -> Void)?
     /// ✎ Change (painting-company row 239): the drawing tools on this painting, any time; nil
     /// offers no button (the release, until the drawing tools ship).
     var onChange: (() -> Void)?
@@ -123,7 +126,7 @@ struct PaintView: View {
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
         isNamed: Bool = true,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil, onChange: (() -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil
     ) {
         self.onChange = onChange
         self.session = session
@@ -134,6 +137,7 @@ struct PaintView: View {
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
+        self.onFirstFrame = onFirstFrame
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
@@ -202,6 +206,14 @@ struct PaintView: View {
         }
         .task {
             if let onTemplateFrame { await reportTemplate(to: onTemplateFrame) }
+        }
+        .task(id: ObjectIdentifier(session)) {
+            guard let onFirstFrame else { return }
+            for _ in 0..<100 where !Task.isCancelled {
+                if controller.isShowingFirstFrame { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            onFirstFrame()
         }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)

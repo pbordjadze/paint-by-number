@@ -144,7 +144,8 @@ struct ArtworkPaintingView: View {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true,
-                    onTemplateFrame: canvasReport, onChange: changeAction)
+                    onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
+                    onChange: changeAction)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
@@ -252,6 +253,7 @@ struct ArtworkPaintingView: View {
         .onDisappear {
             regeneration?.cancel()
             recutting?.cancel()
+            releaseHeldScreen()
             autosaver?.saveNow(refreshThumbnail: true)
         }
     }
@@ -299,7 +301,7 @@ struct ArtworkPaintingView: View {
                open: (0..<session.paletteCount).map { !session.isColorComplete($0) }) {
             session.select(color: kept)
         }
-        if previous != nil { Self.holdOldScreen() }
+        if previous != nil { holdOldScreen() }
         // Before the painting screen appears: its first tip and the first painting's limit.
         PaintTips.artworkOpened(artworkID)
         withAnimation(isUnderCover || previous != nil ? nil : .easeOut(duration: 0.25)) {
@@ -327,18 +329,29 @@ struct ArtworkPaintingView: View {
             .min { ColorScience.distance(palette[$0], oklab) < ColorScience.distance(palette[$1], oklab) }
     }
 
-    /// Lays a picture of the window as it is over it, and takes it away once the painting made
-    /// over beneath it has had time to draw (its canvas's first frame comes a few frames after it
-    /// is made), fading.
-    private static func holdOldScreen() {
+    /// The old screen's picture, over the painting made over beneath it (`holdOldScreen`).
+    @State private var heldScreen: UIView?
+
+    /// Lays a picture of the window as it is over it, taking the touches meant for a screen not yet
+    /// drawn, until the painting made over beneath it has drawn its first frame (`PaintView`'s
+    /// `onFirstFrame`), or 4 s at most.
+    private func holdOldScreen() {
+        releaseHeldScreen()
         let window = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first
         guard let window, let picture = window.snapshotView(afterScreenUpdates: false) else { return }
-        picture.isUserInteractionEnabled = false
+        picture.isUserInteractionEnabled = true
         window.addSubview(picture)
+        heldScreen = picture
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(600))
-            UIView.animate(withDuration: 0.2, animations: { picture.alpha = 0 }, completion: { _ in picture.removeFromSuperview() })
+            try? await Task.sleep(for: .seconds(4))
+            if heldScreen === picture { releaseHeldScreen() }
         }
+    }
+
+    private func releaseHeldScreen() {
+        guard let picture = heldScreen else { return }
+        heldScreen = nil
+        UIView.animate(withDuration: 0.2, animations: { picture.alpha = 0 }, completion: { _ in picture.removeFromSuperview() })
     }
 
     /// The push finished: the painting, when loaded, takes the thumbnail's place.

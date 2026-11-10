@@ -218,7 +218,9 @@ struct PaletteBar: View {
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
-        let lineCount = max(1, min(lines, count))
+        // The lines the layout made room for (`PaintingLayout`, from the painting's colors), so the
+        // bar never comes out thinner than the room kept for it once fewer colors are left.
+        let lineCount = max(1, lines)
         let lanes = Self.lanes(colors, lines: lineCount)
         let horizontal = axis == .horizontal
         // Lanes run along the bar, each one swatch per line across it.
@@ -337,7 +339,7 @@ struct PaletteBar: View {
         scroll.pending = nil
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
-        let lineCount = max(1, min(lines, colors.count))
+        let lineCount = max(1, lines)
         let lanes = Self.lanes(colors, lines: lineCount)
         guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
         let frameLength = horizontal ? scroll.frame.width : scroll.frame.height

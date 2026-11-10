@@ -383,6 +383,16 @@ final class CanvasView: UIView, PaintingCanvas {
         _ = resignFirstResponder()
     }
 
+    /// Whether anything is presented over the controller the canvas is in (a sheet, an alert, a
+    /// menu): the canvas may itself be in a presented one (Refine's Try Painting, in the create
+    /// flow's cover), so it is the top of the window's presentations that must hold the canvas.
+    private var presentsAbove: Bool {
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        guard let view = top?.viewIfLoaded else { return false }
+        return !isDescendant(of: view)
+    }
+
     /// Whether a menu is presented in `window` (UIKit's context menu controllers, by name: there
     /// is no API that says).
     static func presentsMenu(_ window: UIWindow?) -> Bool {
@@ -426,10 +436,10 @@ final class CanvasView: UIView, PaintingCanvas {
         guard regaining == nil else { return }
         regaining = Task { @MainActor [weak self] in
             defer { self?.regaining = nil }
-            for _ in 0..<600 {
+            while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))
-                guard let self, !Task.isCancelled, wantsFocus, window != nil, !isFirstResponder else { return }
-                if window?.rootViewController?.presentedViewController == nil {
+                guard let self, wantsFocus, window != nil, !isFirstResponder else { return }
+                if !presentsAbove {
                     _ = becomeFirstResponder()
                     return
                 }

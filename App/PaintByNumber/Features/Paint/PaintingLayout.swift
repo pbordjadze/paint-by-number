@@ -43,7 +43,8 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         var regularWidth: Bool
         var dynamicTypeSize: DynamicTypeSize
         var rows: PaletteRows
-        /// The swatches the palette shows (`PaletteBar.visibleColors`).
+        /// The painting's colors (`PaletteBar.visibleColorCount`), not those left: the palette's
+        /// lines stay as they are while colors finish.
         var colors: Int
         var isComplete: Bool
         /// The fold of a half-open iPhone Duo, where it is active: its reserved region (margins
