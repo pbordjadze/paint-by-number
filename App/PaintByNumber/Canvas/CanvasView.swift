@@ -364,13 +364,31 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Lifecycle
 
-    override var canBecomeFirstResponder: Bool { true }
+    /// Not while a menu is open over the painting (More, the length chip, the Finished bar's
+    /// Share): UIKit takes first responder from the canvas as one opens, and a canvas that had it
+    /// again under the open menu raised the software keyboard, with nothing to type into, over
+    /// the lower half of the painting until the menu closed (the Mac critic's sweep and QA,
+    /// November 9; `KeyboardWatch` saw every such keyboard come with the canvas first responder
+    /// and `_UIContextMenuActionsOnlyViewController` presented). `regainFocus` takes it back once
+    /// the menu has gone.
+    override var canBecomeFirstResponder: Bool { !Self.presentsMenu(window) }
+
+    /// Whether a menu is presented in `window` (UIKit's context menu controllers, by name: there
+    /// is no API that says).
+    static func presentsMenu(_ window: UIWindow?) -> Bool {
+        var presented = window?.rootViewController?.presentedViewController
+        while let controller = presented {
+            if String(describing: type(of: controller)).contains("ContextMenu") { return true }
+            presented = controller.presentedViewController
+        }
+        return false
+    }
 
     /// Whether the canvas means to be first responder: from the time it is in a window until
     /// `releaseFocus` (feedback mode), and again from `focus`.
     private var wantsFocus = true
-    /// What the canvas last took first responder back from, and when (`resignFirstResponder`).
-    private var reclaimed: (from: ObjectIdentifier?, at: ContinuousClock.Instant)?
+    /// Waiting for whatever took first responder (a menu, a sheet, an alert) to go.
+    private var regaining: Task<Void, Never>?
 
     func focus() {
         wantsFocus = true
@@ -379,39 +397,36 @@ final class CanvasView: UIView, PaintingCanvas {
 
     func releaseFocus() {
         wantsFocus = false
+        regaining?.cancel()
         _ = resignFirstResponder()
     }
 
-    /// Taken by a menu (More, the Finished bar's Share), first responder comes straight back:
-    /// a menu opened over the canvas raised the software keyboard, with nothing to type into,
-    /// over the lower half of the painting until it closed (iPhone and iPad simulators without a
-    /// hardware keyboard: the Mac critic's sweep, November 9, and main's iPhone UI tests'
-    /// `more-under-the-zen-tip`). Never while anything is presented over the painting (a sheet,
-    /// an alert, the share sheet and the compose views it hosts out of process, a dialog): UIKit
-    /// gives first responder back when they go, and a canvas taking it under them would steal a
-    /// field's focus or let ⌘Z undo fills behind a modal. Nor from a text field or view. The same
-    /// responder is fought over once a second at most.
     override func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
-        guard resigned, wantsFocus else { return resigned }
-        Task { @MainActor [weak self] in
-            guard let self, wantsFocus, window != nil, !isFirstResponder else { return }
-            if let presented = window?.rootViewController?.presentedViewController {
-                Log.canvas.notice("First responder left for \(String(describing: type(of: presented)), privacy: .public): not taken back")
-                return
-            }
-            let taker = UIResponder.current
-            if taker is UITextField || taker is UITextView { return }
-            let now = ContinuousClock.now
-            let id = taker.map { ObjectIdentifier($0) }
-            if let reclaimed, reclaimed.from == id, now - reclaimed.at < .seconds(1) { return }
-            reclaimed = (id, now)
-            let name = taker.map { String(describing: type(of: $0)) } ?? "nothing"
-            Log.canvas.notice("First responder taken by \(name, privacy: .public): the canvas takes it back")
-            _ = becomeFirstResponder()
-        }
+        if resigned, wantsFocus { regainFocus() }
         return resigned
     }
+
+    /// First responder back once nothing is presented over the painting any more: UIKit gives
+    /// it back after a sheet or an alert, but not always after a menu, which took it while the
+    /// canvas couldn't have it (`canBecomeFirstResponder`), and ⌘Z and three-finger undo need it.
+    /// Never under anything presented, where it would take a field's focus or undo fills behind
+    /// a modal.
+    private func regainFocus() {
+        guard regaining == nil else { return }
+        regaining = Task { @MainActor [weak self] in
+            defer { self?.regaining = nil }
+            for _ in 0..<600 {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self, !Task.isCancelled, wantsFocus, window != nil, !isFirstResponder else { return }
+                if window?.rootViewController?.presentedViewController == nil {
+                    _ = becomeFirstResponder()
+                    return
+                }
+            }
+        }
+    }
+
     /// None while a replay plays: ⌘Z, the Edit menu and three-finger undo would take fills off
     /// the painting being played back.
     override var undoManager: UndoManager? { isReplaying ? nil : super.undoManager }

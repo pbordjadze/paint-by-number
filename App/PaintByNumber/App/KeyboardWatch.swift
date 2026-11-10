@@ -20,8 +20,7 @@ nonisolated enum KeyboardWatch {
 
     @MainActor
     private static func report() {
-        let current = UIResponder.current.map { String(describing: type(of: $0)) } ?? "none"
-        Log.demo.notice("The keyboard is about to show; the first responder is \(current, privacy: .public)")
+        Log.demo.notice("The keyboard is about to show")
         for scene in UIApplication.shared.connectedScenes {
             guard let scene = scene as? UIWindowScene else { continue }
             for window in scene.windows {

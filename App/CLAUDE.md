@@ -194,10 +194,12 @@ synchronized folder would bundle it into the app.
   reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
   per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
-- The canvas is first responder (⌘Z, three-finger undo); a menu opened over it (More, the
-  Finished bar's Share) took it and raised the software keyboard with nothing to type into, so
-  the canvas takes it back from anything but a text field or view (`CanvasView.resignFirstResponder`;
-  `PaintingNavigationTests.testMoreRaisesNoKeyboard`). `focus`/`releaseFocus` say when it wants it.
+- The canvas is first responder (⌘Z, three-finger undo), but never while a menu is open over it
+  (More, the length chip, the Finished bar's Share): first responder under an open menu raised
+  the software keyboard with nothing to type into (`CanvasView.canBecomeFirstResponder`; DEBUG
+  `KeyboardWatch` logs every keyboard's owner). It takes it back once nothing is presented
+  (`regainFocus`); `focus`/`releaseFocus` say when it wants it. `PaintingNavigationTests`'
+  `testMoreRaisesNoKeyboard` and `testLengthChipRaisesNoKeyboard`.
 - Events: `PaintingSession.onEvent` has three observers registered when the screen appears:
   `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the shines, the finish) and
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
