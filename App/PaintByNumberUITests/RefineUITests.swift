@@ -709,7 +709,20 @@ final class RefineUITests: XCTestCase {
             XCTAssertTrue(app.buttons["refine-done"].isHittable, "At \(step) Done is out of reach")
             holdForScreenshot("landscape-\(step)")
         }
-        XCTAssertTrue(app.buttons["refine-tiny"].waitForExistence(timeout: 10), "The tiny-numbers badge isn't beside the picture")
+        // Whether the picture has tiny numbers at all is the generator's: CI's iPhone 17 Pro made the
+        // demo's picture with none, this Mac's simulators with one (painting-company row 276).
+        // Upright, with the Pen and no note, the badge shows whenever there are any: missing beside
+        // the picture, it must be missing upright too (else the column gave it way or lost it).
+        if !app.buttons["refine-tiny"].waitForExistence(timeout: 10) {
+            XCUIDevice.shared.orientation = .portrait
+            XCTAssertFalse(
+                app.buttons["refine-tiny"].waitForExistence(timeout: 10),
+                "The tiny-numbers badge shows upright but isn't beside the picture on its side")
+            XCUIDevice.shared.orientation = .landscapeLeft
+            XCTAssertTrue(
+                waitUntil(timeout: 10) { canvas.frame.width > canvas.frame.height }, "Refine didn't turn back on its side")
+            sleep(1)
+        }
         clear("pen")
         pickTool("select", in: "Cells", of: app)
         canvas.coordinate(withNormalizedOffset: onPicture(canvas, 0.637, 0.06)).tap()
