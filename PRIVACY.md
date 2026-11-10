@@ -38,8 +38,9 @@ original photo only if you switch it on (photos).
 
 ## Unlimited Paintings
 
-Three paintings of your own photos are free, and a free one comes back each day, up to three at
-a time; Unlimited Paintings, a one-time purchase, lifts that limit. You buy it from Apple through
+Five new paintings are free, and a free one comes back each day, up to five at a time; every new
+painting takes one, a mosaic too. Unlimited Paintings, a one-time purchase, lifts that limit and
+unlocks Refine, the drawing tools. You buy it from Apple through
 the App Store, under Apple's terms: Apple handles the payment and your Apple Account, and we never
 receive your name, email address or payment details (Apple's sales reports to developers count
 purchases without saying who made them). The app checks on your device whether you have bought

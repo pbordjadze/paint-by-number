@@ -9,6 +9,17 @@ the gates until then). Main at the time of writing: November 5, 2026 (painting-c
 Other features sit behind `UNRELEASED` too and are **not** Refine's: leave them as they are unless
 their own row ships them. They are listed at the end so nothing is taken out by mistake.
 
+
+**Done for 1.1** (November 10, 2026, Paul's word: all of them, the five free paintings too) on the
+release branch `claude/pbm-1.1-candidate`; `main` keeps its gates. Beyond this list it also took
+out the era door's (`App/EraDoor.swift`, `RootView`, `SettingsView`'s Year row), Release's
+exclusion of `Era*.swift`, `Ravenna.framework` and `RavennaResources.bundle`, and Paint Now's ✎
+Change (`PaintingChange.swift`, `ArtworkPaintingView`) and Blank Page (`PhotoSourceView`, split
+from Start from a Drawing's block). The `Ravenna` target no longer defines `UNRELEASED` in
+Release, so its `UnlimitedPaintings.forLaunch` sells there (CI's SideStore build passes
+`UNRELEASED` to every target, which still sells nothing); its own looks keep the side it was
+always built with, and its Nightfall stays gated. `ci/check_release.sh` requires Paint by
+Mosaic's resources and door in Release instead of forbidding them.
 ## The build settings
 
 1. `App/PaintByNumber.xcodeproj/project.pbxproj`, the app target's Release configuration:

@@ -42,13 +42,19 @@
     "releaseType": "AFTER_APPROVAL"
   },
   "versionLocalization": {
-    "promotionalText": "Turn a photo of someone you love into a paint-by-numbers painting, then fill it in one tap at a time. Made on your iPhone or iPad. No account, no ads.",
+    "promotionalText": "Make your own paint-by-numbers: from a photo of someone you love, by redrawing every line yourself, or printed to paint with real brushes. Made on your iPhone or iPad.",
     "keywords": "numbers,color by number,coloring,pet portrait,art,relaxing,calm,mindful,canvas,drawing,keepsake",
     "supportUrl": "https://paulbordjadze.com/paint-by-moonlight/",
     "description": [
-      "Paint by Moonlight turns any photo into a paint-by-numbers painting, then lets you fill it in, one calm tap at a time.",
+      "Paint by Moonlight makes your own paint-by-numbers, three ways.",
       "",
-      "Choose a photo of your dog, your garden or a note in your grandmother's hand. Your iPhone or iPad then draws it as a coloring book: clean lines, numbered areas and a palette of paints mixed from the photo itself. Every paint has a name of its own, like Corn Husk or Inkpot.",
+      "FROM A PHOTO. Choose a photo of your dog, your garden or a note in your grandmother's hand. Your iPhone or iPad draws it as a coloring book: clean lines, numbered areas and a palette of paints mixed from the photo itself, each with a name of its own, like Corn Husk or Inkpot.",
+      "",
+      "BY HAND. Change the drawing yourself, as an artist would: draw lines with your finger or Apple Pencil, bend them, split and join areas, and pick each paint. Or start from a blank page and draw your own picture to paint. The Tool Guide teaches every tool with a picture to practise on.",
+      "",
+      "ON PAPER. Print the template with a key to its colors, and paint it with real paints.",
+      "",
+      "Then fill it in, one calm tap at a time.",
       "",
       "MADE FROM WHAT YOU LOVE",
       "• People and pets: the drawing closes their outlines, spends more colors and detail on them, and draws people's eyes.",
@@ -75,7 +81,7 @@
       "• Save or share the finished picture.",
       "",
       "FREE TO START",
-      "Three paintings of your own photos are free, and a free one comes back each day, up to three. The built-in pictures are always free. A one-time purchase unlocks unlimited paintings. No subscription.",
+      "Five paintings are free, and a free one comes back each day, up to five. A one-time purchase unlocks unlimited paintings and the drawing tools. No subscription.",
       "",
       "PRIVATE BY DESIGN",
       "Every painting is made right on your iPhone or iPad, and your photos stay there unless you choose to share them. No account, no ads, no tracking, and it works offline. Nothing is uploaded except feedback you review and choose to send.",
@@ -87,13 +93,15 @@
   "review": {
     "demoAccountRequired": false,
     "notes": [
-      "No account or sign-in is needed. The app is free: three paintings of your own photos are free, and one comes back each day, up to three; the built-in pictures under Samples are always free. To see the in-app purchase (Unlimited Paintings), open Settings > Unlimited Paintings, or start a fourth painting from your own photo the same day; Restore Purchases is in that sheet.",
+      "No account or sign-in is needed. The app is free: five new paintings are free, and one comes back each day, up to five; every new painting takes one (a picture from The Library, a photo, a blank page or a mosaic). To see the in-app purchase (Unlimited Paintings), open Settings > Unlimited Paintings, or start a sixth painting the same day; Restore Purchases is in that sheet. The purchase also unlocks the drawing tools (Refine): until it is bought, they open its sheet, where Try It opens the Tool Guide, whose practice pictures are free.",
       "",
-      "To try it: tap + (New Painting), choose a picture under Samples (or any photo), and wait for the preview: Start Painting turns on once the settings are chosen, which can take tens of seconds on iPhone. Tap Start Painting, then paint by tapping areas whose number matches the paint selected in the palette (at the bottom, or along the right edge on iPad in landscape). The first launch also prepares two starter paintings in the gallery, which can take a minute.",
+      "To try it: tap + (New Painting) and pick Tonight's Picture or a picture in The Library: the painting forms and opens by itself (tens of seconds on iPhone the first time). Paint by tapping areas whose number matches the paint selected in the palette. To draw on it, tap ✎ Change beside Undo; Blank Page on the New Painting screen starts a drawing of your own. The first launch also prepares two starter paintings in the gallery, which can take a minute.",
       "",
       "Everything runs on the device, including the on-device models that draw the lines. The app makes no network requests except when someone taps Send in Give Feedback (the More menu on a painting): that uploads the report they reviewed to the developers.",
       "",
-      "Optional: Settings > The Making-of plays an animation of the painting being made after Start Painting. On iPad, the menu bar's Paint menu has keyboard shortcuts."
+      "Optional: Settings > The Making-of plays an animation of the painting being made after Start Painting. On iPad, the menu bar's Paint menu has keyboard shortcuts.",
+      "",
+      "An Easter egg we want to disclose (Guideline 2.3.1): a second mode, Paint by Mosaic, in which a photo is laid as a Byzantine mosaic and set tile by tile instead of painted. It is part of the app's own code and content (nothing downloaded), works offline and collects nothing. To reach it: Settings (the gear in the gallery), About, tap the Year row, and roll the wheel that appears to its first year, 0547. To return: in its own Settings, tap the Year row (0547) and roll the wheel forward to the current year. With VoiceOver, the Year row is a button and the wheel is adjustable. Its new mosaics take the same free paintings, and the Unlimited Paintings purchase covers both modes."
     ]
   },
   "availability": {
@@ -137,7 +145,7 @@
   },
   "inAppPurchases": {
     "com.pbordjadze.paintbynumber.unlimited": {
-      "reviewNote": "Open Settings > Unlimited Paintings, or start a fourth painting of your own photo on the same day. The sheet has the purchase and Restore Purchases. Everything in Samples (New Painting's built-in pictures) is always free."
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap ✎ Change in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
     }
   },
   "nomination": {

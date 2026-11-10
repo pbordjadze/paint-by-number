@@ -413,10 +413,10 @@ Saved paintings must open in every later build. The format history is documented
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a type of a file wholly in
   `#if DEBUG`, or of one Release excludes, shows up in the Release binary (both read from the sources). The Making-of ships (its screen and Settings switch have no
   `#if`; `making-of.json` is bundled, which the same check requires). The Marginarium is in no
-  build (the Map), and the same check fails if any of it comes back. Refine is left out of the
-  release for now (October 21, until a good one is ready): its button, tip and the gallery's draft
-  row under `#if UNRELEASED`, its screen's files left out of Release by the target's Release
-  `EXCLUDED_SOURCE_FILE_NAMES` (App/CLAUDE.md › Create flow).
+  build (the Map), and the same check fails if any of it comes back. Refine, Blank Page, ✎ Change
+  and the era door to Paint by Mosaic ship from 1.1 (painting-company row 236: their gates came
+  out on the release branch `claude/pbm-1.1-candidate`; `docs/refine-release-gates.md`), and the
+  same check requires Paint by Mosaic's resources and door.
   `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
   what the release (TestFlight, App Store, the Release check) leaves out. It gates only
@@ -427,9 +427,9 @@ Saved paintings must open in every later build. The format history is documented
   labels and values, Dynamic Type, Reduce Motion and dark mode for every new control, and the
   CLAUDE.md pointers kept current. No stubs or flags hiding unfinished work.
 - Monetization (Paul, October 22): free to download; Unlimited Paintings, one non-consumable
-  in-app purchase ($4.99; Refine joins it when it ships), lifts the free paintings of the
-  painter's own photos (three, one back each day). Library pictures, received and remade
-  paintings are always free; no ads, no subscription. StoreKit 2 checks it on the device and
+  in-app purchase ($4.99; it unlocks Refine too, from 1.1), lifts the free paintings: from 1.1,
+  five, one back each day, every new painting taking one, a mosaic too (1.0: three, the painter's
+  own photos alone). Received and remade paintings are always free; no ads, no subscription. StoreKit 2 checks it on the device and
   SideStore builds sell nothing (`UnlimitedPaintings`; App/CLAUDE.md › Unlimited Paintings).
 - Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking; the one
   thing the app sends off the device is the feedback a painter chooses to send, declared as

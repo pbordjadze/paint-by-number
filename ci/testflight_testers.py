@@ -42,9 +42,15 @@ BUNDLE_ID = "com.pbordjadze.paintbynumber"
 GROUP = "Friends & Family"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
-    "Thanks for trying Paint by Moonlight! Make a painting from one of your photos (New Painting → "
-    "Choose Photo) or a sample, then paint it. Tell us anything that felt confusing, slow or broken, "
-    "and what you loved: Give Feedback, in a painting's More menu, lets you mark the spot."
+    "Thank you for trying Paint by Moonlight 1.1 before anyone else.\n\n"
+    "New: make it your own. In a painting, tap ✎ Change (beside Undo) to draw lines with your finger or "
+    "Apple Pencil, bend them with Bend Line, split and join areas and pick any paint; ? opens the Tool "
+    "Guide, with a picture to practise on. Or tap Blank Page in New Painting and draw your own picture "
+    "to paint.\n\n"
+    "Please try: a photo of your own, changed, then painted; bending a long line across the picture; a "
+    "Blank Page drawing; the drawing tools on an iPhone turned on its side.\n\n"
+    "Also new: five free paintings, one back each day.\n\n"
+    "Anything odd, confusing or lovely: Give Feedback, in a painting's More menu, lets you mark the spot."
 )
 
 

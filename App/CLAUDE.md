@@ -554,11 +554,11 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
 
 ## Create flow
 
-- **Paint Now** (painting-company row 239, "Paint Now, through the Shelf's door"; ships in the
-  release but for its drawing-tool parts): New Painting is **Paint**, one shelf
+- **Paint Now** (painting-company row 239, "Paint Now, through the Shelf's door"; ships in 1.1, its
+  drawing tools too): New Painting is **Paint**, one shelf
   (`PhotoSourceView`): Tonight's Picture (`Sample.tonight`, a library painting a calendar day),
-  Your Own (A Photo, the system picker; Take Photo; under `UNRELEASED` A Drawing on Paper and
-  Blank Page), The Library. No inline picker, segmented control or Browse All any more. A picture
+  Your Own (A Photo, the system picker; Take Photo; Blank Page; under `UNRELEASED` A Drawing on
+  Paper), The Library. No inline picker, segmented control or Browse All any more. A picture
   picked (or a photo dropped or opened, outside demos) sets `CreateModel.paintsNow`: the pushed
   preview is only the picture forming (`TemplatePreviewView.isWaitOnly`: no card, no Refine or
   Enlarge) and starts by itself as it appears (the early start, free paintings asked at once;
@@ -568,7 +568,7 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   "~20 min · 406 areas"), whose Painting Lengths cut it again in place (`Library.recut`:
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time band, and
-a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (`UNRELEASED`, with the
+a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
   the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
   `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
@@ -624,18 +624,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
-- Refine is in SideStore and Debug builds only for now (`#if UNRELEASED`; Paul, October 21: "Let’s
-  just take refine out of the release for now—there will be a good one soon"): the release has no
-  Refine button or tip on the preview, no Refine note over it and no draft row (`Drafts` reads
-  no draft there, leaving the one on disk for a build with Refine), and Release's
-  `EXCLUDED_SOURCE_FILE_NAMES` leaves out every `Refine*.swift` and `DraftRow.swift`, which
-  `ci/check_release.sh` checks (its types, read from the files the setting names): a new file of
-  Refine's screen named so is left out and checked too, and
-  anything outside them that names its types needs `#if UNRELEASED`. `RefineEdits.swift` (the
-  edits' model, back in by `INCLUDED_SOURCE_FILE_NAMES`) and `CreateModel`'s refining stay, so
-  paintings refined before regenerate as they were. Every gate that ships Refine and From Scratch,
-  and what else changes with them, is listed in `docs/refine-release-gates.md` (painting-company
-  row 236 takes them out on a release branch).
+- Refine ships from 1.1 (painting-company row 236): left out of 1.0 (Paul, October 21), its gates,
+  and From Scratch's, ✎ Change's and the era door's, came out on the release branch
+  `claude/pbm-1.1-candidate` (`docs/refine-release-gates.md` lists them; Release's
+  `EXCLUDED_SOURCE_FILE_NAMES` is gone).
 - Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
   which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
   the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
@@ -977,8 +969,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
   covers the flow and regeneration, `DrawingEntryUITests` the tile.
-- From Scratch (SideStore and Debug builds, `#if UNRELEASED`, as Refine is; painting-company
-  row 231): the Paint page's Blank Page (`from-scratch`) calls
+- From Scratch (from 1.1, as Refine; painting-company row 231): the Paint page's Blank Page (`from-scratch`) calls
   `CreateModel.loadScratch()` (the drawing tools' Done then starts the painting, row 239): a white square page (`blankPageSide`) is the flow's photo, the
   base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
   makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
@@ -1019,7 +1010,9 @@ a length already cut while the painting is open is made again as it was, `cuts`)
 ## Ravenna (the secret door)
 
 Ravenna, the mosaic era (painting-company row 234; it was the separate SideStore app
-pbordjadze/ravenna), is in SideStore and Debug builds only. Its app is the static framework
+pbordjadze/ravenna), ships from 1.1, behind the secret door (row 236; it was SideStore's and
+Debug's only). The `Ravenna` target defines `UNRELEASED` in Debug alone, as the app does, so its
+`UnlimitedPaintings.forLaunch` sells in the release and nothing in SideStore's build. Its app is the static framework
 `App/Ravenna` (module `Ravenna`, the project's `Ravenna` target) with its resources in
 `App/RavennaResources` (the `RavennaResources` bundle target: asset catalog, string catalog,
 `RavennaShaders.metal`, `Mosaics/` and `Samples/library.json`), on the package's `MosaicKit`,

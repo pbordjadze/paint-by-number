@@ -329,8 +329,8 @@ struct TemplatePreviewView: View {
                 Button("Shrink Preview", systemImage: "arrow.down.right.and.arrow.up.left") { setEnlarged(false) }
             }
         }
-        // Refine is in SideStore and Debug builds only for now: the release has no Refine step.
-        // Paint Now has none either: the painting's ✎ Change is its way to the drawing tools.
+        // A picture Paint Now starts at once has no Refine step: the painting's ✎ Change is its
+        // way to the drawing tools.
         if !isEnlarged && !isWaitOnly {
             // The optional Refine step: a text button, so it reads as a step and not a view.
             ToolbarItem(placement: .primaryAction) {
