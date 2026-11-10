@@ -93,6 +93,7 @@ final class PaintingTipsTests: XCTestCase {
         sleep(1)
         attachScreenshot(of: app, named: "more-under-the-zen-tip")
         XCTAssertTrue(restart.exists, "More's menu closed with the tip")
+        XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with More's menu (main's iPhone run, November 9)")
     }
 
     /// Filling an area is using what the tip is about: the tip closes by itself and stays closed.

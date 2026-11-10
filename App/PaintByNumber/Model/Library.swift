@@ -185,6 +185,16 @@ final class Library {
             settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName)
         made.receivedDigest = draft.receivedDigest
+        if !draft.isNamed {
+            made.title = PhotoNaming.distinct(draft.title, among: Set(artworks.map(\.title)))
+            made.titled = false
+        }
+        if let names = draft.nicknames {
+            made.sentNicknameSeed = names.seed
+            // A version beyond this build's is no sender's this build could name by, and kept it
+            // would rename the paints once a newer vocabulary ships.
+            made.nicknameVersion = min(names.version, ColorNickname.currentVersion)
+        }
         let artwork = made
         let store = self.store
         try await Background.run {
@@ -203,7 +213,7 @@ final class Library {
 
     /// A painting someone sent (`SharedPainting`, a `.moonlight` file) as a new painting, blank and
     /// with its sender's title (else `fallbackTitle`, the file's name), and its colors' nicknames
-    /// its own. With the sender's photo (or library picture) it has the photo peek, and a damaged
+    /// the sender's (`SharedPainting.nicknames`; a file without them, its own). With the sender's photo (or library picture) it has the photo peek, and a damaged
     /// template is made again from it, without the sender's edits, which never travel; without,
     /// neither. A photo that doesn't decode is left out. The same file opened again (tapped twice
     /// in Messages, say) opens the painting it made, painted or not, rather than adding a copy.
@@ -237,7 +247,8 @@ final class Library {
                 title: title, template: shared.template, settings: settings, photo: photo,
                 // A library picture's name only beside its photo: alone it could name any picture,
                 // which a damaged template would then be made again from.
-                sampleName: photo == nil ? nil : shared.sampleName, receivedDigest: digest))
+                sampleName: photo == nil ? nil : shared.sampleName, receivedDigest: digest, nicknames: shared.nicknames,
+                isNamed: !shared.title.isEmpty || fallbackTitle != nil))
         } catch {
             Log.library.error("Saving a received painting failed: \(String(describing: error), privacy: .public)")
             throw ReceiveError.saveFailed
@@ -295,6 +306,9 @@ final class Library {
         var age: TimeInterval = 0
         /// Demos use smaller photos so they are ready quickly even in Debug builds.
         var photoMaxPixelSize = ArtworkStore.sourceMaxPixelSize
+        /// The Painting Length it is recorded as cut for, as a picture picked on the Paint page is
+        /// (`gallery-open-new`: its length chip); nil as the starters have none.
+        var paintingLength: PaintingLength? = nil
     }
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
@@ -314,9 +328,13 @@ final class Library {
                 let date = now.addingTimeInterval(-item.age - Double(index))
                 let clock = ContinuousClock.now
                 do {
-                    let draft = try await ArtworkFactory.draft(
+                    var draft = try await ArtworkFactory.draft(
                         sample: item.sample, paintedFraction: item.painted, date: date,
                         photoMaxPixelSize: item.photoMaxPixelSize)
+                    if let length = item.paintingLength {
+                        draft.paintingLength = length
+                        draft.settingsOrigin = .suggested
+                    }
                     try await create(draft)
                     created += 1
                     Log.library.notice("Seeded \(item.sample.id, privacy: .public) in \(String(describing: ContinuousClock.now - clock), privacy: .public)")
@@ -331,10 +349,14 @@ final class Library {
 
     // MARK: Editing
 
+    /// Names the painting; kept as it is, the name it was given becomes its own all the same.
     func rename(_ id: UUID, to title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp, artwork.title != trimmed else { return }
+        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp,
+              artwork.title != trimmed || !artwork.isNamed
+        else { return }
         artwork.title = trimmed
+        if artwork.titled != nil { artwork.titled = true }
         replace(artwork, resort: false)
         persistMeta(artwork)
     }
@@ -598,6 +620,115 @@ final class Library {
         return PaintingDocument(
             template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0),
             hasPhoto: hasPhoto)
+    }
+
+    /// What the painting's ✎ Change opens on (`CreateModel.load(artwork:…)`): the photo it was
+    /// made from as stored (`source.jpg`, else its library picture's file) and its refinements,
+    /// read off the main actor. Throws `ArtworkFactory.FactoryError.sourceUnavailable` without a photo.
+    func changeInputs(for id: UUID) async throws -> (photo: Data, refinements: TemplateRefinements) {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        _ = await writes[id]?.value
+        let store = self.store
+        return try await Background.run { () throws -> (photo: Data, refinements: TemplateRefinements) in
+            let photo: Data
+            if store.hasSource(id) {
+                photo = try Data(contentsOf: store.url(.source, of: id))
+            } else if let url = artwork.sampleName.flatMap(Sample.named)?.url {
+                photo = try Data(contentsOf: url)
+            } else {
+                throw ArtworkFactory.FactoryError.sourceUnavailable
+            }
+            let refinements = try store.readRefinements(id)
+            // Edits a newer app made may not all have been read: Done would write them away.
+            guard refinements.editorVersion <= TemplateEditor.version else { throw OpenError.needsNewerApp }
+            return (photo, refinements)
+        }
+    }
+
+    /// Takes the painting's ✎ Change (painting-company row 239): `draft`, the drawing tools'
+    /// template with its settings and refinements, becomes the painting's, its painted areas
+    /// carried over (`PaintProgress.remapped`, as `regenerate` does: an area a new line split is
+    /// painted on both sides), swapped in atomically with its `refinements.json`.
+    func adopt(_ draft: ArtworkDraft, into id: UUID) async throws -> PaintingDocument {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }
+        guard regenerating[id] == nil else { throw RegenerationError.inProgress }
+        regenerating[id] = 0
+        defer { regenerating[id] = nil }
+        _ = await writes[id]?.value
+        let store = self.store, template = draft.template
+        let (old, savedProgress) = try await Background.run { () throws -> (Template?, ArtworkStore.SavedProgress) in
+            let old = try Library.readTemplate(id, from: store)
+            return (old, try Library.readProgress(id, regionCount: old?.regions.count ?? 0, from: store))
+        }
+        let (progress, thumbnail, hasPhoto) = await Background.run { () -> (PaintProgress, Data?, Bool) in
+            let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
+                ?? PaintProgress(regionCount: template.regions.count)
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted), store.hasSource(id))
+        }
+        try Task.checkCancellation()
+        var updated = self.artwork(with: id) ?? artwork
+        updated.adopt(template, settings: draft.settings)
+        updated.format = Artwork.currentFormat
+        updated.record(progress)
+        updated.thumbnailVersion += 1
+        let snapshot = updated, refinements = draft.refinements
+        let saved = await enqueue(id) { store in
+            try store.replaceContents(
+                of: snapshot, template: template, progress: progress, thumbnailPNG: thumbnail, refinements: refinements)
+        }.value
+        guard saved else { throw RegenerationError.saveFailed }
+        unsavedProgress[id] = nil
+        unsavedMeta.remove(id)
+        clearWriteFailure(id)
+        replace(updated)
+        return PaintingDocument(template: template, progress: progress, hasPhoto: hasPhoto)
+    }
+
+    /// Cuts a painting not begun again at another Painting Length (the painting's length chip,
+    /// painting-company row 239): Auto chooses settings for its photo at `length`, as the Paint
+    /// page's pick did at the painter's own (`ArtworkFactory.suggested`), keeping its line art,
+    /// mix and tuning; then `regenerate` makes and saves it, and the artwork records the length.
+    /// A cut the painting had before at that length is put back instead (`restoreCut`).
+    func recut(artwork id: UUID, length: PaintingLength) async throws -> PaintingDocument {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        let store = self.store
+        let photo = try await Background.run { try ArtworkFactory.sourcePhoto(of: artwork, in: store) }
+        let settings = try await ArtworkFactory.suggested(
+            for: photo, keeping: artwork.settings, length: length, maxCandidates: CreateModel.maxCandidates)
+        try Task.checkCancellation()
+        var document = try await regenerate(artwork: id, settings: settings)
+        if var updated = self.artwork(with: id) {
+            updated.paintingLength = length.rawValue
+            updated.settingsOrigin = SettingsOrigin.suggested.rawValue
+            replace(updated, resort: false)
+            let snapshot = updated
+            enqueue(id) { store in try store.writeMeta(snapshot) }
+        }
+        // Nothing was painted, so nothing to tell: the painting is simply the new cut.
+        document.notice = nil
+        return document
+    }
+
+    /// Puts back a cut the painting had while open (`template`, made with `settings` at
+    /// `length`), as it was: never made again, which from `source.jpg` came out a few areas
+    /// different from the cut made from the photo itself (the Mac's QA, 347 areas then 344). The
+    /// painting's refinements stay as they are.
+    func restoreCut(artwork id: UUID, length: PaintingLength, template: Template, settings: GenerationSettings) async throws -> PaintingDocument {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        let store = self.store
+        var draft = ArtworkDraft(title: artwork.title, template: template, settings: settings)
+        draft.refinements = (try? await Background.run { try store.readRefinements(id) }) ?? TemplateRefinements()
+        var document = try await adopt(draft, into: id)
+        if var updated = self.artwork(with: id) {
+            updated.paintingLength = length.rawValue
+            updated.settingsOrigin = SettingsOrigin.suggested.rawValue
+            replace(updated, resort: false)
+            let snapshot = updated
+            enqueue(id) { store in try store.writeMeta(snapshot) }
+        }
+        document.notice = nil
+        return document
     }
 
     /// The photo an artwork was made from (the painting screen's photo peek), decoded off the main actor.

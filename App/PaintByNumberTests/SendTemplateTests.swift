@@ -26,6 +26,11 @@ struct SendTemplateTests {
         #expect(pictureKept == none && !pictureKept.localizedCaseInsensitiveContains("photo"))
     }
 
+    /// The photo stays behind unless the painter switches it on.
+    @Test func photoIsOffUntilAskedFor() {
+        #expect(!SendTemplateSheet.includesPhotoByDefault)
+    }
+
     /// A refined, half-painted painting with a photo, made from a library picture: what is sent is
     /// its template, with its photo and picture only when asked for.
     private func sender(_ library: Library) async throws -> Artwork {
@@ -87,6 +92,35 @@ struct SendTemplateTests {
         #expect(document.progress.paintedCount == 0 && document.notice == nil)
         // It stays after a relaunch.
         #expect(makeLibrary().artwork(with: received.id) == received)
+    }
+
+    /// The receiver paints the sender's page by the sender's names (the sweep of November 9: colour
+    /// 1 was "Apricot Nectar" for one and "Cider Donut" for the other), after a relaunch too, and
+    /// passes them on; a file from before the names travelled names its paints its own way.
+    @Test func paintNamesSurviveASend() async throws {
+        let library = makeLibrary()
+        var artwork = try await sender(library)
+        artwork.nicknameVersion = 1
+        try library.store.writeMeta(artwork)
+        let palette = try library.store.readTemplate(artwork.id).palette
+        func names(_ artwork: Artwork) -> [String] {
+            ColorNickname.assign(palette, seed: artwork.nicknameSeed, version: artwork.nicknameVersion)
+        }
+        let sent = try ArtworkExporter.sharedPainting(store: library.store, artwork: artwork, includesPhoto: false)
+        let received = try await library.receive(sent, fallbackTitle: nil)
+        #expect(received.id != artwork.id)
+        #expect(received.nicknameSeed == ColorNickname.seed(for: artwork.id) && received.nicknameVersion == 1)
+        #expect(names(received) == names(artwork))
+        #expect(makeLibrary().artwork(with: received.id)?.nicknameSeed == artwork.nicknameSeed)
+
+        let passedOn = try await makeLibrary().receive(
+            ArtworkExporter.sharedPainting(store: library.store, artwork: received, includesPhoto: true), fallbackTitle: nil)
+        #expect(names(passedOn) == names(artwork))
+
+        let unnamed = try SharedPaintingCodec.encode(SharedPainting(title: "Old", settings: nil, template: Fixtures.stripes()))
+        let old = try await library.receive(unnamed, fallbackTitle: nil)
+        #expect(old.sentNicknameSeed == nil && old.nicknameSeed == ColorNickname.seed(for: old.id))
+        #expect(old.nicknameVersion == ColorNickname.currentVersion)
     }
 
     /// With the photo, the painting has it for the photo peek and to be made again from; never the

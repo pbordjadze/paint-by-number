@@ -364,7 +364,89 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Lifecycle
 
-    override var canBecomeFirstResponder: Bool { true }
+    /// Not while a menu is open over the painting (More, the length chip, the Finished bar's
+    /// Share): a menu opened over the canvas as first responder raised the software keyboard for
+    /// it, with nothing to type into, over the lower half of the painting until the menu closed
+    /// (the Mac critic's sweep and QA, November 9; `KeyboardWatch` saw every such keyboard come
+    /// with the canvas first responder and `_UIContextMenuActionsOnlyViewController` presented).
+    /// Under a menu its input is an empty view, so the system has no keyboard to show for it, and
+    /// a keyboard coming anyway sends it to resign (`keyboardWillShow`); `regainFocus` takes first
+    /// responder back once the menu has gone.
+    override var canBecomeFirstResponder: Bool { !Self.presentsMenu(window) }
+
+    override var inputView: UIView? { Self.presentsMenu(window) ? noKeyboard : nil }
+    private let noKeyboard = UIView(frame: .zero)
+
+    @objc private func keyboardWillShow(_ note: Notification) {
+        guard isFirstResponder, Self.presentsMenu(window) else { return }
+        Log.canvas.notice("A keyboard came for the canvas under a menu: the canvas lets first responder go")
+        _ = resignFirstResponder()
+    }
+
+    /// Whether anything is presented over the controller the canvas is in (a sheet, an alert, a
+    /// menu): the canvas may itself be in a presented one (Refine's Try Painting, in the create
+    /// flow's cover), so it is the top of the window's presentations that must hold the canvas.
+    private var presentsAbove: Bool {
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        guard let view = top?.viewIfLoaded else { return false }
+        return !isDescendant(of: view)
+    }
+
+    /// Whether a menu is presented in `window` (UIKit's context menu controllers, by name: there
+    /// is no API that says).
+    static func presentsMenu(_ window: UIWindow?) -> Bool {
+        var presented = window?.rootViewController?.presentedViewController
+        while let controller = presented {
+            if String(describing: type(of: controller)).contains("ContextMenu") { return true }
+            presented = controller.presentedViewController
+        }
+        return false
+    }
+
+    /// Whether the canvas means to be first responder: from the time it is in a window until
+    /// `releaseFocus` (feedback mode), and again from `focus`.
+    private var wantsFocus = true
+    /// Waiting for whatever took first responder (a menu, a sheet, an alert) to go.
+    private var regaining: Task<Void, Never>?
+
+    func focus() {
+        wantsFocus = true
+        _ = becomeFirstResponder()
+    }
+
+    func releaseFocus() {
+        wantsFocus = false
+        regaining?.cancel()
+        _ = resignFirstResponder()
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned, wantsFocus { regainFocus() }
+        return resigned
+    }
+
+    /// First responder back once nothing is presented over the painting any more: UIKit gives
+    /// it back after a sheet or an alert, but not always after a menu, which took it while the
+    /// canvas couldn't have it (`canBecomeFirstResponder`), and ⌘Z and three-finger undo need it.
+    /// Never under anything presented, where it would take a field's focus or undo fills behind
+    /// a modal.
+    private func regainFocus() {
+        guard regaining == nil else { return }
+        regaining = Task { @MainActor [weak self] in
+            defer { self?.regaining = nil }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self, wantsFocus, window != nil, !isFirstResponder else { return }
+                if !presentsAbove {
+                    _ = becomeFirstResponder()
+                    return
+                }
+            }
+        }
+    }
+
     /// None while a replay plays: ⌘Z, the Edit menu and three-finger undo would take fills off
     /// the painting being played back.
     override var undoManager: UndoManager? { isReplaying ? nil : super.undoManager }
@@ -382,9 +464,12 @@ final class CanvasView: UIView, PaintingCanvas {
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
             Task { self.becomeFirstResponder() }
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         } else {
             displayLink?.invalidate()
             displayLink = nil
+            NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         }
     }
 

@@ -441,7 +441,7 @@ struct RefineView: View {
                 }
                 .background(Theme.paper)
                 .overlay { layersHook }
-                .navigationTitle("Refine")
+                .navigationTitle(screenTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
                 .toolbarVisibility(fullScreen || usesSide ? .hidden : .visible, for: .navigationBar)
@@ -877,7 +877,7 @@ struct RefineView: View {
     /// nudged through junctions as any line now does) unless Color from Photo is on, when the
     /// model reads the photo's colors for the pieces it cuts (`TemplateEditor.painted`).
     private func inked(_ edit: TemplateEditor.Edit) -> TemplateEditor.Edit {
-        Self.inked(edit, colorsFromPhoto: penColors)
+        Self.inked(edit, colorsFromPhoto: penColors && !model.isScratch)
     }
 
     /// `edit`, a drawn line with no paints to give unless `colorsFromPhoto`.
@@ -1293,6 +1293,12 @@ struct RefineView: View {
     private func done() {
         finishCurve()
         dismiss()
+    }
+
+    /// Named for the way in (painting-company row 239): a blank page's drawing, or ✎ Change
+    /// on a painting or a picture.
+    private var screenTitle: Text {
+        model.isScratch ? Text("Blank Page") : Text("Change")
     }
 
     /// The number of changes, for VoiceOver.
@@ -2186,8 +2192,16 @@ extension RefineView {
     }
 
     /// The Pen's and Shapes' Color from Photo: a figure's pieces take the photo's colors as a
-    /// drawn line's do (`inked`), so the switch shows with both.
+    /// drawn line's do (`inked`), so the switch shows with both. A blank page has no photo to
+    /// color from, so none there (the Mac's QA, November 9).
+    @ViewBuilder
     private var penColorsToggle: some View {
+        if !model.isScratch {
+            penColorsSwitch
+        }
+    }
+
+    private var penColorsSwitch: some View {
         Toggle(isOn: $penColors) { Text("Color from Photo") }
             .accessibilityHint(Text(String(
                 localized: "refine.penColors.hint", defaultValue: "Gives the areas a line divides the photo’s colors there.",

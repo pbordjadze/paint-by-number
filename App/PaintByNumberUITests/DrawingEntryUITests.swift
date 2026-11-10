@@ -1,54 +1,38 @@
 import UIKit
 import XCTest
 
-/// Start from a Drawing's way in (SideStore and Debug builds, painting-company row 190): a long
-/// press of the photo step's photo button (Browse All… on iPad, Choose Photo on iPhone) offers
-/// Choose Photo of a Drawing…, and the toolbar itself offers nothing of it.
+/// Start from a Drawing's way in (SideStore and Debug builds, painting-company row 190): the
+/// Paint page's A Drawing on Paper tile, in Your Own, presents the system picker for a drawing.
 final class DrawingEntryUITests: XCTestCase {
     @MainActor
-    private var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
-
-    @MainActor
-    func testLongPressOfThePhotoButtonOffersADrawing() throws {
+    func testADrawingOnPaperPresentsThePicker() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "create"]
         app.launch()
-        // iPhone's Photos pane is the Choose Photo button (`PhotoSourceView.embedsPicker`).
-        let button = isPad ? app.buttons["Browse All…"] : app.buttons["choose-photo"]
-        XCTAssertTrue(button.waitForExistence(timeout: 20), "No photo button on the photo step")
+        let tile = app.buttons["choose-drawing"]
+        XCTAssertTrue(tile.waitForExistence(timeout: 20), "Your Own has no A Drawing on Paper")
         // First use may explain limited library access.
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 2) { ok.tap() }
-        XCTAssertTrue(waitUntil(timeout: 10) { button.isHittable }, "The photo button isn't ready")
+        XCTAssertEqual(tile.label, "A Drawing on Paper")
+        XCTAssertTrue(reveal(tile, in: app), "A Drawing on Paper isn't ready for a tap")
 
-        // Off the toolbar on purpose: nothing names the drawing before the long press.
-        let item = element(labeled: "Choose Photo of a Drawing…", in: app)
-        XCTAssertFalse(element(labeled: "From a Drawing", in: app).exists, "The toolbar still offers From a Drawing")
-        XCTAssertFalse(item.exists, "The drawing's item shows before any long press")
-
-        button.press(forDuration: 1.2)
-        let offered = item.waitForExistence(timeout: 5)
-        attachScreenshot(of: app, named: "drawing-entry-menu")
-        if !offered { attachTree(of: app, named: "drawing-entry-menu-tree") }
-        XCTAssertTrue(offered, "A long press of the photo button doesn't offer Choose Photo of a Drawing…")
-
-        // The item presents the system picker: a new Cancel or Close comes up with its sheet
+        // The tile presents the system picker: a new Cancel or Close comes up with its sheet
         // (the way CreateFlowTests tells a sheet). The out-of-process picker's cold start can
-        // swallow a first tap, so one more long press and tap are allowed.
+        // swallow a first tap, so one more tap is allowed.
         let dismissals = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
         let before = dismissals.count
-        item.tap()
+        tile.tap()
         var presented = waitUntil(timeout: 15) { dismissals.count > before }
         if !presented {
             attachScreenshot(of: app, named: "drawing-entry-tap-missed")
             attachTree(of: app, named: "drawing-entry-tap-missed-tree")
-            if !item.exists, button.isHittable { button.press(forDuration: 1.2) }
-            if item.waitForExistence(timeout: 5) { item.tap() }
+            if tile.isHittable { tile.tap() }
             presented = waitUntil(timeout: 25) { dismissals.count > before }
         }
         attachScreenshot(of: app, named: "drawing-entry-picker")
         if !presented { attachTree(of: app, named: "drawing-entry-picker-tree") }
-        XCTAssertTrue(presented, "Choose Photo of a Drawing… didn't present the system picker")
+        XCTAssertTrue(presented, "A Drawing on Paper didn't present the system picker")
         XCTAssertFalse(app.buttons["Start Painting"].exists)
     }
 }

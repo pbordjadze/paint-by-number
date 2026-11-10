@@ -218,7 +218,9 @@ struct PaletteBar: View {
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
-        let lineCount = max(1, min(lines, count))
+        // The lines the layout made room for (`PaintingLayout`, from the painting's colors), so the
+        // bar never comes out thinner than the room kept for it once fewer colors are left.
+        let lineCount = max(1, lines)
         let lanes = Self.lanes(colors, lines: lineCount)
         let horizontal = axis == .horizontal
         // Lanes run along the bar, each one swatch per line across it.
@@ -245,11 +247,22 @@ struct PaletteBar: View {
             }
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 along {
-                    ForEach(lanes.indices, id: \.self) { lane in
-                        across {
-                            ForEach(lanes[lane], id: \.self) { index in
-                                swatch(index).id(index)
-                                    .transition(transition)
+                    if lineCount == 1 {
+                        // One line: the swatches themselves, by color, so a finished color leaves and
+                        // the rest slide along. In lanes kept by position every later swatch moved to
+                        // another lane, and each ran its leaving and coming in at once: the whole strip
+                        // blinked at every finish (the Mac's QA, November 10).
+                        ForEach(colors, id: \.self) { index in
+                            swatch(index).id(index)
+                                .transition(transition)
+                        }
+                    } else {
+                        ForEach(lanes.indices, id: \.self) { lane in
+                            across {
+                                ForEach(lanes[lane], id: \.self) { index in
+                                    swatch(index).id(index)
+                                        .transition(transition)
+                                }
                             }
                         }
                     }
@@ -326,7 +339,7 @@ struct PaletteBar: View {
         scroll.pending = nil
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
-        let lineCount = max(1, min(lines, colors.count))
+        let lineCount = max(1, lines)
         let lanes = Self.lanes(colors, lines: lineCount)
         guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
         let frameLength = horizontal ? scroll.frame.width : scroll.frame.height

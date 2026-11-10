@@ -26,6 +26,11 @@ struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
     var onClose: (() -> Void)?
+    /// Names a painting still under the name the app gave it (`Artwork.isNamed`): finished, its
+    /// bar's name is tappable (`CompletionBar.onName`). Nil once it has a name.
+    var onName: (() -> Void)?
+    /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
+    var isNamed = true
     /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
@@ -34,6 +39,12 @@ struct PaintView: View {
     /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
     /// Read when the canvas is made.
     var onTemplateFrame: ((CGRect) -> Void)?
+    /// Told once the canvas has drawn this session's first frame (a painting made over in place:
+    /// `ArtworkPaintingView` keeps the old screen over it till then).
+    var onFirstFrame: (() -> Void)?
+    /// ✎ Change (painting-company row 239): the drawing tools on this painting, any time; nil
+    /// offers no button (the release, until the drawing tools ship).
+    var onChange: (() -> Void)?
 
     @State private var controller = CanvasController()
     @Environment(\.startHandoff) private var startHandoff
@@ -49,6 +60,9 @@ struct PaintView: View {
     /// The progress badge names the painting (the top bar's layout that fits has room for it):
     /// the completion bar doesn't name it twice.
     @State private var badgeShowsTitle = false
+    /// Whether the top bar's row on screen has Hint: where it doesn't (a phone with ✎ Change),
+    /// More offers Show Hint, or a phone had no hint until the bar went quiet.
+    @State private var barShowsHint = true
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -109,16 +123,21 @@ struct PaintView: View {
 
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
-        session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
+        session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
+        isNamed: Bool = true,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil
     ) {
+        self.onChange = onChange
         self.session = session
         self.title = title
         self.onClose = onClose
+        self.onName = onName
+        self.isNamed = isNamed
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
+        self.onFirstFrame = onFirstFrame
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
@@ -187,6 +206,14 @@ struct PaintView: View {
         }
         .task {
             if let onTemplateFrame { await reportTemplate(to: onTemplateFrame) }
+        }
+        .task(id: ObjectIdentifier(session)) {
+            guard let onFirstFrame else { return }
+            for _ in 0..<100 where !Task.isCancelled {
+                if controller.isShowingFirstFrame { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            onFirstFrame()
         }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
@@ -402,7 +429,11 @@ struct PaintView: View {
     private func layout(in geo: GeometryProxy) -> PaintingLayout {
         PaintingLayout(PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
-            dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColors(session).count,
+            // The painting's colors, not those left: Auto's count of lines went with the colors
+            // left, so finishing one re-laid the whole palette (3 rows to 2 on an iPad, the bar
+            // wider than the picture and the picture taller; the Mac's QA, November 10). The
+            // create flow's hand-off counts them so too.
+            dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColorCount(session.template),
             isComplete: session.isComplete,
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
@@ -443,6 +474,8 @@ struct PaintView: View {
     /// to `quietRow`.
     private func topBar(width: CGFloat, regular: Bool) -> some View {
         let badges = badgeVariants(regular)
+        // ✎ Change stays in the bar with Hint (the board's critic: it mustn't push Hint out); on
+        // the narrowest windows Hint goes first, as it did before, and Change keeps its place.
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) }
@@ -459,6 +492,7 @@ struct PaintView: View {
                         ForEach(rows, id: \.self) { row in
                             topBarRow(badge: row.badge, showsHint: row.showsHint, regular: regular)
                                 .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
+                                .preference(key: BarHintKey.self, value: [row.showsHint])
                         }
                     }
                     .transition(.opacity)
@@ -470,6 +504,9 @@ struct PaintView: View {
         .onPreferenceChange(BadgeTitleKey.self) { shown in
             // Only the row that fit is on screen; were any other heard, the bar names the title.
             MainActor.assumeIsolated { badgeShowsTitle = shown == [true] }
+        }
+        .onPreferenceChange(BarHintKey.self) { shown in
+            MainActor.assumeIsolated { barShowsHint = shown != [false] }
         }
         // A fade, never a move, so Reduce Motion needs nothing else.
         .animation(.easeInOut(duration: 0.5), value: quiet)
@@ -498,6 +535,10 @@ struct PaintView: View {
             QuietRingButton(session: session, title: title) { chrome.wantsQuiet = false }
                 .frame(width: barHeight, height: barHeight)
             Spacer(minLength: 0)
+            // ✎ Change stays in the quiet bar: it is for any time, half painted too (the Mac's QA).
+            if let onChange {
+                changeButton(onChange, barHeight: barHeight)
+            }
             GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
                 .frame(width: barHeight, height: barHeight)
         }
@@ -511,6 +552,12 @@ struct PaintView: View {
 
     /// Whether the top bar's row on screen names the painting in its badge.
     nonisolated private struct BadgeTitleKey: PreferenceKey {
+        static let defaultValue: [Bool] = []
+        static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
+    }
+
+    /// Whether the top bar's row on screen has Hint.
+    nonisolated private struct BarHintKey: PreferenceKey {
         static let defaultValue: [Bool] = []
         static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
     }
@@ -540,8 +587,20 @@ struct PaintView: View {
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
+            if let onChange {
+                changeButton(onChange, barHeight: barHeight)
+            }
             moreMenu(regular)
         }
+    }
+
+    /// ✎ Change: the drawing tools on this painting.
+    private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
+        GlassIconButton(systemImage: "pencil", label: "Change", action: action)
+            .frame(width: barHeight, height: barHeight)
+            .disabled(session.isReplaying)
+            .accessibilityHint(Text("Draw or erase lines in this painting"))
+            .accessibilityIdentifier("change-painting")
     }
 
     /// What the progress badge shows: the ring, plus any of the title (when it fits whole),
@@ -597,6 +656,9 @@ struct PaintView: View {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
+            if !barShowsHint, !session.isComplete {
+                Button { controller.showHint() } label: { Label("Show Hint", systemImage: "lightbulb") }
+            }
             Divider()
             if session.isReplaying {
                 Button(action: controller.stopReplay) { Label("Stop Replay", systemImage: "stop") }
@@ -666,7 +728,7 @@ struct PaintView: View {
             CompletionBar(
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
-                onShareTimelapse: shareTimelapse, onClose: onClose)
+                onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose)
                 .transition(transition)
         } else {
             PaletteBar(

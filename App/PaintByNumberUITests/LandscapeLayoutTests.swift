@@ -50,7 +50,7 @@ final class LandscapeLayoutTests: XCTestCase {
     func testGallery() throws {
         let app = try launchInLandscape("gallery")
         let preparing = app.staticTexts["Preparing…"]
-        XCTAssertTrue(app.buttons["New Painting"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30))
         let deadline = Date.now.addingTimeInterval(120)
         while preparing.exists && Date.now < deadline { sleep(1) }
         sleep(2)

@@ -33,6 +33,9 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     /// saw, not one made again from `source.jpg`, a JPEG that can suggest otherwise. Absent (nil)
     /// in drafts before it, a drawing's and a page from scratch's.
     var suggested: GenerationSettings? = nil
+    /// `defaultTitle` is a name the app gave the photo (its subject or a date: `PhotoNaming`),
+    /// not one it came with. Absent (nil) in drafts before it, which read as not given.
+    var givenTitle: Bool? = nil
 
     var resolvedTitle: String { Self.resolvedTitle(typed: title, default: defaultTitle) }
 
@@ -43,7 +46,7 @@ nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case photoID, title, defaultTitle, settings, lines, sampleName, scratch, suggested
+        case photoID, title, defaultTitle, settings, lines, sampleName, scratch, suggested, givenTitle
     }
 }
 

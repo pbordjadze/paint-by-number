@@ -40,19 +40,21 @@ nonisolated enum ArtworkExporter {
     static func templatePDF(store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let nicknames = ColorNameText.nicknames(
-            for: template.palette, seed: ColorNickname.seed(for: artwork.id), version: artwork.nicknameVersion)
+            for: template.palette, seed: artwork.nicknameSeed, version: artwork.nicknameVersion)
         return PDFExporter.document(for: template, title: artwork.title, paper: paper, nicknames: nicknames)
     }
 
     /// The painting to send someone else (`SharedPainting`): its template as it is, refinements
     /// and all, with its title and settings, never its progress; with `includesPhoto`, the photo
-    /// it was made from (`source.jpg`) and, with it, the library picture it came from.
+    /// it was made from (`source.jpg`) and, with it, the library picture it came from. Its paint
+    /// names go with it, so the receiver's paints are called what the sender's are.
     static func sharedPainting(store: ArtworkStore, artwork: Artwork, includesPhoto: Bool) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let photo = includesPhoto ? try? Data(contentsOf: store.url(.source, of: artwork.id)) : nil
         return try SharedPaintingCodec.encode(SharedPainting(
             title: artwork.title, settings: artwork.settings, template: template, photo: photo,
-            sampleName: photo == nil ? nil : artwork.sampleName))
+            sampleName: photo == nil ? nil : artwork.sampleName,
+            nicknames: SharedPainting.Nicknames(seed: artwork.nicknameSeed, version: artwork.nicknameVersion)))
     }
 
     /// Writes `data` to a uniquely placed temporary file named after the artwork.

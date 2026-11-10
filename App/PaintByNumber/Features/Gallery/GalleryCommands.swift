@@ -32,7 +32,7 @@ struct GalleryCommands: Commands {
                 .disabled(gallery == nil)
         }
         CommandGroup(replacing: .newItem) {
-            Button("New Painting") { gallery?.newPainting() }
+            Button("Paint") { gallery?.newPainting() }
                 .keyboardShortcut("n")
                 .disabled(gallery?.isCovered != false)
         }

@@ -7,20 +7,6 @@ synchronized folder would bundle it into the app.
 
 ## Gotchas
 
-- The inline `PhotosPicker` runs out of process: never put it inside a ScrollView (UIKit can't
-  arbitrate their pans across the process boundary: neither scrolls). It stays flush with the page's
-  left edge, the window's unless a safe area insets it (edge to edge on compact widths, its card
-  docked there on wide ones): inset from both the left and the top, its photo grid ignores taps on
-  iPhone for its first ten seconds or so, and a painter's iPad ignored them too, though the iPad
-  simulator doesn't (`PhotoSourceView`; `CreateFlowTests` picks an inline photo on both devices
-  and checks the left edge).
-- The inline picker's second pick of a photo it gave before in the flow (its selection is reset
-  after each pick so the same photo can be picked again) is an item with the photo's identifier and
-  no content types: `loadTransferable` answers nil, however often it is asked, and the preview
-  said "Couldn’t Open Photo" (CI, Oct 17). `CreateModel.load(item:)` keeps the data of the last
-  three library photos by identifier and uses the kept copy then. The preview opens either way, so
-  `CreateFlowTests` waits for Start Painting to enable after the second pick, and for the settings'
-  chip (`previewLoads`, `waitForSuggestion`: in SideStore and Debug builds Start works from the first draft).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
@@ -208,6 +194,13 @@ synchronized folder would bundle it into the app.
   reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
   per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
+- The canvas is first responder (⌘Z, three-finger undo). A menu opened over it (More, the length
+  chip, the Finished bar's Share) raised the software keyboard for it, with nothing to type into:
+  while a context menu is presented its `inputView` is an empty view (`CanvasView.inputView`,
+  which is what keeps the keyboard down), it won't take first responder anew, and a keyboard
+  coming anyway makes it resign, `regainFocus` taking it back once nothing is presented. DEBUG
+  `KeyboardWatch` logs every keyboard's owner; `focus`/`releaseFocus` say when the canvas wants
+  it. `PaintingNavigationTests`' `testMoreRaisesNoKeyboard` and `testLengthChipRaisesNoKeyboard`.
 - Events: `PaintingSession.onEvent` has three observers registered when the screen appears:
   `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the shines, the finish) and
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
@@ -295,7 +288,7 @@ synchronized folder would bundle it into the app.
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
   hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
-  (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
+  (`ColorNickname.seed(for:)`; a received painting by its sender's: `Artwork.nicknameSeed`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
   feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
@@ -536,6 +529,13 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
+- Names: a painting of the painter's own photo that they haven't named is named by the app
+  (`PhotoNaming`: the day the photo was taken, else today), made distinct from the paintings'
+  names (", No. 2"), and records `Artwork.titled` false: finished, its bar's second line is that
+  name with a pencil, no label (`CompletionBar.onName`), and a tap opens Name Your Painting
+  (`ArtworkPaintingView`; its field empty, the name as placeholder); Rename or Save names it for
+  good. Named, the bar's title stays a plain way to Rename Painting. Absent, `titled` reads as named.
+  A received painting keeps its sender's paint names (`Artwork.sentNicknameSeed`).
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
   (`GalleryFilter`, `@SceneStorage("galleryFilter")`; there once a favorite exists, or while it
   filters) and `.searchable` make a `GalleryQuery`
@@ -554,13 +554,36 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
 
 ## Create flow
 
-- `PhotoSourceView`: the inline picker fills the page (Gotchas). iPhone doesn't embed it: its grid
-  never took a tap on a device, so the Photos pane is Choose Photo, which presents the full system
-  picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
-  Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
-  picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search; "Browse All…" (the toolbar, iPad only) presents the full system picker, the way in when the embedded
-  one doesn't take taps.
+- **Paint Now** (painting-company row 239, "Paint Now, through the Shelf's door"; ships in the
+  release but for its drawing-tool parts): New Painting is **Paint**, one shelf
+  (`PhotoSourceView`): Tonight's Picture (`Sample.tonight`, a library painting a calendar day),
+  Your Own (A Photo, the system picker; Take Photo; under `UNRELEASED` A Drawing on Paper and
+  Blank Page), The Library. No inline picker, segmented control or Browse All any more. A picture
+  picked (or a photo dropped or opened, outside demos) sets `CreateModel.paintsNow`: the pushed
+  preview is only the picture forming (`TemplatePreviewView.isWaitOnly`: no card, no Refine or
+  Enlarge) and starts by itself as it appears (the early start, free paintings asked at once;
+  declined, or an error cancelled, it goes back to Paint), at the painter's Painting Length.
+  Blank Page's drawing tools' Done goes straight into the painting, Cancel or a page left blank
+  back to Paint. A painting not begun shows the **length chip** under its bar (`LengthChip`,
+  "~20 min · 406 areas"), whose Painting Lengths cut it again in place (`Library.recut`:
+  `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
+  `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time band, and
+a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (`UNRELEASED`, with the
+  drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
+  the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
+  `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
+  unedited template kept as the trail so nothing is made again); Done saves the template and
+  refinements into the painting with its painted areas carried over (`Library.adopt`,
+  `PaintProgress.remapped`), Cancel changes nothing. Cut for 1.1, on purpose: the iPad drawer
+  with the palette staying (the tools are full screen), one undo across paint and edits, the
+  preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
+  base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
+  `PaintNowTests`.
+- `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
+  of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
+  the library's tiles `library-picture`, labelled by title and creator. The inline photo picker is
+  gone (it scrolls out of process, which no scroll view around it arbitrates, and on iPhone its
+  grid never took a tap); A Photo presents the full system picker.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.
@@ -938,10 +961,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
-  PaintCore's `docs/start-from-a-drawing.md`): a long press of the photo step's photo button
-  (Browse All… on iPad, a `Menu` with a primary action; Choose Photo on iPhone, a context menu)
-  offers Choose Photo of a Drawing… and Photograph a Drawing, kept off the toolbar on purpose
-  (findable, not offered; painting-company row 190, October 30); they open the step's own picker and camera
+  PaintCore's `docs/start-from-a-drawing.md`): the Paint page's A Drawing on Paper (`choose-drawing`;
+  until row 239 a long press of the photo button) opens the system picker
   with `picksDrawing` set, so the pick calls `CreateModel.load(drawing:)` /
   `load(drawingData:)`, which cleans the sheet off the main actor (`DrawingScan.clean`: found,
   pulled square, the paper white) and makes the cleaned sheet the flow's photo, so the
@@ -955,10 +976,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   Refine works as on any book (`hasLineArtInput`); Color from Photo and Make Cell read the
   cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
-  covers the flow and regeneration, `DrawingEntryUITests` the long press and the bare toolbar.
+  covers the flow and regeneration, `DrawingEntryUITests` the tile.
 - From Scratch (SideStore and Debug builds, `#if UNRELEASED`, as Refine is; painting-company
-  row 231): the New Painting screen's toolbar button (`from-scratch`, beside Take Photo, its name in text: as an icon newcomers found it only by its VoiceOver label) calls
-  `CreateModel.loadScratch()`: a white square page (`blankPageSide`) is the flow's photo, the
+  row 231): the Paint page's Blank Page (`from-scratch`) calls
+  `CreateModel.loadScratch()` (the drawing tools' Done then starts the painting, row 239): a white square page (`blankPageSide`) is the flow's photo, the
   base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
   makes it and regenerates it from `source.jpg`), nothing is analyzed or suggested, and Refine
   is asked for at once (`opensRefine`; the preview opens it once its push has landed, `pushSettles`). `isScratch`
@@ -989,9 +1010,9 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   Share Extension (a hand-written `.appex` target that can't open its app). A painting someone
   sent (a `.moonlight` file, the type `Config/Info.plist` exports, Owner rank) is told from a photo
   by its first bytes (`SharedPaintingCodec.isSharedPainting`): `Library.receive` adds it as a new,
-  blank painting with the sender's title and nicknames of its own, and with the sender's photo
-  (decoded like any opened image, stored as `source.jpg`) and library picture when they came, so
-  it has the photo peek and a damaged template is made again from the photo, without the sender's
+  blank painting with the sender's title and paint names (`Artwork.sentNicknameSeed`), and with
+  the sender's photo (decoded like any opened image, stored as `source.jpg`) and library picture
+  when they came, so it has the photo peek and a damaged template is made again from the photo, without the sender's
   edits, which never travel. It opens in place of any painting or create flow; one that can't be
   read adds nothing and says why in an alert (`Library.ReceiveError`).
 
@@ -1057,10 +1078,11 @@ written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 
 (a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
-blank page and the Original Photo switch, on unless the painter turns it off (Paul, October 18),
+blank page and the Original Photo switch, off until the painter turns it on (the sweep of
+November 9),
 then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPainting`): PaintCore's
-`SharedPainting`, the template as it is (the painter's refinements are in it) with its title and
-settings, LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
+`SharedPainting`, the template as it is (the painter's refinements are in it) with its title,
+settings and paint names (their seed and vocabulary: the receiver's `Artwork.sentNicknameSeed`), LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
 picture; never progress or refinements. The sheet deletes the file once the share sheet closes,
 and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
 instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter

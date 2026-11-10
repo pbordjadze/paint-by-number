@@ -291,7 +291,7 @@ final class SettingsTests: XCTestCase {
         year.tap()
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
         roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
-        XCTAssertTrue(app.buttons["New Painting"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 

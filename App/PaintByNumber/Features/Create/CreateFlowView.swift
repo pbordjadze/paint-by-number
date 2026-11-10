@@ -124,6 +124,8 @@ struct CreateFlowView: View {
             }
             #endif
             if let droppedPhoto {
+                // A photo dropped or opened from another app is picked as on the Paint page.
+                model.paintsNow = !Self.isDemo
                 model.load(imageData: droppedPhoto, title: droppedTitle)
             } else if let resuming {
                 model.load(draft: resuming.draft, photo: resuming.photo, kept: resuming.kept)
@@ -195,7 +197,7 @@ struct CreateFlowView: View {
         if droppedPhoto != nil || openingSample != nil || resuming != nil || opensOnDrawing {
             TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() }, pictureProbe: previewPicture)
         } else {
-            PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
+            PhotoSourceView(model: model, onClose: { dismiss() }) {
                 // A page from scratch goes to Refine: its preview, plain paper until Refine has
                 // slid up over it, is there at once rather than pushed (`TemplatePreviewView`).
                 var push = Transaction()
@@ -203,6 +205,15 @@ struct CreateFlowView: View {
                 withTransaction(push) { path = [.preview] }
             }
         }
+    }
+
+    /// Demo launches open a dropped photo on its preview, which their screenshots show.
+    private static var isDemo: Bool {
+        #if DEBUG
+        ShellDemo.current != nil
+        #else
+        false
+        #endif
     }
 
     /// The `create-drawing` demos open on the drawing's preview.
@@ -220,14 +231,6 @@ struct CreateFlowView: View {
         if let style = ShellDemo.current?.previewStyle { return style }
         #endif
         return Preferences().previewStyle
-    }
-
-    /// The `create-samples` demos open on the Samples pane; everything else starts on Photos.
-    private var initialPane: PhotoSourceView.Pane {
-        #if DEBUG
-        if ShellDemo.current?.opensSamples == true { return .samples }
-        #endif
-        return .photos
     }
 
     /// Saves the full-resolution template to the library and goes into the painting; the draft of

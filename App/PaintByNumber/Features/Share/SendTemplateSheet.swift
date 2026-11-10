@@ -4,16 +4,16 @@ import os
 import PaintCore
 import SwiftUI
 
-/// "Send Template…": the page someone else will paint, blank, with the Original Photo switch (on
-/// unless the painter turns it off; Paul, October 18: "maybe on by default"), then the share
-/// sheet with the `.moonlight` file (`ArtworkExporter.sharedPainting`), deleted once it closes.
-/// Present it as a sheet.
+/// "Send Template…": the page someone else will paint, blank, with the Original Photo switch
+/// (off until the painter turns it on, `includesPhotoByDefault`), then the share sheet with the
+/// `.moonlight` file (`ArtworkExporter.sharedPainting`), deleted once it closes. Present it as a
+/// sheet.
 struct SendTemplateSheet: View {
     let artwork: Artwork
     @Environment(Library.self) private var library
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @State private var includesPhoto = true
+    @State private var includesPhoto = SendTemplateSheet.includesPhotoByDefault
     @State private var preview: CGImage?
     @State private var isPreparing = false
     @State private var file: URL?
@@ -128,6 +128,10 @@ struct SendTemplateSheet: View {
         let tone = CanvasPalette.sheetPaperSRGB * (colorScheme == .dark ? 0.82 : 1)
         return Color(.sRGB, red: Double(tone.x), green: Double(tone.y), blue: Double(tone.z))
     }
+
+    /// Off: the photo is the private part of what is sent, so it goes only when the painter says
+    /// so (the critic's sweep of November 9; Paul's call, reversing October 18's on).
+    static let includesPhotoByDefault = false
 
     /// The note under the switch. A library picture (`isPicture`) is no one's own photo: sent, it
     /// is "the picture", and kept back there is nothing private to mention.

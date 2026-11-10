@@ -641,7 +641,7 @@ final class RefineUITests: XCTestCase {
                 "The picture moved at \(step): \(canvas.frame), opened at \(opened)")
         }
         for group in ["Cells", "Paint", "Numbers", "See", "Ink"] {
-            app.buttons[group].tap()
+            groupTab(group, of: app).tap()
             kept(group)
         }
         pickTool("select", in: "Cells", of: app)
@@ -783,7 +783,7 @@ final class RefineUITests: XCTestCase {
     @discardableResult
     private func pickTool(_ id: String, in group: String, of app: XCUIApplication) -> XCUIElement {
         let button = app.buttons["refine-tool-\(id)"]
-        if !button.exists { app.buttons[group].tap() }
+        if !button.exists { groupTab(group, of: app).tap() }
         XCTAssertTrue(button.waitForExistence(timeout: 5), "Refine has no \(id)")
         let selected = NSPredicate(format: "isSelected == true")
         button.tap()
@@ -792,6 +792,14 @@ final class RefineUITests: XCTestCase {
         if !waitFor(button, toMatch: selected) { retapIfLost(id) { button.tap() } }
         XCTAssertTrue(waitFor(button, toMatch: selected, timeout: 5), "\(id) didn't become the tool")
         return button
+    }
+
+    /// A group's tab on iPhone, in Refine's own chooser (the segmented control upright, the
+    /// column's buttons on its side, both `refine-groups`): the gallery's Paint (+) lies under
+    /// Refine and answers to the Paint group's name too (Paint Now, November 9).
+    @MainActor
+    private func groupTab(_ group: String, of app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)["refine-groups"].firstMatch.buttons[group]
     }
 
     /// The paint's number in "…Paint 3 · 2 areas".

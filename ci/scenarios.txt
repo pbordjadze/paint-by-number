@@ -2,6 +2,7 @@ paint@40
 paint-progress@40
 paint-zoom@40
 paint-complete@40
+paint-complete-unnamed@40
 paint-dark@40
 paint-dark-paper@40
 paint-fill@40
@@ -37,6 +38,8 @@ gallery-preparing@60
 gallery-draft@90
 gallery-draft-long-text@90
 gallery-open@90
+gallery-open-new@90
+gallery-open-new-dark@90
 gallery-send@90
 gallery-send-dark@90
 gallery-send-long-text@90
@@ -113,7 +116,6 @@ settings-tip@60
 gallery-dark--tip-shelfNewPainting@240
 gallery--tip-shelfHold@240
 gallery--tip-shelfTimeLapse@240
-create--tip-newPaintingSamples@30
 create-preview--tip-newPaintingDivider@120
 create-preview-dark--tip-newPaintingSliders@120
 create-custom-long-text--tip-newPaintingReset@120

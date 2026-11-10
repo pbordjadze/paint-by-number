@@ -20,7 +20,7 @@ final class PaintingNavigationTests: XCTestCase {
     func testBackReturnsToGallery() throws {
         let app = openSeededPainting()
         app.buttons["Back"].tap()
-        let returned = app.buttons["New Painting"].waitForExistence(timeout: 10)
+        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-back")
         XCTAssertTrue(returned, "Back didn't return to the gallery")
     }
@@ -31,7 +31,7 @@ final class PaintingNavigationTests: XCTestCase {
         let window = app.windows.firstMatch
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
             .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
-        let returned = app.buttons["New Painting"].waitForExistence(timeout: 10)
+        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-edge-swipe")
         XCTAssertTrue(returned, "The edge swipe didn't return to the gallery")
     }
@@ -101,6 +101,42 @@ final class PaintingNavigationTests: XCTestCase {
         dismissDialog(at: dialog, titled: "Restart this painting?", in: app)
     }
 
+    /// More's menu raises no keyboard over the painting, and stays open: the canvas takes back the
+    /// first responder the menu took (`CanvasView.resignFirstResponder`; the Mac critic's sweep of
+    /// November 9 saw a keyboard rise over the lower half while it was open, with nothing to type).
+    @MainActor
+    func testMoreRaisesNoKeyboard() throws {
+        let app = openSeededPainting()
+        app.buttons["More"].tap()
+        let restart = app.buttons["Restart"]
+        XCTAssertTrue(restart.waitForExistence(timeout: 5), "More has no Restart")
+        sleep(1)
+        attachScreenshot(of: app, named: "more-open")
+        XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with More's menu")
+        XCTAssertTrue(restart.exists, "More's menu closed by itself")
+    }
+
+    /// The length chip's menu, on a painting not begun, raises no keyboard either (the Mac's
+    /// QA of Paint Now, November 9, item 7: on iPad it did, as More's had).
+    @MainActor
+    func testLengthChipRaisesNoKeyboard() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "gallery-open-new"]
+        app.launch()
+        let chip = app.buttons["length-chip"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 90), "The painting not begun has no length chip")
+        XCTAssertTrue(waitUntil(timeout: 15) { chip.isHittable })
+        sleep(2)
+        chip.tap()
+        // Each length's row carries its time band too: "Quick, 8 min – 25 min".
+        let quick = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Quick'")).firstMatch
+        XCTAssertTrue(quick.waitForExistence(timeout: 5), "The length chip's menu didn't open")
+        sleep(1)
+        attachScreenshot(of: app, named: "length-chip-open")
+        XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with the length chip's menu")
+        XCTAssertTrue(quick.exists, "The length chip's menu closed by itself")
+    }
+
     /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
     /// and a tap on the ring brings Undo and More back.
     @MainActor
@@ -126,7 +162,15 @@ final class PaintingNavigationTests: XCTestCase {
     func testHintButtonMovesTheCanvas() throws {
         let app = openSeededPainting()
         let before = app.screenshot()
-        app.buttons["Hint"].tap()
+        // A phone's bar with ✎ Change has no room for Hint: More offers it there.
+        if app.buttons["Hint"].exists {
+            app.buttons["Hint"].tap()
+        } else {
+            app.buttons["More"].tap()
+            let show = app.buttons["Show Hint"]
+            XCTAssertTrue(show.waitForExistence(timeout: 5), "Neither the bar nor More has Hint")
+            show.tap()
+        }
         sleep(2)
         let after = app.screenshot()
         for (shot, name) in [(before, "before-hint"), (after, "after-hint")] { attach(shot, named: name) }
@@ -398,7 +442,7 @@ final class PaintingNavigationTests: XCTestCase {
         app.launchArguments = ["-demo", "gallery-open"] + (tracingPhotoPeek ? ["-tracePhotoPeek", "YES"] : [])
             + (playHarness ? ["-playHarness"] : [])
         app.launch()
-        // "Back" alone could be another screen's (CI once swiped to the New Painting sheet); the progress
+        // "Back" alone could be another screen's (CI once swiped to the Paint sheet); the progress
         // badge is the painting's own.
         let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
         XCTAssertTrue(badge.waitForExistence(timeout: 90), "The painting didn't open")

@@ -22,6 +22,16 @@ struct CompletionBar: View {
     /// Replay's slot holds Stop while the painting plays back.
     let onStopReplay: () -> Void
     let onShareTimelapse: () -> Void
+    /// While the painting has only the name the app gave it, the line under "Finished!" is that
+    /// name with a pencil, and a tap on it names the painting (the Mac critic's sweep: every
+    /// unnamed painting was the date, on the share sheet and the printed page too). No label says
+    /// so: the name that looks editable is the invitation (Paul, November 9, through the
+    /// interviewer: "it shouldn't say 'name it' it should just feel intuitive"). Named, the title
+    /// there stays a way to rename it, plain (the critic's round 2: a control that worked a
+    /// moment ago shouldn't stop). Nil where nothing can be renamed (demos).
+    var onName: (() -> Void)?
+    /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
+    var isNamed = true
     let onClose: (() -> Void)?
 
     var body: some View {
@@ -56,16 +66,47 @@ struct CompletionBar: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
                     .lineLimit(1)
-                Group {
-                    if title.isEmpty || !showsTitle {
-                        Text("Every area is painted.")
-                    } else {
-                        Text(title)
+                if let onName, !isNamed {
+                    // Shown even where the badge has the title too: this line is the way to name it.
+                    Button(action: onName) {
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            Text(title)
+                                .lineLimit(titleLines)
+                            Image(systemName: "pencil")
+                                .imageScale(.small)
+                                .accessibilityHidden(true)
+                        }
+                        .font(.subheadline)
                     }
+                    .buttonStyle(.borderless)
+                    .tint(Theme.signature)
+                    .accessibilityLabel(Text("Name Painting"))
+                    .accessibilityValue(Text(title))
+                    .accessibilityHint(Text("Gives the painting a name for sharing and printing."))
+                    .accessibilityIdentifier("name-painting")
+                } else if let onName, !title.isEmpty, showsTitle {
+                    Button(action: onName) {
+                        Text(title)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(titleLines)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Rename Painting"))
+                    .accessibilityValue(Text(title))
+                    .accessibilityIdentifier("name-painting")
+                } else {
+                    Group {
+                        if title.isEmpty || !showsTitle {
+                            Text("Every area is painted.")
+                        } else {
+                            Text(title)
+                        }
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(titleLines)
                 }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(titleLines)
             }
             Spacer(minLength: 0)
             ZStack {

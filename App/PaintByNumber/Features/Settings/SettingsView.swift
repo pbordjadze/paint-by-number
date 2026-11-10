@@ -301,7 +301,7 @@ struct SettingsView: View {
                 #if UNRELEASED
                 Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
                 #else
-                Text("A free painting of your own photos comes back each day, up to three. Everything in Samples is always free.")
+                Text("A free painting of your own photos comes back each day, up to three. Everything in The Library is always free.")
                 #endif
             }
         }

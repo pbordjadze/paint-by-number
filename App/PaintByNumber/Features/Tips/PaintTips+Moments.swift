@@ -33,11 +33,11 @@ extension PaintTips {
 
     // MARK: New Painting
 
-    /// Choosing a photo opens: Samples, for whoever has no photo at hand.
+    /// The Paint page opens. Its library is on the page itself, so No Photo at Hand, which
+    /// pointed to the Samples behind a segment, is no longer offered.
     static func newPaintingOpened() {
         desk.enter(.newPainting)
         used(.shelfNewPainting)
-        desk.offer([.newPaintingSamples], in: .newPainting, rest: .milliseconds(1200))
     }
 
     /// A photo or a sample was chosen.

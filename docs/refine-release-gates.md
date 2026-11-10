@@ -65,6 +65,22 @@ keep the `UNRELEASED` side and drop the other).
 `Features/Unlock/UnlockSheet.swift`
 - The sheet's message: keep the `UNRELEASED` side, which says the purchase unlocks Refine.
 
+## Paint Now's drawing-tool parts (painting-company row 239)
+
+The Paint page, the wait in place of the preview and the length chip ship ungated. These wait
+for the drawing tools:
+
+- `Features/Paint/PaintingChange.swift` (`PaintingChangeView`, ✎ Change's cover): wholly in
+  `#if UNRELEASED`; drop the `#if`.
+- `Features/Gallery/ArtworkPaintingView.swift`: `change`, `offersChangeUnlock` and the
+  `UnlimitedPaintings` environment; the cover and `RefineUnlockOffer`; `changeAction`'s
+  `UNRELEASED` side; `openChange()`, `changeEnded()`, `showChangeFailed()`; `PaintingChange`.
+- `Features/Create/PhotoSourceView.swift`: A Drawing on Paper and Blank Page in Your Own, and
+  `startFromScratch()`.
+- `Features/Create/CreateModel.swift`: `load(artwork:photo:template:refinements:)`.
+- `Features/Create/TemplatePreviewView.swift`: the drawing tools' Done on a blank page starting
+  the painting (in `observingTheModel`'s `isRefining` block).
+
 ## With the gates out, also
 
 - **Unlimited Paintings with Refine** (`UnlimitedPaintings.includesRefine`, painting-company

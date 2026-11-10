@@ -48,15 +48,16 @@ struct TemplatePreviewView: View {
     @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
     @Environment(UnlimitedPaintings.self) private var paintings
 
     // In two parts, which the compiler type-checks apart: as one chain it ran out of time.
     var body: some View {
         observingTheModel(screen)
-            .modifier(UnlockOffer(isPresented: $offersUnlock, start: start))
+            .modifier(UnlockOffer(isPresented: $offersUnlock, start: start, declined: leaveIfPaintingNow))
             .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
                 Button("Try Again", action: start)
-                Button("Cancel", role: .cancel) {}
+                Button("Cancel", role: .cancel, action: leaveIfPaintingNow)
             } message: {
                 Text(startError ?? "")
             }
@@ -65,7 +66,11 @@ struct TemplatePreviewView: View {
     /// The preview, its bar and its covers.
     private var screen: some View {
         Group {
-            if let fold, fold.isUpright {
+            if isWaitOnly {
+                // Paint Now: the picture forming is a wait, not a step; nothing here asks anything.
+                canvas
+                    .padding(sidePadding)
+            } else if let fold, fold.isUpright {
                 pages(beside: fold.frame)
             } else if let fold {
                 halves(across: fold.frame)
@@ -126,12 +131,12 @@ struct TemplatePreviewView: View {
             if beside { isTuning = false }
         }
         // The title field names the painting; the bar says which step this is.
-        .navigationTitle("New Painting")
+        .navigationTitle("Paint")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         #if UNRELEASED
         // Refine's button goes while the preview is enlarged, and its tip with it.
-        .barTips(.newPaintingRefine, active: !isEnlarged)
+        .barTips(.newPaintingRefine, active: !isEnlarged && !isWaitOnly)
         #endif
         // Shrink Preview is the way back from the enlarged preview. There is none while Start
         // Painting saves: leaving then would open the painting from whichever flow closes next.
@@ -164,7 +169,11 @@ struct TemplatePreviewView: View {
             // The preview's tips: a template that is final is a moment, a slider let go another.
             .onAppear {
                 PaintTips.desk.enter(.preview)
-                if model.isFinal { previewFinal() }
+                if model.paintsNow {
+                    startPickedPicture()
+                } else if model.isFinal {
+                    previewFinal()
+                }
             }
             .onDisappear {
                 PaintTips.desk.leave(.preview)
@@ -172,6 +181,10 @@ struct TemplatePreviewView: View {
             }
             .onChange(of: model.isFinal) { _, isFinal in
                 if isFinal { previewFinal() }
+            }
+            // A picture picked on the Paint page starts once its photo is there to start from.
+            .onChange(of: model.source == nil) { _, isMissing in
+                if !isMissing && model.paintsNow { startPickedPicture() }
             }
             // A start asked for early goes once the painting is made, unless something called it off.
             .onChange(of: model.startsNow) { _, now in
@@ -191,6 +204,16 @@ struct TemplatePreviewView: View {
                 if refining {
                     PaintTips.refineOpened()
                     hasRefined = true
+                } else if model.isScratch {
+                    // A blank page has no preview (painting-company row 239): Done on a page drawn
+                    // on goes straight into the painting, Cancel or a page left blank back to Paint.
+                    if !model.refiningCancelled && model.refinements.changeCount > 0 {
+                        start()
+                    } else if let onClose {
+                        onClose()
+                    } else {
+                        dismiss()
+                    }
                 }
             }
             #endif
@@ -326,7 +349,8 @@ struct TemplatePreviewView: View {
         }
         #if UNRELEASED
         // Refine is in SideStore and Debug builds only for now: the release has no Refine step.
-        if !isEnlarged {
+        // Paint Now has none either: the painting's ✎ Change is its way to the drawing tools.
+        if !isEnlarged && !isWaitOnly {
             // The optional Refine step: a text button, so it reads as a step and not a view.
             ToolbarItem(placement: .primaryAction) {
                 Button(action: openRefine) {
@@ -351,7 +375,7 @@ struct TemplatePreviewView: View {
             }
         }
         #endif
-        if offersEnlarging && !isEnlarged {
+        if offersEnlarging && !isEnlarged && !isWaitOnly {
             ToolbarItem(placement: .primaryAction) {
                 Button("Enlarge Preview", systemImage: "arrow.up.left.and.arrow.down.right") { setEnlarged(true) }
                     .disabled(model.preview == nil)
@@ -479,7 +503,7 @@ struct TemplatePreviewView: View {
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name,
                     beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
-                    compares: !model.isScratch, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    compares: !model.isScratch && !isWaitOnly, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
                     }
@@ -908,6 +932,25 @@ struct TemplatePreviewView: View {
     private static let startsEarly = false
     #endif
 
+    /// Paint Now: the free paintings are asked at once and the start goes once the painting is
+    /// made; asked only once the photo has loaded, since a start asked for before has nothing to
+    /// start (`CreateModel.askForStart`).
+    private func startPickedPicture() {
+        guard model.source != nil else { return }
+        start()
+    }
+
+    /// The preview is only a wait on the way to the painting: a picture picked on the Paint page
+    /// (`CreateModel.paintsNow`), or a blank page, whose drawing tools' Done starts it.
+    private var isWaitOnly: Bool { model.paintsNow || model.isScratch }
+
+    /// Paint Now's way back when the painting won't start (the unlock declined, an error
+    /// cancelled): the Shelf, where the picture was picked.
+    private func leaveIfPaintingNow() {
+        guard isWaitOnly, !isStarting, !model.startAsked else { return }
+        if let onClose { onClose() } else { dismiss() }
+    }
+
     /// Start Painting was tapped and waits for the painting to be made.
     private var isPreparingStart: Bool { model.startAsked }
 
@@ -917,7 +960,7 @@ struct TemplatePreviewView: View {
         guard !isStarting, !model.startAsked else { return }
         titleFocused = false
         let ownPhoto = isOwnPhoto
-        if Self.startsEarly && !(model.isFinal && !model.isChoosingSettings) {
+        if (Self.startsEarly || model.paintsNow) && !(model.isFinal && !model.isChoosingSettings) {
             // Early: the free paintings now, the start once the painting is made.
             model.askForStart()
             Task {
@@ -1184,10 +1227,12 @@ struct ContentSwipeBackOff: UIViewControllerRepresentable {
 private struct UnlockOffer: ViewModifier {
     @Binding var isPresented: Bool
     let start: () -> Void
+    /// The sheet went without the unlock.
+    let declined: () -> Void
     @Environment(UnlimitedPaintings.self) private var paintings
 
     func body(content: Content) -> some View {
-        content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } }) {
+        content.sheet(isPresented: $isPresented, onDismiss: { if paintings.isUnlocked { start() } else { declined() } }) {
             UnlockSheet(fromStart: true)
         }
     }

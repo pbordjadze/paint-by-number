@@ -134,7 +134,10 @@ final class CreateModel {
     /// (`lineArt(_:lines:)`). Classic line art has no lines to tune.
     var lines = 0.5
     /// The line art the painting is made with: the base with the Lines slider applied.
-    var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
+    var lineArt: LineArtSettings { paintingLineArt ?? Self.lineArt(baseLineArt, lines: lines) }
+    /// A painting's own line art, for its ✎ Change (`load(artwork:…)`), which has no Lines slider:
+    /// the settings it was made with, whatever slider position made them.
+    private var paintingLineArt: LineArtSettings?
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
     /// The photo is a line drawing on paper (Start from a Drawing, painting-company row 190):
@@ -179,6 +182,12 @@ final class CreateModel {
     /// as soon as it is (`startsNow`). Called off wherever a waiting Refine is, and by Reset to
     /// Suggested: a changed setting (a touch heard or not), a new photo, a failed generation.
     private(set) var startAsked = false
+    /// Paint Now (painting-company row 239): a picture picked on the Paint page opens as a
+    /// painting, at the painter's Painting Length, with no preview step: the preview shows only
+    /// the picture forming and starts by itself (`TemplatePreviewView`). Set by the page for each
+    /// pick; a resumed draft, a page from scratch and the demos that open on a preview leave it
+    /// off, and so keep the preview and its sliders.
+    var paintsNow = false
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo; a drawing on Blank's own name once the photo
@@ -190,8 +199,18 @@ final class CreateModel {
         #endif
         return photoDefaultTitle
     }
-    /// The photo's default name: the sample's, or the date.
+    /// The photo's default name: the sample's, a file's own, or one given (`titleIsGiven`).
     private var photoDefaultTitle = ""
+    /// The photo's default name is one the app gave it (the day it was taken, or today:
+    /// `PhotoNaming`), not a name it came with: a painting created under it isn't named
+    /// yet (`ArtworkDraft.isNamed`).
+    private(set) var titleIsGiven = false
+    /// Whether the painting is created with a name of its own: typed, or the photo's (a library
+    /// picture's, a file's), not one the app gave.
+    var isNamed: Bool {
+        !titleIsGiven || defaultTitle != photoDefaultTitle
+            || !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
     #if UNRELEASED
     /// The default name of a drawing on Blank, fixed for the flow so a draft resumed another day
     /// keeps it.
@@ -220,7 +239,7 @@ final class CreateModel {
         return CreateDraft(
             photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
             sampleName: source.sampleName, refinements: refinements, scratch: isScratch ? true : nil,
-            suggested: suggested)
+            suggested: suggested, givenTitle: titleIsGiven ? true : nil)
     }
 
     var colorCount: Double
@@ -359,7 +378,7 @@ final class CreateModel {
     @ObservationIgnored private var refineEpoch = 0
     /// Refine was cancelled and hasn't opened again: a color its card or Edit Paint still had
     /// waiting as the screen went (`RefinePendingPick.flush`) isn't laid over what Cancel put back.
-    @ObservationIgnored private var refiningCancelled = false
+    @ObservationIgnored private(set) var refiningCancelled = false
     @ObservationIgnored private var noteTask: Task<Void, Never>?
 
     /// How many full-resolution templates `made` keeps: a template is 10–20 MB, most of it the
@@ -532,8 +551,9 @@ final class CreateModel {
     }
 
     func load(item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { [self] in
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, givenTitle: true) { [self] in
             let data = try await photoData(of: item)
+            await nameAfterCaptureDate(of: data)
             return try await Self.decode(data: data)
         }
     }
@@ -577,8 +597,9 @@ final class CreateModel {
     /// A photo of a drawing from the library: the sheet is cleaned and its lines become the
     /// painting (`isDrawing`).
     func load(drawing item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil, drawing: true) { [self] in
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, drawing: true, givenTitle: true) { [self] in
             let data = try await photoData(of: item)
+            await nameAfterCaptureDate(of: data)
             return try await Self.decode(data: data)
         }
     }
@@ -622,19 +643,26 @@ final class CreateModel {
 
     /// A photo of a drawing from the camera or a file (`isDrawing`).
     func load(drawingData: Data, title: String? = nil) {
-        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true) { try await Self.decode(data: drawingData) }
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, drawing: true, givenTitle: title == nil) { [self] in
+            if title == nil { await nameAfterCaptureDate(of: drawingData) }
+            return try await Self.decode(data: drawingData)
+        }
     }
 
     /// `title` names the painting when the photo came with a name (an opened file); without
     /// one, the date does.
     func load(imageData: Data, title: String? = nil) {
-        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, givenTitle: title == nil) { [self] in
+            if title == nil { await nameAfterCaptureDate(of: imageData) }
+            return try await Self.decode(data: imageData)
+        }
     }
 
     /// Picks up a draft (`Drafts`): its photo, title and refinements, with the settings the
     /// painter left on the sliders. The suggestion is still made, for Reset to Suggested and the
     /// sliders' detents, but the draft's settings are the ones generated.
     func load(draft: CreateDraft, photo: Data, kept: EditTrail.Kept? = nil) {
+        paintingLineArt = nil
         // A drawing's draft keeps the cleaned sheet as its photo: nothing to clean again.
         begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft, kept: kept,
               drawing: draft.settings.drawing != nil, cleaned: true, scratch: draft.scratch == true) {
@@ -643,6 +671,24 @@ final class CreateModel {
     }
 
     #if UNRELEASED
+    /// A painting's ✎ Change (painting-company row 239): its photo, settings and refinements,
+    /// ready for the drawing tools (`PaintingChangeView`). With no edits its template is its
+    /// base, kept as the trail, so nothing is made again; with edits the base is made again
+    /// from the photo with its pinned paints and the edits laid. Nothing is suggested and no
+    /// draft is kept: Done gives the painting its new template (`Library.adopt`).
+    func load(artwork: Artwork, photo: Data, template: Template, refinements: TemplateRefinements) {
+        let blank = refinements.start == .blank
+        let saved = CreateDraft(
+            photoID: UUID(), title: artwork.title, defaultTitle: artwork.title, settings: artwork.settings, lines: 0.5,
+            sampleName: artwork.sampleName, refinements: refinements, scratch: blank ? true : nil)
+        let kept = refinements.edits.isEmpty ? EditTrail.Kept(base: template, edits: [], made: [], template: template) : nil
+        begin(defaultTitle: artwork.title, sampleName: artwork.sampleName, resuming: saved, kept: kept,
+              drawing: artwork.settings.drawing != nil, cleaned: true, scratch: blank, suggests: false,
+              lineArt: artwork.settings.lineArt) {
+            try await Self.decode(data: photo)
+        }
+    }
+
     /// Refine's Tool Guide: a practice picture as the photo, ready to refine. The evening
     /// (PaintCore's `RefinePractice`) is its template of `scene` at once, never generated: its
     /// pages offer neither Start From nor the text corrections, and have no sliders. Writing's
@@ -657,6 +703,7 @@ final class CreateModel {
         homeKey = nil
         pinOrigins = []
         photoDefaultTitle = ""
+        titleIsGiven = false
         blankTitle = ""
         title = ""
         let photo = scene == .note ? picture.note : picture.evening
@@ -724,9 +771,13 @@ final class CreateModel {
     /// `cleaned` already (a draft's photo).
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
-        drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, decode: @escaping () async throws -> Decoded
+        drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, suggests: Bool = true,
+        lineArt paintings: LineArtSettings? = nil, givenTitle: Bool = false,
+        decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
+        // A painting's own line art (its ✎ Change), read by the inputs prepared below too.
+        paintingLineArt = paintings
         isPractice = false
         isDrawing = drawing
         isScratch = scratch
@@ -738,6 +789,7 @@ final class CreateModel {
         pinOrigins = []
         // A new photo gets a new default name, and anything typed for the last one goes.
         photoDefaultTitle = defaultTitle
+        titleIsGiven = saved.map { $0.givenTitle == true } ?? givenTitle
         #if UNRELEASED
         // A draft on Blank (or a page from scratch) saved its drawing's name as its default.
         blankTitle = scratch || saved?.refinements.start == .blank ? defaultTitle : Self.scratchTitle()
@@ -770,7 +822,7 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let lineArt = baseLineArt
+        let lineArt = paintingLineArt ?? baseLineArt
         // A suggestion's candidates have no edge map: as line art the first would be every edge
         // between its regions, which the painting won't draw, so line art waits for the winner.
         // Nor does a draft show the suggestion: the painter's settings are what it generates.
@@ -822,13 +874,18 @@ final class CreateModel {
                 importance = prepared.importance
                 lineArtInput = prepared.lineArt
                 draftImage = prepared.draft
-                phase = .suggesting
+                if suggests { phase = .suggesting }
                 let chosen: AutoDecision?
                 do {
-                    chosen = try await Self.suggest(
-                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        lineArt: lineArt, tuning: Self.newTuning, taste: Self.newTaste, maxCandidates: Self.maxCandidates,
-                        firstDraft: firstDraft)
+                    // A painting's ✎ Change keeps its own settings: nothing to suggest.
+                    if suggests {
+                        chosen = try await Self.suggest(
+                            prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
+                            lineArt: lineArt, tuning: Self.newTuning, taste: Self.newTaste, maxCandidates: Self.maxCandidates,
+                            firstDraft: firstDraft)
+                    } else {
+                        chosen = nil
+                    }
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch {
@@ -965,7 +1022,7 @@ final class CreateModel {
         return ArtworkDraft(
             id: paintingID, title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
             paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName,
-            refinements: refinements)
+            refinements: refinements, isNamed: isNamed)
     }
 
     /// What the making-of show of `draft` (the painting Start saved, as `artworkID`) is made from:
@@ -1959,6 +2016,12 @@ final class CreateModel {
     }
 
     private static func photoTitle() -> String {
-        Date.now.formatted(.dateTime.month(.wide).day())
+        PhotoNaming.dateTitle(.now)
+    }
+
+    /// A photo the app names is named for the day it was taken, when it says (`PhotoNaming`).
+    private func nameAfterCaptureDate(of data: Data) async {
+        guard titleIsGiven, !Task.isCancelled, let taken = PhotoNaming.captureDate(ofImageData: data) else { return }
+        photoDefaultTitle = PhotoNaming.dateTitle(taken)
     }
 }

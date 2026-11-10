@@ -41,6 +41,42 @@ struct LibraryTests {
         #expect(reloaded.store.source(artwork.id)?.width == 300)
     }
 
+    /// A painting under the name the app gave it (a date, a subject) is made distinct from the
+    /// paintings' names and isn't named until the painter names it; renamed, or kept as it was
+    /// through Name Your Painting's Save, it is named for good, after a relaunch too (the critic's
+    /// round on item 4: the button must not come back). A `meta.json` before the flag is named.
+    @Test func unnamedPaintingsAreDistinctUntilNamed() async throws {
+        let library = makeLibrary()
+        let typed = try await library.create(draft(title: "November 9"))
+        #expect(typed.isNamed && typed.titled == nil)
+        var given = draft(title: "November 9")
+        given.isNamed = false
+        let first = try await library.create(given)
+        #expect(first.title == "November 9, No. 2" && !first.isNamed)
+        given.id = UUID()
+        let second = try await library.create(given)
+        #expect(second.title == "November 9, No. 3" && !second.isNamed)
+        #expect(makeLibrary().artwork(with: first.id)?.isNamed == false)
+
+        library.rename(first.id, to: "Sunday Walk")
+        #expect(library.artwork(with: first.id)?.title == "Sunday Walk")
+        #expect(library.artwork(with: first.id)?.isNamed == true)
+        // Saved under the name it was given: that name is its own now.
+        library.rename(second.id, to: "November 9, No. 3")
+        #expect(library.artwork(with: second.id)?.isNamed == true)
+        await library.flush()
+        let relaunched = makeLibrary()
+        #expect(relaunched.artwork(with: first.id)?.isNamed == true)
+        #expect(relaunched.artwork(with: second.id)?.isNamed == true)
+        #expect(relaunched.artwork(with: second.id)?.title == "November 9, No. 3")
+
+        // An older app's meta.json has no flag: named, never asked.
+        var json = try JSONSerialization.jsonObject(with: Data(contentsOf: library.store.url(.meta, of: first.id))) as? [String: Any]
+        json?["titled"] = nil
+        try JSONSerialization.data(withJSONObject: json ?? [:]).write(to: library.store.url(.meta, of: first.id))
+        #expect(makeLibrary().artwork(with: first.id)?.isNamed == true)
+    }
+
     /// A refined painting keeps its refinements beside it, through a regeneration too, which
     /// reads them again.
     @Test func refinementsAreKeptWithThePainting() async throws {

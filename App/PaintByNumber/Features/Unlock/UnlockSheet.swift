@@ -42,11 +42,11 @@ struct UnlockSheet: View {
                     Group {
                         #if UNRELEASED
                         if forRefine {
-                            Text("Draw your own pictures in Refine, or start one from a blank page. One purchase unlocks Refine and as many new paintings as you like.")
+                            Text("Draw your own picture on a blank page, or change the lines and paints of any painting. One purchase unlocks the drawing tools and as many new paintings as you like.")
                         } else if fromStart {
-                            Text("Your next free painting comes tomorrow. One purchase unlocks Refine and as many new paintings as you like.")
+                            Text("Your next free painting comes tomorrow. One purchase unlocks the drawing tools and as many new paintings as you like.")
                         } else {
-                            Text("One purchase unlocks Refine and as many new paintings as you like.")
+                            Text("One purchase unlocks the drawing tools and as many new paintings as you like.")
                         }
                         #else
                         if fromStart {
@@ -149,7 +149,7 @@ struct UnlockSheet: View {
             Text("Paintings someone sends you are always free.")
                 .foregroundStyle(Theme.quietInk)
             #else
-            Text("Everything in Samples is always free.")
+            Text("Everything in The Library is always free.")
                 .foregroundStyle(Theme.quietInk)
             #endif
         }

@@ -24,10 +24,14 @@ import Foundation
 /// only up to `newestPlausible`: beyond that it is damage, so a damaged file isn't sent to the App
 /// Store for an update that doesn't exist. Chunks defined so far:
 /// - `META` (required): UTF-8 JSON, at most `maximumMetaBytes`:
-///   `{"title": String, "settings": GenerationSettings, "sampleName": String}`, the last two
-///   optional; unknown keys are ignored, settings that don't decode are none, and a `sampleName`
-///   (the library picture the painting was made from) that isn't lowercase letters, digits and
-///   hyphens is none.
+///   `{"title": String, "settings": GenerationSettings, "sampleName": String, "nicknameSeed": UInt64,
+///   "nicknameVersion": Int}`, all but the title optional; unknown keys are ignored, settings that
+///   don't decode are none, and a `sampleName` (the library picture the painting was made from)
+///   that isn't lowercase letters, digits and hyphens is none. `nicknameSeed` and
+///   `nicknameVersion` are the sender's paint names (`ColorNickname.assign`), so the receiver's
+///   paints go by the same names: both or neither, a version outside `1...newestPlausible` is
+///   neither. Files written before they travelled have neither, and readers before them ignore
+///   them.
 /// - `TMPL`:
 ///   ```
 ///   UInt32 compression      `Compression` raw value; one this reader doesn't know needs a newer one
@@ -49,13 +53,30 @@ public struct SharedPainting: Sendable, Equatable {
     public var photo: Data?
     /// The library picture the painting was made from (the app's `Sample.id`).
     public var sampleName: String?
+    /// The seed and vocabulary version of the sender's paint names (`ColorNickname.assign`): the
+    /// same template named with them gives the receiver the sender's names.
+    public var nicknames: Nicknames?
 
-    public init(title: String, settings: GenerationSettings?, template: Template, photo: Data? = nil, sampleName: String? = nil) {
+    public struct Nicknames: Sendable, Equatable {
+        public var seed: UInt64
+        public var version: Int
+
+        public init(seed: UInt64, version: Int) {
+            self.seed = seed
+            self.version = version
+        }
+    }
+
+    public init(
+        title: String, settings: GenerationSettings?, template: Template, photo: Data? = nil, sampleName: String? = nil,
+        nicknames: Nicknames? = nil
+    ) {
         self.title = title
         self.settings = settings
         self.template = template
         self.photo = photo
         self.sampleName = sampleName
+        self.nicknames = nicknames
     }
 
     public static let formatVersion: UInt32 = 1
@@ -83,11 +104,22 @@ public struct SharedPainting: Sendable, Equatable {
         var title: String
         var settings: GenerationSettings?
         var sampleName: String?
+        var nicknameSeed: UInt64?
+        var nicknameVersion: Int?
 
-        init(title: String, settings: GenerationSettings?, sampleName: String?) {
+        init(title: String, settings: GenerationSettings?, sampleName: String?, nicknames: Nicknames?) {
             self.title = title
             self.settings = settings
             self.sampleName = sampleName
+            nicknameSeed = nicknames?.seed
+            nicknameVersion = nicknames?.version
+        }
+
+        var nicknames: Nicknames? {
+            guard let nicknameSeed, let nicknameVersion, (1...Int(SharedPainting.newestPlausible)).contains(nicknameVersion) else {
+                return nil
+            }
+            return Nicknames(seed: nicknameSeed, version: nicknameVersion)
         }
 
         init(from decoder: any Decoder) throws {
@@ -95,6 +127,8 @@ public struct SharedPainting: Sendable, Equatable {
             title = try c.decode(String.self, forKey: .title)
             settings = (try? c.decodeIfPresent(GenerationSettings.self, forKey: .settings)) ?? nil
             sampleName = ((try? c.decodeIfPresent(String.self, forKey: .sampleName)) ?? nil).flatMap(SharedPainting.cleanSampleName)
+            nicknameSeed = (try? c.decodeIfPresent(UInt64.self, forKey: .nicknameSeed)) ?? nil
+            nicknameVersion = (try? c.decodeIfPresent(Int.self, forKey: .nicknameVersion)) ?? nil
         }
     }
 
@@ -111,7 +145,7 @@ public struct SharedPainting: Sendable, Equatable {
         let payload = compression == .none ? raw : try compress(raw)
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        let meta = try encoder.encode(Meta(title: Self.cleanTitle(title), settings: settings, sampleName: sampleName))
+        let meta = try encoder.encode(Meta(title: Self.cleanTitle(title), settings: settings, sampleName: sampleName, nicknames: nicknames))
         guard meta.count <= Self.maximumMetaBytes else {
             throw EncodingError.invalidValue(meta.count, .init(codingPath: [], debugDescription: "META exceeds maximumMetaBytes"))
         }
@@ -191,7 +225,8 @@ public struct SharedPainting: Sendable, Equatable {
         }
         guard r.isAtEnd else { throw CodingError.corrupt("trailing bytes") }
         guard let meta, let template else { throw CodingError.corrupt("missing chunk") }
-        self.init(title: Self.cleanTitle(meta.title), settings: meta.settings, template: template, photo: photo, sampleName: meta.sampleName)
+        self.init(title: Self.cleanTitle(meta.title), settings: meta.settings, template: template, photo: photo, sampleName: meta.sampleName,
+            nicknames: meta.nicknames)
     }
 
     /// Trimmed, without control characters, and at most `maximumTitleLength` characters.

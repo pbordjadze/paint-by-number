@@ -52,6 +52,19 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// same file again opens this painting rather than adding a copy (`Library.receive`). Nil for
     /// paintings not received, and for those received before it was kept.
     var receivedDigest: String?
+    /// The seed of a received painting's paint names, its sender's (`SharedPainting.nicknames`),
+    /// so both paint the same page by the same names; nil for every other painting, whose names
+    /// are seeded by its id (`nicknameSeed`). Its `meta.json` key is `nicknameSeed`.
+    var sentNicknameSeed: UInt64?
+
+    /// False while the painting still has the name it was given, never typed or renamed (a photo's
+    /// subject or date: `PhotoNaming`): its Finished bar offers to name it. Absent from every
+    /// `meta.json` before it, which reads as named, so no older painting is asked.
+    var titled: Bool?
+    var isNamed: Bool { titled ?? true }
+
+    /// What this painting's derived paint names are seeded by (`ColorNickname.assign`).
+    var nicknameSeed: UInt64 { sentNicknameSeed ?? ColorNickname.seed(for: id) }
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -116,6 +129,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
         case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion, receivedDigest
+        case sentNicknameSeed = "nicknameSeed"
+        case titled
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -151,6 +166,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
             paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
             receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
+            sentNicknameSeed = try? c.decodeIfPresent(UInt64.self, forKey: .sentNicknameSeed)
+            titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -172,6 +189,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
         paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
         receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
+        sentNicknameSeed = try? c.decodeIfPresent(UInt64.self, forKey: .sentNicknameSeed)
+        titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }
@@ -205,4 +224,9 @@ nonisolated struct ArtworkDraft: Sendable {
     var refinements = TemplateRefinements()
     /// The received file's digest (`Artwork.receivedDigest`), for a painting someone sent.
     var receivedDigest: String?
+    /// A received painting's sender's paint names (`Artwork.sentNicknameSeed`, `nicknameVersion`).
+    var nicknames: SharedPainting.Nicknames?
+    /// False when `title` is only the name the app gave (`Artwork.titled`): it is made distinct
+    /// from the paintings' names, and the painting is offered a name when it is finished.
+    var isNamed = true
 }

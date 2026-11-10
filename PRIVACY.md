@@ -51,8 +51,9 @@ Nothing leaves your device unless you send or share it yourself. When you share 
 it, export a time-lapse or send a template, you choose where it goes with Apple's share sheet.
 
 **Send Template** makes a file of a painting for someone else to paint: its blank template (with
-any changes you made to the drawing), its title and the settings that made it. It includes the
-original photo unless you switch Original Photo off. It never includes your progress. The file
+any changes you made to the drawing), its title, the settings that made it and its paints' names.
+It includes the original photo only if you switch Original Photo on. It never includes your
+progress. The file
 goes only where you send it; it doesn't pass through us.
 
 **Give Feedback** puts together a report that you can read before sending. It contains your
