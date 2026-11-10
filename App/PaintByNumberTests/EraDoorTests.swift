@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import Ravenna
 import Testing
@@ -85,4 +84,3 @@ struct EraDoorTests {
         #expect(EraClock.nearest(to: 1550) == 1600, "a tie takes the later year")
     }
 }
-#endif

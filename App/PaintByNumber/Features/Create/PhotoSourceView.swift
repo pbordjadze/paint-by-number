@@ -27,10 +27,10 @@ struct PhotoSourceView: View {
     /// picker for a photo of a drawing, which `CreateModel.load(drawing:)` cleans and traces. The
     /// same picker and camera serve both; this says which way the next pick goes.
     @State private var picksDrawing = false
+    #endif
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
-    #endif
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -106,9 +106,7 @@ struct PhotoSourceView: View {
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
-        #if UNRELEASED
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
-        #endif
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
@@ -175,6 +173,7 @@ struct PhotoSourceView: View {
                 }
                 .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
                 .accessibilityIdentifier("choose-drawing")
+                #endif
                 Button {
                     if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
                 } label: {
@@ -182,7 +181,6 @@ struct PhotoSourceView: View {
                 }
                 .accessibilityHint(Text("Draw your own picture on a blank page"))
                 .accessibilityIdentifier("from-scratch")
-                #endif
             }
             .buttonStyle(PressableCardStyle())
         }
@@ -267,7 +265,6 @@ struct PhotoSourceView: View {
         isShowingCamera = true
     }
 
-    #if UNRELEASED
     /// A blank page, straight into the drawing tools.
     private func startFromScratch() {
         PaintTips.photoChosen()
@@ -276,7 +273,6 @@ struct PhotoSourceView: View {
         if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
         onPicked()
     }
-    #endif
 }
 
 /// One of Your Own's ways in: a small card with its symbol and name.

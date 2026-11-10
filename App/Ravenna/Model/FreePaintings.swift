@@ -12,13 +12,9 @@ import Foundation
 /// daylight saving time moves the count by no more than the clock did; a clock set back before
 /// the count began gives them all back rather than stalling them until it catches up.
 nonisolated struct FreePaintings: Codable, Equatable, Sendable {
-    #if UNRELEASED
     /// Five in 1.1, every new painting taking one (painting-company row 235, the owner's decision
     /// of November 5; `UnlimitedPaintings.countsEveryPainting`).
     static let most = 5
-    #else
-    static let most = 3
-    #endif
 
     /// Free paintings left, as of `since`.
     private(set) var left: Int

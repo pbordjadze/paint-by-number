@@ -40,11 +40,7 @@ enum PaintEvent: Equatable {
 /// Paul: "let's build them all"). One begun opens as before, on the palette's first color with
 /// areas left. SideStore and Debug builds only for now (`UNRELEASED`, root `CLAUDE.md` › App rules).
 nonisolated enum OpeningColor {
-    #if UNRELEASED
     static let isLargestArea = true
-    #else
-    static let isLargestArea = false
-    #endif
 
     /// The color of `template`'s largest area, ties going to the lower number; nil without areas.
     static func largestArea(in template: Template, skipping skipped: Int? = nil) -> Int? {

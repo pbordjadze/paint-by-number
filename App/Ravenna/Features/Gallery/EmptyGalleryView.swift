@@ -37,11 +37,7 @@ struct EmptyGalleryView: View {
     }
 
     @ViewBuilder private var sketch: some View {
-        #if UNRELEASED
         SelfPaintingSketch()
-        #else
-        NightSketch()
-        #endif
     }
 }
 
@@ -203,7 +199,6 @@ private struct SketchPaint {
     }
 }
 
-#if UNRELEASED
 /// The empty gallery's sketch paints itself once a launch, about two seconds, the first time the
 /// empty gallery appears (Paul, October 18, 2026: "Build both please, then let me see"; the Lamplit Table's
 /// round `pieces/intro-animation`): the sky, the mountains and the lake in turn, each spreading
@@ -283,4 +278,3 @@ private struct SelfPaintingSketch: View {
         #endif
     }()
 }
-#endif

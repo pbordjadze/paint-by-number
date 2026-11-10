@@ -411,11 +411,7 @@ struct TemplatePreviewView: View {
     /// which shows them and keeps them shown for whoever opened it
     /// (`SettingsKey.previewShowsSettings`), as Paint by Moonlight's SideStore build has it. Ravenna
     /// is always `UNRELEASED`, so it always folds.
-    #if UNRELEASED
     private static let foldsSettings = true
-    #else
-    private static let foldsSettings = false
-    #endif
 
     private var showsSettings: Bool { !Self.foldsSettings || opensSettings }
 
@@ -657,11 +653,7 @@ struct TemplatePreviewView: View {
     /// In SideStore and Debug builds only for now (`UNRELEASED`, until a Lamplit Table round and
     /// Paul choose it for the release): the first-five-minutes walk, October 23 ("Choosing
     /// settings…" takes tens of seconds on a phone, with Start off); Paul: "let's build them all".
-    #if UNRELEASED
     private static let startsEarly = true
-    #else
-    private static let startsEarly = false
-    #endif
 
     /// Start Painting was tapped and waits for the painting to be made.
     private var isPreparingStart: Bool { model.startAsked }

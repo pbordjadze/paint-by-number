@@ -194,9 +194,7 @@ final class CreateModel {
     /// is gone from it (Refine's Start From), as a page from scratch is named (QA, November 3:
     /// a sailboat drawn on Blank was called "Red Fuji").
     var defaultTitle: String {
-        #if UNRELEASED
         if refinements.start == .blank { return blankTitle }
-        #endif
         return photoDefaultTitle
     }
     /// The photo's default name: the sample's, a file's own, or one given (`titleIsGiven`).
@@ -211,11 +209,9 @@ final class CreateModel {
         !titleIsGiven || defaultTitle != photoDefaultTitle
             || !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    #if UNRELEASED
     /// The default name of a drawing on Blank, fixed for the flow so a draft resumed another day
     /// keeps it.
     private var blankTitle = ""
-    #endif
     /// Names the photo, new with each one chosen and the draft's for a photo resumed from one.
     private(set) var photoID = UUID()
 
@@ -604,7 +600,6 @@ final class CreateModel {
         }
     }
 
-    #if UNRELEASED
     /// From Scratch (painting-company row 231): a blank page to draw and paint everything on, with
     /// no photo behind it. The page is plain paper made here, the base Blank from the start, and
     /// Refine opens on it as soon as it is made (`opensRefine`).
@@ -639,7 +634,6 @@ final class CreateModel {
         return String(localized: "create.scratch.title", defaultValue: "Drawing, \(date)",
                       comment: "Default name of a painting started From Scratch on a blank page; the argument is today's month and day, e.g. “November 4”")
     }
-    #endif
 
     /// A photo of a drawing from the camera or a file (`isDrawing`).
     func load(drawingData: Data, title: String? = nil) {
@@ -670,7 +664,6 @@ final class CreateModel {
         }
     }
 
-    #if UNRELEASED
     /// A painting's ✎ Change (painting-company row 239): its photo, settings and refinements,
     /// ready for the drawing tools (`PaintingChangeView`). With no edits its template is its
     /// base, kept as the trail, so nothing is made again; with edits the base is made again
@@ -747,7 +740,6 @@ final class CreateModel {
             }
         }
     }
-    #endif
 
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
     /// preview.
@@ -790,10 +782,8 @@ final class CreateModel {
         // A new photo gets a new default name, and anything typed for the last one goes.
         photoDefaultTitle = defaultTitle
         titleIsGiven = saved.map { $0.givenTitle == true } ?? givenTitle
-        #if UNRELEASED
         // A draft on Blank (or a page from scratch) saved its drawing's name as its default.
         blankTitle = scratch || saved?.refinements.start == .blank ? defaultTitle : Self.scratchTitle()
-        #endif
         title = saved?.title ?? ""
         photoID = saved?.photoID ?? UUID()
         source = nil

@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import Observation
 import SwiftUI
@@ -266,4 +265,3 @@ private struct PassageRandom {
         return Double(z >> 11) / Double(1 << 53)
     }
 }
-#endif

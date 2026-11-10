@@ -57,7 +57,6 @@ final class Drafts {
         store.purgeStaging()
         // A draft is Refine's, which the release leaves out for now (SideStore and Debug builds
         // have it): the release reads none and leaves the one on disk for a build with Refine.
-        #if UNRELEASED
         do {
             current = try store.read()
             keptOnDisk = current != nil && store.hasKept
@@ -69,7 +68,6 @@ final class Drafts {
             Log.create.error("Removing a damaged draft: \(String(describing: error), privacy: .public)")
             store.remove()
         }
-        #endif
     }
 
     /// Takes the flow's latest draft, and the trail its edits made when they have been laid; it

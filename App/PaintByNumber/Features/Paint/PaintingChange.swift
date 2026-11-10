@@ -1,4 +1,3 @@
-#if UNRELEASED
 import PaintCore
 import SwiftUI
 
@@ -60,4 +59,3 @@ struct PaintingChangeView: View {
         }
     }
 }
-#endif
