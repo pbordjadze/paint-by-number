@@ -43,3 +43,11 @@
 Item 1 (a pick never opened the painting) fixed at 01e8711, its UI test green there; item 2 (✎
 Done kept nothing) at bbe9ec7; items 3-6, 8, 10 and 12 at d7101f4; 9 and 11 were this log's
 b048196 round (c2f20dd). Item 7 is the sweep's keyboard fix; 13 and 14 are outside this change.
+
+## 2026-11-10 · Final (Mac QA of 334708b7)
+
+**Verdict: ship once (a) and (b) are fixed.** Everything else that the plan and the b048196 round asked for checks out on device. A pick goes straight to the painting. ✎ Change keeps what it changed. Blank Page always shows. The chip's menu works. ✎ is in the bar with its label and hint. The tools are titled by the way in.
+
+1. **(b) comes first, because the chip is the only way to change a painting's length (plan point 2).** The chip must not contradict itself. Its menu's time band and the chip's own "~N min" have to come from the same estimate (`PaintingTime`), not from fixed ranges per length. Going back to a length must give back the same painting (347 areas, not 344). Either reuse the cut already made for that length, or make the regeneration land on the same bytes. A painter who tries 20 minutes and comes back to 10 should find the 10-minute painting they left.
+2. **(a): no keyboard under a menu.** The keyboard rising under More, the chip's menu and Share is a visible bug on the very control this cut adds, and on both device sizes. Something is keeping or taking text focus. Drop focus before a menu opens, and verify it on the 17e and the iPad.
+3. **Not blockers. Carry them forward.** Cancel while Preparing and closing mid-save need a check on a real device or a UI test before the release goes to TestFlight. Trimming the drawing tools per entry (b048196 point 2) is Paul's call, since the Toolbox is his design. Put it to him with the photo-only tools on a blank page as the example. It does not hold this ship.
