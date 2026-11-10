@@ -1,0 +1,56 @@
+{
+ "n": 3,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    id: change-painting\n- waitForAnimationToEnd"
+   },
+   "seconds": 6.6,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":3,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/s03-change\n"
+   },
+   "seconds": 0.3,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "inspect_screen",
+   "arguments": {},
+   "seconds": 0.3,
+   "isError": false,
+   "text": [
+    "{\"ui_schema\":{\"platform\":\"ios\",\"abbreviations\":{\"b\":\"bounds\",\"txt\":\"text\",\"rid\":\"resource-id\",\"a11y\":\"accessibilityText\",\"hint\":\"hintText\",\"val\":\"value\",\"c\":\"children\"},\"defaults\":{\"enabled\":true,\"focused\":false,\"selected\":false,\"checked\":false,\"txt\":\"\",\"hint\":\"\",\"rid\":\"\",\"val\":\"\",\"a11y\":\"\"}},\"elements\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Paint by Moonlight\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[-1032,-1376][2064,2752]\",\"a11y\":\"dismiss popup\",\"rid\":\"PopoverDismissRegion\"}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[-1032,-1376][2064,2752]\",\"a11y\":\"dismiss popup\",\"rid\":\"PopoverDismissRegion\"},{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[76,514][956,1168]\"},{\"b\":\"[226,664][806,1018]\"},{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[226,664][806,1018]\",\"c\":[{\"b\":\"[416,759][615,783]\",\"a11y\":\"Unlimited Paintings\"},{\"b\":\"[334,791][698,869]\",\"a11y\":\"Draw your own picture on a blank page, or change the lines and paints of any painting. One purchase unlocks the drawing tools and as many new paintings as you like.\"},{\"b\":\"[384,891][474,926]\",\"a11y\":\"Not Now\",\"rid\":\"unlock-not-now\"},{\"b\":\"[486,891][648,926]\",\"a11y\":\"Unlock for $4.99\",\"rid\":\"unlock-buy\"},{\"b\":\"[448,948][584,964]\",\"a11y\":\"Try It in the Tool Guide\",\"rid\":\"unlock-try-guide\"},{\"b\":\"[445,960][587,1004]\",\"a11y\":\"Restore Purchases\",\"rid\":\"unlock-restore\"}]},{\"b\":\"[773,696][803,986]\",\"a11y\":\"Vertical scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[800,1042][803,1049]\"}]},{\"b\":\"[773,696][803,986]\",\"a11y\":\"Vertical scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[800,1042][803,1049]\"}]}]}]}]}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\"}]}]}]},{\"b\":\"[0,0][1032,32]\"},{\"b\":\"[0,0][1032,32]\"}]}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.6,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0003-4-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 305099,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
