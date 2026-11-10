@@ -1005,6 +1005,9 @@ pbordjadze/ravenna), is in SideStore and Debug builds only. Its app is the stati
 `MosaicEngine` and `MosaicCore`. It is Paint by Moonlight's app as copied at f1024441 with
 Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
 own, so it follows none of this app's later changes and needs none of its gates.
+The painter sees it as **Paint by Mosaic** (painting-company row 281: its gallery's title, the PDF
+footer, Settings, Feedback, its credits); code, module, target, files and the name of the city
+in its texts (the Ground and Sinopia captions) stay Ravenna.
 
 - **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About has a plain Year row
   (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose

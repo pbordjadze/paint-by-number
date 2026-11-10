@@ -132,7 +132,10 @@ struct SettingsView: View {
                             withAnimation { showsClock.toggle() }
                         } label: {
                             LabeledContent {
+                                // Tinted as the pickers' values beside it are: it, too, is tapped
+                                // to change (painting-company row 281).
                                 Text(verbatim: EraClock.text(of: EraYear.byzantium))
+                                    .foregroundStyle(.tint)
                             } label: {
                                 SwiftUI.Label("Year", systemImage: "clock")
                             }
@@ -154,7 +157,7 @@ struct SettingsView: View {
                     } header: {
                         Text("About")
                     } footer: {
-                        Text("Your photos and mosaics stay on this device unless you share them or choose to send feedback. Ravenna has no accounts, ads or tracking.")
+                        Text("Your photos and mosaics stay on this device unless you share them or choose to send feedback. Paint by Mosaic has no accounts, ads or tracking.")
                     }
                 }
                 #if DEBUG
@@ -224,7 +227,7 @@ struct SettingsView: View {
             }
         } footer: {
             if paintings.isUnlocked {
-                Text("Thank you for supporting Ravenna.")
+                Text("Thank you for supporting Paint by Mosaic.")
             } else {
                 Text("A free mosaic comes back each day, up to five, and Paint by Moonlight’s new paintings take from the same five. Mosaics someone sends you are always free.")
             }
