@@ -665,10 +665,10 @@ final class CreateModel {
             sampleName: artwork.sampleName, refinements: refinements, scratch: blank ? true : nil)
         let kept = refinements.edits.isEmpty ? EditTrail.Kept(base: template, edits: [], made: [], template: template) : nil
         begin(defaultTitle: artwork.title, sampleName: artwork.sampleName, resuming: saved, kept: kept,
-              drawing: artwork.settings.drawing != nil, cleaned: true, scratch: blank, suggests: false) {
+              drawing: artwork.settings.drawing != nil, cleaned: true, scratch: blank, suggests: false,
+              lineArt: artwork.settings.lineArt) {
             try await Self.decode(data: photo)
         }
-        paintingLineArt = artwork.settings.lineArt
     }
 
     /// Refine's Tool Guide: a practice picture as the photo, ready to refine. The evening
@@ -753,10 +753,11 @@ final class CreateModel {
     private func begin(
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil, kept: EditTrail.Kept? = nil,
         drawing: Bool = false, cleaned: Bool = false, scratch: Bool = false, suggests: Bool = true,
-        decode: @escaping () async throws -> Decoded
+        lineArt paintings: LineArtSettings? = nil, decode: @escaping () async throws -> Decoded
     ) {
         cancelAll()
-        paintingLineArt = nil
+        // A painting's own line art (its ✎ Change), read by the inputs prepared below too.
+        paintingLineArt = paintings
         isPractice = false
         isDrawing = drawing
         isScratch = scratch
@@ -800,7 +801,7 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let lineArt = baseLineArt
+        let lineArt = paintingLineArt ?? baseLineArt
         // A suggestion's candidates have no edge map: as line art the first would be every edge
         // between its regions, which the painting won't draw, so line art waits for the winner.
         // Nor does a draft show the suggestion: the painter's settings are what it generates.

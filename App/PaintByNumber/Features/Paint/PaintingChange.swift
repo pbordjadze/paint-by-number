@@ -14,6 +14,8 @@ import SwiftUI
 /// In SideStore and Debug builds only while the drawing tools are (`docs/refine-release-gates.md`).
 struct PaintingChangeView: View {
     let model: CreateModel
+    /// The tools have opened, on these refinements.
+    var onOpen: (TemplateRefinements) -> Void
 
     @Environment(\.dismiss) private var dismiss
     /// The drawing tools have opened: they stay while their edits are laid, when the template
@@ -47,7 +49,10 @@ struct PaintingChangeView: View {
         }
         .interactiveDismissDisabled()
         .onChange(of: model.canRefine, initial: true) { _, can in
-            if can { isOpen = true }
+            if can && !isOpen {
+                isOpen = true
+                onOpen(model.refinements)
+            }
         }
         .onDisappear {
             // A load never opened stops with the screen.

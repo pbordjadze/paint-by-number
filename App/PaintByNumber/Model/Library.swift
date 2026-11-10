@@ -623,7 +623,10 @@ final class Library {
             } else {
                 throw ArtworkFactory.FactoryError.sourceUnavailable
             }
-            return (photo, try store.readRefinements(id))
+            let refinements = try store.readRefinements(id)
+            // Edits a newer app made may not all have been read: Done would write them away.
+            guard refinements.editorVersion <= TemplateEditor.version else { throw OpenError.needsNewerApp }
+            return (photo, refinements)
         }
     }
 
@@ -634,6 +637,9 @@ final class Library {
     func adopt(_ draft: ArtworkDraft, into id: UUID) async throws -> PaintingDocument {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }
+        guard regenerating[id] == nil else { throw RegenerationError.inProgress }
+        regenerating[id] = 0
+        defer { regenerating[id] = nil }
         _ = await writes[id]?.value
         let store = self.store, template = draft.template
         let (old, savedProgress) = try await Background.run { () throws -> (Template?, ArtworkStore.SavedProgress) in

@@ -72,6 +72,13 @@ struct PaintNowTests {
         #expect(!inputs.photo.isEmpty)
         #expect(inputs.refinements.isEmpty)
 
+        // Refinements from a newer editor may hold edits this one couldn't read: Done would write
+        // them away, so ✎ Change doesn't open on them.
+        try Data(#"{"editorVersion": 9999, "edits": []}"#.utf8).write(to: library.store.url(.refinements, of: artwork.id))
+        await #expect(throws: Library.OpenError.needsNewerApp) {
+            _ = try await library.changeInputs(for: artwork.id)
+        }
+
         let bare = try await library.create(draft())
         await #expect(throws: ArtworkFactory.FactoryError.sourceUnavailable) {
             _ = try await library.changeInputs(for: bare.id)

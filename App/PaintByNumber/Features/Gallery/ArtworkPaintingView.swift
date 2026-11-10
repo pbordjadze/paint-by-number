@@ -38,6 +38,9 @@ struct ArtworkPaintingView: View {
     @State private var notice: ShownNotice?
     /// The painting's length chip's re-cut, under way (`recut(to:)`).
     @State private var recutting: Task<Void, Never>?
+    /// ✎ Change opening or saving (`openChange`, `changeEnded`): never cancelled when the screen
+    /// goes, so Done's change is saved whatever comes after.
+    @State private var changing: Task<Void, Never>?
     @State private var recutFailed = false
     /// The cuts this painting has had while open, by length: going back to one makes that cut
     /// again, not another choice (the Mac's QA: Relaxed again came back as another painting).
@@ -121,7 +124,7 @@ struct ArtworkPaintingView: View {
                     .id(ObjectIdentifier(autosaver.session))
                     // Nothing is painted while the picture is cut again: it would be lost.
                     .overlay {
-                        if recutting != nil { Color.clear.contentShape(.rect) }
+                        if recutting != nil || changing != nil { Color.clear.contentShape(.rect) }
                     }
                     .transition(.opacity)
             } else if let failure {
@@ -191,7 +194,11 @@ struct ArtworkPaintingView: View {
         .toolbar(.hidden, for: .navigationBar)
         #if UNRELEASED
         .fullScreenCover(item: $change, onDismiss: changeEnded) { change in
-            PaintingChangeView(model: change.model)
+            PaintingChangeView(model: change.model) { refinements in
+                // What Done is compared with: the refinements as the tools opened, after the
+                // load's own pin or rebase, not as read from disk (the fresh reader's review).
+                presentedChange?.opened = refinements
+            }
         }
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
         #endif
@@ -325,17 +332,17 @@ struct ArtworkPaintingView: View {
     #if UNRELEASED
     /// The drawing tools on this painting as it stands (`PaintingChangeView`).
     private func openChange() {
-        guard change == nil, recutting == nil, let autosaver, let artwork else { return }
+        guard change == nil, changing == nil, recutting == nil, regeneration == nil, let autosaver, let artwork else { return }
         autosaver.saveNow()
         let template = autosaver.session.template, id = artworkID
-        recutting = Task {
-            defer { recutting = nil }
+        changing = Task {
+            defer { changing = nil }
             do {
                 let inputs = try await library.changeInputs(for: id)
                 try Task.checkCancellation()
                 let model = CreateModel(previewStyle: .painting)
                 model.load(artwork: artwork, photo: inputs.photo, template: template, refinements: inputs.refinements)
-                let opened = PaintingChange(model: model, opened: inputs.refinements)
+                let opened = PaintingChange(model: model)
                 presentedChange = opened
                 change = opened
             } catch is CancellationError {
@@ -353,12 +360,13 @@ struct ArtworkPaintingView: View {
         presentedChange = nil
         change = nil
         let model = ended.model
-        guard !model.refiningCancelled, model.refinements != ended.opened else {
+        // Closed before the tools opened (Cancel while Preparing) is a cancel too.
+        guard let opened = ended.opened, !model.refiningCancelled, model.refinements != opened else {
             model.cancelAll()
             return
         }
-        recutting = Task {
-            defer { recutting = nil }
+        changing = Task {
+            defer { changing = nil }
             do {
                 let draft = try await model.makeDraft()
                 let document = try await library.adopt(draft, into: artworkID)
@@ -406,7 +414,7 @@ struct ArtworkPaintingView: View {
 
     /// Cuts the painting again at `length` (`Library.recut`) and opens the new cut in place.
     private func recut(to length: PaintingLength) {
-        guard recutting == nil, regeneration == nil, let autosaver,
+        guard recutting == nil, changing == nil, regeneration == nil, let autosaver,
               length.rawValue != artwork?.paintingLength else { return }
         autosaver.saveNow()
         recutFailed = false
@@ -541,10 +549,11 @@ private extension OpenNotice {
 }
 
 #if UNRELEASED
-/// ✎ Change's drawing tools open on a painting: their model, and the refinements they opened on.
+/// ✎ Change's drawing tools open on a painting: their model, and the refinements they opened
+/// on, once they have (nil while Preparing).
 private struct PaintingChange: Identifiable {
     let id = UUID()
     let model: CreateModel
-    let opened: TemplateRefinements
+    var opened: TemplateRefinements?
 }
 #endif
