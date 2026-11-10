@@ -794,11 +794,12 @@ final class RefineUITests: XCTestCase {
         return button
     }
 
-    /// A group's tab on iPhone, in Refine's own chooser: the gallery's Paint (+) lies under Refine
-    /// and answers to the Paint group's name too (Paint Now, November 9).
+    /// A group's tab on iPhone, in Refine's own chooser (the segmented control upright, the
+    /// column's buttons on its side, both `refine-groups`): the gallery's Paint (+) lies under
+    /// Refine and answers to the Paint group's name too (Paint Now, November 9).
     @MainActor
     private func groupTab(_ group: String, of app: XCUIApplication) -> XCUIElement {
-        app.segmentedControls["refine-groups"].buttons[group]
+        app.descendants(matching: .any)["refine-groups"].firstMatch.buttons[group]
     }
 
     /// The paint's number in "…Paint 3 · 2 areas".

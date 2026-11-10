@@ -38,7 +38,7 @@ final class ScratchUITests: XCTestCase {
         // presented nothing for a newcomer's first taps, and CI's first launch saw none in 40 s).
         let bucket = app.buttons["refine-tool-bucket"]
         // The Paint group's tab, in Refine's chooser: the gallery's Paint (+) lies beneath.
-        if !bucket.exists { app.segmentedControls["refine-groups"].buttons["Paint"].tap() }
+        if !bucket.exists { app.descendants(matching: .any)["refine-groups"].firstMatch.buttons["Paint"].tap() }
         XCTAssertTrue(bucket.waitForExistence(timeout: 5), "Refine has no Bucket")
         bucket.tap()
         let wheel = app.buttons["refine-palette-new"]

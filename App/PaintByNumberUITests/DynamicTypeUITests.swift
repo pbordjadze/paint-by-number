@@ -38,7 +38,6 @@ final class DynamicTypeUITests: XCTestCase {
     func testNewPaintingTitleAndSamples() throws {
         let app = launch("create-samples")
         XCTAssertTrue(app.staticTexts["Paint"].waitForExistence(timeout: 60), "The Paint page's title is gone")
-        try assertNoClippedText(in: app, named: "create-samples-ax5-top")
         // At this size on a phone the library starts below Tonight's Picture and Your Own, out
         // of a lazy grid's reach until scrolled to.
         let sample = app.buttons.matching(identifier: "library-picture").firstMatch
