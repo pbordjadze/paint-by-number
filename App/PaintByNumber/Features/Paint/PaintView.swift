@@ -57,6 +57,9 @@ struct PaintView: View {
     /// The progress badge names the painting (the top bar's layout that fits has room for it):
     /// the completion bar doesn't name it twice.
     @State private var badgeShowsTitle = false
+    /// Whether the top bar's row on screen has Hint: where it doesn't (a phone with ✎ Change),
+    /// More offers Show Hint, or a phone had no hint until the bar went quiet.
+    @State private var barShowsHint = true
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -473,6 +476,7 @@ struct PaintView: View {
                         ForEach(rows, id: \.self) { row in
                             topBarRow(badge: row.badge, showsHint: row.showsHint, regular: regular)
                                 .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
+                                .preference(key: BarHintKey.self, value: [row.showsHint])
                         }
                     }
                     .transition(.opacity)
@@ -484,6 +488,9 @@ struct PaintView: View {
         .onPreferenceChange(BadgeTitleKey.self) { shown in
             // Only the row that fit is on screen; were any other heard, the bar names the title.
             MainActor.assumeIsolated { badgeShowsTitle = shown == [true] }
+        }
+        .onPreferenceChange(BarHintKey.self) { shown in
+            MainActor.assumeIsolated { barShowsHint = shown != [false] }
         }
         // A fade, never a move, so Reduce Motion needs nothing else.
         .animation(.easeInOut(duration: 0.5), value: quiet)
@@ -529,6 +536,12 @@ struct PaintView: View {
 
     /// Whether the top bar's row on screen names the painting in its badge.
     nonisolated private struct BadgeTitleKey: PreferenceKey {
+        static let defaultValue: [Bool] = []
+        static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
+    }
+
+    /// Whether the top bar's row on screen has Hint.
+    nonisolated private struct BarHintKey: PreferenceKey {
         static let defaultValue: [Bool] = []
         static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
     }
@@ -627,6 +640,9 @@ struct PaintView: View {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
+            if !barShowsHint, !session.isComplete {
+                Button { controller.showHint() } label: { Label("Show Hint", systemImage: "lightbulb") }
+            }
             Divider()
             if session.isReplaying {
                 Button(action: controller.stopReplay) { Label("Stop Replay", systemImage: "stop") }

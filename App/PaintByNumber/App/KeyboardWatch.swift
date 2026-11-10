@@ -21,19 +21,17 @@ nonisolated enum KeyboardWatch {
     @MainActor
     private static func report() {
         let current = UIResponder.current.map { String(describing: type(of: $0)) } ?? "none"
-        var lines = ["The keyboard is about to show; the first responder is \(current)"]
+        Log.demo.notice("The keyboard is about to show; the first responder is \(current, privacy: .public)")
         for scene in UIApplication.shared.connectedScenes {
             guard let scene = scene as? UIWindowScene else { continue }
             for window in scene.windows {
-                let responder = firstResponder(in: window)
-                let name = responder.map { describe($0) } ?? "none"
+                let kind = String(describing: type(of: window))
+                let responder = firstResponder(in: window).map { describe($0) } ?? "none"
                 let presented = window.rootViewController?.presentedViewController.map { String(describing: type(of: $0)) } ?? "none"
-                lines.append(
-                    "  window \(type(of: window)) key \(window.isKeyWindow) level \(window.windowLevel.rawValue) "
-                        + "hidden \(window.isHidden) presented \(presented) first responder \(name)")
+                Log.demo.notice(
+                    "Keyboard window \(kind, privacy: .public) key \(window.isKeyWindow) level \(window.windowLevel.rawValue) hidden \(window.isHidden) presented \(presented, privacy: .public) first responder \(responder, privacy: .public)")
             }
         }
-        Log.demo.notice("\(lines.joined(separator: "\n"), privacy: .public)")
     }
 
     @MainActor

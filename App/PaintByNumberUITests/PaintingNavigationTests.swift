@@ -162,7 +162,15 @@ final class PaintingNavigationTests: XCTestCase {
     func testHintButtonMovesTheCanvas() throws {
         let app = openSeededPainting()
         let before = app.screenshot()
-        app.buttons["Hint"].tap()
+        // A phone's bar with ✎ Change has no room for Hint: More offers it there.
+        if app.buttons["Hint"].exists {
+            app.buttons["Hint"].tap()
+        } else {
+            app.buttons["More"].tap()
+            let show = app.buttons["Show Hint"]
+            XCTAssertTrue(show.waitForExistence(timeout: 5), "Neither the bar nor More has Hint")
+            show.tap()
+        }
         sleep(2)
         let after = app.screenshot()
         for (shot, name) in [(before, "before-hint"), (after, "after-hint")] { attach(shot, named: name) }
