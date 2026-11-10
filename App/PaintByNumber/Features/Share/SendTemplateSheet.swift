@@ -136,7 +136,6 @@ struct SendTemplateSheet: View {
     /// The note under the switch. A library picture (`isPicture`) is no one's own photo: sent, it
     /// is "the picture", and kept back there is nothing private to mention.
     static func explanation(canIncludePhoto: Bool, includesPhoto: Bool, isPicture: Bool) -> String {
-        #if UNRELEASED
         if !canIncludePhoto || (isPicture && !includesPhoto) {
             String(localized: "send.explanation.noPhoto",
                    defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included.",
@@ -154,26 +153,6 @@ struct SendTemplateSheet: View {
                    defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included. Your photo stays on this device.",
                    comment: "Send Template's note with the Original Photo switch off")
         }
-        #else
-        // The release has no Refine: there are no changes to the drawing to mention.
-        if !canIncludePhoto || (isPicture && !includesPhoto) {
-            String(localized: "send.explanation.noPhoto.release",
-                   defaultValue: "They get a blank copy of this page to paint.",
-                   comment: "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)")
-        } else if isPicture {
-            String(localized: "send.explanation.picture.release",
-                   defaultValue: "They get a blank copy of this page to paint, and the picture to peek at.",
-                   comment: "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)")
-        } else if includesPhoto {
-            String(localized: "send.explanation.photo.release",
-                   defaultValue: "They get a blank copy of this page to paint, and your photo to peek at.",
-                   comment: "Send Template's note with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)")
-        } else {
-            String(localized: "send.explanation.drawingOnly.release",
-                   defaultValue: "They get a blank copy of this page to paint. Your photo stays on this device.",
-                   comment: "Send Template's note with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)")
-        }
-        #endif
     }
 
     /// The blank page, and whether there is a photo to send: the painter's own, which travels as

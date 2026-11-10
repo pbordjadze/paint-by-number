@@ -59,7 +59,7 @@
       "MADE FROM WHAT YOU LOVE",
       "• People and pets: the drawing closes their outlines, spends more colors and detail on them, and draws people's eyes.",
       "• Handwriting in your photo, like a note or a card, is traced in ink and kept clear of the numbers, so a love note stays readable.",
-      "• Choose Quick, Relaxed or Detailed in Settings, and each new painting's colors, detail and smoothness are suggested to match. Move a slider and the preview follows.",
+      "• Choose Quick, Relaxed or Detailed in Settings, and each new painting's colors, detail and smoothness are suggested to match. A painting you haven't begun can be made quicker or more detailed in place.",
       "• Take a photo, pick one from your library, or open one from Files or another app.",
       "",
       "CALM, SATISFYING PAINTING",
@@ -93,9 +93,9 @@
   "review": {
     "demoAccountRequired": false,
     "notes": [
-      "No account or sign-in is needed. The app is free: five new paintings are free, and one comes back each day, up to five; every new painting takes one (a picture from The Library, a photo, a blank page or a mosaic). To see the in-app purchase (Unlimited Paintings), open Settings > Unlimited Paintings, or start a sixth painting the same day; Restore Purchases is in that sheet. The purchase also unlocks the drawing tools (Refine): until it is bought, they open its sheet, where Try It opens the Tool Guide, whose practice pictures are free.",
+      "No account or sign-in is needed. The app is free: five new paintings are free, and one comes back each day, up to five; every new painting takes one (a picture from The Library, a photo or a mosaic). To see the in-app purchase (Unlimited Paintings), open Settings > Unlimited Paintings, or start a sixth painting the same day; Restore Purchases is in that sheet. The purchase also unlocks the drawing tools (the pencil Change button in a painting, and Blank Page on the New Painting screen): until it is bought, they open its sheet, where Try It in the Tool Guide opens the tools' guide, whose practice pictures are free.",
       "",
-      "To try it: tap + (New Painting) and pick Tonight's Picture or a picture in The Library: the painting forms and opens by itself (tens of seconds on iPhone the first time). Paint by tapping areas whose number matches the paint selected in the palette. To draw on it, tap ✎ Change beside Undo; Blank Page on the New Painting screen starts a drawing of your own. The first launch also prepares two starter paintings in the gallery, which can take a minute.",
+      "To try it: tap + (New Painting) and pick Tonight's Picture or a picture in The Library: the painting forms and opens by itself (tens of seconds on iPhone the first time). Paint by tapping areas whose number matches the paint selected in the palette. To draw on it, tap the pencil button (Change) beside Undo; Blank Page on the New Painting screen starts a drawing of your own. Both come with the purchase. The first launch also prepares two starter paintings in the gallery, which can take a minute.",
       "",
       "Everything runs on the device, including the on-device models that draw the lines. The app makes no network requests except when someone taps Send in Give Feedback (the More menu on a painting): that uploads the report they reviewed to the developers.",
       "",
@@ -145,7 +145,7 @@
   },
   "inAppPurchases": {
     "com.pbordjadze.paintbynumber.unlimited": {
-      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap ✎ Change in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap the pencil button (Change) in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
     }
   },
   "nomination": {
@@ -156,7 +156,7 @@
       "",
       "Its own pipeline draws each photo as a coloring book: clean outlines that close around people and pets, people's eyes drawn in, handwriting traced in ink and kept clear of the numbers, and a palette mixed from the photo itself, each paint with a name of its own. Painting is made for touch and Apple Pencil, with Zen Mode, dark paper for the evening, and a replay of the finished painting as a time-lapse; painting works with VoiceOver, area by area.",
       "",
-      "It is made by one developer, with no account, ads or tracking, and works offline. 44 public-domain pictures are built in, from Hokusai, Van Gogh and Vermeer to national parks and the Earth from space. Three paintings of your own photos are free, and a one-time purchase unlocks unlimited paintings."
+      "It is made by one developer, with no account, ads or tracking, and works offline. 44 public-domain pictures are built in, from Hokusai, Van Gogh and Vermeer to national parks and the Earth from space. Five paintings are free, one back each day, and a one-time purchase unlocks unlimited paintings and the drawing tools."
     ],
     "publishStartDate": "2026-10-27T00:00:00Z",
     "deviceFamilies": [

@@ -115,7 +115,7 @@ final class UnlimitedPaintings {
     func mayStart(ownPhoto: Bool) async -> Bool {
         guard ownPhoto || Self.countsEveryPainting, isSold else { return true }
         if !hasChecked { await refresh() }
-        // The count is shared with Ravenna's (SideStore and Debug builds), which may have taken
+        // The count is shared with Paint by Mosaic's (`Ravenna`), which may have taken
         // one since.
         if let defaults { free = Self.stored(in: defaults) }
         return isUnlocked || freeLeft > 0

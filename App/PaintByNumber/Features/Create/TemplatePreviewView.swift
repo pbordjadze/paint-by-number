@@ -304,8 +304,7 @@ struct TemplatePreviewView: View {
         withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
     }
 
-    /// Whether Close answers Esc: not while Refine covers the preview (Refine is in SideStore and
-    /// Debug builds only).
+    /// Whether Close answers Esc: not while Refine covers the preview.
     private var closeTakesEsc: Bool {
         !isRefining
     }

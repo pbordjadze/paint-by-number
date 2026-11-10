@@ -55,8 +55,7 @@ final class Drafts {
     init(store: DraftStore) {
         self.store = store
         store.purgeStaging()
-        // A draft is Refine's, which the release leaves out for now (SideStore and Debug builds
-        // have it): the release reads none and leaves the one on disk for a build with Refine.
+        // A draft is Refine's (from 1.1 in every build).
         do {
             current = try store.read()
             keptOnDisk = current != nil && store.hasKept

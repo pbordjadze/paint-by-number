@@ -6,8 +6,8 @@ import UIKit
 
 /// First step of the create flow, the Paint page (painting-company row 239, "Paint Now, through
 /// the Shelf's door"): one shelf of pictures. Tonight's Picture (a library painting, another each
-/// day) large at the top, then Your Own: a photo from the system picker, the camera, and in
-/// SideStore and Debug builds a drawing on paper and a blank page; then The Library, its paintings
+/// day) large at the top, then Your Own: a photo from the system picker, the camera, a blank page
+/// and, in SideStore and Debug builds, a drawing on paper; then The Library, its paintings
 /// and photographs. A picture picked opens as a painting with no preview step
 /// (`CreateModel.paintsNow`); a blank page opens the drawing tools (`CreateModel.loadScratch()`).
 ///
@@ -145,8 +145,8 @@ struct PhotoSourceView: View {
         }
     }
 
-    /// The painter's own ways in: a photo, the camera, and in SideStore and Debug builds a drawing
-    /// on paper and a blank page.
+    /// The painter's own ways in: a photo, the camera, a blank page and, in SideStore and Debug
+    /// builds, a drawing on paper.
     private var yourOwnSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle("Your Own", style: isWide ? .title2 : .title3)

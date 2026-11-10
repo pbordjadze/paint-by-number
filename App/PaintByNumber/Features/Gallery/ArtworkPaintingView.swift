@@ -397,8 +397,7 @@ struct ArtworkPaintingView: View {
         }
     }
 
-    /// ✎ Change in the painting's bar: in SideStore and Debug builds while the drawing tools are,
-    /// for a painting with a photo to draw over (a library picture's file will do).
+    /// ✎ Change in the painting's bar, for a painting with a photo to draw over (a library picture's file will do).
     private var changeAction: (() -> Void)? {
         guard let artwork, sourcePhotoLoader != nil || artwork.sampleName != nil else { return nil }
         return {

@@ -27,12 +27,13 @@ strings -a "$WORK/binary" > "$WORK/strings.txt"
 # The top-level types of two sets of files, each line "<name> <file>": the files the app target's
 # Release EXCLUDED_SOURCE_FILE_NAMES leaves out (less its INCLUDED_SOURCE_FILE_NAMES), none since
 # 1.1 shipped Refine and the era door (painting-company row 236), and the files whose code is wholly
-# inside `#if DEBUG` (the demo and test launches' code).
+# inside `#if DEBUG` (the demo and test launches' code), the app's and Paint by Mosaic's
+# (`App/Ravenna`).
 python3 - "$ROOT" > "$WORK/types.txt" <<'PY'
 import fnmatch, pathlib, re, shlex, sys
 root = pathlib.Path(sys.argv[1])
 project = (root / "App/PaintByNumber.xcodeproj/project.pbxproj").read_text()
-sources = sorted((root / "App/PaintByNumber").rglob("*.swift"))
+sources = sorted((root / "App/PaintByNumber").rglob("*.swift")) + sorted((root / "App/Ravenna").rglob("*.swift"))
 def setting(block, name):
     m = re.search(r"\b%s = (\"[^\"]*\"|[^;]*);" % name, block)
     return shlex.split(m.group(1).strip('"')) if m else []
@@ -80,6 +81,8 @@ done
 # and 236), ships from 1.1: the door's code is in the binary (the module is a static library) and
 # its resources are bundled, or the door would open on nothing.
 [[ -d "$APP/RavennaResources.bundle" ]] || fail "the Release app doesn't bundle RavennaResources.bundle, so the era door would open on nothing"
+# A static library, linked in: an embedded copy of it would fail App Store validation.
+[[ ! -e "$APP/Frameworks/Ravenna.framework" ]] || fail "the Release app embeds Ravenna.framework"
 for symbol in RavennaEra EraClock; do
   if ! grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary lacks $symbol: the era door isn't in it"; fi
 done
