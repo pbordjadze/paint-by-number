@@ -365,13 +365,23 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: Lifecycle
 
     /// Not while a menu is open over the painting (More, the length chip, the Finished bar's
-    /// Share): UIKit takes first responder from the canvas as one opens, and a canvas that had it
-    /// again under the open menu raised the software keyboard, with nothing to type into, over
-    /// the lower half of the painting until the menu closed (the Mac critic's sweep and QA,
-    /// November 9; `KeyboardWatch` saw every such keyboard come with the canvas first responder
-    /// and `_UIContextMenuActionsOnlyViewController` presented). `regainFocus` takes it back once
-    /// the menu has gone.
+    /// Share): a menu opened over the canvas as first responder raised the software keyboard for
+    /// it, with nothing to type into, over the lower half of the painting until the menu closed
+    /// (the Mac critic's sweep and QA, November 9; `KeyboardWatch` saw every such keyboard come
+    /// with the canvas first responder and `_UIContextMenuActionsOnlyViewController` presented).
+    /// Under a menu its input is an empty view, so the system has no keyboard to show for it, and
+    /// a keyboard coming anyway sends it to resign (`keyboardWillShow`); `regainFocus` takes first
+    /// responder back once the menu has gone.
     override var canBecomeFirstResponder: Bool { !Self.presentsMenu(window) }
+
+    override var inputView: UIView? { Self.presentsMenu(window) ? noKeyboard : nil }
+    private let noKeyboard = UIView(frame: .zero)
+
+    @objc private func keyboardWillShow(_ note: Notification) {
+        guard isFirstResponder, Self.presentsMenu(window) else { return }
+        Log.canvas.notice("A keyboard came for the canvas under a menu: the canvas lets first responder go")
+        _ = resignFirstResponder()
+    }
 
     /// Whether a menu is presented in `window` (UIKit's context menu controllers, by name: there
     /// is no API that says).
@@ -444,9 +454,12 @@ final class CanvasView: UIView, PaintingCanvas {
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
             Task { self.becomeFirstResponder() }
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         } else {
             displayLink?.invalidate()
             displayLink = nil
+            NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         }
     }
 
