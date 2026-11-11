@@ -1,6 +1,6 @@
 # Paint by Moonlight: Privacy Policy
 
-*Last updated October 22, 2026*
+*Last updated November 11, 2026*
 
 Paint by Moonlight turns your photos into paint-by-numbers paintings on your iPhone or iPad. It
 has no accounts, no ads, no analytics and no tracking. The only thing it can send off your device
@@ -72,7 +72,13 @@ the picture instead).
   your IP address. The relay uses it only to limit how quickly one connection can send reports,
   and does not save it with the report.
 - **Use.** The developers use a report only to see what went wrong with a painting and to fix it.
-  It is not sold, shared for advertising or used for anything else.
+  It is not sold, shared for advertising or used for anything else. Cloudflare (the relay) and
+  GitHub (where reports are kept) handle reports for us under their own terms.
+- **How long it's kept.** We keep a report until the problem it describes is fixed, and at most
+  six months.
+- **Deleting a report.** To have a report deleted, email
+  [support@paulbordjadze.com](mailto:support@paulbordjadze.com) with roughly when you sent it and
+  what it showed. There is no account to tie it to you, so that is how we find it.
 - **Your choice.** Nothing is sent unless you tap Send. If sending fails you can try again, share
   the report some other way (for example Mail, Messages or AirDrop), or cancel, which keeps what
   you wrote.
@@ -95,5 +101,6 @@ If this policy changes, the new version will be posted on this page with a new d
 
 ## Contact
 
-Questions about privacy: open an issue at
+Questions about privacy, or a request to delete a report: email
+[support@paulbordjadze.com](mailto:support@paulbordjadze.com), or open an issue at
 [github.com/pbordjadze/paint-by-number/issues](https://github.com/pbordjadze/paint-by-number/issues).

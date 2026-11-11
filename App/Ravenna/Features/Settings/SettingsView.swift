@@ -154,6 +154,18 @@ struct SettingsView: View {
                             SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
                         }
                         .accessibilityIdentifier("about-acknowledgements")
+                        Link(destination: AboutLinks.privacyPolicy) {
+                            SwiftUI.Label("Privacy Policy", systemImage: "hand.raised")
+                        }
+                        .accessibilityIdentifier("about-privacy")
+                        Link(destination: AboutLinks.contact) {
+                            LabeledContent {
+                                Text(verbatim: AboutLinks.supportAddress)
+                            } label: {
+                                SwiftUI.Label("Contact", systemImage: "envelope")
+                            }
+                        }
+                        .accessibilityIdentifier("about-contact")
                     } header: {
                         Text("About")
                     } footer: {
