@@ -305,7 +305,8 @@ beside their column on its side),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
-where they live.
+where they live (the Tool Guide is a place with no tips, in front of all, so what it covers keeps
+quiet; a screen entering in front calls off the covered screen's moment and tip).
 
 - **Where they live.** `Features/Tips/`: `GentleTips` (18 of the tips as TipKit tips, `nonisolated`,
   in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
