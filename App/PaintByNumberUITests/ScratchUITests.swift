@@ -133,6 +133,8 @@ final class ScratchUITests: XCTestCase {
         guide.tap()
         XCTAssertTrue(
             app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-guide-page"].staticTexts["Pen"].exists, "Try It didn't open the guide on the Pen")
         app.buttons["refine-guide-done"].tap()
 
         XCTAssertTrue(reveal(scratch, in: app), "The guide didn't go back to the Paint page")

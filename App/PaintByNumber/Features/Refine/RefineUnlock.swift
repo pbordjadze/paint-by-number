@@ -2,8 +2,9 @@ import SwiftUI
 
 /// Refine, and From Scratch with it, come with Unlimited Paintings (`UnlimitedPaintings.locksRefine`,
 /// painting-company row 143): before it is bought their buttons open `UnlockSheet` for Refine,
-/// whose Try It in the Tool Guide opens the guide, its practice pictures free to everyone. Bought
-/// there, what was asked for goes on (`unlocked`).
+/// whose Try It in the Tool Guide opens the guide on the Pen, its practice pictures free to
+/// everyone: a newcomer's first touch there is drawing, not The Basics' page of words (QA,
+/// painting-company row 237). Bought there, what was asked for goes on (`unlocked`).
 struct RefineUnlockOffer: ViewModifier {
     @Binding var isPresented: Bool
     let unlocked: () -> Void
@@ -23,7 +24,7 @@ struct RefineUnlockOffer: ViewModifier {
     private func dismissed() {
         if opensGuide {
             opensGuide = false
-            guide = .basics
+            guide = .opening(at: .pen)
         } else if !paintings.locksRefine {
             unlocked()
         }
