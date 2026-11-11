@@ -1,0 +1,56 @@
+{
+ "n": 17,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn: 'Close'\n- longPressOn: 'William the Hippopotamus'\n- waitForAnimationToEnd"
+   },
+   "seconds": 12.6,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":4,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/s19-menu\n"
+   },
+   "seconds": 0.4,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "inspect_screen",
+   "arguments": {},
+   "seconds": 0.5,
+   "isError": false,
+   "text": [
+    "{\"ui_schema\":{\"platform\":\"ios\",\"abbreviations\":{\"b\":\"bounds\",\"txt\":\"text\",\"rid\":\"resource-id\",\"a11y\":\"accessibilityText\",\"hint\":\"hintText\",\"val\":\"value\",\"c\":\"children\"},\"defaults\":{\"enabled\":true,\"focused\":false,\"selected\":false,\"checked\":false,\"txt\":\"\",\"hint\":\"\",\"rid\":\"\",\"val\":\"\",\"a11y\":\"\"}},\"elements\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Paint by Moonlight\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[-1032,-1376][2064,2752]\"},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[348,193][683,584]\",\"a11y\":\"Preview\",\"c\":[{\"b\":\"[359,206][672,571]\",\"c\":[{\"b\":\"[359,206][673,519]\",\"c\":[{\"b\":\"[359,206][673,519]\"},{\"b\":\"[359,206][673,519]\",\"c\":[{\"b\":\"[359,206][673,519]\"}]}]}]}]},{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\"},{\"b\":\"[398,604][634,1980]\",\"c\":[{\"b\":\"[398,612][634,650]\",\"c\":[{\"b\":\"[398,612][634,650]\",\"a11y\":\"Favorite\",\"rid\":\"heart\",\"c\":[{\"b\":\"[421,623][440,639]\",\"a11y\":\"love\",\"rid\":\"heart\"}]}]},{\"b\":\"[398,667][634,705]\",\"c\":[{\"b\":\"[398,667][634,705]\",\"a11y\":\"Rename\",\"rid\":\"pencil\",\"c\":[{\"b\":\"[423,678][438,693]\",\"a11y\":\"edit\",\"rid\":\"pencil\"}]}]},{\"b\":\"[418,658][614,659]\"},{\"b\":\"[398,722][634,760]\",\"c\":[{\"b\":\"[398,722][634,760]\",\"a11y\":\"Share\",\"rid\":\"square.and.arrow.up\",\"c\":[{\"b\":\"[605,734][614,747]\",\"a11y\":\"Forward\",\"rid\":\"chevron.forward\"},{\"b\":\"[422,729][439,750]\",\"a11y\":\"Share\",\"rid\":\"square.and.arrow.up\"}]}]},{\"b\":\"[418,713][614,714]\"},{\"b\":\"[398,777][634,815]\",\"c\":[{\"b\":\"[398,777][634,815]\",\"a11y\":\"Delete\",\"rid\":\"trash\",\"c\":[{\"b\":\"[423,785][439,805]\",\"a11y\":\"trash\",\"rid\":\"trash\"}]}]},{\"b\":\"[418,768][614,769]\"},{\"b\":\"[601,628][631,799]\",\"a11y\":\"Vertical scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[628,631][631,796]\"}]},{\"b\":\"[398,766][634,796]\",\"a11y\":\"Horizontal scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[401,793][631,796]\"}]},{\"b\":\"[601,628][631,799]\",\"a11y\":\"Vertical scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[628,631][631,796]\"}]},{\"b\":\"[398,766][634,796]\",\"a11y\":\"Horizontal scroll bar, 1 page\",\"txt\":\"0%\",\"val\":\"0%\",\"c\":[{\"b\":\"[401,793][631,796]\"}]}]}]},{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,648]\"}]}]},{\"b\":\"[398,604][634,823]\",\"c\":[{\"b\":\"[398,604][634,648]\"}]}]}]}]}]}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\"}]}]}]},{\"b\":\"[0,0][1032,32]\"},{\"b\":\"[0,0][1032,32]\",\"c\":[{\"b\":\"[0,0][1032,32]\",\"c\":[{\"b\":\"[0,0][1032,32]\",\"c\":[{\"b\":\"[25,11][172,21]\",\"c\":[{\"b\":\"[25,7][85,24]\",\"a11y\":\"12:02\u202fAM\"},{\"b\":\"[95,7][172,24]\",\"a11y\":\"Wed Nov 11\"}]},{\"b\":\"[182,11][323,21]\",\"c\":[{\"b\":\"[182,0][323,32]\",\"c\":[{\"b\":\"[182,0][323,32]\",\"c\":[{\"b\":\"[182,0][310,32]\",\"a11y\":\"Paint by Moonlight\"}]}]}]},{\"b\":\"[331,11][1006,21]\",\"c\":[{\"b\":\"[955,8][973,24]\",\"txt\":\"SSID, 3 of 3 Wi-Fi bars\",\"val\":\"SSID, 3 of 3 Wi-Fi bars\",\"rid\":\"3 of 3 Wi-Fi bars\",\"c\":[{\"b\":\"[954,9][973,22]\",\"a11y\":\"Wi-Fi\",\"rid\":\"wifi\"}]},{\"b\":\"[977,9][1006,22]\",\"a11y\":\"100% battery power\",\"txt\":\"Not charging\",\"val\":\"Not charging\"}]}]}]}]}]}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.8,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0017-4-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 223274,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
