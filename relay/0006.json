@@ -1,0 +1,18 @@
+{
+ "n": 6,
+ "results": [
+  {
+   "tool": "_log",
+   "arguments": {
+    "lines": 8
+   },
+   "seconds": 0.0,
+   "isError": false,
+   "text": [
+    "2026-11-11 00:30:26.954 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted\n2026-11-11 00:31:05.159 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:library] Opened E6839AAA-F8FF-4CF9-A6F9-5834F290EF8D: 163 regions\n2026-11-11 00:31:05.243 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted benchTap\n2026-11-11 00:31:05.333 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:tips] nothing was eligible in time: benchTap invalidated(TipKit.Tips.InvalidationReason.tipClosed)\n2026-11-11 00:31:25.387 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted\n2026-11-11 00:31:58.226 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:create] Full #1 started for 24 colors, detail 0.5, lines 0.5 [adjusting false, full under way false, final false, phase generating]\n2026-11-11 00:32:01.022 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]\n2026-11-11 00:32:05.486 Df PaintByNumber[36470:18934] [com.pbordjadze.paintbynumber:tips] offer in bench: , wanted"
+   ],
+   "images": []
+  }
+ ],
+ "ended": false
+}
