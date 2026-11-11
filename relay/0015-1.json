@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    id: change-painting\n- extendedWaitUntil:\n    visible:\n      id: refine-done\n    timeout: 120000\n- tapOn:\n    id: refine-tool-pen\n- swipe:\n    start: '70%,36%'\n    end: '92%,40%'\n    duration: 1200\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/d11-wave-pen\n- tapOn:\n    id: refine-done\n    waitToSettleTimeoutMs: 100\n- pressKey: Home\n- stopApp\n- launchApp\n- waitForAnimationToEnd:\n    timeout: 15000"
+ },
+ "seconds": 62.0,
+ "isError": false,
+ "text": [
+  "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":11,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+ ],
+ "images": []
+}
