@@ -2,7 +2,8 @@ name: TestFlight
 
 # A signed Release build for TestFlight, on request only (CI's IPA job keeps making the unsigned
 # SideStore builds). Every run archives, signs and has App Store Connect validate the app; only a
-# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it, and
+# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`, or the release
+# branch `claude/pbm-1.1-candidate`) uploads it, and
 # then its `testers` job waits for App Store Connect to process the build, puts it in the
 # Friends & Family group with its What to Test and submits it for Beta App Review
 # (ci/testflight_testers.py): one button from `main` to testers. A push to a
@@ -56,12 +57,12 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
-      - name: From main only
+      - name: From main or the release branch only
         # Upload sends App Store Connect and the testers what this run checked out: only main's
         # reviewed code goes (the header's rule).
-        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main' && github.ref_name != 'claude/pbm-1.1-candidate'
         run: |
-          echo "::error::Upload runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
+          echo "::error::Upload runs from main or claude/pbm-1.1-candidate only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
           exit 1
       - uses: actions/checkout@v5
       - name: Xcode
