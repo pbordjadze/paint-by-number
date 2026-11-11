@@ -547,7 +547,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   launches, nor while a file is being opened); a launch whose reopen never settled (the app ended
   opening it) shows the gallery at the next one instead (`ReopenGuard`).
 - Image caches (`ImageCache`, `ImageCaches.swift`): LRU by decoded bytes, emptied on memory
-  warnings; gallery tiles decode thumbnails at their own pixel size.
+  warnings; gallery tiles decode thumbnails at their own pixel size. A thumbnail's unpainted areas
+  are a pale wash of their paint (`TemplateRasterizer.sketchColor`; a grey until 1.1, so a
+  newcomer's first gallery was grey on grey), and a launch draws every stored thumbnail again once
+  when `Library.thumbnailLook` is newer than the one they were drawn in.
 - Rendering without Metal: `TemplateRasterizer` (CoreGraphics; vector geometry, falls back to the
   region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`, on its own white
   paper.

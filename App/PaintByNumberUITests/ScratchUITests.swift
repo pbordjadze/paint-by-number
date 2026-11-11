@@ -123,6 +123,7 @@ final class ScratchUITests: XCTestCase {
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 2) { ok.tap() }
         XCTAssertTrue(reveal(scratch, in: app), "Blank Page isn't ready")
+        XCTAssertEqual(scratch.value as? String, "Comes with Unlimited Paintings", "Blank Page doesn't say it waits for the purchase")
         scratch.tap()
 
         let buy = app.buttons["unlock-buy"]

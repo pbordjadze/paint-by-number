@@ -290,7 +290,7 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Paint by Moonlight.")
             } else {
-                Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
+                Text("Each new painting takes one, and one comes back each day, up to five. Paintings someone sends you are always free. Drawing your own, on a blank page or over a painting, comes with Unlimited Paintings.")
             }
         }
     }

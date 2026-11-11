@@ -17,8 +17,8 @@
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
-    "A free painting comes back each day, up to five. Paintings someone sends you are always free." : {
-      "comment" : "Settings › Unlimited Paintings footer before the unlock is bought, in builds where every new painting takes a free painting (1.1)",
+    "Each new painting takes one, and one comes back each day, up to five. Paintings someone sends you are always free. Drawing your own, on a blank page or over a painting, comes with Unlimited Paintings." : {
+      "comment" : "Settings › Unlimited Paintings footer before the unlock is bought: every new painting takes a free painting (1.1), and Blank Page and ✎ Change, the drawing tools, come with the purchase",
       "extractionState" : "manual"
     },
     "A Photo" : {
@@ -79,6 +79,10 @@
     },
     "Color from Photo" : {
       "comment" : "Refine screen, the Pen's options: a switch; when on, the parts of an area a drawn line divides take the photo's colors there",
+      "extractionState" : "manual"
+    },
+    "Comes with Unlimited Paintings" : {
+      "comment" : "VoiceOver value of Blank Page (Paint page) and of ✎ Change (a painting's top bar) while Unlimited Paintings isn't bought: their tap opens the purchase, which a small lock on them shows",
       "extractionState" : "manual"
     },
     "Couldn’t change the painting" : {

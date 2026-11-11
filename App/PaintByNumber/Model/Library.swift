@@ -145,7 +145,10 @@ final class Library {
         #endif
         let library = Library(store: ArtworkStore(root: ArtworkStore.defaultRoot))
         library.seedIfNeeded()
-        Task { await library.refreshStaleThumbnails() }
+        Task {
+            await library.refreshStaleThumbnails()
+            await library.refreshThumbnailsForTheirLook()
+        }
         return library
     }
 
@@ -452,6 +455,26 @@ final class Library {
             if await refreshThumbnail(id, progress: saved.progress) { refreshed.append(id) }
         }
         return refreshed
+    }
+
+    /// The look the gallery's stored thumbnails are drawn in: 2, unpainted areas a wash of their
+    /// paint (`TemplateRasterizer.sketchColor`); before, 1, a grey sketch (absent means 1).
+    static let thumbnailLook = 2
+    static let thumbnailLookKey = "thumbnailLook"
+
+    /// Draws every thumbnail again, once, when `thumbnailLook` is newer than the one they were
+    /// drawn in, so a gallery never shows the two looks side by side. A painting whose progress
+    /// can't be read keeps the thumbnail it has.
+    func refreshThumbnailsForTheirLook(defaults: UserDefaults = .standard) async {
+        guard defaults.integer(forKey: Self.thumbnailLookKey) < Self.thumbnailLook else { return }
+        let store = self.store
+        for (id, regionCount) in artworks.filter({ !$0.needsNewerApp }).map({ ($0.id, $0.regionCount) }) {
+            guard artwork(with: id) != nil,
+                  let saved = try? await Background.run({ try store.readProgress(id, regionCount: regionCount) }),
+                  saved.problem == nil || saved.problem == .missing else { continue }
+            await refreshThumbnail(id, progress: saved.progress)
+        }
+        defaults.set(Self.thumbnailLook, forKey: Self.thumbnailLookKey)
     }
 
     // MARK: Deleting (undoable)
