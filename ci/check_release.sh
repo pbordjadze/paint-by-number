@@ -81,6 +81,10 @@ done
 # and 236), ships from 1.1: the door's code is in the binary (the module is a static library) and
 # its resources are bundled, or the door would open on nothing.
 [[ -d "$APP/RavennaResources.bundle" ]] || fail "the Release app doesn't bundle RavennaResources.bundle, so the era door would open on nothing"
+# A bundle without code names no executable: App Store Connect refuses the upload otherwise (90535).
+if /usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/RavennaResources.bundle/Info.plist" >/dev/null 2>&1; then
+  fail "RavennaResources.bundle's Info.plist names a CFBundleExecutable, which App Store Connect refuses (90535)"
+fi
 # A static library, linked in: an embedded copy of it would fail App Store validation.
 [[ ! -e "$APP/Frameworks/Ravenna.framework" ]] || fail "the Release app embeds Ravenna.framework"
 for symbol in RavennaEra EraClock; do
