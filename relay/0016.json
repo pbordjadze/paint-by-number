@@ -1,0 +1,18 @@
+{
+ "n": 16,
+ "results": [
+  {
+   "tool": "_log",
+   "arguments": {
+    "lines": 12
+   },
+   "seconds": 0.0,
+   "isError": false,
+   "text": [
+    "2026-11-11 00:38:12.529 Df PaintByNumber[65191:29614] [com.pbordjadze.paintbynumber:create] Full #1 shown [adjusting false, full under way true, final true, phase generating]\n2026-11-11 00:38:14.331 Df PaintByNumber[65191:29614] [com.pbordjadze.paintbynumber:tips] offer in refine: refineDraw, wanted\n2026-11-11 00:38:34.093 Df PaintByNumber[65191:29614] [com.pbordjadze.paintbynumber:library] Opened 11CEFC4D-7E1A-4D93-B3CA-7D467D6119B6: 333 regions\n2026-11-11 00:38:34.240 Df PaintByNumber[65191:29614] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted\n2026-11-11 00:38:34.264 Df PaintByNumber[65191:29614] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted\n2026-11-11 00:38:46.106 Df PaintByNumber[69075:2b9e9] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted\n2026-11-11 00:38:46.286 Df PaintByNumber[69075:2bc31] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.183419917 seconds\n2026-11-11 00:38:46.666 Df PaintByNumber[69075:2b9e9] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)\n2026-11-11 00:38:46.783 Df PaintByNumber[69075:2b9e9] [com.pbordjadze.paintbynumber:library] Opened 11CEFC4D-7E1A-4D93-B3CA-7D467D6119B6: 333 regions\n2026-11-11 00:38:47.393 Df PaintByNumber[69075:2b9e9] [com.pbordjadze.paintbynumber:tips] offer in bench: benchTap, wanted\n2026-11-11 00:38:47.682 Df PaintByNumber[69075:2b9e9] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer, _UIPointerInteractionHoverGestureRecognizer, _UIPointerInteractionHoverGestureRecognizer, _UIPointerInteractionPressGestureRecognizer\n2026-11-11 00:38:48.265 Df PaintByNumber[69075:2bc30] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.873778667 seconds"
+   ],
+   "images": []
+  }
+ ],
+ "ended": false
+}
