@@ -746,6 +746,34 @@ struct LibraryTests {
         #expect(library.artwork(with: artwork.id) == artwork)
     }
 
+    /// The thumbnails stored in the grey sketch of 1.0 are drawn again in the wash of each area's
+    /// paint, every painting once, begun or not, so a gallery never mixes the two looks (QA,
+    /// painting-company row 237).
+    @Test func thumbnailsAreDrawnAgainOnceInTheirNewLook() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let ready = try await library.create(draft(title: "Ready"))
+        let begun = try await library.create(draft(title: "Begun", painted: [0]))
+        let versions = [ready.id, begun.id].map { library.artwork(with: $0)?.thumbnailVersion }
+
+        await library.refreshThumbnailsForTheirLook(defaults: defaults)
+        await library.flush()
+        #expect([ready.id, begun.id].map { library.artwork(with: $0)?.thumbnailVersion } == versions.map { $0.map { $0 + 1 } })
+        #expect(defaults.integer(forKey: Library.thumbnailLookKey) == Library.thumbnailLook)
+        // The unpainted green stripe is a pale green, not a grey; the painted red one is red.
+        let pixels = PixelReader(try #require(library.store.thumbnail(begun.id)))
+        let wash = pixels[pixels.width / 2, pixels.height / 2]
+        #expect(wash.y > wash.x + 10 && wash.y > wash.z + 10 && wash.x > 150)
+        #expect(pixels[pixels.width / 6, pixels.height / 2] == SIMD3(255, 0, 0))
+
+        await library.refreshThumbnailsForTheirLook(defaults: defaults)
+        #expect(
+            [ready.id, begun.id].map { library.artwork(with: $0)?.thumbnailVersion } == versions.map { $0.map { $0 + 1 } },
+            "The thumbnails were drawn again a second time")
+    }
+
     @Test func seedsStarterSamplesOnce() async throws {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

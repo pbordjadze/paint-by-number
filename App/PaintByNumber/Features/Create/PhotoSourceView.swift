@@ -177,9 +177,10 @@ struct PhotoSourceView: View {
                 Button {
                     if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
                 } label: {
-                    OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
+                    OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble", locked: paintings.locksRefine)
                 }
                 .accessibilityHint(Text("Draw your own picture on a blank page"))
+                .accessibilityValue(paintings.locksRefine ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
                 .accessibilityIdentifier("from-scratch")
             }
             .buttonStyle(PressableCardStyle())
@@ -279,14 +280,23 @@ struct PhotoSourceView: View {
 private struct OwnTile: View {
     let title: Text
     let systemImage: String
+    /// Waits for the purchase: a lock in its corner says so before the tap (QA, painting-company
+    /// row 237); the button's VoiceOver value says it in words.
+    var locked = false
     @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 96
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: systemImage)
-                .font(.system(size: 26, weight: .light))
-                .foregroundStyle(Theme.accent)
-                .accessibilityHidden(true)
+            HStack(alignment: .top) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 26, weight: .light))
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+                if locked {
+                    Spacer(minLength: 0)
+                    LockBadge()
+                }
+            }
             Spacer(minLength: 0)
             title
                 .font(.subheadline.weight(.semibold))

@@ -305,7 +305,8 @@ beside their column on its side),
 each said once, on for everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
 and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
 gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
-where they live.
+where they live (the Tool Guide is a place with no tips, in front of all, so what it covers keeps
+quiet; a screen entering in front calls off the covered screen's moment and tip).
 
 - **Where they live.** `Features/Tips/`: `GentleTips` (18 of the tips as TipKit tips, `nonisolated`,
   in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
@@ -547,7 +548,10 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   launches, nor while a file is being opened); a launch whose reopen never settled (the app ended
   opening it) shows the gallery at the next one instead (`ReopenGuard`).
 - Image caches (`ImageCache`, `ImageCaches.swift`): LRU by decoded bytes, emptied on memory
-  warnings; gallery tiles decode thumbnails at their own pixel size.
+  warnings; gallery tiles decode thumbnails at their own pixel size. A thumbnail's unpainted areas
+  are a pale wash of their paint (`TemplateRasterizer.sketchColor`; a grey until 1.1, so a
+  newcomer's first gallery was grey on grey), and a launch draws every stored thumbnail again once
+  when `Library.thumbnailLook` is newer than the one they were drawn in.
 - Rendering without Metal: `TemplateRasterizer` (CoreGraphics; vector geometry, falls back to the
   region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`, on its own white
   paper.
@@ -1115,7 +1119,7 @@ sends it, the developers collect nothing).
 - Refine, and From Scratch with it, come with the unlock (painting-company row 143;
   `UnlimitedPaintings.includesRefine`, `locksRefine`): in a build that sells it, not yet bought,
   the preview's Refine and From Scratch open `UnlockSheet` worded for Refine (`forRefine`), whose
-  Try It in the Tool Guide opens the guide, its practice pictures free (`RefineUnlockOffer`);
+  Try It in the Tool Guide opens the guide on Bend Line, its practice pictures free (`RefineUnlockOffer`);
   bought there, Refine opens. Refine's paintings take free paintings as any other. Debug builds
   leave Refine open unless `-demoRefineLocked YES` (QA's and Xcode's launches ask the App Store); `create-refine-unlock` (with `-dark`,
   `-long-text`) is the sheet over a sample's preview; `ScratchUITests` and

@@ -94,6 +94,9 @@ struct PaintView: View {
     /// The thanks for feedback just sent or shared, waiting for the review sheet to be gone.
     @State private var pendingThanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
+    /// Whether ✎ Change waits for the purchase (`UnlimitedPaintings.locksRefine`), which its
+    /// button shows before the tap.
+    @Environment(UnlimitedPaintings.self) private var paintings: UnlimitedPaintings?
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
     #if DEBUG
@@ -594,12 +597,15 @@ struct PaintView: View {
         }
     }
 
-    /// ✎ Change: the drawing tools on this painting.
+    /// ✎ Change: the drawing tools on this painting. Before the purchase it carries a lock, so
+    /// its tap opening the purchase is no surprise (QA, painting-company row 237).
     private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
-        GlassIconButton(systemImage: "pencil", label: "Change", action: action)
+        let locked = paintings?.locksRefine == true
+        return GlassIconButton(systemImage: "pencil", label: "Change", badge: locked ? "lock.fill" : nil, action: action)
             .frame(width: barHeight, height: barHeight)
             .disabled(session.isReplaying)
             .accessibilityHint(Text("Draw or erase lines in this painting"))
+            .accessibilityValue(locked ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
             .accessibilityIdentifier("change-painting")
     }
 

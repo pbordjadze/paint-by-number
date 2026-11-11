@@ -2,9 +2,11 @@ import Foundation
 
 /// Where in the app a tip lives. The words are the design's (October 17): the shelf is the gallery,
 /// New Painting the create flow's picking of a photo, its preview, Refine, the bench the painting
-/// screen and the drawer Settings.
+/// screen and the drawer Settings. The guide, Refine's Tool Guide, has no tips: in front of
+/// whatever opened it, it keeps that screen's quiet (the bench's Zen Mode tip came up over the
+/// guide the purchase sheet opens from a painting: QA, painting-company row 237).
 nonisolated enum TipPlace: String, CaseIterable, Codable, Sendable {
-    case shelf, newPainting, preview, refine, bench, drawer
+    case shelf, newPainting, preview, refine, bench, drawer, guide
 
     /// How far in front of the others the screen is when several are up at once (the shelf under the
     /// create flow, Settings or a painting; Refine over the preview). Whichever is most in front is
@@ -16,6 +18,7 @@ nonisolated enum TipPlace: String, CaseIterable, Codable, Sendable {
         case .newPainting: 2
         case .preview: 3
         case .refine: 4
+        case .guide: 5
         }
     }
 }

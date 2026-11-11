@@ -16,8 +16,8 @@ nonisolated enum TemplateRasterizer {
         enum Unpainted: Sendable, Equatable {
             /// Plain paper.
             case paper
-            /// A pale grey at the region's final lightness, like a pencil study of the
-            /// picture, so partly painted thumbnails stay recognizable.
+            /// A pale wash of the region's paint, so a painting not begun shows its picture in
+            /// soft color and every area painted stands out in full (`sketchColor`).
             case sketch
         }
 
@@ -50,7 +50,7 @@ nonisolated enum TemplateRasterizer {
         /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
         var lineWeight: LineWeight?
 
-        /// Gallery thumbnails: painted regions in color, the rest a faint sketch.
+        /// Gallery thumbnails: painted regions in color, the rest a pale wash of theirs.
         static let thumbnail = Style(
             unpainted: .sketch, outlineWidth: 0.9, outlineColor: SIMD4(0.45, 0.46, 0.49, 0.28))
         /// The finished painting, with a whisper of the lines it was painted in.
@@ -143,10 +143,14 @@ nonisolated enum TemplateRasterizer {
             ?? CGColor(red: components[0], green: components[1], blue: components[2], alpha: components[3])
     }
 
-    /// The pale grey standing in for an unpainted region in `.sketch` mode.
-    static func sketchColor(_ color: PaletteColor) -> SIMD3<Float> {
-        let lightness = min(max(color.oklab.x, 0), 1)
-        return SIMD3(repeating: 0.76 + 0.22 * lightness)
+    /// The wash standing in for an unpainted region in `.sketch` mode: its paint lifted toward
+    /// the paper and at half its chroma. Until 1.1 it was a grey at the paint's lightness, which
+    /// left a newcomer's first gallery, two paintings not begun, grey line art on grey (QA,
+    /// painting-company row 237); `Library.thumbnailLook` draws the stored thumbnails again.
+    static func sketchColor(_ color: PaletteColor, space: RGBColorSpace) -> SIMD3<Float> {
+        let lab = color.oklab
+        let lightness = min(max(lab.x, 0), 1)
+        return ColorScience.okLabToEncoded(SIMD3(0.68 + 0.30 * lightness, lab.y * 0.5, lab.z * 0.5), space: space)
     }
 
     private static func resolvedPainted(_ t: Template, painted: [Bool]?, style: Style) -> [Bool] {
@@ -159,7 +163,7 @@ nonisolated enum TemplateRasterizer {
     private static func fill(of region: Int, _ t: Template, painted: [Bool], style: Style) -> SIMD3<Float>? {
         let color = t.palette[Int(t.regions[region].colorIndex)]
         if painted[region] { return color.rgb }
-        return style.unpainted == .sketch ? sketchColor(color) : nil
+        return style.unpainted == .sketch ? sketchColor(color, space: t.colorSpace) : nil
     }
 
     // MARK: Vector path
@@ -193,7 +197,7 @@ nonisolated enum TemplateRasterizer {
         ctx.setLineWidth(seam)
         for (key, path) in paths.enumerated() {
             guard let path else { continue }
-            let rgb = key < paletteCount ? t.palette[key].rgb : sketchColor(t.palette[key - paletteCount])
+            let rgb = key < paletteCount ? t.palette[key].rgb : sketchColor(t.palette[key - paletteCount], space: t.colorSpace)
             let color = cgColor(SIMD4(rgb, 1), space: t.colorSpace)
             ctx.setFillColor(color)
             ctx.setStrokeColor(color)

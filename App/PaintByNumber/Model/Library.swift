@@ -145,7 +145,10 @@ final class Library {
         #endif
         let library = Library(store: ArtworkStore(root: ArtworkStore.defaultRoot))
         library.seedIfNeeded()
-        Task { await library.refreshStaleThumbnails() }
+        Task {
+            await library.refreshStaleThumbnails()
+            await library.refreshThumbnailsForTheirLook()
+        }
         return library
     }
 
@@ -452,6 +455,50 @@ final class Library {
             if await refreshThumbnail(id, progress: saved.progress) { refreshed.append(id) }
         }
         return refreshed
+    }
+
+    /// The look the gallery's stored thumbnails are drawn in: 2, unpainted areas a wash of their
+    /// paint (`TemplateRasterizer.sketchColor`); before, 1, a grey sketch (absent means 1).
+    static let thumbnailLook = 2
+    static let thumbnailLookKey = "thumbnailLook"
+
+    /// Draws every thumbnail again, once, when `thumbnailLook` is newer than the one they were
+    /// drawn in, so a gallery never shows the two looks side by side. A launch where one couldn't
+    /// be drawn (a full disk, files locked) leaves the look unrecorded, and the next tries again.
+    func refreshThumbnailsForTheirLook(defaults: UserDefaults = .standard) async {
+        guard defaults.integer(forKey: Self.thumbnailLookKey) < Self.thumbnailLook else { return }
+        let started = ContinuousClock.now
+        var everyOneDrawn = true
+        var drawnCount = 0
+        for (id, regionCount) in artworks.filter({ !$0.needsNewerApp }).map({ ($0.id, $0.regionCount) }) {
+            guard artwork(with: id) != nil else { continue }
+            // Progress is read in the painting's own queue, after any save of it waiting there
+            // (the painting reopened at launch, closed meanwhile), so the thumbnail never shows
+            // less than was saved.
+            let drawn = await enqueue(id) { store in
+                let saved: ArtworkStore.SavedProgress
+                do {
+                    saved = try store.readProgress(id, regionCount: regionCount)
+                } catch PaintProgress.CodingError.newerVersion(_) {
+                    return
+                }
+                // Damaged progress keeps its thumbnail: opening the painting starts it over and draws one.
+                guard saved.problem == nil || saved.problem == .missing,
+                      let png = try Library.thumbnailPNG(store.readTemplate(id), painted: saved.progress.painted) else { return }
+                try store.writeThumbnail(png, for: id)
+            }.value
+            guard drawn else {
+                everyOneDrawn = false
+                continue
+            }
+            guard var artwork = artwork(with: id) else { continue }
+            artwork.thumbnailVersion += 1
+            replace(artwork, resort: false)
+            persistMeta(artwork)
+            drawnCount += 1
+        }
+        if everyOneDrawn { defaults.set(Self.thumbnailLook, forKey: Self.thumbnailLookKey) }
+        Log.library.notice("Drew \(drawnCount, privacy: .public) thumbnails again in their new look in \(String(describing: ContinuousClock.now - started), privacy: .public), every one: \(everyOneDrawn, privacy: .public)")
     }
 
     // MARK: Deleting (undoable)
