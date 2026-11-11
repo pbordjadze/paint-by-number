@@ -361,7 +361,7 @@ Saved paintings must open in every later build. The format history is documented
 - Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
   `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
 - Identity: the app is called **Paint by Moonlight** (display name, gallery title, permission texts,
-  PDF footer; App Store subtitle "Turn any photo into a painting"). Pipo is only the working name
+  PDF footer; App Store subtitle "Paint by numbers, your own way" from 1.1). Pipo is only the working name
   and never appears in the product; target, module and repository keep the PaintByNumber names.
   Native first: system controls stay system controls. Every new `.glassProminent` button gets
   `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
