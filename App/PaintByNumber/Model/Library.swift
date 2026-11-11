@@ -463,18 +463,38 @@ final class Library {
     static let thumbnailLookKey = "thumbnailLook"
 
     /// Draws every thumbnail again, once, when `thumbnailLook` is newer than the one they were
-    /// drawn in, so a gallery never shows the two looks side by side. A painting whose progress
-    /// can't be read keeps the thumbnail it has.
+    /// drawn in, so a gallery never shows the two looks side by side. A launch where one couldn't
+    /// be drawn (a full disk, files locked) leaves the look unrecorded, and the next tries again.
     func refreshThumbnailsForTheirLook(defaults: UserDefaults = .standard) async {
         guard defaults.integer(forKey: Self.thumbnailLookKey) < Self.thumbnailLook else { return }
-        let store = self.store
+        var everyOneDrawn = true
         for (id, regionCount) in artworks.filter({ !$0.needsNewerApp }).map({ ($0.id, $0.regionCount) }) {
-            guard artwork(with: id) != nil,
-                  let saved = try? await Background.run({ try store.readProgress(id, regionCount: regionCount) }),
-                  saved.problem == nil || saved.problem == .missing else { continue }
-            await refreshThumbnail(id, progress: saved.progress)
+            guard artwork(with: id) != nil else { continue }
+            // Progress is read in the painting's own queue, after any save of it waiting there
+            // (the painting reopened at launch, closed meanwhile), so the thumbnail never shows
+            // less than was saved.
+            let drawn = await enqueue(id) { store in
+                let saved: ArtworkStore.SavedProgress
+                do {
+                    saved = try store.readProgress(id, regionCount: regionCount)
+                } catch PaintProgress.CodingError.newerVersion(_) {
+                    return
+                }
+                // Damaged progress keeps its thumbnail: opening the painting starts it over and draws one.
+                guard saved.problem == nil || saved.problem == .missing,
+                      let png = try Library.thumbnailPNG(store.readTemplate(id), painted: saved.progress.painted) else { return }
+                try store.writeThumbnail(png, for: id)
+            }.value
+            guard drawn else {
+                everyOneDrawn = false
+                continue
+            }
+            guard var artwork = artwork(with: id) else { continue }
+            artwork.thumbnailVersion += 1
+            replace(artwork, resort: false)
+            persistMeta(artwork)
         }
-        defaults.set(Self.thumbnailLook, forKey: Self.thumbnailLookKey)
+        if everyOneDrawn { defaults.set(Self.thumbnailLook, forKey: Self.thumbnailLookKey) }
     }
 
     // MARK: Deleting (undoable)
