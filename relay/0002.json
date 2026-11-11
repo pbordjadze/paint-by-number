@@ -1,0 +1,46 @@
+{
+ "n": 2,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: '15%,63%'\n- tapOn:\n    point: '40%,66%'\n- tapOn:\n    id: swatch-19\n- tapOn:\n    point: '68%,30%'\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/u04-arch-painted\n- tapOn:\n    point: '3%,2%'\n- waitForAnimationToEnd\n- tapOn:\n    point: '72%,4%'\n- waitForAnimationToEnd\n- tapOn:\n    id: tonights-picture\n- waitForAnimationToEnd:\n    timeout: 20000\n- waitForAnimationToEnd:\n    timeout: 20000\n- tapOn:\n    point: '3%,2%'\n- waitForAnimationToEnd"
+   },
+   "seconds": 59.1,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":16,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/u05-gallery\n"
+   },
+   "seconds": 0.2,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.5,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0002-3-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 231019,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
