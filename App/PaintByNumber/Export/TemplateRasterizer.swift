@@ -362,23 +362,38 @@ nonisolated enum TemplateRasterizer {
         let font = CTFontCreateUIFontForLanguage(.system, referenceFontSize, nil)
             ?? CTFontCreateWithName("Helvetica" as CFString, referenceFontSize, nil)
         let capHeight = CTFontGetCapHeight(font)
-        var lines: [Int: (line: CTLine, width: CGFloat)] = [:]
-        func line(for number: Int) -> (line: CTLine, width: CGFloat) {
-            if let cached = lines[number] { return cached }
-            let attributes: [NSAttributedString.Key: Any] = [
-                NSAttributedString.Key(kCTFontAttributeName as String): font,
-                NSAttributedString.Key(kCTForegroundColorFromContextAttributeName as String): true,
-            ]
+        // Each number is filled as its glyphs' outlines, never drawn as text: with an accessibility
+        // client on (VoiceOver, Switch Control, UI Automation), every text draw into a context
+        // queues an accessibility label on the main thread, and UIKit's handling of hundreds of
+        // them froze a new painting for 26 s (painting-company row 320).
+        var outlines: [Int: CGPath] = [:]
+        func outline(for number: Int) -> CGPath {
+            if let cached = outlines[number] { return cached }
+            let attributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key(kCTFontAttributeName as String): font]
             let line = CTLineCreateWithAttributedString(NSAttributedString(string: String(number), attributes: attributes))
-            let entry = (line, CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)))
-            lines[number] = entry
-            return entry
+            let width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+            let path = CGMutablePath()
+            // Digits come from the one font, so every run draws with it.
+            for run in CTLineGetGlyphRuns(line) as! [CTRun] {
+                let count = CTRunGetGlyphCount(run)
+                var glyphs = [CGGlyph](repeating: 0, count: count)
+                var positions = [CGPoint](repeating: .zero, count: count)
+                CTRunGetGlyphs(run, CFRange(location: 0, length: count), &glyphs)
+                CTRunGetPositions(run, CFRange(location: 0, length: count), &positions)
+                for (glyph, position) in zip(glyphs, positions) {
+                    // Centred on the label like the text it replaces, y flipped upright in the
+                    // y-down user space.
+                    var place = CGAffineTransform(
+                        a: 1, b: 0, c: 0, d: -1, tx: position.x - width / 2, ty: capHeight / 2 - position.y)
+                    if let glyphPath = CTFontCreatePathForGlyph(font, glyph, &place) { path.addPath(glyphPath) }
+                }
+            }
+            outlines[number] = path
+            return path
         }
 
         ctx.saveGState()
         ctx.setFillColor(cgColor(style.numberColor, space: t.colorSpace))
-        // y-down user space: flip glyphs upright.
-        ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         let maximumSize = style.maximumNumberFraction * CGFloat(max(t.width, t.height))
         let visible = ctx.boundingBoxOfClipPath
         for label in t.labels {
@@ -393,13 +408,12 @@ nonisolated enum TemplateRasterizer {
                 radius: label.radius, digits: digits, maximum: Float(maximumSize), detail: t.isDetailRegion(region)))
             let reach = size * CGFloat(digits)
             guard visible.insetBy(dx: -reach, dy: -reach).contains(CGPoint(label.position)) else { continue }
-            let run = line(for: number)
             let s = size / referenceFontSize
             ctx.saveGState()
             ctx.translateBy(x: CGFloat(label.position.x), y: CGFloat(label.position.y))
             ctx.scaleBy(x: s, y: s)
-            ctx.textPosition = CGPoint(x: -run.width / 2, y: capHeight / 2)
-            CTLineDraw(run.line, ctx)
+            ctx.addPath(outline(for: number))
+            ctx.fillPath()
             ctx.restoreGState()
         }
         ctx.restoreGState()
