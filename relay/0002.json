@@ -1,0 +1,46 @@
+{
+ "n": 2,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: '92%,5%'\n- waitForAnimationToEnd\n- tapOn: 'The Great Wave'\n- waitForAnimationToEnd\n- tapOn:\n    id: change-painting\n- waitForAnimationToEnd\n- tapOn:\n    id: unlock-try-guide\n- waitForAnimationToEnd\n- swipe:\n    start: '65%,32%'\n    end: '60%,19%'\n    duration: 1500\n- waitForAnimationToEnd"
+   },
+   "seconds": 34.1,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":11,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t06b-bent\n"
+   },
+   "seconds": 0.5,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.8,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0002-3-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 378606,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
