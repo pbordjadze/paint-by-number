@@ -467,7 +467,9 @@ final class Library {
     /// be drawn (a full disk, files locked) leaves the look unrecorded, and the next tries again.
     func refreshThumbnailsForTheirLook(defaults: UserDefaults = .standard) async {
         guard defaults.integer(forKey: Self.thumbnailLookKey) < Self.thumbnailLook else { return }
+        let started = ContinuousClock.now
         var everyOneDrawn = true
+        var drawnCount = 0
         for (id, regionCount) in artworks.filter({ !$0.needsNewerApp }).map({ ($0.id, $0.regionCount) }) {
             guard artwork(with: id) != nil else { continue }
             // Progress is read in the painting's own queue, after any save of it waiting there
@@ -493,8 +495,10 @@ final class Library {
             artwork.thumbnailVersion += 1
             replace(artwork, resort: false)
             persistMeta(artwork)
+            drawnCount += 1
         }
         if everyOneDrawn { defaults.set(Self.thumbnailLook, forKey: Self.thumbnailLookKey) }
+        Log.library.notice("Drew \(drawnCount, privacy: .public) thumbnails again in their new look in \(String(describing: ContinuousClock.now - started), privacy: .public), every one: \(everyOneDrawn, privacy: .public)")
     }
 
     // MARK: Deleting (undoable)
