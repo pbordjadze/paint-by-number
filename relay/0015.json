@@ -1,0 +1,34 @@
+{
+ "n": 15,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- swipe:\n    start: '50%,78%'\n    end: '50%,90%'\n    duration: 120\n- swipe:\n    start: '50%,78%'\n    end: '50%,90%'\n    duration: 120\n- swipe:\n    start: '50%,78%'\n    end: '50%,90%'\n    duration: 120\n- swipe:\n    start: '50%,78%'\n    end: '50%,90%'\n    duration: 120\n- swipe:\n    start: '50%,78%'\n    end: '50%,90%'\n    duration: 120\n- waitForAnimationToEnd"
+   },
+   "seconds": 51.1,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":7,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.9,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0015-2-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 243567,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
