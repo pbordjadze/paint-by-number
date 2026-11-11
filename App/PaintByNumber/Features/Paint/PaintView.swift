@@ -601,11 +601,8 @@ struct PaintView: View {
     /// its tap opening the purchase is no surprise (QA, painting-company row 237).
     private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
         let locked = paintings?.locksRefine == true
-        return GlassIconButton(systemImage: "pencil", label: "Change", action: action)
+        return GlassIconButton(systemImage: "pencil", label: "Change", badge: locked ? "lock.fill" : nil, action: action)
             .frame(width: barHeight, height: barHeight)
-            .overlay(alignment: .topTrailing) {
-                if locked { LockBadge().offset(x: 3, y: -3) }
-            }
             .disabled(session.isReplaying)
             .accessibilityHint(Text("Draw or erase lines in this painting"))
             .accessibilityValue(locked ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
