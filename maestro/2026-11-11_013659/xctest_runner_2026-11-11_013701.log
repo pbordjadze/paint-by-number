@@ -1,0 +1,841 @@
+2026-11-11 01:37:06.381 xcodebuild[57097:150576] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+** BUILD INTERRUPTED **
+3A-4ACA-99BF-97F59D694F718244397097806232355/maestro-driver-ios-config.xctestrun -destination id=E247944A-EF3A-4ACA-99BF-97F59D694F71 -derivedDataPath /var/folders/5n/5t77mfb93jd7q8v9s6f0dn0m0000gn/T/maestro_xctestrunner_xcodebuild_output17375140965875528358
+
+2026-11-11 01:37:10.413139+0000 maestro-driver-iosUITests-Runner[57227:151030] [Default] Running tests...
+2026-11-11 01:37:10.601085+0000 maestro-driver-iosUITests-Runner[57227:151030] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+2026-11-11 01:37:10.727288+0000 maestro-driver-iosUITests-Runner[57227:151030] snapshotKeyHonorModalViews configured to value: (null)
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-11 01:37:19.737.
+Test Suite 'maestro-driver-iosUITests.xctest' started at 2026-11-11 01:37:19.738.
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' started at 2026-11-11 01:37:19.738.
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' started.
+    t =     0.08s Start Test at 2026-11-11 01:37:19.817
+    t =     0.08s Set Up
+    t =     0.10s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testClassifiedTimeoutPreservesTheRealMessage]' passed (0.091 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:19.885
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testMainThreadBusyIsClassifiedAsTimeout]' passed (0.064 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:19.949
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testTimeoutMessageWithWrongDomainStaysInternal]' passed (0.022 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:19.972
+    t =     0.00s Set Up
+    t =     0.01s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUIQueryTimeoutIsClassifiedAsTimeout]' passed (0.044 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:20.017
+    t =     0.01s Set Up
+    t =     0.01s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testUnrelatedXCTFutureErrorStaysInternal]' passed (0.064 seconds).
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:20.081
+    t =     0.00s Set Up
+    t =     0.00s Tear Down
+Test Case '-[maestro_driver_iosUITests.SwipeRouteHandlerV2ClassificationTests testXCTFutureCode1000WithUnrelatedMessageStaysInternal]' passed (0.014 seconds).
+Test Suite 'SwipeRouteHandlerV2ClassificationTests' passed at 2026-11-11 01:37:20.095.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.300 (0.357) seconds
+Test Suite 'maestro_driver_iosUITests' started at 2026-11-11 01:37:20.096.
+    t =      nans Suite Set Up
+Test Case '-[maestro_driver_iosUITests.maestro_driver_iosUITests testHttpServer]' started.
+    t =     0.00s Start Test at 2026-11-11 01:37:20.099
+    t =     0.00s Set Up
+2026-11-11 01:37:20.100738+0000 maestro-driver-iosUITests-Runner[57227:151538] [maestro_driver_iosUITests] Will start HTTP server
+2026-11-11 01:37:20.438950+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] starting server 127.0.0.1:22087
+2026-11-11 01:37:20.751820+0000 maestro-driver-iosUITests-Runner[57227:151540] [FlyingFox] <127.0.0.1> open connection
+2026-11-11 01:37:20.763028+0000 maestro-driver-iosUITests-Runner[57227:151540] [FlyingFox] <127.0.0.1> request: GET /status
+2026-11-11 01:37:21.833390+0000 maestro-driver-iosUITests-Runner[57227:151540] [FlyingFox] <127.0.0.1> open connection
+2026-11-11 01:37:21.835273+0000 maestro-driver-iosUITests-Runner[57227:151540] [FlyingFox] <127.0.0.1> request: GET /screenshot
+objc[57227]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.qvkyxO/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1053e0398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.qvkyxO/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1088c0310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+2026-11-11 01:37:41.663449+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    21.57s Getting device orientation
+2026-11-11 01:37:41.721131+0000 maestro-driver-iosUITests-Runner[57227:151030] Using singleton test manager
+2026-11-11 01:37:41.754741+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    21.67s Getting device orientation
+    t =    21.68s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:37:41.997419+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:37:42.132172+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:37:42.531327+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:37:59.815622+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    39.72s Getting device orientation
+2026-11-11 01:37:59.844248+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    39.75s Getting device orientation
+2026-11-11 01:37:59.851248+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:37:59.851470+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:01.028316+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:01.156996+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:01.160274+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:01.161441+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    41.06s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:01.373944+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:01.374611+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    41.28s Checking existence of `StatusBar (First Match)`
+    t =    41.31s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    41.36s Find the StatusBar (Element at index 0)
+    t =    41.39s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:01.545654+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.17094600200653076
+2026-11-11 01:38:01.545821+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:01.555962+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.010062932968139648
+    t =    41.46s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:01.588089+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:01.808289+0000 maestro-driver-iosUITests-Runner[57227:151542] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:02.493717+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:03.247220+0000 maestro-driver-iosUITests-Runner[57227:151542] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    43.15s Getting device orientation
+2026-11-11 01:38:03.263693+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    43.17s Getting device orientation
+2026-11-11 01:38:03.268978+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:03.269407+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:03.309158+0000 maestro-driver-iosUITests-Runner[57227:151542] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:03.318698+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    43.22s Getting device orientation
+2026-11-11 01:38:03.323892+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    43.23s Getting device orientation
+2026-11-11 01:38:03.325374+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 89.0, 539.0
+    t =    43.23s Getting device orientation
+2026-11-11 01:38:03.859826+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.5231609344482422
+2026-11-11 01:38:03.872523+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:05.096795+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:08.337297+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:14.469591+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:15.187207+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:17.092305+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:17.529650+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    57.43s Getting device orientation
+2026-11-11 01:38:17.605958+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    57.51s Getting device orientation
+2026-11-11 01:38:17.609721+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:17.611068+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:17.636777+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:17.642529+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:17.644182+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:17.644376+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    57.55s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:17.961128+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:17.961634+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    57.86s Checking existence of `StatusBar (First Match)`
+    t =    57.89s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    57.94s Find the StatusBar (Element at index 0)
+    t =    57.98s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:18.125920+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.1640869379043579
+2026-11-11 01:38:18.126314+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:18.127213+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0008339881896972656
+    t =    58.03s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:18.169487+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:18.390191+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:19.368596+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:19.987982+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:19.998823+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    59.90s Getting device orientation
+2026-11-11 01:38:20.003188+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    59.90s Getting device orientation
+2026-11-11 01:38:20.006352+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 382.0, 1132.0
+    t =    59.91s Getting device orientation
+2026-11-11 01:38:20.366469+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3570669889450073
+2026-11-11 01:38:20.411434+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:21.333112+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:22.134972+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    62.04s Getting device orientation
+2026-11-11 01:38:22.154793+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    62.06s Getting device orientation
+2026-11-11 01:38:22.160101+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:22.160569+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:22.165268+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:22.176321+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:22.177877+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:22.178017+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    62.08s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:22.260832+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:22.261061+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    62.16s Checking existence of `StatusBar (First Match)`
+    t =    62.18s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    62.21s Find the StatusBar (Element at index 0)
+    t =    62.23s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:22.366740+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.10559201240539551
+2026-11-11 01:38:22.366991+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:22.367909+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0008779764175415039
+    t =    62.27s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:22.391225+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:22.409210+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:23.068406+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:23.598627+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:23.609986+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    63.51s Getting device orientation
+2026-11-11 01:38:23.616728+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    63.52s Getting device orientation
+2026-11-11 01:38:23.619116+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 264.0, 1314.0
+    t =    63.52s Getting device orientation
+2026-11-11 01:38:23.971526+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3500540256500244
+2026-11-11 01:38:24.045635+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:25.079621+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:25.938037+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:26.595815+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    66.50s Getting device orientation
+2026-11-11 01:38:26.622103+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    66.52s Getting device orientation
+2026-11-11 01:38:26.624816+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:26.624975+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:26.632689+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    66.53s Getting device orientation
+2026-11-11 01:38:26.649705+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    66.55s Getting device orientation
+2026-11-11 01:38:26.654532+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:26.654704+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:26.658192+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:26.667518+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:26.669279+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:26.669464+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    66.57s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:26.765271+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:26.765709+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    66.67s Checking existence of `StatusBar (First Match)`
+    t =    66.68s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    66.70s Find the StatusBar (Element at index 0)
+    t =    66.73s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:26.860305+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.09451794624328613
+2026-11-11 01:38:26.860589+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:26.861367+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0007410049438476562
+    t =    66.76s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:26.880673+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:26.888602+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:27.500162+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:27.519972+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    67.43s Getting device orientation
+2026-11-11 01:38:27.527296+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    67.43s Getting device orientation
+2026-11-11 01:38:27.530466+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 598.0, 605.0
+    t =    67.43s Getting device orientation
+2026-11-11 01:38:27.881306+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3477360010147095
+2026-11-11 01:38:27.911286+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:29.154112+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:29.891515+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    69.79s Getting device orientation
+2026-11-11 01:38:29.907114+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    69.81s Getting device orientation
+2026-11-11 01:38:29.914174+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:29.914707+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:29.921010+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    69.82s Getting device orientation
+2026-11-11 01:38:29.929968+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    69.83s Getting device orientation
+2026-11-11 01:38:29.933367+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:29.933563+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:29.936903+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:29.944515+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:29.945769+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:29.945907+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    69.85s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:30.054979+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:30.055381+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    69.96s Checking existence of `StatusBar (First Match)`
+    t =    69.97s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    70.00s Find the StatusBar (Element at index 0)
+    t =    70.03s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:30.160895+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.10532999038696289
+2026-11-11 01:38:30.161220+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:30.163715+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0022879838943481445
+    t =    70.07s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:30.191752+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:30.201790+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:30.805905+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:30.816920+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    70.72s Getting device orientation
+2026-11-11 01:38:30.820760+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    70.72s Getting device orientation
+2026-11-11 01:38:30.825495+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 722.0, 564.0
+    t =    70.73s Getting device orientation
+2026-11-11 01:38:31.162477+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.33377397060394287
+2026-11-11 01:38:31.166853+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:31.800510+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    71.70s Getting device orientation
+2026-11-11 01:38:31.811273+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    71.71s Getting device orientation
+2026-11-11 01:38:31.814678+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:31.814870+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:31.817160+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:31.822356+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:31.824617+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:31.824789+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    71.73s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:31.907824+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:31.908049+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    71.81s Checking existence of `StatusBar (First Match)`
+    t =    71.82s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    71.85s Find the StatusBar (Element at index 0)
+    t =    71.87s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:31.992664+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.08453607559204102
+2026-11-11 01:38:31.992782+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:31.993555+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.000722050666809082
+    t =    71.90s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:32.018326+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:32.031211+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:32.681062+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:33.175196+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:33.186721+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    73.09s Getting device orientation
+2026-11-11 01:38:33.193127+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    73.09s Getting device orientation
+2026-11-11 01:38:33.196294+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 320.0, 1258.0
+    t =    73.10s Getting device orientation
+2026-11-11 01:38:33.533012+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3315080404281616
+2026-11-11 01:38:33.539198+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:34.576125+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:35.448357+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:36.159725+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    76.06s Getting device orientation
+2026-11-11 01:38:36.178429+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    76.08s Getting device orientation
+2026-11-11 01:38:36.182580+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:36.183236+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:36.195928+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    76.10s Getting device orientation
+2026-11-11 01:38:36.209162+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    76.11s Getting device orientation
+2026-11-11 01:38:36.213512+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:36.214019+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:36.218792+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:36.225534+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:36.226992+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:36.227159+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    76.13s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:36.314108+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:36.314571+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    76.22s Checking existence of `StatusBar (First Match)`
+    t =    76.23s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    76.26s Find the StatusBar (Element at index 0)
+    t =    76.29s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:36.413736+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.0990910530090332
+2026-11-11 01:38:36.413863+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:36.414690+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0007829666137695312
+    t =    76.32s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:36.440007+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:36.452086+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:36.953072+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:36.960748+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    76.86s Getting device orientation
+2026-11-11 01:38:36.965487+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    76.87s Getting device orientation
+2026-11-11 01:38:36.967743+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 639.0, 330.0
+    t =    76.87s Getting device orientation
+2026-11-11 01:38:37.308003+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3378230333328247
+2026-11-11 01:38:37.318812+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:38.147660+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:38.957230+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:39.628894+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    79.53s Getting device orientation
+2026-11-11 01:38:39.638888+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    79.54s Getting device orientation
+2026-11-11 01:38:39.646267+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:39.646459+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:39.656726+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    79.56s Getting device orientation
+2026-11-11 01:38:39.670944+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    79.57s Getting device orientation
+2026-11-11 01:38:39.675903+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:39.676352+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:39.693503+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:39.699406+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:39.700437+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:39.700534+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    79.60s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:39.755641+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:39.755949+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    79.66s Checking existence of `StatusBar (First Match)`
+    t =    79.67s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    79.70s Find the StatusBar (Element at index 0)
+    t =    79.72s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:39.851018+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.09498000144958496
+2026-11-11 01:38:39.851375+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:39.852816+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0013920068740844727
+    t =    79.75s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:39.886542+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:39.920276+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:40.480704+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:40.490363+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    80.39s Getting device orientation
+2026-11-11 01:38:40.495876+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    80.40s Getting device orientation
+2026-11-11 01:38:40.499326+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 856.0, 344.0
+    t =    80.40s Getting device orientation
+2026-11-11 01:38:40.841387+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3376520872116089
+2026-11-11 01:38:40.845532+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:41.462400+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:41.879781+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:43.293261+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:43.617901+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    83.52s Getting device orientation
+2026-11-11 01:38:43.639360+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    83.54s Getting device orientation
+2026-11-11 01:38:43.644202+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:43.644470+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:43.647195+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:43.657043+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:43.659908+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:43.660165+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    83.56s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:43.744104+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:43.744356+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    83.65s Checking existence of `StatusBar (First Match)`
+    t =    83.66s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    83.70s Find the StatusBar (Element at index 0)
+    t =    83.73s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:43.857237+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.11279892921447754
+2026-11-11 01:38:43.857490+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:43.859437+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0017470121383666992
+    t =    83.76s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:43.880950+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:43.891993+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:44.403945+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:44.883822+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:44.892972+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    84.80s Getting device orientation
+2026-11-11 01:38:44.896179+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    84.80s Getting device orientation
+2026-11-11 01:38:44.898322+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 943.0, 26.0
+    t =    84.80s Getting device orientation
+2026-11-11 01:38:45.240062+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.33792102336883545
+2026-11-11 01:38:46.044373+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:46.988083+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:47.666977+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:48.300686+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:48.707675+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:49.811881+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:50.117097+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    90.02s Getting device orientation
+2026-11-11 01:38:50.133292+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    90.04s Getting device orientation
+2026-11-11 01:38:50.136786+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:50.137198+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:50.164598+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:50.170961+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:50.171933+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:50.172025+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    90.07s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:50.269500+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:50.269865+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    90.17s Checking existence of `StatusBar (First Match)`
+    t =    90.18s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    90.20s Find the StatusBar (Element at index 0)
+    t =    90.23s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:50.368730+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.09879899024963379
+2026-11-11 01:38:50.368862+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:50.369607+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0007040500640869141
+    t =    90.27s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:50.391846+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:50.411544+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:50.961299+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:51.414045+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:38:51.421391+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    91.33s Getting device orientation
+2026-11-11 01:38:51.427177+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =    91.33s Getting device orientation
+2026-11-11 01:38:51.429693+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 516.0, 956.0
+    t =    91.33s Getting device orientation
+2026-11-11 01:38:51.765642+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3325510025024414
+2026-11-11 01:38:51.772478+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:52.766934+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:54.148613+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:38:55.105140+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    95.01s Getting device orientation
+2026-11-11 01:38:55.126183+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    95.05s Getting device orientation
+2026-11-11 01:38:55.150128+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:55.150754+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:55.164132+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:55.184026+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:55.187588+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:55.188110+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    95.09s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:55.851851+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:55.852330+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    95.75s Checking existence of `StatusBar (First Match)`
+    t =    95.77s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    95.81s Find the StatusBar (Element at index 0)
+    t =    95.85s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:55.998241+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.14579999446868896
+2026-11-11 01:38:55.998378+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:55.999189+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0007740259170532227
+    t =    95.90s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:56.027199+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:56.069407+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    95.97s Getting device orientation
+2026-11-11 01:38:56.083743+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    95.99s Getting device orientation
+2026-11-11 01:38:56.087207+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:56.087459+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:56.095215+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:56.104275+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:56.105444+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:56.105623+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    96.01s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:56.495277+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:38:56.495894+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =    96.40s Checking existence of `StatusBar (First Match)`
+    t =    96.41s Get all elements bound by index for: Descendants matching type StatusBar
+    t =    96.45s Find the StatusBar (Element at index 0)
+    t =    96.48s Find the StatusBar (Element at index 1)
+2026-11-11 01:38:56.613626+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.11765789985656738
+2026-11-11 01:38:56.613874+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:38:56.614558+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.000635981559753418
+    t =    96.52s Find the Application 'com.apple.springboard'
+2026-11-11 01:38:56.637666+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:38:56.658822+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:57.506433+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:59.175336+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:38:59.605413+0000 maestro-driver-iosUITests-Runner[57227:157769] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =    99.52s Getting device orientation
+2026-11-11 01:38:59.648811+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =    99.55s Getting device orientation
+2026-11-11 01:38:59.656044+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:38:59.656650+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:38:59.694053+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:38:59.707657+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:38:59.711567+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:38:59.711919+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =    99.61s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:00.410055+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:00.411410+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   100.31s Checking existence of `StatusBar (First Match)`
+    t =   100.35s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   100.43s Find the StatusBar (Element at index 0)
+    t =   100.48s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:00.641506+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.22972798347473145
+2026-11-11 01:39:00.642302+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:00.644300+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0017549991607666016
+    t =   100.55s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:00.670769+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:00.817506+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:23.643578+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   123.55s Getting device orientation
+2026-11-11 01:39:23.680061+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   123.59s Getting device orientation
+2026-11-11 01:39:23.687480+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:23.687719+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:23.700402+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   123.60s Getting device orientation
+2026-11-11 01:39:23.714845+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   123.62s Getting device orientation
+2026-11-11 01:39:23.717870+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:23.718031+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:23.726520+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:24.724275+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /swipeV2
+2026-11-11 01:39:24.777199+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   124.68s Getting device orientation
+2026-11-11 01:39:24.781222+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   124.68s Getting device orientation
+    t =   124.69s Getting device orientation
+2026-11-11 01:39:24.909315+0000 maestro-driver-iosUITests-Runner[57227:151030] [SwipeRouteHandlerV2] Swipe (v2) from (464.0, 275.0) to (619.0, 247.0) with 0.6 duration
+2026-11-11 01:39:24.917897+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   124.83s Swipe (v2) from (464.0, 275.0) to (619.0, 247.0) with 0.6 duration
+2026-11-11 01:39:24.928788+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+    t =   124.83s     Find the Any (First Match)
+    t =   124.87s Application is configured to skip UI interruption handling
+    t =   124.87s     Synthesize event
+    t =   124.87s         Getting device orientation
+2026-11-11 01:39:25.926726+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+2026-11-11 01:39:25.933101+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:26.702747+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   126.60s Getting device orientation
+2026-11-11 01:39:26.713765+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   126.62s Getting device orientation
+2026-11-11 01:39:26.718284+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:26.718455+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:26.723312+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   126.63s Getting device orientation
+2026-11-11 01:39:26.734147+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   126.64s Getting device orientation
+2026-11-11 01:39:26.740689+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:26.740983+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:26.743415+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:27.513731+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /swipeV2
+2026-11-11 01:39:27.525408+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   127.43s Getting device orientation
+2026-11-11 01:39:27.529175+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   127.43s Getting device orientation
+    t =   127.43s Getting device orientation
+2026-11-11 01:39:27.533790+0000 maestro-driver-iosUITests-Runner[57227:151030] [SwipeRouteHandlerV2] Swipe (v2) from (619.0, 247.0) to (598.0, 344.0) with 0.5 duration
+2026-11-11 01:39:27.540215+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   127.44s Swipe (v2) from (619.0, 247.0) to (598.0, 344.0) with 0.5 duration
+2026-11-11 01:39:27.541444+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+    t =   127.44s     Find the Any (First Match)
+    t =   127.45s Application is configured to skip UI interruption handling
+    t =   127.45s     Synthesize event
+    t =   127.45s         Getting device orientation
+2026-11-11 01:39:28.400091+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+2026-11-11 01:39:28.422505+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:29.092306+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   128.99s Getting device orientation
+2026-11-11 01:39:29.104946+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   129.01s Getting device orientation
+2026-11-11 01:39:29.107274+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:29.107472+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:29.115732+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   129.02s Getting device orientation
+2026-11-11 01:39:29.123380+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   129.03s Getting device orientation
+2026-11-11 01:39:29.128549+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:29.128729+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:29.130496+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:29.690117+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /swipeV2
+2026-11-11 01:39:29.700171+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   129.60s Getting device orientation
+2026-11-11 01:39:29.704583+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   129.61s Getting device orientation
+    t =   129.61s Getting device orientation
+2026-11-11 01:39:29.709459+0000 maestro-driver-iosUITests-Runner[57227:151030] [SwipeRouteHandlerV2] Swipe (v2) from (598.0, 344.0) to (464.0, 275.0) with 0.6 duration
+2026-11-11 01:39:29.713887+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   129.62s Swipe (v2) from (598.0, 344.0) to (464.0, 275.0) with 0.6 duration
+2026-11-11 01:39:29.716077+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+    t =   129.62s     Find the Any (First Match)
+    t =   129.62s Application is configured to skip UI interruption handling
+    t =   129.63s     Synthesize event
+    t =   129.63s         Getting device orientation
+2026-11-11 01:39:30.773440+0000 maestro-driver-iosUITests-Runner[57227:151030] Quiescence checks are disabled for com.pbordjadze.paintbynumber application. Making it to believe it is idling
+2026-11-11 01:39:30.778526+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:31.763072+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:32.542665+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:33.042199+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:34.285316+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:34.610057+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   134.51s Getting device orientation
+2026-11-11 01:39:34.623429+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   134.53s Getting device orientation
+2026-11-11 01:39:34.626478+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:34.626893+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:34.635954+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   134.54s Getting device orientation
+2026-11-11 01:39:34.647687+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   134.55s Getting device orientation
+2026-11-11 01:39:34.651232+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:34.651438+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:34.655018+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:39:34.661431+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:39:34.662635+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:34.662777+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   134.56s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:35.006888+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:35.007245+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   134.91s Checking existence of `StatusBar (First Match)`
+    t =   134.94s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   134.97s Find the StatusBar (Element at index 0)
+    t =   135.01s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:35.147970+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.14060592651367188
+2026-11-11 01:39:35.148238+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:35.149099+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0008349418640136719
+    t =   135.05s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:35.172211+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:35.185699+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:35.647157+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:39:35.660625+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   135.57s Getting device orientation
+2026-11-11 01:39:35.667785+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   135.57s Getting device orientation
+2026-11-11 01:39:35.669947+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 1001.0, 55.0
+    t =   135.57s Getting device orientation
+2026-11-11 01:39:36.015431+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.34298694133758545
+2026-11-11 01:39:36.046888+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:37.211951+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:37.850811+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:38.278406+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:39.415295+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   139.32s Getting device orientation
+2026-11-11 01:39:39.433908+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   139.34s Getting device orientation
+2026-11-11 01:39:39.438726+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:39.438915+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:39.442971+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:39:39.448253+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:39:39.450630+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:39.450758+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   139.35s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:39.520593+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:39.521064+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   139.42s Checking existence of `StatusBar (First Match)`
+    t =   139.44s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   139.46s Find the StatusBar (Element at index 0)
+    t =   139.48s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:39.610203+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.08907902240753174
+2026-11-11 01:39:39.610331+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:39.611877+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.001497030258178711
+    t =   139.51s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:39.633303+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:39.644852+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:40.221482+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:40.595362+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:39:40.603934+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   140.51s Getting device orientation
+2026-11-11 01:39:40.611319+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   140.51s Getting device orientation
+2026-11-11 01:39:40.617311+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 34.0, 28.0
+    t =   140.52s Getting device orientation
+2026-11-11 01:39:40.995315+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.37158799171447754
+2026-11-11 01:39:41.061999+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:42.148840+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:42.637877+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:43.012077+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:44.011787+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:44.253829+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   144.16s Getting device orientation
+2026-11-11 01:39:44.266034+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   144.17s Getting device orientation
+2026-11-11 01:39:44.269595+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:44.269882+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:44.291082+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   144.19s Getting device orientation
+2026-11-11 01:39:44.302655+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   144.21s Getting device orientation
+2026-11-11 01:39:44.308595+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:44.308892+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:44.313941+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:39:44.322974+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:39:44.324521+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:44.324682+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   144.23s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:44.442549+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:44.442987+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   144.35s Checking existence of `StatusBar (First Match)`
+    t =   144.37s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   144.41s Find the StatusBar (Element at index 0)
+    t =   144.44s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:44.580197+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.13705003261566162
+2026-11-11 01:39:44.580491+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:44.582711+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0020380020141601562
+    t =   144.48s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:44.613982+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:44.640244+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:45.001995+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:39:45.010872+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   144.91s Getting device orientation
+2026-11-11 01:39:45.015132+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   144.92s Getting device orientation
+2026-11-11 01:39:45.019895+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 743.0, 55.0
+    t =   144.92s Getting device orientation
+2026-11-11 01:39:45.366302+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.3427790403366089
+2026-11-11 01:39:45.402873+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:46.946216+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:48.097369+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:48.753487+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:50.018396+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:50.531749+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   150.43s Getting device orientation
+2026-11-11 01:39:50.550814+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   150.45s Getting device orientation
+2026-11-11 01:39:50.554858+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:50.555371+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:50.562335+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   150.46s Getting device orientation
+2026-11-11 01:39:50.571219+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   150.47s Getting device orientation
+2026-11-11 01:39:50.575136+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:50.575353+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:50.578438+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:39:50.586739+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:39:50.590061+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:50.590355+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   150.49s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:50.846814+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:50.847077+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   150.75s Checking existence of `StatusBar (First Match)`
+    t =   150.77s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   150.82s Find the StatusBar (Element at index 0)
+    t =   150.87s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:51.017208+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.17002999782562256
+2026-11-11 01:39:51.017395+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:51.018127+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0006910562515258789
+    t =   150.92s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:51.048628+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:51.064253+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:51.804001+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:39:51.813606+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   151.72s Getting device orientation
+2026-11-11 01:39:51.821743+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   151.72s Getting device orientation
+2026-11-11 01:39:51.823810+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 30.0, 55.0
+    t =   151.73s Getting device orientation
+2026-11-11 01:39:52.168908+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.34108400344848633
+2026-11-11 01:39:52.252708+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:53.093358+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:53.678770+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:54.080897+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:55.234994+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   155.14s Getting device orientation
+2026-11-11 01:39:55.250411+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   155.16s Getting device orientation
+2026-11-11 01:39:55.258900+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:55.259385+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:55.266256+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   155.17s Getting device orientation
+2026-11-11 01:39:55.278314+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   155.18s Getting device orientation
+2026-11-11 01:39:55.282970+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:39:55.283273+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:39:55.286253+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:39:55.296159+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:39:55.298676+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:55.299018+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   155.20s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:39:55.417581+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:39:55.417839+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   155.32s Checking existence of `StatusBar (First Match)`
+    t =   155.33s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   155.36s Find the StatusBar (Element at index 0)
+    t =   155.39s Find the StatusBar (Element at index 1)
+2026-11-11 01:39:55.546381+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.12846899032592773
+2026-11-11 01:39:55.546599+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:39:55.547329+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0007020235061645508
+    t =   155.45s Find the Application 'com.apple.springboard'
+2026-11-11 01:39:55.570388+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:39:55.575092+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:55.932829+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /touch
+2026-11-11 01:39:55.942844+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   155.85s Getting device orientation
+2026-11-11 01:39:55.946865+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+    t =   155.85s Getting device orientation
+2026-11-11 01:39:55.949287+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping 30.0, 55.0
+    t =   155.85s Getting device orientation
+2026-11-11 01:39:56.281882+0000 maestro-driver-iosUITests-Runner[57227:151030] Tapping took 0.33040308952331543
+2026-11-11 01:39:56.287720+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:57.160894+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /isScreenStatic
+2026-11-11 01:39:58.064272+0000 maestro-driver-iosUITests-Runner[57227:161790] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:39:58.995539+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:05.828052+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:06.298645+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:07.210253+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   167.11s Getting device orientation
+2026-11-11 01:40:07.249923+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   167.15s Getting device orientation
+2026-11-11 01:40:07.256254+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:40:07.256647+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:40:07.260878+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: POST /deviceInfo
+    t =   167.16s Getting device orientation
+2026-11-11 01:40:07.269411+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+    t =   167.17s Getting device orientation
+2026-11-11 01:40:07.273505+0000 maestro-driver-iosUITests-Runner[57227:151030] Returning cached screen size
+2026-11-11 01:40:07.273700+0000 maestro-driver-iosUITests-Runner[57227:151030] Device orientation is 1
+2026-11-11 01:40:07.276164+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: POST /viewHierarchy
+2026-11-11 01:40:07.287471+0000 maestro-driver-iosUITests-Runner[57227:151030] Detected running apps: ["com.pbordjadze.paintbynumber", "com.apple.springboard"]
+2026-11-11 01:40:07.290630+0000 maestro-driver-iosUITests-Runner[57227:151030] [Start] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:40:07.290904+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Starting getHierarchyWithFallback for element.
+    t =   167.19s Find the Application 'com.pbordjadze.paintbynumber'
+2026-11-11 01:40:07.874415+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Successfully retrieved element hierarchy.
+2026-11-11 01:40:07.875153+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch status bar hierarchy - start
+    t =   167.78s Checking existence of `StatusBar (First Match)`
+    t =   167.79s Get all elements bound by index for: Descendants matching type StatusBar
+    t =   167.83s Find the StatusBar (Element at index 0)
+    t =   167.87s Find the StatusBar (Element at index 1)
+2026-11-11 01:40:08.014732+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch status bar hierarchy - duration 0.13947701454162598
+2026-11-11 01:40:08.014929+0000 maestro-driver-iosUITests-Runner[57227:151030] [ViewHierarchyHandler] Fetch Safari WebView hierarchy - start
+2026-11-11 01:40:08.015887+0000 maestro-driver-iosUITests-Runner[57227:151030] Fetch Safari WebView hierarchy - duration 0.0008900165557861328
+    t =   167.92s Find the Application 'com.apple.springboard'
+2026-11-11 01:40:08.043156+0000 maestro-driver-iosUITests-Runner[57227:151030] [Done] View hierarchy snapshot for Application 'com.pbordjadze.paintbynumber' 
+2026-11-11 01:40:08.104346+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:08.630980+0000 maestro-driver-iosUITests-Runner[57227:151543] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:09.861910+0000 maestro-driver-iosUITests-Runner[57227:160192] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:40:10.201416+0000 maestro-driver-iosUITests-Runner[57227:151541] [FlyingFox] <127.0.0.1> request: GET /screenshot
+2026-11-11 01:42:03.029008+0000 maestro-driver-iosUITests-Runner[57227:152849] [FlyingFox] <127.0.0.1> request: GET /status
