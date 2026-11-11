@@ -37,6 +37,14 @@
       "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState" : "manual"
     },
+    "Contact" : {
+      "comment" : "Settings › About row that writes an email to the developers; the address shows beside it",
+      "extractionState" : "manual"
+    },
+    "Privacy Policy" : {
+      "comment" : "Settings › About row that opens the privacy policy on the web",
+      "extractionState" : "manual"
+    },
     "Bend Line" : {
       "comment" : "Refine screen: the tool that moves a drawn line by dragging it, bending it near where it is held; its name in the tool rail and its VoiceOver label",
       "extractionState" : "manual"

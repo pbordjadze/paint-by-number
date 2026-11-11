@@ -1147,6 +1147,9 @@ sends it, the developers collect nothing).
   (`LineArtSettings()`), with no pipeline tuning in the release (SideStore's: Create flow › Kit
   paint): nothing in Settings changes how a template is
   made.
+- Settings › About's Privacy Policy and Contact rows (`AboutLinks`, Ravenna's the same; painting-company
+  row 310) open the policy the listing links to and an email to the address `PRIVACY.md` gives
+  (`AboutLinksTests`).
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning, line appearance and preview
   picture, and its switch per sound, haptic and flourish; the time-lapse's pace; Settings' paper
