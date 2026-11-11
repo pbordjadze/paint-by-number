@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t01-gallery\n- tapOn: 'The Great Wave'\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t02-wave\n- tapOn: 'Close'\n- tapOn:\n    id: swatch-4\n- tapOn:\n    point: '58%,44%'\n- tapOn:\n    point: '70%,41%'\n- tapOn:\n    id: swatch-5\n- tapOn:\n    point: '62%,24%'\n- tapOn:\n    point: '83%,25%'\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t03-painted\n- tapOn:\n    id: change-painting\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t04-change\n- tapOn:\n    id: unlock-try-guide\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t05-guide\n- swipe:\n    start: '65%,31%'\n    end: '60%,19%'\n    duration: 1500\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t06-bent\n- tapOn:\n    point: '97%,4%'\n- waitForAnimationToEnd\n- tapOn: 'Back'\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t07-gallery\n- tapOn:\n    point: '72%,4%'\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/t08-paint-page\n- tapOn:\n    point: '3%,4%'\n- waitForAnimationToEnd\n- tapOn:\n    point: '3%,4%'\n- waitForAnimationToEnd\n- scrollUntilVisible:\n    element: 'Unlimited Paintings'\n    direction: DOWN\n- waitForAnimationToEnd"
+ },
+ "seconds": 136.6,
+ "isError": false,
+ "text": [
+  "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":37,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+ ],
+ "images": []
+}
