@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn: 'The Great Wave'\n- waitForAnimationToEnd\n- tapOn: 'Close'\n- tapOn:\n    id: swatch-4\n- tapOn:\n    point: '58%,44%'\n- tapOn:\n    point: '70%,41%'\n- tapOn:\n    id: swatch-5\n- tapOn:\n    point: '62%,24%'\n- tapOn:\n    point: '83%,25%'\n- waitForAnimationToEnd\n- tapOn: 'Back'\n- waitForAnimationToEnd\n- tapOn: 'Delicate Arch'\n- waitForAnimationToEnd\n- tapOn:\n    id: change-painting\n- extendedWaitUntil:\n    visible:\n      id: refine-done\n    timeout: 120000\n- tapOn: 'Close'\n- tapOn:\n    id: refine-tool-bendLine\n- swipe:\n    start: '80%,45%'\n    end: '78%,32%'\n    duration: 2000\n- waitForAnimationToEnd\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/u01-arch-bent\n- tapOn:\n    id: refine-done\n- waitForAnimationToEnd:\n    timeout: 15000\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/u02-arch-after\n- tapOn: 'Back'\n- waitForAnimationToEnd"
+ },
+ "seconds": 103.2,
+ "isError": false,
+ "text": [
+  "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":27,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+ ],
+ "images": []
+}
