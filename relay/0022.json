@@ -1,0 +1,56 @@
+{
+ "n": 22,
+ "results": [
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- tapOn:\n    point: '10%,80%'\n- waitForAnimationToEnd\n- tapOn: 'William the Hippopotamus'\n- waitForAnimationToEnd"
+   },
+   "seconds": 15.3,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":5,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "run",
+   "arguments": {
+    "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- takeScreenshot: /Users/runner/work/paint-by-number/paint-by-number/out/shots/s22-mosaic\n"
+   },
+   "seconds": 0.4,
+   "isError": false,
+   "text": [
+    "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "inspect_screen",
+   "arguments": {},
+   "seconds": 0.4,
+   "isError": false,
+   "text": [
+    "{\"ui_schema\":{\"platform\":\"ios\",\"abbreviations\":{\"b\":\"bounds\",\"txt\":\"text\",\"rid\":\"resource-id\",\"a11y\":\"accessibilityText\",\"hint\":\"hintText\",\"val\":\"value\",\"c\":\"children\"},\"defaults\":{\"enabled\":true,\"focused\":false,\"selected\":false,\"checked\":false,\"txt\":\"\",\"hint\":\"\",\"rid\":\"\",\"val\":\"\",\"a11y\":\"\"}},\"elements\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"Paint by Moonlight\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"a11y\":\"dismiss popup\",\"rid\":\"PopoverDismissRegion\"},{\"b\":\"[250,1164][650,1280]\",\"c\":[{\"b\":\"[250,1164][650,1280]\",\"c\":[{\"b\":\"[250,1164][650,1280]\",\"c\":[{\"b\":\"[250,1164][650,1280]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"rid\":\"TipView\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[250,1164][650,1267]\",\"c\":[{\"b\":\"[322,1182][402,1202]\",\"a11y\":\"Tap to Set\"},{\"b\":\"[322,1206][614,1244]\",\"a11y\":\"Pick a color, then tap a tile marked with its number to set it.\"}]}]},{\"b\":\"[609,1179][635,1205]\",\"a11y\":\"Close\",\"rid\":\"xmark.circle.fill\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\",\"c\":[{\"b\":\"[0,0][1032,1376]\"}]}]}]},{\"b\":\"[0,0][1032,32]\"},{\"b\":\"[0,0][1032,32]\"}]}"
+   ],
+   "images": []
+  },
+  {
+   "tool": "take_screenshot",
+   "arguments": {},
+   "seconds": 0.8,
+   "isError": false,
+   "text": [],
+   "images": [
+    {
+     "file": "0022-4-1.jpg",
+     "mimeType": "image/jpeg",
+     "bytes": 710198,
+     "width": 1500,
+     "height": 2000
+    }
+   ]
+  }
+ ],
+ "ended": false
+}
