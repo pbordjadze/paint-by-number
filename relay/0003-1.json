@@ -1,0 +1,12 @@
+{
+ "tool": "run",
+ "arguments": {
+  "yaml": "appId: com.pbordjadze.paintbynumber\n---\n- pressKey: Home"
+ },
+ "seconds": 3.6,
+ "isError": false,
+ "text": [
+  "{\"success\":true,\"device_id\":\"E247944A-EF3A-4ACA-99BF-97F59D694F71\",\"commands_executed\":2,\"message\":\"Flow executed successfully\",\"env_vars\":{\"MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED\":\"true\",\"MAESTRO_CLI_NO_ANALYTICS\":\"1\",\"MAESTRO_DRIVER_STARTUP_TIMEOUT\":\"240000\",\"MAESTRO_VERSION\":\"2.11.0\"}}"
+ ],
+ "images": []
+}
