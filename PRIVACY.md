@@ -78,7 +78,8 @@ the picture instead).
   six months.
 - **Deleting a report.** To have a report deleted, email
   [support@paulbordjadze.com](mailto:support@paulbordjadze.com) with roughly when you sent it and
-  what it showed. There is no account to tie it to you, so that is how we find it.
+  what it showed. There is no account to tie it to you, so that is how we find it. The app itself
+  never asks for your email address: writing to us is only for someone who wants a report deleted.
 - **Your choice.** Nothing is sent unless you tap Send. If sending fails you can try again, share
   the report some other way (for example Mail, Messages or AirDrop), or cancel, which keeps what
   you wrote.
