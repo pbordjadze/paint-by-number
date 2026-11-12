@@ -183,6 +183,9 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     }
 
     private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0) {
+        #if DEBUG
+        TourLog.event("sound", String(format: "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, volume, delay))
+        #endif
         let voice = voices[nextVoice]
         nextVoice = (nextVoice + 1) % voices.count
         voice.volume = volume

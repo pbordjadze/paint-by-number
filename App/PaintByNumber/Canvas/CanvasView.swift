@@ -606,6 +606,11 @@ final class CanvasView: UIView, PaintingCanvas {
         cameraAnimation = CameraAnimation(
             fromZoom: scrollView.zoomScale, toZoom: zoom, fromOffset: scrollView.contentOffset, toOffset: offset,
             start: CACurrentMediaTime(), duration: duration, fits: fits)
+        #if DEBUG
+        TourLog.event("flight", String(format: "from=%.3f,%.1f,%.1f\tto=%.3f,%.1f,%.1f\tduration=%.3f\tfits=%ld",
+            scrollView.zoomScale, scrollView.contentOffset.x, scrollView.contentOffset.y,
+            zoom, offset.x, offset.y, duration, fits ? 1 : 0))
+        #endif
         requestRender()
     }
 
@@ -628,6 +633,9 @@ final class CanvasView: UIView, PaintingCanvas {
         if t >= 1 {
             o = a.toOffset
             cameraAnimation = nil
+            #if DEBUG
+            TourLog.event("land", String(format: "late=%.1f", (time - a.start - a.duration) * 1000))
+            #endif
         }
         apply(zoom: t >= 1 ? a.toZoom : z, offset: o)
         if t >= 1 { cameraDidSettle() }
@@ -831,6 +839,17 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     fileprivate func tick(_ link: CADisplayLink) {
+        #if DEBUG
+        let tourStart = CACurrentMediaTime(), tourFrames = framesRendered
+        defer {
+            if TourLog.isOn {
+                TourLog.event("tick", String(format: "gap=%.2f\twork=%.2f\tdrew=%ld",
+                    (link.timestamp - tourLastTick) * 1000, (CACurrentMediaTime() - tourStart) * 1000,
+                    framesRendered > tourFrames ? 1 : 0))
+            }
+            tourLastTick = link.timestamp
+        }
+        #endif
         stepCameraAnimation(at: CACurrentMediaTime())
         let time = Float(link.targetTimestamp - epoch)
         let camera = currentCamera()
@@ -873,6 +892,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
+    #if DEBUG
+    private var tourLastTick: CFTimeInterval = 0
+    #endif
     private var skippedFrames = 0
     /// The frame `watchesFirstFrame` waits for is on its way to the screen.
     private var isAwaitingFirstFrame = false

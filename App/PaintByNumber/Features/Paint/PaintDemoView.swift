@@ -250,6 +250,8 @@ private final class Demo {
             fillDurationScale = 128
         case "paint-hint":
             paint(fraction: 0.4)
+        case "paint-zen-30":
+            paint(fraction: 0.2)
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
@@ -382,6 +384,32 @@ private final class Demo {
             let marks = feedback.draft?.marks.count ?? -1
             Log.demo.notice("demo \(self.scenario, privacy: .public): \(marks, privacy: .public) marks")
             try? await Task.sleep(for: .seconds(1))
+            return
+        }
+        if scenario == "paint-zen-30" {
+            // No UI test attached: thirty fills of the selected color's next area, alternating a tap's
+            // and a stroke's, one every 3.3 s (the tour's pace), with Zen Mode on (`-zenMode YES`).
+            let t = session.template
+            TourLog.event("zen30", "zenMode=\(UserDefaults.standard.bool(forKey: "zenMode")) flows=\(session.flowsToNextArea)")
+            TourLog.event("mark", "zen-30 begin")
+            try? await Task.sleep(for: .seconds(3))
+            var fills = 0
+            while fills < 30 {
+                let color = session.selectedColor
+                guard let area = t.regions.indices.first(where: { !session.isPainted($0) && session.colorOf($0) == color })
+                    ?? t.regions.indices.first(where: { !session.isPainted($0) }) else { break }
+                if fills % 2 == 0 {
+                    session.paint([area], from: Self.center(t, area), animated: true)
+                } else {
+                    session.beginStroke()
+                    session.paint([area], from: Self.center(t, area), animated: true)
+                    session.endStroke()
+                }
+                fills += 1
+                try? await Task.sleep(for: .seconds(3.3))
+            }
+            TourLog.event("mark", "zen-30 end fills=\(fills)")
+            Log.demo.notice("demo paint-zen-30: \(fills, privacy: .public) fills")
             return
         }
         if scenario.hasPrefix("paint-quiet") {
