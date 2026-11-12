@@ -12,7 +12,7 @@
 #                     line-art maps from the demo launches' cache: PaintCore's share alone
 #   forming-cold      the same with the cache off: the models and Vision run, as for a painter's own photo
 #   start             the same, then Start Painting taps itself: the hand-off into the painting, the
-#                     making-of off (the app's default)
+#                     making-of off (the app's default), nothing to buy (as a SideStore build)
 #   start-making-of   the same with Settings > The Making-of on: the show plays to its end
 #   zen-30            thirty fills in Zen Mode, a tap's and a drag's in turn (`paint-zen-30`)
 #   finish            the last fill, the flight to the whole painting and night falling (`paint-nightfall`)
@@ -49,8 +49,8 @@ plan() {
     launch)          ARGS=(-demo gallery-empty); PLAY=10 ;;
     forming)         ARGS=(-demo create-preview -demoFixedPictures YES); PLAY=25 ;;
     forming-cold)    ARGS=(-demo create-preview -demoFixedPictures YES -demoColdMaps YES); PLAY=45 ;;
-    start)           ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -playsMakingOf NO); PLAY=28 ;;
-    start-making-of) ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -playsMakingOf YES); PLAY=75 ;;
+    start)           ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf NO); PLAY=28 ;;
+    start-making-of) ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf YES); PLAY=75 ;;
     zen-30)          ARGS=(-demo paint-zen-30 -zenMode YES); PLAY=106 ;;
     finish)          ARGS=(-demo paint-nightfall); PLAY=22 ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
