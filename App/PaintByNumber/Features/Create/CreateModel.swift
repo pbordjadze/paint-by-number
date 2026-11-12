@@ -954,6 +954,9 @@ final class CreateModel {
     /// A line of the app's log (`ci/collect.sh` keeps its category) with the state the generation
     /// is in: what a preview that stays off, or goes off again, is diagnosed from.
     private func trace(_ event: String) {
+        #if DEBUG
+        TourLog.event("create", event)
+        #endif
         let phaseName = String(describing: self.phase)
         Log.create.notice(
             "\(event, privacy: .public) [adjusting \(self.isAdjusting, privacy: .public), full under way \(self.refining != nil, privacy: .public), final \(self.isFinal, privacy: .public), phase \(phaseName, privacy: .public)]"
