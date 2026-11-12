@@ -87,6 +87,8 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
+                // Under the create flow's cover the shelf moves nothing (`shelfIsOutOfSight`).
+                .environment(\.shelfIsOutOfSight, isCreating)
                 .navigationTitle("Paint by Moonlight")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)

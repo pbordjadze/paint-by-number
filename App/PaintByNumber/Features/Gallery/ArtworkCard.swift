@@ -81,6 +81,7 @@ struct ArtworkThumbnail: View {
     var contentMode: ContentMode = .fill
     @Environment(Library.self) private var library
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.shelfIsOutOfSight) private var isOutOfSight
     @State private var image: CGImage?
     @State private var size: CGSize = .zero
 
@@ -108,7 +109,12 @@ struct ArtworkThumbnail: View {
             if image == nil { image = cache.cached(artwork, maxPixelSize: pixelSize) ?? cache.bestCached(artwork) }
             let loaded = await cache.load(artwork, maxPixelSize: pixelSize, from: library.store)
             if let loaded, loaded !== image {
-                withAnimation(.easeInOut(duration: 0.3)) { image = loaded }
+                // No fade where nobody sees it (`shelfIsOutOfSight`).
+                if isOutOfSight {
+                    image = loaded
+                } else {
+                    withAnimation(.easeInOut(duration: 0.3)) { image = loaded }
+                }
             }
         }
     }

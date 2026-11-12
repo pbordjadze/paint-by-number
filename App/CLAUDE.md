@@ -11,8 +11,17 @@ synchronized folder would bundle it into the app.
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
-  answering UI tests for up to half a minute. The painting Start Painting makes is pushed with no
-  animation, under the create flow's cover, and shows without fading (`StartHandoff`).
+  answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
+  usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
+  swipe back never worked), and shows without fading (`StartHandoff`).
+- What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
+  shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
+  draws again at every frame of an animation that moves or fades it, seen or not. Under the create
+  flow's cover the shelf therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the
+  card of the painting Start Painting had just made moved in there, unseen, for half a second, and
+  the flow's picture, gliding to its page above it, got 15 to 20 frames a second
+  (painting-company row 292). Before animating anything that holds pictures, ask what else is
+  animating beneath it; `-tourLog`'s `hitch` lines say when the main thread missed a frame.
 - The create flow's preview turns off iOS 26's swipe back from anywhere on a pushed screen
   (`ContentSwipeBackOff` in `TemplatePreviewView`): it took the sliders' and the comparison's
   drags and left for the photo step. The edge swipe and Back still go back.

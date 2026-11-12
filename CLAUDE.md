@@ -272,8 +272,13 @@ shipped binary: testability keeps internal symbols, and the demo code is in); `-
 Debug never tests: a test of an `UNRELEASED` feature says so (`#if UNRELEASED`, with the release's
 behaviour in the `#else` where it has one). Its header is its manual; it needs a simulator of its
 own (one per session running it). `tools/perf-tour/run.sh` measures an installed build on a device
-or a simulator (for a device, `ReleaseTests` with `ENABLE_TESTABILITY=NO`): a number means
-something only beside the same scenario's from the build before it, run turn about in one sitting.
+or a simulator: a number means something only beside the same scenario's from the build before
+it, run turn about in one sitting. Build what it measures as `ReleaseTests` with
+`ENABLE_TESTABILITY=NO CLANG_COVERAGE_MAPPING=NO`: every `xcodebuild build` of the scheme
+otherwise instruments the app for test coverage (the archive that ships has none), which slows
+the hot loops and makes the parallel ones fight over the counters, so much that two builds of the
+same PaintCore differed by 7% in generation time. `otool -l <app>/PaintByNumber | grep -c
+__llvm_prf` prints 0 for a build without it.
 `tools/template_hashes.py` says whether a change left every generated template byte for byte as
 it was, and `tools/frozen.py <commit>` whether the checks and the measuring are still what they
 were at a commit (a long change that must lose no feature runs both before it is judged).
