@@ -8,6 +8,7 @@ struct PaintByNumberApp: App {
 
     init() {
         #if DEBUG
+        TourLog.start()
         if DemoMode.isActive {
             DemoStandardError.silence()
             MainThreadWatchdog.start()

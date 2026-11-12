@@ -3,32 +3,52 @@ import Foundation
 import QuartzCore
 
 /// `-tourLog YES` (Debug builds only): the performance tour's event log, `tmp/tour-log-<pid>.tsv` in the
-/// app's data container, one file per process. One line per canvas tick (when it began, the gap since the last tick, how
-/// long the tick's own work took, whether it drew), per camera flight (start: from and to, duration;
-/// land), per sound and per haptic; about once a second, the thermal state, Low Power Mode and
-/// the memory footprint. Times are wall-clock seconds (the device's clock, which the UI
-/// test's segment marks share). Lines are buffered and written about once a second, off the main thread.
+/// app's data container, one file per process. A `launch` line gives the process's start; then one line
+/// per canvas tick (the gap since the last tick, how long the tick's own work took, whether it drew),
+/// per camera flight (start: from and to, duration; land), per sound and per haptic; and twice a second
+/// the thermal state, Low Power Mode and the memory footprint. Times are wall-clock seconds (the
+/// device's clock, which the UI test's segment marks share). Lines are buffered and written twice a
+/// second, off the main thread.
 nonisolated enum TourLog {
     static let isOn = UserDefaults.standard.bool(forKey: "tourLog")
-    static let url = FileManager.default.temporaryDirectory.appending(path: "tour-log-\(ProcessInfo.processInfo.processIdentifier).tsv")
 
     private static let queue = DispatchQueue(label: "tour-log", qos: .utility)
     nonisolated(unsafe) private static var pending: [String] = []
-    nonisolated(unsafe) private static var scheduled = false
-    nonisolated(unsafe) private static var handle: FileHandle? = {
-        guard isOn else { return nil }
+    nonisolated(unsafe) private static var handle: FileHandle?
+
+    /// Opens the log and starts the sampler (the app's launch).
+    static func start() {
+        guard isOn else { return }
         // The process's start, so the first tick that drew gives the time to the first frame.
         var info = kinfo_proc(), size = MemoryLayout<kinfo_proc>.size
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
         sysctl(&mib, 4, &info, &size, nil, 0)
-        let start = info.kp_proc.p_un.__p_starttime
-        let line = String(format: "%.4f\tlaunch\tstarted=%.4f\n", Date().timeIntervalSince1970,
-                          Double(start.tv_sec) + Double(start.tv_usec) / 1e6)
-        FileManager.default.createFile(atPath: url.path, contents: line.data(using: .utf8))
-        let file = try? FileHandle(forWritingTo: url)
-        _ = try? file?.seekToEnd()
-        return file
-    }()
+        let started = Double(info.kp_proc.p_un.__p_starttime.tv_sec) + Double(info.kp_proc.p_un.__p_starttime.tv_usec) / 1e6
+        let url = FileManager.default.temporaryDirectory.appending(path: "tour-log-\(getpid()).tsv")
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        queue.async {
+            handle = try? FileHandle(forWritingTo: url)
+            pending.append(stamp() + "\tlaunch\tstarted=\(String(format: "%.4f", started))\n")
+            sample()
+        }
+    }
+
+    static func event(_ kind: String, _ fields: String) {
+        guard isOn else { return }
+        let line = stamp() + "\t\(kind)\t\(fields)\n"
+        queue.async { pending.append(line) }
+    }
+
+    private static func stamp() -> String { String(format: "%.4f", Date().timeIntervalSince1970) }
+
+    private static func sample() {
+        let info = ProcessInfo.processInfo
+        pending.append(stamp() + "\tdevice\tthermal=\(info.thermalState.rawValue)\tlowPower=\(info.isLowPowerModeEnabled)"
+            + "\tfootprintMB=\(footprint() / 1_048_576)\n")
+        handle?.write(pending.joined().data(using: .utf8)!)
+        pending.removeAll(keepingCapacity: true)
+        queue.asyncAfter(deadline: .now() + 0.5) { sample() }
+    }
 
     /// The process's memory footprint (what jetsam counts), in bytes.
     private static func footprint() -> UInt64 {
@@ -40,25 +60,6 @@ nonisolated enum TourLog {
             }
         }
         return result == KERN_SUCCESS ? info.phys_footprint : 0
-    }
-
-    static func event(_ kind: String, _ fields: String) {
-        guard isOn else { return }
-        let line = String(format: "%.4f", Date().timeIntervalSince1970) + "\t\(kind)\t\(fields)\n"
-        queue.async {
-            pending.append(line)
-            guard !scheduled else { return }
-            scheduled = true
-            queue.asyncAfter(deadline: .now() + 1) {
-                let info = ProcessInfo.processInfo
-                pending.append(String(format: "%.4f", Date().timeIntervalSince1970)
-                    + "\tdevice\tthermal=\(info.thermalState.rawValue)\tlowPower=\(info.isLowPowerModeEnabled)"
-                    + "\tfootprintMB=\(footprint() / 1_048_576)\n")
-                handle?.write(pending.joined().data(using: .utf8)!)
-                pending.removeAll(keepingCapacity: true)
-                scheduled = false
-            }
-        }
     }
 }
 #endif
