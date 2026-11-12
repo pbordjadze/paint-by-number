@@ -20,9 +20,11 @@ APP = {"PaintByNumber", "PaintCore", "MosaicCore", "MosaicEngine", "MosaicKit", 
 
 
 def export(trace, xpath=None):
+    # A table the trace doesn't have exports as nothing (xctrace exits 1): a Time Profiler recording has no
+    # hitches table, and its stacks are as good. The table of contents must export.
     out = tempfile.NamedTemporaryFile(delete=False, suffix=".xml")
     subprocess.run(["xcrun", "xctrace", "export", "--input", trace] + (["--xpath", xpath] if xpath else ["--toc"]),
-                   stdout=out, stderr=subprocess.DEVNULL, check=True)
+                   stdout=out, stderr=subprocess.DEVNULL, check=xpath is None)
     out.close()
     return out.name
 
