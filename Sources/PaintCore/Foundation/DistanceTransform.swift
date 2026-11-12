@@ -19,7 +19,7 @@ public enum DistanceTransform {
             }
         }
         let f = try! squaredDistances(feature, width: width, height: height, cancel: .none)
-        return Grid(width: width, height: height, storage: f.map { Float($0) })
+        return Grid(width: width, height: height, storage: [Float](count: n) { Float(f[$0]) })
     }
 
     /// For every pixel, the Euclidean distance from its center to the nearest edge of its
@@ -126,15 +126,16 @@ public enum DistanceTransform {
                         try cancel.throwIfCancelled()
                     }
                     try Parallel.forEachBand(height, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
-                        var line = [Double](repeating: 0, count: width)
-                        var out = [Double](repeating: 0, count: width)
-                        var v = [Int](repeating: 0, count: width)
-                        var z = [Double](repeating: 0, count: width + 1)
-                        for y in rows {
-                            let row = base.value + y * width
-                            for x in 0..<width { line[x] = row[x] }
-                            transform1D(line, count: width, out: &out, v: &v, z: &z)
-                            for x in 0..<width { row[x] = out[x] }
+                        // A row is read where it lies and written back whole.
+                        withUnsafeTemporaryAllocation(of: Double.self, capacity: 2 * width + 1) { doubles in
+                            withUnsafeTemporaryAllocation(of: Int.self, capacity: width) { vertices in
+                                let out = doubles.baseAddress!, z = out + width, v = vertices.baseAddress!
+                                for y in rows {
+                                    let row = base.value + y * width
+                                    transform1D(UnsafePointer(row), count: width, out: out, v: v, z: z)
+                                    row.update(from: out, count: width)
+                                }
+                            }
                         }
                     }
                 }
@@ -143,10 +144,13 @@ public enum DistanceTransform {
         return f
     }
 
-    /// 1D squared distance transform of sampled function `f` (lower envelope of parabolas).
+    /// 1D squared distance transform of sampled function `f` (lower envelope of parabolas) into
+    /// `d`; `v` (`n` parabola vertices) and `z` (`n + 1` boundaries) are scratch, written before
+    /// they are read.
     @inline(__always)
     static func transform1D(
-        _ f: [Double], count n: Int, out d: inout [Double], v: inout [Int], z: inout [Double]
+        _ f: UnsafePointer<Double>, count n: Int, out d: UnsafeMutablePointer<Double>, v: UnsafeMutablePointer<Int>,
+        z: UnsafeMutablePointer<Double>
     ) {
         // Skip leading infinite samples: parabolas rooted at +inf never contribute.
         var first = 0
