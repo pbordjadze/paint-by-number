@@ -153,6 +153,7 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
         #if DEBUG
         dispatchPrecondition(condition: .onQueue(queue))
         asked.append(name)
+        TourLog.event("haptic", name)
         #endif
         guard let engine = ensureEngine() else { return }
         do {
