@@ -116,6 +116,18 @@ final class PerformanceTour: XCTestCase {
             let zen = app.buttons["Zen Mode"].firstMatch
             XCTAssertTrue(zen.waitForExistence(timeout: 5), "More has no Zen Mode")
             zen.tap()
+            // Zen Mode is a saved setting, so the toggle may have just turned it off: the "Zen Mode is
+            // on" toast says it's on; without it, toggle again.
+            let on = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Zen Mode is on'")).firstMatch
+            var zenOn = on.waitForExistence(timeout: 3)
+            if !zenOn {
+                if ring.exists && ring.isHittable { ring.tap(); sleep(1) }
+                app.buttons["More"].tap()
+                if zen.waitForExistence(timeout: 5) { zen.tap() }
+                zenOn = on.waitForExistence(timeout: 3)
+            }
+            XCTAssertTrue(zenOn, "Zen Mode didn't turn on")
+            print("TOURNOTE zen on=\(zenOn)")
             sleep(3)
             var fills = 0, tries = 0
             let areas = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-area-'"))

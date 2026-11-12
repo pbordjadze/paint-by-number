@@ -78,7 +78,8 @@ def main():
     # Lifecycle: the launch, from the first lifecycle period to the end of Initial Frame Rendering.
     life = []
     for r in table(trace, "life-cycle-period"):
-        if pid and r["process"].find("pid").text != pid:
+        p = r["process"].find("pid") if r.get("process") is not None else None
+        if pid and (p is None or p.text != pid):
             continue
         life.append((ns(r["start"]) / 1e9, ns(r["duration"]) / 1e9, r["period"].get("fmt")))
     launch = None
@@ -111,7 +112,8 @@ def main():
 
     hitches = []
     for r in table(trace, "hitches"):
-        if pid and r["process"].find("pid").text != pid:
+        p = r["process"].find("pid") if r.get("process") is not None else None
+        if pid and (p is None or p.text != pid):
             continue
         hitches.append((ns(r["start"]) / 1e9, ns(r["duration"]) / 1e6))
     thermal = [(ns(r["start"]) / 1e9, ns(r["duration"]) / 1e9, r["thermal-state"].get("fmt"))
