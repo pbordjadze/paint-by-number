@@ -471,77 +471,87 @@ enum LayeredLines {
         var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
         var weights = [UInt8](repeating: 0, count: t.edges.count)
         // Near the painter's edits: each sample of an edge, and the drawn stretches of edges a
-        // line runs along only in part.
-        var samples: [EdgeSample] = []
-        var partial: [EdgeRun] = []
-        for (k, e) in t.edges.enumerated() {
-            var covered = SIMD4<Float>(repeating: 0)
-            var strengthSum: Float = 0, strengthLength: Float = 0
-            let pts = t.points(of: e)
-            let sampling = plan.exact && e.right != BoundaryEdge.outside
-            samples.removeAll(keepingCapacity: true)
-            var previous = pts.first!
-            for p in pts.dropFirst() {
-                let length = simdLength(p - previous)
-                let steps = max(1, Int(length.rounded(.up)))
-                for step in 0..<steps {
-                    let q = previous + (p - previous) * ((Float(step) + 0.5) / Float(steps))
-                    let x = min(max(Int((q.x - 0.5).rounded()), 0), w - 1), y = min(max(Int((q.y - 0.5).rounded()), 0), h - 1)
-                    let i = y * w + x
-                    // The first layer with a line in reach.
-                    var layer = 3
-                    for (dx, dy) in reach.offsets {
-                        let xx = x + dx, yy = y + dy
-                        guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
-                        let l = Int(walls.layer[yy * w + xx])
-                        if l < layer {
-                            layer = l
-                            if l == 0 { break }
+        // line runs along only in part. An edge is its own work (its layer, its weight, its
+        // stretches), so the edges go in chunks, their stretches joined in the edges' order.
+        let partial: [EdgeRun] = layers.withUnsafeMutableBufferPointer { layerBuffer in
+            weights.withUnsafeMutableBufferPointer { weightBuffer in
+                let layer = UncheckedSendable(layerBuffer.baseAddress!), weight = UncheckedSendable(weightBuffer.baseAddress!)
+                return Parallel.mapChunks(t.edges.count, chunk: 128) { range -> [EdgeRun] in
+                    var samples: [EdgeSample] = []
+                    var partial: [EdgeRun] = []
+                    for k in range {
+                        let e = t.edges[k]
+                        var covered = SIMD4<Float>(repeating: 0)
+                        var strengthSum: Float = 0, strengthLength: Float = 0
+                        let pts = t.points(of: e)
+                        let sampling = plan.exact && e.right != BoundaryEdge.outside
+                        samples.removeAll(keepingCapacity: true)
+                        var previous = pts.first!
+                        for p in pts.dropFirst() {
+                            let length = simdLength(p - previous)
+                            let steps = max(1, Int(length.rounded(.up)))
+                            for step in 0..<steps {
+                                let q = previous + (p - previous) * ((Float(step) + 0.5) / Float(steps))
+                                let x = min(max(Int((q.x - 0.5).rounded()), 0), w - 1), y = min(max(Int((q.y - 0.5).rounded()), 0), h - 1)
+                                let i = y * w + x
+                                // The first layer with a line in reach.
+                                var layer = 3
+                                for (dx, dy) in reach.offsets {
+                                    let xx = x + dx, yy = y + dy
+                                    guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
+                                    let l = Int(walls.layer[yy * w + xx])
+                                    if l < layer {
+                                        layer = l
+                                        if l == 0 { break }
+                                    }
+                                }
+                                let piece = length / Float(steps)
+                                covered[layer] += piece
+                                if layer < 3 {
+                                    strengthSum += Float(strength[i]) * piece
+                                    strengthLength += piece
+                                }
+                                if sampling {
+                                    let erased = plan.erased?[i] ?? 0
+                                    samples.append(EdgeSample(
+                                        position: q, layer: erased == LineEdits.rubbedOut ? 3 : layer, length: piece,
+                                        strength: Float(strength[i]), erased: erased != 0))
+                                }
+                            }
+                            previous = p
+                        }
+                        // The drawn layer along most of the edge (the stronger on ties), unless more of the
+                        // edge has no line at all.
+                        var drawnBest = -1
+                        for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
+                        var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
+                        if sampling {
+                            // Drawn where a line runs along it: whole, not at all, or in stretches over an
+                            // undrawn edge.
+                            let runs = Self.drawnRuns(samples)
+                            if runs.isEmpty {
+                                best = 3
+                            } else if runs.count == 1 && runs[0] == 0...(samples.count - 1) {
+                                best = drawnBest
+                            } else {
+                                best = 3
+                                for run in runs {
+                                    partial.append(Self.edgeRun(samples[run], from: run.lowerBound == 0 ? pts.first : nil,
+                                                                to: run.upperBound == samples.count - 1 ? pts.last : nil, region: e.left))
+                                }
+                            }
+                        }
+                        layer.value[k] = UInt8(best)
+                        if best < 3 {
+                            weight.value[k] = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
+                        } else if e.right != BoundaryEdge.outside {
+                            let a = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab
+                            let b = t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
+                            weight.value[k] = UInt8((min(ColorScience.distance(a, b) / colorWeightReference, 1) * 255).rounded())
                         }
                     }
-                    let piece = length / Float(steps)
-                    covered[layer] += piece
-                    if layer < 3 {
-                        strengthSum += Float(strength[i]) * piece
-                        strengthLength += piece
-                    }
-                    if sampling {
-                        let erased = plan.erased?[i] ?? 0
-                        samples.append(EdgeSample(
-                            position: q, layer: erased == LineEdits.rubbedOut ? 3 : layer, length: piece,
-                            strength: Float(strength[i]), erased: erased != 0))
-                    }
-                }
-                previous = p
-            }
-            // The drawn layer along most of the edge (the stronger on ties), unless more of the
-            // edge has no line at all.
-            var drawnBest = -1
-            for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
-            var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
-            if sampling {
-                // Drawn where a line runs along it: whole, not at all, or in stretches over an
-                // undrawn edge.
-                let runs = Self.drawnRuns(samples)
-                if runs.isEmpty {
-                    best = 3
-                } else if runs.count == 1 && runs[0] == 0...(samples.count - 1) {
-                    best = drawnBest
-                } else {
-                    best = 3
-                    for run in runs {
-                        partial.append(Self.edgeRun(samples[run], from: run.lowerBound == 0 ? pts.first : nil,
-                                                    to: run.upperBound == samples.count - 1 ? pts.last : nil, region: e.left))
-                    }
-                }
-            }
-            layers[k] = UInt8(best)
-            if best < 3 {
-                weights[k] = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
-            } else if e.right != BoundaryEdge.outside {
-                let a = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab
-                let b = t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
-                weights[k] = UInt8((min(ColorScience.distance(a, b) / colorWeightReference, 1) * 255).rounded())
+                    return partial
+                }.flatMap { $0 }
             }
         }
 

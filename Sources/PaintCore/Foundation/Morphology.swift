@@ -45,7 +45,11 @@ enum Thinning {
         // Pixels on the canvas border are cleared first: the 8-neighbourhood test needs a ring.
         for x in 0..<w { mask[x] = false; mask[(h - 1) * w + x] = false }
         for y in 0..<h { mask[y * w] = false; mask[y * w + w - 1] = false }
-        var active = (0..<(w * h)).filter { mask[$0] }
+        // The set pixels, in raster order: bands of pixels, joined in order.
+        var active = mask.withUnsafeBufferPointer { pixels in
+            let set = UncheckedSendable(pixels.baseAddress!)
+            return Parallel.mapBands(w * h, minimumBandSize: 65_536) { range in range.filter { set.value[$0] } }.flatMap { $0 }
+        }
         var remove: [Int] = []
         @inline(__always) func neighbours(_ i: Int) -> UInt8 {
             // Bits clockwise from north: P2 (N), P3 (NE), P4 (E), P5 (SE), P6 (S), P7 (SW), P8 (W), P9 (NW).
