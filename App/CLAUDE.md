@@ -16,12 +16,14 @@ synchronized folder would bundle it into the app.
   swipe back never worked), and shows without fading (`StartHandoff`).
 - What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
-  draws again at every frame of an animation that moves or fades it, seen or not. Under the create
-  flow's cover the shelf therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the
-  card of the painting Start Painting had just made moved in there, unseen, for half a second, and
-  the flow's picture, gliding to its page above it, got 15 to 20 frames a second
-  (painting-company row 292). Before animating anything that holds pictures, ask what else is
-  animating beneath it; `-tourLog`'s `hitch` lines say when the main thread missed a frame.
+  draws again at every frame of an animation that moves or fades it, seen or not. While Start
+  Painting hands over (`StartHandoff.isStarting`, the create flow opaque over it) the shelf
+  therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the card of the painting
+  just made moved in there, unseen, for half a second, and the flow's picture, gliding to its page
+  above it, got 15 to 20 frames a second (painting-company row 292). Only then: as the flow's
+  cover rises or falls the shelf is in view. Before animating anything that holds pictures, ask
+  what else is animating beneath it; `-tourLog`'s `hitch` lines say when the main thread missed a
+  frame.
 - The create flow's preview turns off iOS 26's swipe back from anywhere on a pushed screen
   (`ContentSwipeBackOff` in `TemplatePreviewView`): it took the sliders' and the comparison's
   drags and left for the photo step. The edge swipe and Back still go back.

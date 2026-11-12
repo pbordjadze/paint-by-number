@@ -101,6 +101,9 @@ struct ArtworkThumbnail: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // No fade where nobody sees it (`shelfIsOutOfSight`), decided as it is drawn: a load's
+        // task would only know what held when it began.
+        .transaction { if isOutOfSight { $0.animation = nil } }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .task(id: Load(key: ThumbnailCache.key(artwork), pixelSize: pixelSize)) {
             let pixelSize = pixelSize
@@ -109,12 +112,7 @@ struct ArtworkThumbnail: View {
             if image == nil { image = cache.cached(artwork, maxPixelSize: pixelSize) ?? cache.bestCached(artwork) }
             let loaded = await cache.load(artwork, maxPixelSize: pixelSize, from: library.store)
             if let loaded, loaded !== image {
-                // No fade where nobody sees it (`shelfIsOutOfSight`).
-                if isOutOfSight {
-                    image = loaded
-                } else {
-                    withAnimation(.easeInOut(duration: 0.3)) { image = loaded }
-                }
+                withAnimation(.easeInOut(duration: 0.3)) { image = loaded }
             }
         }
     }

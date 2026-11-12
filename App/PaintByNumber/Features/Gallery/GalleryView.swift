@@ -3,11 +3,13 @@ import os
 import SwiftUI
 
 extension EnvironmentValues {
-    /// The shelf is under the create flow's cover, where nothing of it shows. What changes on it
-    /// there (the card of the painting Start Painting has just made, a thumbnail read again, the
-    /// draft kept) comes without its animation: SwiftUI draws a moving or fading card's picture on
-    /// the main thread at every frame, and under the cover that was half a second of it, unseen,
-    /// while the flow's own picture moved to its page.
+    /// Start Painting is handing over (`StartHandoff.isStarting`): the shelf is under the create
+    /// flow, which stays opaque until the painting has taken its place, so nothing of the shelf
+    /// shows. What changes on it meanwhile (the card of the painting just made, its thumbnail, the
+    /// draft dropped) comes without its animation: SwiftUI draws a moving or fading card's picture
+    /// on the main thread at every frame, and that was half a second of it, unseen, while the
+    /// flow's own picture moved to its page. Not for the flow's whole time up: as its cover
+    /// rises or falls, the shelf is in view and animates as ever.
     @Entry var shelfIsOutOfSight = false
 }
 
@@ -134,8 +136,8 @@ struct GalleryView: View {
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards. Not out of sight
-        // (`shelfIsOutOfSight`): the card of the painting Start Painting has just made would move
-        // in unseen, its neighbours with it.
+        // (`shelfIsOutOfSight`): the card of the painting Start Painting is handing over would
+        // move in unseen, its neighbours with it.
         .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: shownIDs)
         .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: library.placeholders)
         .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: shownDraft?.photoID)
