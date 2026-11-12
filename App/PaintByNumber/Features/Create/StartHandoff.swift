@@ -34,6 +34,12 @@ final class StartHandoff {
         self.timeout = timeout
     }
 
+    /// Start Painting is saving the painting, or has: from here until the hand-off is `reset` the
+    /// create flow is up and opaque over the shelf, which comes back into view only from the
+    /// painting. What changes on the shelf meanwhile (the new painting's card, its thumbnail)
+    /// changes unseen (`EnvironmentValues.shelfIsOutOfSight`).
+    private(set) var isStarting = false
+
     var phase: StartHandoffLogic.Phase { logic.phase }
     /// A hand-off is under way or waiting to be taken in: the cover is up for it.
     var isRunning: Bool { logic.isRunning }
@@ -43,6 +49,12 @@ final class StartHandoff {
     func isOpening(_ id: UUID) -> Bool { logic.isOpening(id) }
     /// The painting `id` is opening under the cover, or the cover still waits for it past its time.
     func isAwaiting(_ id: UUID) -> Bool { logic.isAwaiting(id) }
+
+    /// The create flow is about to save the painting Start Painting asked for.
+    func willStart() { isStarting = true }
+
+    /// The save failed: the flow stays as it was, and may yet be closed over the shelf.
+    func startFailed() { isStarting = false }
 
     /// Start has saved the painting `id`. True when the shell is to push it now; false when a
     /// hand-off is already under way, so a second Start does not push it twice.
@@ -85,6 +97,7 @@ final class StartHandoff {
         fallback?.cancel()
         fallback = nil
         logic.reset()
+        isStarting = false
     }
 
     private func timeOut() {

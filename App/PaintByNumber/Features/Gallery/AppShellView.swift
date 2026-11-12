@@ -87,8 +87,10 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
-                // Under the create flow's cover the shelf moves nothing (`shelfIsOutOfSight`).
-                .environment(\.shelfIsOutOfSight, isCreating)
+                // While Start Painting hands over, under the create flow, the shelf moves nothing
+                // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
+                // doesn't reach the painting screen, whose own thumbnail fades as ever.
+                .environment(\.shelfIsOutOfSight, handoff.isStarting)
                 .navigationTitle("Paint by Moonlight")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
