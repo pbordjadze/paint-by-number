@@ -2,7 +2,11 @@
 """Per-segment numbers from a device trace (Instruments' Animation Hitches template, which carries a Time
 Profiler) and the app's -tourLog file (painting-company row 292, Step 0).
 
-    analyze.py <trace> <tour-log.tsv> [marks.txt]
+    analyze.py <trace|-> <tour-log.tsv> [marks.txt] [pid]
+
+A trace of `-` gives the tour log's numbers alone (an untraced run). A trace attached to the app
+(`xctrace record --attach`) or one with no hitches table (Time Profiler) works too; `pid` picks the app
+out of an all-processes trace.
 
 Segments come from marks.txt (`TOURMARK <name> begin|end <epoch s>` lines, the tour UI test's output); without
 it, from the tour log's create events (launch, forming, settled). Prints one JSON object per segment.
@@ -24,9 +28,15 @@ def export(trace, xpath=None):
 
 
 def table(trace, schema):
+    if trace == "-":
+        return
     path = export(trace, f'/trace-toc/run[@number="1"]/data/table[@schema="{schema}"]')
-    root = ET.parse(path).getroot()
-    os.unlink(path)
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError:
+        return
+    finally:
+        os.unlink(path)
     ids = IDS
     ids.clear()
 
@@ -51,11 +61,17 @@ def ns(e):
 def main():
     trace, log = sys.argv[1], sys.argv[2]
     marks = sys.argv[3] if len(sys.argv) > 3 else None
-    toc = ET.parse(export(trace)).getroot()
-    start = datetime.datetime.fromisoformat(toc.find(".//summary/start-date").text).timestamp()
-    proc = toc.find(".//target/process[@type='launched']")
-    device = toc.find(".//target/device")
-    pid = proc.get("pid") if proc is not None else None
+    pid = sys.argv[4] if len(sys.argv) > 4 else None
+    if trace == "-":
+        start, device = 0.0, None
+    else:
+        toc = ET.parse(export(trace)).getroot()
+        start = datetime.datetime.fromisoformat(toc.find(".//summary/start-date").text).timestamp()
+        proc = toc.find(".//target/process[@type='launched']")
+        if proc is None:
+            proc = toc.find(".//target/process[@type='attached']")
+        device = toc.find(".//target/device")
+        pid = pid or (proc.get("pid") if proc is not None else None)
     lines = [l.rstrip("\n").split("\t") for l in open(log)]
     ev = [(float(l[0]) - start, l[1], l[2:]) for l in lines]  # trace-relative seconds
 
@@ -77,6 +93,8 @@ def main():
     if marks:
         m = {}
         for l in open(marks):
+            if not l.startswith("TOURMARK"):
+                continue
             _, name, edge, t = l.split()
             m.setdefault(name, {})[edge] = float(t) - start
         segs = [(n, v["begin"], v["end"]) for n, v in m.items() if "begin" in v and "end" in v]
@@ -158,6 +176,14 @@ def main():
             "tick_gap_over_8.3": sum(g > 8.4 for g in ticks),
             "tick_gap_over_25": sum(g > 25 for g in ticks),
             "tick_worst_gap_ms": round(max(ticks), 1) if ticks else None,
+            # Gaps over 200 ms are the display link resuming after an idle pause, not drops; between 25
+            # and 200 ms, each 16.7 ms past the first is a missed 60 Hz frame.
+            "missed_60hz_frames": sum(round(g / 16.667) - 1 for g in ticks if 25 < g <= 200),
+            "drop_gaps_25_200": sum(25 < g <= 200 for g in ticks),
+            "worst_drop_gap_ms": round(max([g for g in ticks if g <= 200] or [0]), 1),
+            "tick_work_median_ms": round(sorted(works)[len(works) // 2], 2) if works else None,
+            "tick_work_over_8.3": sum(w > 8.3 for w in works),
+            "tick_work_over_16.7": sum(w > 16.7 for w in works),
             "tick_work_p99_ms": round(sorted(works)[int(len(works) * 0.99) - 1], 2) if len(works) > 10 else None,
             "tick_work_max_ms": round(max(works), 2) if works else None,
             "flights": sum(1 for t, k, f in ev if k == "flight" and t0 <= t < t1),
@@ -168,7 +194,7 @@ def main():
             "main_owner": dict(own.most_common()),
             "top_app_frames": top_app.most_common(8), "top_main_leaves": top_leaf.most_common(6),
         })
-    print(json.dumps({"device": f'{device.get("model")} {device.get("platform")} {device.get("os-version")}',
+    print(json.dumps({"device": f'{device.get("model")} {device.get("platform")} {device.get("os-version")}' if device is not None else None,
                       "pid": pid, "launch_ms": round((launch[1] - launch[0]) * 1000) if launch else None,
                       "segments": out}, indent=1))
 

@@ -19,7 +19,13 @@ final class PerformanceTour: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
     }
 
+    /// Seconds of rest before each segment (`TOUR_GAP`, default 0), marked `pre`: time for a Mac
+    /// script watching the test's output to start (and an earlier one to finish) an Instruments
+    /// recording of that segment alone.
+    private let gap = UInt32(ProcessInfo.processInfo.environment["TOUR_GAP"] ?? "") ?? 0
+
     private func segment(_ name: String, _ body: () -> Void) {
+        if gap > 0 { mark(name, "pre"); sleep(gap) }
         mark(name, "begin")
         body()
         mark(name, "end")
@@ -60,11 +66,15 @@ final class PerformanceTour: XCTestCase {
         }
         sleep(3)
 
-        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        // The progress badge, or the quiet bar's ring (a button) once the bar has faded.
+        let badge = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label ENDSWITH 'percent painted' AND NOT (identifier BEGINSWITH 'swatch-')")).firstMatch
         segment("start") {
             start.tap()
             XCTAssertTrue(badge.waitForExistence(timeout: 90), "The painting didn't open")
-            XCTAssertTrue(waitUntil(timeout: 15) { badge.isHittable && app.buttons["Back"].isHittable })
+            // The bar stays hidden (not hittable) until the page is touched, so the segment ends
+            // when the painting screen exists.
+            XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 15))
         }
         sleep(3)
         attachScreenshot(of: app, named: "tour-painting")
@@ -79,7 +89,8 @@ final class PerformanceTour: XCTestCase {
             if let last = swatches.allElementsBoundByIndex.last, last.exists {
                 last.swipeLeft(); sleep(1); last.swipeRight(); sleep(1)
             }
-            app.buttons["swatch-1"].tap()
+            let first = app.buttons["swatch-1"]
+            if first.exists && first.isHittable { first.tap() }
         }
         sleep(2)
 
@@ -98,6 +109,9 @@ final class PerformanceTour: XCTestCase {
         sleep(2)
 
         segment("zen-30") {
+            // The quiet bar hides More; its ring brings the rest of the bar back.
+            let ring = app.buttons["quiet-ring"]
+            if ring.exists && ring.isHittable { ring.tap(); sleep(1) }
             app.buttons["More"].tap()
             let zen = app.buttons["Zen Mode"].firstMatch
             XCTAssertTrue(zen.waitForExistence(timeout: 5), "More has no Zen Mode")
