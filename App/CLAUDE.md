@@ -162,6 +162,24 @@ synchronized folder would bundle it into the app.
   `DemoTemplateCache`, beside `LineArtMapsCache`'s maps; CI keeps both between runs, so a test
   that needs a photo no cache has seen makes one, as `LineArtInputsTests` does): the line-art
   models take 10 to 40 s a picture there, and a UI test waits for its seed.
+- Measuring (painting-company row 292): `-tourLog YES` (`TourLog`, DEBUG) writes
+  `tmp/tour-log-<pid>.tsv`: every canvas tick, camera flight, sound and haptic, the create flow's
+  generations, a `hitch` line for each screen refresh the main thread came to late (its pulse),
+  `mark` lines (the line-art maps' `maps begin`/`end`, the start of a painting's `start begin`,
+  `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
+  memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
+  itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
+  as for a painter's own photo), and `paint-zen-30` paints thirty Zen fills: with them
+  `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames
+  themselves (`PerformanceTour`, the UI test, is for what only a touch reaches).
+- What no simulator has is checked through seams: `HapticsPlayer(isSupported: true)` and
+  `SoundPlayer(playsAloud: false)` say what they were asked to play (`patterns()`, `played()`:
+  `HapticPatternTests`, `SoundPlayerTests`; `FeedbackEngine(haptics:sounds:defaults:)` for which
+  moment gets which: `FeedbackEngineTests`), and `PencilTests` hand the canvas's own handlers
+  recognizers that say where a Pencil is (`CanvasView.prefersPencilOnlyDrawing` answers for the
+  system's setting; `PencilAction.perform` is its double tap and squeeze).
+  `KeyboardShortcutTests` press the Paint menu's and the gallery's keys; an Esc typed by XCUITest
+  never reaches the app, so the cancel key is pressed as ⌘.
 - Demo launches (screenshots, UI tests) run `MainThreadWatchdog`: a main thread that stops
   answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.

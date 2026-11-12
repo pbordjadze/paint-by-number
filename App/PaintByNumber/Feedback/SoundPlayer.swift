@@ -36,6 +36,13 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     /// the app at about 1% CPU on the gallery after any painting (Mac's sweep, painting-company
     /// row 263); `setUpIfNeeded` starts it again for the next sound.
     private static let restAfter: Duration = .seconds(8)
+    private let playsAloud: Bool
+
+    /// `playsAloud` false keeps the audio engine off: a test sees what would play (`played()`) and
+    /// hears nothing.
+    init(playsAloud: Bool = true) {
+        self.playsAloud = playsAloud
+    }
 
     /// Sun: D major pentatonic over two octaves from D4, a tone above the C the app first played.
     static let sunScale: [Double] = [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.26, 739.99, 880.00, 987.77, 1174.66, 1318.51]
@@ -66,69 +73,119 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         }
     }
 
+    /// One sound of a moment: which of the player's buffers, how loud, and how long after the
+    /// moment it starts.
+    struct Cue: Equatable, Sendable {
+        enum Voice: Equatable, Sendable {
+            /// The note at `index` of `sky`'s scale, in the sky's voice.
+            case note(Sky, index: Int)
+            /// The twinkle an octave above the Moon's note at `index`.
+            case twinkle(index: Int)
+            case thud
+        }
+        var voice: Voice
+        var volume: Float
+        var delay: TimeInterval = 0
+    }
+
     /// Plays the tune's `note`, and the Moon's twinkle where its phrase rests. `velocity` 0…1.
     func paint(_ note: PaintingMelody.Note, velocity: Float) {
-        queue.async { [self] in
-            guard setUpIfNeeded() else { return }
-            let volume = (0.18 + 0.22 * min(max(velocity, 0), 1)) * Self.level(of: note.sky)
-            play(notes(of: note.sky)[note.index], volume: volume)
-            if note.sky == .moon, note.endsPhrase {
-                play(twinkle(note.index), volume: volume * 0.35, delay: 0.12)
-            }
+        perform(Self.paintCues(note, velocity: velocity))
+    }
+
+    static func paintCues(_ note: PaintingMelody.Note, velocity: Float) -> [Cue] {
+        let volume = (0.18 + 0.22 * min(max(velocity, 0), 1)) * level(of: note.sky)
+        var cues = [Cue(voice: .note(note.sky, index: note.index), volume: volume)]
+        if note.sky == .moon, note.endsPhrase {
+            cues.append(Cue(voice: .twinkle(index: note.index), volume: volume * 0.35, delay: 0.12))
         }
+        return cues
     }
 
     func reject() {
-        queue.async { [self] in
-            guard setUpIfNeeded(), let thud else { return }
-            play(thud, volume: 0.35)
-        }
+        perform(Self.rejectCues)
     }
+
+    static let rejectCues = [Cue(voice: .thud, volume: 0.35)]
 
     /// A little rising arpeggio from the tune's latest note `latest`, in `sky`; the Moon's is slower.
     func colorComplete(sky: Sky, from latest: Int) {
-        queue.async { [self] in
-            guard setUpIfNeeded() else { return }
-            let tones = notes(of: sky)
-            let root = min(latest, tones.count - 5)
-            let (start, step) = sky == .sun ? (0.12, 0.085) : (0.14, 0.12)
-            for (k, interval) in [0, 2, 4].enumerated() {
-                play(tones[root + interval], volume: 0.3 * Self.level(of: sky), delay: start + step * Double(k))
-            }
+        perform(Self.colorCompleteCues(sky: sky, from: latest))
+    }
+
+    static func colorCompleteCues(sky: Sky, from latest: Int) -> [Cue] {
+        let root = min(latest, scale(of: sky).count - 5)
+        let (start, step) = sky == .sun ? (0.12, 0.085) : (0.14, 0.12)
+        return [0, 2, 4].enumerated().map { k, interval in
+            Cue(voice: .note(sky, index: root + interval), volume: 0.3 * level(of: sky), delay: start + step * Double(k))
         }
     }
 
     /// The finale in `sky`. Sun: a bright run up every note to an open, sunlit chord. Moon: a
     /// slower, softer run down that settles on a warm low chord, one star left ringing above it.
     func celebrate(sky: Sky) {
+        perform(Self.celebrateCues(sky: sky))
+    }
+
+    static func celebrateCues(sky: Sky) -> [Cue] {
+        let count = scale(of: sky).count
+        var cues: [Cue] = []
+        switch sky {
+        case .sun:
+            for i in 0..<count {
+                cues.append(Cue(voice: .note(.sun, index: i), volume: 0.22 + 0.01 * Float(i), delay: 0.07 * Double(i)))
+            }
+            for i in [5, 7, 9, 11] {
+                cues.append(Cue(voice: .note(.sun, index: i), volume: 0.28, delay: 0.07 * Double(count) + 0.12))
+            }
+        case .moon:
+            let soft = level(of: .moon)
+            for (k, i) in (0..<count).reversed().enumerated() {
+                cues.append(Cue(voice: .note(.moon, index: i), volume: (0.24 - 0.005 * Float(k)) * soft, delay: 0.1 * Double(k)))
+            }
+            let chord = 0.1 * Double(count) + 0.15
+            for i in [0, 1, 3, 4] {
+                cues.append(Cue(voice: .note(.moon, index: i), volume: 0.26 * soft, delay: chord))
+            }
+            cues.append(Cue(voice: .twinkle(index: 5), volume: 0.2, delay: chord + 0.35))
+        }
+        return cues
+    }
+
+    #if DEBUG
+    /// The cues asked to play, in order, whether or not the engine could start (on `queue`): `played()`.
+    private var asked: [Cue] = []
+
+    /// What was asked to play so far, once the work asked before this call has run.
+    func played() -> [Cue] { queue.sync { asked } }
+    #endif
+
+    // MARK: Engine (on `queue`)
+
+    /// Plays `cues` in order, on `queue`.
+    private func perform(_ cues: [Cue]) {
         queue.async { [self] in
+            #if DEBUG
+            asked.append(contentsOf: cues)
+            #endif
             guard setUpIfNeeded() else { return }
-            let tones = notes(of: sky)
-            switch sky {
-            case .sun:
-                for i in 0..<tones.count {
-                    play(tones[i], volume: 0.22 + 0.01 * Float(i), delay: 0.07 * Double(i))
-                }
-                for i in [5, 7, 9, 11] {
-                    play(tones[i], volume: 0.28, delay: 0.07 * Double(tones.count) + 0.12)
-                }
-            case .moon:
-                let level = Self.level(of: .moon)
-                for (k, i) in tones.indices.reversed().enumerated() {
-                    play(tones[i], volume: (0.24 - 0.005 * Float(k)) * level, delay: 0.1 * Double(k))
-                }
-                let chord = 0.1 * Double(tones.count) + 0.15
-                for i in [0, 1, 3, 4] {
-                    play(tones[i], volume: 0.26 * level, delay: chord)
-                }
-                play(twinkle(5), volume: 0.2, delay: chord + 0.35)
+            for cue in cues {
+                guard let buffer = buffer(of: cue.voice) else { continue }
+                play(buffer, volume: cue.volume, delay: cue.delay)
             }
         }
     }
 
-    // MARK: Engine (on `queue`)
+    private func buffer(of voice: Cue.Voice) -> AVAudioPCMBuffer? {
+        switch voice {
+        case let .note(sky, index): notes(of: sky)[index]
+        case let .twinkle(index): twinkle(index)
+        case .thud: thud
+        }
+    }
 
     private func setUpIfNeeded() -> Bool {
+        guard playsAloud else { return false }
         if isSetUp {
             if !engine.isRunning { try? engine.start() }
             return engine.isRunning
@@ -184,7 +241,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
 
     private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0) {
         #if DEBUG
-        TourLog.event("sound", String(format: "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, volume, delay))
+        TourLog.trace("sound", "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, volume, delay)
         #endif
         let voice = voices[nextVoice]
         nextVoice = (nextVoice + 1) % voices.count

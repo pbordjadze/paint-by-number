@@ -4,8 +4,9 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
+#if UNRELEASED
 /// The quiet painting screen (`QuietPainting`): when the top bar fades, what keeps it whole, and
-/// the bigger buttons and swatches of regular widths. Debug builds define `UNRELEASED`.
+/// the bigger buttons and swatches of regular widths. Debug and SideStore builds (`UNRELEASED`).
 @MainActor
 struct QuietPaintingTests {
     private func quiet(
@@ -70,3 +71,28 @@ struct QuietPaintingTests {
         chrome.close()
     }
 }
+#else
+/// The release has no quiet painting yet (`QuietPainting.isAvailable`): its bar never fades, and
+/// nothing is bigger on regular widths.
+@MainActor
+struct QuietPaintingTests {
+    @Test func theReleaseKeepsItsWholeBar() throws {
+        #expect(!QuietPainting.isAvailable)
+        #expect(!QuietPainting.isQuiet(
+            wanted: true, isStarted: true, isComplete: false, isGivingFeedback: false, assistiveTechnology: false, tipTurn: nil))
+        #expect(QuietPainting.scale(regularWidth: true) == 1)
+        #expect(QuietPainting.scale(regularWidth: false) == 1)
+
+        // A fill asks for nothing.
+        let template = Fixtures.mosaic
+        let session = PaintingSession(template: template)
+        let chrome = PaintChromeState()
+        chrome.observe(session)
+        let color = try #require(session.selectedColor)
+        let area = try #require(template.regions.indices.first { session.colorOf($0) == color })
+        session.paint([area], from: try #require(template.labels(ofRegion: area).first).position, animated: false)
+        #expect(!chrome.wantsQuiet)
+        chrome.close()
+    }
+}
+#endif

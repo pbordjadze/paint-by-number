@@ -137,6 +137,7 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(quick.exists, "The length chip's menu closed by itself")
     }
 
+    #if UNRELEASED
     /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
     /// and a tap on the ring brings Undo and More back.
     @MainActor
@@ -156,6 +157,7 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(waitUntil(timeout: 5) { !ring.exists }, "The ring stayed once the bar came back")
         attachScreenshot(of: app, named: "shown")
     }
+    #endif
 
     /// The Hint button flies the camera to an unpainted area.
     @MainActor

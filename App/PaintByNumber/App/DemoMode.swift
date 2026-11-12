@@ -51,6 +51,11 @@ enum DemoMode {
         return copy
     }()
 
+    /// `-demoStart YES`: a create scenario taps Start Painting by itself, three seconds after its
+    /// painting is made, so the start of a painting can be measured with no UI test driving it
+    /// (`-tourLog`'s `start begin` mark).
+    static let startsWhenMade = UserDefaults.standard.bool(forKey: "demoStart")
+
     /// `-tracePhotoPeek YES`: the Photo control's accessibility identifier lists every value it
     /// has had, since a UI test can't read the value mid-hold (`press(forDuration:)` blocks).
     static let tracesPhotoPeek = UserDefaults.standard.bool(forKey: "tracePhotoPeek")

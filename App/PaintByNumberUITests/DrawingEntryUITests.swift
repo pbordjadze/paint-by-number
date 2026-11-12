@@ -1,6 +1,7 @@
 import UIKit
 import XCTest
 
+#if UNRELEASED
 /// Start from a Drawing's way in (SideStore and Debug builds, painting-company row 190): the
 /// Paint page's A Drawing on Paper tile, in Your Own, presents the system picker for a drawing.
 final class DrawingEntryUITests: XCTestCase {
@@ -36,3 +37,16 @@ final class DrawingEntryUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Start Painting"].exists)
     }
 }
+#else
+/// The release has no Start from a Drawing yet: its Paint page offers no A Drawing on Paper.
+final class DrawingEntryUITests: XCTestCase {
+    @MainActor
+    func testTheReleaseOffersNoDrawingOnPaper() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create"]
+        app.launch()
+        XCTAssertTrue(app.buttons["choose-photo"].waitForExistence(timeout: 20), "The Paint page didn't open")
+        XCTAssertFalse(app.buttons["choose-drawing"].exists, "The release offers A Drawing on Paper")
+    }
+}
+#endif

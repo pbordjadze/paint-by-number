@@ -955,7 +955,7 @@ final class CreateModel {
     /// is in: what a preview that stays off, or goes off again, is diagnosed from.
     private func trace(_ event: String) {
         #if DEBUG
-        TourLog.event("create", event)
+        TourLog.trace("create", "%@", event)
         #endif
         let phaseName = String(describing: self.phase)
         Log.create.notice(

@@ -48,6 +48,9 @@ final class StartHandoff {
     /// hand-off is already under way, so a second Start does not push it twice.
     func begin(_ id: UUID) -> Bool {
         guard logic.begin(id) else { return false }
+        #if DEBUG
+        TourLog.trace("mark", "handoff begin")
+        #endif
         fallback = Task { [weak self, timeout] in
             try? await Task.sleep(for: timeout)
             guard !Task.isCancelled else { return }
@@ -61,13 +64,20 @@ final class StartHandoff {
     /// painting is the one being opened, and once the flow has dissolved.
     func paintingDrew(_ id: UUID, templateRect: CGRect) {
         guard logic.paintingDrew(id, templateRect: templateRect) else { return }
+        #if DEBUG
+        TourLog.trace("mark", "handoff drew")
+        #endif
         fallback?.cancel()
         fallback = nil
     }
 
     /// The create flow has dissolved into the painting (or faded out of its way).
     func complete() {
+        #if DEBUG
+        if logic.complete() { TourLog.trace("mark", "start end") }
+        #else
         logic.complete()
+        #endif
     }
 
     /// The cover is gone, or a new flow replaced the one handing over.
@@ -79,7 +89,11 @@ final class StartHandoff {
 
     private func timeOut() {
         fallback = nil
+        #if DEBUG
+        if logic.timeOut() { TourLog.trace("mark", "handoff timed out") }
+        #else
         logic.timeOut()
+        #endif
     }
 }
 

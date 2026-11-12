@@ -390,8 +390,9 @@ private final class Demo {
             // No UI test attached: thirty fills of the selected color's next area, alternating a tap's
             // and a stroke's, one every 3.3 s (the tour's pace), with Zen Mode on (`-zenMode YES`).
             let t = session.template
-            TourLog.event("zen30", "zenMode=\(UserDefaults.standard.bool(forKey: "zenMode")) flows=\(session.flowsToNextArea)")
-            TourLog.event("mark", "zen-30 begin")
+            TourLog.trace("zen30", "zenMode=%@ flows=%@",
+                          UserDefaults.standard.bool(forKey: "zenMode").description, session.flowsToNextArea.description)
+            TourLog.trace("mark", "zen-30 begin")
             try? await Task.sleep(for: .seconds(3))
             var fills = 0
             while fills < 30 {
@@ -408,7 +409,7 @@ private final class Demo {
                 fills += 1
                 try? await Task.sleep(for: .seconds(3.3))
             }
-            TourLog.event("mark", "zen-30 end fills=\(fills)")
+            TourLog.trace("mark", "zen-30 end fills=%ld", fills)
             Log.demo.notice("demo paint-zen-30: \(fills, privacy: .public) fills")
             return
         }

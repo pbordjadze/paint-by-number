@@ -9,8 +9,10 @@ import PaintCore
 final class FeedbackEngine {
     static let shared = FeedbackEngine()
 
-    private let haptics = HapticsPlayer()
-    private let sounds = SoundPlayer()
+    private let haptics: HapticsPlayer
+    private let sounds: SoundPlayer
+    /// Where the Haptics, Sounds and Music settings are read (a test's own).
+    private let defaults: UserDefaults
 
     private final class AttachedSession {
         weak var session: PaintingSession?
@@ -31,10 +33,16 @@ final class FeedbackEngine {
     /// update this per paint.
     var fillDuration: TimeInterval = 0.4
 
-    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.haptics) as? Bool ?? SettingsDefault.haptics }
-    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.sounds) as? Bool ?? SettingsDefault.sounds }
+    private var hapticsEnabled: Bool { defaults.object(forKey: SettingsKey.haptics) as? Bool ?? SettingsDefault.haptics }
+    private var soundsEnabled: Bool { defaults.object(forKey: SettingsKey.sounds) as? Bool ?? SettingsDefault.sounds }
+    private var skyOfTheMoment: Sky { Sky.current(in: defaults) }
 
-    private init() {}
+    /// The app's is `shared`; a test makes its own, with players it can ask what they played.
+    init(haptics: HapticsPlayer = HapticsPlayer(), sounds: SoundPlayer = SoundPlayer(), defaults: UserDefaults = .standard) {
+        self.haptics = haptics
+        self.sounds = sounds
+        self.defaults = defaults
+    }
 
     /// Plays a session's events, once however often its screen appears, and warms up the
     /// engines so the first stroke isn't late.
@@ -54,13 +62,13 @@ final class FeedbackEngine {
 
     private func prepare() {
         if hapticsEnabled { haptics.prepare() }
-        if soundsEnabled { sounds.prepare(sky: Sky.current()) }
+        if soundsEnabled { sounds.prepare(sky: skyOfTheMoment) }
     }
 
     /// The sky the next fill plays in: the tune's own until its next phrase begins (or a pause
     /// lets it turn), then the sky of the hour.
     func skyOfComingFill() -> Sky {
-        melody.skyOfNote(at: clock.now, under: Sky.current())
+        melody.skyOfNote(at: clock.now, under: skyOfTheMoment)
     }
 
     /// Selection changes and other UI detents.
@@ -75,7 +83,7 @@ final class FeedbackEngine {
 
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
-        let sky = melody.sky ?? Sky.current()
+        let sky = melody.sky ?? skyOfTheMoment
         switch event {
         case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
@@ -87,7 +95,7 @@ final class FeedbackEngine {
             let now = clock.now
             if lastNote.map({ now - $0 >= .milliseconds(40) }) ?? true {
                 lastNote = now
-                let note = melody.next(at: now, under: Sky.current())
+                let note = melody.next(at: now, under: skyOfTheMoment)
                 if soundsOn { sounds.paint(note, velocity: 0.35 + 0.65 * size) }
             }
         case .rejected:

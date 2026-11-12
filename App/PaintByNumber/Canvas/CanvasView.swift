@@ -19,6 +19,25 @@ enum PencilAction {
     case tap, squeeze
     /// The Pencil left the canvas after a stroke.
     case lifted
+
+    /// What the Pencil's own gestures do on the painting screen: a double tap takes the next color
+    /// with areas left, a squeeze shows a hint, and a stroke's end is `pencilUsed`'s to hear (the
+    /// tips').
+    func perform(
+        on session: PaintingSession, feedback: FeedbackEngine = .shared, showHint: () -> Void, pencilUsed: () -> Void
+    ) {
+        switch self {
+        case .tap:
+            if let current = session.selectedColor, let next = session.nextIncompleteColor(after: current) {
+                session.select(color: next)
+                feedback.selectionChanged()
+            }
+        case .squeeze:
+            showHint()
+        case .lifted:
+            pencilUsed()
+        }
+    }
 }
 
 /// The painting surface: a `CAMetalLayer` driven by an invisible `UIScrollView` overlay so
@@ -55,6 +74,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     var initialCamera: CanvasCamera?
     var onPencilAction: ((PencilAction) -> Void)?
+    /// "Only Draw with Apple Pencil" (Settings › Apple Pencil), asked at each touch; a test answers
+    /// for it.
+    var prefersPencilOnlyDrawing: () -> Bool = { UIPencilInteraction.prefersPencilOnlyDrawing }
     /// Scales fill, sparkle and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
     /// Loads the photo the painting was made from, the first time it is shown.
@@ -607,9 +629,9 @@ final class CanvasView: UIView, PaintingCanvas {
             fromZoom: scrollView.zoomScale, toZoom: zoom, fromOffset: scrollView.contentOffset, toOffset: offset,
             start: CACurrentMediaTime(), duration: duration, fits: fits)
         #if DEBUG
-        TourLog.event("flight", String(format: "from=%.3f,%.1f,%.1f\tto=%.3f,%.1f,%.1f\tduration=%.3f\tfits=%ld",
+        TourLog.trace("flight", "from=%.3f,%.1f,%.1f\tto=%.3f,%.1f,%.1f\tduration=%.3f\tfits=%ld",
             scrollView.zoomScale, scrollView.contentOffset.x, scrollView.contentOffset.y,
-            zoom, offset.x, offset.y, duration, fits ? 1 : 0))
+            zoom, offset.x, offset.y, duration, fits ? 1 : 0)
         #endif
         requestRender()
     }
@@ -634,7 +656,7 @@ final class CanvasView: UIView, PaintingCanvas {
             o = a.toOffset
             cameraAnimation = nil
             #if DEBUG
-            TourLog.event("land", String(format: "late=%.1f", (time - a.start - a.duration) * 1000))
+            TourLog.trace("land", "late=%.1f", (time - a.start - a.duration) * 1000)
             #endif
         }
         apply(zoom: t >= 1 ? a.toZoom : z, offset: o)
@@ -843,9 +865,9 @@ final class CanvasView: UIView, PaintingCanvas {
         let tourStart = CACurrentMediaTime(), tourFrames = framesRendered
         defer {
             if TourLog.isOn {
-                TourLog.event("tick", String(format: "gap=%.2f\twork=%.2f\tdrew=%ld",
+                TourLog.trace("tick", "gap=%.2f\twork=%.2f\tdrew=%ld",
                     (link.timestamp - tourLastTick) * 1000, (CACurrentMediaTime() - tourStart) * 1000,
-                    framesRendered > tourFrames ? 1 : 0))
+                    framesRendered > tourFrames ? 1 : 0)
             }
             tourLastTick = link.timestamp
         }
@@ -1455,7 +1477,7 @@ final class CanvasView: UIView, PaintingCanvas {
             return
         }
         // "Only Draw with Apple Pencil": fingers navigate (double-tap still zooms), pointers paint.
-        if tapWasFinger && UIPencilInteraction.prefersPencilOnlyDrawing {
+        if tapWasFinger && prefersPencilOnlyDrawing() {
             lastTap = (t, view, false)
             return
         }
@@ -1470,7 +1492,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     @objc private func handleDragPaint(_ g: UILongPressGestureRecognizer) {
-        guard !UIPencilInteraction.prefersPencilOnlyDrawing else { return }
+        guard !prefersPencilOnlyDrawing() else { return }
         let p = canvasPoint(g.location(in: zoomView))
         let radius = Float(Self.brushRadius / scrollView.zoomScale)
         switch g.state {
