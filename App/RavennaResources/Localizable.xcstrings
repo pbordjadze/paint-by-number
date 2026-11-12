@@ -25,6 +25,14 @@
       "comment": "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState": "manual"
     },
+    "Contact": {
+      "comment": "Settings › About row that writes an email to the developers; the address shows beside it",
+      "extractionState": "manual"
+    },
+    "Privacy Policy": {
+      "comment": "Settings › About row that opens the privacy policy on the web",
+      "extractionState": "manual"
+    },
     "Paint by Mosaic": {
       "comment": "The gallery's navigation title: the app's name",
       "extractionState": "manual"

@@ -255,3 +255,19 @@ struct AcknowledgementsTests {
         }
     }
 }
+
+/// Settings › About's Privacy Policy and Contact rows (`AboutLinks`) lead where the listing and
+/// the policy say: the policy the App Store links to, and the address it gives for questions and
+/// deleting a report.
+struct AboutLinksTests {
+    @Test func privacyPolicyIsTheListingsAndContactIsThePolicysAddress() throws {
+        let listing = try Data(contentsOf: Fixtures.repositoryRoot.appending(path: "ci/store-listing.json"))
+        let json = try #require(JSONSerialization.jsonObject(with: listing) as? [String: Any])
+        let info = try #require(json["appInfoLocalization"] as? [String: Any])
+        #expect(info["privacyPolicyUrl"] as? String == AboutLinks.privacyPolicy.absoluteString)
+
+        let policy = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "PRIVACY.md"), encoding: .utf8)
+        #expect(policy.contains("mailto:\(AboutLinks.supportAddress)"))
+        #expect(AboutLinks.contact.absoluteString == "mailto:\(AboutLinks.supportAddress)")
+    }
+}
