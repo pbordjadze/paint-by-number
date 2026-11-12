@@ -14,9 +14,10 @@ struct MakingOfNumberTests {
         #expect(bounds.width < size * CGFloat(String(value).count), "\(value) is as wide as its digits")
         // Centred across by its advance, as text anchored at its centre was.
         #expect(abs(bounds.midX) < size * 0.15)
-        // Digits stand on the baseline, below the middle, and reach up past it (y down); drawn
-        // upside down they would hang below the baseline instead.
-        #expect(bounds.maxY > 0 && bounds.maxY < size * 0.35)
-        #expect(bounds.minY < -size * 0.3)
+        // Digits stand on the baseline, (ascent - descent) / 2 below the middle (about a third of
+        // the size in New York), and reach up past the middle (y down); drawn upside down they
+        // would hang below the baseline, all of them under the middle.
+        #expect(bounds.maxY > 0 && bounds.maxY < size * 0.5)
+        #expect(bounds.minY < -size * 0.15)
     }
 }
