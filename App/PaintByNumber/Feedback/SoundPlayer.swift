@@ -158,6 +158,16 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
 
     /// What was asked to play so far, once the work asked before this call has run.
     func played() -> [Cue] { queue.sync { asked } }
+
+    /// The samples a cue's voice plays: the buffer `perform` hands the engine for it (the thud, made
+    /// with the engine's graph, is made here for a player whose engine never starts).
+    func samples(of voice: Cue.Voice) -> [Float]? {
+        queue.sync {
+            if thud == nil { thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate)) }
+            guard let buffer = buffer(of: voice), let channel = buffer.floatChannelData?[0] else { return nil }
+            return Array(UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength)))
+        }
+    }
     #endif
 
     // MARK: Engine (on `queue`)
@@ -171,6 +181,9 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             guard setUpIfNeeded() else { return }
             for cue in cues {
                 guard let buffer = buffer(of: cue.voice) else { continue }
+                #if DEBUG
+                TourLog.trace("sound", "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, cue.volume, cue.delay)
+                #endif
                 play(buffer, volume: cue.volume, delay: cue.delay)
             }
         }
@@ -240,9 +253,6 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     }
 
     private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0) {
-        #if DEBUG
-        TourLog.trace("sound", "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, volume, delay)
-        #endif
         let voice = voices[nextVoice]
         nextVoice = (nextVoice + 1) % voices.count
         voice.volume = volume

@@ -55,12 +55,12 @@ struct FeedbackEngineTests {
         for (cue, wanted) in zip(cues, expected) { expectClose(cue.volume, wanted.volume, sourceLocation: sourceLocation) }
     }
 
-    /// The mosaic's color with the most tiles, selected, and its tiles: room for a few fills that
+    /// The mosaic's color with the most tiles, selected, and its tiles: room for four fills that
     /// finish nothing.
     private func roomiestColor(of session: PaintingSession) throws -> [Int] {
         let tiles = Dictionary(grouping: mosaic.regions.indices, by: session.colorOf)
         let (color, areas) = try #require(tiles.max { ($0.value.count, -$0.key) < ($1.value.count, -$1.key) })
-        try #require(areas.count >= 4, "no color of the mosaic has four tiles")
+        try #require(areas.count >= 5, "no color of the mosaic has five tiles")
         session.select(color: color)
         return areas.sorted()
     }
@@ -98,16 +98,45 @@ struct FeedbackEngineTests {
         #expect(rig.haptics.played() == ["paint", "paint", "paint"])
     }
 
-    /// A stroke's fills come faster than notes can sound: at most one every 40 ms.
+    /// A stroke's fills come faster than notes can sound: a fill within 40 ms of the last note
+    /// plays none; at 40 ms it plays the tune's next.
     @Test func fillsCloseTogetherShareANote() throws {
         let rig = Rig()
         let session = PaintingSession(template: mosaic)
         rig.engine.attach(to: session)
         let areas = try roomiestColor(of: session)
+        let start = ContinuousClock.now
+        var elapsed = Duration.zero
+        rig.engine.now = { start + elapsed }
         paint(areas[0], in: session)
+        elapsed = .milliseconds(39)
         paint(areas[1], in: session)
-        #expect(rig.sounds.played().count == 1)
-        #expect(rig.haptics.played() == ["paint"])
+        #expect(rig.sounds.played().map(\.voice) == [.note(.sun, index: 2)])
+        elapsed = .milliseconds(40)
+        paint(areas[2], in: session)
+        #expect(rig.sounds.played().map(\.voice) == [.note(.sun, index: 2), .note(.sun, index: 3)])
+        elapsed = .milliseconds(79)
+        paint(areas[3], in: session)
+        #expect(rig.sounds.played().count == 2)
+    }
+
+    /// After five seconds' rest the tune picks up where its next phrase begins.
+    @Test func theTuneTakesABreath() throws {
+        let rig = Rig()
+        let session = PaintingSession(template: mosaic)
+        rig.engine.attach(to: session)
+        let areas = try roomiestColor(of: session)
+        let start = ContinuousClock.now
+        var elapsed = Duration.zero
+        rig.engine.now = { start + elapsed }
+        paint(areas[0], in: session)
+        elapsed = .seconds(1)
+        paint(areas[1], in: session)
+        elapsed = .seconds(6)
+        paint(areas[2], in: session)
+        // The first phrase's first two notes, then the second phrase's first (`PaintingMelody.tune`).
+        #expect(rig.sounds.played().map(\.voice) == [.note(.sun, index: 2), .note(.sun, index: 3), .note(.sun, index: 2)])
+        #expect(PaintingMelody.tune[8] == 2 && PaintingMelody.breath == .seconds(5))
     }
 
     /// A tap on another color's area: the dull double tap and the thud.

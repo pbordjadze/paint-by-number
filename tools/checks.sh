@@ -3,7 +3,8 @@
 # change must keep passing where CI isn't run (painting-company row 292).
 #   tools/checks.sh [-c Debug|ReleaseTests] [-u] [-s <simulator udid>] [-o <outdir>] [-d <derived data>] [step...]
 # Steps (default: all of them, in this order):
-#   packages    `swift test` on macOS: PaintCore, MakingOf and the mosaic packages
+#   packages    `swift test` on macOS: PaintCore, MakingOf and the mosaic packages (the two tests that
+#               pin Linux's own arithmetic fail here and are named as known)
 #   regression  the quality gate (tools/regression.py) on a release `pbn`, its JSON kept
 #   release     the Release build with ci/check_release.sh, and the SideStore build (Release with UNRELEASED)
 #   build       the app and its tests, built for testing in the chosen build
@@ -11,7 +12,9 @@
 #   unit        PaintByNumberTests
 #   ui          PaintByNumberUITests, but PerformanceTour (a measurement, not a check)
 # -c  Debug is CI's. ReleaseTests (the default) is Release with the demo and test code in (`DEBUG`) and
-#     the app testable: the optimized code a release ships, PaintCore at -Ounchecked.
+#     the app testable: optimized as a release is, PaintCore at -Ounchecked. Not the shipped binary:
+#     testability keeps the app's internal symbols, which can cost it some inlining, and the demo
+#     code is there; the two real Release builds are `release`'s to build and check.
 # -u  adds UNRELEASED to ReleaseTests: the SideStore build's features (Debug always has them).
 # -s  the simulator (an iPad Pro 13-inch, as CI's); default: ci/simulators.sh's.
 # A failed test runs once more, as on CI; summary.txt names it either way. Compiler warnings fail `build`
@@ -62,7 +65,7 @@ results() { # <bundle>
   xcrun xcresulttool get test-results summary --path "$1" --compact 2>/dev/null | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-print("%s tests: %s passed, %s failed, %s skipped" % (d.get("totalTestCount"), d.get("passedTests"), d.get("failedTests"), d.get("skippedTests")))
+print("%s tests: %s passed, %s failed, %s skipped, %s with a known issue" % (d.get("totalTestCount"), d.get("passedTests"), d.get("failedTests"), d.get("skippedTests"), d.get("expectedFailures")))
 for f in d.get("testFailures", []):
     print("  FAILED %s: %s" % (f.get("testIdentifierString") or f.get("testName"), " ".join((f.get("failureText") or "").split())[:300]))
 ' || echo "no readable results in $1"
@@ -81,7 +84,22 @@ def walk(node, path):
 for n in json.load(sys.stdin).get("testNodes", []): walk(n, [])
 ' || true
 }
+# The app and its tests, built for testing from the sources as they are, once a run: `unit` and `ui`
+# never judge whatever an earlier run left in the derived data.
+built=""
+build_tests() {
+  [[ -n "$built" ]] && return 0
+  local start=$SECONDS status
+  xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
+    -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DD" "${SETTINGS[@]}" > "$OUT/build.log" 2>&1; status=$?
+  ci/warnings.sh "$OUT/build-warnings.txt" "$OUT/build.log" > /dev/null || status=1
+  finish build $status $((SECONDS - start)) "$(grep -E '\*\* TEST BUILD' "$OUT/build.log" | tail -1); $(wc -l < "$OUT/build-warnings.txt" | tr -d ' ') warning(s)"
+  grep -E ' error: ' "$OUT/build.log" | sed "s#$PWD/##" | sort -u | cut -c1-300 | head -40 | tee -a "$SUMMARY"
+  built=$status
+  return $status
+}
 run_tests() { # <step> <log name> <selection...>
+  if [[ "$built" != 0 ]]; then note "$1: FAIL (the build failed)"; failed=1; return; fi
   local step="$1" log="$OUT/$2.log" bundle="$OUT/$2.xcresult"; shift 2
   simulator
   rm -rf "$bundle"
@@ -99,12 +117,29 @@ for step in "${STEPS[@]}"; do
   case "$step" in
     packages)
       swift test > "$OUT/packages.log" 2>&1; status=$?
-      finish packages $status $((SECONDS - start)) "$(grep -E 'Test run with [0-9]+ tests' "$OUT/packages.log" | tail -1 | sed -E 's/^[^T]*//')"
-      grep -E 'recorded an issue' "$OUT/packages.log" | sed -E 's/^[^T]*Test /  FAILED /; s/ recorded an issue at /: /' | cut -c1-300 | sort -u | tee -a "$SUMMARY"
+      # Two tests pin what Linux computes (CI runs the packages there): they fail on macOS, whose
+      # libm differs in the last bits, and count as known here. Anything else that fails, fails.
+      known="aPaletteKeepsItsNames() parrotsDecisionIsPinned()"
+      failures="$(grep -E 'recorded an issue' "$OUT/packages.log" | sed -E 's/^[^T]*Test ([^ ]+) recorded an issue.*/\1/' | sort -u)"
+      unknown=0
+      for name in $failures; do [[ " $known " == *" $name "* ]] || unknown=1; done
+      ran="$(grep -E 'Test run with [0-9]+ tests' "$OUT/packages.log" | sed -E 's/.*Test run with ([0-9]+) tests.*/\1/' | paste -sd+ - | bc)"
+      [[ -n "$ran" && "$ran" -gt 0 ]] || unknown=1
+      [[ $status -ne 0 && $unknown -eq 0 && -n "$failures" ]] && status=0
+      [[ $unknown -eq 1 ]] && status=1
+      finish packages $status $((SECONDS - start)) "${ran:-no} tests ran; failed: $(echo ${failures:-none}) (known on macOS: $known)"
+      grep -E 'recorded an issue' "$OUT/packages.log" | sed -E 's/^[^T]*Test /  failed: /; s/ recorded an issue at /: /' | cut -c1-300 | sort -u | tee -a "$SUMMARY"
       ;;
     regression)
-      { swift build -c release --product pbn 2>&1 | tail -3
-        python3 tools/regression.py --json "$OUT/regression.json" --sheets "$OUT/regression-sheets"; } > "$OUT/regression.log" 2>&1; status=$?
+      # regression.py needs Pillow: the system's Python has it, or nix's does.
+      gate="python3 tools/regression.py --json '$OUT/regression.json' --sheets '$OUT/regression-sheets'"
+      python3 -c 'import PIL' 2> /dev/null || gate="nix-shell -p 'python3.withPackages (p: [p.pillow])' --run \"$gate\""
+      # The gate judges the pbn it finds: a build that failed must not leave it judging the last one.
+      if swift build -c release --product pbn > "$OUT/regression-build.log" 2>&1; then
+        eval "$gate" > "$OUT/regression.log" 2>&1; status=$?
+      else
+        tail -20 "$OUT/regression-build.log" > "$OUT/regression.log"; echo "pbn did not build" >> "$OUT/regression.log"; status=1
+      fi
       finish regression $status $((SECONDS - start)) "$(tail -1 "$OUT/regression.log" | cut -c1-200)"
       ;;
     release)
@@ -118,21 +153,15 @@ for step in "${STEPS[@]}"; do
       ci/warnings.sh "$OUT/release-warnings.txt" "$OUT/release-build.log" "$OUT/sidestore-build.log" > /dev/null || status=1
       finish release $status $((SECONDS - start)) "$(tail -1 "$OUT/release-check.log" | cut -c1-160); $(wc -l < "$OUT/release-warnings.txt" | tr -d ' ') warning(s)"
       ;;
-    build)
-      xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
-        -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DD" "${SETTINGS[@]}" > "$OUT/build.log" 2>&1; status=$?
-      ci/warnings.sh "$OUT/build-warnings.txt" "$OUT/build.log" > /dev/null || status=1
-      finish build $status $((SECONDS - start)) "$(grep -E '\*\* TEST BUILD' "$OUT/build.log" | tail -1); $(wc -l < "$OUT/build-warnings.txt" | tr -d ' ') warning(s)"
-      grep -E ' error: ' "$OUT/build.log" | sed "s#$PWD/##" | sort -u | cut -c1-300 | head -40 | tee -a "$SUMMARY"
-      ;;
+    build) build_tests ;;
     warmup)
       simulator
       ci/screenshots.sh "$DD/Build/Products/$CONFIG-iphonesimulator/PaintByNumber.app" "$OUT/warmup" ipad "$UDID" \
         gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180 > "$OUT/warmup.log" 2>&1; status=$?
       finish warmup $status $((SECONDS - start)) ""
       ;;
-    unit) run_tests unit unit -only-testing:PaintByNumberTests ;;
-    ui) run_tests ui ui -only-testing:PaintByNumberUITests -skip-testing:PaintByNumberUITests/PerformanceTour ;;
+    unit) build_tests; run_tests unit unit -only-testing:PaintByNumberTests ;;
+    ui) build_tests; run_tests ui ui -only-testing:PaintByNumberUITests -skip-testing:PaintByNumberUITests/PerformanceTour ;;
     *) note "$step: unknown step"; failed=1 ;;
   esac
 done

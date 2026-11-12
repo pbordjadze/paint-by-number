@@ -15,12 +15,15 @@ copied from the app's tmp folder. A run is cut into segments by what the log its
               color to ease in)
 
 For each: its length; the main thread's hitches (the log's pulse: refreshes it came to late, the time
-past a frame summed, the longest gap); the canvas's drawn frames, the 60 Hz frames it missed (drawn
-ticks 25 to 200 ms apart: each 16.7 ms past the first is one; longer gaps are the display link
-resting) and its ticks' own work; camera flights and how late they landed; sounds and haptics; the
-memory footprint's peak; the thermal state and Low Power Mode. `what` is a digest of the segment's
-flights, sounds and haptics, in order: two runs of one demo that fly, sound and feel alike have the
-same one. One line a segment, or --json.
+past a frame summed, that time per second of the segment, the longest gap); the canvas's drawn
+frames, the 60 Hz frames it missed (drawn ticks 25 to 200 ms after the last tick, each 16.7 ms past
+the first one frame; a tick the log marks `rest`, the display link having been paused before it, is
+no miss, and without that mark, in an older log, gaps over 200 ms are taken for rests) and its ticks'
+own work; camera flights and how late they landed; sounds and haptics; the memory footprint's peak;
+the thermal state and Low Power Mode. `what` is a digest of the segment's flights, sounds and
+haptics, in order: two runs of one demo that fly, sound and feel alike have the same one. The pulse
+sees the main thread only: a frame the GPU or the render server was late with is Instruments' to
+find (run.sh -r). One line a segment, or --json.
 """
 import hashlib, json, sys
 
@@ -65,7 +68,11 @@ def summarize(path):
         hitches = [fields(f) for _, k, f in inside if k == "hitch"]
         late = [max(float(h["gap"]) - float(h["frame"]), 0) for h in hitches]
         ticks = [fields(f) for _, k, f in inside if k == "tick"]
-        gaps = [float(x["gap"]) for x in ticks if x.get("drew") == "1"]
+        drawn = [x for x in ticks if x.get("drew") == "1"]
+        gaps = [float(x["gap"]) for x in drawn]
+        # Waits, not rests: where the log says which ticks followed a pause, those are left out.
+        waits = [float(x["gap"]) for x in drawn if x.get("rest", "0") != "1"]
+        longest = float("inf") if any("rest" in x for x in drawn) else 200
         work = sorted(float(x["work"]) for x in ticks)
         flights = [f for _, k, f in inside if k == "flight"]
         lands = [float(fields(f).get("late", 0)) for _, k, f in inside if k == "land"]
@@ -77,9 +84,11 @@ def summarize(path):
             + ["haptic " + " ".join(f) for f in haptics]).encode()).hexdigest()[:12]
         out.append({
             "segment": name, "begin": t0, "seconds": round(t1 - t0, 3),
-            "hitches": len(hitches), "hitch_ms": round(sum(late), 1), "worst_gap_ms": round(max((float(h["gap"]) for h in hitches), default=0), 1),
-            "frames": len(gaps), "missed_60hz_frames": sum(round(g / 16.667) - 1 for g in gaps if 25 < g <= 200),
-            "worst_frame_gap_ms": round(max((g for g in gaps if g <= 200), default=0), 1),
+            "hitches": len(hitches), "hitch_ms": round(sum(late), 1),
+            "hitch_ms_per_s": round(sum(late) / max(t1 - t0, 1e-6), 1),
+            "worst_gap_ms": round(max((float(h["gap"]) for h in hitches), default=0), 1),
+            "frames": len(gaps), "missed_60hz_frames": sum(round(g / 16.667) - 1 for g in waits if 25 < g <= longest),
+            "worst_frame_gap_ms": round(max((g for g in waits if g <= longest), default=0), 1),
             "tick_work_median_ms": work[len(work) // 2] if work else None,
             "tick_work_p99_ms": work[int(len(work) * 0.99) - 1] if len(work) > 10 else None,
             "tick_work_max_ms": work[-1] if work else None,
@@ -92,7 +101,8 @@ def summarize(path):
             "low_power": any(d.get("lowPower") == "true" for d in device),
         })
     marks = [f[0] for _, k, f in events if k == "mark" and f]
-    return {"log": path, "init_ms": init_ms, "marks": marks, "segments": out}
+    build = next((fields(f) for _, k, f in events if k == "build"), {})
+    return {"log": path, "build": build, "init_ms": init_ms, "marks": marks, "segments": out}
 
 
 def main():
@@ -104,11 +114,13 @@ def main():
         print(json.dumps(runs, indent=1))
         return
     for run in runs:
-        print("%s  (process start to the app's init: %s ms)" % (run["log"], run.get("init_ms")))
+        print("%s  (binary %s%s; process start to the app's init: %s ms)" % (
+            run["log"], run["build"].get("uuid", "unknown"), ", UNRELEASED" if run["build"].get("unreleased") == "true" else "",
+            run.get("init_ms")))
         for s in run["segments"]:
-            print("  %-9s %7.2f s  hitches %2d (%6.1f ms, worst gap %6.1f)  frames %5d missed %3d  work %s/%s/%s ms  "
+            print("  %-9s %7.2f s  hitches %2d (%6.1f ms, %5.1f ms/s, worst gap %6.1f)  frames %5d missed %3d  work %s/%s/%s ms  "
                   "flights %2d sounds %2d haptics %2d  what %s  footprint %s MB (peak since launch %s)  thermal %s%s" % (
-                      s["segment"], s["seconds"], s["hitches"], s["hitch_ms"], s["worst_gap_ms"], s["frames"],
+                      s["segment"], s["seconds"], s["hitches"], s["hitch_ms"], s["hitch_ms_per_s"], s["worst_gap_ms"], s["frames"],
                       s["missed_60hz_frames"], s["tick_work_median_ms"], s["tick_work_p99_ms"], s["tick_work_max_ms"],
                       s["flights"], s["sounds"], s["haptics"], s["what"], s["footprint_mb_max"], s["peak_mb_since_launch"], s["thermal_max"],
                       " LOW POWER" if s["low_power"] else ""))

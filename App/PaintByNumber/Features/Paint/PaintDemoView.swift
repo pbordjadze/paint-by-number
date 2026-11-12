@@ -458,6 +458,13 @@ private final class Demo {
         }
         if scenario == "paint-finish" || scenario.hasPrefix("paint-nightfall"), let last = lastArea {
             try? await Task.sleep(for: .seconds(1.5))
+            // The tour log's finish: the last fill, the flight out, the shine and the night, which are
+            // over well within eight seconds.
+            TourLog.trace("mark", "finish begin")
+            Task {
+                try? await Task.sleep(for: .seconds(8))
+                TourLog.trace("mark", "finish end")
+            }
             session.paint([last], from: Self.center(session.template, last), animated: true)
             // Ready once the camera has landed on the whole painting.
             let clock = ContinuousClock()

@@ -27,7 +27,8 @@ final class FeedbackEngine {
     /// as a phrase begins. It plays on with the sounds off.
     private var melody = PaintingMelody()
     private var lastNote: ContinuousClock.Instant?
-    private let clock = ContinuousClock()
+    /// The moment, for the tune's breath and the 40 ms between notes (a test's own).
+    var now: () -> ContinuousClock.Instant = { .now }
 
     /// How long the canvas animates a fill, so the haptic swell can match it. The canvas may
     /// update this per paint.
@@ -68,7 +69,7 @@ final class FeedbackEngine {
     /// The sky the next fill plays in: the tune's own until its next phrase begins (or a pause
     /// lets it turn), then the sky of the hour.
     func skyOfComingFill() -> Sky {
-        melody.skyOfNote(at: clock.now, under: skyOfTheMoment)
+        melody.skyOfNote(at: now(), under: skyOfTheMoment)
     }
 
     /// Selection changes and other UI detents.
@@ -92,7 +93,7 @@ final class FeedbackEngine {
             let size = min(1, (area / canvas).squareRoot() * 6)
             if hapticsOn { haptics.paint(strength: size, duration: fillDuration) }
             // At most a note every 40 ms: a stroke's fills come faster than notes can sound.
-            let now = clock.now
+            let now = self.now()
             if lastNote.map({ now - $0 >= .milliseconds(40) }) ?? true {
                 lastNote = now
                 let note = melody.next(at: now, under: skyOfTheMoment)

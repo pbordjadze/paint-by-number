@@ -116,6 +116,24 @@ struct SoundPlayerTests {
         #expect(expected.count == 2 + 1 + 3 + 17)
     }
 
+    /// Each cue's voice is the sound it names: a sky's note is that sky's voice at the note's pitch
+    /// on its scale, a twinkle the star an octave above the Moon's note, the thud the thud. (That a
+    /// delayed cue sounds at its delay is the audio engine's scheduling, which no test hears.)
+    @Test func eachVoiceIsTheSoundItNames() throws {
+        let sounds = SoundPlayer(playsAloud: false)
+        for index in SoundPlayer.sunScale.indices {
+            #expect(sounds.samples(of: .note(.sun, index: index)) == ToneSynth.kalimba(frequency: SoundPlayer.sunScale[index], sampleRate: 44_100),
+                    "the Sun's note \(index)")
+            #expect(sounds.samples(of: .note(.moon, index: index)) == ToneSynth.celesta(frequency: SoundPlayer.moonScale[index], sampleRate: 44_100),
+                    "the Moon's note \(index)")
+            #expect(sounds.samples(of: .twinkle(index: index)) == ToneSynth.twinkle(frequency: 2 * SoundPlayer.moonScale[index], sampleRate: 44_100),
+                    "the twinkle over the Moon's note \(index)")
+        }
+        #expect(sounds.samples(of: .thud) == ToneSynth.thud(sampleRate: 44_100))
+        // Asking what a voice sounds like plays nothing.
+        #expect(sounds.played().isEmpty)
+    }
+
     // MARK: The voices
 
     /// A voice's sound in a few numbers: its length, its peak, its loudness (RMS) and how often it

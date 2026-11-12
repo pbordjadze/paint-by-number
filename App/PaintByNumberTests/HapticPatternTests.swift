@@ -65,16 +65,23 @@ struct HapticPatternTests {
         expect(least.curves[0], time: 0.015, points: [SIMD2(0, 1), SIMD2(0.042, 0.6), SIMD2(0.12, 0)])
     }
 
-    /// A stroke's fills come many a second: those within 45 ms of the last one felt are dropped, so
-    /// drag painting is a texture and not a buzz.
-    @Test func fillsCloseTogetherAreOneTexture() async throws {
+    /// A stroke's fills come many a second: one within 45 ms of the last one felt is dropped, so
+    /// drag painting is a texture and not a buzz. At 45 ms the next is felt, and the gap is counted
+    /// from it.
+    @Test func fillsCloseTogetherAreOneTexture() {
         let haptics = HapticsPlayer(isSupported: true)
-        haptics.paint(strength: 0.5, duration: 0.3)
-        haptics.paint(strength: 0.5, duration: 0.3)
+        let start = ContinuousClock.now
+        func fill(after milliseconds: Int) { haptics.paint(strength: 0.5, duration: 0.3, at: start + .milliseconds(milliseconds)) }
+        fill(after: 0)
+        fill(after: 1)
+        fill(after: 44)
         #expect(haptics.played() == ["paint"])
-        try await Task.sleep(for: .milliseconds(60))
-        haptics.paint(strength: 0.5, duration: 0.3)
+        fill(after: 45)
         #expect(haptics.played() == ["paint", "paint"])
+        fill(after: 89)
+        #expect(haptics.played() == ["paint", "paint"])
+        fill(after: 90)
+        #expect(haptics.played() == ["paint", "paint", "paint"])
     }
 
     /// A wrong color: two dull taps, the second softer.

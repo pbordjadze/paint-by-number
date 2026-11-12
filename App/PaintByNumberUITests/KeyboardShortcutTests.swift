@@ -145,6 +145,8 @@ final class KeyboardShortcutTests: XCTestCase {
     }
 
     /// ⌘F puts the keyboard in the gallery's search field: what is typed next narrows the shelf.
+    /// (What a painter with a keyboard gets; iPadOS's own Find may be what answers, so this is not
+    /// proof of the app's own binding.)
     @MainActor
     func testSearchKey() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")

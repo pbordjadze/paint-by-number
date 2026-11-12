@@ -857,6 +857,9 @@ final class CanvasView: UIView, PaintingCanvas {
     func requestRender() {
         needsRender = true
         idleTicks = 0
+        #if DEBUG
+        if displayLink?.isPaused == true { tourRested = true }
+        #endif
         displayLink?.isPaused = false
     }
 
@@ -865,11 +868,13 @@ final class CanvasView: UIView, PaintingCanvas {
         let tourStart = CACurrentMediaTime(), tourFrames = framesRendered
         defer {
             if TourLog.isOn {
-                TourLog.trace("tick", "gap=%.2f\twork=%.2f\tdrew=%ld",
+                // `rest`: the display link was paused before this tick, so its gap is a rest, not a wait.
+                TourLog.trace("tick", "gap=%.2f\twork=%.2f\tdrew=%ld\trest=%ld",
                     (link.timestamp - tourLastTick) * 1000, (CACurrentMediaTime() - tourStart) * 1000,
-                    framesRendered > tourFrames ? 1 : 0)
+                    framesRendered > tourFrames ? 1 : 0, tourRested ? 1 : 0)
             }
             tourLastTick = link.timestamp
+            tourRested = false
         }
         #endif
         stepCameraAnimation(at: CACurrentMediaTime())
@@ -916,6 +921,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private(set) var framesRendered = 0
     #if DEBUG
     private var tourLastTick: CFTimeInterval = 0
+    private var tourRested = true
     #endif
     private var skippedFrames = 0
     /// The frame `watchesFirstFrame` waits for is on its way to the screen.

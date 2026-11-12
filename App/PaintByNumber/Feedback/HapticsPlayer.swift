@@ -14,7 +14,6 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     private var engine: CHHapticEngine?
     private let isSupported: Bool
     private var lastPaint: ContinuousClock.Instant?
-    private let clock = ContinuousClock()
     #if DEBUG
     /// What was asked to play, in order (on `queue`): `played()`, and each pattern as it was made:
     /// `patterns()`.
@@ -49,9 +48,8 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     }
 
     /// Paint spreading over a region. `strength` 0…1 (bigger regions feel heavier),
-    /// `duration` matches the fill animation.
-    func paint(strength: Float, duration: TimeInterval) {
-        let now = clock.now
+    /// `duration` matches the fill animation; `now` is when it was painted (a test's own).
+    func paint(strength: Float, duration: TimeInterval, at now: ContinuousClock.Instant = .now) {
         perform { [self] in
             // Drag painting can fire many fills per second; keep it a texture, not a buzz.
             if let last = lastPaint, now - last < .milliseconds(45) { return }

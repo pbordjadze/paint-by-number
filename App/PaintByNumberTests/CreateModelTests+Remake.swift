@@ -10,14 +10,25 @@ import Testing
 /// unless the painter changed how many there are, the edits land where they were made, on a
 /// canvas of another size too, and none is left out unseen.
 extension CreateModelTests {
-    /// How many of `refined()`'s four edits a base made again with the same paints leaves out (a
-    /// Writing mark, Smoothness), said to the painter by the count: none on the base the SideStore
-    /// and Debug builds make (`CreateModel.newTuning` and `newPaintMix`), one on the release's.
-    #if UNRELEASED
-    static let leftOutByARemake = 0
-    #else
-    static let leftOutByARemake = 1
-    #endif
+    /// A base made again with the same paints (a Writing mark, Smoothness) leaves out none of
+    /// `refined()`'s four edits. On the base the release's own build makes (no `UNRELEASED`: the
+    /// photo's paints, no tuning, where no test had run before November 12, 2026) one edit is left
+    /// out, and the count says so to the painter: a known issue until someone decides whether it
+    /// is a fault or the tuning's honest result (painting-company row 322), so a change either way
+    /// shows here.
+    func expectNothingLeftOut(_ model: CreateModel, changes: Int? = nil, sourceLocation: SourceLocation = #_sourceLocation) {
+        #expect(model.leftOut <= 1, sourceLocation: sourceLocation)
+        if let changes {
+            #expect(model.shownChangeCount == changes - model.leftOut && model.refinements.edits.count == 4, sourceLocation: sourceLocation)
+        }
+        #if UNRELEASED
+        #expect(model.leftOut == 0, sourceLocation: sourceLocation)
+        #else
+        withKnownIssue("The release's build leaves one edit out when a refined base is made again (painting-company row 322)") {
+            #expect(model.leftOut == 0, sourceLocation: sourceLocation)
+        }
+        #endif
+    }
 
     /// A refined flow: the four edits laid on `base`, and what each should still do.
     struct Refined {
@@ -147,8 +158,7 @@ extension CreateModelTests {
         try await waitUntil { model.refinements.addedText.count == 1 && model.isFinal }
         let after = try #require(model.preview?.template)
         #expect(Set(model.paintsBeforeEdits).isSubset(of: Set(r.base.palette)), "the base chose its paints again")
-        #expect(model.leftOut == Self.leftOutByARemake && model.shownChangeCount == 5 - Self.leftOutByARemake
-            && model.refinements.edits.count == 4)
+        expectNothingLeftOut(model, changes: 5)
         expectEditsHold(r, on: after)
         let margin: Float = 0.1
         #expect(Self.samePaint(before, after, excluding: (box.0 - margin, box.1 + margin)) > 0.85)
@@ -196,7 +206,7 @@ extension CreateModelTests {
         model.settingsChanged()
         try await waitUntil { model.isFinal && model.preview?.settings == model.settings }
         #expect(Set(model.paintsBeforeEdits).isSubset(of: Set(r.base.palette)))
-        #expect(model.leftOut == Self.leftOutByARemake)
+        expectNothingLeftOut(model)
         expectEditsHold(r, on: try #require(model.preview?.template))
 
         let smoothed = try #require(model.preview?.template)
@@ -243,7 +253,7 @@ extension CreateModelTests {
         let laid = try #require(model.preview?.template)
         let recolored = Set(r.base.palette.map { TemplateEditor.recolor($0.oklab, by: r.repaint) })
         #expect(laid.palette.allSatisfy { firstLaid.palette.contains($0) || recolored.contains($0.oklab) })
-        #expect(model.leftOut == Self.leftOutByARemake)
+        expectNothingLeftOut(model)
 
         let count = model.colorCount
         model.colorCount += 4

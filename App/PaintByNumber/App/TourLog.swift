@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import MachO
 import QuartzCore
 
 /// `-tourLog YES` (Debug builds only): the performance tour's event log, `tmp/tour-log-<pid>.tsv` in the
@@ -7,8 +8,9 @@ import QuartzCore
 /// per canvas tick (the gap since the last tick, how long the tick's own work took, whether it drew),
 /// per camera flight (start: from and to, duration; land), per sound and per haptic; and twice a second
 /// the thermal state, Low Power Mode and the memory footprint (now, and its peak since launch). Times are wall-clock seconds (the
-/// device's clock, which the UI test's segment marks share). Lines are buffered and written twice a
-/// second, off the main thread.
+/// device's clock, which the UI test's segment marks share). A `build` line names the binary (its
+/// Mach-O UUID) and whether it has `UNRELEASED`. Lines are buffered and written twice a second, off
+/// the main thread.
 ///
 /// It also keeps a pulse (`TourPulse`): a `hitch` line whenever the main thread came to a screen
 /// refresh late, with how long since the last one it met (`gap`) and how long a refresh is
@@ -37,8 +39,30 @@ nonisolated enum TourLog {
             sample()
         }
         trace("launch", "started=%.4f", started)
+        trace("build", "uuid=%@\tunreleased=%@", executableUUID(), unreleased.description)
         // The app's launch is on the main thread.
         MainActor.assumeIsolated { TourPulse.shared.start() }
+    }
+
+    #if UNRELEASED
+    private static let unreleased = true
+    #else
+    private static let unreleased = false
+    #endif
+
+    /// The app binary's own identifier (its Mach-O UUID, what `dwarfdump --uuid` prints): which
+    /// build wrote this log.
+    private static func executableUUID() -> String {
+        guard let header = _dyld_get_image_header(0) else { return "unknown" }
+        var command = UnsafeRawPointer(header).advanced(by: MemoryLayout<mach_header_64>.size)
+        for _ in 0..<header.pointee.ncmds {
+            let load = command.assumingMemoryBound(to: load_command.self).pointee
+            if load.cmd == UInt32(LC_UUID) {
+                return UUID(uuid: command.assumingMemoryBound(to: uuid_command.self).pointee.uuid).uuidString
+            }
+            command = command.advanced(by: Int(load.cmdsize))
+        }
+        return "unknown"
     }
 
     /// One line: the time, `kind`, then `format` filled with `arguments` (its fields, tab-separated
