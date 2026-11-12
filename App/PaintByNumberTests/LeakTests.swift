@@ -3,7 +3,6 @@ import Testing
 import UIKit
 @testable import PaintByNumber
 
-#if UNRELEASED
 /// Screens let go of the flow they show once they close. Refine's Layers anchor once kept a
 /// closure of Refine's view, and with it the create flow and its templates, past every trip into
 /// Refine (painting-company row 263: 150 to 200 MB a trip, never freed); every functional test
@@ -45,4 +44,3 @@ struct LeakTests {
         return gone()
     }
 }
-#endif

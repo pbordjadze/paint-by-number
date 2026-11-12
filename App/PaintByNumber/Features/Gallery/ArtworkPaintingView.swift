@@ -54,7 +54,6 @@ struct ArtworkPaintingView: View {
     }
     /// What the failure toast says: the re-cut's, or ✎ Change's.
     @State private var recutFailedText = ""
-    #if UNRELEASED
     /// ✎ Change's drawing tools, open over the painting (`PaintingChangeView`), with the
     /// refinements they opened on.
     @State private var change: PaintingChange?
@@ -64,7 +63,6 @@ struct ArtworkPaintingView: View {
     /// ✎ Change was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersChangeUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
-    #endif
     /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`): the toasts keep to
     /// the painting's page beside it.
     @State private var foldPlace: FoldPlace?
@@ -221,7 +219,6 @@ struct ArtworkPaintingView: View {
             if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
-        #if UNRELEASED
         .fullScreenCover(item: $change, onDismiss: changeEnded) { change in
             PaintingChangeView(model: change.model) { refinements in
                 // What Done is compared with: the refinements as the tools opened, after the
@@ -230,7 +227,6 @@ struct ArtworkPaintingView: View {
             }
         }
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
-        #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .alert(namingUnnamed ? Text("Name Your Painting") : Text("Rename Painting"), isPresented: $isNaming) {
             TextField("Title", text: $nameText, prompt: Text(namingTitle))
@@ -401,20 +397,14 @@ struct ArtworkPaintingView: View {
         }
     }
 
-    /// ✎ Change in the painting's bar: in SideStore and Debug builds while the drawing tools are,
-    /// for a painting with a photo to draw over (a library picture's file will do).
+    /// ✎ Change in the painting's bar, for a painting with a photo to draw over (a library picture's file will do).
     private var changeAction: (() -> Void)? {
-        #if UNRELEASED
         guard let artwork, sourcePhotoLoader != nil || artwork.sampleName != nil else { return nil }
         return {
             if paintings.locksRefine { offersChangeUnlock = true } else { openChange() }
         }
-        #else
-        nil
-        #endif
     }
 
-    #if UNRELEASED
     /// The drawing tools on this painting as it stands (`PaintingChangeView`).
     private func openChange() {
         guard change == nil, changing == nil, recutting == nil, regeneration == nil, let autosaver, let artwork else { return }
@@ -478,7 +468,6 @@ struct ArtworkPaintingView: View {
             recutFailed = false
         }
     }
-    #endif
 
     /// The Painting Length chip shows on a painting not begun that was cut for a length (a
     /// picture picked, not a drawing, a page drawn or a painting someone sent), and while a
@@ -642,7 +631,6 @@ private extension OpenNotice {
     }
 }
 
-#if UNRELEASED
 /// ✎ Change's drawing tools open on a painting: their model, and the refinements they opened
 /// on, once they have (nil while Preparing).
 private struct PaintingChange: Identifiable {
@@ -650,4 +638,3 @@ private struct PaintingChange: Identifiable {
     let model: CreateModel
     var opened: TemplateRefinements?
 }
-#endif

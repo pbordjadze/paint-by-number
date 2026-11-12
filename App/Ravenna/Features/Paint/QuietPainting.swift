@@ -9,11 +9,7 @@ import CoreGraphics
 ///
 /// SideStore and Debug builds only for now (`UNRELEASED`, root `CLAUDE.md` › App rules).
 nonisolated enum QuietPainting {
-    #if UNRELEASED
     static let isAvailable = true
-    #else
-    static let isAvailable = false
-    #endif
 
     /// The tips that hang from a button the quiet bar hides: while one has its turn, the bar
     /// shows, so the tip has its button to point at.

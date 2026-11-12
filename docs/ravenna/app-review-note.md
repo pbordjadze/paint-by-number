@@ -15,7 +15,7 @@ painting-company row 234; the count itself is row 235's).
 ---
 
 Paint by Moonlight 1.1 includes an Easter egg we want to disclose: a second mode, a "Byzantine
-era" called Ravenna, in which a photo is laid as a mosaic and set tile by tile instead of painted.
+era" called Paint by Mosaic, in which a photo is laid as a mosaic and set tile by tile instead of painted.
 It is part of the app's own code and content (no downloaded code, no web content), works offline
 like the rest of the app, and collects nothing.
 

@@ -5,6 +5,10 @@ import SwiftUI
 struct GlassIconButton: View {
     let systemImage: String
     let label: LocalizedStringKey
+    /// A small symbol in the label's bottom trailing corner, inside the circle (✎ Change's lock
+    /// before the purchase): laid over the button from outside, the glass drew over it and
+    /// clipped it (QA, painting-company row 237).
+    var badge: String?
     let action: () -> Void
 
     @Environment(\.isEnabled) private var isEnabled
@@ -12,6 +16,15 @@ struct GlassIconButton: View {
     var body: some View {
         Button(action: action) {
             GlassIconLabel(systemImage: systemImage)
+                .overlay(alignment: .bottomTrailing) {
+                    if let badge {
+                        Image(systemName: badge)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.primary)
+                            .offset(x: 2)
+                            .accessibilityHidden(true)
+                    }
+                }
                 .opacity(isEnabled ? 1 : 0.35)
         }
         .buttonStyle(.glass)

@@ -1,7 +1,10 @@
 import CoreGraphics
+import CoreText
+import Foundation
 import MakingOf
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// The making-of show, full screen over the create flow after Start Painting when Settings › The
 /// Making-of is on (`SettingsKey.playsMakingOf`, off by default): the painter's photo becoming its
@@ -385,7 +388,7 @@ struct MakingOfCanvas: View {
 
     nonisolated static let cornerRadius: CGFloat = 6
     /// The size digits are set at, then scaled to each number's.
-    nonisolated private static let digitSize: CGFloat = 64
+    nonisolated static let digitSize: CGFloat = 64
     /// A spark is a filled circle of `sparkRadius + sparkGrowth * heat` picture pixels at
     /// `sparkOpacity * heat` (`Spark`'s doc comment: `230 * heat / 255`), a star an outline
     /// `starWidth` pixel wide; all in `RevealStyle.ink`, scaled to the view like the rings.
@@ -445,16 +448,15 @@ struct MakingOfCanvas: View {
         _ built: MakingOfShow, _ frame: ShowFrame, place: Placement, context: GraphicsContext
     ) {
         guard !frame.numbers.isEmpty else { return }
-        var digits: [Int: GraphicsContext.ResolvedText] = [:]
+        var outlines: [Int: Path] = [:]
         for (i, alpha) in frame.numbers.enumerated() where alpha > 0.01 && i < built.numbers.count && i < built.digits.count {
             let value = built.digits[i]
-            let text: GraphicsContext.ResolvedText
-            if let resolved = digits[value] {
-                text = resolved
+            let outline: Path
+            if let made = outlines[value] {
+                outline = made
             } else {
-                text = context.resolve(
-                    Text(verbatim: String(value)).font(.system(size: digitSize, design: .serif)).foregroundStyle(ink))
-                digits[value] = text
+                outline = numberOutline(value)
+                outlines[value] = outline
             }
             let number = built.numbers[i]
             var c = context
@@ -463,8 +465,40 @@ struct MakingOfCanvas: View {
             c.translateBy(x: at.x, y: at.y)
             let s = CGFloat(number.size) * place.scale / digitSize
             c.scaleBy(x: s, y: s)
-            c.draw(text, at: .zero, anchor: .center)
+            c.fill(outline, with: .color(ink))
         }
+    }
+
+    /// `value` in New York at `digitSize` as its glyphs' outlines, centred on the origin as text
+    /// anchored at its centre was. Never drawn as text: with an accessibility client on
+    /// (VoiceOver, Switch Control, UI Automation), every text draw queues an accessibility label on
+    /// the main thread, and the show's numbers, drawn every frame, left thousands that UIKit took
+    /// 26 s to clear as the painting opened (painting-company row 320).
+    nonisolated static func numberOutline(_ value: Int) -> Path {
+        let base = UIFont.systemFont(ofSize: digitSize)
+        let font = UIFont(descriptor: base.fontDescriptor.withDesign(.serif) ?? base.fontDescriptor, size: digitSize) as CTFont
+        let attributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key(kCTFontAttributeName as String): font]
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: String(value), attributes: attributes))
+        var ascent: CGFloat = 0, descent: CGFloat = 0
+        let width = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil))
+        // The line's box centred on the origin, y down: its baseline half the ascent less the
+        // descent below the middle.
+        let baseline = (ascent - descent) / 2
+        let path = CGMutablePath()
+        // Digits come from the one font, so every run draws with it.
+        for run in CTLineGetGlyphRuns(line) as! [CTRun] {
+            let count = CTRunGetGlyphCount(run)
+            var glyphs = [CGGlyph](repeating: 0, count: count)
+            var positions = [CGPoint](repeating: .zero, count: count)
+            CTRunGetGlyphs(run, CFRange(location: 0, length: count), &glyphs)
+            CTRunGetPositions(run, CFRange(location: 0, length: count), &positions)
+            for (glyph, position) in zip(glyphs, positions) {
+                var place = CGAffineTransform(
+                    a: 1, b: 0, c: 0, d: -1, tx: position.x - width / 2, ty: baseline - position.y)
+                if let glyphPath = CTFontCreatePathForGlyph(font, glyph, &place) { path.addPath(glyphPath) }
+            }
+        }
+        return Path(path)
     }
 
     /// Each k-means++ seed's ring, as `SeedRing` says: an ink circle over a paper halo, a dot in

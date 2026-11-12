@@ -25,20 +25,12 @@ final class UnlimitedPaintings {
     /// `since` (a `Date` as JSONEncoder writes one). 1.1's count is a key of its own, so everyone
     /// from 1.0 begins it with five, and 1.0's is left as it was; Ravenna's mosaics take from the
     /// same count.
-    #if UNRELEASED
     static let freeKey = "freePaintings.v2"
-    #else
-    static let freeKey = "freePaintings"
-    #endif
 
     /// Whether every new painting takes a free painting (1.1: a library picture's, a page from
     /// scratch, a mosaic), or only one of the painter's own photo (1.0). Making a painting is what
     /// counts; painting it, refining it, a painting someone sent and one made again take none.
-    #if UNRELEASED
     static let countsEveryPainting = true
-    #else
-    static let countsEveryPainting = false
-    #endif
 
     /// Whether this build sells the unlock: every build but SideStore's.
     let isSold: Bool
@@ -123,7 +115,7 @@ final class UnlimitedPaintings {
     func mayStart(ownPhoto: Bool) async -> Bool {
         guard ownPhoto || Self.countsEveryPainting, isSold else { return true }
         if !hasChecked { await refresh() }
-        // The count is shared with Ravenna's (SideStore and Debug builds), which may have taken
+        // The count is shared with Paint by Mosaic's (`Ravenna`), which may have taken
         // one since.
         if let defaults { free = Self.stored(in: defaults) }
         return isUnlocked || freeLeft > 0

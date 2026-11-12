@@ -1,9 +1,7 @@
 import CoreHaptics
 import Foundation
 import PaintCore
-#if UNRELEASED
 import Ravenna
-#endif
 import SwiftUI
 
 struct SettingsView: View {
@@ -30,10 +28,8 @@ struct SettingsView: View {
     private enum Destination: Hashable { case acknowledgements }
     private static let paintingLengthRow = "painting-length"
     @State private var tipsReset = false
-    #if UNRELEASED
     /// The secret door's year setter is out under the Year row (`EraDoor`): tapped, the row brings it.
     @State private var showsClock = false
-    #endif
 
     init() {
         #if DEBUG
@@ -180,7 +176,6 @@ struct SettingsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
-                        #if UNRELEASED
                         // The secret door: a plain Year row at the present; its setter's first
                         // year, 0547, opens Ravenna (`EraDoor`).
                         Button {
@@ -206,7 +201,6 @@ struct SettingsView: View {
                             .accessibilityIdentifier("era-clock")
                             .id("era-clock")
                         }
-                        #endif
                         NavigationLink(value: Destination.acknowledgements) {
                             SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
                         }
@@ -232,7 +226,6 @@ struct SettingsView: View {
                 #if DEBUG
                 // On a phone the row is below the fold, and its tip comes only once it is reached.
                 .task {
-                    #if UNRELEASED
                     if ShellDemo.current == .settingsClock {
                         try? await Task.sleep(for: .seconds(1))
                         withAnimation { proxy.scrollTo("era-clock", anchor: .center) }
@@ -240,7 +233,6 @@ struct SettingsView: View {
                         DemoMode.markReady()
                         return
                     }
-                    #endif
                     guard ShellDemo.current == .settingsTip else { return }
                     try? await Task.sleep(for: .seconds(1))
                     withAnimation { proxy.scrollTo(Self.paintingLengthRow, anchor: .center) }
@@ -310,11 +302,7 @@ struct SettingsView: View {
             if paintings.isUnlocked {
                 Text("Thank you for supporting Paint by Moonlight.")
             } else {
-                #if UNRELEASED
-                Text("A free painting comes back each day, up to five. Paintings someone sends you are always free.")
-                #else
-                Text("A free painting of your own photos comes back each day, up to three. Everything in The Library is always free.")
-                #endif
+                Text("Each new painting takes one, and one comes back each day, up to five. Paintings someone sends you are always free. Drawing your own, on a blank page or over a painting, comes with Unlimited Paintings.")
             }
         }
     }

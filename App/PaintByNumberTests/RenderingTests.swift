@@ -14,10 +14,10 @@ struct RasterizerTests {
         let pixels = PixelReader(image)
         #expect(pixels[20, 40] == SIMD3(255, 0, 0))
         #expect(pixels[100, 40] == SIMD3(0, 0, 255))
-        // The unpainted green stripe is sketched as a light neutral grey.
-        let sketch = pixels[60, 40]
-        #expect(sketch.x == sketch.y && sketch.y == sketch.z)
-        #expect(sketch.x > 200 && sketch.x < 255)
+        // The unpainted green stripe is a pale wash of its green (QA, painting-company row 237).
+        let wash = pixels[60, 40]
+        #expect(wash.y > wash.x + 10 && wash.y > wash.z + 10)
+        #expect(wash.x > 150 && wash.z > 150)
     }
 
     @Test(arguments: [true, false])

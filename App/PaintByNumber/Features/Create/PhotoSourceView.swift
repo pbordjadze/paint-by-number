@@ -6,8 +6,8 @@ import UIKit
 
 /// First step of the create flow, the Paint page (painting-company row 239, "Paint Now, through
 /// the Shelf's door"): one shelf of pictures. Tonight's Picture (a library painting, another each
-/// day) large at the top, then Your Own: a photo from the system picker, the camera, and in
-/// SideStore and Debug builds a drawing on paper and a blank page; then The Library, its paintings
+/// day) large at the top, then Your Own: a photo from the system picker, the camera, a blank page
+/// and, in SideStore and Debug builds, a drawing on paper; then The Library, its paintings
 /// and photographs. A picture picked opens as a painting with no preview step
 /// (`CreateModel.paintsNow`); a blank page opens the drawing tools (`CreateModel.loadScratch()`).
 ///
@@ -27,10 +27,10 @@ struct PhotoSourceView: View {
     /// picker for a photo of a drawing, which `CreateModel.load(drawing:)` cleans and traces. The
     /// same picker and camera serve both; this says which way the next pick goes.
     @State private var picksDrawing = false
+    #endif
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
-    #endif
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -106,9 +106,7 @@ struct PhotoSourceView: View {
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
-        #if UNRELEASED
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
-        #endif
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
@@ -147,8 +145,8 @@ struct PhotoSourceView: View {
         }
     }
 
-    /// The painter's own ways in: a photo, the camera, and in SideStore and Debug builds a drawing
-    /// on paper and a blank page.
+    /// The painter's own ways in: a photo, the camera, a blank page and, in SideStore and Debug
+    /// builds, a drawing on paper.
     private var yourOwnSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle("Your Own", style: isWide ? .title2 : .title3)
@@ -175,14 +173,15 @@ struct PhotoSourceView: View {
                 }
                 .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
                 .accessibilityIdentifier("choose-drawing")
+                #endif
                 Button {
                     if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
                 } label: {
-                    OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble")
+                    OwnTile(title: Text("Blank Page"), systemImage: "pencil.and.scribble", locked: paintings.locksRefine)
                 }
                 .accessibilityHint(Text("Draw your own picture on a blank page"))
+                .accessibilityValue(paintings.locksRefine ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
                 .accessibilityIdentifier("from-scratch")
-                #endif
             }
             .buttonStyle(PressableCardStyle())
         }
@@ -267,7 +266,6 @@ struct PhotoSourceView: View {
         isShowingCamera = true
     }
 
-    #if UNRELEASED
     /// A blank page, straight into the drawing tools.
     private func startFromScratch() {
         PaintTips.photoChosen()
@@ -276,21 +274,29 @@ struct PhotoSourceView: View {
         if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
         onPicked()
     }
-    #endif
 }
 
 /// One of Your Own's ways in: a small card with its symbol and name.
 private struct OwnTile: View {
     let title: Text
     let systemImage: String
+    /// Waits for the purchase: a lock in its corner says so before the tap (QA, painting-company
+    /// row 237); the button's VoiceOver value says it in words.
+    var locked = false
     @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 96
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: systemImage)
-                .font(.system(size: 26, weight: .light))
-                .foregroundStyle(Theme.accent)
-                .accessibilityHidden(true)
+            HStack(alignment: .top) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 26, weight: .light))
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+                if locked {
+                    Spacer(minLength: 0)
+                    LockBadge()
+                }
+            }
             Spacer(minLength: 0)
             title
                 .font(.subheadline.weight(.semibold))

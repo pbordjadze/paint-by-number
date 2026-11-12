@@ -103,11 +103,14 @@ final class TipDesk {
 
     // MARK: Where the painter is
 
-    /// A screen appears. Going to another screen is something done.
+    /// A screen appears. Going to another screen is something done. A screen it covers keeps
+    /// quiet: its tip goes and its moment is called off.
     func enter(_ place: TipPlace) {
         places.removeAll { $0 == place }
         places.append(place)
         if place == .shelf { servedShelf = false }
+        if let offering, !isInView(offering.place) { stopOffering() }
+        if let turn, !isInView(turn.place) { release(turn) }
         noteActivity()
     }
 

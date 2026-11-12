@@ -123,6 +123,7 @@ final class ScratchUITests: XCTestCase {
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 2) { ok.tap() }
         XCTAssertTrue(reveal(scratch, in: app), "Blank Page isn't ready")
+        XCTAssertEqual(scratch.value as? String, "Comes with Unlimited Paintings", "Blank Page doesn't say it waits for the purchase")
         scratch.tap()
 
         let buy = app.buttons["unlock-buy"]
@@ -133,6 +134,8 @@ final class ScratchUITests: XCTestCase {
         guide.tap()
         XCTAssertTrue(
             app.descendants(matching: .any)["refine-guide-page"].waitForExistence(timeout: 30), "Try It didn't open the Tool Guide")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["refine-guide-page"].staticTexts["Bend Line"].exists, "Try It didn't open the guide on Bend Line")
         app.buttons["refine-guide-done"].tap()
 
         XCTAssertTrue(reveal(scratch, in: app), "The guide didn't go back to the Paint page")

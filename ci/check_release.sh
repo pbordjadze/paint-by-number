@@ -2,8 +2,9 @@
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
-# behind Settings' The Making-of ships), nothing of the Marginarium or of Ravenna, none of what the project leaves
-# out of Release, and none of the Debug-only code. Run from the repository: the types it looks for
+# behind Settings' The Making-of ships), Paint by Mosaic's resources (Ravenna's era ships from 1.1), nothing of the
+# Marginarium, none of what the project leaves out of Release (nothing, since 1.1 ships Refine), and none of the
+# Debug-only code. Run from the repository: the types it looks for
 # are read from the sources, so a file added to either set is checked without an edit here.
 set -euo pipefail
 APP="$1"
@@ -24,21 +25,23 @@ strip -S -x -o "$WORK/binary" "$BINARY"
 strings -a "$WORK/binary" > "$WORK/strings.txt"
 
 # The top-level types of two sets of files, each line "<name> <file>": the files the app target's
-# Release EXCLUDED_SOURCE_FILE_NAMES leaves out (less its INCLUDED_SOURCE_FILE_NAMES: Refine's
-# screen and the gallery's draft row, which SideStore builds carry, CLAUDE.md › App rules), and the
-# files whose code is wholly inside `#if DEBUG` (the demo and test launches' code).
+# Release EXCLUDED_SOURCE_FILE_NAMES leaves out (less its INCLUDED_SOURCE_FILE_NAMES), none since
+# 1.1 shipped Refine and the era door (painting-company row 236), and the files whose code is wholly
+# inside `#if DEBUG` (the demo and test launches' code), the app's and Paint by Mosaic's
+# (`App/Ravenna`).
 python3 - "$ROOT" > "$WORK/types.txt" <<'PY'
 import fnmatch, pathlib, re, shlex, sys
 root = pathlib.Path(sys.argv[1])
 project = (root / "App/PaintByNumber.xcodeproj/project.pbxproj").read_text()
-sources = sorted((root / "App/PaintByNumber").rglob("*.swift"))
+sources = sorted((root / "App/PaintByNumber").rglob("*.swift")) + sorted((root / "App/Ravenna").rglob("*.swift"))
 def setting(block, name):
     m = re.search(r"\b%s = (\"[^\"]*\"|[^;]*);" % name, block)
     return shlex.split(m.group(1).strip('"')) if m else []
 # Each configuration is `isa`, then its `buildSettings = { … };` (no braces inside), then its name.
 configurations = re.findall(r"isa = XCBuildConfiguration;\s*buildSettings = \{([^{}]*)\};\s*name = (\w+);", project)
-blocks = [b for b, name in configurations if name == "Release" and "EXCLUDED_SOURCE_FILE_NAMES" in b]
-if len(blocks) != 1: sys.exit("expected one Release configuration with EXCLUDED_SOURCE_FILE_NAMES, found %d" % len(blocks))
+# The app target's Release configuration: the one that names the app.
+blocks = [b for b, name in configurations if name == "Release" and "INFOPLIST_KEY_CFBundleDisplayName" in b]
+if len(blocks) != 1: sys.exit("expected one Release configuration of the app target, found %d" % len(blocks))
 excluded, included = setting(blocks[0], "EXCLUDED_SOURCE_FILE_NAMES"), setting(blocks[0], "INCLUDED_SOURCE_FILE_NAMES")
 def matches(path, patterns): return any(fnmatch.fnmatchcase(path.name, p) for p in patterns)
 left_out = [p for p in sources if matches(p, excluded) and not matches(p, included)]
@@ -53,7 +56,7 @@ def debug_only(path):
     return bool(code) and depth == 0
 declaration = re.compile(r"^(?:(?:public|internal|private|fileprivate|final|nonisolated|indirect|@\w+(?:\([^)]*\))?) +)*(?:struct|class|enum|actor|protocol) +(\w+)", re.M)
 files = left_out + [p for p in sources if debug_only(p)]
-if not left_out or len(files) == len(left_out): sys.exit("found no excluded or no Debug-only files: the check would check nothing")
+if len(files) == len(left_out): sys.exit("found no Debug-only files: the check would check nothing")
 for path in files:
     for name in declaration.findall(path.read_text()):
         print(name, path.relative_to(root))
@@ -74,13 +77,18 @@ for symbol in demo-ready DemoLibrary LineArtMaps DemoTemplates feedback-upload d
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 
-# Ravenna, the era behind the secret door (painting-company row 234), is SideStore's and Debug's
-# only for now: Release leaves its module and its resource bundle out (EXCLUDED_SOURCE_FILE_NAMES
-# names both), and the door's own files (`Era*.swift`) are checked with the rest above.
-[[ ! -e "$APP/RavennaResources.bundle" ]] || fail "the Release app bundles RavennaResources.bundle"
+# Paint by Mosaic (the `Ravenna` module), the era behind the secret door (painting-company rows 234
+# and 236), ships from 1.1: the door's code is in the binary (the module is a static library) and
+# its resources are bundled, or the door would open on nothing.
+[[ -d "$APP/RavennaResources.bundle" ]] || fail "the Release app doesn't bundle RavennaResources.bundle, so the era door would open on nothing"
+# A bundle without code names no executable: App Store Connect refuses the upload otherwise (90535).
+if /usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/RavennaResources.bundle/Info.plist" >/dev/null 2>&1; then
+  fail "RavennaResources.bundle's Info.plist names a CFBundleExecutable, which App Store Connect refuses (90535)"
+fi
+# A static library, linked in: an embedded copy of it would fail App Store validation.
 [[ ! -e "$APP/Frameworks/Ravenna.framework" ]] || fail "the Release app embeds Ravenna.framework"
-for symbol in RavennaEra RavennaWorld EraClock ravenna.library; do
-  if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
+for symbol in RavennaEra EraClock; do
+  if ! grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary lacks $symbol: the era door isn't in it"; fi
 done
 
 # Paul's decision (October 23): the Marginarium is private for now; it leaves every build and this
@@ -103,5 +111,5 @@ if xcrun --find assetutil > /dev/null 2>&1; then
     fail "the Release asset catalog holds the Marginarium's frames"
   fi
 fi
-[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, nothing the project leaves out of Release, no Debug-only code, no Marginarium"
+[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, paper launch screen, making-of spec bundled, Paint by Mosaic in, nothing the project leaves out of Release, no Debug-only code, no Marginarium"
 exit $failed

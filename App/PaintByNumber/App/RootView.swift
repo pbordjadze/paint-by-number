@@ -1,6 +1,4 @@
-#if UNRELEASED
 import Ravenna
-#endif
 import SwiftUI
 
 /// Routes to the app shell. Debug builds route to a demo scenario when launched with
@@ -9,12 +7,9 @@ import SwiftUI
 /// scenarios, `-demo ravenna-<name>`; `era-passage` sets the clock back at launch and holds the
 /// passage half laid.
 struct RootView: View {
-    #if UNRELEASED
     @State private var door = EraDoor.shared
-    #endif
 
     var body: some View {
-        #if UNRELEASED
         Group {
             if door.shown == .byzantium || RavennaEra.isDemoScenario {
                 RavennaEra(leave: { door.go(to: .moonlight) })
@@ -26,9 +21,6 @@ struct RootView: View {
         #if DEBUG
         // `era-passage`: the gallery as the clock is set back, the passage held half laid.
         .task { if DemoMode.scenario == "era-passage" { door.go(to: .byzantium) } }
-        #endif
-        #else
-        moonlight
         #endif
     }
 

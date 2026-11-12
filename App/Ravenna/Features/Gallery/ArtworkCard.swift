@@ -215,11 +215,7 @@ struct PlaceholderCard: View {
     /// look at rather than a grey blur (the first-five-minutes walk, October 23; Paul: "let's build
     /// them all"), the brush pulsing on glass over it. SideStore and Debug builds only for now
     /// (`UNRELEASED`, root `CLAUDE.md` › App rules).
-    #if UNRELEASED
     private static let showsPicture = true
-    #else
-    private static let showsPicture = false
-    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {

@@ -2945,32 +2945,8 @@
         }
       }
     },
-    "send.explanation.drawingOnly.release": {
-      "comment": "Send Template's note with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "They get a blank copy of this mosaic to set. Your photo stays on this device."
-          }
-        }
-      }
-    },
     "send.explanation.noPhoto": {
       "comment": "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "They get a blank copy of this mosaic to set."
-          }
-        }
-      }
-    },
-    "send.explanation.noPhoto.release": {
-      "comment": "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off, in the release (which has no Refine, so no changes to the drawing to mention)",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2993,32 +2969,8 @@
         }
       }
     },
-    "send.explanation.photo.release": {
-      "comment": "Send Template's note with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "They get a blank copy of this mosaic to set, and your photo to peek at."
-          }
-        }
-      }
-    },
     "send.explanation.picture": {
       "comment": "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "They get a blank copy of this mosaic to set, and the picture to peek at."
-          }
-        }
-      }
-    },
-    "send.explanation.picture.release": {
-      "comment": "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on, in the release (which has no Refine, so no changes to the drawing to mention)",
       "extractionState": "manual",
       "localizations": {
         "en": {

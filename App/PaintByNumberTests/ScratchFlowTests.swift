@@ -4,7 +4,6 @@ import Testing
 import UIKit
 @testable import PaintByNumber
 
-#if UNRELEASED
 /// From Scratch in the New Painting screen (painting-company row 231): a blank page with no
 /// photo behind it, Blank from the start, a name of its own, and Refine asked for at once; the
 /// painting drawn on it saves and regenerates as a Blank start does.
@@ -111,4 +110,3 @@ struct ScratchFlowTests {
         model.cancelAll()
     }
 }
-#endif

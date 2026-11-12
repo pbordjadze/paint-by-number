@@ -690,7 +690,11 @@ struct RefineGuideView: View {
                     }
             }
         }
-        .onAppear(perform: RefinePracticeSetup.seedSettings)
+        .onAppear {
+            RefinePracticeSetup.seedSettings()
+            PaintTips.desk.enter(.guide)
+        }
+        .onDisappear { PaintTips.desk.leave(.guide) }
         .task {
             do {
                 picture = try await RefinePracticePicture.shared()

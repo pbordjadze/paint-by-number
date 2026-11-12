@@ -40,7 +40,6 @@ struct UnlockSheet: View {
                         .font(.display(.title3))
                         .accessibilityAddTraits(.isHeader)
                     Group {
-                        #if UNRELEASED
                         if forRefine {
                             Text("Draw your own picture on a blank page, or change the lines and paints of any painting. One purchase unlocks the drawing tools and as many new paintings as you like.")
                         } else if fromStart {
@@ -48,13 +47,6 @@ struct UnlockSheet: View {
                         } else {
                             Text("One purchase unlocks the drawing tools and as many new paintings as you like.")
                         }
-                        #else
-                        if fromStart {
-                            Text("Your next free painting comes tomorrow. One purchase unlocks as many paintings of your own photos as you like.")
-                        } else {
-                            Text("One purchase unlocks as many paintings of your own photos as you like.")
-                        }
-                        #endif
                     }
                     .font(.subheadline)
                     .foregroundStyle(Theme.quietInk)
@@ -144,14 +136,9 @@ struct UnlockSheet: View {
                 comment: "VoiceOver hint of the Unlimited Paintings sheet's button that opens Refine's Tool Guide, whose practice pictures anyone may use")))
             .accessibilityIdentifier("unlock-try-guide")
         } else {
-            #if UNRELEASED
             // 1.1: Samples take a free painting as any new painting does.
             Text("Paintings someone sends you are always free.")
                 .foregroundStyle(Theme.quietInk)
-            #else
-            Text("Everything in The Library is always free.")
-                .foregroundStyle(Theme.quietInk)
-            #endif
         }
     }
 

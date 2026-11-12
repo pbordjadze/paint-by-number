@@ -210,6 +210,23 @@ struct TipDeskTests {
         #expect(f.desk.shelfReturns == before + 1)
     }
 
+    /// The Tool Guide the purchase sheet opens from a painting covers it: the painting's moment is
+    /// called off, and comes again once the guide has gone (QA, painting-company row 237: Zen
+    /// Mode's tip came up over the guide).
+    @Test func theToolGuideKeepsThePaintingUnderItQuiet() throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.desk.enter(.bench)
+        f.desk.offer([.benchZen], in: .bench, rest: .seconds(5))
+        #expect(f.desk.offeringPlace == .bench)
+        f.desk.enter(.guide)
+        #expect(f.desk.offeringPlace == nil)
+        f.desk.leave(.guide)
+        f.desk.offer([.benchZen], in: .bench, rest: .seconds(5))
+        #expect(f.desk.offeringPlace == .bench)
+        f.desk.leave(.bench)
+    }
+
     @Test func noTipHasTheTurnBeforeOneIsGiven() throws {
         let f = try fixture()
         defer { f.cleanup() }

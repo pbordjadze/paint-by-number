@@ -85,7 +85,6 @@ struct PaintNowTests {
         }
     }
 
-    #if UNRELEASED
     /// An unedited painting opens in the drawing tools as it stands: its template is the base,
     /// nothing made again.
     @Test func changeOpensOnTheTemplateAsItStands() async throws {
@@ -105,7 +104,6 @@ struct PaintNowTests {
         let draft = try await model.makeDraft()
         #expect(draft.template == made.template)
     }
-    #endif
 
     /// The length chip's re-cut records the length it was cut for.
     @Test func recuttingRecordsTheLength() async throws {
