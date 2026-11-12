@@ -44,22 +44,19 @@ public struct EdgeMap: Sendable, Equatable {
         precondition(w > 0 && h > 0, "EdgeMap size")
         if w == width && h == height { return self }
         let xw = Resample.Weights(inCount: width, outCount: w), yw = Resample.Weights(inCount: height, outCount: h)
-        var horizontal = [Float](repeating: 0, count: w * height)
-        for y in 0..<height {
-            let row = y * width, out = y * w
-            for x in 0..<w {
-                var acc: Float = 0
-                for k in xw.start[x]..<xw.start[x + 1] { acc += Float(values[row + Int(xw.index[k])]) * xw.weight[k] }
-                horizontal[out + x] = acc
-            }
+        // Every pixel is its own sum, in its own order: the rows go in parallel.
+        let source = values, sourceWidth = width
+        let horizontal = [Float](count: w * height) { i in
+            let y = i / w, x = i - y * w, row = y * sourceWidth
+            var acc: Float = 0
+            for k in xw.start[x]..<xw.start[x + 1] { acc += Float(source[row + Int(xw.index[k])]) * xw.weight[k] }
+            return acc
         }
-        var out = [UInt8](repeating: 0, count: w * h)
-        for y in 0..<h {
-            for x in 0..<w {
-                var acc: Float = 0
-                for k in yw.start[y]..<yw.start[y + 1] { acc += horizontal[Int(yw.index[k]) * w + x] * yw.weight[k] }
-                out[y * w + x] = UInt8(min(max((acc + 0.5).rounded(.down), 0), 255))
-            }
+        let out = [UInt8](count: w * h) { i in
+            let y = i / w, x = i - y * w
+            var acc: Float = 0
+            for k in yw.start[y]..<yw.start[y + 1] { acc += horizontal[Int(yw.index[k]) * w + x] * yw.weight[k] }
+            return UInt8(min(max((acc + 0.5).rounded(.down), 0), 255))
         }
         return EdgeMap(width: w, height: h, values: out)
     }

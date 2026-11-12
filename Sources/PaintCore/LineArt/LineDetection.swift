@@ -134,16 +134,15 @@ enum LineDetection {
         threshold: Float, cancel: CancellationCheck
     ) throws -> [Bool] {
         let n = w * h
-        var candidate = [Bool](repeating: false, count: n)
-        var stack: [Int32] = []
-        for i in 0..<n where ridge[i] {
+        // 0: not a candidate; 1: a candidate; 2: a candidate strong enough to start from.
+        let level = [UInt8](count: n) { i in
+            guard ridge[i] else { return 0 }
             let scale = 1 + importanceGain * (1 - 2 * (importance?[i] ?? 0.5))
             let v = rs[i]
-            if v > lowFraction * threshold * scale {
-                candidate[i] = true
-                if v > threshold * scale { stack.append(Int32(i)) }
-            }
+            return v > lowFraction * threshold * scale ? (v > threshold * scale ? 2 : 1) : 0
         }
+        let candidate = [Bool](count: n) { level[$0] != 0 }
+        var stack = Parallel.mapBands(n, minimumBandSize: 65_536) { range in range.filter { level[$0] == 2 }.map { Int32($0) } }.flatMap { $0 }
         try cancel.throwIfCancelled()
         var keep = [Bool](repeating: false, count: n)
         for s in stack { keep[Int(s)] = true }
@@ -161,8 +160,8 @@ enum LineDetection {
             }
         }
         try cancel.throwIfCancelled()
-        var mask = Morphology.close3x3(keep, width: w, height: h)
-        for i in 0..<n where keep[i] { mask[i] = true }
+        let closed = Morphology.close3x3(keep, width: w, height: h)
+        var mask = [Bool](count: n) { closed[$0] || keep[$0] }
         try cancel.throwIfCancelled()
         Thinning.thin(&mask, width: w, height: h)
         return mask
@@ -179,8 +178,9 @@ enum LineDetection {
     static func clutter(_ mask: [Bool], width w: Int, height h: Int, cancel: CancellationCheck) throws -> [Float] {
         let radius = max(1, Int((clutterWindow * Float(max(w, h)) / 1500 / 2).rounded()))
         let onset = clutterDensity * clutterWindow / Float(2 * radius + 1)
-        let density = try BoxBlur.apply(mask.map { $0 ? 1 : 0 }, width: w, height: h, radius: radius, passes: 1, cancel: cancel)
-        let crowded = density.map { min(max($0 / onset - 1, 0), 1) }
+        let ink = [Float](count: mask.count) { mask[$0] ? 1 : 0 }
+        let density = try BoxBlur.apply(ink, width: w, height: h, radius: radius, passes: 1, cancel: cancel)
+        let crowded = [Float](count: density.count) { min(max(density[$0] / onset - 1, 0), 1) }
         return try BoxBlur.apply(crowded, width: w, height: h, radius: max(1, radius / 2), passes: 2, cancel: cancel)
     }
 }

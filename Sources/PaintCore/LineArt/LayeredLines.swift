@@ -202,8 +202,9 @@ enum LayeredLines {
             let field = LineDetection.strength(contours, width: w, height: h)
             try cancel.throwIfCancelled()
             let smooth = Gaussian.filter(field, width: w, height: h, sigma: LineDetection.responseSigma, orderX: 0, orderY: 0)
-            let levels = smooth.map { UInt8(min(max($0, 0), 1) * 255 + 0.5) }
-            return Self.maxFilter(levels, width: w, height: h, radius: contourReach).map { Float($0) / 255 }
+            let levels = [UInt8](count: smooth.count) { UInt8(min(max(smooth[$0], 0), 1) * 255 + 0.5) }
+            let widened = Self.maxFilter(levels, width: w, height: h, radius: contourReach)
+            return [Float](count: widened.count) { Float(widened[$0]) / 255 }
         }
         try cancel.throwIfCancelled()
 
@@ -308,7 +309,8 @@ enum LayeredLines {
         let walls = LineLayering.walls(lines, width: w, height: h)
         var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in
             var cells = try clock.measure("lineArt.cells.split") { () throws -> CellMap in
-                let paint = segmentation.labels.storage.map { segmentation.regionColor[Int($0)] }
+                let regions = segmentation.labels.storage, regionColor = segmentation.regionColor
+                let paint = [UInt32](count: regions.count) { regionColor[Int(regions[$0])] }
                 return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
             }
             stats.cellsSplit = cells.count
@@ -369,7 +371,7 @@ enum LayeredLines {
         var final = finalCells
         let kept = final.compactPalette(paletteCount: paints.count)
         let split = Segmentation(
-            labels: RegionMap(width: w, height: h, storage: final.label.map { UInt32($0) }),
+            labels: RegionMap(width: w, height: h, storage: [UInt32](count: final.label.count) { UInt32(final.label[$0]) }),
             regionColor: final.color, palette: kept.map { paints[$0] }, colorSpace: segmentation.colorSpace)
         let detailRegions = final.kept.indices.filter { final.kept[$0] }.map { UInt32($0) }
         stats.cells = final.count
@@ -378,10 +380,9 @@ enum LayeredLines {
 
         // Which stretches still bound cells after the joins, and which now run inside one.
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = [], drawnInterior: [[SIMD2<Float>]] = []
-        let distance = Self.boundaryDistance(final.label, width: w, height: h)
         try cancel.throwIfCancelled()
         for (k, line) in (edited?.drawing.lines ?? lines).enumerated() {
-            let flags = Self.near(line, distance: distance, width: w)
+            let flags = Self.near(line, cells: final.label, width: w, height: h)
             boundary += line.pieces(keeping: flags, freeCuts: true)
             let drawn = (edited?.drawing.origin[k] ?? -1) >= 0
             // A piece shorter than the layering's minimum run is a boundary stretch's end
@@ -461,12 +462,9 @@ enum LayeredLines {
     static func annotate(_ t: Template, plan: Plan, cancel: CancellationCheck) throws -> TemplateLineArt {
         let w = t.width, h = t.height
         let walls = LineLayering.walls(plan.boundaryLines, width: w, height: h)
-        let r2 = annotateNear * annotateNear
-        var distances: [[Float]] = []
-        for l in 0..<3 {
-            try cancel.throwIfCancelled()
-            distances.append(DistanceTransform.squaredEDT(width: w, height: h) { walls.layer[$0] == UInt8(l) }.storage)
-        }
+        // A line of a layer runs along a sample when one of its pixels lies within `annotateNear`:
+        // asked at the samples (`Reach`), not of a distance transform a layer.
+        let reach = Reach(squaredRadius: annotateNear * annotateNear)
         try cancel.throwIfCancelled()
         let strength = Self.maxFilter(walls.strength, width: w, height: h, radius: Int(annotateNear.rounded(.up)))
         try cancel.throwIfCancelled()
@@ -490,8 +488,17 @@ enum LayeredLines {
                     let q = previous + (p - previous) * ((Float(step) + 0.5) / Float(steps))
                     let x = min(max(Int((q.x - 0.5).rounded()), 0), w - 1), y = min(max(Int((q.y - 0.5).rounded()), 0), h - 1)
                     let i = y * w + x
+                    // The first layer with a line in reach.
                     var layer = 3
-                    for l in 0..<3 where distances[l][i] <= r2 { layer = l; break }
+                    for (dx, dy) in reach.offsets {
+                        let xx = x + dx, yy = y + dy
+                        guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
+                        let l = Int(walls.layer[yy * w + xx])
+                        if l < layer {
+                            layer = l
+                            if l == 0 { break }
+                        }
+                    }
                     let piece = length / Float(steps)
                     covered[layer] += piece
                     if layer < 3 {
@@ -658,28 +665,30 @@ enum LayeredLines {
 
     /// Pixels with a 4-neighbour of another label.
     static func boundaryPixels<T: Equatable>(_ labels: [T], width w: Int, height h: Int) -> [Bool] {
-        var out = [Bool](repeating: false, count: w * h)
-        for y in 0..<h {
-            for x in 0..<w {
-                let i = y * w + x
-                if x + 1 < w && labels[i] != labels[i + 1] { out[i] = true; out[i + 1] = true }
-                if y + 1 < h && labels[i] != labels[i + w] { out[i] = true; out[i + w] = true }
+        [Bool](count: w * h) { i in
+            let y = i / w, x = i - y * w, label = labels[i]
+            return (x + 1 < w && labels[i + 1] != label) || (x > 0 && labels[i - 1] != label)
+                || (y + 1 < h && labels[i + w] != label) || (y > 0 && labels[i - w] != label)
+        }
+    }
+
+    /// Per point of a line, whether a cell boundary (a pixel with a 4-neighbour of another cell,
+    /// as `boundaryPixels` marks them) runs within `trimNear` (short runs follow their neighbours:
+    /// short gaps inside the line close, short pieces go). Asked at the line's own points
+    /// (`Reach`): the cells' boundaries need no distance transform for it.
+    static func near(_ line: DrawnLine, cells: [Int32], width w: Int, height h: Int) -> [Bool] {
+        let reach = Reach(squaredRadius: trimNear * trimNear)
+        var keep = cells.withUnsafeBufferPointer { label in
+            line.points.map { p in
+                // The point's pixel, as `LineLayering.pixelIndex(of:width:height:)` has it.
+                let px = min(max(Int(p.x.rounded()), 0), w - 1), py = min(max(Int(p.y.rounded()), 0), h - 1)
+                return reach.touches(x: px, y: py, width: w, height: h) { x, y in
+                    let i = y * w + x, cell = label[i]
+                    return (x + 1 < w && label[i + 1] != cell) || (x > 0 && label[i - 1] != cell)
+                        || (y + 1 < h && label[i + w] != cell) || (y > 0 && label[i - w] != cell)
+                }
             }
         }
-        return out
-    }
-
-    /// Squared distance from every pixel to the nearest cell-boundary pixel.
-    static func boundaryDistance(_ labels: [Int32], width w: Int, height h: Int) -> [Float] {
-        let boundary = boundaryPixels(labels, width: w, height: h)
-        return DistanceTransform.squaredEDT(width: w, height: h) { boundary[$0] }.storage
-    }
-
-    /// Per point of a line, whether a cell boundary runs within `trimNear` (short runs follow
-    /// their neighbours: short gaps inside the line close, short pieces go).
-    static func near(_ line: DrawnLine, distance: [Float], width w: Int) -> [Bool] {
-        let h = distance.count / w
-        var keep = line.points.map { distance[LineLayering.pixelIndex(of: $0, width: w, height: h)] <= trimNear * trimNear }
         let arc = line.arcLength
         let n = keep.count
         for flag in [false, true] {
