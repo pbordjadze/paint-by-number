@@ -202,6 +202,18 @@ nonisolated struct ArtworkStore: Sendable {
         try png.write(to: url(.thumbnail, of: id), options: .atomic)
     }
 
+    /// Whether the progress on disk was written after the thumbnail (by more than `slack`, as
+    /// a folder written whole may write them in either order). Closing a painting writes both;
+    /// one the app ended in (a crash) saved its progress and never the thumbnail.
+    func thumbnailIsBehindProgress(_ id: UUID, slack: TimeInterval = 2) -> Bool {
+        func modified(_ file: File) -> Date? {
+            try? url(file, of: id).resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+        }
+        guard let progress = modified(.progress) else { return false }
+        guard let thumbnail = modified(.thumbnail) else { return true }
+        return progress.timeIntervalSince(thumbnail) > slack
+    }
+
     func thumbnail(_ id: UUID, maxPixelSize: Int? = nil) -> CGImage? {
         ImageCodec.image(at: url(.thumbnail, of: id), maxPixelSize: maxPixelSize)
     }

@@ -2453,6 +2453,18 @@
         }
       }
     },
+    "paint.zen.on": {
+      "comment": "Painting screen: a toast for a few seconds after Zen Mode is turned on in the More menu, saying what it does to the view",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zen Mode is on: after each tile you set, the mosaic glides to the next tile of your color."
+          }
+        }
+      }
+    },
     "Paintings": {
       "comment": "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
       "extractionState": "manual"

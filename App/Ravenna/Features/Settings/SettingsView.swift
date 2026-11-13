@@ -63,10 +63,21 @@ struct SettingsView: View {
                             PaintTips.showAgain()
                             tipsReset = true
                         } label: {
+                            // Every row's words are in the text's color and its symbol in the tint,
+                            // a button's and a link's too, whose label the system would tint whole
+                            // (painting-company row 329).
                             if tipsReset {
-                                SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
+                                SwiftUI.Label {
+                                    Text("Tips Will Show Again").foregroundStyle(.secondary)
+                                } icon: {
+                                    Image(systemName: "checkmark")
+                                }
                             } else {
-                                SwiftUI.Label("Show Tips Again", systemImage: "arrow.counterclockwise")
+                                SwiftUI.Label {
+                                    Text("Show Tips Again").foregroundStyle(.primary)
+                                } icon: {
+                                    Image(systemName: "arrow.counterclockwise")
+                                }
                             }
                         }
                         .disabled(tipsReset)
@@ -137,10 +148,13 @@ struct SettingsView: View {
                                 Text(verbatim: EraClock.text(of: EraYear.byzantium))
                                     .foregroundStyle(.tint)
                             } label: {
-                                SwiftUI.Label("Year", systemImage: "clock")
+                                SwiftUI.Label {
+                                    Text("Year").foregroundStyle(.primary)
+                                } icon: {
+                                    Image(systemName: "clock")
+                                }
                             }
                         }
-                        .foregroundStyle(.primary)
                         .accessibilityIdentifier("about-year")
                         if showsClock {
                             EraClock(year: EraYear.byzantium) { year in
@@ -155,14 +169,22 @@ struct SettingsView: View {
                         }
                         .accessibilityIdentifier("about-acknowledgements")
                         Link(destination: AboutLinks.privacyPolicy) {
-                            SwiftUI.Label("Privacy Policy", systemImage: "hand.raised")
+                            SwiftUI.Label {
+                                Text("Privacy Policy").foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: "hand.raised")
+                            }
                         }
                         .accessibilityIdentifier("about-privacy")
                         Link(destination: AboutLinks.contact) {
                             LabeledContent {
                                 Text(verbatim: AboutLinks.supportAddress)
                             } label: {
-                                SwiftUI.Label("Contact", systemImage: "envelope")
+                                SwiftUI.Label {
+                                    Text("Contact").foregroundStyle(.primary)
+                                } icon: {
+                                    Image(systemName: "envelope")
+                                }
                             }
                         }
                         .accessibilityIdentifier("about-contact")
@@ -192,6 +214,8 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                         .tint(Theme.signature)
+                        // Esc closes it, as ⌘. did.
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
@@ -233,7 +257,11 @@ struct SettingsView: View {
                 Button {
                     isUnlocking = true
                 } label: {
-                    SwiftUI.Label("Unlimited Paintings", systemImage: "infinity")
+                    SwiftUI.Label {
+                        Text("Unlimited Paintings").foregroundStyle(.primary)
+                    } icon: {
+                        Image(systemName: "infinity")
+                    }
                 }
                 .accessibilityIdentifier("settings-unlimited")
             }

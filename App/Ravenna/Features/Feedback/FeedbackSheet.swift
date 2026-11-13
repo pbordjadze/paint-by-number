@@ -74,6 +74,7 @@ struct FeedbackSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Back", systemImage: "chevron.backward") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                         .accessibilityIdentifier("feedback-back")
                 }
                 ToolbarItem(placement: .confirmationAction) {
