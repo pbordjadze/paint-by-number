@@ -222,6 +222,10 @@ struct TemplatePreviewView: View {
             .onChange(of: model.refinements.isEmpty) { _, isEmpty in
                 if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
             }
+            // A `-demoPhotos` photo is refined with nothing (`ShellDemo.refinements`): Refine opens on it as made.
+            .onChange(of: model.isFinal, initial: true) { _, isFinal in
+                if ShellDemo.current?.refines == true, isFinal, !DemoMode.photos.isEmpty { isRefining = true }
+            }
             #endif
     }
 

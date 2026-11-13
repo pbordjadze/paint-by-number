@@ -259,7 +259,9 @@ synchronized folder would bundle it into the app.
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
-  (`PaintingSession.colorOrder`): a begun painting opens on the palette's first swatch
+  (`PaintingSession.colorOrder`): a painting opens on the paint in hand when it was last saved
+  (`PaintProgress.inHand`, a trailing field; `PaintingAutosaver` saves a change of paint alone
+  on leaving), else a begun one on the palette's first swatch
   (`firstIncompleteColor`; a fresh one, in SideStore and Debug builds, on its largest area's color:
   `OpeningColor`), finishing the selected color selects the next color left after it
   (`nextIncompleteColor`, coming round; the finished swatch leaves, and the first swatch left
@@ -600,7 +602,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   back to Paint. A painting not begun shows the **length chip** under its bar (`LengthChip`,
   "~20 min · 406 areas"), whose Painting Lengths cut it again in place (`Library.recut`:
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
-  `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time band, and
+  `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
+by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
 a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
   the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
@@ -629,9 +632,11 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   waiting Refine is) → the winner's draft (unless it is that candidate
   and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
   (a `withTaskCancellationHandler` flag reaches every candidate's thread).
-- Kit paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 191): a photo's
-  new painting records `paintMix: .kit` (`CreateModel.newPaintMix`, PaintCore's `KitPaint`), so
-  its paints are a kit's, bolder than the regions' means, skin lifted toward peach, and the
+- Lively paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company rows 191, 326): a
+  photo's new painting records `paintMix: .lively` (`CreateModel.newPaintMix`, PaintCore's
+  `LivelyPaint` on `KitPaint`; `.kit` until row 326, and a painting that recorded it keeps it), so
+  its paints are a kit's, bolder than the regions' means, skin lifted toward peach, a family's
+  lights turned warm and its shadows cool, and the
   tuning `subjectCellSize` 2.5 and `faceCellSize` 3 (`CreateModel.newTuning`: the subject's
   body in fewer, larger cells, the face kept; a large face in broad tones, its eyes kept, which
   Auto's drafts, having no eyes, don't see); Auto chooses with that tuning and `AutoTaste.finished` (`newTaste`),

@@ -16,7 +16,7 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     /// on paper whose lines bound the areas, and the paints come from a palette set), not from
     /// a photo's colors. Nil, the default and every photo's, leaves the photo path as it is.
     public var drawing: DrawingSettings?
-    /// How the paints are mixed from the regions' colors (`PaintMix`, `KitPaint`). Nil, the
+    /// How the paints are mixed from the regions' colors (`PaintMix`: `KitPaint`, `LivelyPaint`). Nil, the
     /// default and every painting's made before kit paint, is `.photo`: the regions' means, so
     /// such a painting regenerates as it was made.
     public var paintMix: PaintMix?

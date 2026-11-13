@@ -370,6 +370,33 @@ struct PaintingSessionTests {
         #expect(session.selectedColor == shown, "Started over, the painting didn't open as a fresh one")
     }
 
+    /// A painting opens on the paint that was in hand when it was saved, whatever the palette's
+    /// order (the Mac's QA, November 10: left and reopened, it went back to the first color);
+    /// one with nothing left to paint, or that the palette hasn't, opens as before.
+    @Test func aPaintingOpensOnThePaintInHand() throws {
+        let last = template.palette.count - 1
+        try #require(last >= 3)
+        let first = try #require((0...last).first { regions(ofColor: $0).count >= 2 })
+        let held = try #require((0...last).last { $0 != first && !regions(ofColor: $0).isEmpty })
+        var progress = PaintProgress(regionCount: template.regions.count)
+        progress.paint(regions(ofColor: first)[0])
+        progress.inHand = held
+        let session = try PaintingSession(template: template, progress: progress)
+        #expect(session.selectedColor == held)
+        session.colorOrder = Array((0...last).reversed())
+        #expect(session.selectedColor == held, "The palette's order moved the paint in hand")
+        #expect(session.savedProgress.inHand == held)
+        session.select(color: first)
+        #expect(session.savedProgress.inHand == first)
+
+        // A paint with no areas left, or none at all, is no paint to open on.
+        for regionsOfHeld in regions(ofColor: held) { progress.paint(regionsOfHeld) }
+        let finished = try PaintingSession(template: template, progress: progress)
+        #expect(finished.selectedColor != held)
+        progress.inHand = last + 7
+        #expect(try PaintingSession(template: template, progress: progress).selectedColor == finished.selectedColor)
+    }
+
     @Test func paintingEverythingCompletesTheArtwork() {
         let session = PaintingSession(template: template)
         let events = recordEvents(session)

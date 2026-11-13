@@ -6,6 +6,27 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
     /// The same regions in the paints a kit would sell (`KitPaint`): bolder and cleaner than
     /// the regions' means, skin kept close to the photo.
     case kit
+    /// Kit paint with its hues spread (`LivelyPaint`): within a family of shades the lights
+    /// turned warm and the shadows cool, for a broader variety of colors.
+    case lively
+
+    /// `palette` (the regions' colors) mixed this way, never closer than `minDistance` where
+    /// the regions' colors weren't; `faces` as `KitPaint.mix` takes them, `shares` as
+    /// `LivelyPaint.mix` (the share of the painting each paint covers).
+    public func mixed(
+        _ palette: [PaletteColor], shares: [Float] = [], space: RGBColorSpace, minDistance: Float, faces: KitPaint.Faces? = nil
+    ) -> [PaletteColor] {
+        switch self {
+        case .photo: return palette
+        case .kit: return KitPaint.mix(palette, space: space, minDistance: minDistance, faces: faces)
+        case .lively:
+            let kit = KitPaint.mix(palette, space: space, minDistance: minDistance, faces: faces)
+            let hold = palette.indices.map { k in
+                KitPaint.skinHold(palette[k], face: faces.map { $0.share.count == palette.count ? $0.share[k] : 0 } ?? 0)
+            }
+            return LivelyPaint.mix(kit, shares: shares, hold: hold, space: space, minDistance: minDistance)
+        }
+    }
 }
 
 /// Kit paint: the finished template's paints mixed as a paint-by-numbers kit mixes them, bolder
@@ -241,6 +262,17 @@ public enum KitPaint {
             skinHue: length > 0 ? SIMD2(Float(hueSum.x / length), Float(hueSum.y / length)) : nil,
             skinLightness: Float(skin.x),
             pallor: skin.x > 0 ? 1 - smoothstep(pallidRatio, Float(skin.y / skin.x)) : 0)
+    }
+
+    /// How much of a paint is skin, 0...1: all of a face's skin paint (`face` its share of
+    /// pixels on a face), `elsewhereSkin` of a paint of skin's colour off any face.
+    static func skinHold(_ paint: PaletteColor, face share: Float) -> Float {
+        let lab = paint.oklab
+        let chroma = (lab.y * lab.y + lab.z * lab.z).squareRoot()
+        guard chroma > 0 else { return 0 }
+        let cosine = (lab.y * skinHue.x + lab.z * skinHue.y) / chroma
+        let skin = smoothstep(skinCosine, cosine) * (1 - smoothstep(skinChroma, chroma)) * smoothstep(neutralChroma, chroma)
+        return skin * (elsewhereSkin + (1 - elsewhereSkin) * smoothstep(faceShareRange, share))
     }
 
     /// A pale face's skin: its mean lightness and its pallor.
