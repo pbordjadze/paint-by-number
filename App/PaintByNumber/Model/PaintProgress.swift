@@ -14,6 +14,10 @@ nonisolated struct PaintProgress: Sendable, Equatable {
     private(set) var log: [Stroke] = []
     /// Accumulated active painting time.
     var activeSeconds: Double = 0
+    /// The palette index on the brush when the painting was last saved, so a painting left and
+    /// opened again opens on the paint the painter had in hand (the Mac's QA, November 10). Only
+    /// a hint: an index with no paint left to paint is ignored (`PaintingSession`).
+    var inHand: Int?
 
     init(regionCount: Int) {
         painted = [Bool](repeating: false, count: regionCount)
@@ -45,9 +49,10 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         painted = [Bool](repeating: false, count: painted.count)
         log.removeAll()
         activeSeconds = 0
+        inHand = nil
     }
 
-    // MARK: Coding (compact binary: header, painting time, stroke log)
+    // MARK: Coding (compact binary: header, painting time, stroke log, the paint in hand)
 
     nonisolated enum CodingError: Error, Equatable {
         case corrupt
@@ -71,6 +76,8 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         put(activeSeconds)
         put(UInt32(log.count))
         for s in log { put(s.region); put(s.time) }
+        // Appended in 1.2 (0: none, else the palette index + 1); older readers stop before it.
+        put(UInt32(inHand.map { $0 + 1 } ?? 0))
         return data
     }
 
@@ -107,7 +114,15 @@ nonisolated struct PaintProgress: Sendable, Equatable {
             painted[Int(region)] = true
             log.append(Stroke(region: region, time: Float(Self.sanitized(Double(time)))))
         }
+        // Absent from files written before 1.2.
+        if data.endIndex - offset >= MemoryLayout<UInt32>.size {
+            let hand = try get(UInt32.self)
+            inHand = hand == 0 || hand > Self.maximumInHand ? nil : Int(hand) - 1
+        }
     }
+
+    /// Far above any palette: a larger value is damage, read as none.
+    private static let maximumInHand: UInt32 = 1 << 16
 
     /// A century of active painting is far beyond a real painting, and fits both stroke
     /// times (Float) and the gallery's whole minutes (Int).

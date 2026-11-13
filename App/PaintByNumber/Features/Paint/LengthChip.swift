@@ -71,19 +71,54 @@ struct LengthChip: View {
 
     /// A length's row's time: the cut on screen's and those made while open, as the chip says it
     /// (`PaintingTime`; the Mac's QA: "Relaxed, 20 min – 50 min" beside a chip saying ~15 min),
-    /// else the band a length not cut yet aims for.
+    /// else the times a length not cut yet can give (`expectedTimes`).
     static func rowTime(
         of choice: PaintingLength, chosen: PaintingLength?, regionCount: Int, cutAreas: [PaintingLength: Int]
     ) -> String {
-        let areas = choice == chosen ? regionCount : cutAreas[choice]
-        return areas.map { PaintingTimeText.approximate(PaintingTime.estimate(regionCount: $0)) } ?? Self.band(of: choice)
+        var known = cutAreas.mapValues { PaintingTime.estimate(regionCount: $0) }
+        if let chosen { known[chosen] = PaintingTime.estimate(regionCount: regionCount) }
+        if let seconds = known[choice] { return PaintingTimeText.approximate(seconds) }
+        let times = expectedTimes(of: choice, known: known)
+        let low = shown(times.lowerBound), high = shown(times.upperBound)
+        return low < high ? Self.range(low, high) : PaintingTimeText.approximate(times.upperBound)
+    }
+
+    /// The times (seconds) a length not cut yet can give, by what the lengths cut so far gave
+    /// (`known`): the band it aims for (`PaintingLength.timeBand`), never longer than the
+    /// nearest longer length's cut nor shorter than the nearest shorter one's; and from that
+    /// shorter cut's time up where it fell short of its own band, since a photo without the
+    /// areas for one length hasn't them for a longer one either (the Mac's re-check of
+    /// November 10: on a five-area photo Quick offered "8 min – 25 min" and came out ~5 min,
+    /// Detailed "40 min – 2 hr" beside Relaxed's ~5 min). An empty range is the longer cut's time.
+    static func expectedTimes(of choice: PaintingLength, known: [PaintingLength: Double]) -> ClosedRange<Double> {
+        let order = PaintingLength.allCases
+        guard let place = order.firstIndex(of: choice) else { return choice.timeBand }
+        var low = choice.timeBand.lowerBound, high = choice.timeBand.upperBound
+        if let shorter = order[..<place].last(where: { known[$0] != nil }), let seconds = known[shorter] {
+            low = seconds < shorter.timeBand.lowerBound ? seconds : max(low, seconds)
+        }
+        if let longer = order[(place + 1)...].first(where: { known[$0] != nil }), let seconds = known[longer] {
+            high = min(high, seconds)
+        }
+        return min(low, high)...high
+    }
+
+    /// `seconds` as the menu shows a time: whole five minutes up to 55 (5 the least), then half
+    /// hours, as `PaintingTimeText.approximate` rounds.
+    private static func shown(_ seconds: Double) -> Double {
+        let minutes = seconds / 60
+        return minutes < 55 ? Double(max(5, Int((minutes / 5).rounded()) * 5)) * 60 : (minutes / 30).rounded() * 30 * 60
     }
 
     /// "20 min – 50 min": the times a length aims for (`PaintingLength.timeBand`).
     static func band(of length: PaintingLength) -> String {
+        range(length.timeBand.lowerBound, length.timeBand.upperBound)
+    }
+
+    private static func range(_ low: Double, _ high: Double) -> String {
         let style = Duration.UnitsFormatStyle(allowedUnits: [.hours, .minutes], width: .abbreviated)
-        let low = Duration.seconds(length.timeBand.lowerBound).formatted(style)
-        let high = Duration.seconds(length.timeBand.upperBound).formatted(style)
+        let low = Duration.seconds(low).formatted(style)
+        let high = Duration.seconds(high).formatted(style)
         return String(localized: "paint.lengthChip.band", defaultValue: "\(low) – \(high)",
                       comment: "Under a Painting Length in the painting's length chip menu: the times it aims for; the arguments are durations, e.g. 20 min – 50 min")
     }
