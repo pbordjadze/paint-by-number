@@ -238,8 +238,8 @@ struct CreateFlowView: View {
     /// saved painting's show plays on the way, and the painting takes over when it ends.
     private func start() async throws {
         // The shelf gets the painting's card as it is saved, under this flow: out of sight from here
-        // until the painting has taken over (`StartHandoff.isStarting`).
-        handoff?.willStart()
+        // until the painting has taken over (`StartHandoff.shelfIsOutOfSight`).
+        let starting = handoff?.willStart()
         do {
             let draft = try await model.makeDraft()
             let artwork = try await library.create(draft)
@@ -248,7 +248,7 @@ struct CreateFlowView: View {
             let show = Preferences().playsMakingOf ? model.makingOfSource(for: draft, artworkID: artwork.id) : nil
             handOver(artwork, template: draft.template, show: show)
         } catch {
-            handoff?.startFailed()
+            if let starting { handoff?.startFailed(starting) }
             throw error
         }
     }

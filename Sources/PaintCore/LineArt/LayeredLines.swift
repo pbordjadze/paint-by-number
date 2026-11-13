@@ -202,9 +202,9 @@ enum LayeredLines {
             let field = LineDetection.strength(contours, width: w, height: h)
             try cancel.throwIfCancelled()
             let smooth = Gaussian.filter(field, width: w, height: h, sigma: LineDetection.responseSigma, orderX: 0, orderY: 0)
-            let levels = [UInt8](count: smooth.count) { UInt8(min(max(smooth[$0], 0), 1) * 255 + 0.5) }
+            let levels = [UInt8](inParallel: smooth.count) { UInt8(min(max(smooth[$0], 0), 1) * 255 + 0.5) }
             let widened = Self.maxFilter(levels, width: w, height: h, radius: contourReach)
-            return [Float](count: widened.count) { Float(widened[$0]) / 255 }
+            return [Float](inParallel: widened.count) { Float(widened[$0]) / 255 }
         }
         try cancel.throwIfCancelled()
 
@@ -310,7 +310,7 @@ enum LayeredLines {
         var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in
             var cells = try clock.measure("lineArt.cells.split") { () throws -> CellMap in
                 let regions = segmentation.labels.storage, regionColor = segmentation.regionColor
-                let paint = [UInt32](count: regions.count) { regionColor[Int(regions[$0])] }
+                let paint = [UInt32](inParallel: regions.count) { regionColor[Int(regions[$0])] }
                 return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
             }
             stats.cellsSplit = cells.count
@@ -371,7 +371,7 @@ enum LayeredLines {
         var final = finalCells
         let kept = final.compactPalette(paletteCount: paints.count)
         let split = Segmentation(
-            labels: RegionMap(width: w, height: h, storage: [UInt32](count: final.label.count) { UInt32(final.label[$0]) }),
+            labels: RegionMap(width: w, height: h, storage: [UInt32](inParallel: final.label.count) { UInt32(final.label[$0]) }),
             regionColor: final.color, palette: kept.map { paints[$0] }, colorSpace: segmentation.colorSpace)
         let detailRegions = final.kept.indices.filter { final.kept[$0] }.map { UInt32($0) }
         stats.cells = final.count
@@ -675,7 +675,7 @@ enum LayeredLines {
 
     /// Pixels with a 4-neighbour of another label.
     static func boundaryPixels<T: Equatable>(_ labels: [T], width w: Int, height h: Int) -> [Bool] {
-        [Bool](count: w * h) { i in
+        [Bool](inParallel: w * h) { i in
             let y = i / w, x = i - y * w, label = labels[i]
             return (x + 1 < w && labels[i + 1] != label) || (x > 0 && labels[i - 1] != label)
                 || (y + 1 < h && labels[i + w] != label) || (y > 0 && labels[i - w] != label)

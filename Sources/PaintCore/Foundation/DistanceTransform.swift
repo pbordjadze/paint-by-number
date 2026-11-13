@@ -19,7 +19,7 @@ public enum DistanceTransform {
             }
         }
         let f = try! squaredDistances(feature, width: width, height: height, cancel: .none)
-        return Grid(width: width, height: height, storage: [Float](count: n) { Float(f[$0]) })
+        return Grid(width: width, height: height, storage: [Float](inParallel: n) { Float(f[$0]) })
     }
 
     /// For every pixel, the Euclidean distance from its center to the nearest edge of its

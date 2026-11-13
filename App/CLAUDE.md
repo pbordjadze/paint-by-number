@@ -17,7 +17,7 @@ synchronized folder would bundle it into the app.
 - What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
   draws again at every frame of an animation that moves or fades it, seen or not. While Start
-  Painting hands over (`StartHandoff.isStarting`, the create flow opaque over it) the shelf
+  Painting hands over (`StartHandoff.shelfIsOutOfSight`, the create flow opaque over it) the shelf
   therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the card of the painting
   just made moved in there, unseen, for half a second, and the flow's picture, gliding to its page
   above it, got 15 to 20 frames a second (painting-company row 292). Only then: as the flow's

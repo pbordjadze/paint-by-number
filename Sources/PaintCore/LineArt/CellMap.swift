@@ -74,7 +74,7 @@ struct CellMap {
     static func split(paint: [UInt32], walls: LineLayering.Walls, cancel: CancellationCheck) throws -> CellMap {
         let w = walls.width, h = walls.height, n = w * h
         let wallValue = UInt32.max
-        var color = [UInt32](count: n) { walls.isWall($0) ? wallValue : paint[$0] }
+        var color = [UInt32](inParallel: n) { walls.isWall($0) ? wallValue : paint[$0] }
         try snapThinNearWalls(&color, width: w, height: h, wallValue: wallValue, cancel: cancel)
         try cancel.throwIfCancelled()
         // Numbered as `ConnectedComponents.label` numbers them, and found by runs, in parallel.
@@ -86,7 +86,7 @@ struct CellMap {
             cellColor.append(cls)
         }
         let regions = components.labelMap().storage
-        let label = [Int32](count: n) { cellOf[Int(regions[$0])] }
+        let label = [Int32](inParallel: n) { cellOf[Int(regions[$0])] }
         return CellMap(label: label, color: cellColor, kept: [Bool](repeating: false, count: cellColor.count), width: w, height: h)
     }
 
@@ -285,7 +285,7 @@ struct CellMap {
     func rooms() -> [Float] {
         let n = width * height
         let sentinel = UInt32(count)
-        let labels = [UInt32](count: n) { label[$0] < 0 ? sentinel : UInt32(label[$0]) }
+        let labels = [UInt32](inParallel: n) { label[$0] < 0 ? sentinel : UInt32(label[$0]) }
         let distance = DistanceTransform.interiorDistance(labels: RegionMap(width: width, height: height, storage: labels))
         // A largest value per band, then the largest of the bands'.
         let cells = count
@@ -835,11 +835,11 @@ struct CellMap {
         // Numbered as `ConnectedComponents.label` numbers them, and found by runs, in parallel.
         let old = label
         let components = RegionRuns(
-            classes: [UInt32](count: old.count) { UInt32(bitPattern: old[$0]) }, width: width, height: height)
+            classes: [UInt32](inParallel: old.count) { UInt32(bitPattern: old[$0]) }, width: width, height: height)
         color = components.classOf.map { color[Int($0)] }
         kept = components.classOf.map { kept[Int($0)] }
         let regions = components.labelMap().storage
-        label = [Int32](count: regions.count) { Int32(regions[$0]) }
+        label = [Int32](inParallel: regions.count) { Int32(regions[$0]) }
         return components.count == before
     }
 

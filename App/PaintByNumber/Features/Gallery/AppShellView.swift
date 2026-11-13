@@ -90,7 +90,7 @@ struct AppShellView: View {
                 // While Start Painting hands over, under the create flow, the shelf moves nothing
                 // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
                 // doesn't reach the painting screen, whose own thumbnail fades as ever.
-                .environment(\.shelfIsOutOfSight, handoff.isStarting)
+                .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
                 .navigationTitle("Paint by Moonlight")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)

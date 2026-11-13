@@ -227,9 +227,10 @@ public final class CancellationFlag: @unchecked Sendable {
 extension Array {
     /// The array `(0..<count).map(element)` makes, its elements made in parallel bands: for a map
     /// over every pixel of a picture, which is otherwise a stretch of the pipeline on one core.
-    /// Each element depends on its index alone, so the bands' boundaries don't show.
+    /// Each element depends on its index alone, so the bands' boundaries don't show; `element`
+    /// runs on several threads at once, and must only read what it shares.
     @inline(__always)
-    init(count: Int, minimumBandSize: Int = 16_384, parallel element: (Int) -> Element) {
+    init(inParallel count: Int, minimumBandSize: Int = 16_384, _ element: (Int) -> Element) {
         self.init(unsafeUninitializedCapacity: count) { buffer, initialized in
             if count > 0 {
                 let base = UncheckedSendable(buffer.baseAddress!)

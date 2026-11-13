@@ -3,7 +3,7 @@ import os
 import SwiftUI
 
 extension EnvironmentValues {
-    /// Start Painting is handing over (`StartHandoff.isStarting`): the shelf is under the create
+    /// Start Painting is handing over (`StartHandoff.shelfIsOutOfSight`): the shelf is under the create
     /// flow, which stays opaque until the painting has taken its place, so nothing of the shelf
     /// shows. What changes on it meanwhile (the card of the painting just made, its thumbnail, the
     /// draft dropped) comes without its animation: SwiftUI draws a moving or fading card's picture

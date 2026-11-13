@@ -46,13 +46,13 @@ public struct EdgeMap: Sendable, Equatable {
         let xw = Resample.Weights(inCount: width, outCount: w), yw = Resample.Weights(inCount: height, outCount: h)
         // Every pixel is its own sum, in its own order: the rows go in parallel.
         let source = values, sourceWidth = width
-        let horizontal = [Float](count: w * height) { i in
+        let horizontal = [Float](inParallel: w * height) { i in
             let y = i / w, x = i - y * w, row = y * sourceWidth
             var acc: Float = 0
             for k in xw.start[x]..<xw.start[x + 1] { acc += Float(source[row + Int(xw.index[k])]) * xw.weight[k] }
             return acc
         }
-        let out = [UInt8](count: w * h) { i in
+        let out = [UInt8](inParallel: w * h) { i in
             let y = i / w, x = i - y * w
             var acc: Float = 0
             for k in yw.start[y]..<yw.start[y + 1] { acc += horizontal[Int(yw.index[k]) * w + x] * yw.weight[k] }
