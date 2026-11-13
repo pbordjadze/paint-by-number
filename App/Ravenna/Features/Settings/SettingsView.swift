@@ -66,7 +66,15 @@ struct SettingsView: View {
                             if tipsReset {
                                 SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
                             } else {
-                                SwiftUI.Label("Show Tips Again", systemImage: "arrow.counterclockwise")
+                                // Every row's words are in the text's color and its symbol in the tint,
+                                // a button's and a link's too, which the system tints whole. A plain
+                                // color: `.primary` is the level of the style around it, here the
+                                // tint (painting-company row 329).
+                                SwiftUI.Label {
+                                    Text("Show Tips Again").foregroundStyle(Color.primary)
+                                } icon: {
+                                    Image(systemName: "arrow.counterclockwise")
+                                }
                             }
                         }
                         .disabled(tipsReset)
@@ -137,10 +145,13 @@ struct SettingsView: View {
                                 Text(verbatim: EraClock.text(of: EraYear.byzantium))
                                     .foregroundStyle(.tint)
                             } label: {
-                                SwiftUI.Label("Year", systemImage: "clock")
+                                SwiftUI.Label {
+                                    Text("Year").foregroundStyle(Color.primary)
+                                } icon: {
+                                    Image(systemName: "clock")
+                                }
                             }
                         }
-                        .foregroundStyle(.primary)
                         .accessibilityIdentifier("about-year")
                         if showsClock {
                             EraClock(year: EraYear.byzantium) { year in
@@ -155,14 +166,22 @@ struct SettingsView: View {
                         }
                         .accessibilityIdentifier("about-acknowledgements")
                         Link(destination: AboutLinks.privacyPolicy) {
-                            SwiftUI.Label("Privacy Policy", systemImage: "hand.raised")
+                            SwiftUI.Label {
+                                Text("Privacy Policy").foregroundStyle(Color.primary)
+                            } icon: {
+                                Image(systemName: "hand.raised")
+                            }
                         }
                         .accessibilityIdentifier("about-privacy")
                         Link(destination: AboutLinks.contact) {
                             LabeledContent {
                                 Text(verbatim: AboutLinks.supportAddress)
                             } label: {
-                                SwiftUI.Label("Contact", systemImage: "envelope")
+                                SwiftUI.Label {
+                                    Text("Contact").foregroundStyle(Color.primary)
+                                } icon: {
+                                    Image(systemName: "envelope")
+                                }
                             }
                         }
                         .accessibilityIdentifier("about-contact")
@@ -192,6 +211,8 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                         .tint(Theme.signature)
+                        // Esc closes it, as ⌘. did.
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
@@ -233,7 +254,11 @@ struct SettingsView: View {
                 Button {
                     isUnlocking = true
                 } label: {
-                    SwiftUI.Label("Unlimited Paintings", systemImage: "infinity")
+                    SwiftUI.Label {
+                        Text("Unlimited Paintings").foregroundStyle(Color.primary)
+                    } icon: {
+                        Image(systemName: "infinity")
+                    }
                 }
                 .accessibilityIdentifier("settings-unlimited")
             }

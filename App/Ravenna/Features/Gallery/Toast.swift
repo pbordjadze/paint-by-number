@@ -28,14 +28,23 @@ struct Toast<Trailing: View>: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
+                // 38 by 18 points alone (QA, November 7).
+                .buttonStyle(ReachingButtonStyle())
         }
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 20)
         .padding(.vertical, 13)
-        // The stacked toast is too tall for a capsule's ends: they would cut into the text.
-        .glassEffect(.regular, in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
+        // The stacked toast is too tall for a capsule's ends: they would cut into the text. Tinted
+        // with the paper: clear glass took the light of the thumbnails under it in dark mode,
+        // turned pale grey and left the white text and the Undo faint (QA, November 7). Enough
+        // paper to hold the text over a bright picture, little enough to stay glass.
+        .glassEffect(.regular.tint(Theme.paper.opacity(0.7)),
+                     in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
         .transition(reduceMotion ? .opacity : .move(edge: edge).combined(with: .opacity))
-        .accessibilityElement(children: .combine)
+        // A toast's action stays a button of its own: combined into the message, a tap on "Undo"
+        // by Voice Control or a test landed on the message's middle and undid nothing (QA,
+        // November 6: a deletion's Undo did nothing in 1 of 3 tries).
+        .accessibilityElement(children: Trailing.self == EmptyView.self ? .combine : .contain)
     }
 }
 
