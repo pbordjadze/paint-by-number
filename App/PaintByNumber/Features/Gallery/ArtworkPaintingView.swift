@@ -30,6 +30,8 @@ struct ArtworkPaintingView: View {
     /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
     /// renders in one push), where the thumbnail costs next to nothing.
     @State private var hasLanded = false
+    /// Back was tapped: the status bar is back before the pop starts (`close`).
+    @State private var leaving = false
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
@@ -143,7 +145,7 @@ struct ArtworkPaintingView: View {
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
-                    onChange: changeAction)
+                    onChange: changeAction, hidesStatusBar: !leaving)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
@@ -534,7 +536,12 @@ struct ArtworkPaintingView: View {
 
     private func close() {
         autosaver?.saveNow(refreshThumbnail: true)
-        onClose()
+        // The status bar first, the pop on the next turn: popped while the painting still hid it,
+        // the gallery's large title and its count came back about 120 points low, over the first
+        // card, for the second the zoom takes, then jumped into place (painting-company row 324).
+        // The edge swipe back doesn't do this.
+        leaving = true
+        Task { onClose() }
     }
 }
 
