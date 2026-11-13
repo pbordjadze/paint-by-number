@@ -157,6 +157,8 @@ before planning app work).
   repository's `store-slides` branch, since the slides show the painter's own photos;
   `.github/workflows/store-listing.yml` fills in its text, categories, age rating, review notes
   and accessibility labels from `ci/store-listing.json` (`ci/store_listing.py`).
+  `.github/workflows/store-release.yml` makes the version, sets its build and, on Paul's word,
+  submits it for App Review (`ci/store_release.py`).
 - `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
   contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
   CI's `core` job too). It files each report in the developers' private GitHub repository. Its

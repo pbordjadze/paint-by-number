@@ -1,0 +1,60 @@
+name: Store release
+
+# Makes the App Store version for a release, sets its build and, when asked, submits it for App
+# Review, through the App Store Connect API (ci/store_release.py, its docstring the manual), on
+# request only. Actions › Store release › Run workflow from `main`: with neither box ticked it is
+# a dry run; Prepare makes the version and sets its build (then run Store listing and Store
+# screenshots); Submit sends it to App Review, which only Paul asks for.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (as the TestFlight workflow's).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version the store shows (MARKETING_VERSION)'
+        required: true
+        default: '1.1'
+      build:
+        description: 'TestFlight build to ship (its build number)'
+        required: true
+      prepare:
+        description: 'Make the version and set its build'
+        type: boolean
+        default: false
+      submit:
+        description: 'Submit it for App Review'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: App Store release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: From main only
+        if: (inputs.prepare || inputs.submit) && github.ref_name != 'main'
+        run: |
+          echo "::error::Prepare and Submit run from main only, and this run is on $GITHUB_REF_NAME"
+          exit 1
+      - uses: actions/checkout@v5
+      - name: Python
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+      - name: Release
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          FLAGS: ${{ inputs.prepare && '--prepare' || '' }} ${{ inputs.submit && '--submit' || '' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_release.py "$VERSION" "$BUILD" $FLAGS'
