@@ -108,8 +108,9 @@ nonisolated enum TemplateRasterizer {
         guard !t.rings.isEmpty, !style.numbers, height >= 2 * bandRows, let data = ctx.data, let space = ctx.colorSpace else {
             return false
         }
-        // Built once: every band fills the same paths.
-        let fills = fillPaths(t, painted: resolvedPainted(t, painted: painted, style: style), style: style)
+        // Built once: every band fills the same paths, read on every core, so immutable copies (CoreGraphics
+        // promises thread safety for those alone).
+        let fills = fillPaths(t, painted: resolvedPainted(t, painted: painted, style: style), style: style).map { $0?.copy() }
         let bytesPerRow = ctx.bytesPerRow, info = ctx.bitmapInfo.rawValue
         let pixels = UncheckedSendable(data)
         var drawn = [Bool](repeating: false, count: (height + bandRows - 1) / bandRows)

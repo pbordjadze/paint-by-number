@@ -9,7 +9,8 @@ import XCTest
 /// Cancel and Discard), start (preview to painting), palette, zoom-pan, zen-30 (Zen Mode on, thirty
 /// fills by tap and drag), transitions (back to the gallery and into the painting, twice).
 ///
-/// Run it alone on a device: `-only-testing:PaintByNumberUITests/PerformanceTour`.
+/// Run it alone on a device: `-only-testing:PaintByNumberUITests/PerformanceTour` with `TEST_RUNNER_TOUR=1`
+/// (without `TOUR` it skips, so CI's UI test runs, which take every class, don't spend minutes on it).
 @MainActor
 final class PerformanceTour: XCTestCase {
     private var marks: [String] = []
@@ -38,6 +39,7 @@ final class PerformanceTour: XCTestCase {
     }
 
     func testTour() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["TOUR"] != nil, "The tour runs only when asked for (TOUR)")
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-tourLog", "YES"]
         let start = app.buttons["Start Painting"]
