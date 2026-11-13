@@ -124,13 +124,18 @@ nonisolated enum EdgeDetector {
             ? image
             : Resample.area(image, width: size.width, height: size.height)
         try cancel.throwIfCancelled()
-        let loaded = try loadModel(model)
-        let features = try MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(multiArray: paddedInput(input, for: model))])
-        try cancel.throwIfCancelled()
-        let output = try loaded.prediction(from: features)
-        try cancel.throwIfCancelled()
-        guard let values = output.featureValue(for: model.output)?.multiArrayValue else { throw DetectorError.unexpectedOutput }
-        return try edgeMap(from: values, width: input.width, height: input.height)
+        // A pool of the run's own: what Core ML makes for it (the model, its input and output, whatever it
+        // autoreleases) goes when the run is over. Without one it stayed until the caller's task next gave way,
+        // and the second model ran on top of what the first had left.
+        return try autoreleasepool {
+            let loaded = try loadModel(model)
+            let features = try MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(multiArray: paddedInput(input, for: model))])
+            try cancel.throwIfCancelled()
+            let output = try loaded.prediction(from: features)
+            try cancel.throwIfCancelled()
+            guard let values = output.featureValue(for: model.output)?.multiArrayValue else { throw DetectorError.unexpectedOutput }
+            return try edgeMap(from: values, width: input.width, height: input.height)
+        }
     }
 
     /// The size a map of a `width` × `height` photo has: the photo's, scaled down to fit
