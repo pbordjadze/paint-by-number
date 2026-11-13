@@ -279,3 +279,78 @@ extension EditWork {
         summary.erased += chain.count
     }
 }
+
+extension TemplateEditor {
+    /// How much farther than its own reach an eraser's rub, or a Line Eraser's tap, laid again on
+    /// a base made again looks for the ink it was made on, canvas units: a Writing mark, Smoothness
+    /// or Detail moves the drawing's lines by a few units, and a rub made across a line then found
+    /// none under it (painting-company row 322).
+    public static let reanchorReach: Float = tapReach
+
+    /// `edit`, an eraser's rub or a Line Eraser's tap with nothing under it on `template`, moved
+    /// whole onto the ink nearest it there, if any lies within its reach and `reanchorReach` more:
+    /// the edit as it was made on the base the painter saw, carried onto the line it was made on,
+    /// which the base made again drew a little way off (`EditTrail.move(to:)`). Nil for any other
+    /// edit, or with no ink that near. The ink is the drawing the eraser reaches (drawn lines and
+    /// strokes, not the frame, nor writing, which a base made again traces anew from the text it
+    /// finds), found in lattice arithmetic, so the same on every device. Points that aren't finite
+    /// are left out of the moved edit, as the editor leaves them out.
+    public static func reanchored(_ edit: Edit, on template: Template) -> Edit? {
+        let points: [SIMD2<Float>], reach: Float
+        switch edit {
+        case .erase(let path, let radius):
+            points = Array(path.prefix(maximumPoints))
+            reach = radius.isFinite ? min(max(radius, 0), Lattice.inputLimit) : 0
+        case .eraseLine(let point, let tapReach):
+            points = [point]
+            reach = tapReach.isFinite ? min(max(tapReach, 0), 1024) : 0
+        default:
+            return nil
+        }
+        let finite = points.filter { $0.x.isFinite && $0.y.isFinite }
+        let path = finite.map(Lattice.clampedPoint)
+        guard !path.isEmpty, var work = try? EditWork(template),
+              let offset = work.nearestInk(to: path, within: Int64(((reach + reanchorReach) * Float(Lattice.unit)).rounded()))
+        else { return nil }
+        let moved = path.map { Lattice.position($0 &+ offset) }
+        switch edit {
+        case .erase(_, let radius): return .erase(path: moved, radius: radius)
+        case .eraseLine(_, let tapReach): return .eraseLine(at: moved[0], reach: tapReach)
+        default: return nil
+        }
+    }
+}
+
+extension EditWork {
+    /// The step that takes the point of `path` nearest the drawing's ink onto that ink, when it is
+    /// within `reach` (lattice steps): drawn edges and strokes of two points or more, not the
+    /// frame nor writing; the first found of equal ones, edges before strokes, in their order.
+    mutating func nearestInk(to path: [LatticePoint], within reach: Int64) -> LatticePoint? {
+        let low = path.reduce(path[0]) { pointwiseMin($0, $1) } &- reach
+        let high = path.reduce(path[0]) { pointwiseMax($0, $1) } &+ reach
+        func near(_ lo: LatticePoint, _ hi: LatticePoint) -> Bool { hi.x >= low.x && lo.x <= high.x && hi.y >= low.y && lo.y <= high.y }
+        var lines: [[LatticePoint]] = []
+        for e in t.edges.indices where !edgeDead[e] && isInked(e) && !isFrame(e) {
+            let b = box(of: e)
+            if near(b.lo, b.hi) { lines.append(lattice(of: e)) }
+        }
+        for s in strokes where s.alive && s.layer != LineLayer.color.rawValue && !s.writing && s.points.count >= 2 {
+            let line = s.points.map(Lattice.point)
+            let lo = line.reduce(line[0]) { pointwiseMin($0, $1) }, hi = line.reduce(line[0]) { pointwiseMax($0, $1) }
+            if near(lo, hi) { lines.append(line) }
+        }
+        var best: (offset: LatticePoint, d2: Int64)?
+        for line in lines where !line.isEmpty {
+            for j in 0..<max(line.count - 1, 1) {
+                let a = line[j], b = line[min(j + 1, line.count - 1)]
+                for p in path {
+                    let near = Lattice.nearest(to: p, on: a, b)
+                    if near.distanceSquared <= reach * reach, best == nil || near.distanceSquared < best!.d2 {
+                        best = (near.point &- p, near.distanceSquared)
+                    }
+                }
+            }
+        }
+        return best?.offset
+    }
+}

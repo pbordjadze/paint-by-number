@@ -183,8 +183,9 @@ extension CreateModelTests {
         #expect(after.width != before.width, "Detail left the canvas as it was")
         #expect(Set(model.paintsBeforeEdits).isSubset(of: Set(r.base.palette)))
         #expect(model.refinements.pin?.width == after.width)
-        // The rub was made across a line this Detail may draw elsewhere, and is then honestly
-        // left out: the count says so. The other edits land.
+        // The rub follows its line the few units this Detail moves it (`TemplateEditor.reanchored`);
+        // a line it draws farther off, or not at all, leaves the rub out, and the count says so.
+        // The other edits land.
         #expect(model.leftOut <= 1 && model.shownChangeCount == 4 - model.leftOut)
         Log.create.notice("Row 278: at another Detail \(model.leftOut, privacy: .public) edit was left out")
         expectEditsHold(r, on: after)

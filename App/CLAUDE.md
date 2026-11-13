@@ -879,7 +879,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     reusing a base made before, `made`) and the edits are laid on the new one, those that no
     longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
     drawing") and out of the "N changes" (`CreateModel.shownChangeCount`); they stay in the
-    list, so a correction undone brings them back. Once there are edits, a base made again
+    list, so a correction undone brings them back. An Eraser rub or a Line Eraser tap that
+    finds no line on the new base follows its line the few units the base moved it
+    (`TemplateEditor.reanchored`, painting-company row 322), and is left out only where the line
+    is gone. Once there are edits, a base made again
     keeps the paints of the base they were made on (`TemplateRefinements.pin`, PaintCore's
     `TemplateGenerator.generate(…palette:)`; painting-company row 278), unless the Colors
     count changed, and the edits are carried onto it (`TemplateRefinements.rebased`): scaled to
