@@ -6,6 +6,7 @@ book's own stages (the lines, the cells, the layers) meet a picture of the app's
     book_hashes.py --out <hashes.json>                              the reference, before the change
     book_hashes.py --against <hashes.json> [--out <hashes.json>]    after it
     … --pbn <path>                                                  another build's pbn (the reference's)
+    … --bands <n>                                                   split the work as a device with n bands does
 
 On a Mac (`sips` enlarges the photos). The six `Tests/Corpus` photos, enlarged to the 2,048 px the app decodes a
 photo to, are each made a coloring book by `.build/release/pbn generate` (build it first: `swift build -c release
@@ -17,8 +18,12 @@ once, a book with no line at all, a drawing on paper (`pbn drawing`), and pictur
 anything that walks a neighbourhood must mind the border. `--against` lists every case whose template changed and
 exits 1 if any did (a case pbn refuses is compared by what it says). The hashes are this machine's (see
 template_hashes.py). Each case's time and its slowest stages are kept too (one run each: not a benchmark).
+
+A template must not depend on how many cores made it, and the package's own test of that uses pictures too small
+to be split: run `--against` again with `--bands 1`, `--bands 16` (an iPad Air) and an odd `--bands 37` (pbn's
+`PBN_BANDS`; `PBN_BANDS=16 tools/template_hashes.py …` does the same for that tool's 34).
 """
-import hashlib, json, math, pathlib, subprocess, sys, tempfile
+import hashlib, json, math, os, pathlib, subprocess, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PBN = ROOT / ".build/release/pbn"
@@ -107,7 +112,9 @@ def note(photo, path, scratch):
 
 def generate(pbn, command, source, out, arguments):
     """One template of pbn: its hash and what stats.json says, or what pbn said when it refused."""
-    done = subprocess.run([str(pbn), command, str(source), str(out)] + [str(a) for a in arguments], capture_output=True, text=True)
+    environment = dict(os.environ, PBN_BANDS=option("--bands")) if option("--bands") else None
+    done = subprocess.run([str(pbn), command, str(source), str(out)] + [str(a) for a in arguments], capture_output=True, text=True,
+                          env=environment)
     template = pathlib.Path(out) / "template.pbnt"
     if done.returncode != 0 or not template.exists():
         return {"sha1": "refused: " + ((done.stderr.strip() or f"exited {done.returncode}").splitlines()[-1])[:200]}

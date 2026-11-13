@@ -24,9 +24,11 @@ public enum Parallel {
     }
 
     /// Runs `body` with work split as a device with `count` bands splits it, for the tests that
-    /// hold the pipeline to the rule above (`BandCountTests`): one runner sees one core count.
-    /// Process-wide, since nested passes read `bandCount` on the workers' threads.
-    static func withBandCount<T>(_ count: Int, _ body: () throws -> T) rethrows -> T {
+    /// hold the pipeline to the rule above (`BandCountTests`) and for `pbn` under `PBN_BANDS`,
+    /// which the template hashes use to do the same at the sizes the app works at: one machine
+    /// sees one core count. Process-wide, since nested passes read `bandCount` on the workers'
+    /// threads.
+    public static func withBandCount<T>(_ count: Int, _ body: () throws -> T) rethrows -> T {
         forcedBands.count = max(1, count)
         defer { forcedBands.count = nil }
         return try body()
