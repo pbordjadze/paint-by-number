@@ -20,11 +20,9 @@ APP = {"PaintByNumber", "PaintCore", "MosaicCore", "MosaicEngine", "MosaicKit", 
 
 
 def export(trace, xpath=None):
-    # A table the trace doesn't have exports as nothing (xctrace exits 1): a Time Profiler recording has no
-    # hitches table, and its stacks are as good. The table of contents must export.
     out = tempfile.NamedTemporaryFile(delete=False, suffix=".xml")
     subprocess.run(["xcrun", "xctrace", "export", "--input", trace] + (["--xpath", xpath] if xpath else ["--toc"]),
-                   stdout=out, stderr=subprocess.DEVNULL, check=xpath is None)
+                   stdout=out, stderr=subprocess.DEVNULL, check=True)
     out.close()
     return out.name
 
@@ -80,7 +78,11 @@ def main():
         p = r["process"].find("pid") if r.get("process") is not None else None
         return pid is None or (p is not None and p.text == pid)
 
-    hitches = [(number(r["start"]) / 1e9, number(r["duration"]) / 1e6) for r, _ in rows(trace, "hitches") if mine(r)]
+    # A Time Profiler recording (all a simulator makes) has no hitches table: its table of contents says so, and
+    # its stacks are as good. Any other export that fails still stops the script.
+    recorded = {t.get("schema") for t in toc.iter("table")}
+    hitches = [(number(r["start"]) / 1e9, number(r["duration"]) / 1e6)
+               for r, _ in (rows(trace, "hitches") if "hitches" in recorded else []) if mine(r)]
     samples = []
     for r, ids in rows(trace, "time-profile"):
         if not mine(r):
