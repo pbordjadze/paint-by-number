@@ -19,8 +19,9 @@ name: CI
 #            A branch's quick check before it takes a full slot.
 #   test     `[test Class …]` in a branch's pushed commit's message (or the hand-started run's
 #            `tests`; never main's), instead of the three above: the Debug build and only those
-#            UI test classes (or Class/testMethod) on the iPad, after the demo caches' warm-up when
-#            they miss; no screenshots, no Release. A UI test's quick try; `core` runs as ever.
+#            tests on the iPad: UI test classes (or Class/testMethod), unit test suites (or
+#            Suite/test), or `unit` for every unit test; after the demo caches' warm-up when they
+#            miss; no screenshots, no Release. A test's quick try; `core` runs as ever.
 #   duo      `[duo]` in a branch's pushed commit's message (or the hand-started run's `duo`; never
 #            main's), instead of the three above: the Debug build on the iPhone Duo, the foldable,
 #            and ci/duo.sh's screenshots of ci/duo-scenarios.txt in every pose (closed, turned,
@@ -143,7 +144,7 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
-    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen UI tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || 'iPhone — build, screenshots, tests' }}
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || 'iPhone — build, screenshots, tests' }}
     runs-on: xcode-27
     # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
     # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
@@ -179,10 +180,12 @@ jobs:
             duo)     plan=(DEVICE=duo SHOTS=0 RELEASE=0 ONLY= SKIP= DUO=1) ;;
             test)
               # The run's `tests`, or every `[test …]` in the message (any case, as `contains` reads
-              # it): UI test classes or Class/testMethod. A name the sources don't have fails here
-              # (out/plan.log, for the report), where -only-testing would run nothing and pass.
+              # it): UI test classes or Class/testMethod, the unit tests' suites (Swift Testing) or
+              # Suite/test, or `unit` for every unit test (painting-company row 288). A name the
+              # sources don't have fails here (out/plan.log, for the report), where -only-testing
+              # would run nothing and pass.
               fail() { mkdir -p out; echo "error: $*" | tee -a out/plan.log; echo "::error::$*"; exit 1; }
-              names="$TESTS" rest="$MESSAGE" tag='\[test ([^]]*)\]' form='^[A-Za-z_][A-Za-z0-9_]*(/test[A-Za-z0-9_]*)?$'
+              names="$TESTS" rest="$MESSAGE" tag='\[test ([^]]*)\]' form='^[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*(\(\))?)?$'
               shopt -s nocasematch
               while [[ -z "$TESTS" && "$rest" =~ $tag ]]; do
                 names+=" ${BASH_REMATCH[1]}"; rest="${rest#*"${BASH_REMATCH[0]}"}"
@@ -191,16 +194,28 @@ jobs:
               set -f
               only=()
               for name in $names; do
-                [[ "$name" =~ $form ]] || fail "not a UI test class or Class/testMethod: $name"
+                if [[ "$name" == unit ]]; then only+=(PaintByNumberTests); continue; fi
+                [[ "$name" =~ $form ]] || fail "not a test class, suite, Class/testMethod or unit: $name"
                 cls="${name%%/*}"
-                grep -rqE "class $cls: XCTestCase" App/PaintByNumberUITests || fail "no UI test class $cls in App/PaintByNumberUITests"
-                if [[ "$name" == */* ]]; then
-                  grep -qE "func ${name#*/}\(" $(grep -rlE "class $cls: XCTestCase|extension $cls[^A-Za-z0-9_]" App/PaintByNumberUITests) \
-                    || fail "no ${name#*/} in $cls"
+                if grep -rqE "class $cls: XCTestCase" App/PaintByNumberUITests; then
+                  if [[ "$name" == */* ]]; then
+                    grep -qE "func ${name#*/}\(" $(grep -rlE "class $cls: XCTestCase|extension $cls[^A-Za-z0-9_]" App/PaintByNumberUITests) \
+                      || fail "no ${name#*/} in $cls"
+                  fi
+                  only+=("PaintByNumberUITests/$name")
+                elif files="$(grep -rlE "(struct|class|enum|actor) $cls([^A-Za-z0-9_]|$)" App/PaintByNumberTests)"; then
+                  # Swift Testing names a test by its function, parentheses and all.
+                  if [[ "$name" == */* ]]; then
+                    test="${name#*/}"; test="${test%"()"}"
+                    grep -qE "func $test\(" $files || fail "no $test in $cls"
+                    name="$cls/$test()"
+                  fi
+                  only+=("PaintByNumberTests/$name")
+                else
+                  fail "no UI test class or unit test suite $cls in App/PaintByNumberUITests or App/PaintByNumberTests"
                 fi
-                only+=("PaintByNumberUITests/$name")
               done
-              [[ ${#only[@]} -gt 0 ]] || fail "[test] names no UI test class: [test SettingsTests]"
+              [[ ${#only[@]} -gt 0 ]] || fail "[test] names no test: [test SettingsTests], [test LibraryTests], [test unit]"
               plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=${only[*]}" SKIP=) ;;
           esac
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
@@ -280,7 +295,8 @@ jobs:
         id: warmup
         # Without screenshots before them, the UI tests would make the fixed pictures' templates
         # and the previews' maps inside their own waits: on empty caches these scenarios do.
-        if: env.SHOTS == '0' && env.COMPILE != '1' && env.DUO != '1' && steps.demo-cache.outputs.cache-hit != 'true'
+        # Unit tests alone (`[test unit]`, a suite) need none of it.
+        if: env.SHOTS == '0' && env.COMPILE != '1' && env.DUO != '1' && steps.demo-cache.outputs.cache-hit != 'true' && (env.ONLY == '' || contains(env.ONLY, 'PaintByNumberUITests'))
         run: |
           ci/screenshots.sh "$APP" build/warm-up "$DEVICE" "${{ steps.sim.outputs.udid }}" \
             gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180
