@@ -42,6 +42,26 @@ struct PaintNowTests {
         #expect(Set(days.compactMap { Sample.tonight(on: $0, calendar: calendar)?.id }) == Set(paintings.map(\.id)))
     }
 
+    /// The gallery's Tonight's Picture and the nights after it (painting-company row 317):
+    /// tonight's first, then the next nights' in turn, skipping what the gallery holds.
+    @Test func theGalleryOffersTheNightsItDoesNotHold() throws {
+        let paintings = Sample.all(of: .painting)
+        try #require(paintings.count > 4)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+        let day = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 9, hour: 20)))
+        let next = try #require(calendar.date(byAdding: .day, value: 1, to: day))
+        let tonight = try #require(Sample.tonight(on: day, calendar: calendar))
+        let nights = Sample.nights(from: day, count: 3, calendar: calendar)
+        #expect(nights.count == 3)
+        #expect(nights.first == tonight)
+        #expect(nights[1] == Sample.tonight(on: next, calendar: calendar))
+        let held = Sample.nights(from: day, count: 3, excluding: [tonight.id], calendar: calendar)
+        #expect(held == Array(Sample.nights(from: day, count: 4, calendar: calendar).dropFirst()))
+        #expect(Sample.nights(from: day, count: paintings.count + 5, calendar: calendar).count == paintings.count)
+        #expect(Sample.nights(from: day, count: 5, excluding: Set(paintings.map(\.id)), calendar: calendar).isEmpty)
+    }
+
     /// ✎ Change's Done: the new template and refinements replace the painting's, and the painted
     /// areas are carried onto it.
     @Test func adoptingAChangeKeepsThePaintedAreas() async throws {

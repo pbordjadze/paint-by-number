@@ -282,7 +282,7 @@ private struct OwnTile: View {
     }
 }
 
-private struct SectionTitle: View {
+struct SectionTitle: View {
     let title: LocalizedStringKey
     let style: Font.TextStyle
     init(_ title: LocalizedStringKey, style: Font.TextStyle = .title3) {
@@ -298,7 +298,9 @@ private struct SectionTitle: View {
     }
 }
 
-private struct SampleTile: View {
+/// A library picture's tile: the picture, its title and painter on it (under it at accessibility
+/// sizes). The Paint page's, and the gallery's Tonight's Picture (`GalleryShelf`).
+struct SampleTile: View {
     let sample: Sample
     @State private var image: CGImage?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize

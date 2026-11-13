@@ -3737,6 +3737,14 @@
       "comment" : "Header of the list of bundled machine-learning models in Acknowledgements",
       "extractionState" : "manual"
     },
+    "More to Paint" : {
+      "comment" : "Gallery (SideStore builds): button under Tonight’s Picture and the nights after it, opening the Paint page",
+      "extractionState" : "manual"
+    },
+    "Opens the Paint page: your own photos, a blank page and the whole library" : {
+      "comment" : "VoiceOver hint of the gallery's More to Paint button",
+      "extractionState" : "manual"
+    },
     "More" : {
       "comment" : "Accessibility label of the painting screen's More (…) menu",
       "extractionState" : "manual"

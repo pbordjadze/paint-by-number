@@ -15,6 +15,8 @@ struct GalleryView: View {
     var onCreate: () -> Void
     /// The painter chose to continue refining the create flow's draft.
     var onContinueDraft: (Drafts.Opened) -> Void
+    /// A library picture picked on the gallery (`GalleryShelf`), to paint now.
+    var onPaint: (Sample) -> Void = { _ in }
     /// Whether a rename, restart or delete question (or the restart's failure) is up; set false
     /// by the shell to close it, as a photo shared in from another app does.
     @Binding var isAsking: Bool
@@ -75,6 +77,15 @@ struct GalleryView: View {
                             ForEach(finished) { card($0) }
                         }
                     }
+                    #if UNRELEASED
+                    if !query.isActive {
+                        GalleryShelf(
+                            held: Set(library.artworks.compactMap(\.sampleName)),
+                            hasRoom: library.artworks.count + library.placeholders.count < Self.fewPaintings,
+                            column: width - 2 * horizontalPadding - 8,
+                            onPaint: onPaint, onMore: onCreate)
+                    }
+                    #endif
                 }
                 .padding(.leading, horizontalPadding + max(0, 2 * (fold?.offset ?? 0)))
                 .padding(.trailing, horizontalPadding + max(0, -2 * (fold?.offset ?? 0)))
@@ -234,6 +245,10 @@ struct GalleryView: View {
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
     /// widths, 20 pt on regular ones), so the cards start where they do.
     private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
+    #if UNRELEASED
+    /// Fewer paintings than this leave the gallery room for the nights after Tonight's Picture.
+    static let fewPaintings = 4
+    #endif
     /// How far the pages may be scrolled with their top still counted in view.
     nonisolated private static let topSlack: CGFloat = 44
     private var spacing: CGFloat { width < 560 ? 16 : 26 }

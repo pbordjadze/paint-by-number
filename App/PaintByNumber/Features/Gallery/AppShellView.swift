@@ -28,6 +28,8 @@ struct AppShellView: View {
     #endif
     @State private var droppedPhoto: Data?
     @State private var droppedTitle: String?
+    /// A library picture picked on the gallery to paint now (`GalleryShelf`).
+    @State private var pickedSample: Sample?
     /// The draft the create flow continues, read off the main actor by the gallery's row.
     @State private var resumedDraft: Drafts.Opened?
     /// A file opened from another app (share sheet, Files), waiting for the library and the
@@ -72,12 +74,13 @@ struct AppShellView: View {
         // old identity).
         let flowPhoto = droppedPhoto
         let flowTitle = droppedTitle
+        let flowSample = pickedSample
         let flowDraft = resumedDraft
         let flowIdentity = flowID
         NavigationStack(path: $path) {
             GalleryView(
                 namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
-                onContinueDraft: continueDraft, isAsking: $galleryAsks)
+                onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
                     guard let photo = photos.first, !isCreating else { return false }
@@ -116,12 +119,14 @@ struct AppShellView: View {
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil
+            pickedSample = nil
             resumedDraft = nil
             handoff.reset()
             presentIncomingImage()
         }) {
             CreateFlowView(
-                openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
+                openingSample: flowSample ?? launchSample, paintsSampleNow: flowSample != nil,
+                droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
                 onStart: startPainting
             )
             .id(flowIdentity)
@@ -407,6 +412,16 @@ struct AppShellView: View {
         }
         pendingReceiveFailure = nil
         receiveFailure = failure
+    }
+
+    /// Paints a library picture picked on the gallery, as the Paint page's tiles do: the flow
+    /// opens on the picture forming and starts by itself.
+    private func paint(_ sample: Sample) {
+        guard !isCreating else { return }
+        PaintTips.photoChosen()
+        pickedSample = sample
+        flowID = UUID()
+        isCreating = true
     }
 
     /// Opens the create flow on the draft the gallery's row read.
