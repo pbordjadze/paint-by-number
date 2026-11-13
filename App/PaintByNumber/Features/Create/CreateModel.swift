@@ -1793,11 +1793,11 @@ final class CreateModel {
                 // Rendered here, before the other candidates run: it is what the painter waits for.
                 guard let firstDraft else { return }
                 var template = output.template
-                if Self.newPaintMix == .kit {
+                if let mix = Self.newPaintMix {
                     // Its paints as the painting's will be, but for faces' skin, which needs the eyes
                     // a draft has none of (`KitPaint.faces(of:…)`); the candidate's count bounds how close.
-                    template.palette = KitPaint.mix(
-                        template.palette, space: template.colorSpace,
+                    template.palette = mix.mixed(
+                        template.palette, shares: mix == .lively ? LivelyPaint.shares(of: template) : [], space: template.colorSpace,
                         minDistance: GenerationSettings(colorCount: template.palette.count).minPaletteDistance)
                 }
                 guard let preview = try? Self.makePreview(

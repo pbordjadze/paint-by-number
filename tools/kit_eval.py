@@ -14,7 +14,8 @@ For every photo `run` makes the coloring book the app would (the set's edge maps
 subject as the silhouette, its eyes (where the stand-in's `eyes.json` is empty, almonds at the
 eye features the set marks by hand, `standin_eyes`), the app's importance map from the scene; 24 paints, detail
 0.5) twice with the same pbn: `before` with the regions' paints, `after` with `--paint-mix kit`
-(and any options after `--`); `--before` adds pbn options to `before` alone (a
+(and any options after `--`: `-- --paint-mix lively` makes `after` lively paint, painting-company
+row 326, and with `--before "--paint-mix kit"` compares it with kit paint); `--before` adds pbn options to `before` alone (a
 round's baseline: `--before "--paint-mix kit"`), `--both` to both (`--auto` lets Auto choose
 the colours and detail, from the scene's importance map, as the app does). It writes `DIR/<id>/{before,after}/` (pbn's output, `finished.png`:
 the finished painting, paint with the drawing in ink over it, from `painted-outlined.svg`, 1280 px

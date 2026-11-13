@@ -47,7 +47,10 @@ before planning app work).
     `tools/kit_eval.py`): the finished template's paints mixed bolder than the regions' means,
     nothing else moved; nil is the photo's, and the app asks for it only under `UNRELEASED`
     (`CreateModel.newPaintMix`); with it the subject's body loosened (`subjectCellSize`) and Auto's
-    `AutoTaste.finished`, which values the finished painting over ΔE. `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    `AutoTaste.finished`, which values the finished painting over ΔE. Lively paint (`LivelyPaint`,
+    `--paint-mix lively`, `PaintMix.mixed`; painting-company row 326): kit paint's paints with their
+    hues spread, a family's lights turned warm and its shadows cool, for a broader variety of colors;
+    no build asks for it yet (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
