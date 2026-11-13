@@ -187,7 +187,8 @@ enum ShellDemo: Equatable {
     /// pictures: Earthrise, and Red Fuji).
     private var favoriteSamples: [String] {
         let positions: [Int] = switch self {
-        case .gallery, .gallerySearch: [2]
+        // `-demoPhotos`' photos come first in the gallery, ahead of a favorite.
+        case .gallery, .gallerySearch: DemoMode.photos.isEmpty ? [2] : []
         case .galleryFavorites: [2, 5]
         default: []
         }
@@ -236,7 +237,7 @@ enum ShellDemo: Equatable {
         case .createTip: pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
              .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createRefineUnlock:
-            pictures.first
+            DemoMode.photos.first ?? pictures.first
         default: nil
         }
     }
@@ -281,9 +282,10 @@ enum ShellDemo: Equatable {
     var picksColorPaint: Bool { self == .createRefineColorsPicked }
 
     /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
-    /// canvas of `template`.
+    /// canvas of `template`: nothing on a `-demoPhotos` photo, whose canvas the strokes don't fit.
     static func refinements(for template: Template) -> TemplateRefinements {
-        var refinements = refinements(canvas: CGSize(width: template.width, height: template.height))
+        var refinements = DemoMode.photos.isEmpty
+            ? refinements(canvas: CGSize(width: template.width, height: template.height)) : TemplateRefinements()
         if current?.opensColors == true { refinements.edits.append(TemplateEditor.look(.starryNight, strength: 1, on: template)) }
         return refinements
     }
@@ -314,7 +316,7 @@ enum ShellDemo: Equatable {
         switch self {
         case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites:
             let favorites = favoriteSamples
-            library.seed(galleryItems, completion: { _ in
+            library.seed(photoItems + galleryItems, completion: { _ in
                 for artwork in library.artworks {
                     if let sample = artwork.sampleName, favorites.contains(sample) { library.setFavorite(artwork.id, true) }
                 }
@@ -514,7 +516,20 @@ enum ShellDemo: Equatable {
         let hour: TimeInterval = 3600
         // By position: the fraction painted, and the hours since it was last painted.
         let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 1), (1, 5), (0.68, 3), (0.12, 26), (0, 50), (1, 80)]
+        // Behind the `-demoPhotos` photos, which were painted more recently.
+        let later: TimeInterval = DemoMode.photos.isEmpty ? 0 : 6
         return zip(pictures, stages).map { sample, stage in
+            Library.SeedItem(sample: sample, painted: stage.painted, age: (stage.hours + later) * hour, photoMaxPixelSize: 560)
+        }
+    }
+
+    /// `gallery`'s `-demoPhotos` photos, ahead of the library's pictures: by position (by name),
+    /// three in progress to different amounts and the third finished.
+    private var photoItems: [Library.SeedItem] {
+        guard self == .gallery else { return [] }
+        let hour: TimeInterval = 3600
+        let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 2), (0.68, 1), (1, 4), (0.24, 3)]
+        return zip(DemoMode.photos, stages).map { sample, stage in
             Library.SeedItem(sample: sample, painted: stage.painted, age: stage.hours * hour, photoMaxPixelSize: 560)
         }
     }

@@ -51,6 +51,32 @@ enum DemoMode {
         return copy
     }()
 
+    /// `-demoPhotos <dir>`: the scenarios that show a picture of their own (`paint-book-progress`,
+    /// `paint-book-zoomed`, the `create-refine` ones and `gallery`) show the photos in this folder
+    /// instead, by name, through the real pipeline as coloring books, titled by their file names;
+    /// `-demoPhoto <name>` keeps only the one of that name. For store screenshots of the painter's
+    /// own pictures, which never go in the app or its repository.
+    nonisolated static let photos: [Sample] = {
+        guard let path = UserDefaults.standard.string(forKey: "demoPhotos") else { return [] }
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: URL(fileURLWithPath: path, isDirectory: true), includingPropertiesForKeys: nil)) ?? []
+        let name = UserDefaults.standard.string(forKey: "demoPhoto")
+        return files
+            .filter { ["jpg", "jpeg", "png", "heic"].contains($0.pathExtension.lowercased()) }
+            .map(Sample.init(file:))
+            .filter { name == nil || $0.title == name }
+            .sorted { $0.title < $1.title }
+    }()
+
+    /// `-demoPhotoCenter <x>,<y>`: where `paint-book-zoomed` zooms on a `-demoPhotos` photo, as
+    /// fractions of its width and height from the top left, as a painter would zoom onto the pet
+    /// rather than the busiest part of the picture.
+    static let photoCenter: SIMD2<Float>? = {
+        guard !photos.isEmpty, let value = UserDefaults.standard.string(forKey: "demoPhotoCenter") else { return nil }
+        let parts = value.split(separator: ",").compactMap { Float($0) }
+        return parts.count == 2 ? SIMD2(parts[0], parts[1]) : nil
+    }()
+
     /// `-tracePhotoPeek YES`: the Photo control's accessibility identifier lists every value it
     /// has had, since a UI test can't read the value mid-hold (`press(forDuration:)` blocks).
     static let tracesPhotoPeek = UserDefaults.standard.bool(forKey: "tracePhotoPeek")
