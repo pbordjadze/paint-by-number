@@ -117,17 +117,19 @@ final class PaintingSession {
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
     /// nil goes by number. Its first value (the screen showing the palette) moves the selection
     /// a begun painting opened with (the first color by number with areas left) to the palette's
-    /// first, as the swatches lead off; a color picked meanwhile stays, and so does the largest
-    /// area's color a fresh painting opened on (`OpeningColor`), whatever the order.
+    /// first, as the swatches lead off; a color picked meanwhile stays, and so does a color the
+    /// session opened on of its own (`opensOnItsOwnColor`), whatever the order.
     @ObservationIgnored var colorOrder: [Int]? {
         didSet {
-            guard oldValue == nil, !opensOnLargestArea,
+            guard oldValue == nil, !opensOnItsOwnColor,
                   selectedColor == remainingByColor.firstIndex(where: { $0 > 0 }) else { return }
             select(color: firstIncompleteColor())
         }
     }
-    /// The session opened on the color of the largest area, the painting being fresh (`OpeningColor`).
-    private let opensOnLargestArea: Bool
+    /// The session opened on a color of its own, which the palette's order leaves alone: the
+    /// paint in hand when the painting was last saved (`PaintProgress.inHand`), or the largest
+    /// area's, the painting being fresh (`OpeningColor`).
+    private let opensOnItsOwnColor: Bool
     /// Fixes the colors' nicknames (it keyed the retired Custom palette order too).
     let nicknameSeed: UInt64
     /// The artwork's recorded vocabulary version, kept even when newer than this build knows.
@@ -198,7 +200,7 @@ final class PaintingSession {
         let numbered: [String]
         let labels: [String]
         let opening: Int?
-        let opensOnLargestArea: Bool
+        let opensOnItsOwnColor: Bool
 
         init(template: Template, progress: PaintProgress, seed: UInt64, version: Int) {
             totals = template.regionCountsByColor
@@ -208,8 +210,16 @@ final class PaintingSession {
             }
             self.remaining = remaining
             completed = Set(remaining.indices.filter { remaining[$0] == 0 })
-            opensOnLargestArea = OpeningColor.isLargestArea && progress.paintedCount == 0
-            opening = opensOnLargestArea ? OpeningColor.largestArea(in: template) : remaining.firstIndex { $0 > 0 }
+            if let hand = progress.inHand, remaining.indices.contains(hand), remaining[hand] > 0 {
+                opensOnItsOwnColor = true
+                opening = hand
+            } else if OpeningColor.isLargestArea && progress.paintedCount == 0 {
+                opensOnItsOwnColor = true
+                opening = OpeningColor.largestArea(in: template)
+            } else {
+                opensOnItsOwnColor = false
+                opening = remaining.firstIndex { $0 > 0 }
+            }
             let names = template.palette.map(\.colorName)
             let nicknames = ColorNameText.nicknames(for: template.palette, seed: seed, version: version)
             self.names = names
@@ -247,7 +257,7 @@ final class PaintingSession {
         isComplete = progress.isComplete
         isStarted = progress.paintedCount > 0
         completedColors = prepared.completed
-        opensOnLargestArea = prepared.opensOnLargestArea
+        opensOnItsOwnColor = prepared.opensOnItsOwnColor
         selectedColor = prepared.opening
     }
 
@@ -258,6 +268,13 @@ final class PaintingSession {
     func nickname(of color: Int) -> String? { colorNicknames[color] }
 
     var paletteCount: Int { template.palette.count }
+
+    /// What is saved: `progress` with the paint in hand, so the painting opens on it again.
+    var savedProgress: PaintProgress {
+        var saved = progress
+        saved.inHand = selectedColor
+        return saved
+    }
     var fractionComplete: Double {
         progress.regionCount == 0 ? 0 : Double(progress.paintedCount) / Double(progress.regionCount)
     }

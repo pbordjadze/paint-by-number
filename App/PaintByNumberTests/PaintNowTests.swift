@@ -156,4 +156,23 @@ struct PaintNowTests {
         #expect(LengthChip.rowTime(of: .detailed, chosen: .relaxed, regionCount: 406, cutAreas: [.quick: 150])
             == LengthChip.band(of: .detailed))
     }
+
+    /// A length not cut yet offers its band where the cuts made agree with it, and narrows it
+    /// where they don't (the Mac's re-check, November 10: a five-area photo's Quick offered
+    /// "8 min – 25 min" and came out ~5 min, Detailed "40 min – 2 hr" beside Relaxed's ~5 min).
+    @Test func aLengthNotCutYetPromisesNoTimeTheCutsRuleOut() {
+        let minute = 60.0
+        // A five-area photo cut Relaxed: Quick can be no longer, Detailed may be as short.
+        let tiny = [PaintingLength.relaxed: PaintingTime.estimate(regionCount: 5)]
+        #expect(LengthChip.expectedTimes(of: .quick, known: tiny) == tiny[.relaxed]!...tiny[.relaxed]!)
+        #expect(LengthChip.expectedTimes(of: .detailed, known: tiny) == tiny[.relaxed]!...(120 * minute))
+        #expect(LengthChip.rowTime(of: .quick, chosen: .relaxed, regionCount: 5, cutAreas: [:])
+            == PaintingTimeText.approximate(PaintingTime.estimate(regionCount: 5)))
+        // A cut inside its band: the next length's band holds, from that cut up.
+        #expect(LengthChip.expectedTimes(of: .detailed, known: [.relaxed: 25 * minute]) == (40 * minute)...(120 * minute))
+        #expect(LengthChip.expectedTimes(of: .quick, known: [.relaxed: 21 * minute]) == (8 * minute)...(21 * minute))
+        #expect(LengthChip.expectedTimes(of: .relaxed, known: [.quick: 24 * minute, .detailed: 45 * minute])
+            == (24 * minute)...(45 * minute))
+        #expect(LengthChip.expectedTimes(of: .relaxed, known: [:]) == PaintingLength.relaxed.timeBand)
+    }
 }

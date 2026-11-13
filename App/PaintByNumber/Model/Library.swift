@@ -398,14 +398,18 @@ final class Library {
     }
 
     /// Saves painting progress (called debounced while painting).
-    func saveProgress(_ progress: PaintProgress, for id: UUID) {
+    /// `recording` false: only the paint in hand changed, so the details (the painting's date,
+    /// and its place in the gallery) stay as they are.
+    func saveProgress(_ progress: PaintProgress, for id: UUID, recording: Bool = true) {
         guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return }
         guard artwork.regionCount == progress.regionCount else {
             Log.library.error("Not saving progress of \(id.uuidString, privacy: .public): \(progress.regionCount) regions, artwork has \(artwork.regionCount)")
             return
         }
-        artwork.record(progress)
-        replace(artwork)
+        if recording {
+            artwork.record(progress)
+            replace(artwork)
+        }
         persistProgress(progress, of: artwork)
     }
 

@@ -3,7 +3,9 @@ import PaintCore
 
 /// Persists a painting session: progress about a second after the last change (right
 /// away when the painting is finished, and at the latest `maxWait` after the first unsaved
-/// change, so continuous painting still saves), and a fresh thumbnail when leaving.
+/// change, so continuous painting still saves), and a fresh thumbnail when leaving. A new
+/// paint in hand alone is saved with the next save, leaving included, without touching the
+/// painting's details (its place in the gallery goes by its last change of paint).
 final class PaintingAutosaver {
     let session: PaintingSession
     let artworkID: UUID
@@ -14,6 +16,8 @@ final class PaintingAutosaver {
     /// When the oldest change not yet handed to the library happened.
     private var firstUnsaved: ContinuousClock.Instant?
     private var savedRevision: Int
+    /// The paint in hand on disk.
+    private var savedInHand: Int?
     /// The revision whose thumbnail is on disk (or at least queued and not known to have failed).
     private var thumbnailRevision: Int
     private var renderingRevision: Int?
@@ -30,6 +34,10 @@ final class PaintingAutosaver {
         self.delay = delay
         self.maxWait = maxWait
         savedRevision = session.revision
+        // What the file holds, not what the session opened on: a painting made over in place
+        // keeps its paint in hand on screen (`ArtworkPaintingView.keptColor`), which its new
+        // file doesn't have yet.
+        savedInHand = session.progress.inHand
         thumbnailRevision = session.revision
     }
 
@@ -60,7 +68,11 @@ final class PaintingAutosaver {
         firstUnsaved = nil
         if session.revision != savedRevision {
             savedRevision = session.revision
-            library.saveProgress(session.progress, for: artworkID)
+            savedInHand = session.selectedColor
+            library.saveProgress(session.savedProgress, for: artworkID)
+        } else if session.selectedColor != savedInHand {
+            savedInHand = session.selectedColor
+            library.saveProgress(session.savedProgress, for: artworkID, recording: false)
         }
         if refreshThumbnail && session.revision != thumbnailRevision && session.revision != renderingRevision {
             let revision = session.revision
