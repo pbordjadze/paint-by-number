@@ -119,7 +119,8 @@ public struct TemplateGenerator: Sendable {
         // a draft continued without its kept trail) the template is the one made before, byte
         // for byte. Otherwise each pinned paint is fitted as its color before mixing, by the mix
         // of the paint chosen here nearest it (painting-company row 278).
-        let kit = settings.paintMix == .kit
+        let mix = settings.normalized.paintMix
+        let kit = mix != nil
         let twice = kit && pinned != nil
         let buffer = twice && observer != nil ? SnapshotBuffer() : nil
         var (segmentation, weights, plan) = try segmented(
@@ -128,9 +129,11 @@ public struct TemplateGenerator: Sendable {
         var faces = kit
             ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
         var mixes = kit
-        if kit, let pinned {
+        // How much of the painting each paint covers, for lively paint's families.
+        var shares = mix == .lively ? LivelyPaint.shares(of: segmentation) : []
+        if let mix, let pinned {
             let means = segmentation.palette
-            let mixed = KitPaint.mix(means, space: segmentation.colorSpace, minDistance: settings.minPaletteDistance, faces: faces)
+            let mixed = mix.mixed(means, shares: shares, space: segmentation.colorSpace, minDistance: settings.minPaletteDistance, faces: faces)
             if mixed != pinned, !mixed.isEmpty {
                 let centers = pinned.map { paint in
                     let j = mixed.indices.min {
@@ -146,6 +149,7 @@ public struct TemplateGenerator: Sendable {
                 plan = nil
                 (segmentation, weights, plan) = try segmented(pinned, centers: centers, observer: observer, spanning: 0.4...0.7)
                 faces = nil
+                shares = []
                 mixes = false
             } else {
                 if let buffer, let observer { for shot in buffer.shots { try observer(shot) } }
@@ -163,9 +167,9 @@ public struct TemplateGenerator: Sendable {
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         // Before the line art's annotation, which reads the paints' lightness (writing on dark paint).
-        if mixes {
-            vector.template.palette = KitPaint.mix(
-                vector.template.palette, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
+        if mixes, let mix {
+            vector.template.palette = mix.mixed(
+                vector.template.palette, shares: shares, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
                 faces: faces)
             // The output's paints are the template's, so pbn's rasters show what is painted.
             segmentation.palette = vector.template.palette
