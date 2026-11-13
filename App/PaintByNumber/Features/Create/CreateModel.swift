@@ -1996,7 +1996,8 @@ final class CreateModel {
         switch style {
         case .painting:
             let long = max(template.width, template.height)
-            guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long) else {
+            // In bands: the preview is there sooner after every change of a setting (`TemplateRasterizer.drawInBands`).
+            guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long, inBands: true) else {
                 throw CreateError.renderFailed
             }
             picture = .painting(painting)
