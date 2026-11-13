@@ -7,6 +7,12 @@ synchronized folder would bundle it into the app.
 
 ## Gotchas
 
+- In SideStore and Debug builds a gallery card opens its painting through an arch (`ArchOpening`,
+  painting-company row 332): the shell's overlay grows the card's picture into the room, then
+  pushes the painting under it through `StartHandoff`, as Start Painting does under its cover; the
+  way back is still the zoom. The same builds use 1.3's names (row 331): Edit for Refine and ✎
+  Change, Art for the Paint page's paintings, Colors for Refine's Paint group and layer (the Tool
+  Guide's words through `RefineGuidePage.named`); UI tests see these names.
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
@@ -220,7 +226,14 @@ synchronized folder would bundle it into the app.
   `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
   progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
   completion bar names the painting only when the badge doesn't (`badgeShowsTitle`, from the top
-  bar's row that fits); during a replay its ring and
+  bar's row that fits). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 332)
+  the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
+  One paints the next night's library picture the gallery doesn't hold through the shell's
+  `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
+  finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
+  of the screen; `PaintView` measures the panel and the canvas makes room for it
+  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot;
+  during a replay its ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
   the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
