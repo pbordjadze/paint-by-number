@@ -29,6 +29,24 @@ struct RefineGuideTests {
         #expect(RefineGuidePage.of(.tool(.tryPainting)).practice.teaches == .tryPainting)
     }
 
+    /// Every page ends with On the practice picture, which SideStore and Debug builds lay over
+    /// the practice canvas as the page's invitation, the rest under How It Works
+    /// (painting-company row 316).
+    @Test func everyPageInvitesToItsPractice() {
+        for topic in RefineGuideTopic.sections.flatMap(\.topics) {
+            let blocks = RefineGuideText.blocks(RefineGuidePage.of(topic).text)
+            let lastHeading = blocks.last { if case .heading = $0 { true } else { false } }
+            #expect(lastHeading == .heading("On the practice picture"), "\(topic)")
+            let split = RefineGuideText.invitation(blocks)
+            #expect(!split.invitation.isEmpty && !split.rest.isEmpty, "\(topic)")
+            #expect(!split.invitation.contains { if case .heading = $0 { true } else { false } }, "\(topic)")
+        }
+        let split = RefineGuideText.invitation(RefineGuideText.blocks("Lead.\n\n## More\nMiddle.\n\n## Try\nDo it."))
+        #expect(split.invitation == [.paragraph("Do it.")])
+        #expect(split.rest == [.paragraph("Lead."), .heading("More"), .paragraph("Middle.")])
+        #expect(RefineGuideText.invitation([.paragraph("Alone.")]).invitation.isEmpty)
+    }
+
     /// A page's links name pages the guide lists, and none links to itself.
     @Test func everyLinkOpensAListedPage() throws {
         for topic in RefineGuideTopic.sections.flatMap(\.topics) {
