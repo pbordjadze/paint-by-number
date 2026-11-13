@@ -99,6 +99,8 @@ struct PaintView: View {
     @Environment(UnlimitedPaintings.self) private var paintings: UnlimitedPaintings?
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
+    /// Built out of sight before Start Painting (`PaintScreenWarmup`).
+    @Environment(\.paintScreenIsWarmup) private var isWarmup
     #if DEBUG
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
@@ -164,6 +166,7 @@ struct PaintView: View {
             zenMode: $zenMode, isGivingFeedback: feedback != nil, giveFeedback: startFeedback, replay: replay,
             close: onClose))
         .onAppear {
+            guard !isWarmup else { return }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.hasPhoto = photoLoader != nil
@@ -185,7 +188,7 @@ struct PaintView: View {
         .onChange(of: autoAdvance, initial: true) { _, advance in session.autoAdvance = advance }
         .onChange(of: zenMode, initial: true) { was, zen in
             session.flowsToNextArea = zen
-            if zen { PaintTips.used(.benchZen) }
+            if zen && !isWarmup { PaintTips.used(.benchZen) }
             if zen && !was { sayWhatZenDoes() }
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
@@ -204,6 +207,7 @@ struct PaintView: View {
             }
         }
         .onDisappear {
+            guard !isWarmup else { return }
             undoManager?.removeAllActions(withTarget: session)
             chrome.close()
         }
