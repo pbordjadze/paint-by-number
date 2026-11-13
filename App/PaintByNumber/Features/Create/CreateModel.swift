@@ -403,12 +403,12 @@ final class CreateModel {
         ).normalized
     }
 
-    /// How a new painting's paints are mixed: as a kit would mix them (PaintCore's `KitPaint`)
-    /// in SideStore and Debug builds, until Paul has seen it (painting-company row 191); the
-    /// regions' own colors in the release. A drawing's paints come from its palette set. The
+    /// How a new painting's paints are mixed: a kit's paints with their hues spread (PaintCore's
+    /// `LivelyPaint`, on `KitPaint`) in SideStore and Debug builds, until it is chosen for a
+    /// release (painting-company rows 191, 326); the regions' own colors in the release. A drawing's paints come from its palette set. The
     /// painting records it, so it regenerates as it was made.
     #if UNRELEASED
-    nonisolated static let newPaintMix: PaintMix? = .kit
+    nonisolated static let newPaintMix: PaintMix? = .lively
     #else
     nonisolated static let newPaintMix: PaintMix? = nil
     #endif
