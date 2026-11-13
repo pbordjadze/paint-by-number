@@ -1028,7 +1028,9 @@ Debug's only). The `Ravenna` target defines `UNRELEASED` in Debug alone, as the 
 `RavennaShaders.metal`, `Mosaics/` and `Samples/library.json`), on the package's `MosaicKit`,
 `MosaicEngine` and `MosaicCore`. It is Paint by Moonlight's app as copied at f1024441 with
 Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
-own, so it follows none of this app's later changes and needs none of its gates.
+own, so it follows none of this app's later changes unless they are carried over (row 263's
+polish sweep was, for the tips, the palette, toasts, the gallery and large text: painting-company
+row 330) and needs none of its gates.
 The painter sees it as **Paint by Mosaic** (painting-company row 281: its gallery's title, the PDF
 footer, Settings, Feedback, its credits); code, module, target, files and the name of the city
 in its texts (the Ground and Sinopia captions) stay Ravenna.

@@ -13,9 +13,6 @@ import UIKit.UIGestureRecognizerSubclass
 /// target answers: a menu that opens then (More's) stays open. A touch inside it (its ×, its words) is
 /// the popover's own. The popover takes the appearance of the view it hangs from. A tip over a sheet lets touches through to that sheet alone: outside it,
 /// the sheet's own dimming takes them, and the tip still closes.
-///
-/// Ravenna keeps its own copy of the tips (App/CLAUDE.md › Ravenna: it follows none of this app's
-/// later changes), so its tips are as they were.
 struct TipPassthrough: UIViewRepresentable {
     /// Whether a tip's popover is meant to be up now.
     var isShown: Bool
