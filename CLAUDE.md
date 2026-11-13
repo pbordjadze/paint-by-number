@@ -391,15 +391,13 @@ Saved paintings must open in every later build. The format history is documented
   `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
   numerals use New York, buttons and body text SF. The design system, tokens, canvas sheet and app
   icon: `App/CLAUDE.md` › Design.
-- Taste: every new screen or control, and every one not yet in the release, goes to the
-  **Lamplit Table** before it ships (Paul, October 17, 2026): the Lamp's standing jury for the
-  app's UI, the Astrologer, Rikyū, the Child at Bedtime, the Hedge Witch, Madeleine and
-  Originality (who can only veto). Its charters and how a round runs (a low-effort Opus subagent
-  per seat, the charter word for word, blind ballots, every reply kept) are `factory/GUARDIANS.md`
-  › The Lamplit Table and `factory/ORCHESTRATOR.md` in the private `painting-company` repository
-  (until October 23 on this repository's `claude/vibe-factory` branch, which older comments
-  name); a round's brief, replies and decisions go in its `factory/pieces/<piece>/`, and its
-  outcome in the commit that acts on it. Its answers are proposals: Paul decides.
+- Taste: a new screen or control, and anything else Paul will look at (visuals, store pages,
+  measured performance), gets a fresh critic each build before it ships (painting-company's
+  `process/critic.md`), done after 3 rounds or two rounds running of only polish; bug fixes skip
+  it. The Lamplit Table, the Lamp's jury for the app's UI (`factory/GUARDIANS.md` › The Lamplit
+  Table in the private `painting-company` repository), is no longer a gate (November 13, 2026):
+  it runs only when Paul asks for it, its rounds in `factory/pieces/<piece>/`. Its answers and
+  the critic's are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
   Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
@@ -631,7 +629,7 @@ him itself, with a push notification once he has gone quiet.
   painting-company; new text here quotes no one, Three layers). Text he'll send
   as his own (a message, a post) is a draft for him to change, and your report says so; the app's
   copy keeps the app's voice. Nothing already written needs rewriting for this.
-- **Propose, don't start.** Any session (and the Lamplit Table, as a round's last question) may
+- **Propose, don't start.** Any session (and a critic or the Lamplit Table, as a round's last question) may
   propose new work it noticed: one short `new` row in the backlog (what, why, size, who
   thought of it), at most one a night, keeping to its own topic, and its next report to Paul names
   the row. Paul signs off on it. Small fixes inside a session's own task aren't proposals.

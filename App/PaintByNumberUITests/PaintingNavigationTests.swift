@@ -135,6 +135,12 @@ final class PaintingNavigationTests: XCTestCase {
         attachScreenshot(of: app, named: "length-chip-open")
         XCTAssertEqual(app.keyboards.count, 0, "A keyboard rose with the length chip's menu")
         XCTAssertTrue(quick.exists, "The length chip's menu closed by itself")
+        // The chosen length's row too, beside its checkmark (painting-company row 305).
+        for name in ["Quick", "Relaxed", "Detailed"] {
+            let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+            XCTAssertTrue(row.exists, "The length chip's menu has no \(name) row")
+            XCTAssertNotNil(row.label.rangeOfCharacter(from: .decimalDigits), "\(name)'s row shows no time: \(row.label)")
+        }
     }
 
     #if UNRELEASED
