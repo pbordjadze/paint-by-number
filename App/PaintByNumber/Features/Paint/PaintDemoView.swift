@@ -267,7 +267,7 @@ private final class Demo {
             paint(fraction: 0.4)
             showsPhoto = true
         case "paint-book-progress":
-            if DemoMode.photos.isEmpty { paint(fraction: 0.45) } else { paintPet(fraction: 0.88, holdingDark: false) }
+            if DemoMode.photos.isEmpty { paint(fraction: 0.45) } else { paintPet(fraction: DemoMode.photoPainted(default: 0.88), holdingDark: false) }
         case "paint-book-dark-paper", "paint-book-night-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
@@ -292,7 +292,7 @@ private final class Demo {
         case "paint-book-zoomed":
             if let center = petCenter {
                 // Onto the pet, its face painted but for one dark paint.
-                paintPet(fraction: 0.8, holdingDark: true)
+                paintPet(fraction: DemoMode.photoPainted(default: 0.8), holdingDark: true)
                 camera = CanvasCamera(zoom: 3, center: center * SIMD2(Float(t.width), Float(t.height)))
             } else {
                 paint(fraction: 0.2)

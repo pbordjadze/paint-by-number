@@ -91,6 +91,14 @@ enum DemoMode {
         return value.split(separator: ";").compactMap(point)
     }()
 
+    /// `-demoPhotoPainted <fraction>`: how much of a `-demoPhotos` painting `paint-book-progress`
+    /// and `paint-book-zoomed` paint (outward from the pet), in place of their own amounts.
+    nonisolated static func photoPainted(default value: Double) -> Double {
+        guard !photos.isEmpty, let text = UserDefaults.standard.string(forKey: "demoPhotoPainted"),
+              let fraction = Double(text), (0...1).contains(fraction) else { return value }
+        return fraction
+    }
+
     nonisolated private static func point(_ text: Substring) -> SIMD2<Float>? {
         let parts = text.split(separator: ",").compactMap { Float($0) }
         return parts.count == 2 ? SIMD2(parts[0], parts[1]) : nil
