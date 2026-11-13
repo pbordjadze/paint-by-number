@@ -1606,6 +1606,12 @@ final class CreateModel {
             if case .split = edit, let shown = trail?.template, let photo = source?.image {
                 kept = await Self.painting(edit, on: shown, photo: photo)
             }
+            // A rub with no line under it on screen is nothing, as it is laid there: kept, it would
+            // take the line nearest it on the new template (`TemplateEditor.reanchored`).
+            if let shown = trail?.template, await !Self.erases(edit, on: shown) {
+                handled(serial, shown: false)
+                return
+            }
             let now = refinements
             let edits = placement.prior(now.edits) + [kept]
             // Refused or kept, it settles with the edits sent before it, once the template is remade.
@@ -1649,6 +1655,13 @@ final class CreateModel {
                 guard epoch == refineEpoch else { return }
                 if case .declined(let why) = laid.verdict {
                     say(.init(declined: edit, because: why))
+                    handled(serial)
+                    return
+                }
+                // Nothing to change at the end, as on the template it was made on: not kept (an
+                // eraser's rub kept would take a line nearest it when laid again,
+                // `TemplateEditor.reanchored`).
+                if case .nothing = laid.verdict, placement == .last {
                     handled(serial)
                     return
                 }
@@ -1920,6 +1933,16 @@ final class CreateModel {
         var trail: EditTrail
         var verdict: EditTrail.Verdict
         var preview: Preview?
+    }
+
+    /// Whether `edit`, an eraser's rub or a Line Eraser's tap, takes ink out of `template`; true
+    /// for any other edit.
+    @concurrent
+    private static func erases(_ edit: TemplateEditor.Edit, on template: Template) async -> Bool {
+        switch edit {
+        case .erase, .eraseLine: (try? TemplateEditor.apply(edit, to: template, verify: false).outcome.changed) ?? true
+        default: true
+        }
     }
 
     /// `edit` with the colors of `photo` for the pieces it cuts on `template` (`TemplateEditor.painted`).
