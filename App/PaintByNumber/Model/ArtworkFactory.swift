@@ -35,6 +35,14 @@ nonisolated enum ArtworkFactory {
         var progress: PaintProgress?
         if let paintedFraction {
             var painted = self.progress(painting: paintedFraction, of: template)
+            #if DEBUG
+            // A `-demoPhotos` photo is painted outward from the pet, as its Paint scenarios are.
+            if sample.file != nil, paintedFraction < 1 {
+                painted = PaintProgress(regionCount: template.regions.count)
+                let center = DemoMode.photoCenter(of: sample.title) ?? SIMD2(0.5, 0.5)
+                for region in DemoMode.petRegions(of: template, center: center, fraction: paintedFraction).painted { painted.paint(region) }
+            }
+            #endif
             // Plausible painting time for a demo in progress.
             painted.activeSeconds = Double(painted.paintedCount) * 3
             progress = painted
