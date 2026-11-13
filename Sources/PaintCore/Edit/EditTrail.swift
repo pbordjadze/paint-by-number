@@ -9,7 +9,10 @@ import Foundation
 /// device. An edit that does nothing on its ground (it was declined, or it found nothing to
 /// change, as an eraser rubbing bare paper does) is left out of the template and stays in the list,
 /// where it does nothing again; so a list laid on a new base shows what still fits it, and the
-/// edits that no longer apply are counted (`Replay.left`), not lost.
+/// edits that no longer apply are counted (`Replay.left`), not lost. An eraser's rub or a Line
+/// Eraser's tap laid again with no line under it is carried onto the line nearest it, as close as
+/// a base made again draws it (`TemplateEditor.reanchored`, in `move(to:)`; `add(_:)` lays the
+/// painter's new edit as it comes, so a rub over bare paper stays nothing).
 ///
 /// An edit brings its colors through the looks and repaints made before it
 /// (`TemplateEditor.recolored`), so a line drawn under a look takes the look.
@@ -146,7 +149,13 @@ public struct EditTrail: Sendable {
             if position > 0 { kept[position] = current }
             let recolors = target.indices.prefix(position)
                 .filter { made[$0] && TemplateEditor.isRecolor(target[$0]) }.map { target[$0] }
-            let (next, verdict) = Self.lay(target[position], on: current, after: recolors)
+            var (next, verdict) = Self.lay(target[position], on: current, after: recolors)
+            // An eraser's rub laid again finding no line under it, on a base made again, takes
+            // the line it was made on, a little way off now (`TemplateEditor.reanchored`). The
+            // list keeps the edit as made, so the base it was made on lays it as it was.
+            if verdict == .nothing, let moved = TemplateEditor.reanchored(target[position], on: current) {
+                (next, verdict) = Self.lay(moved, on: current, after: recolors)
+            }
             made.append(verdict.isMade)
             switch verdict {
             case .made(let tooSmall):

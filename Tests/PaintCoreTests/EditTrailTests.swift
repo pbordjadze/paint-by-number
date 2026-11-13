@@ -137,6 +137,39 @@ struct EditTrailTests {
         #expect(again.template == trail.template && again.template.encoded() == trail.template.encoded())
     }
 
+    /// An eraser's rub, or a Line Eraser's tap, laid again on a base made again that draws its line
+    /// a little way off is carried onto that line, and the list keeps it as made; a new rub with
+    /// nothing under it, or one with no line near, is still nothing (painting-company row 322).
+    @Test func aRubLaidAgainFollowsItsLineALittleWayOff() throws {
+        let line: [SIMD2<Float>] = [SIMD2(15, -4), SIMD2(18.5, 30.25), SIMD2(15, 71)]
+        let made = try Self.laid([.draw(points: line)])
+        let remade = try Self.laid([.draw(points: line.map { $0 + SIMD2(5, 0) })])
+        let rub: Edit = .erase(path: [SIMD2(15, 40), SIMD2(18, 40)], radius: 2)
+        let tap: Edit = .eraseLine(at: SIMD2(10, 40), reach: 8)
+        for edit in [rub, tap] {
+            #expect(try TemplateEditor.apply(edit, to: made).outcome.changed, "the edit takes ink out where it was made")
+            #expect(try !TemplateEditor.apply(edit, to: remade).outcome.changed, "the line moved out of its reach")
+
+            var trail = EditTrail(base: remade)
+            let replay = try trail.move(to: [edit])
+            #expect(replay.made == 1 && replay.left == 0)
+            #expect(trail.edits == [edit], "the list keeps the edit as it was made")
+            let moved = try #require(TemplateEditor.reanchored(edit, on: remade))
+            #expect(trail.template == (try Self.laid([moved], on: remade)))
+            expectValid(trail.template)
+            // On the base it was made on it lays as it was.
+            var first = EditTrail(base: made)
+            try first.move(to: [edit])
+            #expect(first.template == (try Self.laid([edit], on: made)))
+            // The painter's new edit lays as it comes.
+            var fresh = EditTrail(base: remade)
+            #expect(fresh.add(edit) == .nothing)
+        }
+        #expect(TemplateEditor.reanchored(.erase(path: [SIMD2(15, 40), SIMD2(18, 40)], radius: 2), on: TemplateEditorTests.scene) == nil,
+                "no line within reach")
+        #expect(TemplateEditor.reanchored(.fill(at: SIMD2(15, 40), color: SIMD3(0.5, 0, 0)), on: remade) == nil)
+    }
+
     /// A shape too small for a number is drawn as a stroke; the trail says so.
     @Test func aShapeTooSmallForANumberIsReported() throws {
         let tiny: [SIMD2<Float>] = [SIMD2(99.2, 24.2), SIMD2(100.8, 24.2), SIMD2(100.8, 25.8), SIMD2(99.2, 25.8)]
