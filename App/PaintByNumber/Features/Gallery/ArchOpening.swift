@@ -39,12 +39,15 @@ struct ArchOpeningView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @State private var grown = false
     @State private var flat = false
     @State private var landed: CGRect?
     @State private var faded = false
+    /// The arch filled the screen and the painting was pushed under it.
+    @State private var covered = false
 
     /// How long the arch takes to fill the screen.
     static let growth: Double = 0.5
@@ -104,6 +107,7 @@ struct ArchOpeningView: View {
         withAnimation(reduceMotion ? .easeOut(duration: growth) : .timingCurve(0.65, 0, 0.35, 1, duration: growth)) {
             grown = true
         } completion: {
+            covered = true
             onCovered()
         }
         if !reduceMotion {
@@ -122,17 +126,21 @@ struct ArchOpeningView: View {
             }
         case .timedOut(let id) where id == opening.artwork.id && !faded:
             dissolve()
+        case .idle where covered && !faded:
+            // The hand-off was called off under the arch (a file opened from another app): the arch
+            // goes with it, completing nothing.
+            dissolve(completes: false)
         default:
             break
         }
     }
 
-    private func dissolve() {
+    private func dissolve(completes: Bool = true) {
         guard !faded else { return }
         withAnimation(.easeOut(duration: Self.fade)) {
             faded = true
         } completion: {
-            handoff.complete()
+            if completes { handoff.complete() }
             onFinished()
         }
     }
@@ -157,10 +165,26 @@ struct ArchOpeningView: View {
         let inputs = PaintingLayout.Inputs(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: max(1, opening.artwork.colorCount),
-            isComplete: opening.artwork.isComplete)
+            isComplete: opening.artwork.isComplete,
+            completionHeight: opening.artwork.isComplete ? expectedPanel(geo: geo) : nil)
         let page = PaintingLayout(inputs).page(
             of: CGSize(width: opening.artwork.width, height: opening.artwork.height), inputs: inputs, rightToLeft: false)
         return page.isPlace ? page : screen.insetBy(dx: 20, dy: screen.height * 0.2)
+    }
+
+    /// A finished painting's Finished panel with its doors, as `PaintView` will lay it.
+    private func expectedPanel(geo: GeometryProxy) -> CGFloat? {
+        let width = min(CompletionBar.panelWidth, geo.size.width - 2 * PaintingLayout.edge) - 2 * CompletionBar.doorsInset
+        let room = geo.size.height * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact)
+        let size = min(dynamicTypeSize, .xxLarge)
+        guard let doors = DoorMetrics.fitting(
+            count: FinishedDoor.allCases.count, width: width,
+            height: room - CompletionBar.height - CompletionBar.doorsInset, dynamicTypeSize: size)
+        else { return nil }
+        let rows = CGFloat(doors.rows)
+        return CompletionBar.height + CompletionBar.doorsInset
+            + rows * (doors.arch.height + DoorMetrics.labelGap + DoorMetrics.labelHeight(size))
+            + (rows - 1) * DoorMetrics.rowGap
     }
 }
 #endif

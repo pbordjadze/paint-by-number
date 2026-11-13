@@ -83,6 +83,11 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     static let leastPage: CGFloat = 200
     static let foldSpan: CGFloat = 0.8
 
+    /// The most of the screen the Finished panel with its doors takes (SideStore and Debug builds,
+    /// `FinishedDoors`): the mockups' painting stepped back to about a quarter of an iPhone's
+    /// height (`factory/pieces/doors/`); a phone on its side keeps more for the painting.
+    static func doorsShare(compactHeight: Bool) -> CGFloat { compactHeight ? 0.55 : 0.65 }
+
     /// How much bigger the bar's buttons and the swatches are (`QuietPainting.scale`).
     static func chromeScale(regularWidth: Bool) -> CGFloat { QuietPainting.scale(regularWidth: regularWidth) }
     /// The top bar's height: its round buttons' size, 44 pt on compact widths.

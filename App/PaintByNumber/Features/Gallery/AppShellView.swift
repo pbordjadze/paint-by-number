@@ -89,7 +89,7 @@ struct AppShellView: View {
             gallery
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
-                    guard let photo = photos.first, !isCreating else { return false }
+                    guard let photo = photos.first, !isCreating, !isArchOpening else { return false }
                     droppedPhoto = photo.data
                     isCreating = true
                     return true
@@ -132,7 +132,7 @@ struct AppShellView: View {
             // Not over another sheet or the create flow: one presentation can't present another
             // here, and the flag would stay set, leaving the shelf covered (review of polish7).
             openSettings: { if !isCovered { isShowingSettings = true } },
-            newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
+            newPainting: { if !isCovered && !isArchOpening && path.isEmpty { isCreating = true } },
             search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
@@ -231,13 +231,22 @@ struct AppShellView: View {
     private var gallery: GalleryView {
         #if UNRELEASED
         GalleryView(
-            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
+            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { if !isArchOpening { isCreating = true } },
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks, onOpen: openThroughArch,
             cardPlaces: cardPlaces)
         #else
         GalleryView(
             namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
+        #endif
+    }
+
+    /// A painting is opening through the arch: nothing else opens over it meanwhile.
+    private var isArchOpening: Bool {
+        #if UNRELEASED
+        archOpening != nil
+        #else
+        false
         #endif
     }
 
@@ -264,7 +273,8 @@ struct AppShellView: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) { galleryRecedes = false }
         let id = opening.artwork.id
-        guard handoff.begin(id) else {
+        // A create flow opened meanwhile (a file from another app) keeps the hand-off for its own.
+        guard !isCreating, handoff.begin(id) else {
             archOpening = nil
             if !path.contains(id) { path = [id] }
             return
@@ -276,7 +286,7 @@ struct AppShellView: View {
     /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,
     /// it opens on the Paint page.
     private func paintAnother(_ sample: Sample?) {
-        guard !isCreating else { return }
+        guard !isCreating, archOpening == nil else { return }
         if let sample {
             paint(sample)
         } else {
@@ -345,7 +355,7 @@ struct AppShellView: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Paint", systemImage: "plus") { isCreating = true }
+                Button("Paint", systemImage: "plus") { if !isArchOpening { isCreating = true } }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
             }

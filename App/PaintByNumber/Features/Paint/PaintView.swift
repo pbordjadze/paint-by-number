@@ -69,6 +69,7 @@ struct PaintView: View {
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.layoutDirection) private var layoutDirection
     /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`), in the safe area.
     @State private var foldPlace: FoldPlace?
@@ -782,17 +783,14 @@ struct PaintView: View {
     private func doorMetrics(layout: PaintingLayout, geo: GeometryProxy, controlsWidth: CGFloat) -> DoorMetrics? {
         let page = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom - layout.controls.top - layout.controls.bottom
         let bars = Self.topGap + barHeight(layout.regularChrome) + PaintingLayout.canvasGap + Self.bottomGap + Self.bookGap
-        let room = layout.mode == .whole ? page * Self.doorsShare : page - bars
+        let room = layout.mode == .whole
+            ? page * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact) : page - bars
         let width = min(CompletionBar.panelWidth, controlsWidth - 2 * Self.edge) - 2 * CompletionBar.doorsInset
         let height = room - CompletionBar.height - CompletionBar.doorsInset
         return DoorMetrics.fitting(
             count: FinishedDoor.shown(changes: onChange != nil).count, width: width, height: height,
             dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
     }
-
-    /// The most of the screen the Finished panel takes: the mockups' painting stepped back to
-    /// about a quarter of an iPhone's height (`factory/pieces/doors/`).
-    private static let doorsShare: CGFloat = 0.65
     #endif
 
     // MARK: Actions

@@ -2,6 +2,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import os
 import PaintCore
 import SwiftUI
 import UIKit
@@ -30,6 +31,7 @@ struct FinishedDoors: View {
     /// The file On Paper or Send It made, while the share sheet is up for it.
     @State private var sharedFile: URL?
     @State private var preparing: FinishedDoor?
+    @State private var sharedDoor: FinishedDoor?
 
     var body: some View {
         let doors = FinishedDoor.shown(changes: onChange != nil)
@@ -44,12 +46,6 @@ struct FinishedDoors: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .background {
-            ActivityShareSheet(item: sharedFile) {
-                if let sharedFile { ArtworkExporter.removeExport(at: sharedFile) }
-                sharedFile = nil
-            }
-        }
         .task(id: session.revision) { await glimpses.prepare(for: session) }
         .task(id: next?.id) {
             guard let next else {
@@ -91,6 +87,16 @@ struct FinishedDoors: View {
             .contentShape(.rect)
         }
         .buttonStyle(PressableCardStyle())
+        // The share sheet hangs from the door that made its file (an iPad's popover points at it).
+        .background {
+            if sharedDoor == door {
+                ActivityShareSheet(item: sharedFile) {
+                    if let sharedFile { ArtworkExporter.removeExport(at: sharedFile) }
+                    sharedFile = nil
+                    sharedDoor = nil
+                }
+            }
+        }
         .disabled(preparing != nil)
         .accessibilityLabel(name(door))
         .accessibilityHint(subtitle(door, next: next))
@@ -210,7 +216,9 @@ struct FinishedDoors: View {
         Task {
             defer { preparing = nil }
             do {
-                sharedFile = try await export()
+                let file = try await export()
+                sharedDoor = door
+                sharedFile = file
             } catch {
                 Log.library.error("A door's file couldn't be made: \(String(describing: error), privacy: .public)")
             }
@@ -293,7 +301,7 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
 @Observable
 final class DoorGlimpses {
     /// Long side of a glimpse, in pixels: a door at most `DoorMetrics.largest` points wide, at 3×.
-    static let pixelSize = 560
+    nonisolated static let pixelSize = 560
 
     private(set) var lines: CGImage?
     private(set) var paper: CGImage?
