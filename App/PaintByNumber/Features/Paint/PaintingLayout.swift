@@ -47,6 +47,9 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         /// lines stay as they are while colors finish.
         var colors: Int
         var isComplete: Bool
+        /// The completion bar's height as laid out, when it is taller than `CompletionBar.height`
+        /// (the doors after Finished, SideStore and Debug builds); nil is that height.
+        var completionHeight: CGFloat? = nil
         /// The fold of a half-open iPhone Duo, where it is active: its reserved region (margins
         /// included) in the whole screen's coordinates, x from the leading edge
         /// (`PaintingLayout.fold(_:rightToLeft:safe:)`, or a window's `fold(in:rightToLeft:)`). Nil when
@@ -202,7 +205,8 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         if inputs.isComplete {
             return EdgeInsets(
                 top: top, leading: safe.leading,
-                bottom: safe.bottom + bottomGap + CompletionBar.height + canvasGap, trailing: safe.trailing)
+                bottom: safe.bottom + bottomGap + (inputs.completionHeight ?? CompletionBar.height) + canvasGap,
+                trailing: safe.trailing)
         }
         if palette.side {
             return EdgeInsets(

@@ -20,6 +20,12 @@ struct GalleryView: View {
     /// Whether a rename, restart or delete question (or the restart's failure) is up; set false
     /// by the shell to close it, as a photo shared in from another app does.
     @Binding var isAsking: Bool
+    #if UNRELEASED
+    /// Opens a painting through the arch (`ArchOpening`), from its picture's place in
+    /// `cardPlaces`; nil opens it by the usual link.
+    var onOpen: ((Artwork) -> Void)?
+    var cardPlaces: CardPlaces?
+    #endif
 
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -292,10 +298,31 @@ struct GalleryView: View {
         return ids
     }
 
-    private func card(_ artwork: Artwork) -> some View {
+    @ViewBuilder
+    private func link(_ artwork: Artwork) -> some View {
+        #if UNRELEASED
+        if let onOpen {
+            Button { onOpen(artwork) } label: {
+                ArtworkCard(artwork: artwork, namespace: namespace)
+            }
+            // The card's picture is its top, as wide as the card.
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { card in
+                cardPlaces?.set(CGRect(x: card.minX, y: card.minY, width: card.width, height: card.width), for: artwork.id)
+            }
+        } else {
+            NavigationLink(value: artwork.id) {
+                ArtworkCard(artwork: artwork, namespace: namespace)
+            }
+        }
+        #else
         NavigationLink(value: artwork.id) {
             ArtworkCard(artwork: artwork, namespace: namespace)
         }
+        #endif
+    }
+
+    private func card(_ artwork: Artwork) -> some View {
+        link(artwork)
         .buttonStyle(PressableCardStyle())
         .cardTip(tips(of: artwork))
         .contextMenu { menu(for: artwork) }

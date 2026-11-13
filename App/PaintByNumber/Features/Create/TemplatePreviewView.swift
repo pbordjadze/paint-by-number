@@ -313,6 +313,16 @@ struct TemplatePreviewView: View {
         !isRefining
     }
 
+    /// The drawing tools' button: Edit under 1.3's names (painting-company row 331), Refine in
+    /// the release.
+    private var refineName: Text {
+        #if UNRELEASED
+        Text("Edit")
+        #else
+        Text("Refine")
+        #endif
+    }
+
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         if let onClose, !isEnlarged {
@@ -344,7 +354,7 @@ struct TemplatePreviewView: View {
                             Text("Preparing…")
                         }
                     } else {
-                        Text("Refine")
+                        refineName
                     }
                 }
                 // Without line art there is nothing to draw on. Else it is on while the painting
@@ -352,7 +362,7 @@ struct TemplatePreviewView: View {
                 // template's canvas units), so a tap before it is made waits for it
                 // (`CreateModel.askForRefine`) and opens by itself.
                 .disabled(!model.canAskForRefine || isStarting || !model.hasLineArtInput)
-                .accessibilityLabel("Refine")
+                .accessibilityLabel(refineName)
                 .accessibilityValue(
                     model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.shownChangeCount))
                 .accessibilityIdentifier("refine")

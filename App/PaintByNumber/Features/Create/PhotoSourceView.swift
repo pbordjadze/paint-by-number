@@ -194,7 +194,12 @@ struct PhotoSourceView: View {
     @ViewBuilder
     private func sectionTitle(_ kind: Sample.Kind) -> some View {
         switch kind {
+        #if UNRELEASED
+        // 1.3's name (painting-company row 331): "Paint" is filling alone, so famous paintings are Art.
+        case .painting: SectionTitle("Art", style: .headline)
+        #else
         case .painting: SectionTitle("Paintings", style: .headline)
+        #endif
         case .photograph: SectionTitle("Photographs", style: .headline)
         }
     }

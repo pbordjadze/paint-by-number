@@ -112,6 +112,16 @@ nonisolated struct RefineGuidePage {
     var text: String
     var practice: RefinePracticeSetup
 
+    /// A page's words under the release's names, or under 1.3's in SideStore and Debug builds
+    /// (painting-company row 331: Refine is Edit, its Paint group and layer are Colors).
+    static func named(_ release: String, _ unreleased: String) -> String {
+        #if UNRELEASED
+        return unreleased
+        #else
+        return release
+        #endif
+    }
+
     // The practice pictures: a moonlit evening with a far hill, a near hill with a tree, a cottage
     // with a four-paned window and a door, the moon and a few stars (`RefinePractice`), and for
     // Writing a note on a table ("Back at six", "Soup is hot", "feed the cat" in pencil) beside a
@@ -122,7 +132,8 @@ nonisolated struct RefineGuidePage {
             RefineGuidePage(
                 summary: String(localized: "refine.guide.basics.summary", defaultValue: "How a picture is made, and the gestures every tool shares.",
                                 comment: "Tool Guide, The Basics: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.basics.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.basics.text", defaultValue: """
                     A picture in Refine is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Refine’s own messages call a cell an “area”.
 
                     The tools are in five groups:
@@ -166,12 +177,57 @@ nonisolated struct RefineGuidePage {
                     Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Each page of this guide has its own copy of the practice picture, with the layers set for that page. Reset, above it, puts it back as it was whenever you like, and clears Undo with it.
                     """,
                              comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.basics.text.edit", defaultValue: """
+                    A picture in Edit is made of three things. Ink is the lines you see. Cells are the areas the picture is divided into, and each cell has a number. Paint is the color of a cell, and all the cells of one paint share its number. Most cells are bounded by lines; a border with no line shows as a dashed edge while you work with cells, and isn’t drawn on the finished picture. Edit’s own messages call a cell an “area”.
+
+                    The tools are in five groups:
+
+                    - Ink: the Pen, Shapes, Bend Line, the Eraser and the Line Eraser
+                    - Cells: Select, Cell Edge, Merge, Move Edge and Make Cell
+                    - Colors: the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks
+                    - Numbers: Move Number
+                    - See: Writing and Try Painting
+
+                    On iPad they all stand in a column at the side; on iPhone, pick a group and then a tool. Whatever options a tool has appear along the bottom, and so does the palette: a swatch for each paint, with its number, and a color wheel at the end for a new one. Each tool is made for ink, cells, paint or numbers, though one change can lead to another: erase the line between two cells, and they become one.
+
+                    ## When a change seems to do nothing
+                    It often did something. A line that closes off a shape makes a new cell, but the new cell keeps the paint of the cell it was cut from, so it looks the same until you paint it. Turn on Numbers in [Layers](guide:layers) to see its number.
+
+                    When a tool can’t do something, a note at the top says why, and nothing changes. A few misses say nothing at all, such as a drag too short to count.
+
+                    ## Moving around
+                    Pinch to zoom, and drag with two fingers to move. When you’re zoomed in, a quick pinch inward fits the whole picture to the screen, and a quick pinch outward straight after takes you back.
+
+                    Tap with two fingers to undo and with three to redo. Leave them on the screen to keep going, faster the longer you hold.
+
+                    Touch and hold still for half a second to pick up a color. A loupe appears: its top half is the color under your finger, its bottom half your current paint. Slide to another color if you like, and lift to pick it. Your tool stays the same. This works with every tool but Bend Line, Move Edge and Move Number, where holding still is part of the drag.
+
+                    Tap with four fingers to hide the tools and see the picture alone, and again to bring them back.
+
+                    ## Apple Pencil and a keyboard
+                    The Pencil’s double tap or squeeze does what you chose for it in iPadOS Settings › Apple Pencil. If it’s set to switch to the eraser, it takes you from the Pen or Shapes to the Eraser, and from either eraser back to the Pen. With Only Draw with Apple Pencil on, your finger moves the picture and only the Pencil draws.
+
+                    On a keyboard, hold ⌘ to see the shortcuts. Most tools have a letter, such as P for the Pen and B for the Paint Brush, and [ and ] change the size of the brush and the erasers.
+
+                    The practice pictures in this guide work with the finger gestures and ⌘Z, but not the four-finger tap or the other shortcuts.
+
+                    ## Starting from a blank page
+                    Until your first change, Start From at the top lets you pick Blank instead of Generated: your photo as one plain cell, to draw everything yourself. Shapes you draw on it all keep that one paint, so either paint them as you go or turn on Color from Photo on the [Pen](guide:pen) first.
+
+                    ## Keeping your changes
+                    Done, the ✓ at the top, keeps what you did. Cancel throws it away and puts the picture back as it was when Edit opened; if you’ve changed anything, it asks first.
+
+                    ## On the practice picture
+                    Zoom in on the cottage’s window, then touch and hold one pane until the loupe shows its yellow. A quick pinch brings the whole evening back. Each page of this guide has its own copy of the practice picture, with the layers set for that page. Reset, above it, puts it back as it was whenever you like, and clears Undo with it.
+                    """,
+                             comment: "Tool Guide, The Basics: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .select))
         case .layers:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.layers.summary", defaultValue: "What shows: the numbers, the ink, the paint and your photo.",
                                 comment: "Tool Guide, Layers: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.layers.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.layers.text", defaultValue: """
                     The Layers panel changes what you see while you work. The picture itself stays as it is. Tap Layers at the top of Refine to open it.
 
                     It lists four layers, from the top: Numbers, Ink, Paint and Photo. Refine opens with Ink and Paint showing, the picture as it will look finished. Numbers starts off, so a cell you’ve just made shows no number until you turn Numbers on.
@@ -186,6 +242,21 @@ nonisolated struct RefineGuidePage {
                     Here Photo is on, under Paint at half. Turn Photo off to see the paint alone, then on again. Bring Paint down to a quarter and zoom in on the sky until the stars show: they’re in the photo but not in the paint. Draw a small loop around one with the Pen.
                     """,
                              comment: "Tool Guide, Layers: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.layers.text.edit", defaultValue: """
+                    The Layers panel changes what you see while you work. The picture itself stays as it is. Tap Layers at the top of Edit to open it.
+
+                    It lists four layers, from the top: Numbers, Ink, Colors and Photo. Edit opens with Ink and Colors showing, the picture as it will look finished. Numbers starts off, so a cell you’ve just made shows no number until you turn Numbers on.
+
+                    Colors and Photo each have a slider for how strongly they show. With Photo on and Colors turned down, your photo shows through the paint, and you can trace it with the Pen.
+
+                    The Eyedropper picks the color of whichever layer shows more strongly. With Colors at half, the colors still win, so to pick a color from the photo, turn Colors below half or off.
+
+                    The layer your tool works on is tinted in the panel. If you’ve hidden it, Edit shows it again as soon as you use the tool, so you can see what you’re changing. Select and the Eyedropper only look, so they leave the layers as you set them.
+
+                    ## On the practice picture
+                    Here Photo is on, under Colors at half. Turn Photo off to see the paint alone, then on again. Bring Colors down to a quarter and zoom in on the sky until the stars show: they’re in the photo but not in the paint. Draw a small loop around one with the Pen.
+                    """,
+                             comment: "Tool Guide, Layers: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen, layers: .tracing))
         case .tool(let tool):
             page(of: tool)
@@ -231,7 +302,8 @@ nonisolated struct RefineGuidePage {
             RefineGuidePage(
                 summary: String(localized: "refine.guide.shape.summary", defaultValue: "Draws lines, rectangles, ovals, curves, hexagons and stars.",
                                 comment: "Tool Guide, Shapes: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.shape.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.shape.text", defaultValue: """
                     Pick a figure among the tool’s options at the bottom, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Refine opens, the bar starts on Line.
 
                     A closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.
@@ -246,6 +318,21 @@ nonisolated struct RefineGuidePage {
                     Draw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it. Its ends land on the tree’s and the cottage’s lines, but the hill runs on beneath both, so the curve closes nothing off: it stays a line of ink, a path drawn on the hill.
                     """,
                              comment: "Tool Guide, Shapes: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.shape.text.edit", defaultValue: """
+                    Pick a figure among the tool’s options at the bottom, then drag across the box the figure should fill, from one corner to the opposite one. For a line, drag from one end to the other. The figure follows your finger until you lift it. Each time Edit opens, the bar starts on Line.
+
+                    A closed figure makes a new cell. Like a shape drawn with the [Pen](guide:pen), it keeps the paint of the cell it was drawn in until you paint it, unless Color from Photo is on.
+
+                    A curve takes two drags. The first sets its ends, and the second bends it toward your finger. To leave it straight, tap anywhere on the picture, or pick another tool. Undo takes the curve away. While a curve waits, a line under the tools reminds you: “Drag to bend the curve, or tap to keep it straight.”
+
+                    The Snap switch works only on lines and curves: it moves their ends onto lines near them. Rectangles, ovals, hexagons and stars go exactly where you drag them, so draw them clear of other lines or well across them.
+
+                    A drag too small to make a figure does nothing.
+
+                    ## On the practice picture
+                    Draw a star in the sky. Then pick Curve and draw a path over the near hill from the tree to the cottage’s door: drag its ends first, then drag again to bend it. Its ends land on the tree’s and the cottage’s lines, but the hill runs on beneath both, so the curve closes nothing off: it stays a line of ink, a path drawn on the hill.
+                    """,
+                             comment: "Tool Guide, Shapes: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .shape, shape: .star))
         case .eraser:
             RefineGuidePage(
@@ -421,7 +508,8 @@ nonisolated struct RefineGuidePage {
             RefineGuidePage(
                 summary: String(localized: "refine.guide.brush.summary", defaultValue: "Paints a stroke in the current paint.",
                                 comment: "Tool Guide, the Paint Brush: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.brush.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.brush.text", defaultValue: """
                     Brush across the picture, and everything under the stroke takes the current paint. Where the stroke crosses a cell, the part under it becomes a cell of its own, with dashed edges along the sides of the stroke. Where it touches a cell that already has the paint, the two join into one. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.
 
                     Start moving as soon as you touch the screen. If your finger rests for half a second before it moves, Refine takes it as a touch and hold and picks up a color instead.
@@ -434,12 +522,26 @@ nonisolated struct RefineGuidePage {
                     Touch and hold the cottage’s wall to pick up its cream, then paint a winding path over the near hill to the door.
                     """,
                              comment: "Tool Guide, the Paint Brush: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.brush.text.edit", defaultValue: """
+                    Brush across the picture, and everything under the stroke takes the current paint. Where the stroke crosses a cell, the part under it becomes a cell of its own, with dashed edges along the sides of the stroke. Where it touches a cell that already has the paint, the two join into one. It paints under the drawn lines and stops at them: a stroke across a line makes two cells, one on each side.
+
+                    Start moving as soon as you touch the screen. If your finger rests for half a second before it moves, Edit takes it as a touch and hold and picks up a color instead.
+
+                    The Size slider sets the brush’s width on the screen, not on the picture, so zoom in to paint finer. A tap paints a single dab. With the Apple Pencil hovering over the picture, a ring shows the brush’s size.
+
+                    Where the stroke would leave a sliver too small to hold a number, that sliver keeps its old paint. If the whole stroke is like that, nothing changes, and a note at the top says “That couldn’t be painted there.” A wider brush, or a stroke farther from the lines, usually works.
+
+                    ## On the practice picture
+                    Touch and hold the cottage’s wall to pick up its cream, then paint a winding path over the near hill to the door.
+                    """,
+                             comment: "Tool Guide, the Paint Brush: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .brush))
         case .eyedropper:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.eyedropper.summary", defaultValue: "Picks up a paint from the picture.",
                                 comment: "Tool Guide, the Eyedropper: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.eyedropper.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.eyedropper.text", defaultValue: """
                     Tap a cell, and its paint becomes the current paint, circled in the palette.
 
                     You won’t often need to pick the Eyedropper itself. With most tools, touch and hold the picture for half a second, and a loupe appears: its top half is the color under your finger, its bottom half the current paint. Slide to the color you want and lift to pick it; your tool stays the same. Bend Line, Move Edge and Move Number are the exceptions: with them, you hold something to drag it.
@@ -450,6 +552,17 @@ nonisolated struct RefineGuidePage {
                     Tap the window to pick up its yellow. Then, in Layers, turn Photo on and Paint off, and pick up the peach glow above the hills.
                     """,
                              comment: "Tool Guide, the Eyedropper: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.eyedropper.text.edit", defaultValue: """
+                    Tap a cell, and its paint becomes the current paint, circled in the palette.
+
+                    You won’t often need to pick the Eyedropper itself. With most tools, touch and hold the picture for half a second, and a loupe appears: its top half is the color under your finger, its bottom half the current paint. Slide to the color you want and lift to pick it; your tool stays the same. Bend Line, Move Edge and Move Number are the exceptions: with them, you hold something to drag it.
+
+                    Where your photo shows through more strongly than the paint, the Eyedropper picks the photo’s color. To pick from the photo, open [Layers](guide:layers), turn Photo on, and turn Colors below half or off. A color from the photo that matches no paint shows as a + swatch after the palette, and becomes a paint once you pour it.
+
+                    ## On the practice picture
+                    Tap the window to pick up its yellow. Then, in Layers, turn Photo on and Colors off, and pick up the peach glow above the hills.
+                    """,
+                             comment: "Tool Guide, the Eyedropper: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .eyedropper))
         case .editPaint:
             RefineGuidePage(
@@ -523,7 +636,8 @@ nonisolated struct RefineGuidePage {
             RefineGuidePage(
                 summary: String(localized: "refine.guide.tryPainting.summary", defaultValue: "Paints the picture as it is now, to see how it feels.",
                                 comment: "Tool Guide, Try Painting: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.tryPainting.text", defaultValue: """
+                text: RefineGuidePage.named(
+                    String(localized: "refine.guide.tryPainting.text", defaultValue: """
                     Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells as you would any painting, then close it to come back to Refine. Nothing you paint there is kept.
 
                     It shows the picture as it was the moment you tapped the button, so a change you made a split second before may not be in it.
@@ -532,6 +646,15 @@ nonisolated struct RefineGuidePage {
                     Draw a cloud in the sky with the Pen, ending where you began so it becomes a cell, then tap Try Painting and paint the cloud and the sky around it.
                     """,
                              comment: "Tool Guide, Try Painting: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
+                    String(localized: "refine.guide.tryPainting.text.edit", defaultValue: """
+                    Try Painting opens the painting screen on the picture with your changes, so you can check that its cells are pleasant to paint and its numbers easy to find. Paint a few cells as you would any painting, then close it to come back to Edit. Nothing you paint there is kept.
+
+                    It shows the picture as it was the moment you tapped the button, so a change you made a split second before may not be in it.
+
+                    ## On the practice picture
+                    Draw a cloud in the sky with the Pen, ending where you began so it becomes a cell, then tap Try Painting and paint the cloud and the sky around it.
+                    """,
+                             comment: "Tool Guide, Try Painting: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them (the names of SideStore builds: Edit for Refine, Colors for the Paint group and layer)")),
                 practice: RefinePracticeSetup(scene: .painted, tool: .pen, teaches: .tryPainting))
         }
     }

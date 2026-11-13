@@ -182,7 +182,7 @@ final class RefineUITests: XCTestCase {
         let sky = try XCTUnwrap(paintNumber(in: info.label), "Select's bar names no paint: \(info.label)")
 
         // With the Bucket in hand and another paint current, a hold on the sky picks the sky's.
-        pickTool("bucket", in: "Paint", of: app)
+        pickTool("bucket", in: "Colors", of: app)
         let other = app.buttons["refine-paint-\(sky == 1 ? 2 : 1)"]
         XCTAssertTrue(other.waitForExistence(timeout: 5), "The palette has no other paint")
         other.tap()
@@ -245,7 +245,7 @@ final class RefineUITests: XCTestCase {
         drag(on: canvas, from: onPicture(canvas, 0.637, 0.06), to: onPicture(canvas, 0.637, 0.675))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The cell edge didn't count: \(canvas.value ?? "")")
 
-        pickTool("bucket", in: "Paint", of: app)
+        pickTool("bucket", in: "Colors", of: app)
         let other = app.buttons["refine-paint-\(sky == 1 ? 2 : 1)"]
         XCTAssertTrue(other.waitForExistence(timeout: 5), "The palette has no other paint")
         other.tap()
@@ -259,7 +259,7 @@ final class RefineUITests: XCTestCase {
         drag(on: canvas, from: onPicture(canvas, 0.6, 0.06), to: onPicture(canvas, 0.85, 0.25))
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The merge didn't count: \(canvas.value ?? "")")
 
-        pickTool("brush", in: "Paint", of: app)
+        pickTool("brush", in: "Colors", of: app)
         XCTAssertTrue(app.sliders["refine-brush-size"].waitForExistence(timeout: 5), "The brush has no Size")
         // Another paint than the merged sky's, so the stroke changes something.
         let fresh = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND isSelected == false", "refine-paint-")).firstMatch
@@ -360,12 +360,12 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-select-sky")
 
         // The Eyedropper's tap: the sky's paint becomes the current one, nothing changes.
-        pickTool("bucket", in: "Paint", of: app)
+        pickTool("bucket", in: "Colors", of: app)
         let other = app.buttons["refine-paint-\(skyPaint == 1 ? 2 : 1)"]
         XCTAssertTrue(other.waitForExistence(timeout: 5), "The palette has no other paint")
         other.tap()
         XCTAssertTrue(waitFor(other, toMatch: NSPredicate(format: "isSelected == true")), "The paint didn't become current")
-        pickTool("eyedropper", in: "Paint", of: app)
+        pickTool("eyedropper", in: "Colors", of: app)
         canvas.coordinate(withNormalizedOffset: sky).tap()
         XCTAssertTrue(
             waitFor(app.buttons["refine-paint-\(skyPaint)"], toMatch: NSPredicate(format: "isSelected == true")),
@@ -432,7 +432,7 @@ final class RefineUITests: XCTestCase {
         attachScreenshot(of: app, named: "refine-bend")
 
         // A look over every paint.
-        pickTool("looks", in: "Paint", of: app)
+        pickTool("looks", in: "Colors", of: app)
         let look = app.buttons["refine-look-moonlit"]
         XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
         look.tap()
@@ -453,7 +453,7 @@ final class RefineUITests: XCTestCase {
         app.buttons["refine"].tap()
         let canvas = app.descendants(matching: .any)["refine-canvas"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
-        pickTool("editPaint", in: "Paint", of: app)
+        pickTool("editPaint", in: "Colors", of: app)
         let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
         XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
         let swatches = app.buttons.matching(
@@ -487,7 +487,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(canvas.waitForExistence(timeout: 120), "Refine didn't open")
 
         if UIDevice.current.userInterfaceIdiom == .pad {
-            pickTool("editPaint", in: "Paint", of: app)
+            pickTool("editPaint", in: "Colors", of: app)
             let from = app.buttons["refine-paint-2"], onto = app.buttons["refine-paint-3"]
             XCTAssertTrue(from.waitForExistence(timeout: 5) && onto.exists, "The palette has no paints 2 and 3")
             let dragged = { from.press(forDuration: 1.0, thenDragTo: onto, withVelocity: .slow, thenHoldForDuration: 1.0) }
@@ -496,7 +496,7 @@ final class RefineUITests: XCTestCase {
                 retapIfLost("swatch drag", dragged)
             }
         } else {
-            pickTool("looks", in: "Paint", of: app)
+            pickTool("looks", in: "Colors", of: app)
             let look = app.buttons["refine-look-moonlit"]
             XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
             look.tap()
@@ -644,7 +644,7 @@ final class RefineUITests: XCTestCase {
                 waitUntil(timeout: 3) { canvas.frame == opened },
                 "The picture moved at \(step): \(canvas.frame), opened at \(opened)")
         }
-        for group in ["Cells", "Paint", "Numbers", "See", "Ink"] {
+        for group in ["Cells", "Colors", "Numbers", "See", "Ink"] {
             groupTab(group, of: app).tap()
             kept(group)
         }
@@ -741,8 +741,8 @@ final class RefineUITests: XCTestCase {
         clear("card")
         // The card takes the groups' room beside the picture: closed, they are back.
         if change.exists { change.tap() }
-        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 5), "The groups didn't come back after the card")
-        pickTool("looks", in: "Paint", of: app)
+        XCTAssertTrue(app.buttons["Colors"].waitForExistence(timeout: 5), "The groups didn't come back after the card")
+        pickTool("looks", in: "Colors", of: app)
         sleep(1)
         clear("looks")
         app.buttons["refine-layers"].tap()

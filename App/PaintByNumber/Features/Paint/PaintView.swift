@@ -60,6 +60,9 @@ struct PaintView: View {
     /// The progress badge names the painting (the top bar's layout that fits has room for it):
     /// the completion bar doesn't name it twice.
     @State private var badgeShowsTitle = false
+    /// The completion bar's height as laid out: with the doors under it (SideStore and Debug
+    /// builds) it is taller than `CompletionBar.height`, and the canvas makes room for it.
+    @State private var completionHeight: CGFloat?
     /// Whether the top bar's row on screen has Hint: where it doesn't (a phone with ✎ Change),
     /// More offers Show Hint, or a phone had no hint until the bar went quiet.
     @State private var barShowsHint = true
@@ -241,6 +244,11 @@ struct PaintView: View {
         // The bars' room within the safe area: all of it, or the controls' page beside a fold.
         let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
         let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
+        #if UNRELEASED
+        let doors = session.isComplete ? doorMetrics(layout: layout, geo: geo, controlsWidth: controlsWidth) : nil
+        #else
+        let doors: Never? = nil
+        #endif
         return ZStack {
             if layout.mode != .whole {
                 // The controls' page, on the painting's own surroundings.
@@ -325,7 +333,7 @@ struct PaintView: View {
                         .padding(.bottom, Self.bottomGap)
                         .duoProbe("paint-feedback-tools")
                 } else if !palette.side || session.isComplete {
-                    bottomBar(palette)
+                    bottomBar(palette, doors: doors)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
                         .duoProbe("paint-palette")
@@ -341,7 +349,7 @@ struct PaintView: View {
             if feedback == nil && palette.side && !session.isComplete {
                 HStack {
                     Spacer(minLength: 0)
-                    bottomBar(palette)
+                    bottomBar(palette, doors: nil)
                         .padding(.trailing, Self.edge)
                         .padding(.top, PaintingLayout.sidePaletteTop(regularWidth: layout.regularChrome))
                         .padding(.bottom, Self.edge)
@@ -438,6 +446,7 @@ struct PaintView: View {
             // create flow's hand-off counts them so too.
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColorCount(session.template),
             isComplete: session.isComplete,
+            completionHeight: session.isComplete ? completionHeight : nil,
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
                 : PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
@@ -601,7 +610,13 @@ struct PaintView: View {
     /// its tap opening the purchase is no surprise (QA, painting-company row 237).
     private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
         let locked = paintings?.locksRefine == true
-        return GlassIconButton(systemImage: "pencil", label: "Change", badge: locked ? "lock.fill" : nil, action: action)
+        // 1.3's name for it (painting-company row 331): Edit, one name with Refine's.
+        #if UNRELEASED
+        let name = LocalizedStringKey("Edit")
+        #else
+        let name = LocalizedStringKey("Change")
+        #endif
+        return GlassIconButton(systemImage: "pencil", label: name, badge: locked ? "lock.fill" : nil, action: action)
             .frame(width: barHeight, height: barHeight)
             .disabled(session.isReplaying)
             .accessibilityHint(Text("Draw or erase lines in this painting"))
@@ -727,15 +742,31 @@ struct PaintView: View {
 
     // MARK: Bottom
 
+    #if UNRELEASED
+    typealias Doors = DoorMetrics
+    #else
+    typealias Doors = Never
+    #endif
+
     @ViewBuilder
-    private func bottomBar(_ palette: PaletteLayout) -> some View {
+    private func bottomBar(_ palette: PaletteLayout, doors: Doors?) -> some View {
         if session.isComplete {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
+            #if UNRELEASED
+            CompletionBar(
+                session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
+                sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
+                onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose,
+                doors: doors, onChange: onChange)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
+                .transition(transition)
+            #else
             CompletionBar(
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
                 onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose)
                 .transition(transition)
+            #endif
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
@@ -743,6 +774,26 @@ struct PaintView: View {
                 order: colorOrder)
         }
     }
+
+    #if UNRELEASED
+    /// The doors after Finished in the room the painting screen gives them: most of the page under
+    /// the top bar, never so much that the painting has no room (on the whole screen, at most
+    /// `doorsShare` of it), or all of a fold's controls page.
+    private func doorMetrics(layout: PaintingLayout, geo: GeometryProxy, controlsWidth: CGFloat) -> DoorMetrics? {
+        let page = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom - layout.controls.top - layout.controls.bottom
+        let bars = Self.topGap + barHeight(layout.regularChrome) + PaintingLayout.canvasGap + Self.bottomGap + Self.bookGap
+        let room = layout.mode == .whole ? page * Self.doorsShare : page - bars
+        let width = min(CompletionBar.panelWidth, controlsWidth - 2 * Self.edge) - 2 * CompletionBar.doorsInset
+        let height = room - CompletionBar.height - CompletionBar.doorsInset
+        return DoorMetrics.fitting(
+            count: FinishedDoor.shown(changes: onChange != nil).count, width: width, height: height,
+            dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
+    }
+
+    /// The most of the screen the Finished panel takes: the mockups' painting stepped back to
+    /// about a quarter of an iPhone's height (`factory/pieces/doors/`).
+    private static let doorsShare: CGFloat = 0.65
+    #endif
 
     // MARK: Actions
 
