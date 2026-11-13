@@ -281,10 +281,16 @@ enum ShellDemo: Equatable {
     var picksColorPaint: Bool { self == .createRefineColorsPicked }
 
     /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
-    /// canvas of `template`: nothing on a `-demoPhotos` photo, whose canvas the strokes don't fit.
+    /// canvas of `template`: on a `-demoPhotos` photo, whose canvas those strokes don't fit, only
+    /// the `-demoPhotoStroke` line.
     static func refinements(for template: Template) -> TemplateRefinements {
         var refinements = DemoMode.photos.isEmpty
             ? refinements(canvas: CGSize(width: template.width, height: template.height)) : TemplateRefinements()
+        if !DemoMode.photoStroke.isEmpty {
+            // The `-demoPhotoStroke` line, drawn with the Pen on the photo's canvas.
+            let size = SIMD2(Float(template.width), Float(template.height))
+            refinements.edits.append(.draw(points: DemoMode.photoStroke.map { $0 * size }))
+        }
         if current?.opensColors == true { refinements.edits.append(TemplateEditor.look(.starryNight, strength: 1, on: template)) }
         return refinements
     }
@@ -521,10 +527,10 @@ enum ShellDemo: Equatable {
     }
 
     /// `gallery`'s `-demoPhotos` photos, in place of the library's pictures: by position (by
-    /// name), all in progress to different amounts, so all of them fit on the first screen.
+    /// name), all in progress, as far as the Paint scenarios take them, so all fit on the first screen.
     private var photoItems: [Library.SeedItem] {
         let hour: TimeInterval = 3600
-        let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 2), (0.67, 1), (0.91, 3), (0.24, 4)]
+        let stages: [(painted: Double, hours: TimeInterval)] = [(0.7, 2), (0.875, 1), (0.91, 3), (0.78, 4)]
         return zip(DemoMode.photos, stages).map { sample, stage in
             Library.SeedItem(sample: sample, painted: stage.painted, age: stage.hours * hour, photoMaxPixelSize: 560)
         }
