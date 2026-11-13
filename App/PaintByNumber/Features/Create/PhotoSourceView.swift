@@ -111,13 +111,7 @@ struct PhotoSourceView: View {
     /// Tonight's Picture: one painting from the library, large, another each day.
     private func tonightSection(_ tonight: Sample) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                SectionTitle("Tonight’s Picture", style: isWide ? .title2 : .title3)
-                Text("A different picture every day")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
-            }
+            SectionTitle("Tonight’s Picture", style: isWide ? .title2 : .title3)
             Button { pick(tonight) } label: { SampleTile(sample: tonight) }
                 .buttonStyle(PressableCardStyle())
                 .frame(maxWidth: tonightWidth)

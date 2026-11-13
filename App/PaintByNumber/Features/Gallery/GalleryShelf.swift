@@ -25,15 +25,10 @@ struct GalleryShelf: View {
         let nights = Sample.nights(count: hasRoom ? max(1, columns.count) : 1, excluding: held)
         if !nights.isEmpty {
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Tonight’s Picture")
-                        .font(.display(.title2))
-                        .accessibilityAddTraits(.isHeader)
-                    Text("A different picture every day")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 4)
+                Text("Tonight’s Picture")
+                    .font(.display(.title2))
+                    .padding(.horizontal, 4)
+                    .accessibilityAddTraits(.isHeader)
                 LazyVGrid(columns: columns, alignment: .leading, spacing: rowSpacing) {
                     ForEach(Array(nights.enumerated()), id: \.element.id) { index, sample in
                         Button { onPaint(sample) } label: { SampleTile(sample: sample) }
