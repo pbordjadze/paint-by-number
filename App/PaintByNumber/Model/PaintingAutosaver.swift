@@ -34,10 +34,12 @@ final class PaintingAutosaver {
         self.delay = delay
         self.maxWait = maxWait
         savedRevision = session.revision
-        // What the file holds, not what the session opened on: a painting made over in place
+        // What opening the file gives, not what is in hand now: a painting made over in place
         // keeps its paint in hand on screen (`ArtworkPaintingView.keptColor`), which its new
-        // file doesn't have yet.
-        savedInHand = session.progress.inHand
+        // file doesn't have yet. A file from before the field opens as it always did, and is
+        // written only once the paint in hand changes (each write of progress alone has the
+        // next launch draw the thumbnail again).
+        savedInHand = session.progress.inHand ?? session.openingColor
         thumbnailRevision = session.revision
     }
 
@@ -68,11 +70,13 @@ final class PaintingAutosaver {
         firstUnsaved = nil
         if session.revision != savedRevision {
             savedRevision = session.revision
-            savedInHand = session.selectedColor
-            library.saveProgress(session.savedProgress, for: artworkID)
-        } else if session.selectedColor != savedInHand {
-            savedInHand = session.selectedColor
-            library.saveProgress(session.savedProgress, for: artworkID, recording: false)
+            let progress = session.savedProgress
+            savedInHand = progress.inHand
+            library.saveProgress(progress, for: artworkID)
+        } else if session.savedProgress.inHand != savedInHand {
+            let progress = session.savedProgress
+            savedInHand = progress.inHand
+            library.saveProgress(progress, for: artworkID, recording: false)
         }
         if refreshThumbnail && session.revision != thumbnailRevision && session.revision != renderingRevision {
             let revision = session.revision

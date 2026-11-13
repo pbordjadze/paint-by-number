@@ -130,6 +130,8 @@ final class PaintingSession {
     /// paint in hand when the painting was last saved (`PaintProgress.inHand`), or the largest
     /// area's, the painting being fresh (`OpeningColor`).
     private let opensOnItsOwnColor: Bool
+    /// The color the session opened on, which opening it again gives too.
+    let openingColor: Int?
     /// Fixes the colors' nicknames (it keyed the retired Custom palette order too).
     let nicknameSeed: UInt64
     /// The artwork's recorded vocabulary version, kept even when newer than this build knows.
@@ -258,6 +260,7 @@ final class PaintingSession {
         isStarted = progress.paintedCount > 0
         completedColors = prepared.completed
         opensOnItsOwnColor = prepared.opensOnItsOwnColor
+        openingColor = prepared.opening
         selectedColor = prepared.opening
     }
 
@@ -269,10 +272,11 @@ final class PaintingSession {
 
     var paletteCount: Int { template.palette.count }
 
-    /// What is saved: `progress` with the paint in hand, so the painting opens on it again.
+    /// What is saved: `progress` with the paint in hand, so the painting opens on it again
+    /// (none once finished: nothing is left to paint).
     var savedProgress: PaintProgress {
         var saved = progress
-        saved.inHand = selectedColor
+        saved.inHand = isComplete ? nil : selectedColor
         return saved
     }
     var fractionComplete: Double {
