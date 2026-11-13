@@ -11,7 +11,7 @@ keeps it; a key or field left out is left as it is, and a list of strings is its
     appInfoLocalization  name, subtitle, privacyPolicyUrl, in LOCALE
     ageRating            the age rating questionnaire, as ageRatingDeclarations' attributes
     version              copyright, releaseType
-    versionLocalization  description, keywords, promotionalText, supportUrl, marketingUrl, in LOCALE
+    versionLocalization  description, keywords, promotionalText, supportUrl, marketingUrl, whatsNew, in LOCALE
     review               App Review Information: notes, demoAccountRequired
     accessibility        {IPHONE: {…}, IPAD: {…}}: the Accessibility Nutrition Labels, as
                          accessibilityDeclarations' supports* attributes, every one given
@@ -58,7 +58,7 @@ from testflight_testers import APIError, Client, find_app, private_key, summariz
 EDITABLE_INFO = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED")
 # App Store Connect's limits, in characters.
 LIMITS = {"name": 30, "subtitle": 30, "promotionalText": 170, "keywords": 100, "description": 4000,
-          "notes": 4000, "copyright": 200}
+          "notes": 4000, "copyright": 200, "whatsNew": 4000}
 ACCESSIBILITY = ("supportsVoiceover", "supportsVoiceControl", "supportsLargerText", "supportsDarkInterface",
                  "supportsDifferentiateWithoutColorAlone", "supportsSufficientContrast",
                  "supportsReducedMotion", "supportsCaptions", "supportsAudioDescriptions")
@@ -82,7 +82,7 @@ FIELDS = {
         "userGeneratedContent")}},
     "version": {"copyright": str, "releaseType": ("MANUAL", "AFTER_APPROVAL", "SCHEDULED")},
     "versionLocalization": {"description": str, "keywords": str, "marketingUrl": str, "promotionalText": str,
-                            "supportUrl": str},
+                            "supportUrl": str, "whatsNew": str},
     "review": {"notes": str, "demoAccountRequired": bool},
 }
 # The other English storefronts' locales, and what each may say in its own words; the rest is
@@ -90,7 +90,7 @@ FIELDS = {
 OTHER_LOCALES = ("en-GB", "en-AU", "en-CA")
 LOCALE_FIELDS = ("keywords", "promotionalText", "subtitle")
 # The prose respelled for them (never a URL).
-PROSE = ("name", "subtitle", "description", "keywords", "promotionalText")
+PROSE = ("name", "subtitle", "description", "keywords", "promotionalText", "whatsNew")
 NOMINATION = {"name": str, "type": ("APP_LAUNCH", "APP_ENHANCEMENTS", "NEW_CONTENT"), "description": str,
               "publishStartDate": str, "deviceFamilies": list, "locales": list, "supplementalMaterialsUris": list,
               "hasInAppEvents": bool, "launchInSelectMarketsFirst": bool, "preOrderEnabled": bool, "notes": str,
