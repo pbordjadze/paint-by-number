@@ -84,9 +84,17 @@ nonisolated enum LineArtInputs {
         async let eyes = findEyes(in: image)
         async let objects = findObjects(in: image)
         async let writing = findWriting(in: image)
-        let maps = try EdgeDetector.maps(for: image)
+        // The two maps as `EdgeDetector.maps(for:maxLongSide:)` makes them, with Vision's findings awaited
+        // between the models: the line drawing's model needs more memory than anything else the app does, and
+        // Vision has the first model's time to be done and out of its way.
+        let photo = try PhotoLoader.rgbaImage(from: image, colorSpace: .sRGB)
+        let contours = try EdgeDetector.edgeMap(for: photo, cancel: .task)
+        let (foundEyes, foundObjects, foundWriting) = (await eyes, await objects, await writing)
+        let drawing = try EdgeDetector.lineDrawing(for: photo, cancel: .task)
+        try Task.checkCancellation()
         let found = Maps(
-            drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects, writing: await writing)
+            drawing: drawing.resampled(width: contours.width, height: contours.height), contours: contours,
+            eyes: foundEyes, objects: foundObjects, writing: foundWriting)
         #if DEBUG
         LineArtMapsCache.store(found, for: image)
         #endif
