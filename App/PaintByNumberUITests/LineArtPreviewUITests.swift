@@ -101,6 +101,7 @@ final class LineArtPreviewUITests: XCTestCase {
         attachScreenshot(of: app, named: "create-card-detail")
     }
 
+    #if UNRELEASED
     /// The card folds its settings away: the title, the suggestion, the summary and Start Painting,
     /// and Adjust, which shows the sliders and keeps them shown through a launch, until it folds
     /// them again (SideStore and Debug builds).
@@ -130,6 +131,7 @@ final class LineArtPreviewUITests: XCTestCase {
             waitFor(app.buttons["preview-adjust"], toMatch: NSPredicate(format: "value == %@", "Settings hidden")),
             "Adjust didn't fold the settings again")
     }
+    #endif
 
     // MARK: - Helpers
 

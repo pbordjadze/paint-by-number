@@ -29,6 +29,10 @@ struct TemplatePreviewView: View {
     /// The layout chosen when title editing began, for that window width: kept until it ends.
     @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
     @State private var isStarting = false
+    #if DEBUG
+    /// `-demoStart` has tapped Start Painting.
+    @State private var demoStarted = false
+    #endif
     @State private var startError: String?
     /// Start Painting found no free painting left for the painter's own photo.
     @State private var offersUnlock = false
@@ -409,6 +413,15 @@ struct TemplatePreviewView: View {
         if ShellDemo.current == .createUnlock { start() }
         // `create-refine-unlock` taps Refine, which waits for the unlock.
         if ShellDemo.current == .createRefineUnlock { openRefine() }
+        // `-demoStart YES` taps Start Painting, once, when the painting has been still a moment.
+        if DemoMode.startsWhenMade, !demoStarted {
+            demoStarted = true
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                TourLog.trace("mark", "start begin")
+                start()
+            }
+        }
         #endif
     }
 

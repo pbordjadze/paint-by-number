@@ -138,7 +138,10 @@ before planning app work).
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights).
+  (the app's Core ML models from their source weights); on a Mac with Xcode, `checks.sh` (every
+  check, in the build of your choice: On a Mac) and `perf-tour/` (the app measured by its own
+  `-tourLog`: `run.sh` plays the demo scenarios with no UI test driving them, `summary.py` reads a
+  log, `analyze.py` a device trace beside it).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
@@ -263,6 +266,27 @@ logs the tuned ones.
 - A tool you write to check or measure your own work (a harness, a preview, a shim) is committed
   before you finish, in `tools/` (or painting-company's when it holds anything private), its
   header saying how to run it: a scratch directory dies with its session (painting-company row 159).
+
+## On a Mac (Xcode at hand)
+
+`tools/checks.sh` runs what CI runs, and in a build CI doesn't have: the project's `ReleaseTests`
+configuration is Release (the app optimized, PaintCore at `-Ounchecked`) with the demo and test
+code in (`DEBUG`) and the app testable, so the unit and UI tests judge optimized code (not the
+shipped binary: testability keeps internal symbols, and the demo code is in); `-u` adds
+`UNRELEASED`, the SideStore build's features. Without `-u` it is the release's own features, which
+Debug never tests: a test of an `UNRELEASED` feature says so (`#if UNRELEASED`, with the release's
+behaviour in the `#else` where it has one). Its header is its manual; it needs a simulator of its
+own (one per session running it). `tools/perf-tour/run.sh` measures an installed build on a device
+or a simulator: a number means something only beside the same scenario's from the build before
+it, run turn about in one sitting. Build what it measures as `ReleaseTests` with
+`ENABLE_TESTABILITY=NO CLANG_COVERAGE_MAPPING=NO`: every `xcodebuild build` of the scheme
+otherwise instruments the app for test coverage (the archive that ships has none), which slows
+the hot loops and makes the parallel ones fight over the counters, so much that two builds of the
+same PaintCore differed by 7% in generation time. `otool -l <app>/PaintByNumber | grep -c
+__llvm_prf` prints 0 for a build without it.
+`tools/template_hashes.py` says whether a change left every generated template byte for byte as
+it was, and `tools/frozen.py <commit>` whether the checks and the measuring are still what they
+were at a commit (a long change that must lose no feature runs both before it is judged).
 
 ## Quality gate
 

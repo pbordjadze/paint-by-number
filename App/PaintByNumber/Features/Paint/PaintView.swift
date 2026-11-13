@@ -777,17 +777,7 @@ struct PaintView: View {
     private func handlePencil(_ action: PencilAction) {
         // Drawing feedback, the Pencil's double tap and squeeze belong to its tools.
         guard feedback == nil else { return }
-        switch action {
-        case .tap:
-            if let current = session.selectedColor, let next = session.nextIncompleteColor(after: current) {
-                session.select(color: next)
-                FeedbackEngine.shared.selectionChanged()
-            }
-        case .squeeze:
-            controller.showHint()
-        case .lifted:
-            chrome.tipSignal(.pencilUsed)
-        }
+        action.perform(on: session, showHint: { controller.showHint() }, pencilUsed: { chrome.tipSignal(.pencilUsed) })
     }
 
     // MARK: Feedback

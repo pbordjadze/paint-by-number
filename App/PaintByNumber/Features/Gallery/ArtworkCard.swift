@@ -81,6 +81,7 @@ struct ArtworkThumbnail: View {
     var contentMode: ContentMode = .fill
     @Environment(Library.self) private var library
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.shelfIsOutOfSight) private var isOutOfSight
     @State private var image: CGImage?
     @State private var size: CGSize = .zero
 
@@ -100,6 +101,9 @@ struct ArtworkThumbnail: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // No fade where nobody sees it (`shelfIsOutOfSight`), decided as it is drawn: a load's
+        // task would only know what held when it began.
+        .transaction { if isOutOfSight { $0.animation = nil } }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .task(id: Load(key: ThumbnailCache.key(artwork), pixelSize: pixelSize)) {
             let pixelSize = pixelSize

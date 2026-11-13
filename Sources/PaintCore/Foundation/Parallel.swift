@@ -24,9 +24,11 @@ public enum Parallel {
     }
 
     /// Runs `body` with work split as a device with `count` bands splits it, for the tests that
-    /// hold the pipeline to the rule above (`BandCountTests`): one runner sees one core count.
-    /// Process-wide, since nested passes read `bandCount` on the workers' threads.
-    static func withBandCount<T>(_ count: Int, _ body: () throws -> T) rethrows -> T {
+    /// hold the pipeline to the rule above (`BandCountTests`) and for `pbn` under `PBN_BANDS`,
+    /// which the template hashes use to do the same at the sizes the app works at: one machine
+    /// sees one core count. Process-wide, since nested passes read `bandCount` on the workers'
+    /// threads.
+    public static func withBandCount<T>(_ count: Int, _ body: () throws -> T) rethrows -> T {
         forcedBands.count = max(1, count)
         defer { forcedBands.count = nil }
         return try body()
@@ -221,5 +223,24 @@ public final class CancellationFlag: @unchecked Sendable {
     public func set() -> Bool {
         lock.withLock { cancelled = true }
         return true
+    }
+}
+
+extension Array {
+    /// The array `(0..<count).map(element)` makes, its elements made in parallel bands: for a map
+    /// over every pixel of a picture, which is otherwise a stretch of the pipeline on one core.
+    /// Each element depends on its index alone, so the bands' boundaries don't show; `element`
+    /// runs on several threads at once, and must only read what it shares.
+    @inline(__always)
+    init(inParallel count: Int, minimumBandSize: Int = 16_384, _ element: (Int) -> Element) {
+        self.init(unsafeUninitializedCapacity: count) { buffer, initialized in
+            if count > 0 {
+                let base = UncheckedSendable(buffer.baseAddress!)
+                Parallel.forEachBand(count, minimumBandSize: minimumBandSize) { range in
+                    for i in range { (base.value + i).initialize(to: element(i)) }
+                }
+            }
+            initialized = count
+        }
     }
 }

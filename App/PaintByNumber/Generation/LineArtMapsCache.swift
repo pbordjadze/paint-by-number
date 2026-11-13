@@ -19,9 +19,12 @@ nonisolated enum LineArtMapsCache {
 
     /// On for demo scenarios (`-demo`, as `DemoMode.scenario` reads it) and the unit-test
     /// host (as `DemoMode.isTestHost` does), never for a painter's own launch; read here
-    /// directly, since the maps are computed off the main actor.
+    /// directly, since the maps are computed off the main actor. `-demoColdMaps YES` turns it off
+    /// for a launch, which then runs the models and Vision as a painter's own photo does (what a
+    /// measurement of making a painting needs).
     static var isEnabled: Bool {
-        UserDefaults.standard.string(forKey: "demo") != nil
+        guard !UserDefaults.standard.bool(forKey: "demoColdMaps") else { return false }
+        return UserDefaults.standard.string(forKey: "demo") != nil
             || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 

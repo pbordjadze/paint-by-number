@@ -88,20 +88,22 @@ struct StrokeGraph {
         var degree = [UInt8](repeating: 0, count: n)
         var isNode = [Bool](repeating: false, count: n)
         var on = mask
-        for i in 0..<n where on[i] {
+        // The mask's pixels, in raster order: every pass below visits these alone.
+        let pixels = Parallel.mapBands(n, minimumBandSize: 65_536) { range in range.filter { mask[$0] } }.flatMap { $0 }
+        for i in pixels {
             let y = i / w, x = i - y * w
             guard x > 0 && y > 0 && x < w - 1 && y < h - 1 else { on[i] = false; continue }
             var d: UInt8 = 0
             for o in offsets where mask[i + o.dy * w + o.dx] { d += 1 }
             degree[i] = d
         }
-        for i in 0..<n where on[i] {
+        for i in pixels where on[i] {
             if degree[i] == 0 { on[i] = false } else if degree[i] != 2 { isNode[i] = true }
         }
         // Junction clusters: 8-connected node pixels form one node at their centroid.
         var cluster = [Int32](repeating: -1, count: n)
         var stack: [Int] = []
-        for i in 0..<n where isNode[i] && cluster[i] < 0 {
+        for i in pixels where isNode[i] && cluster[i] < 0 {
             let id = Int32(g.nodes.count)
             var sum = SIMD2<Float>(0, 0)
             var count: Float = 0
@@ -120,7 +122,7 @@ struct StrokeGraph {
         }
         @inline(__always) func xy(_ i: Int) -> SIMD2<Float> { SIMD2(Float(i % w), Float(i / w)) }
         var visited = [Bool](repeating: false, count: n)
-        for p in 0..<n where isNode[p] {
+        for p in pixels where isNode[p] {
             for o in offsets {
                 let q = p + o.dy * w + o.dx
                 guard on[q] && !isNode[q] && !visited[q] else { continue }
@@ -147,7 +149,7 @@ struct StrokeGraph {
             }
         }
         // Loops without any node.
-        for s in 0..<n where on[s] && !isNode[s] && !visited[s] {
+        for s in pixels where on[s] && !isNode[s] && !visited[s] {
             var path = [s]
             visited[s] = true
             var prev = -1, cur = s

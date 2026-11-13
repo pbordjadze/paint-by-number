@@ -14,10 +14,31 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     private var engine: CHHapticEngine?
     private let isSupported: Bool
     private var lastPaint: ContinuousClock.Instant?
-    private let clock = ContinuousClock()
     #if DEBUG
-    /// What was asked to play, in order (on `queue`): `played()`.
+    /// What was asked to play, in order (on `queue`): `played()`, and each pattern as it was made:
+    /// `patterns()`.
     private var asked: [String] = []
+    private var made: [Pattern] = []
+
+    /// A pattern as it was asked to play, written out for a test to pin: every event's kind,
+    /// intensity, sharpness, time and length, and every curve's points.
+    struct Pattern: Equatable, Sendable {
+        struct Event: Equatable, Sendable {
+            var isContinuous: Bool
+            var intensity: Float
+            var sharpness: Float
+            var time: TimeInterval
+            var duration: TimeInterval
+        }
+        struct Curve: Equatable, Sendable {
+            var time: TimeInterval
+            /// Each control point's time and value, in order.
+            var points: [SIMD2<Double>]
+        }
+        var name: String
+        var events: [Event]
+        var curves: [Curve]
+    }
     #endif
 
     /// `isSupported` true runs the queue where Core Haptics has no engine (CI's simulators), for
@@ -27,9 +48,8 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     }
 
     /// Paint spreading over a region. `strength` 0…1 (bigger regions feel heavier),
-    /// `duration` matches the fill animation.
-    func paint(strength: Float, duration: TimeInterval) {
-        let now = clock.now
+    /// `duration` matches the fill animation; `now` is when it was painted (a test's own).
+    func paint(strength: Float, duration: TimeInterval, at now: ContinuousClock.Instant = .now) {
         perform { [self] in
             // Drag painting can fire many fills per second; keep it a texture, not a buzz.
             if let last = lastPaint, now - last < .milliseconds(45) { return }
@@ -147,12 +167,33 @@ nonisolated final class HapticsPlayer: @unchecked Sendable {
     #if DEBUG
     /// What was asked to play so far, in order, once the work asked before this call has run.
     func played() -> [String] { queue.sync { asked } }
+
+    /// The same, each pattern written out.
+    func patterns() -> [Pattern] { queue.sync { made } }
+
+    private static func describe(_ name: String, _ events: [CHHapticEvent], _ curves: [CHHapticParameterCurve]) -> Pattern {
+        func value(_ id: CHHapticEvent.ParameterID, of event: CHHapticEvent) -> Float {
+            event.eventParameters.first { $0.parameterID == id }?.value ?? -1
+        }
+        return Pattern(
+            name: name,
+            events: events.map { event in
+                Pattern.Event(
+                    isContinuous: event.type == .hapticContinuous, intensity: value(.hapticIntensity, of: event),
+                    sharpness: value(.hapticSharpness, of: event), time: event.relativeTime, duration: event.duration)
+            },
+            curves: curves.map { curve in
+                Pattern.Curve(time: curve.relativeTime, points: curve.controlPoints.map { SIMD2($0.relativeTime, Double($0.value)) })
+            })
+    }
     #endif
 
     private func play(_ name: String, _ events: [CHHapticEvent], curves: [CHHapticParameterCurve] = []) {
         #if DEBUG
         dispatchPrecondition(condition: .onQueue(queue))
         asked.append(name)
+        made.append(Self.describe(name, events, curves))
+        TourLog.trace("haptic", "%@", name)
         #endif
         guard let engine = ensureEngine() else { return }
         do {

@@ -53,6 +53,11 @@ enum DemoMode {
         return copy
     }()
 
+    /// `-demoStart YES`: a create scenario taps Start Painting by itself, three seconds after its
+    /// painting is made, so the start of a painting can be measured with no UI test driving it
+    /// (`-tourLog`'s `start begin` mark).
+    static let startsWhenMade = UserDefaults.standard.bool(forKey: "demoStart")
+
     /// `-demoPhotos <dir>`: the scenarios that show a picture of their own (`paint-book-progress`,
     /// `paint-book-zoomed`, the `create-refine` ones and `gallery`) show the photos in this folder
     /// instead, by name, through the real pipeline as coloring books, titled by their file names;

@@ -18,6 +18,7 @@ final class NightfallUITests: XCTestCase {
         XCTAssertGreaterThan(largestChange(in: frames), ScreenChanges.still, "Nothing moved after the painting finished")
     }
 
+    #if UNRELEASED
     @MainActor
     func testTheEmptyGallerysSketchPaintsItself() throws {
         let app = XCUIApplication()
@@ -37,6 +38,7 @@ final class NightfallUITests: XCTestCase {
         attachFrames(frames, named: "empty-gallery-sketch")
         XCTAssertGreaterThan(largestChange(in: frames), ScreenChanges.still, "The sketch didn't paint itself")
     }
+    #endif
 
     /// How far the screen got from its first frame: the sketch is a small part of the screen, so
     /// no step from one frame to the next need count as a move.

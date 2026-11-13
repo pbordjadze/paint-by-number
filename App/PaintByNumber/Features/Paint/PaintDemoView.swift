@@ -263,6 +263,8 @@ private final class Demo {
             fillDurationScale = 128
         case "paint-hint":
             paint(fraction: 0.4)
+        case "paint-zen-30":
+            paint(fraction: 0.2)
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
@@ -403,6 +405,33 @@ private final class Demo {
             try? await Task.sleep(for: .seconds(1))
             return
         }
+        if scenario == "paint-zen-30" {
+            // No UI test attached: thirty fills of the selected color's next area, alternating a tap's
+            // and a stroke's, one every 3.3 s (the tour's pace), with Zen Mode on (`-zenMode YES`).
+            let t = session.template
+            TourLog.trace("zen30", "zenMode=%@ flows=%@",
+                          UserDefaults.standard.bool(forKey: "zenMode").description, session.flowsToNextArea.description)
+            TourLog.trace("mark", "zen-30 begin")
+            try? await Task.sleep(for: .seconds(3))
+            var fills = 0
+            while fills < 30 {
+                let color = session.selectedColor
+                guard let area = t.regions.indices.first(where: { !session.isPainted($0) && session.colorOf($0) == color })
+                    ?? t.regions.indices.first(where: { !session.isPainted($0) }) else { break }
+                if fills % 2 == 0 {
+                    session.paint([area], from: Self.center(t, area), animated: true)
+                } else {
+                    session.beginStroke()
+                    session.paint([area], from: Self.center(t, area), animated: true)
+                    session.endStroke()
+                }
+                fills += 1
+                try? await Task.sleep(for: .seconds(3.3))
+            }
+            TourLog.trace("mark", "zen-30 end fills=%ld", fills)
+            Log.demo.notice("demo paint-zen-30: \(fills, privacy: .public) fills")
+            return
+        }
         if scenario.hasPrefix("paint-quiet") {
             // A tap's fill, as a painter's would land; ready once it has and the bar has faded.
             try? await Task.sleep(for: .seconds(1))
@@ -448,6 +477,13 @@ private final class Demo {
         }
         if scenario == "paint-finish" || scenario.hasPrefix("paint-nightfall"), let last = lastArea {
             try? await Task.sleep(for: .seconds(1.5))
+            // The tour log's finish: the last fill, the flight out, the shine and the night, which are
+            // over well within eight seconds.
+            TourLog.trace("mark", "finish begin")
+            Task {
+                try? await Task.sleep(for: .seconds(8))
+                TourLog.trace("mark", "finish end")
+            }
             session.paint([last], from: Self.center(session.template, last), animated: true)
             // Ready once the camera has landed on the whole painting.
             let clock = ContinuousClock()

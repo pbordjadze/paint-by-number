@@ -11,8 +11,19 @@ synchronized folder would bundle it into the app.
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
-  answering UI tests for up to half a minute. The painting Start Painting makes is pushed with no
-  animation, under the create flow's cover, and shows without fading (`StartHandoff`).
+  answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
+  usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
+  swipe back never worked), and shows without fading (`StartHandoff`).
+- What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
+  shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
+  draws again at every frame of an animation that moves or fades it, seen or not. While Start
+  Painting hands over (`StartHandoff.shelfIsOutOfSight`, the create flow opaque over it) the shelf
+  therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the card of the painting
+  just made moved in there, unseen, for half a second, and the flow's picture, gliding to its page
+  above it, got 15 to 20 frames a second (painting-company row 292). Only then: as the flow's
+  cover rises or falls the shelf is in view. Before animating anything that holds pictures, ask
+  what else is animating beneath it; `-tourLog`'s `hitch` lines say when the main thread missed a
+  frame.
 - The create flow's preview turns off iOS 26's swipe back from anywhere on a pushed screen
   (`ContentSwipeBackOff` in `TemplatePreviewView`): it took the sliders' and the comparison's
   drags and left for the photo step. The edge swipe and Back still go back.
@@ -162,6 +173,24 @@ synchronized folder would bundle it into the app.
   `DemoTemplateCache`, beside `LineArtMapsCache`'s maps; CI keeps both between runs, so a test
   that needs a photo no cache has seen makes one, as `LineArtInputsTests` does): the line-art
   models take 10 to 40 s a picture there, and a UI test waits for its seed.
+- Measuring (painting-company row 292): `-tourLog YES` (`TourLog`, DEBUG) writes
+  `tmp/tour-log-<pid>.tsv`: every canvas tick, camera flight, sound and haptic, the create flow's
+  generations, a `hitch` line for each screen refresh the main thread came to late (its pulse),
+  `mark` lines (the line-art maps' `maps begin`/`end`, the start of a painting's `start begin`,
+  `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
+  memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
+  itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
+  as for a painter's own photo), and `paint-zen-30` paints thirty Zen fills: with them
+  `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames
+  themselves (`PerformanceTour`, the UI test, is for what only a touch reaches).
+- What no simulator has is checked through seams: `HapticsPlayer(isSupported: true)` and
+  `SoundPlayer(playsAloud: false)` say what they were asked to play (`patterns()`, `played()`:
+  `HapticPatternTests`, `SoundPlayerTests`; `FeedbackEngine(haptics:sounds:defaults:)` for which
+  moment gets which: `FeedbackEngineTests`), and `PencilTests` hand the canvas's own handlers
+  recognizers that say where a Pencil is (`CanvasView.prefersPencilOnlyDrawing` answers for the
+  system's setting; `PencilAction.perform` is its double tap and squeeze).
+  `KeyboardShortcutTests` press the Paint menu's and the gallery's keys; an Esc typed by XCUITest
+  never reaches the app, so the cancel key is pressed as ⌘.
 - Demo launches (screenshots, UI tests) run `MainThreadWatchdog`: a main thread that stops
   answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.

@@ -74,18 +74,19 @@ struct CellMap {
     static func split(paint: [UInt32], walls: LineLayering.Walls, cancel: CancellationCheck) throws -> CellMap {
         let w = walls.width, h = walls.height, n = w * h
         let wallValue = UInt32.max
-        var color = [UInt32](uninitializedCount: n)
-        for i in 0..<n { color[i] = walls.isWall(i) ? wallValue : paint[i] }
+        var color = [UInt32](inParallel: n) { walls.isWall($0) ? wallValue : paint[$0] }
         try snapThinNearWalls(&color, width: w, height: h, wallValue: wallValue, cancel: cancel)
         try cancel.throwIfCancelled()
-        let components = ConnectedComponents.label(Grid(width: w, height: h, storage: color))
+        // Numbered as `ConnectedComponents.label` numbers them, and found by runs, in parallel.
+        let components = RegionRuns(classes: color, width: w, height: h)
         var cellOf = [Int32](repeating: -1, count: components.count)
         var cellColor: [UInt32] = []
         for (c, cls) in components.classOf.enumerated() where cls != wallValue {
             cellOf[c] = Int32(cellColor.count)
             cellColor.append(cls)
         }
-        let label = components.labels.storage.map { cellOf[Int($0)] }
+        let regions = components.labelMap().storage
+        let label = [Int32](inParallel: n) { cellOf[Int(regions[$0])] }
         return CellMap(label: label, color: cellColor, kept: [Bool](repeating: false, count: cellColor.count), width: w, height: h)
     }
 
@@ -211,29 +212,42 @@ struct CellMap {
             }
         }
         try cancel.throwIfCancelled()
-        let wallDistance = DistanceTransform.squaredEDT(width: w, height: h) { src[$0] == wallValue }
-        try cancel.throwIfCancelled()
-        let band2 = snapBand * snapBand
-        let hole = UInt32.max - 1
-        var out = src
-        var holes = 0
+        // The pixels within `snapBand` of a wall: each wall pixel marks those in its reach (`Reach`).
+        var nearWall = [Bool](repeating: false, count: n)
+        let reach = Reach(squaredRadius: snapBand * snapBand)
         for y in 0..<h {
-            for x in 0..<w {
-                let i = y * w + x
-                let c = src[i]
-                guard c != wallValue, wallDistance.storage[i] <= band2 else { continue }
-                var covered = false
-                for (dx, dy) in disc {
+            for x in 0..<w where src[y * w + x] == wallValue {
+                for (dx, dy) in reach.offsets {
                     let xx = x + dx, yy = y + dy
-                    guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
-                    if core[yy * w + xx] && src[yy * w + xx] == c { covered = true; break }
+                    if xx >= 0 && yy >= 0 && xx < w && yy < h { nearWall[yy * w + xx] = true }
                 }
-                if !covered { out[i] = hole; holes += 1 }
             }
         }
-        guard holes > 0 else { return }
         try cancel.throwIfCancelled()
-        var pending = (0..<n).filter { out[$0] == hole }
+        let hole = UInt32.max - 1
+        var out = src
+        // In raster order: bands of rows, joined in order.
+        var pending = Parallel.mapBands(h, minimumBandSize: 16) { rows -> [Int] in
+            var found: [Int] = []
+            for y in rows {
+                for x in 0..<w {
+                    let i = y * w + x
+                    let c = src[i]
+                    guard c != wallValue, nearWall[i] else { continue }
+                    var covered = false
+                    for (dx, dy) in disc {
+                        let xx = x + dx, yy = y + dy
+                        guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
+                        if core[yy * w + xx] && src[yy * w + xx] == c { covered = true; break }
+                    }
+                    if !covered { found.append(i) }
+                }
+            }
+            return found
+        }.flatMap { $0 }
+        guard !pending.isEmpty else { return }
+        for i in pending { out[i] = hole }
+        try cancel.throwIfCancelled()
         for _ in 0..<64 where !pending.isEmpty {
             var updates: [(Int, UInt32)] = []
             for i in pending {
@@ -271,27 +285,48 @@ struct CellMap {
     func rooms() -> [Float] {
         let n = width * height
         let sentinel = UInt32(count)
-        var labels = [UInt32](uninitializedCount: n)
-        for i in 0..<n { labels[i] = label[i] < 0 ? sentinel : UInt32(label[i]) }
+        let labels = [UInt32](inParallel: n) { label[$0] < 0 ? sentinel : UInt32(label[$0]) }
         let distance = DistanceTransform.interiorDistance(labels: RegionMap(width: width, height: height, storage: labels))
+        // A largest value per band, then the largest of the bands'.
+        let cells = count
+        let bands = Parallel.mapBands(n, minimumBandSize: 65_536) { range -> [Float] in
+            var room = [Float](repeating: 0, count: cells)
+            for i in range where label[i] >= 0 {
+                let c = Int(label[i])
+                if distance.storage[i] > room[c] { room[c] = distance.storage[i] }
+            }
+            return room
+        }
         var room = [Float](repeating: 0, count: count)
-        for i in 0..<n where label[i] >= 0 {
-            let c = Int(label[i])
-            if distance.storage[i] > room[c] { room[c] = distance.storage[i] }
+        for band in bands {
+            for c in 0..<cells where band[c] > room[c] { room[c] = band[c] }
         }
         return room
     }
 
     /// Area and bounds per cell.
     func extents() -> (area: [Int], bounds: [PixelBounds]) {
+        // Counts add and bounds join, whatever the bands.
+        let cells = count, w = width
+        let bands = Parallel.mapBands(height, minimumBandSize: 32) { rows -> (area: [Int], bounds: [PixelBounds]) in
+            var area = [Int](repeating: 0, count: cells)
+            var bounds = [PixelBounds](repeating: .empty, count: cells)
+            for y in rows {
+                for x in 0..<w {
+                    let c = label[y * w + x]
+                    guard c >= 0 else { continue }
+                    area[Int(c)] += 1
+                    bounds[Int(c)].include(x: x, y: y)
+                }
+            }
+            return (area, bounds)
+        }
         var area = [Int](repeating: 0, count: count)
         var bounds = [PixelBounds](repeating: .empty, count: count)
-        for y in 0..<height {
-            for x in 0..<width {
-                let c = label[y * width + x]
-                guard c >= 0 else { continue }
-                area[Int(c)] += 1
-                bounds[Int(c)].include(x: x, y: y)
+        for band in bands {
+            for c in 0..<cells where band.area[c] > 0 {
+                area[c] += band.area[c]
+                bounds[c].formUnion(band.bounds[c])
             }
         }
         return (area, bounds)
@@ -514,7 +549,11 @@ struct CellMap {
     /// its outline runs along the line rather than inside it.
     mutating func assignWalls() {
         let w = width, h = height
-        var pending = label.indices.filter { label[$0] < 0 }
+        // The wall pixels, in raster order: bands of pixels, joined in order.
+        var pending = label.withUnsafeBufferPointer { cells in
+            let cell = UncheckedSendable(cells.baseAddress!)
+            return Parallel.mapBands(cells.count, minimumBandSize: 65_536) { range in range.filter { cell.value[$0] < 0 } }.flatMap { $0 }
+        }
         if kept.contains(true) {
             func keptCell(_ j: Int) -> Int32 { label[j] >= 0 && kept[Int(label[j])] ? label[j] : -1 }
             var updates: [(Int, Int32)] = []
@@ -793,10 +832,14 @@ struct CellMap {
     @discardableResult
     mutating func renumber() -> Bool {
         let before = count
-        let components = ConnectedComponents.label(Grid(width: width, height: height, storage: label.map { UInt32(bitPattern: $0) }))
+        // Numbered as `ConnectedComponents.label` numbers them, and found by runs, in parallel.
+        let old = label
+        let components = RegionRuns(
+            classes: [UInt32](inParallel: old.count) { UInt32(bitPattern: old[$0]) }, width: width, height: height)
         color = components.classOf.map { color[Int($0)] }
         kept = components.classOf.map { kept[Int($0)] }
-        label = components.labels.storage.map { Int32($0) }
+        let regions = components.labelMap().storage
+        label = [Int32](inParallel: regions.count) { Int32(regions[$0]) }
         return components.count == before
     }
 
