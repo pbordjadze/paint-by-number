@@ -187,8 +187,7 @@ enum ShellDemo: Equatable {
     /// pictures: Earthrise, and Red Fuji).
     private var favoriteSamples: [String] {
         let positions: [Int] = switch self {
-        // `-demoPhotos`' photos come first in the gallery, ahead of a favorite.
-        case .gallery, .gallerySearch: DemoMode.photos.isEmpty ? [2] : []
+        case .gallery, .gallerySearch: [2]
         case .galleryFavorites: [2, 5]
         default: []
         }
@@ -316,7 +315,7 @@ enum ShellDemo: Equatable {
         switch self {
         case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites:
             let favorites = favoriteSamples
-            library.seed(photoItems + galleryItems, completion: { _ in
+            library.seed(DemoMode.photos.isEmpty ? galleryItems : photoItems, completion: { _ in
                 for artwork in library.artworks {
                     if let sample = artwork.sampleName, favorites.contains(sample) { library.setFavorite(artwork.id, true) }
                 }
@@ -516,19 +515,16 @@ enum ShellDemo: Equatable {
         let hour: TimeInterval = 3600
         // By position: the fraction painted, and the hours since it was last painted.
         let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 1), (1, 5), (0.68, 3), (0.12, 26), (0, 50), (1, 80)]
-        // Behind the `-demoPhotos` photos, which were painted more recently.
-        let later: TimeInterval = DemoMode.photos.isEmpty ? 0 : 6
         return zip(pictures, stages).map { sample, stage in
-            Library.SeedItem(sample: sample, painted: stage.painted, age: (stage.hours + later) * hour, photoMaxPixelSize: 560)
+            Library.SeedItem(sample: sample, painted: stage.painted, age: stage.hours * hour, photoMaxPixelSize: 560)
         }
     }
 
-    /// `gallery`'s `-demoPhotos` photos, ahead of the library's pictures: by position (by name),
-    /// three in progress to different amounts and the third finished.
+    /// `gallery`'s `-demoPhotos` photos, in place of the library's pictures: by position (by
+    /// name), all in progress to different amounts, so all of them fit on the first screen.
     private var photoItems: [Library.SeedItem] {
-        guard self == .gallery else { return [] }
         let hour: TimeInterval = 3600
-        let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 2), (0.68, 1), (1, 4), (0.24, 3)]
+        let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 2), (0.67, 1), (0.91, 3), (0.24, 4)]
         return zip(DemoMode.photos, stages).map { sample, stage in
             Library.SeedItem(sample: sample, painted: stage.painted, age: stage.hours * hour, photoMaxPixelSize: 560)
         }

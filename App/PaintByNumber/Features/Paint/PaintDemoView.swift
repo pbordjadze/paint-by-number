@@ -195,6 +195,27 @@ private final class Demo {
             if !regions.isEmpty { session.paint(regions, from: .zero, animated: false) }
             if let next = order.dropFirst(count).first { session.select(color: session.colorOf(next)) }
         }
+        /// A `-demoPhotos` photo: painted outward from the pet (`DemoMode.photoCenter`, else the
+        /// middle), so what is left is background. `holdingDark`: among the areas nearest the pet,
+        /// the dark paint with the most of them is left for last and selected, so they show their hatch.
+        func paintPet(fraction: Double, holdingDark: Bool) {
+            let pet = (DemoMode.photoCenter ?? SIMD2(0.5, 0.5)) * SIMD2(Float(t.width), Float(t.height))
+            let near = t.regions.indices.sorted { simd_distance(Self.center(t, $0), pet) < simd_distance(Self.center(t, $1), pet) }
+            let count = Int(Double(near.count) * fraction)
+            var regions = Array(near.prefix(count))
+            var color = near.dropFirst(count).first.map(session.colorOf)
+            if holdingDark {
+                let closest = Set(near.prefix(near.count / 10))
+                var counts: [Int: Int] = [:]
+                for region in closest where t.palette[session.colorOf(region)].oklab.x < 0.45 { counts[session.colorOf(region), default: 0] += 1 }
+                if let dark = counts.max(by: { ($0.value, $1.key) < ($1.value, $0.key) })?.key {
+                    regions.removeAll { closest.contains($0) && session.colorOf($0) == dark }
+                    color = dark
+                }
+            }
+            if !regions.isEmpty { session.paint(regions, from: .zero, animated: false) }
+            session.select(color: color)
+        }
 
         switch scenario {
         case "paint-progress", "paint-dark", "paint-ax", "paint-long-text", "paint-quiet", "paint-quiet-dark":
@@ -260,7 +281,7 @@ private final class Demo {
             paint(fraction: 0.4)
             showsPhoto = true
         case "paint-book-progress":
-            paint(fraction: 0.45)
+            if DemoMode.photos.isEmpty { paint(fraction: 0.45) } else { paintPet(fraction: 0.88, holdingDark: false) }
         case "paint-book-dark-paper", "paint-book-night-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
@@ -284,8 +305,8 @@ private final class Demo {
             }
         case "paint-book-zoomed":
             if let center = DemoMode.photoCenter {
-                // Onto the pet, painted far enough that its own (darker, later) paints are under way.
-                paint(fraction: 0.7)
+                // Onto the pet, its face painted but for one dark paint.
+                paintPet(fraction: 0.8, holdingDark: true)
                 camera = CanvasCamera(zoom: 3, center: center * SIMD2(Float(t.width), Float(t.height)))
             } else {
                 paint(fraction: 0.2)

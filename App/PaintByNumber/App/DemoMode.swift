@@ -68,9 +68,9 @@ enum DemoMode {
             .sorted { $0.title < $1.title }
     }()
 
-    /// `-demoPhotoCenter <x>,<y>`: where `paint-book-zoomed` zooms on a `-demoPhotos` photo, as
-    /// fractions of its width and height from the top left, as a painter would zoom onto the pet
-    /// rather than the busiest part of the picture.
+    /// `-demoPhotoCenter <x>,<y>`: where the pet is in a `-demoPhotos` photo, as fractions of its
+    /// width and height from the top left: `paint-book-progress` paints outward from it, and
+    /// `paint-book-zoomed` zooms onto it rather than the busiest part of the picture.
     static let photoCenter: SIMD2<Float>? = {
         guard !photos.isEmpty, let value = UserDefaults.standard.string(forKey: "demoPhotoCenter") else { return nil }
         let parts = value.split(separator: ",").compactMap { Float($0) }
