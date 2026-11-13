@@ -58,6 +58,28 @@ struct PaintProgressTests {
         #expect(negative.log.map(\.time) == [0, 12])
     }
 
+    /// The paint in hand rides after the stroke log (1.2): files without it read as none, and
+    /// a value no palette could have reads as none too.
+    @Test func thePaintInHandIsSavedAfterTheLog() throws {
+        var progress = PaintProgress(regionCount: 4)
+        progress.paint(1)
+        progress.inHand = 2
+        let data = progress.encoded()
+        #expect(try PaintProgress(encoded: data).inHand == 2)
+
+        let beforeIt = data.dropLast(4)
+        var unheld = progress
+        unheld.inHand = nil
+        #expect(try PaintProgress(encoded: beforeIt) == unheld)
+        #expect(try PaintProgress(encoded: beforeIt + Data([7, 0])) == unheld, "A torn field read as a paint")
+
+        var damaged = beforeIt
+        withUnsafeBytes(of: UInt32.max) { damaged.append(contentsOf: $0) }
+        #expect(try PaintProgress(encoded: damaged).inHand == nil)
+        progress.reset()
+        #expect(progress.inHand == nil)
+    }
+
     @Test func remappedCarriesProgressAcrossTemplates() {
         let old = Fixtures.stripes(), new = Fixtures.stripes(count: 6, stripeWidth: 10)
         var progress = PaintProgress(regionCount: 3)

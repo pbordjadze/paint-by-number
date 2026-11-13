@@ -149,9 +149,13 @@ struct CreateFlowView: View {
                 return
             }
             if ShellDemo.current?.refines == true, model.refinements.isEmpty, let template = model.preview?.template {
-                // As a painter would in Refine; the preview opens it (`TemplatePreviewView`).
-                model.refine(ShellDemo.refinements(for: template))
-                return
+                // As a painter would in Refine; the preview opens it (`TemplatePreviewView`). A
+                // painter's own photo (`-demoPhotos`) may come with no edits: then it is ready below.
+                let edits = ShellDemo.refinements(for: template)
+                if !edits.isEmpty {
+                    model.refine(edits)
+                    return
+                }
             }
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).

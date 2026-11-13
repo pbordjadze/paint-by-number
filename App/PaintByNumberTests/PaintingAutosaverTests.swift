@@ -67,6 +67,23 @@ struct PaintingAutosaverTests {
         #expect(library.artwork(with: artwork.id)?.thumbnailVersion == artwork.thumbnailVersion + 1)
     }
 
+    /// A paint picked and nothing painted is saved on leaving, so the painting opens on it
+    /// again, without moving the painting's date (its place in the gallery).
+    @Test func thePaintInHandIsSavedOnLeaving() async throws {
+        let (library, artwork, autosaver) = try await open(count: 5)
+        paint(0, in: autosaver)
+        autosaver.saveNow()
+        let painted = try #require(library.artwork(with: artwork.id)).modifiedAt
+        autosaver.session.select(color: 3)
+        autosaver.saveNow()
+        #expect(library.artwork(with: artwork.id)?.modifiedAt == painted)
+        await library.flush()
+        let reopened = try await makeLibrary().loadForPainting(artwork.id)
+        #expect(reopened.progress.inHand == 3)
+        #expect(reopened.progress.paintedCount == 1)
+        #expect(try PaintingSession(template: reopened.template, progress: reopened.progress).selectedColor == 3)
+    }
+
     @Test func aFinishedPaintingIsSavedImmediately() async throws {
         let (library, artwork, autosaver) = try await open(count: 2)
         paint(0, in: autosaver)

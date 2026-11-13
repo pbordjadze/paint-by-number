@@ -36,7 +36,22 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
         self.provenance = provenance
     }
 
-    var url: URL? { Bundle.main.url(forResource: id, withExtension: "jpg") }
+    #if DEBUG
+    /// A demo launch's own photo (`DemoMode.photos`), which `url` gives instead of a bundled one.
+    private(set) var file: URL?
+
+    init(file: URL) {
+        self.init(id: "demo-photo:\(file.path)", title: file.deletingPathExtension().lastPathComponent)
+        self.file = file
+    }
+    #endif
+
+    var url: URL? {
+        #if DEBUG
+        if let file { return file }
+        #endif
+        return Bundle.main.url(forResource: id, withExtension: "jpg")
+    }
 
     /// The pictures the Samples pane offers, in the order of `library.json` (which is
     /// authoritative: curating the library reorders the file, not this code).

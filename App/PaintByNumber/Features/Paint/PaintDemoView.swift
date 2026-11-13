@@ -93,7 +93,8 @@ struct PaintDemoView: View {
         }
         .task {
             let book = scenario.hasPrefix("paint-book")
-            let photo = book ? "red-fox" : "delicate-arch"
+            let pet = book ? DemoMode.photos.first : nil
+            let photo = pet?.id ?? (book ? "red-fox" : "delicate-arch")
             let template: Template?
             if book {
                 template = await Self.bookTemplate(photo: photo)
@@ -106,17 +107,22 @@ struct PaintDemoView: View {
             let title = scenario.hasSuffix("-long-text")
                 ? "Delicate Arch on Our Spring Trip Through Utah"
                 : scenario == "paint-complete-unnamed" ? "June 14"
-                : (template == nil ? "Mosaic" : (book ? "Red Fox" : "Delicate Arch"))
+                : (template == nil ? "Mosaic" : (book ? pet?.title ?? "Red Fox" : "Delicate Arch"))
             demo = await Demo(
                 scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
                 photo: template == nil ? nil : photo)
         }
     }
 
+    /// The bundled photo `name` names, or the `-demoPhotos` photo whose id it is.
+    nonisolated private static func url(_ name: String) -> URL? {
+        DemoMode.photos.first { $0.id == name }?.url ?? Bundle.main.url(forResource: name, withExtension: "jpg")
+    }
+
     /// The photo the demo template is generated from, so the overlay lines up for real.
     @concurrent
     private static func photo(_ name: String, maxPixelSize: Int?) async -> CGImage? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else { return nil }
+        guard let url = Self.url(name) else { return nil }
         return ImageCodec.image(at: url, maxPixelSize: maxPixelSize)
     }
 
@@ -124,7 +130,7 @@ struct PaintDemoView: View {
     @concurrent
     private static func template(photo: String) async -> Template? {
         let settings = GenerationSettings(lineArt: LineArtSettings(style: .classic))
-        guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
+        guard let url = Self.url(photo),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
               let output = try? TemplateGenerator(settings: settings).generate(from: image)
         else { return nil }
@@ -136,7 +142,7 @@ struct PaintDemoView: View {
     /// is unavailable.
     @concurrent
     private static func bookTemplate(photo: String) async -> Template? {
-        guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
+        guard let url = Self.url(photo),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
               let small = try? PhotoLoader.load(url: url, maxPixelSize: 640)
         else { return nil }
@@ -188,6 +194,13 @@ private final class Demo {
             let regions = Array(order.prefix(count))
             if !regions.isEmpty { session.paint(regions, from: .zero, animated: false) }
             if let next = order.dropFirst(count).first { session.select(color: session.colorOf(next)) }
+        }
+        /// A `-demoPhotos` photo: painted outward from the pet (`DemoMode.petRegions`).
+        let petCenter = DemoMode.photoCenter(of: title)
+        func paintPet(fraction: Double, holdingDark: Bool) {
+            let pet = DemoMode.petRegions(of: t, center: petCenter ?? SIMD2(0.5, 0.5), fraction: fraction, holdingDark: holdingDark)
+            if !pet.painted.isEmpty { session.paint(pet.painted, from: .zero, animated: false) }
+            session.select(color: pet.color)
         }
 
         switch scenario {
@@ -254,7 +267,7 @@ private final class Demo {
             paint(fraction: 0.4)
             showsPhoto = true
         case "paint-book-progress":
-            paint(fraction: 0.45)
+            if DemoMode.photos.isEmpty { paint(fraction: 0.45) } else { paintPet(fraction: 0.88, holdingDark: false) }
         case "paint-book-dark-paper", "paint-book-night-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
@@ -277,8 +290,14 @@ private final class Demo {
                 lastArea = target
             }
         case "paint-book-zoomed":
-            paint(fraction: 0.2)
-            camera = CanvasCamera(zoom: 4, center: Self.busiest(t))
+            if let center = petCenter {
+                // Onto the pet, its face painted but for one dark paint.
+                paintPet(fraction: 0.8, holdingDark: true)
+                camera = CanvasCamera(zoom: 3, center: center * SIMD2(Float(t.width), Float(t.height)))
+            } else {
+                paint(fraction: 0.2)
+                camera = CanvasCamera(zoom: 4, center: Self.busiest(t))
+            }
         case "paint-feedback", "paint-feedback-dark", "paint-feedback-review", "paint-feedback-long-text":
             paint(fraction: 0.45)
             let reviews = scenario.hasSuffix("-review") || scenario.hasSuffix("-long-text")
