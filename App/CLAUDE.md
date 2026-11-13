@@ -957,11 +957,12 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
-  PaintCore's `docs/start-from-a-drawing.md`): the Paint page's A Drawing on Paper (`choose-drawing`;
-  until row 239 a long press of the photo button) opens the system picker
-  with `picksDrawing` set, so the pick calls `CreateModel.load(drawing:)` /
-  `load(drawingData:)`, which cleans the sheet off the main actor (`DrawingScan.clean`: found,
-  pulled square, the paper white) and makes the cleaned sheet the flow's photo, so the
+  PaintCore's `docs/start-from-a-drawing.md`): its way in, the Paint page's A Drawing on Paper
+  tile, is hidden since November 13, 2026 (the mode's generated colors; removal undecided), so
+  nothing calls `CreateModel.load(drawing:)` now and only the Debug demo `load(drawingData:)`; the paintings
+  already made this way still open, remake and show the palette picker. Those loads clean the
+  sheet off the main actor (`DrawingScan.clean`: found, pulled square, the paper white) and make
+  the cleaned sheet the flow's photo, so the
   comparison, the photo peek, Refine's photo layer and `source.jpg` all hold it; nothing is
   analyzed or suggested (`isDrawing`, `settingsOrigin` nil, no drafts), and the card shows the
   palette set's picker (`drawingPalette`, `TemplatePreviewView.palettePicker`) in the sliders'
@@ -972,7 +973,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   Refine works as on any book (`hasLineArtInput`); Color from Photo and Make Cell read the
   cleaned sheet, so they give paper white. `create-drawing` (with `-dark`) is its screenshot
   (`ShellDemo.drawingPhoto`, a page drawn at launch and photographed askew); `DrawingFlowTests`
-  covers the flow and regeneration, `DrawingEntryUITests` the tile.
+  covers the flow and regeneration.
 - From Scratch (from 1.1, as Refine; painting-company row 231): the Paint page's Blank Page (`from-scratch`) calls
   `CreateModel.loadScratch()` (the drawing tools' Done then starts the painting, row 239): a white square page (`blankPageSide`) is the flow's photo, the
   base is Blank from the start (`TemplateRefinements.Start.blank`, so `ArtworkFactory.blank`
