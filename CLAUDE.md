@@ -469,7 +469,8 @@ any port of it, when changing the fitter: work from the paper.
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the report CI
-   publishes to the ref `refs/ci-shots/<branch>` (not fetched by a clone) and unpacks it:
+   publishes to the ref `refs/ci-shots/<branch>` (not fetched by a clone; for a re-run of the same
+   commit add `CI_RUN=<run id>.<attempt>`, or it returns the earlier report) and unpacks it:
    `STATUS.md` (job results and verdicts, then per simulator job the steps that failed, its test
    counts, each failed test with its first message, tests that passed only when run again, scenarios
    that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines

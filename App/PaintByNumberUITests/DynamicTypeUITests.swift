@@ -38,19 +38,22 @@ final class DynamicTypeUITests: XCTestCase {
     func testNewPaintingTitleAndSamples() throws {
         let app = launch("create-samples")
         XCTAssertTrue(app.staticTexts["Paint"].waitForExistence(timeout: 60), "The Paint page's title is gone")
+        // The page's top, Tonight's Picture and Your Own, before it scrolls (painting-company row 302).
+        try assertNoClippedText(in: app, named: "create-samples-ax5-top", allowing: Self.ownTileTitles)
         // At this size on a phone the library starts below Tonight's Picture and Your Own, out
         // of a lazy grid's reach until scrolled to.
         let sample = app.buttons.matching(identifier: "library-picture").firstMatch
         for _ in 0..<8 where !sample.exists { app.swipeUp() }
         XCTAssertTrue(sample.waitForExistence(timeout: 30), "The samples never showed")
-        // Your Own's tiles are whole at AX5 on an iPhone 17 Pro, but the audit flags one or two
-        // of them, which ones depending on where the scroll stopped (CI: 'A Photo'; a Mac: 'Blank
-        // Page' and a tile since hidden), on the TestFlight 1.1 code too: painting-company
-        // mac/results/2026-11-12-dynamic-type-a-photo.md. Noted for them, not failed.
-        try assertNoClippedText(
-            in: app, named: "create-samples-ax5",
-            allowing: ["A Photo", "Take Photo", "Blank Page"])
+        try assertNoClippedText(in: app, named: "create-samples-ax5", allowing: Self.ownTileTitles)
     }
+
+    /// Your Own's tiles are whole at AX5 on an iPhone 17 Pro and an iPad Air, but the audit flags
+    /// one or two of them, which ones depending on where the scroll stopped (CI: 'A Photo'; a Mac:
+    /// 'Blank Page' and a tile since hidden), on the TestFlight 1.1 code too: painting-company
+    /// mac/results/2026-11-10-look-paint-now-tile-largest-text.md and
+    /// 2026-11-12-dynamic-type-a-photo.md. Noted for them, not failed.
+    private static let ownTileTitles: Set<String> = ["A Photo", "Take Photo", "Blank Page"]
 
     @MainActor
     func testRefineBadgeAndPenOptions() throws {

@@ -507,7 +507,7 @@ jobs:
           done
           {
             echo "commit: ${GITHUB_SHA}"
-            echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (attempt ${GITHUB_RUN_ATTEMPT})"
             if [[ "$COMPILE" == 1 ]]; then
               JOBS=(compile=${{ needs.apple.result }})
             elif [[ "$TEST_ONLY" == 1 ]]; then
@@ -524,6 +524,8 @@ jobs:
           } > STATUS.md
           cat STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
+          # Which run and attempt wrote it: a re-run of one commit rewrites the ref (ci/fetch.sh's CI_RUN).
+          echo "${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}" > RUN
           git init -q && git checkout -q -b shots
           git add -A
           git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "CI report for ${GITHUB_SHA}"

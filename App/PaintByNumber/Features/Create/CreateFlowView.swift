@@ -16,6 +16,8 @@ import UIKit
 struct CreateFlowView: View {
     /// A bundled sample to open straight on its preview (demo scenarios).
     var openingSample: Sample?
+    /// `openingSample` was picked on the gallery: painted now, as a Paint page tile's is.
+    var paintsSampleNow = false
     /// A photo dropped on the gallery: the flow opens on its preview.
     var droppedPhoto: Data?
     /// The dropped or opened file's name, when it has one.
@@ -130,6 +132,7 @@ struct CreateFlowView: View {
             } else if let resuming {
                 model.load(draft: resuming.draft, photo: resuming.photo, kept: resuming.kept)
             } else if let openingSample {
+                model.paintsNow = paintsSampleNow
                 model.load(sample: openingSample)
             }
         }
