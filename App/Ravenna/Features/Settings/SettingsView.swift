@@ -63,18 +63,15 @@ struct SettingsView: View {
                             PaintTips.showAgain()
                             tipsReset = true
                         } label: {
-                            // Every row's words are in the text's color and its symbol in the tint,
-                            // a button's and a link's too, whose label the system would tint whole
-                            // (painting-company row 329).
                             if tipsReset {
-                                SwiftUI.Label {
-                                    Text("Tips Will Show Again").foregroundStyle(.secondary)
-                                } icon: {
-                                    Image(systemName: "checkmark")
-                                }
+                                SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
                             } else {
+                                // Every row's words are in the text's color and its symbol in the tint,
+                                // a button's and a link's too, which the system tints whole. A plain
+                                // color: `.primary` is the level of the style around it, here the
+                                // tint (painting-company row 329).
                                 SwiftUI.Label {
-                                    Text("Show Tips Again").foregroundStyle(.primary)
+                                    Text("Show Tips Again").foregroundStyle(Color.primary)
                                 } icon: {
                                     Image(systemName: "arrow.counterclockwise")
                                 }
@@ -149,7 +146,7 @@ struct SettingsView: View {
                                     .foregroundStyle(.tint)
                             } label: {
                                 SwiftUI.Label {
-                                    Text("Year").foregroundStyle(.primary)
+                                    Text("Year").foregroundStyle(Color.primary)
                                 } icon: {
                                     Image(systemName: "clock")
                                 }
@@ -170,7 +167,7 @@ struct SettingsView: View {
                         .accessibilityIdentifier("about-acknowledgements")
                         Link(destination: AboutLinks.privacyPolicy) {
                             SwiftUI.Label {
-                                Text("Privacy Policy").foregroundStyle(.primary)
+                                Text("Privacy Policy").foregroundStyle(Color.primary)
                             } icon: {
                                 Image(systemName: "hand.raised")
                             }
@@ -181,7 +178,7 @@ struct SettingsView: View {
                                 Text(verbatim: AboutLinks.supportAddress)
                             } label: {
                                 SwiftUI.Label {
-                                    Text("Contact").foregroundStyle(.primary)
+                                    Text("Contact").foregroundStyle(Color.primary)
                                 } icon: {
                                     Image(systemName: "envelope")
                                 }
@@ -258,7 +255,7 @@ struct SettingsView: View {
                     isUnlocking = true
                 } label: {
                     SwiftUI.Label {
-                        Text("Unlimited Paintings").foregroundStyle(.primary)
+                        Text("Unlimited Paintings").foregroundStyle(Color.primary)
                     } icon: {
                         Image(systemName: "infinity")
                     }
