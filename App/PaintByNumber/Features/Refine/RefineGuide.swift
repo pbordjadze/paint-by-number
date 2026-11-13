@@ -580,6 +580,16 @@ nonisolated enum RefineGuideText {
         }
     }
 
+    /// A page's words as the guide lays them out in SideStore and Debug builds (painting-company
+    /// row 316, every critic round of row 237: "the guide's manual"): its last section, On the
+    /// practice picture, is the invitation over the practice canvas; the rest is How It Works,
+    /// a tap away. Every page ends with that section (`RefineGuideTests`); a page without a
+    /// heading has no invitation.
+    static func invitation(_ blocks: [Block]) -> (invitation: [Block], rest: [Block]) {
+        guard let last = blocks.lastIndex(where: { if case .heading = $0 { true } else { false } }) else { return ([], blocks) }
+        return (Array(blocks[(last + 1)...]), Array(blocks[..<last]))
+    }
+
     /// A paragraph's inline Markdown (links, emphasis), or its text as it is if it has none that parses.
     static func inline(_ text: String) -> AttributedString {
         (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
@@ -758,6 +768,10 @@ struct RefineGuidePageView: View {
     /// (main's runs 559 and 561), as the painting screen did while it was laid out at every frame
     /// of its push (`ArtworkPaintingView.hasLanded`).
     @State private var hasLanded = false
+    #if UNRELEASED
+    /// How It Works is open: the page's words beyond its invitation (`RefineGuideText.invitation`).
+    @State private var showsHowItWorks = false
+    #endif
 
     private var page: RefineGuidePage { .of(topic) }
 
@@ -766,9 +780,14 @@ struct RefineGuidePageView: View {
             let practice = page.practice
             if proxy.size.width >= 760 {
                 HStack(spacing: 0) {
-                    pad(practice)
-                        .padding(16)
-                    ScrollView { words }
+                    VStack(alignment: .leading, spacing: 12) {
+                        #if UNRELEASED
+                        invitationView
+                        #endif
+                        pad(practice)
+                    }
+                    .padding(16)
+                    ScrollView { words(leadingInvitation: false) }
                         .frame(width: min(420, proxy.size.width * 0.4))
                 }
             } else {
@@ -782,7 +801,9 @@ struct RefineGuidePageView: View {
                         // Over the words, which scrolled up showed in a strip under the panel's
                         // edge (QA, October 28).
                         .zIndex(1)
-                    ScrollView { words }
+                    // Under the picture here, at the words' top: over it, on a phone on its side or at
+                    // large text sizes, it left the words no room.
+                    ScrollView { words(leadingInvitation: true) }
                 }
             }
         }
@@ -852,10 +873,55 @@ struct RefineGuidePageView: View {
 
     // MARK: Words
 
-    private var words: some View {
+    private var blocks: [RefineGuideText.Block] { RefineGuideText.blocks(page.text) }
+
+    #if UNRELEASED
+    /// What the practice picture is for, over it (SideStore and Debug builds; the release's words
+    /// keep it last): the page's own On the practice picture.
+    @ViewBuilder
+    private var invitationView: some View {
+        let invitation = RefineGuideText.invitation(blocks).invitation
+        if !invitation.isEmpty {
+            blockViews(invitation)
+                .font(.body.weight(.medium))
+                .modifier(GuideLinks(open: open))
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("refine-guide-invitation")
+        }
+    }
+    #endif
+
+    private func words(leadingInvitation: Bool) -> some View {
         VStack(alignment: .leading, spacing: 14) {
+            #if UNRELEASED
+            if leadingInvitation { invitationView }
+            let rest = RefineGuideText.invitation(blocks).rest
+            if topic == .basics {
+                blockViews(rest)
+            } else if !rest.isEmpty {
+                DisclosureGroup(isExpanded: $showsHowItWorks) {
+                    blockViews(rest)
+                        .padding(.top, 10)
+                } label: {
+                    Text("How It Works")
+                        .font(.headline)
+                }
+                .accessibilityIdentifier("refine-guide-how-it-works")
+            }
+            #else
             header
-            ForEach(Array(RefineGuideText.blocks(page.text).enumerated()), id: \.offset) { _, block in
+            blockViews(blocks)
+            #endif
+        }
+        .modifier(GuideLinks(open: open))
+        .padding(20)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("refine-guide-page")
+    }
+
+    private func blockViews(_ blocks: [RefineGuideText.Block]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
                 switch block {
                 case .heading(let heading):
                     Text(heading)
@@ -881,19 +947,9 @@ struct RefineGuidePageView: View {
                 }
             }
         }
-        .tint(Theme.signature)
-        // A link to another page (`guide:<identifier>`) opens it here.
-        .environment(\.openURL, OpenURLAction { url in
-            guard let topic = RefineGuideTopic(link: url) else { return .systemAction }
-            FeedbackEngine.shared.selectionChanged()
-            open(topic)
-            return .handled
-        })
-        .padding(20)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("refine-guide-page")
     }
 
+    #if !UNRELEASED
     private var header: some View {
         HStack(spacing: 14) {
             Image(systemName: Self.symbol(topic))
@@ -907,6 +963,7 @@ struct RefineGuidePageView: View {
                 .accessibilityAddTraits(.isHeader)
         }
     }
+    #endif
 
     // MARK: Names
 
@@ -924,6 +981,23 @@ struct RefineGuidePageView: View {
         case .layers: "square.3.layers.3d"
         case .tool(let tool): RefineView.symbol(tool, shape: .star)
         }
+    }
+}
+
+/// The guide's words in its signature tint, a link to another page (`guide:<identifier>`)
+/// opening it here.
+private struct GuideLinks: ViewModifier {
+    let open: (RefineGuideTopic) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .tint(Theme.signature)
+            .environment(\.openURL, OpenURLAction { url in
+                guard let topic = RefineGuideTopic(link: url) else { return .systemAction }
+                FeedbackEngine.shared.selectionChanged()
+                open(topic)
+                return .handled
+            })
     }
 }
 

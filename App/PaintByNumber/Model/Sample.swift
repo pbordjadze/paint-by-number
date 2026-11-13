@@ -77,6 +77,19 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
         return paintings[((day % paintings.count) + paintings.count) % paintings.count]
     }
 
+    /// Tonight's Picture and the nights after it, as the gallery offers them (`GalleryShelf`):
+    /// the library's paintings in `tonight`'s turn from `date` on, those the painter's gallery
+    /// already holds (`excluding`, by id) skipped, at most `count` and each once.
+    static func nights(
+        from date: Date = .now, count: Int, excluding held: Set<String> = [], calendar: Calendar = .current
+    ) -> [Sample] {
+        let paintings = all(of: .painting)
+        guard !paintings.isEmpty, count > 0, let first = tonight(on: date, calendar: calendar),
+              let start = paintings.firstIndex(of: first) else { return [] }
+        let turn = paintings[start...] + paintings[..<start]
+        return Array(turn.filter { !held.contains($0.id) }.prefix(count))
+    }
+
     /// Prepared on first launch so the gallery starts with something to paint: a painting and
     /// a photograph, the library's best first impression.
     static let starters: [Sample] = ["great-wave", "delicate-arch"].compactMap(Sample.named)
