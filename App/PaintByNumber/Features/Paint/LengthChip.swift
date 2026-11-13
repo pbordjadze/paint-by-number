@@ -20,22 +20,16 @@ struct LengthChip: View {
 
     var body: some View {
         Menu {
-            // Each length with the time it aims for, so the choice isn't blind (the Mac's QA).
+            // Each length with the time it aims for, so the choice isn't blind (the Mac's QA). A
+            // toggle per row, the menu's own checkmark: a Label's title shows only its first Text
+            // there, which hid the chosen length's time (painting-company row 305).
             ForEach(PaintingLength.allCases, id: \.self) { choice in
-                Button {
-                    if choice != length { onPick(choice) }
-                } label: {
-                    if choice == length {
-                        Label {
-                            Text(choice.name)
-                            Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
-                        } icon: {
-                            Image(systemName: "checkmark")
-                        }
-                    } else {
-                        Text(choice.name)
-                        Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
-                    }
+                Toggle(isOn: Binding(
+                    get: { choice == length },
+                    set: { _ in if choice != length { onPick(choice) } }
+                )) {
+                    Text(choice.name)
+                    Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
                 }
             }
         } label: {
