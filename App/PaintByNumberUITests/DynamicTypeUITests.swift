@@ -45,7 +45,7 @@ final class DynamicTypeUITests: XCTestCase {
         XCTAssertTrue(sample.waitForExistence(timeout: 30), "The samples never showed")
         // Your Own's tiles are whole at AX5 on an iPhone 17 Pro, but the audit flags one or two
         // of them, which ones depending on where the scroll stopped (CI: 'A Photo'; a Mac: 'Blank
-        // Page' and 'A Drawing on Paper'), on the TestFlight 1.1 code too: painting-company
+        // Page' and a tile since hidden), on the TestFlight 1.1 code too: painting-company
         // mac/results/2026-11-12-dynamic-type-a-photo.md. Noted for them, not failed.
         try assertNoClippedText(
             in: app, named: "create-samples-ax5",

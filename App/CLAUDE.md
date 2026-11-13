@@ -959,7 +959,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
   PaintCore's `docs/start-from-a-drawing.md`): its way in, the Paint page's A Drawing on Paper
   tile, is hidden since November 13, 2026 (the mode's generated colors; removal undecided), so
-  nothing in the app calls `CreateModel.load(drawing:)` / `load(drawingData:)` now; the paintings
+  nothing calls `CreateModel.load(drawing:)` now and only the Debug demo `load(drawingData:)`; the paintings
   already made this way still open, remake and show the palette picker. Those loads clean the
   sheet off the main actor (`DrawingScan.clean`: found, pulled square, the paper white) and make
   the cleaned sheet the flow's photo, so the
