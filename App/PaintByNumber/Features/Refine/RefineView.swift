@@ -488,146 +488,14 @@ struct RefineView: View {
 
     // MARK: Canvas
 
+    /// Refine's picture and what lies over it. Its parts are type-erased (`AnyView`) because the
+    /// whole as one nested SwiftUI type overflowed the iPad's 1 MB main-thread stack in the
+    /// unoptimized Debug build: the runtime resolves a type's generic arguments recursively, and
+    /// the simulator's 8 MB stack never showed it (painting-company row 319). Each erased part
+    /// is resolved on its own, so keep new layers and modifiers inside one of them rather than
+    /// nesting them all again.
     private var canvas: some View {
-        ZStack {
-            if let photo = model.source?.preview {
-                // A card, as the preview's comparison is; zoomed in, its corners leave the screen.
-                Self.card
-                    .fill(Theme.surface)
-                    .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
-                    .frame(width: picture.width, height: picture.height)
-                    .position(x: picture.midX, y: picture.midY)
-                // The photo shows through what lies over it; under opaque paint the lines are drawn
-                // as over the paint.
-                let showsPhoto = base == nil || layers.photoStrength > 0
-                let painted = showsPainting && base != nil && painting?.preview == base?.id ? painting?.image : nil
-                ZStack {
-                    // The paper, beneath every layer: it shows where the paint and the photo are
-                    // hidden or faint.
-                    Rectangle()
-                        .fill(LineArtDrawing.paper)
-                        .frame(width: picture.width, height: picture.height)
-                        .position(x: picture.midX, y: picture.midY)
-                    if layers.photo || base == nil {
-                        Image(decorative: photo, scale: 1)
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: picture.width, height: picture.height)
-                            .position(x: picture.midX, y: picture.midY)
-                            .opacity(base == nil ? 1 : layers.photoOpacity)
-                    }
-                    if let painted {
-                        Image(decorative: painted, scale: 1)
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: picture.width, height: picture.height)
-                            .position(x: picture.midX, y: picture.midY)
-                            .opacity(layers.paintOpacity)
-                            // New colors cross-fade in (`land`).
-                            .id(painting?.preview)
-                            .transition(.opacity)
-                    }
-                    // The brush's strokes until they land, in their paint under the drawing's ink,
-                    // which a brush never covers.
-                    RefineInkLayer(
-                        lines: [], trace: nil, traceIsDrawn: false, erasing: false, brushes: brushes,
-                        eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth, beneath: nil, halo: false)
-                    if let base, layers.ink {
-                        LineArtLayer(
-                            drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto,
-                            overPaint: painted != nil && !showsPhoto)
-                            .equatable()
-                    }
-                    RefineFillLayer(
-                        base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
-                        showsAreas: painted == nil)
-                        .equatable()
-                    // Not Bend Line's: a bend passes over them, re-cutting the cells it crosses.
-                    if group == .cells, let cellEdges {
-                        RefineCellEdges(id: cellEdges.id, size: templateSize, path: cellEdges.path, rect: picture)
-                            .equatable()
-                    }
-                    if !glowAreas.isEmpty {
-                        RefinePaintGlow(base: base, areas: glowAreas, rect: picture, reduceMotion: reduceMotion)
-                            .equatable()
-                    }
-                    let figure = shapeTrace
-                    RefineInkLayer(
-                        lines: layers.ink ? pending : [], trace: tool == .shape ? figure : tool.drags || tool == .brush ? nil : penTrace,
-                        traceIsDrawn: tool == .shape, erasing: tool.erases, dashed: tool == .cellEdge, merging: tool == .merge,
-                        eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
-                        beneath: showsPhoto ? photo : painted, halo: showsPhoto)
-                    if let bend {
-                        RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
-                    }
-                    if layers.numbers || group == .numbers || tinyMarked != nil, let base {
-                        RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
-                            .equatable()
-                    }
-                    if let held = heldNumber, let template = base?.template {
-                        RefineHeldNumber(template: template, paint: held.paint, at: held.at, rect: picture)
-                    }
-                    if let tapped {
-                        RefineTappedLine(points: tapped, rect: picture, lineWidth: lineWidth)
-                            .opacity(flashes ? 1 : 0)
-                    }
-                    RefineMarks(
-                        refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
-                        emphasizesText: tool == .text)
-                    if let mark = dropCell.map(RefineHoverMark.Mark.cell) ?? (hold == nil && trace == nil ? hovering : nil) {
-                        RefineHoverMark(mark: mark, base: base, rect: picture)
-                    }
-                }
-                // Drawing past the picture's edge stays on the picture.
-                .mask {
-                    Self.card
-                        .frame(width: picture.width, height: picture.height)
-                        .position(x: picture.midX, y: picture.midY)
-                }
-            }
-            RefineTouchSurface(
-                aspectRatio: aspectRatio,
-                onLayout: { rect, zoom in
-                    picture = rect
-                    self.zoom = zoom
-                },
-                onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
-                strokes: tool.strokes,
-                onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
-                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
-                focus: focus)
-            if let hold, let space = base?.template.colorSpace {
-                RefineLoupe(
-                    picked: hold.color.map { RefinePalette.color($0, space: space) },
-                    current: currentPaint.map { RefinePalette.color($0, space: space) })
-                    .position(RefineLoupe.position(over: onScreen(hold.at), in: canvasSize))
-            }
-            if let sparkles {
-                RefineSparkles(point: sparkles.point, extent: sparkles.extent, stars: Sky.current() == .moon)
-                    .id(sparkles.id)
-            }
-        }
-        .clipped()
-        .overlay(alignment: .bottom) {
-            // Above a taller tool that rises over the canvas (`reservedTools`).
-            status.padding(12).padding(.bottom, fullScreen || usesSide ? 0 : max(0, toolsMeasured - toolsHeight))
-        }
-        .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
-        .animation(.easeInOut(duration: 0.2), value: model.phase)
-        .animation(reduceMotion ? nil : .snappy, value: model.note)
-        .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(String(
-            localized: "refine.canvas", defaultValue: "Painting to refine",
-            comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
-        .accessibilityValue(Self.changes(model.shownChangeCount))
-        .accessibilityActions {
-            if model.canRedo { Button("Redo", action: redo) }
-            if !isPractice {
-                Button(action: toggleFullScreen) { fullScreen ? Text("Exit Full Screen") : Text("Full Screen") }
-            }
-        }
-        .accessibilityIdentifier("refine-canvas")
+        AnyView(canvasStack)
         // After the picture's own accessibility, which ignores its children: the cells, Start From
         // and the badge are elements of their own, the cells beneath the rest.
         .overlay { cellElements }
@@ -672,6 +540,156 @@ struct RefineView: View {
                     isPresented: Binding(get: { pencilPalette != nil }, set: { if !$0 { pencilPalette = nil } }),
                     attachmentAnchor: .rect(.rect(pencilPalette ?? .zero))
                 ) { pencilPaletteView }
+        }
+    }
+
+    /// The picture, the touch surface over it and what shows above them, with the canvas's own
+    /// accessibility.
+    private var canvasStack: some View {
+        ZStack {
+            if let photo = model.source?.preview {
+                // A card, as the preview's comparison is; zoomed in, its corners leave the screen.
+                Self.card
+                    .fill(Theme.surface)
+                    .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
+                    .frame(width: picture.width, height: picture.height)
+                    .position(x: picture.midX, y: picture.midY)
+                AnyView(pictureLayers(photo: photo))
+            }
+            RefineTouchSurface(
+                aspectRatio: aspectRatio,
+                onLayout: { rect, zoom in
+                    picture = rect
+                    self.zoom = zoom
+                },
+                onDraw: draw, onTap: tap, onUndo: undo, onRedo: redo, onRepeat: repeatStep, holdPicks: !tool.drags,
+                strokes: tool.strokes,
+                onPencil: pencil, onHold: held, onHover: hovered, onDrop: dropped, onDropHover: dropHovered,
+                onFullScreen: { if !isPractice { toggleFullScreen() } }, keys: keys, onKey: pressed, keysRequest: keysRequest,
+                focus: focus)
+            if let hold, let space = base?.template.colorSpace {
+                RefineLoupe(
+                    picked: hold.color.map { RefinePalette.color($0, space: space) },
+                    current: currentPaint.map { RefinePalette.color($0, space: space) })
+                    .position(RefineLoupe.position(over: onScreen(hold.at), in: canvasSize))
+            }
+            if let sparkles {
+                RefineSparkles(point: sparkles.point, extent: sparkles.extent, stars: Sky.current() == .moon)
+                    .id(sparkles.id)
+            }
+        }
+        .clipped()
+        .overlay(alignment: .bottom) {
+            // Above a taller tool that rises over the canvas (`reservedTools`).
+            status.padding(12).padding(.bottom, fullScreen || usesSide ? 0 : max(0, toolsMeasured - toolsHeight))
+        }
+        .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
+        .animation(.easeInOut(duration: 0.2), value: model.phase)
+        .animation(reduceMotion ? nil : .snappy, value: model.note)
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(String(
+            localized: "refine.canvas", defaultValue: "Painting to refine",
+            comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
+        .accessibilityValue(Self.changes(model.shownChangeCount))
+        .accessibilityActions {
+            if model.canRedo { Button("Redo", action: redo) }
+            if !isPractice {
+                Button(action: toggleFullScreen) { fullScreen ? Text("Exit Full Screen") : Text("Full Screen") }
+            }
+        }
+        .accessibilityIdentifier("refine-canvas")
+    }
+
+    /// The picture's layers, from the paper up to the hover mark, masked to the card.
+    @ViewBuilder
+    private func pictureLayers(photo: CGImage) -> some View {
+        // The photo shows through what lies over it; under opaque paint the lines are drawn
+        // as over the paint.
+        let showsPhoto = base == nil || layers.photoStrength > 0
+        let painted = showsPainting && base != nil && painting?.preview == base?.id ? painting?.image : nil
+        ZStack {
+            // The paper, beneath every layer: it shows where the paint and the photo are
+            // hidden or faint.
+            Rectangle()
+                .fill(LineArtDrawing.paper)
+                .frame(width: picture.width, height: picture.height)
+                .position(x: picture.midX, y: picture.midY)
+            if layers.photo || base == nil {
+                Image(decorative: photo, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: picture.width, height: picture.height)
+                    .position(x: picture.midX, y: picture.midY)
+                    .opacity(base == nil ? 1 : layers.photoOpacity)
+            }
+            if let painted {
+                Image(decorative: painted, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: picture.width, height: picture.height)
+                    .position(x: picture.midX, y: picture.midY)
+                    .opacity(layers.paintOpacity)
+                    // New colors cross-fade in (`land`).
+                    .id(painting?.preview)
+                    .transition(.opacity)
+            }
+            // The brush's strokes until they land, in their paint under the drawing's ink,
+            // which a brush never covers.
+            RefineInkLayer(
+                lines: [], trace: nil, traceIsDrawn: false, erasing: false, brushes: brushes,
+                eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth, beneath: nil, halo: false)
+            if let base, layers.ink {
+                LineArtLayer(
+                    drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto,
+                    overPaint: painted != nil && !showsPhoto)
+                    .equatable()
+            }
+            RefineFillLayer(
+                base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
+                showsAreas: painted == nil)
+                .equatable()
+            // Not Bend Line's: a bend passes over them, re-cutting the cells it crosses.
+            if group == .cells, let cellEdges {
+                RefineCellEdges(id: cellEdges.id, size: templateSize, path: cellEdges.path, rect: picture)
+                    .equatable()
+            }
+            if !glowAreas.isEmpty {
+                RefinePaintGlow(base: base, areas: glowAreas, rect: picture, reduceMotion: reduceMotion)
+                    .equatable()
+            }
+            let figure = shapeTrace
+            RefineInkLayer(
+                lines: layers.ink ? pending : [], trace: tool == .shape ? figure : tool.drags || tool == .brush ? nil : penTrace,
+                traceIsDrawn: tool == .shape, erasing: tool.erases, dashed: tool == .cellEdge, merging: tool == .merge,
+                eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
+                beneath: showsPhoto ? photo : painted, halo: showsPhoto)
+            if let bend {
+                RefineBendPreview(original: bend.original, moved: bend.moved, size: templateSize, rect: picture, lineWidth: lineWidth)
+            }
+            if layers.numbers || group == .numbers || tinyMarked != nil, let base {
+                RefineNumbers(base: base, rect: picture, overPaint: painted != nil && !showsPhoto && layers.paintOpacity >= 0.5)
+                    .equatable()
+            }
+            if let held = heldNumber, let template = base?.template {
+                RefineHeldNumber(template: template, paint: held.paint, at: held.at, rect: picture)
+            }
+            if let tapped {
+                RefineTappedLine(points: tapped, rect: picture, lineWidth: lineWidth)
+                    .opacity(flashes ? 1 : 0)
+            }
+            RefineMarks(
+                refinements: model.refinements, found: model.foundText, marking: marking, rect: picture,
+                emphasizesText: tool == .text)
+            if let mark = dropCell.map(RefineHoverMark.Mark.cell) ?? (hold == nil && trace == nil ? hovering : nil) {
+                RefineHoverMark(mark: mark, base: base, rect: picture)
+            }
+        }
+        // Drawing past the picture's edge stays on the picture.
+        .mask {
+            Self.card
+                .frame(width: picture.width, height: picture.height)
+                .position(x: picture.midX, y: picture.midY)
         }
     }
 
