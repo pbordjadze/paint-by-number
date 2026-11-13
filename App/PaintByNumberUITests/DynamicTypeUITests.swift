@@ -49,7 +49,7 @@ final class DynamicTypeUITests: XCTestCase {
         // mac/results/2026-11-12-dynamic-type-a-photo.md. Noted for them, not failed.
         try assertNoClippedText(
             in: app, named: "create-samples-ax5",
-            allowing: ["A Photo", "Take Photo", "A Drawing on Paper", "Blank Page"])
+            allowing: ["A Photo", "Take Photo", "Blank Page"])
     }
 
     @MainActor

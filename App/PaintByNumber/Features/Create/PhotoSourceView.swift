@@ -22,12 +22,6 @@ struct PhotoSourceView: View {
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
-    #if UNRELEASED
-    /// Start from a Drawing (painting-company row 190): A Drawing on Paper opens the system
-    /// picker for a photo of a drawing, which `CreateModel.load(drawing:)` cleans and traces. The
-    /// same picker and camera serve both; this says which way the next pick goes.
-    @State private var picksDrawing = false
-    #endif
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -85,20 +79,11 @@ struct PhotoSourceView: View {
                     .keyboardShortcut(.cancelAction)
             }
         }
-        // The full picker, for A Photo and A Drawing on Paper.
+        // The full picker, for A Photo.
         .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         .onChange(of: browsedItem) { _, item in
             guard let item else { return }
             browsedItem = nil
-                #if UNRELEASED
-            if picksDrawing {
-                PaintTips.photoChosen()
-                model.paintsNow = true
-                model.load(drawing: item)
-                onPicked()
-                return
-            }
-                #endif
             PaintTips.photoChosen()
             model.paintsNow = true
             model.load(item: item)
@@ -111,11 +96,7 @@ struct PhotoSourceView: View {
             CameraPicker { data in
                 PaintTips.photoChosen()
                 model.paintsNow = true
-                #if UNRELEASED
-                if picksDrawing { model.load(drawingData: data) } else { model.load(imageData: data) }
-                #else
                 model.load(imageData: data)
-                #endif
                 onPicked()
             } onFailure: {
                 model.fail(.cameraCapture)
@@ -164,16 +145,6 @@ struct PhotoSourceView: View {
                     }
                     .accessibilityIdentifier("take-photo")
                 }
-                #if UNRELEASED
-                Button {
-                    picksDrawing = true
-                    isBrowsingAll = true
-                } label: {
-                    OwnTile(title: Text("A Drawing on Paper"), systemImage: "doc.viewfinder")
-                }
-                .accessibilityHint(Text("A photo of a drawing, traced into a painting"))
-                .accessibilityIdentifier("choose-drawing")
-                #endif
                 Button {
                     if paintings.locksRefine { offersRefineUnlock = true } else { startFromScratch() }
                 } label: {
@@ -252,17 +223,11 @@ struct PhotoSourceView: View {
 
     /// The full picker, for a photo.
     private func browseAll() {
-        #if UNRELEASED
-        picksDrawing = false
-        #endif
         isBrowsingAll = true
     }
 
     /// The camera, for a photo.
     private func showCamera() {
-        #if UNRELEASED
-        picksDrawing = false
-        #endif
         isShowingCamera = true
     }
 
