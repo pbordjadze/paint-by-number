@@ -82,7 +82,7 @@ struct GalleryView: View {
                         GalleryShelf(
                             held: Set(library.artworks.compactMap(\.sampleName)),
                             hasRoom: library.artworks.count + library.placeholders.count < Self.fewPaintings,
-                            column: width - 2 * horizontalPadding - 8,
+                            columns: columns, rowSpacing: spacing + 8,
                             onPaint: onPaint, onMore: onCreate)
                     }
                     #endif
