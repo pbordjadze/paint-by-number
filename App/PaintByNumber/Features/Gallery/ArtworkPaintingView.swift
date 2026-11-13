@@ -141,7 +141,7 @@ struct ArtworkPaintingView: View {
             if let autosaver, hasLanded {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
-                    onName: { startNaming() }, isNamed: artwork?.isNamed ?? true,
+                    onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
                     onChange: changeAction)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)

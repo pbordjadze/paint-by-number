@@ -32,6 +32,9 @@ struct PaintView: View {
     var onName: (() -> Void)?
     /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
     var isNamed = true
+    /// A painter's own painting, saved in the gallery: finishing it may ask for a rating
+    /// (`RatingPrompt`). Refine's Try Painting and the demos don't.
+    var asksForRating = false
     /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
@@ -61,6 +64,9 @@ struct PaintView: View {
     /// Bumped when a painting finished on this screen is the moment to ask for a rating
     /// (`RatingPrompt`); the ask waits for the finale, and leaving the screen cancels it.
     @State private var ratingMoment = 0
+    /// This painting has been counted as finished: undoing a fill and finishing again doesn't
+    /// count it twice.
+    @State private var countedFinish = false
     /// The progress badge names the painting (the top bar's layout that fits has room for it):
     /// the completion bar doesn't name it twice.
     @State private var badgeShowsTitle = false
@@ -201,7 +207,10 @@ struct PaintView: View {
             if shown { PaintTips.used(.benchShowPhoto) }
         }
         .onChange(of: session.isComplete) { was, complete in
-            if complete, !was, RatingPrompt.forLaunch?.paintingFinished() == true { ratingMoment += 1 }
+            if complete, !was, asksForRating, !countedFinish {
+                countedFinish = true
+                if RatingPrompt.forLaunch?.paintingFinished() == true { ratingMoment += 1 }
+            }
             guard complete, !reduceMotion else { return }
             Task {
                 // As the completion bar settles.
@@ -220,7 +229,7 @@ struct PaintView: View {
             guard ratingMoment > 0 else { return }
             // After the completion bar, the shine and nightfall have played.
             try? await Task.sleep(for: .seconds(RatingPrompt.delay))
-            guard !Task.isCancelled, session.isComplete else { return }
+            guard !Task.isCancelled, session.isComplete, !session.isReplaying else { return }
             RatingPrompt.forLaunch?.asked()
             requestReview()
         }
