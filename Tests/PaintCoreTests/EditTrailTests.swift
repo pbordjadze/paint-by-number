@@ -168,6 +168,9 @@ struct EditTrailTests {
         #expect(TemplateEditor.reanchored(.erase(path: [SIMD2(15, 40), SIMD2(18, 40)], radius: 2), on: TemplateEditorTests.scene) == nil,
                 "no line within reach")
         #expect(TemplateEditor.reanchored(.fill(at: SIMD2(15, 40), color: SIMD3(0.5, 0, 0)), on: remade) == nil)
+        // A point that isn't finite is left out, as the editor leaves it out.
+        let unfinite = TemplateEditor.reanchored(.erase(path: [SIMD2(.nan, 40), SIMD2(15, 40), SIMD2(18, 40)], radius: 2), on: remade)
+        #expect(unfinite == TemplateEditor.reanchored(rub, on: remade))
     }
 
     /// A shape too small for a number is drawn as a stroke; the trail says so.

@@ -136,7 +136,9 @@ public enum TemplateEditor {
     /// than moving whole (painting-company row 277). Move Edge's reshapes make what they made. 7
     /// (November 13, 2026): an eraser's rub or a Line Eraser's tap laid again with no line under
     /// it takes the line nearest it, a little way off on a base made again (`reanchored`,
-    /// `EditTrail.move(to:)`; painting-company row 322).
+    /// `EditTrail.move(to:)`; painting-company row 322). A painting saved with an earlier
+    /// editor whose rub was left out has it made when made again; a draft's kept trail keeps
+    /// what it laid until its list is laid again.
     public static let version = 7
 
     /// Why a Merge whose drag never left the area it began in is declined.

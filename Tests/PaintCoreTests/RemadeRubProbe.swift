@@ -34,7 +34,7 @@ struct RemadeRubProbe {
             var trail = EditTrail(base: remade)
             if try trail.move(to: [scaled]).made == 1 { after += 1; continue }
             // How far the nearest ink is from a rub still left out (nil: none within 64 units).
-            if case .erase(let path, _) = scaled, let work = try? EditWork(remade),
+            if case .erase(let path, _) = scaled, var work = try? EditWork(remade),
                let step = work.nearestInk(to: path.map(Lattice.point), within: 64 * Lattice.unit) {
                 let d = Lattice.double(step)
                 missed.append((d.x * d.x + d.y * d.y).squareRoot())
