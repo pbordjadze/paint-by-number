@@ -429,7 +429,8 @@ struct RefineView: View {
 
     private var refineScreen: some View {
         NavigationStack {
-            canvas
+            // Erased too, for margin under the rest of the screen's nesting (`canvas`).
+            AnyView(canvas
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if !fullScreen, !usesSide { reservedTools }
                 }
@@ -446,7 +447,7 @@ struct RefineView: View {
                 .toolbar { toolbar }
                 .toolbarVisibility(fullScreen || usesSide ? .hidden : .visible, for: .navigationBar)
                 .statusBarHidden(fullScreen)
-                .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
+                .persistentSystemOverlays(fullScreen ? .hidden : .automatic))
         }
         .fullScreenCover(item: $guide) { topic in RefineGuideView(opening: topic) }
         .onChange(of: base?.id) { landedColors() }
