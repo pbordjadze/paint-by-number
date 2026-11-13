@@ -1,0 +1,147 @@
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 561]
+[Planning 402 / 561]
+[Planning deferred tasks]
+[Starting]
+[53 / 266] MosaicKitTests-product
+[122 / 266]
+[126 / 266]
+[130 / 266]
+[132 / 268] MosaicKit
+[136 / 313]
+[141 / 313]
+[142 / 313]
+[144 / 313]
+[147 / 313]
+[149 / 313]
+[150 / 313]
+[151 / 313]
+[154 / 313]
+[155 / 313]
+[156 / 313]
+[157 / 313]
+[158 / 313]
+[160 / 313]
+[163 / 313]
+[165 / 313]
+[166 / 313]
+[167 / 313]
+[171 / 313] PaintCore
+[172 / 313] MosaicKit
+[174 / 313] PaintCore
+[185 / 313] pbn-product
+[186 / 313] pbn-product
+[187 / 313] MosaicKit
+[188 / 313] MosaicKitTests-product
+[189 / 313] MosaicKitTests-product
+[195 / 314]
+[198 / 359]
+[200 / 359]
+[201 / 359]
+[202 / 359]
+[204 / 359]
+[205 / 359]
+[207 / 359] MosaicKitTests-product
+[210 / 359] MosaicKitTests-product
+[213 / 359]
+[215 / 359]
+[216 / 359] MosaicKit
+[217 / 359]
+[220 / 359]
+[221 / 359]
+[223 / 359]
+[224 / 359]
+[226 / 359]
+[227 / 359]
+[228 / 359]
+[230 / 359]
+[231 / 359]
+[232 / 359]
+[233 / 359]
+[234 / 359]
+[236 / 359]
+[238 / 359]
+[239 / 359]
+[241 / 359] pbn-product
+[242 / 359] pbn-product
+[243 / 359] pbn-product
+[244 / 359] pbn-product
+[245 / 360]
+[247 / 364] MosaicEngine
+[248 / 364] MosaicEngine
+[250 / 364] MosaicEngine
+[256 / 364] mosaic-product
+[261 / 365] MosaicKitTests-product
+[263 / 371]
+[266 / 371] MosaicKitTests-product
+[267 / 371] MosaicKitTests-product
+[269 / 371] MosaicKitTests-product
+[275 / 371] PaintCore
+[275 / 371]
+[277 / 373] MosaicCore
+[278 / 375] mosaic-product
+[279 / 379] MosaicCore
+[281 / 379] mosaic-product
+[291 / 379] MosaicEngineTests-product
+[293 / 379] MosaicKitTests-product
+[294 / 379] MosaicKitTests-product
+[296 / 379] MosaicEngine
+[298 / 379] PaintCore
+[300 / 379] PaintCoreTests-product
+[301 / 379] MosaicCore
+[303 / 380] PaintCoreTests-product
+[304 / 384] MosaicCore
+[307 / 384] PaintCoreTests-product
+[308 / 384] PaintCoreTests-product
+[309 / 384] PaintCoreTests-product
+[312 / 385] PaintCoreTests-product
+[316 / 385] pbn-product
+[319 / 389] MosaicCoreTests-product
+[322 / 389] MakingOf
+[327 / 389] PaintCoreTests-product
+[328 / 389] MakingOfTests-product
+[331 / 389] PaintCoreTests-product
+[333 / 389]
+[336 / 389]
+[339 / 389] PaintCoreTests-product
+[340 / 389] mosaic-product
+[345 / 390] MakingOfTests-product
+[346 / 394] MosaicEngineTests-product
+[347 / 394] MosaicEngineTests-product
+[350 / 394] MosaicEngineTests-product
+[354 / 394] MosaicEngineTests-product
+[359 / 394] MosaicCore-product
+[361 / 395] MosaicCoreTests-product
+[363 / 399] MosaicCoreTests-product
+[364 / 399] MosaicCoreTests-product
+[366 / 399] MosaicCoreTests-product
+[370 / 399] MosaicCoreTests-product
+[377 / 400] MosaicEngineTests-product
+[383 / 404] MakingOfTests-product
+[384 / 404] MosaicCoreTests-product
+[387 / 404] MakingOfTests-product
+[391 / 404] AllIncludingTests
+[396 / 404]
+[398 / 404] MakingOfTests-product
+[400 / 404] MakingOfTests-product
+[402 / 404] MakingOfTests-product
+Build complete! (180.03 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test sharedPlatformPins() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.023 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.023 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.023 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.023 seconds.
+✔ Test sharedPlatformPins() passed after 0.032 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.055 seconds.
+✔ Suite "ColorNickname v2" passed after 0.055 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.056 seconds.
