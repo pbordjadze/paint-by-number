@@ -9,10 +9,6 @@
       "comment" : "Paint page: subtitle under Tonight’s Picture",
       "extractionState" : "manual"
     },
-    "A Drawing on Paper" : {
-      "comment" : "Paint page, Your Own (SideStore and Debug builds): pick a photo of a drawing made on paper, which is traced into a painting",
-      "extractionState" : "manual"
-    },
     "A Page Is Waiting" : {
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
@@ -23,10 +19,6 @@
     },
     "A Photo" : {
       "comment" : "Paint page, Your Own: opens the system photo picker; the photo picked opens as a painting",
-      "extractionState" : "manual"
-    },
-    "A photo of a drawing, traced into a painting" : {
-      "comment" : "VoiceOver hint of the Paint page's A Drawing on Paper",
       "extractionState" : "manual"
     },
     "About" : {
