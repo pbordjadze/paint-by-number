@@ -29,6 +29,15 @@ struct RefineGuideTests {
         #expect(RefineGuidePage.of(.tool(.tryPainting)).practice.teaches == .tryPainting)
     }
 
+    /// The practice pad hugs its 4:3 picture: on an iPad's portrait page no empty band lies above
+    /// or below it, and it keeps its floor and its share of the room.
+    @Test func thePracticePadHugsItsPicture() {
+        let width: CGFloat = 686
+        #expect(RefineGuidePageView.padHeight(width: width, room: 1200) == (width - 20) * 3 / 4 + 124)
+        #expect(RefineGuidePageView.padHeight(width: 200, room: 1200) == 360)
+        #expect(RefineGuidePageView.padHeight(width: width, room: 500) == 500 * 0.85)
+    }
+
     /// Every page ends with On the practice picture, which SideStore and Debug builds lay over
     /// the practice canvas as the page's invitation, the rest under How It Works
     /// (painting-company row 316).
