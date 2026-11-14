@@ -5789,6 +5789,10 @@
       "comment" : "Paint menu item (iPad menu bar): show an area to paint next",
       "extractionState" : "manual"
     },
+    "Show Lines" : {
+      "comment" : "Painting screen's More menu, on a finished painting: a switch that shows the painting with its drawing's lines, or off, as paint alone",
+      "extractionState" : "manual"
+    },
     "Show Numbers" : {
       "comment" : "Menu item and Paint menu item: show or hide the numbers on the canvas",
       "extractionState" : "manual"

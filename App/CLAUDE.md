@@ -507,6 +507,21 @@ Conventions).
   sheet's writing stays in its light ink); `TemplateRasterizer.drawBookOutlines` switches where
   the region is painted (never in `.print`) and `LineArtDrawing.paths(within:overPaint:)` splits
   it out over the painting (Refine's). Unpainted and every other line stay in the ink.
+- A finished book as paint alone (SideStore and Debug builds, `#if UNRELEASED`; painting-company
+  row 295): More › Show Lines, offered on a finished coloring book, turned off takes the
+  drawing's ink from the picture. Only a finished painting's: an undo, a restart or a replay has
+  its lines, and finishing again loses them with the finale's shine (`CanvasView.hidesLines`,
+  `inkChanged`: an ease of `inkFadeDuration`, a cut under Reduce Motion and for a painting opened
+  so). The writing stays, since no paint draws it: the canvas's scene marks every writing stroke
+  (`OutlineGeometry(_:marksWriting:)`, `writingMark` beside `lightWritingMark`) and the shader
+  fades the rest by `CanvasFrame.inkHidden` (`lineMode.y`); pictures draw the writing alone
+  under `TemplateRasterizer.Style.withoutInk` (`hidingLines`), `CanvasSnapshot.Options.withoutInk`.
+  The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
+  build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
+  gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
+  Picture (`CompletionShare.withoutLines`) follow it. The doors' Send It picture, the time-lapse
+  and feedback's captures keep the lines. `paint-book-complete` and
+  `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
   pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in

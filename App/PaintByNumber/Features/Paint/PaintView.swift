@@ -51,11 +51,18 @@ struct PaintView: View {
     var onChange: (() -> Void)?
     /// False as the screen is left: `ArtworkPaintingView.close`.
     var hidesStatusBar = true
+    /// Told when the painter turns the finished painting's lines off or on (More › Show Lines, in
+    /// SideStore and Debug builds; painting-company row 295): true = hidden. The gallery's
+    /// painting keeps it (`Artwork.hidesLines`); without it the choice lasts as long as the screen.
+    var onHidesLines: ((Bool) -> Void)?
 
     @State private var controller = CanvasController()
     @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
+    /// The finished painting shows as paint alone, its drawing's lines gone (`CanvasView.hidesLines`):
+    /// as the painting was left (`init`'s `hidesLines`), then as More › Show Lines says.
+    @State private var linesHidden: Bool
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
     @State private var canvasUnavailable = false
@@ -143,14 +150,17 @@ struct PaintView: View {
         paper.usesDarkPaper(interfaceIsDark: system == .dark) ? .dark : system
     }
 
-    /// `showsPhoto` opens with the photo shown (demo scenarios).
+    /// `showsPhoto` opens with the photo shown (demo scenarios); `hidesLines` with the finished
+    /// painting's lines hidden, as the painter left it.
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
         isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
-        hidesStatusBar: Bool = true
+        hidesStatusBar: Bool = true, hidesLines: Bool = false, onHidesLines: ((Bool) -> Void)? = nil
     ) {
+        self.onHidesLines = onHidesLines
+        _linesHidden = State(initialValue: hidesLines)
         self.onChange = onChange
         self.hidesStatusBar = hidesStatusBar
         self.session = session
@@ -213,6 +223,12 @@ struct PaintView: View {
             if zen && !was { sayWhatZenDoes() }
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
+        // The picture the bar shares is the painting as it shows, with its lines or without.
+        .onChange(of: linesHidden, initial: true) { was, hidden in
+            completionShare.withoutLines = hidden
+            if was != hidden { onHidesLines?(hidden) }
+            Task { await completionShare.prepare(for: session) }
+        }
         // Choosing a color is something done: the tips' hand has not rested yet.
         .onChange(of: session.selectedColor) { if !isWarmup { chrome.activity() } }
         // The photo shown, held or kept, is the Photo control used.
@@ -291,7 +307,7 @@ struct PaintView: View {
             PaintCanvas(
                 session: session, controller: controller,
                 chromeInsets: layout.canvasInsets,
-                showsNumbers: showsNumbers, paperAppearance: paperAppearance,
+                showsNumbers: showsNumbers, hidesLines: linesHidden, paperAppearance: paperAppearance,
                 lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
@@ -709,6 +725,14 @@ struct PaintView: View {
         let barHeight = self.barHeight(regular)
         return Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
+            #if UNRELEASED
+            // A finished coloring book with its drawing or as paint alone (painting-company row
+            // 295). A replay shows the painting being made, lines and all; a classic template's
+            // lines have dissolved under its paint already.
+            if session.isComplete, !session.isReplaying, session.template.lineArt != nil {
+                Toggle(isOn: showsLines) { Label("Show Lines", systemImage: "scribble") }
+            }
+            #endif
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !barShowsHint, !session.isComplete {
@@ -748,6 +772,13 @@ struct PaintView: View {
             Text("All paint will be cleared.")
         }
     }
+
+    #if UNRELEASED
+    /// More › Show Lines: on while the finished painting keeps its drawing.
+    private var showsLines: Binding<Bool> {
+        Binding(get: { !linesHidden }, set: { linesHidden = !$0 })
+    }
+    #endif
 
     /// More › Palette: its rows and order.
     private var paletteMenu: some View {

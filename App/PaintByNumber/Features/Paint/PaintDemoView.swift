@@ -60,6 +60,9 @@ import simd
 /// - `paint-book-progress`: ~45 % painted, the color in progress selected (the drawing stays
 ///   over the paint; the selected color's cells are hatched, not outlined)
 /// - `paint-book-zoomed`: zoomed 4× into the busiest part, a color selected
+/// - `paint-book-complete`: the finished book, its drawing over the paint
+/// - `paint-book-complete-no-lines`: the same with More › Show Lines off, as paint alone
+///   (SideStore and Debug builds; painting-company row 295)
 /// - `paint-book-dark-paper`: `paint-book-progress` on dark paper
 /// - `paint-book-night-paper`: the same in light appearance (no "dark" in its name), where dark
 ///   paper makes the bars dark too (`PaintView.chromeScheme`)
@@ -78,7 +81,8 @@ struct PaintDemoView: View {
                     session: demo.session, title: demo.title, onClose: {},
                     onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
                     // A finished painting's Edit, so its doors show Change It as the app's do.
-                    onChange: scenario.hasPrefix("paint-complete") ? {} : nil)
+                    onChange: scenario.hasPrefix("paint-complete") ? {} : nil,
+                    hidesLines: scenario == "paint-book-complete-no-lines")
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })
@@ -238,7 +242,8 @@ private final class Demo {
             }
             let target = candidates.min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
-        case "paint-complete", "paint-complete-dark", "paint-complete-long-text", "paint-complete-unnamed":
+        case "paint-complete", "paint-complete-dark", "paint-complete-long-text", "paint-complete-unnamed",
+             "paint-book-complete", "paint-book-complete-no-lines":
             paint(fraction: 1)
         case "paint-finish", "paint-nightfall", "paint-nightfall-dark":
             if scenario.hasPrefix("paint-nightfall") {
