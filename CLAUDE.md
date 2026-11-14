@@ -476,7 +476,11 @@ Saved paintings must open in every later build. The format history is documented
   the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category
   are in `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings. `ACCESSIBILITY.md` is
   the page the App Store's accessibility link opens (`ci/store-listing.json`): a change to what the
-  app offers with VoiceOver, Reduce Motion, Dynamic Type or without color changes it too.
+  app offers with VoiceOver, Reduce Motion, Dynamic Type or without color changes it too. The
+  listing and the app link to copies of it and of `PRIVACY.md` on paulbordjadze.com
+  (`/paint-by-moonlight-accessibility/`, `/paint-by-moonlight-privacy/`; painting-company row
+  346): a change to either file is copied to `posts/paint-by-moonlight-*.md` in
+  `pbordjadze/paulbordjadze.com` and built there (`python3 build.py`), or the public page is stale.
 - Picture library: public-domain pictures only, under hard license rules (reject on any doubt);
   `library.json` is its single source of truth. Read `docs/picture-library.md` before adding,
   replacing or removing a picture.
