@@ -23,7 +23,7 @@ PATHS = [
     "App/PaintByNumber/App/TourLog.swift", "App/PaintByNumber/App/DemoMode.swift", "App/PaintByNumber/App/ShellDemo.swift",
     "App/PaintByNumber/Features/Paint/PaintDemoView.swift", "App/PaintByNumber/Features/MakingOf/MakingOfDemoView.swift",
     "App/PaintByNumber/Generation/LineArtMapsCache.swift", "App/PaintByNumber/Model/DemoTemplateCache.swift",
-    "App/PaintByNumber/Canvas/SyntheticTemplate.swift", "App/PaintByNumber.xcodeproj/project.pbxproj",
+    "App/Shared/Canvas/SyntheticTemplate.swift", "App/PaintByNumber.xcodeproj/project.pbxproj",
 ]
 RECORDER = re.compile(
     r"\basked\b|\bmade\.append\(|\bdescribe\(|func (played|patterns|samples|frameUniforms)\(|struct (Pattern|Event|Curve|Cue)\b|enum Voice\b"
@@ -37,7 +37,7 @@ def git(*args):
 def lines_of(commit):
     """The tour log's statements and the recorders' lines in the app's sources at `commit`, as multisets."""
     traces, recorders = collections.Counter(), collections.Counter()
-    for path in git("ls-tree", "-r", "--name-only", commit, "--", "App/PaintByNumber").splitlines():
+    for path in git("ls-tree", "-r", "--name-only", commit, "--", "App/PaintByNumber", "App/Shared").splitlines():
         if not path.endswith(".swift") or path.endswith("App/TourLog.swift"):
             continue
         source = git("show", f"{commit}:{path}").splitlines()
