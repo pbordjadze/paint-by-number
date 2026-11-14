@@ -26,6 +26,10 @@ nonisolated enum EraSeam {
     static let offersQuietPainting = false
     #endif
 
+    /// Whether the palette keeps the lines it was given once fewer colors are left: the painting
+    /// screen was laid out for them (`PaintingLayout`).
+    static let paletteKeepsItsLines = true
+
     /// The app's name as the painter reads it (a printed template's footer).
     static var appName: String { String(localized: "Paint by Moonlight") }
 

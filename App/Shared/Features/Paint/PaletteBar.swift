@@ -219,8 +219,9 @@ struct PaletteBar: View {
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
         // The lines the layout made room for (`PaintingLayout`, from the painting's colors), so the
-        // bar never comes out thinner than the room kept for it once fewer colors are left.
-        let lineCount = max(1, lines)
+        // bar never comes out thinner than the room kept for it once fewer colors are left; an era
+        // without that layout takes no more lines than it has colors (`EraSeam.paletteKeepsItsLines`).
+        let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, count))
         let lanes = Self.lanes(colors, lines: lineCount)
         let horizontal = axis == .horizontal
         // Lanes run along the bar, each one swatch per line across it.
@@ -339,7 +340,7 @@ struct PaletteBar: View {
         scroll.pending = nil
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
-        let lineCount = max(1, lines)
+        let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, colors.count))
         let lanes = Self.lanes(colors, lines: lineCount)
         guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
         let frameLength = horizontal ? scroll.frame.width : scroll.frame.height
@@ -473,7 +474,7 @@ struct CurrentColorLabel: View {
                     .minimumScaleFactor(0.5)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color",
+            .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color", bundle: .era,
                                        comment: "VoiceOver label of the selected color's name shown on screen"))
             .accessibilityValue(session.colorLabels[color])
             .accessibilityIdentifier("current-color")

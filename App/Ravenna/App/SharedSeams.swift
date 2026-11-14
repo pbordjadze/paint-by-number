@@ -26,6 +26,10 @@ nonisolated enum EraSeam {
     /// Whether the painting screen goes quiet once an area is painted (`QuietPainting`): always.
     static let offersQuietPainting = true
 
+    /// Whether the palette keeps the lines it was given once fewer colors are left: no, it takes
+    /// no more lines than it has colors.
+    static let paletteKeepsItsLines = false
+
     /// The app's name as the painter reads it (a printed template's footer).
     static var appName: String { String(localized: "Paint by Mosaic", bundle: .ravenna) }
 
