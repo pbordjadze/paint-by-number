@@ -91,11 +91,16 @@ nonisolated struct DrawableLineArt: Sendable {
 /// Classic templates get exactly the segments and regions they always had, every line in layer 0.
 /// Writing over a paint too dark for the ink (`DrawableLineArt.lightWriting`) has
 /// `lightWritingMark` added to its layer: the shader turns it to the light tone as its region is
-/// painted.
+/// painted. A canvas that can show a finished picture without its ink asks for the rest of the
+/// writing to be marked too (`writingMark`): writing stays when the drawing's ink goes.
 nonisolated struct OutlineGeometry {
     /// Added to a stroke's layer when it is writing over a paint too dark for the ink; the
     /// shader's `kLightWriting` (Shaders.metal).
     static let lightWritingMark: Float = 4
+    /// Added to the layer of any other writing stroke, for a shader that asks (`marksWriting`):
+    /// the shader's `kWriting` (Shaders.metal). A stroke carries one mark or the other, never
+    /// both.
+    static let writingMark: Float = 8
 
     /// Boundary points, then stroke points.
     let points: [SIMD2<Float>]
@@ -103,12 +108,16 @@ nonisolated struct OutlineGeometry {
     let segments: [SIMD2<UInt32>]
     /// (left, right) region per line; `BoundaryEdge.outside` on the right of a canvas border edge.
     let lineRegions: [SIMD2<UInt32>]
-    /// `LineLayer` raw value per line, plus `lightWritingMark` for writing over a dark paint.
+    /// `LineLayer` raw value per line, plus `lightWritingMark` for writing over a dark paint
+    /// (and, when asked, `writingMark` for the rest of the writing).
     let lineLayers: [Float]
     /// Whether the lines draw as a coloring book (`ColoringBookLook`): the template has line art.
     let isColoringBook: Bool
 
-    init(_ t: Template) {
+    /// - Parameter marksWriting: Writing over a light paint carries `writingMark`. Only for a
+    ///   shader that reads it: one that doesn't takes the mark for `lightWritingMark` and a
+    ///   layer past the last.
+    init(_ t: Template, marksWriting: Bool = false) {
         let lines = DrawableLineArt(t)
         let strokes = lines?.strokes ?? []
         var segs: [SIMD2<UInt32>] = []
@@ -130,7 +139,8 @@ nonisolated struct OutlineGeometry {
             for (s, stroke) in strokes.enumerated() {
                 let line = UInt32(t.edges.count + s)
                 regions.append(SIMD2(stroke.region, stroke.region))
-                layers.append(Float(stroke.layer) + (lines.lightWriting[s] ? Self.lightWritingMark : 0))
+                let mark = lines.lightWriting[s] ? Self.lightWritingMark : marksWriting && lines.writing[s] ? Self.writingMark : 0
+                layers.append(Float(stroke.layer) + mark)
                 for k in 0..<(stroke.pointCount - 1) { segs.append(SIMD2(base + stroke.pointStart + k, line)) }
             }
         }

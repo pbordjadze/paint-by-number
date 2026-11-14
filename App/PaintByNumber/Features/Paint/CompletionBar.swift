@@ -205,13 +205,18 @@ final class CompletionShare {
     private(set) var picture: CGImage?
     /// The session revision `picture` shows (or is being rendered for).
     @ObservationIgnored private var revision: Int?
+    /// The picture is the painting as paint alone, without its drawing's lines (`PaintView`'s
+    /// Show Lines; painting-company row 295). A change has the next `prepare` render it again.
+    @ObservationIgnored var withoutLines = false {
+        didSet { if withoutLines != oldValue { revision = nil } }
+    }
 
     func prepare(for session: PaintingSession) async {
         guard session.isComplete, revision != session.revision else { return }
         let target = session.revision
         revision = target
         picture = nil
-        let image = await Self.render(template: session.template, progress: session.progress)
+        let image = await Self.render(template: session.template, progress: session.progress, withoutLines: withoutLines)
         // Undone and finished again meanwhile: that completion renders its own.
         guard revision == target else { return }
         picture = image
@@ -220,8 +225,10 @@ final class CompletionShare {
     }
 
     @concurrent
-    private static func render(template: Template, progress: PaintProgress) async -> CGImage? {
+    private static func render(template: Template, progress: PaintProgress, withoutLines: Bool) async -> CGImage? {
         let size = CanvasSnapshot.fittedSize(for: template, longSide: 2048)
-        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting)
+        var options = CanvasSnapshot.Options.painting
+        options.withoutInk = withoutLines
+        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: options)
     }
 }
