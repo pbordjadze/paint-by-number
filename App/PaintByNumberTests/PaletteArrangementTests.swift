@@ -69,59 +69,26 @@ struct PaletteArrangementTests {
         #expect(PaletteBar.lanes([], lines: 2).isEmpty)
     }
 
-    /// The palette stays put (painting-company row 293): a color keeps the place its position in
-    /// the order gives it, a finished one leaves that place empty, and nothing else moves.
-    @Test func aFinishedColorLeavesItsPlaceEmpty() {
-        let order = Array(0..<9)
-        let full = PalettePlaces(order: order, shown: Set(order), lines: 3)
-        #expect(full.lanes.map(\.places) == [[0, 1, 2], [3, 4, 5], [6, 7, 8]])
-        #expect(full.fullLanes == 3)
-        // Paints 2 and 5 (colors 1 and 4) are finished: every other color is on the line and in the lane it was.
-        let left = PalettePlaces(order: order, shown: Set(order).subtracting([1, 4]), lines: 3)
-        #expect(left.lanes.map(\.places) == [[0, nil, 2], [3, nil, 5], [6, 7, 8]])
-        for color in [0, 2, 3, 5, 6, 7, 8] {
-            #expect(left.lane(of: color) == full.lane(of: color), "\(color) changed lanes")
-            #expect(left.lanes[color / 3].places[color % 3] == color, "\(color) changed lines")
-        }
-        #expect(left.lane(of: 1) == nil)
-        // The packed palette, the release's, sends every later color to another line.
-        #expect(PaletteBar.lanes(order.filter { $0 != 1 && $0 != 4 }, lines: 3) == [[0, 2, 3], [5, 6, 7], [8]])
-    }
-
-    /// A lane leaves only once all its places are empty; the lanes after it move up one, each
-    /// color on its line, and are known by the same name, so they slide and aren't made again. The
-    /// bar stays as long as every color's lanes: it neither shrinks nor re-centers.
-    @Test func aLaneLeavesOnceItIsEmpty() {
-        let order = Array(0..<8)
-        let full = PalettePlaces(order: order, shown: Set(order), lines: 3)
-        #expect(full.lanes.map(\.places) == [[0, 1, 2], [3, 4, 5], [6, 7]])
-        let left = PalettePlaces(order: order, shown: [0, 6, 7], lines: 3)
-        #expect(left.lanes.map(\.places) == [[0, nil, nil], [6, 7]])
-        #expect(left.lanes.map(\.id) == [0, 6])
-        #expect(full.lanes.map(\.id) == [0, 3, 6])
-        #expect(left.fullLanes == 3)
-        #expect(left.lane(of: 6) == 1)
-        // An undo brings a color back to the place it left, its lane with it.
-        let undone = PalettePlaces(order: order, shown: [0, 4, 6, 7], lines: 3)
-        #expect(undone.lanes.map(\.places) == [[0, nil, nil], [nil, 4, nil], [6, 7]])
-        #expect(undone.lanes.map(\.id) == [0, 3, 6])
-        // Nothing left to show, and no colors at all.
-        #expect(PalettePlaces(order: order, shown: [], lines: 3).lanes.isEmpty)
-        #expect(PalettePlaces(order: [], shown: [], lines: 2).fullLanes == 0)
-    }
-
-    /// One line (a phone's strip): a lane is a swatch, so the colors after a finished one move up
-    /// one place, the next taking the place the painter's thumb is at, and none before it moves.
-    @Test func onOneLineTheNextColorTakesTheFinishedOnesPlace() {
-        let order = [4, 1, 3, 0, 2]
-        let full = PalettePlaces(order: order, shown: Set(order), lines: 1)
-        let left = PalettePlaces(order: order, shown: [4, 1, 0, 2], lines: 1)
-        #expect(left.lanes.map(\.places) == [[4], [1], [0], [2]])
-        #expect(left.lane(of: 0) == full.lane(of: 3))
-        #expect(left.lane(of: 4) == full.lane(of: 4) && left.lane(of: 1) == full.lane(of: 1))
-        #expect(left.fullLanes == 5)
-        // A line count that makes no sense is one line.
-        #expect(PalettePlaces(order: order, shown: Set(order), lines: 0).lanes.count == 5)
+    /// The palette stays put (painting-company row 293): where it keeps its places, every color
+    /// of the painting has one from the first fill to the last, so a finished color (a spent
+    /// well) leaves the others where they were. The release's palette lets the finished color go and packs the rest.
+    @Test func aFinishedColorKeepsItsPlace() throws {
+        let template = Fixtures.mosaic
+        let session = PaintingSession(template: template, nicknameSeed: 42)
+        let all = (0..<session.paletteCount).filter { session.totalByColor[$0] > 0 }
+        try #require(all.count > 3)
+        #expect(PaletteBar.placedColors(session) == all)
+        #expect(PaletteBar.visibleColors(session) == all)
+        #expect(all.count == PaletteBar.visibleColorCount(template), "the layout counts another palette's lines")
+        // A color that isn't in hand is finished.
+        let finished = try #require(all.last { $0 != session.selectedColor })
+        session.paint(
+            template.regions.indices.filter { Int(template.regions[$0].colorIndex) == finished }, from: .zero, animated: false)
+        #expect(session.isColorComplete(finished))
+        #expect(PaletteBar.placedColors(session) == all)
+        #expect(PaletteBar.visibleColors(session) == all.filter { $0 != finished })
+        // Three lines: every color on the line and in the lane it had, the finished one too.
+        #expect(PaletteBar.lanes(PaletteBar.placedColors(session), lines: 3) == PaletteBar.lanes(all, lines: 3))
     }
 
     /// Only SideStore and Debug builds keep the places, and not in an order that follows the

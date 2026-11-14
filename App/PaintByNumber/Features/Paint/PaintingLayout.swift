@@ -95,10 +95,10 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     /// Where a side palette starts, below the top bar.
     static func sidePaletteTop(regularWidth: Bool) -> CGFloat { topGap + barHeight(regularWidth: regularWidth) + 12 }
 
-    /// Whether the palette's swatches keep their places as colors finish (`PalettePlaces`): in
-    /// SideStore and Debug builds (painting-company row 293), in every order but those the painter
-    /// chose for following the areas left, which re-sort at every fill by their nature. The
-    /// release packs the swatches left again at every finish.
+    /// Whether the palette keeps every color in its place, a finished one as a spent well
+    /// (`PaletteBar.keepsPlaces`): in SideStore and Debug builds (painting-company row 293), in
+    /// every order but those the painter chose for following the areas left, which re-sort at
+    /// every fill by their nature. The release packs the swatches left again at every finish.
     static func paletteKeepsPlaces(_ order: PaletteOrder) -> Bool {
         #if UNRELEASED
         !order.followsProgress
