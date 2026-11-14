@@ -177,7 +177,13 @@ nonisolated struct NewPaintingSlidersTip: Tip {
 nonisolated struct NewPaintingRefineTip: Tip {
     var id: String { PaintTips.scoped("tip.newPaintingRefine") }
     var title: Text { Text("Shape the Lines Yourself") }
-    var message: Text? { Text("Refine, top right, lets you draw or erase lines and fill shapes. It is optional.") }
+    var message: Text? {
+        #if UNRELEASED
+        Text("Edit, top right, lets you draw or erase lines and fill shapes. It is optional.")
+        #else
+        Text("Refine, top right, lets you draw or erase lines and fill shapes. It is optional.")
+        #endif
+    }
     var image: Image? { Image(systemName: "pencil.tip") }
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }

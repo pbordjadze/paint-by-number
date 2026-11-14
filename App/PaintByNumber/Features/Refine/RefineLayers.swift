@@ -157,7 +157,7 @@ struct RefineLayersPanel: View {
         switch layer {
         case .numbers: Text("Numbers")
         case .ink: Text("Ink")
-        case .paint: Text("Paint")
+        case .paint: RefineView.paintName
         case .photo: Text("Photo")
         }
     }

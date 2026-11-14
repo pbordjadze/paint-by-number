@@ -1317,7 +1317,12 @@ struct RefineView: View {
     /// Named for the way in (painting-company row 239): a blank page's drawing, or ✎ Change
     /// on a painting or a picture.
     private var screenTitle: Text {
+        #if UNRELEASED
+        // 1.3's names (painting-company row 331): Edit, for Refine and ✎ Change alike.
+        model.isScratch ? Text("Blank Page") : Text("Edit")
+        #else
         model.isScratch ? Text("Blank Page") : Text("Change")
+        #endif
     }
 
     /// The number of changes, for VoiceOver.
@@ -2021,11 +2026,21 @@ extension RefineView {
         }
     }
 
+    /// The paint tools' group and layer: Colors under 1.3's names (painting-company row 331:
+    /// "Paint" means filling alone), Paint in the release.
+    static var paintName: Text {
+        #if UNRELEASED
+        Text("Colors")
+        #else
+        Text("Paint")
+        #endif
+    }
+
     static func groupName(_ kind: RefineGroup) -> Text {
         switch kind {
         case .ink: Text("Ink")
         case .cells: Text("Cells")
-        case .paint: Text("Paint")
+        case .paint: paintName
         case .numbers: Text("Numbers")
         case .see: Text("See")
         }

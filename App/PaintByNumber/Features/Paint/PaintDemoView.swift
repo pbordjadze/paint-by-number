@@ -14,7 +14,8 @@ import simd
 /// - `paint`: fresh canvas, fit to screen
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
 /// - `paint-zoom`: zoomed ~4× into the canvas, numbers and highlight visible
-/// - `paint-complete`: finished painting (line art dissolved)
+/// - `paint-complete`: finished painting (line art dissolved); in SideStore and Debug builds with
+///   the doors after Finished (`FinishedDoors`); `paint-complete-dark` in dark appearance
 /// - `paint-complete-unnamed`: `paint-complete` under the name the app gave it, a date: the
 ///   Finished bar's name, with a pencil, names it (`Artwork.isNamed`)
 /// - `paint-finish`: everything but one area painted, zoomed ~3× onto it; after 1.5 s it is painted,
@@ -75,7 +76,9 @@ struct PaintDemoView: View {
             if let demo {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
-                    onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
+                    onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
+                    // A finished painting's Edit, so its doors show Change It as the app's do.
+                    onChange: scenario.hasPrefix("paint-complete") ? {} : nil)
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })
@@ -235,7 +238,7 @@ private final class Demo {
             }
             let target = candidates.min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
-        case "paint-complete", "paint-complete-long-text", "paint-complete-unnamed":
+        case "paint-complete", "paint-complete-dark", "paint-complete-long-text", "paint-complete-unnamed":
             paint(fraction: 1)
         case "paint-finish", "paint-nightfall", "paint-nightfall-dark":
             if scenario.hasPrefix("paint-nightfall") {

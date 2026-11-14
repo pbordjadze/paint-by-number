@@ -33,8 +33,54 @@ struct CompletionBar: View {
     /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
     var isNamed = true
     let onClose: (() -> Void)?
+    #if UNRELEASED
+    /// The doors under the row (`FinishedDoors`), laid as these say; nil is the bar alone.
+    var doors: DoorMetrics?
+    /// Change It's way into Edit (`PaintView.onChange`).
+    var onChange: (() -> Void)?
+    #endif
+
+    /// The bar's widest, and the doors' panel's.
+    nonisolated static let panelWidth: CGFloat = 560
+    /// The doors' margin inside the panel, at its sides and foot.
+    nonisolated static let doorsInset: CGFloat = 16
 
     var body: some View {
+        #if UNRELEASED
+        if let doors {
+            panel(doors)
+        } else {
+            bar
+        }
+        #else
+        bar
+        #endif
+    }
+
+    #if UNRELEASED
+    /// The bar grown into a panel: its row as it is, the doors under it (painting-company row 332).
+    private func panel(_ doors: DoorMetrics) -> some View {
+        VStack(spacing: 0) {
+            ViewThatFits(in: .horizontal) {
+                row(seal: true, titleLines: 1)
+                row(seal: false, titleLines: 1)
+                row(seal: false, titleLines: 2)
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .frame(minHeight: Self.height)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange)
+                .padding(.horizontal, Self.doorsInset)
+                .padding(.bottom, Self.doorsInset)
+        }
+        .frame(maxWidth: Self.panelWidth)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
+        .task(id: session.revision) { await share.prepare(for: session) }
+    }
+    #endif
+
+    private var bar: some View {
         // The row as it is where the painting's name fits on one line; on a narrower bar (a small
         // phone, larger text) the seal makes room for it first, and then the name wraps to a
         // second line. Text never shrinks, and Replay, Share and Done keep their size.
@@ -46,7 +92,7 @@ struct CompletionBar: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
         .frame(minHeight: Self.height)
-        .frame(maxWidth: 560)
+        .frame(maxWidth: Self.panelWidth)
         // One compact row even at the largest text sizes: the canvas insets assume its height,
         // and the Large Content Viewer shows its buttons enlarged.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
