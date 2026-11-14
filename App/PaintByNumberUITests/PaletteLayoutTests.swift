@@ -15,6 +15,26 @@ final class PaletteLayoutTests: XCTestCase {
             .map { (number: Int($0.identifier.dropFirst("swatch-".count)) ?? 0, frame: $0.frame) }
             .sorted { $0.number < $1.number }
         XCTAssertGreaterThan(frames.count, 6, "Too few colors left to fill three rows")
+        #if UNRELEASED
+        // SideStore and Debug builds keep each color's place (painting-company row 293): number n,
+        // finished colors or not, is on row (n - 1) % 3 of column (n - 1) / 3 (every paint of the
+        // demo's painting has an area), so the colors left are where they were at the start.
+        let first = frames[0]
+        for swatch in frames.dropFirst() {
+            let rows = (swatch.number - 1) % 3 - (first.number - 1) % 3
+            let columns = (swatch.number - 1) / 3 - (first.number - 1) / 3
+            if rows == 0 {
+                XCTAssertEqual(swatch.frame.midY, first.frame.midY, accuracy: 1, "\(swatch.number) isn't on \(first.number)'s row")
+            } else {
+                XCTAssertEqual(rows > 0, swatch.frame.midY > first.frame.midY + 1, "\(swatch.number) is on the wrong side of \(first.number)'s row")
+            }
+            if columns == 0 {
+                XCTAssertEqual(swatch.frame.midX, first.frame.midX, accuracy: 1, "\(swatch.number) isn't in \(first.number)'s column")
+            } else {
+                XCTAssertGreaterThan(swatch.frame.midX, first.frame.midX + 1, "\(swatch.number) isn't right of \(first.number)")
+            }
+        }
+        #else
         for (i, swatch) in frames.enumerated().dropFirst() {
             let previous = frames[i - 1].frame
             if i % 3 == 0 {
@@ -27,5 +47,6 @@ final class PaletteLayoutTests: XCTestCase {
                 XCTAssertGreaterThan(swatch.frame.midY, previous.midY + 1, "\(swatch.number) isn't below \(frames[i - 1].number)")
             }
         }
+        #endif
     }
 }
