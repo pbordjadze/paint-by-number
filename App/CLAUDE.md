@@ -180,7 +180,7 @@ synchronized folder would bundle it into the app.
   `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
   memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
   itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
-  as for a painter's own photo), and `paint-zen-30` paints thirty Zen fills: with them
+  as for a painter's own photo), `paint-zen-30` paints thirty Zen fills and `paint-colors-10` ten that each finish a color: with them
   `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames
   themselves (`PerformanceTour`, the UI test, is for what only a touch reaches).
 - What no simulator has is checked through seams: `HapticsPlayer(isSupported: true)` and
@@ -246,7 +246,8 @@ synchronized folder would bundle it into the app.
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
-  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. From the painter's second
+  `isComplete`; built once a launch out of sight as the first painting screen opens, `FinishWarmup`,
+  so the last fill doesn't meet its views, symbols and bounce for the first time) and its seal bounces once it is up, for a painting finished on screen. From the painter's second
   painting finished on screen, once per app version, Apple's rating prompt is asked for after the finale
   (`RatingPrompt`, row 341; never in demo or test launches). The
   progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
