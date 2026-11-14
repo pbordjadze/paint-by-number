@@ -177,13 +177,13 @@ struct UnlockSheet: View {
         switch note {
         case .pending:
             Text("Waiting for approval. Your paintings unlock as soon as it comes.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
         case .nothingToRestore:
             Text("This Apple Account hasn’t bought Unlimited Paintings yet.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
         case .failed(let message):
             Text(message)
-                .foregroundStyle(.red)
+                .foregroundStyle(Theme.errorInk)
         }
     }
 
