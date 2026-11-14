@@ -33,13 +33,14 @@ name: CI
 #            (`ci/duo.sh`). No tests, no Release. `[compile]` and `[test …]` win over it.
 #   release-tests  what the App Store gets, tested (painting-company row 337): the project's
 #            `ReleaseTests` build (Release, optimized, PaintCore at -Ounchecked, with the demo and
-#            test code in and without UNRELEASED, which Debug defines) and every unit and UI test
-#            on the iPad. The entries above test the SideStore build's features; this one the
-#            release's own, the `#else` of each `#if UNRELEASED`. On the shipping branch, main,
-#            beside the others; on a branch, `[release-tests]` in the pushed commit's message (or
-#            the hand-started run's `release_tests`) runs it instead of them (`[compile]` and
-#            `[duo]` win over it). With `[test …]` it is the `test` entry in that build: only
-#            those tests, as the release has them.
+#            test code in and without UNRELEASED, which Debug defines) and its tests on the iPad.
+#            The entries above test the SideStore build's features; this one the release's own,
+#            the `#else` of each `#if UNRELEASED`. On the shipping branch, main, beside the others:
+#            the unit tests (about 35 minutes, 26 of them the build). On a branch, `[release-tests]`
+#            in the pushed commit's message (or the hand-started run's `release_tests`) runs it
+#            instead of them, with every unit and UI test (about 105 minutes: before a release;
+#            `[compile]` and `[duo]` win over it). With `[test …]` it is the `test` entry in that
+#            build: only those tests, as the release has them.
 # iPad is the primary device, its work split in two so a push waits for about half of it. The
 # shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and a
 # SideStore source listing the latest builds (branch `sidestore`).
@@ -200,7 +201,10 @@ jobs:
             iphone-ui) plan=(DEVICE=iphone SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
             compile) plan=(DEVICE=ipad SHOTS=0 RELEASE=1 ONLY= SKIP=) ;;
             duo)     plan=(DEVICE=duo SHOTS=0 RELEASE=0 ONLY= SKIP= DUO=1); CACHE=ipad ;;
-            release-tests) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY= SKIP=); CONFIG=ReleaseTests ;;
+            release-tests)
+              # The shipping branch's every run takes the unit tests alone (the build and 5 minutes
+              # of tests; the UI tests took 70 more on November 14); asked for, all of them.
+              plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=$([[ "$GITHUB_REF_NAME" == main ]] && echo PaintByNumberTests)" SKIP=); CONFIG=ReleaseTests ;;
             test)
               # The run's `tests`, or every `[test …]` in the message (any case, as `contains` reads
               # it): UI test classes or Class/testMethod, the unit tests' suites (Swift Testing) or
@@ -422,10 +426,11 @@ jobs:
             $S/parrots.jpg $S/regatta.jpg --runs 3 | tee out/bench.txt
       - name: Keep demo caches
         id: demo-out
-        # After a full, passing run only: caches a run left half made would be kept as made.
+        # After a full, passing run only: caches a run left half made would be kept as made (main's
+        # release-tests runs no UI test, and makes none).
         continue-on-error: true
         if: >-
-          ${{ !cancelled() && matrix.job != 'test' && matrix.job != 'duo' && steps.demo-cache.outputs.cache-hit != 'true' && steps.test.outcome == 'success'
+          ${{ !cancelled() && matrix.job != 'test' && matrix.job != 'duo' && !(matrix.job == 'release-tests' && github.ref_name == 'main') && steps.demo-cache.outputs.cache-hit != 'true' && steps.test.outcome == 'success'
           && steps.shots.outcome != 'failure' && steps.warmup.outcome != 'failure' }}
         run: |
           ci/demo_caches.sh out "${{ steps.sim.outputs.udid }}" "$APP" build/demo-caches

@@ -145,7 +145,8 @@ before planning app work).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
-  on `main`: `iphone` and `iphone-ui`, the iPhone's share alike; a branch's `[compile]` or `[test …]` runs one entry instead, CI
+  on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
+  App Store's build; a branch's `[compile]` or `[test …]` runs one entry instead, CI
   feedback loop), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
@@ -269,7 +270,8 @@ logs the tuned ones.
 
 ## On a Mac (Xcode at hand)
 
-`tools/checks.sh` runs what CI runs, and in a build CI doesn't have: the project's `ReleaseTests`
+`tools/checks.sh` runs what CI runs, in the build of your choice (CI's `release-tests` entry tests
+the same build, CI feedback loop): the project's `ReleaseTests`
 configuration is Release (the app optimized, PaintCore at `-Ounchecked`) with the demo and test
 code in (`DEBUG`) and the app testable, so the unit and UI tests judge optimized code (not the
 shipped binary: testability keeps internal symbols, and the demo code is in); `-u` adds
@@ -500,7 +502,7 @@ any port of it, when changing the fitter: work from the paper.
    that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines
    trimmed), `core/` (tests, strings check, `regression/` with its table and
    `sheets/<regime>/<sample>.jpg`), and per job
-   (`ipad`, `ipad-ui`, `iphone`, `iphone-ui`, or the one `compile`, `test` or `duo`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
+   (`ipad`, `ipad-ui`, `iphone`, `iphone-ui`, `release-tests`, or the one `compile`, `test` or `duo`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's own log lines
    during the run, every category of `Log`), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
@@ -519,8 +521,8 @@ any port of it, when changing the fitter: work from the paper.
 3. Turnaround is about 30 min on idle runners (both iPad jobs take about that), about 40 when the
    caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
    as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
-   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 5 (four simulator jobs and the
-   IPA; each iPhone job about 75 to 90 min, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
+   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 6 (four simulator jobs,
+   `release-tests` and the IPA, so one waits for the IPA's runner; each iPhone job about 75 to 90 min, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
    push to the same branch cancels the older run, which then never reports. A job GitHub finds no
    `xcode-27` runner for in about 15 minutes is abandoned ("not acquired by Runner of type hosted";
    STATUS.md says so): re-run that job (twice on November 4, 2026). Work on
@@ -548,6 +550,16 @@ any port of it, when changing the fitter: work from the paper.
    (`duo/shots/duo-<scenario>-<n>-<pose>.png`, with the layout the app reported as `.json` beside
    each), failing when a control lies on the fold (`ci/duo/check.py`; "on the fold" in STATUS.md).
    About 25 min. Run it after touching a screen's layout; it never runs on `main`.
+   The App Store's build: Debug defines `UNRELEASED`, so every entry above tests the SideStore
+   build's features. `release-tests` builds the `ReleaseTests` configuration (On a Mac: optimized,
+   without `UNRELEASED`) and tests the release's own, the `#else` of each `#if UNRELEASED`
+   (`release-tests` in STATUS.md). On `main` it runs with every push, the unit tests alone (about
+   35 min, 26 of them the build). `[release-tests]` in a branch commit's message (a run started
+   by hand takes `release_tests`) runs it instead of every other entry with every unit and UI
+   test, on one runner: about 105 min (November 14: 884 tests). Beside `[test …]` it runs only
+   those tests in that build (the quick try of a test's `#else`). Run the whole of it on the
+   commit a release is made from, before the TestFlight or App Store upload, and after changing
+   what an `#if UNRELEASED` leaves the release.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
    with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
@@ -608,11 +620,11 @@ him itself, with a push notification once he has gone quiet.
   extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
   head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
   `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
-  `[compile]`, `[test …]`, `[iphone]` and `[ipa]` the same way on branches.
+  `[compile]`, `[test …]`, `[duo]`, `[release-tests]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes all 5 macOS runners at first (the IPA's
-  for its build), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
+  for its build, then `release-tests` for about 35 minutes), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
