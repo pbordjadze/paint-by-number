@@ -1,0 +1,80 @@
+{
+  "name": "Paint by Moonlight (CI builds)",
+  "identifier": "com.pbordjadze.paintbynumber.source",
+  "subtitle": "Automatic builds",
+  "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+  "website": "https://github.com/pbordjadze/paint-by-number",
+  "tintColor": "#7B3F7E",
+  "apps": [
+    {
+      "name": "Paint by Moonlight",
+      "bundleIdentifier": "com.pbordjadze.paintbynumber",
+      "developerName": "pbordjadze",
+      "subtitle": "Turn any photo into a painting",
+      "localizedDescription": "Turn your photos into paint-by-numbers canvases, entirely on device, and paint them with a finger or Apple Pencil. Built for iPad, works on iPhone.",
+      "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+      "tintColor": "#7B3F7E",
+      "category": "entertainment",
+      "versions": [
+        {
+          "version": "1.0.963",
+          "buildVersion": "963",
+          "date": "2026-11-14T12:27:45Z",
+          "localizedDescription": "Merge claude/project-thread-8wig4r: the iPhone's CI work in two jobs, iphone and iphone-ui, as the iPad's (painting-company row 289)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-963/PaintByNumber.ipa",
+          "size": 66473617,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.952",
+          "buildVersion": "952",
+          "date": "2026-11-14T10:07:29Z",
+          "localizedDescription": "Merge claude/project-thread-8wig4r: the critics' polish of the gallery shelf and the Tool Guide, and a unit-tests lane for the test tag (painting-company rows 288, 316, 317)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-952/PaintByNumber.ipa",
+          "size": 66473619,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.942",
+          "buildVersion": "942",
+          "date": "2026-11-14T05:45:05Z",
+          "localizedDescription": "Merge claude/project-thread-80oj5a: error words in a red that reads at AA (painting-company row 266)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-942/PaintByNumber.ipa",
+          "size": 66461053,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.941",
+          "buildVersion": "941",
+          "date": "2026-11-14T02:47:49Z",
+          "localizedDescription": "Merge claude/project-thread-odafwk: the App Store listing for the next version, and a rating prompt after a finished painting (painting-company rows 340, 341)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-941/PaintByNumber.ipa",
+          "size": 66461019,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.933",
+          "buildVersion": "933",
+          "date": "2026-11-13T23:18:57Z",
+          "localizedDescription": "Merge claude/project-thread-ubilen: Fable 292 Step 1, a faster coloring book and Start Painting (painting-company row 292)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-933/PaintByNumber.ipa",
+          "size": 66456447,
+          "minOSVersion": "26.0"
+        }
+      ],
+      "version": "1.0.963",
+      "versionDate": "2026-11-14T12:27:45Z",
+      "versionDescription": "Merge claude/project-thread-8wig4r: the iPhone's CI work in two jobs, iphone and iphone-ui, as the iPad's (painting-company row 289)",
+      "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-963/PaintByNumber.ipa",
+      "size": 66473617,
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "Paint by Moonlight uses the camera to take a photo you can turn into a paint-by-numbers picture. The photo stays on your device.",
+          "NSPhotoLibraryAddUsageDescription": "Paint by Moonlight saves a painting or its time-lapse to your photo library when you choose Save Image or Save Video as you share it."
+        }
+      }
+    }
+  ],
+  "news": []
+}
