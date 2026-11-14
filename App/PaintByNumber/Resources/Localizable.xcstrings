@@ -9,6 +9,14 @@
       "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
       "extractionState" : "manual"
     },
+    "About This Painting" : {
+      "comment" : "Title of the page about the real work behind a library picture, opened from The Original door of a finished painting; the picture is a painting or a print",
+      "extractionState" : "manual"
+    },
+    "About This Photograph" : {
+      "comment" : "Title of the page about the real work behind a library picture, opened from The Original door of a finished painting; the picture is a photograph",
+      "extractionState" : "manual"
+    },
     "Another One" : {
       "comment" : "Finished painting, a door under the Finished bar: paints a new picture from the library",
       "extractionState" : "manual"
@@ -17,8 +25,16 @@
       "comment" : "Paint page (the create flow's first screen): heading of the library's famous paintings, in SideStore builds (the release says Paintings)",
       "extractionState" : "manual"
     },
+    "Cataloged As" : {
+      "comment" : "About This Painting page: label of the full title the work’s keeper catalogs it under, where the app’s title is shorter",
+      "extractionState" : "manual"
+    },
     "Change It" : {
       "comment" : "Finished painting, a door under the Finished bar: opens Edit, the drawing tools, on this painting",
+      "extractionState" : "manual"
+    },
+    "Credit" : {
+      "comment" : "About This Painting page: label of the credit line the picture’s source asks for",
       "extractionState" : "manual"
     },
     "Each new painting takes one, and one comes back each day, up to five. Paintings someone sends you are always free. Drawing your own, on a blank page or over a painting, comes with Unlimited Paintings." : {
@@ -61,8 +77,16 @@
       "comment" : "Gallery, the draft's Discard confirmation, in SideStore builds (where Refine is called Edit)",
       "extractionState" : "manual"
     },
+    "Medium" : {
+      "comment" : "About This Painting page: label of what the work is made of, as its museum words it, e.g. “Oil on canvas”",
+      "extractionState" : "manual"
+    },
     "On Paper" : {
       "comment" : "Finished painting, a door under the Finished bar: prints the painting's template",
+      "extractionState" : "manual"
+    },
+    "Opens in your browser." : {
+      "comment" : "About This Painting page: VoiceOver hint of the buttons that open the work’s catalog entry and its Wikipedia article",
       "extractionState" : "manual"
     },
     "Print and paint it" : {
@@ -175,6 +199,26 @@
     },
     "One purchase unlocks the drawing tools and as many new paintings as you like." : {
       "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
+    "Read on Wikipedia" : {
+      "comment" : "About This Painting page: button that opens the work’s Wikipedia article, in the browser",
+      "extractionState" : "manual"
+    },
+    "See the Catalog Entry" : {
+      "comment" : "About This Painting page: button that opens the work’s page at the museum or agency that keeps it, in the browser",
+      "extractionState" : "manual"
+    },
+    "The Original" : {
+      "comment" : "Finished painting, a door under the Finished bar, only for a painting made from a library picture: opens the page about the real work",
+      "extractionState" : "manual"
+    },
+    "Where It’s Kept" : {
+      "comment" : "About This Painting page: label of the museum or library that keeps the work, e.g. “Rijksmuseum, Amsterdam”",
+      "extractionState" : "manual"
+    },
+    "Who made it" : {
+      "comment" : "Finished painting, the line under The Original door: its page says who made the real work, when, and where it is kept",
       "extractionState" : "manual"
     },
     "paint.lengthChip" : {

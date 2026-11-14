@@ -64,13 +64,27 @@ can't be confirmed is dropped.
   "evidence": "<the page's exact license sentence or API field>", "retrieved": "2026-10-02",
   "crop": "<what was cut off, and the resize>", "sha256": "<of the shipped file>",
   "work_title": "<the source's own title, where title shortens it>",
-  "evidence_url": "<the page the evidence quotes>" }
+  "evidence_url": "<the page the evidence quotes>",
+  "medium": "Woodblock print; ink and color on paper",
+  "place": "The Metropolitan Museum of Art, New York",
+  "wikipedia": "https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa" }
 ```
 
 - Required (`SampleLibraryTests.recordsAreComplete`): every field but the last two, none
   empty; `id` a flat file name (`^[a-z0-9]+(-[a-z0-9]+)*$`, the JPEG is `<id>.jpg`), `kind`
   `painting` or `photograph`, `source` an https URL, `retrieved` a `YYYY-MM-DD` date, no id
   twice. `work_title` and `evidence_url` are optional.
+- `medium`, `place` and `wikipedia` are optional too, and a painting's alone: SideStore and
+  Debug builds show them, with `work_title`, the credit line and a button to `source`, on the
+  page a finished library picture opens (About This Painting, painting-company row 120). The
+  page writes nothing of its own, so each is a fact with a source, and one that isn't certain is
+  left out: `medium` is the keeper's own wording, letter for letter (the page only capitalizes
+  it); `place` is the institution that keeps the object `source` shows, with its city where its
+  name doesn't say; `wikipedia` is an article of the English Wikipedia about this very work (the
+  object's own article by Wikidata, or the article of the work it is one of, a print's design or
+  a painting in several versions, read by a person and found to bear it out), never a search, an
+  artist's page or a guess. `tools/library_about.py` checks all three against the museums' own
+  records; `AboutPaintingTests` that every painting has a place and every link is https.
 - `creator`, `year`, `credit` and `license` are proper names and facts: the app reads them at
   runtime and shows them verbatim in every language (Settings › Acknowledgements, the
   painting tiles' creator line and VoiceOver labels), so they stay in the audited record

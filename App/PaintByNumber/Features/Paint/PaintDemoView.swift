@@ -15,7 +15,8 @@ import simd
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
 /// - `paint-zoom`: zoomed ~4× into the canvas, numbers and highlight visible
 /// - `paint-complete`: finished painting (line art dissolved); in SideStore and Debug builds with
-///   the doors after Finished (`FinishedDoors`); `paint-complete-dark` in dark appearance
+///   the doors after Finished (`FinishedDoors`, The Original among them: the demo's picture is
+///   the library's); `paint-complete-dark` in dark appearance
 /// - `paint-complete-unnamed`: `paint-complete` under the name the app gave it, a date: the
 ///   Finished bar's name, with a pencil, names it (`Artwork.isNamed`)
 /// - `paint-finish`: everything but one area painted, zoomed ~3× onto it; after 1.5 s it is painted,
@@ -78,7 +79,10 @@ struct PaintDemoView: View {
                     session: demo.session, title: demo.title, onClose: {},
                     onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
                     // A finished painting's Edit, so its doors show Change It as the app's do.
-                    onChange: scenario.hasPrefix("paint-complete") ? {} : nil)
+                    onChange: scenario.hasPrefix("paint-complete") ? {} : nil,
+                    // A library picture's painting, so its doors end with The Original; the one
+                    // under a date's name stands for a painter's own photo, without it.
+                    libraryPicture: scenario == "paint-complete-unnamed" ? nil : demo.photo)
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })

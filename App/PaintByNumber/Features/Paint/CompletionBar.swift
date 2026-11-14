@@ -38,6 +38,8 @@ struct CompletionBar: View {
     var doors: DoorMetrics?
     /// Change It's way into Edit (`PaintView.onChange`).
     var onChange: (() -> Void)?
+    /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
+    var original: OriginalWork?
     #endif
 
     /// The bar's widest, and the doors' panel's.
@@ -69,7 +71,7 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }

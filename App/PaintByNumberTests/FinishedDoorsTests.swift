@@ -10,8 +10,29 @@ import Testing
 @MainActor
 struct FinishedDoorsTests {
     @Test func changeItShowsOnlyWhereEditOpens() {
-        #expect(FinishedDoor.shown(changes: true) == [.another, .change, .paper, .send])
-        #expect(FinishedDoor.shown(changes: false) == [.another, .paper, .send])
+        #expect(FinishedDoor.shown(changes: true, original: false) == [.another, .change, .paper, .send])
+        #expect(FinishedDoor.shown(changes: false, original: false) == [.another, .paper, .send])
+    }
+
+    /// The Original (painting-company row 120) is the last door, and only a painting made from a
+    /// library picture has it.
+    @Test func theOriginalIsTheLastDoorOfALibraryPicture() {
+        #expect(FinishedDoor.shown(changes: true, original: true) == [.another, .change, .paper, .send, .original])
+        #expect(FinishedDoor.shown(changes: false, original: true) == [.another, .paper, .send, .original])
+    }
+
+    /// Five doors: three over two where a row of five would be too small (a phone upright, an
+    /// iPad's panel), one row on a phone on its side.
+    @Test func fiveDoorsStandThreeOverTwo() throws {
+        let phone = try #require(DoorMetrics.fitting(count: 5, width: 346, height: 417, dynamicTypeSize: .large))
+        #expect(phone.columns == 3 && phone.rows == 2)
+        #expect(phone.arch.width >= 100)
+        #expect(3 * phone.arch.width + 2 * DoorMetrics.gap <= 346)
+        let pad = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 600, dynamicTypeSize: .large))
+        #expect(pad.columns == 3 && pad.rows == 2)
+        #expect(pad.arch.width >= DoorMetrics.roomyRow && pad.arch.width <= DoorMetrics.largest)
+        let side = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 140, dynamicTypeSize: .large))
+        #expect(side.columns == 5 && side.rows == 1)
     }
 
     /// An iPhone upright: two by two, the arches as large as the mockups' (about 150 points).

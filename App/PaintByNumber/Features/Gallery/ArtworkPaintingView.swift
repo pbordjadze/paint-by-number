@@ -145,7 +145,7 @@ struct ArtworkPaintingView: View {
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
-                    onChange: changeAction, hidesStatusBar: !leaving)
+                    onChange: changeAction, libraryPicture: artwork?.sampleName, hidesStatusBar: !leaving)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }

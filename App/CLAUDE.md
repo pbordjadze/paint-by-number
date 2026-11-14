@@ -143,7 +143,7 @@ below name both alike.
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  `CompletionBar`, `FinishedDoors` and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
   The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
@@ -289,8 +289,16 @@ below name both alike.
   `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
   finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
-  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot;
-  during a replay its ring and
+  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
+  A painting made from a library picture (`Artwork.sampleName`, handed on as
+  `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
+  (painting-company row 120), five doors standing three over two: it opens `AboutPainting`, a
+  sheet about the real work (`OriginalWork`, read from `library.json` alone: the picture, its
+  title, maker and date, medium, where it is kept, the title it is cataloged under, the credit
+  line), whose two buttons open the keeper's catalog entry and, where the record names one, the
+  work's Wikipedia article in the browser; the app sends nothing. `about-painting` (with `-dark`)
+  and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
+  the bar's ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
   the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
