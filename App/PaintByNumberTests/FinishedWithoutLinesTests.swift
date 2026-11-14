@@ -262,7 +262,9 @@ struct FinishedWithoutLinesTests {
         let done = Self.everyAreaPainted(t)
         library.saveProgress(done, for: id)
         await library.refreshThumbnail(id, template: t, progress: done)
+        #if UNRELEASED
         let version = try #require(library.artwork(with: id)?.thumbnailVersion)
+        #endif
         let inked = try drawingInThumbnail()
 
         await library.setHidesLines(id, true, template: t, progress: done)

@@ -541,8 +541,8 @@ Conventions).
   The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
   build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
   gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
-  Picture (`CompletionShare.withoutLines`) follow it. The doors' Send It picture, the time-lapse
-  and feedback's captures keep the lines. `paint-book-complete` and
+  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
   `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and

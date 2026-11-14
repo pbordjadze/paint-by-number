@@ -71,7 +71,7 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, withoutLines: share.withoutLines)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
@@ -215,12 +215,12 @@ final class CompletionShare {
 
     func prepare(for session: PaintingSession) async {
         guard session.isComplete, revision != session.revision else { return }
-        let target = session.revision
+        let target = session.revision, plain = withoutLines
         revision = target
         picture = nil
-        let image = await Self.render(template: session.template, progress: session.progress, withoutLines: withoutLines)
-        // Undone and finished again meanwhile: that completion renders its own.
-        guard revision == target else { return }
+        let image = await Self.render(template: session.template, progress: session.progress, withoutLines: plain)
+        // Undone and finished again, or its lines turned, meanwhile: that one renders its own.
+        guard revision == target, withoutLines == plain else { return }
         picture = image
         // A failed render may succeed next time the bar appears.
         if image == nil { revision = nil }

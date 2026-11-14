@@ -864,10 +864,10 @@ final class CanvasView: UIView, PaintingCanvas {
             cameraAnimation = nil
             hoverRegion = -1
             pendingFocus = nil
-        } else {
-            // A painting finished under the markup canvas had no finale to take its ink.
-            inkChanged()
         }
+        // Feedback's capture keeps the lines, so the markup canvas shows them; they go again
+        // after it (also from a painting finished under it, which had no finale to take them).
+        inkChanged()
         accessibilityChanged()
         requestRender()
     }
@@ -1033,7 +1033,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Motion and before the canvas is on screen (a painting opened finished shows as it was
     /// left).
     private func inkChanged(after delay: Float = 0) {
-        let hidden: Float = hidesLines && session.isComplete && !isReplaying ? 1 : 0
+        let hidden: Float = hidesLines && session.isComplete && !isReplaying && !isAnnotating ? 1 : 0
         guard hidden != inkFade.to else { return }
         let t = now()
         let from = inkFade.value(at: t)

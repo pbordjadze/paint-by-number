@@ -345,6 +345,13 @@ struct PaletteBar: View {
                 if keepsPlaces, abs(length - viewport) > 0.5 { viewport = length }
                 revealPending()
             }
+            // An order that keeps places, chosen after one that doesn't: the length wasn't kept
+            // meanwhile, and the window may have turned.
+            .onChange(of: keepsPlaces) {
+                guard keepsPlaces, !scroll.frame.isNull else { return }
+                let length = axis == .horizontal ? scroll.frame.width : scroll.frame.height
+                if abs(length - viewport) > 0.5 { viewport = length }
+            }
             // The bar moves only as far as brings the selected swatch into view, and not at all while
             // it shows: centring it pulled the palette to its middle at every change of color.
             .onAppear {

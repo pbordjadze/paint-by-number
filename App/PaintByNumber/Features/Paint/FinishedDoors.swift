@@ -26,6 +26,9 @@ struct FinishedDoors: View {
     /// The Original: the work behind the library picture this painting was made from; nil (a
     /// painter's own photo) leaves the door out.
     var original: OriginalWork?
+    /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
+    /// painting-company row 295).
+    var withoutLines = false
 
     @Environment(\.paintPicture) private var paintPicture
     @Environment(Library.self) private var library: Library?
@@ -266,8 +269,8 @@ struct FinishedDoors: View {
             let paper = PDFExporter.Paper.default(for: Locale.current.region)
             prepare(door) { try await Self.paperFile(template, title: name, paper: paper, nicknames: nicknames) }
         case .send:
-            let template = session.template, painted = session.progress.painted, name = title
-            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name) }
+            let template = session.template, painted = session.progress.painted, name = title, plain = withoutLines
+            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name, withoutLines: plain) }
         case .original: about = original
         }
     }
@@ -295,9 +298,11 @@ struct FinishedDoors: View {
     }
 
     @concurrent
-    private static func pictureFile(_ template: Template, painted: [Bool], title: String) async throws -> URL {
+    private static func pictureFile(
+        _ template: Template, painted: [Bool], title: String, withoutLines: Bool
+    ) async throws -> URL {
         guard let data = TemplateRasterizer.pngData(
-            template, painted: painted, style: .finished, maxPixelSize: ArtworkExporter.imagePixelSize)
+            template, painted: painted, style: .finished.hidingLines(withoutLines, painted: painted), maxPixelSize: ArtworkExporter.imagePixelSize)
         else { throw ArtworkExporter.ExportError.renderFailed }
         return try ArtworkExporter.temporaryFile(data, name: title, pathExtension: "png")
     }
