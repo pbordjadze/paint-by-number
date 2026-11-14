@@ -51,6 +51,18 @@ struct FinishedDoorsTests {
         #expect(abs(panel - bar - (500 - CompletionBar.height)) < 0.01)
     }
 
+    /// Change It and On Paper look through the door at the middle of the picture, close enough to
+    /// read its lines, in the door's own proportions and inside the canvas.
+    @Test func theGlimpseIsACloseUpInTheDoorsShape() {
+        for (w, h) in [(2100, 1500), (1100, 2100), (2000, 300)] {
+            let rect = DoorGlimpses.closeUp(of: CGSize(width: w, height: h))
+            #expect(abs(rect.height / rect.width - DoorMetrics.aspect) < 0.001)
+            #expect(CGRect(x: 0, y: 0, width: w, height: h).insetBy(dx: -0.001, dy: -0.001).contains(rect))
+            #expect(abs(rect.midX - Double(w) / 2) < 0.001 && abs(rect.midY - Double(h) / 2) < 0.001)
+            #expect(rect.width <= Double(min(w, h)) * 0.45 + 0.001)
+        }
+    }
+
     @Test func anArchHasARoundTopUntilItFlattens() {
         let rect = CGRect(x: 0, y: 0, width: 100, height: 108)
         let round = ArchShape().path(in: rect)

@@ -38,7 +38,8 @@ struct FinishedDoors: View {
         let next = nextPicture
         Grid(horizontalSpacing: DoorMetrics.gap, verticalSpacing: DoorMetrics.rowGap) {
             ForEach(0..<metrics.rows, id: \.self) { row in
-                GridRow {
+                // Top-aligned, so a door whose label wraps doesn't push its neighbours' arches down.
+                GridRow(alignment: .top) {
                     ForEach(doors.dropFirst(row * metrics.columns).prefix(metrics.columns)) { door in
                         button(door, next: next)
                     }
@@ -320,10 +321,34 @@ final class DoorGlimpses {
 
     @concurrent
     private static func render(template: Template, progress: PaintProgress) async -> (CGImage?, CGImage?) {
-        let size = CanvasSnapshot.fittedSize(for: template, longSide: pixelSize)
-        let lines = CanvasSnapshot.render(template: template, progress: progress, size: size, options: .thumbnail)
-        let paper = CanvasSnapshot.render(template: template, progress: nil, size: size, options: .thumbnail)
+        let rect = closeUp(of: CGSize(width: template.width, height: template.height))
+        let height = Double(pixelSize)
+        let size = CGSize(width: (height / Double(DoorMetrics.aspect)).rounded(), height: height)
+        let lines = CanvasSnapshot.render(
+            template: template, progress: progress, rect: rect, size: size,
+            options: CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: lineWidth))
+        let paper = CanvasSnapshot.render(
+            template: template, progress: nil, rect: rect, size: size,
+            options: CanvasSnapshot.Options(outlines: true, numbers: true, outlineWidth: lineWidth))
         return (lines, paper)
+    }
+
+    /// Lines as dark as the mockups' (`factory/pieces/doors/`): the whole picture at a door's size
+    /// draws them a fraction of a pixel wide, a blank arch.
+    nonisolated static let lineWidth: Float = 3
+
+    /// The middle of the canvas in a door's proportions, a little under half its short side wide:
+    /// close enough that the lines and numbers read, as a glimpse through a doorway does.
+    nonisolated static func closeUp(of canvas: CGSize) -> CGRect {
+        let w = Double(canvas.width), h = Double(canvas.height)
+        let aspect = Double(DoorMetrics.aspect)
+        var width = min(w, h) * 0.45
+        var height = width * aspect
+        if height > h {
+            height = h
+            width = h / aspect
+        }
+        return CGRect(x: (w - width) / 2, y: (h - height) / 2, width: width, height: height)
     }
 }
 
