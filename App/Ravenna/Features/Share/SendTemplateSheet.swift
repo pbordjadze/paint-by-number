@@ -85,6 +85,9 @@ struct SendTemplateSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .presentationDetents([.height(contentHeight)])
+        // Opaque, as Paint by Moonlight's: on iPad the glass let the painting behind show through
+        // its words. On the bench its secondary and red notes read at AA (6:1 and 5:1).
+        .presentationBackground(Theme.surface)
         .background {
             ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
         }
