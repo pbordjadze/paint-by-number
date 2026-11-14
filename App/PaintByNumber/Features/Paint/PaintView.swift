@@ -116,6 +116,8 @@ struct PaintView: View {
     @Environment(UnlimitedPaintings.self) private var paintings: UnlimitedPaintings?
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
+    /// Built out of sight before Start Painting (`PaintScreenWarmup`).
+    @Environment(\.paintScreenIsWarmup) private var isWarmup
     #if DEBUG
     @Environment(\.feedbackDemo) private var feedbackDemo
     #endif
@@ -179,11 +181,13 @@ struct PaintView: View {
         // The canvas runs under the top edge: the clock would sit on the painting.
         .statusBarHidden(hidesStatusBar)
         .background(Color(uiColor: .systemGroupedBackground))
-        .focusedSceneValue(\.painting, PaintingFocus(
+        // Out of sight, the menu bar's commands stay the preview's.
+        .focusedSceneValue(\.painting, isWarmup ? nil : PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
             zenMode: $zenMode, isGivingFeedback: feedback != nil, giveFeedback: startFeedback, replay: replay,
             close: onClose))
         .onAppear {
+            guard !isWarmup else { return }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.hasPhoto = photoLoader != nil
@@ -205,12 +209,12 @@ struct PaintView: View {
         .onChange(of: autoAdvance, initial: true) { _, advance in session.autoAdvance = advance }
         .onChange(of: zenMode, initial: true) { was, zen in
             session.flowsToNextArea = zen
-            if zen { PaintTips.used(.benchZen) }
+            if zen && !isWarmup { PaintTips.used(.benchZen) }
             if zen && !was { sayWhatZenDoes() }
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // Choosing a color is something done: the tips' hand has not rested yet.
-        .onChange(of: session.selectedColor) { chrome.activity() }
+        .onChange(of: session.selectedColor) { if !isWarmup { chrome.activity() } }
         // The photo shown, held or kept, is the Photo control used.
         .onChange(of: peek.isShown) { _, shown in
             if shown { PaintTips.used(.benchShowPhoto) }
@@ -228,6 +232,7 @@ struct PaintView: View {
             }
         }
         .onDisappear {
+            guard !isWarmup else { return }
             undoManager?.removeAllActions(withTarget: session)
             chrome.close()
         }

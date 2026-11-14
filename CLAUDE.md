@@ -532,10 +532,11 @@ any port of it, when changing the fitter: work from the paper.
    first, October 18), but it waits for one like any macOS job. Run it before asking
    for a full slot. It isn't a slot, but one runs at a time, and never while the branch's own full
    run is going (the push cancels it).
-   A UI test's quick try: `[test RefineUITests]` (several classes, or `Class/testMethod`; a run
-   started by hand takes `tests`) runs only those UI tests, on the iPad after the Debug build
+   A test's quick try: `[test RefineUITests]` (several classes, or `Class/testMethod`; a unit
+   suite, `[test LibraryTests]` or `Suite/test`, or `[test unit]` for every unit test; a run
+   started by hand takes `tests`) runs only those tests, on the iPad after the Debug build
    (`test` in STATUS.md, instead of every other entry, `[iphone]`'s too; no screenshots, no
-   Release; on a cache miss the warm-up first), on one runner like `[compile]`: 17 min for two
+   Release; on a cache miss the warm-up first, for UI tests), on one runner like `[compile]`: 17 min for two
    small classes on an idle runner, 12 of them the build (October 29, run 653). A name the
    sources lack fails its Plan step at once (`test/errors.txt` says why); a choice that still ran
    no test fails its Test step. The full run still comes before a merge.
