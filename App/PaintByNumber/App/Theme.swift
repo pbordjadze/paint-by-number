@@ -26,6 +26,10 @@ enum Theme {
     /// `.secondary` gives 3.3:1 on the light paper, under WCAG AA's 4.5:1 (QA, November 7: the
     /// unlock sheet, Refine's rail).
     static let quietInk = Color.primary.opacity(0.7)
+    /// Words that say something went wrong: a deeper red by day, where the system's red gives
+    /// 3.2:1 on the light paper (under AA's 4.5:1), and the system's own dark red at night: about 5:1
+    /// on either paper, 4.97:1 on the night sheet (`ThemeTests`).
+    static let errorInk = Color("ErrorInk")
 
     /// Navigation titles in New York, like the identity's headings.
     static func styleNavigationTitles() {
