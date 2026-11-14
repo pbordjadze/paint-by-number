@@ -75,10 +75,10 @@ final class MarkupCanvasView: PKCanvasView {
         isAccessibilityElement = true
         // Without it VoiceOver takes the touches, and the hint's promise to draw couldn't be kept.
         accessibilityTraits = .allowsDirectInteraction
-        accessibilityLabel = String(localized: "feedback.canvas.label", defaultValue: "Mosaic", bundle: .ravenna,
+        accessibilityLabel = String(localized: "feedback.canvas.label", defaultValue: "Painting", bundle: .era,
                                     comment: "VoiceOver label of the painting while feedback is being drawn on it")
         accessibilityHint = String(localized: "feedback.canvas.hint",
-                                   defaultValue: "Draw on the painting to show what your feedback is about. Two fingers move and zoom.", bundle: .ravenna,
+                                   defaultValue: "Draw on the painting to show what your feedback is about. Two fingers move and zoom.", bundle: .era,
                                    comment: "VoiceOver hint of the painting while feedback is being drawn on it")
         accessibilityIdentifier = "feedback-canvas"
     }

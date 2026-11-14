@@ -43,9 +43,9 @@ final class Nightfall {
         let start = CACurrentMediaTime()
         peak = start + (reduceMotion ? settled : (night ? 2.0 : settled)) * pace
         announcement = night
-            ? String(localized: "nightfall.moon", defaultValue: "The moon rises over your painting.", bundle: .ravenna,
+            ? String(localized: "nightfall.moon", defaultValue: "The moon rises over your painting.", bundle: .era,
                      comment: "VoiceOver announcement as a painting is finished by night: dusk falls over it and a crescent and two stars come out")
-            : String(localized: "nightfall.evening", defaultValue: "Evening light falls over your painting.", bundle: .ravenna,
+            : String(localized: "nightfall.evening", defaultValue: "Evening light falls over your painting.", bundle: .era,
                      comment: "VoiceOver announcement as a painting is finished by day: a warm evening light settles over it")
 
         CATransaction.begin()

@@ -21,18 +21,18 @@ nonisolated enum LineWeight: String, CaseIterable, Identifiable, Sendable {
 
     var name: String {
         switch self {
-        case .fine: String(localized: "lineWeight.fine", defaultValue: "Fine",
+        case .fine: String(localized: "lineWeight.fine", defaultValue: "Fine", bundle: .era,
                            comment: "Choice of the Line Weight setting: a painting's drawn lines lighter than designed")
-        case .regular: String(localized: "lineWeight.regular", defaultValue: "Regular",
+        case .regular: String(localized: "lineWeight.regular", defaultValue: "Regular", bundle: .era,
                               comment: "Choice of the Line Weight setting: a painting's drawn lines as designed")
-        case .bold: String(localized: "lineWeight.bold", defaultValue: "Bold",
+        case .bold: String(localized: "lineWeight.bold", defaultValue: "Bold", bundle: .era,
                            comment: "Choice of the Line Weight setting: a painting's drawn lines heavier than designed")
         }
     }
 
     /// The stored setting (`SettingsKey.lineWeight`), or the default. Safe off the main actor:
     /// pictures and the time-lapse are drawn with it in the background.
-    static func stored(in defaults: UserDefaults = .standard) -> LineWeight {
+    static func stored(in defaults: UserDefaults = .era) -> LineWeight {
         defaults.string(forKey: SettingsKey.lineWeight).flatMap(LineWeight.init(rawValue:)) ?? .default
     }
 

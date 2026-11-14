@@ -7,9 +7,10 @@ import CoreGraphics
 /// fill. Nothing the canvas sees changes, so the painting never moves. On regular widths the bar's
 /// buttons and the swatches are a quarter bigger, always, so nothing changes size under a finger.
 ///
-/// SideStore and Debug builds only for now (`UNRELEASED`, root `CLAUDE.md` › App rules).
+/// Paint by Moonlight's SideStore and Debug builds only for now (`UNRELEASED`, root `CLAUDE.md` ›
+/// App rules); every build of Paint by Mosaic (`EraSeam.offersQuietPainting`).
 nonisolated enum QuietPainting {
-    static let isAvailable = true
+    static let isAvailable = EraSeam.offersQuietPainting
 
     /// The tips that hang from a button the quiet bar hides: while one has its turn, the bar
     /// shows, so the tip has its button to point at.

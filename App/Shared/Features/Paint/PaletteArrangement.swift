@@ -97,13 +97,13 @@ extension PaletteRows {
     var name: String {
         switch self {
         case .auto:
-            String(localized: "palette.rows.auto", defaultValue: "Auto", bundle: .ravenna,
+            String(localized: "palette.rows.auto", defaultValue: "Auto", bundle: .era,
                    comment: "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)")
         case .all:
-            String(localized: "palette.rows.all", defaultValue: "All at Once", bundle: .ravenna,
+            String(localized: "palette.rows.all", defaultValue: "All at Once", bundle: .era,
                    comment: "Palette Rows choice: as many rows as it takes to show every color without scrolling")
         default:
-            String(localized: "palette.rows.count", defaultValue: "\(rawValue) Rows", bundle: .ravenna,
+            String(localized: "palette.rows.count", defaultValue: "\(rawValue) Rows", bundle: .era,
                    comment: "Palette Rows choice: a fixed number of rows of swatches (columns beside a landscape iPad); the argument is the count")
         }
     }
@@ -113,22 +113,22 @@ extension PaletteOrder {
     var name: String {
         switch self {
         case .number:
-            String(localized: "palette.order.number", defaultValue: "By Number", bundle: .ravenna,
+            String(localized: "palette.order.number", defaultValue: "By Number", bundle: .era,
                    comment: "Palette Order choice: swatches in the order of their numbers")
         case .rainbow:
-            String(localized: "palette.order.rainbow", defaultValue: "Rainbow", bundle: .ravenna,
+            String(localized: "palette.order.rainbow", defaultValue: "Rainbow", bundle: .era,
                    comment: "Palette Order choice: swatches by hue, red through violet, then grays")
         case .lightToDark:
-            String(localized: "palette.order.lightToDark", defaultValue: "Light to Dark", bundle: .ravenna,
+            String(localized: "palette.order.lightToDark", defaultValue: "Light to Dark", bundle: .era,
                    comment: "Palette Order choice: lightest paint first")
         case .darkToLight:
-            String(localized: "palette.order.darkToLight", defaultValue: "Dark to Light", bundle: .ravenna,
+            String(localized: "palette.order.darkToLight", defaultValue: "Dark to Light", bundle: .era,
                    comment: "Palette Order choice: darkest paint first")
         case .nearlyDone:
-            String(localized: "palette.order.nearlyDone", defaultValue: "Nearly Done First", bundle: .ravenna,
+            String(localized: "palette.order.nearlyDone", defaultValue: "Nearly Done First", bundle: .era,
                    comment: "Palette Order choice: colors with the fewest areas left to paint first")
         case .mostLeft:
-            String(localized: "palette.order.mostLeft", defaultValue: "Most Left First", bundle: .ravenna,
+            String(localized: "palette.order.mostLeft", defaultValue: "Most Left First", bundle: .era,
                    comment: "Palette Order choice: colors with the most areas left to paint first")
         }
     }

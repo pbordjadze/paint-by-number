@@ -261,7 +261,7 @@ nonisolated struct TipStore {
     static let pacingKey = "tipsPacing"
     static let historyKey = "tipsHistory"
 
-    var defaults: UserDefaults = .standard
+    var defaults: UserDefaults = .era
 
     func pacing() -> TipPacing { read(Self.pacingKey) ?? TipPacing() }
     func history() -> TipHistory { read(Self.historyKey) ?? TipHistory() }

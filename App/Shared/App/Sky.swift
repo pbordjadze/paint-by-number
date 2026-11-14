@@ -21,7 +21,7 @@ nonisolated enum Sky: String, Sendable {
     }
 
     /// The sky painting plays in at `date`: what a sound or a sparkle asks for.
-    static func current(at date: Date = .now, in defaults: UserDefaults = .standard) -> Sky {
+    static func current(at date: Date = .now, in defaults: UserDefaults = .era) -> Sky {
         SkySetting.stored(in: defaults).sky(at: date)
     }
 
@@ -46,11 +46,11 @@ nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
 
     var name: String {
         switch self {
-        case .sun: String(localized: "sky.sun", defaultValue: "Sun",
+        case .sun: String(localized: "sky.sun", defaultValue: "Sun", bundle: .era,
                           comment: "Choice of Settings › Music: the daytime music, a bright kalimba, at every hour")
-        case .moon: String(localized: "sky.moon", defaultValue: "Moon",
+        case .moon: String(localized: "sky.moon", defaultValue: "Moon", bundle: .era,
                            comment: "Choice of Settings › Music: the nighttime music, a bell, and stars for sparkles, at every hour")
-        case .auto: String(localized: "sky.auto", defaultValue: "Auto",
+        case .auto: String(localized: "sky.auto", defaultValue: "Auto", bundle: .era,
                            comment: "Choice of Settings › Music: Sun by day and Moon by night, by the painter's own clock")
         }
     }
@@ -66,7 +66,7 @@ nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
     /// The stored setting (`SettingsKey.sky`), or the default. A value this build doesn't know
     /// (the first version's `followTheSky`, in SideStore builds only) is the default, Auto, which
     /// is what it meant.
-    static func stored(in defaults: UserDefaults = .standard) -> SkySetting {
+    static func stored(in defaults: UserDefaults = .era) -> SkySetting {
         defaults.string(forKey: SettingsKey.sky).flatMap(SkySetting.init(rawValue:)) ?? .default
     }
 }

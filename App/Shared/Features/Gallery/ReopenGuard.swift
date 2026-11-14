@@ -10,7 +10,7 @@ struct ReopenGuard {
     /// How long a reopened painting stays on screen before its reopen counts as safe.
     static let settleDelay: Duration = .seconds(10)
 
-    var defaults: UserDefaults = .standard
+    var defaults: UserDefaults = .era
 
     /// Whether this launch may reopen the last painting: false, once, after a launch whose
     /// reopen never settled.

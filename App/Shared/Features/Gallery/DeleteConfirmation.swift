@@ -7,7 +7,7 @@ import SwiftUI
 enum DeleteConfirmation {
     /// The destructive button: "Delete “Wheat Field”".
     static func buttonTitle(for artwork: Artwork) -> String {
-        String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(artwork.title)”",
+        String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(artwork.title)”", bundle: .era,
                comment: "Destructive button of the delete confirmation; the argument is the painting's title")
     }
 }
@@ -18,14 +18,14 @@ struct DeleteConfirmationMessage: View {
 
     var body: some View {
         if artwork.isComplete {
-            Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(artwork.title)” is finished.",
+            Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(artwork.title)” is finished.", bundle: .era,
                         comment: "Delete confirmation message for a finished painting; the argument is its title"))
         } else if artwork.isStarted {
             let percent = ProgressCaption.percentText(artwork)
-            Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(artwork.title)” is \(percent) painted.",
+            Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(artwork.title)” is \(percent) painted.", bundle: .era,
                         comment: "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%"))
         } else {
-            Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(artwork.title)” hasn’t been started yet.",
+            Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(artwork.title)” hasn’t been started yet.", bundle: .era,
                         comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
         }
     }

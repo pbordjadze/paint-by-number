@@ -53,6 +53,11 @@ APP_SOURCES = "App/PaintByNumber"
 # The code the app shares with Paint by Mosaic, compiled into the app target too (App/CLAUDE.md ›
 # Ravenna): its files are named as the app's are, by their path under the folder.
 SHARED_SOURCES = "App/Shared"
+# Paint by Mosaic's catalog: a shared file's `String(localized:)` reads this era's catalog
+# (`bundle: .era`, the app's own here and this one there), so each of its keys is in both.
+ERA_CATALOG = "App/RavennaResources/Localizable.xcstrings"
+# The shared files among the sources scanned (filled by `swift_sources`).
+SHARED_FILES = set()
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
@@ -111,6 +116,9 @@ ALLOWED_LITERALS = {
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).
     ("Model/Artwork.swift", "invalid artwork dimensions"),
     ("Model/ArtworkStore.swift", "template decompression"),
+    # `feedback.md`'s words for the developers (VERBATIM_FILES' FeedbackReport), which differ by era.
+    ("App/SharedSeams.swift", "Paint by Moonlight \x00"),
+    ("App/SharedSeams.swift", "Untitled painting"),
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations); and feedback's report (`feedback.md`), written for the
@@ -505,9 +513,15 @@ def explicit(rel, call, key_tokens, labels, usages, findings, consumed):
         findings.append(Finding(rel, call.line, f"{what}: the key must be a string literal"))
         return
     consumed.add(id(key))
-    for forbidden in ("table", "bundle", "locale"):
+    for forbidden in ("table", "locale"):
         if forbidden in labels:
             findings.append(Finding(rel, call.line, f"{what}: `{forbidden}:` is not supported (the app uses Localizable.xcstrings in the main bundle)"))
+    bundle = "".join(str(t.value) for t in labels["bundle"] if t.kind != "str") if "bundle" in labels else None
+    if rel in SHARED_FILES and call.name == "String":
+        if bundle != ".era":
+            findings.append(Finding(rel, call.line, f"{what}: a shared file passes `bundle: .era`, or Paint by Mosaic reads the app's words"))
+    elif bundle is not None:
+        findings.append(Finding(rel, call.line, f"{what}: `bundle:` is for App/Shared's files alone (`bundle: .era`)"))
     if key.interpolations:
         findings.append(Finding(rel, key.line, f"{what}: \"{shorten(key.text)}\" interpolates; give it an explicit key and defaultValue"))
         return
@@ -559,6 +573,8 @@ def swift_sources(root):
         for path in sorted(base.rglob("*.swift")):
             rel = path.relative_to(base).as_posix()
             if rel not in DEBUG_ONLY_FILES:
+                if base.name == "Shared":
+                    SHARED_FILES.add(rel)
                 yield rel, path
 
 
@@ -771,6 +787,12 @@ def run(root):
             return findings + [Finding(CATALOG, error.lineno, f"invalid JSON: {error.msg}")], 0, 0
         check_catalog(catalog, usages, findings)
         keys = len(catalog.get("strings", {}))
+    era_path = root / ERA_CATALOG
+    if SHARED_FILES and era_path.exists():
+        era = json.loads(era_path.read_text(encoding="utf-8")).get("strings", {})
+        for usage in usages:
+            if usage.path in SHARED_FILES and usage.default is not None and usage.key not in era:
+                findings.append(Finding(usage.path, usage.line, f'"{usage.key}" is not in {ERA_CATALOG}: Paint by Mosaic would show the default here'))
     info_path = root / INFOPLIST_CATALOG
     if not info_path.exists():
         findings.append(Finding(INFOPLIST_CATALOG, 0, "missing"))

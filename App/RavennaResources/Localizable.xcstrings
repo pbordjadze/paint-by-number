@@ -29,6 +29,18 @@
       "comment": "Settings › About row that writes an email to the developers; the address shows beside it",
       "extractionState": "manual"
     },
+    "Painting": {
+      "comment": "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mosaic"
+          }
+        }
+      }
+    },
     "Privacy Policy": {
       "comment": "Settings › About row that opens the privacy policy on the web",
       "extractionState": "manual"
@@ -44,6 +56,18 @@
     "Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on.": {
       "comment": "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
       "extractionState": "manual"
+    },
+    "template.colorsOf": {
+      "comment": "How many colors a template kept of the number the Colors slider asked for, the rest unused; the arguments are the kept count and the asked count, e.g. 21 of 24 colors",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld colors"
+          }
+        }
+      }
     },
     "Thank you for supporting Paint by Mosaic.": {
       "comment": "Footer of Settings › Unlimited Paintings once the purchase is bought",

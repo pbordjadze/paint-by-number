@@ -183,8 +183,8 @@ nonisolated extension FeedbackReport {
 
     /// `feedback.md`.
     var markdown: String {
-        var lines = ["# \(title.isEmpty ? "Untitled painting" : title): feedback", ""]
-        lines.append("Paint by Moonlight \(app) on \(device), \(system), \(date.formatted(.iso8601))")
+        var lines = ["# \(title.isEmpty ? EraSeam.feedbackUntitled : title): feedback", ""]
+        lines.append("\(EraSeam.feedbackHeader(app)) on \(device), \(system), \(date.formatted(.iso8601))")
         lines += ["", "## Note", "", note.isEmpty ? "(none)" : note, "", "## Marks", ""]
         if marks.isEmpty { lines.append("(none)") }
         for mark in marks {

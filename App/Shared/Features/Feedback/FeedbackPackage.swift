@@ -111,11 +111,11 @@ nonisolated enum FeedbackPackage {
     /// "Red Fox Feedback 2026-10-05 14.32": the name the picture and the zip are shared under,
     /// told apart by when the feedback was given (local time).
     static func bundleName(title: String, date: Date) -> String {
-        let painting = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
+        let painting = title.isEmpty ? String(localized: "Painting", bundle: .era) : title
         let t = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         let stamp = String(
             format: "%04d-%02d-%02d %02d.%02d", t.year ?? 0, t.month ?? 0, t.day ?? 0, t.hour ?? 0, t.minute ?? 0)
-        return String(localized: "feedback.bundleName", defaultValue: "\(painting) Feedback \(stamp)", bundle: .ravenna,
+        return String(localized: "feedback.bundleName", defaultValue: "\(painting) Feedback \(stamp)", bundle: .era,
                       comment: "Name of the files a painting's feedback is shared as (a picture and a zip archive); the arguments are the painting's title and when the feedback was given, e.g. 2026-10-05 14.32")
     }
 

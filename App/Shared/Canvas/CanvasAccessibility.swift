@@ -21,15 +21,15 @@ nonisolated enum CanvasPosition: Int, Sendable {
 
     var spoken: String {
         switch self {
-        case .topLeft: String(localized: "paint.position.topLeft", defaultValue: "top left", comment: "Where an area sits on the painting")
-        case .top: String(localized: "paint.position.top", defaultValue: "top", comment: "Where an area sits on the painting")
-        case .topRight: String(localized: "paint.position.topRight", defaultValue: "top right", comment: "Where an area sits on the painting")
-        case .left: String(localized: "paint.position.left", defaultValue: "left", comment: "Where an area sits on the painting")
-        case .center: String(localized: "paint.position.center", defaultValue: "center", comment: "Where an area sits on the painting")
-        case .right: String(localized: "paint.position.right", defaultValue: "right", comment: "Where an area sits on the painting")
-        case .bottomLeft: String(localized: "paint.position.bottomLeft", defaultValue: "bottom left", comment: "Where an area sits on the painting")
-        case .bottom: String(localized: "paint.position.bottom", defaultValue: "bottom", comment: "Where an area sits on the painting")
-        case .bottomRight: String(localized: "paint.position.bottomRight", defaultValue: "bottom right", comment: "Where an area sits on the painting")
+        case .topLeft: String(localized: "paint.position.topLeft", defaultValue: "top left", bundle: .era, comment: "Where an area sits on the painting")
+        case .top: String(localized: "paint.position.top", defaultValue: "top", bundle: .era, comment: "Where an area sits on the painting")
+        case .topRight: String(localized: "paint.position.topRight", defaultValue: "top right", bundle: .era, comment: "Where an area sits on the painting")
+        case .left: String(localized: "paint.position.left", defaultValue: "left", bundle: .era, comment: "Where an area sits on the painting")
+        case .center: String(localized: "paint.position.center", defaultValue: "center", bundle: .era, comment: "Where an area sits on the painting")
+        case .right: String(localized: "paint.position.right", defaultValue: "right", bundle: .era, comment: "Where an area sits on the painting")
+        case .bottomLeft: String(localized: "paint.position.bottomLeft", defaultValue: "bottom left", bundle: .era, comment: "Where an area sits on the painting")
+        case .bottom: String(localized: "paint.position.bottom", defaultValue: "bottom", bundle: .era, comment: "Where an area sits on the painting")
+        case .bottomRight: String(localized: "paint.position.bottomRight", defaultValue: "bottom right", bundle: .era, comment: "Where an area sits on the painting")
         }
     }
 }

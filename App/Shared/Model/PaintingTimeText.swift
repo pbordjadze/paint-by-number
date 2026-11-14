@@ -18,14 +18,14 @@ nonisolated enum PaintingTimeText {
                     duration = Self.hours(Int(halves))
                 } else {
                     let text = halves.formatted(.number.precision(.fractionLength(1)))
-                    duration = String(localized: "time.hours.fractional", defaultValue: "\(text) h", bundle: .ravenna,
+                    duration = String(localized: "time.hours.fractional", defaultValue: "\(text) h", bundle: .era,
                                       comment: "A duration in hours with a decimal, e.g. 1.5 h; the argument is the formatted number")
                 }
             } else {
                 duration = Self.hours(Int(hours.rounded()))
             }
         }
-        return String(localized: "time.approximately", defaultValue: "~\(duration)", bundle: .ravenna,
+        return String(localized: "time.approximately", defaultValue: "~\(duration)", bundle: .era,
                       comment: "An estimated duration, e.g. ~40 min; the argument is the duration text")
     }
 
@@ -35,24 +35,24 @@ nonisolated enum PaintingTimeText {
         // Double(Int.max) rounds up on 64-bit devices: test the bound before converting.
         let total = value >= Double(Int.max) ? Int.max : (value > 0 ? Int(value) : 0)
         if total < 1 {
-            return String(localized: "time.lessThanMinute", defaultValue: "< 1 min", bundle: .ravenna,
+            return String(localized: "time.lessThanMinute", defaultValue: "< 1 min", bundle: .era,
                           comment: "Painting time shorter than one minute")
         }
         let h = total / 60, m = total % 60
         if h == 0 { return minutes(m) }
         if m == 0 { return hours(h) }
         let hoursText = hours(h), minutesText = minutes(m)
-        return String(localized: "time.hoursAndMinutes", defaultValue: "\(hoursText) \(minutesText)", bundle: .ravenna,
+        return String(localized: "time.hoursAndMinutes", defaultValue: "\(hoursText) \(minutesText)", bundle: .era,
                       comment: "A duration in hours and minutes, e.g. 2 h 14 min; the arguments are the hours text and the minutes text")
     }
 
     private static func minutes(_ count: Int) -> String {
-        String(localized: "time.minutes", defaultValue: "\(count) min", bundle: .ravenna,
+        String(localized: "time.minutes", defaultValue: "\(count) min", bundle: .era,
                comment: "A duration in minutes, e.g. 35 min; the argument is the number of minutes")
     }
 
     private static func hours(_ count: Int) -> String {
-        String(localized: "time.hours", defaultValue: "\(count) h", bundle: .ravenna,
+        String(localized: "time.hours", defaultValue: "\(count) h", bundle: .era,
                comment: "A duration in whole hours, e.g. 2 h; the argument is the number of hours")
     }
 }

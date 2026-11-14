@@ -27,13 +27,13 @@ nonisolated enum FeedbackInkColor: CaseIterable, Hashable {
     var name: String {
         switch self {
         case .red:
-            String(localized: "feedback.ink.red", defaultValue: "Red", bundle: .ravenna,
+            String(localized: "feedback.ink.red", defaultValue: "Red", bundle: .era,
                    comment: "Feedback mode's tools: VoiceOver label of the button that gives the pen red ink")
         case .blue:
-            String(localized: "feedback.ink.blue", defaultValue: "Blue", bundle: .ravenna,
+            String(localized: "feedback.ink.blue", defaultValue: "Blue", bundle: .era,
                    comment: "Feedback mode's tools: VoiceOver label of the button that gives the pen blue ink")
         case .green:
-            String(localized: "feedback.ink.green", defaultValue: "Green", bundle: .ravenna,
+            String(localized: "feedback.ink.green", defaultValue: "Green", bundle: .era,
                    comment: "Feedback mode's tools: VoiceOver label of the button that gives the pen green ink")
         }
     }
