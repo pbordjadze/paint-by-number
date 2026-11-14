@@ -296,7 +296,7 @@ below name both alike.
   the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
-- Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
+- Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
@@ -311,7 +311,21 @@ below name both alike.
   `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
   double tap and the Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
-  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen. The palette's
+  lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
+  so they never change as colors finish. In SideStore and Debug builds the palette stays put
+  (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
+  `PalettePlaces`): each color keeps the place its position in the order gives it, a finished one
+  leaves that place empty, a lane (a bottom bar's column, a side bar's row) leaves only once all
+  its places are empty, the lanes after it then moving up one with every swatch on its line (on
+  one line, the next color takes the finished one's place), and the bar keeps the length of all
+  the painting's colors, its swatches laid from its start, so it neither shrinks nor re-centers;
+  at a scrolling bar's end the content keeps its length until it is scrolled back
+  (`PaletteBar.shownEnd`), so it is always the colors after a finished one that move. An undo
+  puts a color back where it was. Not under Nearly Done or Most Left, which re-sort by the
+  painter's choice; the release packs the colors left at every finish, as 1.1 did. `paint-palette`
+  and `paint-palette-number` show the empty places, `paint-progress` an iPhone's strip from its
+  start.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,

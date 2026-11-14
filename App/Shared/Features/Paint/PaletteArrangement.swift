@@ -91,6 +91,45 @@ nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// Where each swatch lies when the palette keeps its places (painting-company row 293): every
+/// color of the painting has a place by its position in the palette's order, `lines` places to a
+/// lane (a bottom bar's column, a side bar's row), and keeps it for as long as its lane is there.
+/// A finished color leaves its place empty, and nothing else moves; a lane leaves only once every
+/// place in it is empty, and then the lanes after it move up by one, each swatch on the line it
+/// was on. Packed instead (`PaletteBar.lanes`), every finish sent every later swatch to another
+/// line. With one line a lane is a swatch, so the next color takes the finished one's place.
+nonisolated struct PalettePlaces: Equatable, Sendable {
+    nonisolated struct Lane: Equatable, Identifiable, Sendable {
+        /// The color of the lane's first place, shown or not: what the lane goes by as colors
+        /// leave and come back (an undo), so the lanes that stay are moved, not made again.
+        let id: Int
+        /// The lane's places in order: a color, or nil where its color has left.
+        let places: [Int?]
+    }
+
+    /// The lanes with a color to show, in order.
+    let lanes: [Lane]
+    /// The lanes every color of the painting takes: the bar is laid out for them all and keeps
+    /// that length, so it neither shrinks nor moves as colors finish.
+    let fullLanes: Int
+
+    /// `order` is every color of the painting in the palette's order, `shown` those with a swatch.
+    init(order: [Int], shown: Set<Int>, lines: Int) {
+        let size = max(lines, 1)
+        let all = stride(from: 0, to: order.count, by: size).map { Array(order[$0..<min($0 + size, order.count)]) }
+        fullLanes = all.count
+        lanes = all.compactMap { lane in
+            guard let first = lane.first, lane.contains(where: shown.contains) else { return nil }
+            return Lane(id: first, places: lane.map { shown.contains($0) ? $0 : nil })
+        }
+    }
+
+    /// The index, among the lanes shown, of the lane with `color`'s swatch.
+    func lane(of color: Int) -> Int? {
+        lanes.firstIndex { $0.places.contains(color) }
+    }
+}
+
 // MARK: Names
 
 extension PaletteRows {

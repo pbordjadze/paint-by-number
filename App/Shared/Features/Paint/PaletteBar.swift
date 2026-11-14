@@ -93,7 +93,8 @@ nonisolated struct PaletteWindow: Equatable, Sendable {
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
 /// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view,
-/// or the swatch a tap on its color's area just shook.
+/// or the swatch a tap on its color's area just shook. Where it `keepsPlaces`, a swatch stays
+/// where the painter learned it (`PalettePlaces`) and the bar keeps its length.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -107,6 +108,9 @@ struct PaletteBar: View {
     var showsCurrentColor = false
     /// Every color in its order on screen (`PaintView.colorOrder`), finished ones too.
     let order: [Int]
+    /// Whether a swatch keeps its place while colors finish (`PalettePlaces`); otherwise the
+    /// swatches left are packed again at every finish and the bar shrinks to them.
+    var keepsPlaces = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -117,6 +121,9 @@ struct PaletteBar: View {
     /// Whether swatches lie past either end of the bar, which then fades there: a swatch cut by
     /// the bar's edge alone didn't say the bar scrolls (QA, November 7, the seventh on an iPhone).
     @State private var more = PaletteOverflow()
+    /// The scroll view's length along the bar, where swatches keep their places: their content
+    /// is laid from its start and never shorter than it.
+    @State private var viewport: CGFloat = 0
 
     /// Where the scroll view and the bar's clipped glass are, and how far it has scrolled. A
     /// reference, so that scrolling renders nothing.
@@ -198,6 +205,27 @@ struct PaletteBar: View {
         return stride(from: 0, to: colors.count, by: size).map { Array(colors[$0..<min($0 + size, colors.count)]) }
     }
 
+    /// The swatches' places where they keep them: of every color with an area to paint (and any
+    /// other in `shown`), in the palette's order.
+    private func keptPlaces(shown: Set<Int>, lines: Int) -> PalettePlaces {
+        PalettePlaces(
+            order: order.filter { session.totalByColor[$0] > 0 || shown.contains($0) }, shown: shown, lines: lines)
+    }
+
+    /// How far along its content the scroll view shows, as it last reported. Swatches that keep
+    /// their places are laid on content at least this long, so a lane leaving never shortens it
+    /// under what is in view: at the bar's end the scroll view then pulled the swatches before the
+    /// finished one along, where anywhere else those after it move up (painting-company row 293).
+    /// The room goes again, out of view, at a render after the bar has scrolled back.
+    private var shownEnd: CGFloat {
+        guard let geometry = scroll.geometry else { return 0 }
+        let horizontal = axis == .horizontal
+        let container = horizontal ? geometry.containerSize.width : geometry.containerSize.height
+        let content = horizontal ? geometry.contentSize.width : geometry.contentSize.height
+        let offset = horizontal ? geometry.contentOffset.x : geometry.contentOffset.y
+        return min(max(offset, 0) + container, max(content, container))
+    }
+
     /// The paint of palette color `index` as a SwiftUI color.
     static func paint(_ template: Template, _ index: Int) -> Color {
         let rgb = template.palette[index].rgb
@@ -223,6 +251,9 @@ struct PaletteBar: View {
         // without that layout takes no more lines than it has colors (`EraSeam.paletteKeepsItsLines`).
         let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, count))
         let lanes = Self.lanes(colors, lines: lineCount)
+        let places = keepsPlaces ? keptPlaces(shown: visible, lines: lineCount) : nil
+        // The swatches the bar is as long as: those left, or every place where they are kept.
+        let barCount = places.map { max($0.fullLanes, 1) * lineCount } ?? count
         let horizontal = axis == .horizontal
         // Lanes run along the bar, each one swatch per line across it.
         let along = horizontal
@@ -236,6 +267,16 @@ struct PaletteBar: View {
         let radius = min(thickness / 2, 38)
         // A caption needs room for a long name even when few swatches are left.
         let minLength = caption ? 260 * metrics.scale : 0
+        let barLength = metrics.length(count: barCount, lines: lineCount)
+        // Kept places are laid from the bar's start, on content as long as the scroll view at
+        // least (`shownEnd`); in a bar longer than its places (the caption's room, a painting of
+        // few colors) they start where the whole set is centered, and stay there.
+        let contentFloor = max(viewport, shownEnd)
+        let lead = places == nil ? 0 : max(0, (viewport - barLength) / 2)
+        let contentMinWidth: CGFloat? = places == nil ? minLength : (horizontal ? contentFloor : nil)
+        let contentMinHeight: CGFloat? = places == nil || horizontal ? nil : contentFloor
+        let contentAlignment: Alignment = places == nil ? .center : (horizontal ? .leading : .top)
+        let emptyPlace = metrics.diameter + 8
         let transition: AnyTransition = reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity)
         let anchors = barTipAnchors
         let tipEdge: Edge = axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing
@@ -248,7 +289,25 @@ struct PaletteBar: View {
             }
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 along {
-                    if lineCount == 1 {
+                    if let places {
+                        // By lane, each known by its first place's color: a lane that leaves lets
+                        // those after it slide up, and a color that leaves a lane leaves its place.
+                        ForEach(places.lanes) { lane in
+                            across {
+                                ForEach(Array(lane.places.enumerated()), id: \.offset) { place in
+                                    if let index = place.element {
+                                        swatch(index).id(index)
+                                            .transition(transition)
+                                    } else {
+                                        Color.clear
+                                            .frame(width: emptyPlace, height: emptyPlace)
+                                            .accessibilityHidden(true)
+                                    }
+                                }
+                            }
+                            .transition(transition)
+                        }
+                    } else if lineCount == 1 {
                         // One line: the swatches themselves, by color, so a finished color leaves and
                         // the rest slide along. In lanes kept by position every later swatch moved to
                         // another lane, and each ran its leaving and coming in at once: the whole strip
@@ -270,7 +329,8 @@ struct PaletteBar: View {
                 }
                 .padding(axis == .horizontal ? .horizontal : .vertical, PaletteMetrics.endPadding)
                 .padding(axis == .horizontal ? .vertical : .horizontal, PaletteMetrics.padding)
-                .frame(minWidth: minLength, alignment: .center)
+                .padding(horizontal ? .leading : .top, lead)
+                .frame(minWidth: contentMinWidth, minHeight: contentMinHeight, alignment: contentAlignment)
             }
             .scrollPosition($position)
             .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { _, geometry in
@@ -281,6 +341,8 @@ struct PaletteBar: View {
             .mask { PaletteFade(more: more, axis: axis) }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                 scroll.frame = frame
+                let length = axis == .horizontal ? frame.width : frame.height
+                if keepsPlaces, abs(length - viewport) > 0.5 { viewport = length }
                 revealPending()
             }
             // The bar moves only as far as brings the selected swatch into view, and not at all while
@@ -299,8 +361,8 @@ struct PaletteBar: View {
         }
         .frame(width: axis == .vertical ? thickness : nil,
                height: axis == .horizontal ? thickness : nil)
-        .frame(maxWidth: axis == .horizontal ? max(metrics.length(count: count, lines: lineCount), minLength) : nil,
-               maxHeight: axis == .vertical ? metrics.length(count: count, lines: lineCount) : nil)
+        .frame(maxWidth: axis == .horizontal ? max(barLength, minLength) : nil,
+               maxHeight: axis == .vertical ? barLength : nil)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
             scroll.clip = frame
             revealPending()
@@ -341,8 +403,17 @@ struct PaletteBar: View {
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
         let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, colors.count))
-        let lanes = Self.lanes(colors, lines: lineCount)
-        guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
+        let lane: Int?, laneCount: Int
+        if keepsPlaces {
+            let places = keptPlaces(shown: visible, lines: lineCount)
+            lane = places.lane(of: color)
+            laneCount = places.lanes.count
+        } else {
+            let lanes = Self.lanes(colors, lines: lineCount)
+            lane = lanes.firstIndex(where: { $0.contains(color) })
+            laneCount = lanes.count
+        }
+        guard let lane else { return }
         let frameLength = horizontal ? scroll.frame.width : scroll.frame.height
         // Before the scroll view first reports its geometry it hasn't scrolled: the content sits at
         // its start, as long as the swatches lay it out.
@@ -351,7 +422,7 @@ struct PaletteBar: View {
             offset: geometry.map { horizontal ? $0.contentOffset.x : $0.contentOffset.y } ?? 0,
             viewport: geometry.map { horizontal ? $0.containerSize.width : $0.containerSize.height } ?? frameLength,
             content: geometry.map { horizontal ? $0.contentSize.width : $0.contentSize.height }
-                ?? metrics.length(count: max(colors.count, 1), lines: lineCount),
+                ?? metrics.length(count: max(laneCount, 1) * lineCount, lines: lineCount),
             hiddenBefore: horizontal ? scroll.clip.minX - scroll.frame.minX : scroll.clip.minY - scroll.frame.minY,
             shown: horizontal ? scroll.clip.width : scroll.clip.height)
         guard let target = window.offset(revealing: lane, metrics: metrics) else { return }
