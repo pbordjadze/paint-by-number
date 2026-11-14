@@ -86,7 +86,33 @@ synchronized folder would bundle it into the app.
 - Vision finds no subjects or eyes on CI's simulators: `ObjectFinderTests` and `EyeFinderTests` bite
   only on a device.
 
-## Layout (`App/PaintByNumber/`)
+## Shared with Paint by Mosaic (`App/Shared/`)
+
+`App/Shared` is compiled into both modules, the app and `Ravenna` (the project syncs the folder
+into both targets), so a change there reaches both eras; Swift sources only (painting-company
+row 336). `App/Ravenna` still holds its own copy of the rest (`tools/era_twins.py` lists the
+pairs and how far each has drifted): fix a bug in a file with a twin there in both, or share
+the file (`tools/era_share.py`, whose header is the method).
+
+- **Seams.** A shared file never names `Bundle.main`, `UserDefaults.standard`, the app or an era:
+  it asks the module, and each answers in its `App/SharedSeams.swift` (`Bundle.era`,
+  `UserDefaults.era`, `EraSeam`'s few constants; Paint by Mosaic's also has the no-ops for what it
+  lacks, like the fold's sheet placement). A new difference between the eras is a new answer in
+  both files, not an `#if` or a check in the shared one.
+- **Words.** `String(localized:)` in a shared file passes `bundle: .era`, and its key is in both
+  catalogs. A SwiftUI literal is looked up in the app's catalog in both eras, which is right when
+  the words are the same; where Paint by Mosaic says something else (a painting is a mosaic), the
+  shared file writes `Text("…", bundle: .era)` with the app's words as the key and Paint by
+  Mosaic's catalog gives its own (`tools/era_words.py "<key>" "<its words>"`).
+  `tools/strings_check.py` holds shared files to all of this.
+- **Checks** walk both folders: the strings check, `ci/check_release.sh`, `AboutTests`'
+  required-reason APIs, `tools/frozen.py`, the demo caches' key.
+
+## Layout (`App/PaintByNumber/`, and `App/Shared/` for what Paint by Mosaic uses too)
+
+A file under `App/Shared/` is in the place it would have under `App/PaintByNumber/`, and the lists
+below name both alike.
+
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
   `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
@@ -1062,7 +1088,8 @@ Debug's only). The `Ravenna` target defines `UNRELEASED` in Debug alone, as the 
 `RavennaShaders.metal`, `Mosaics/` and `Samples/library.json`), on the package's `MosaicKit`,
 `MosaicEngine` and `MosaicCore`. It is Paint by Moonlight's app as copied at f1024441 with
 Ravenna's seams (`docs/ravenna/app-notes.md`): the same type names, compiled in a module of its
-own, so it follows none of this app's later changes unless they are carried over (row 263's
+own. What the two have in common is moving to `App/Shared` (Shared with Paint by Mosaic, above);
+the files still under `App/Ravenna` follow none of this app's later changes unless they are carried over (row 263's
 polish sweep was, for the tips, the palette, toasts, the gallery and large text: painting-company
 row 330) and needs none of its gates.
 The painter sees it as **Paint by Mosaic** (painting-company row 281: its gallery's title, the PDF
@@ -1087,8 +1114,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   mosaics in `Application Support/Ravenna/Artworks`, exports in `tmp/RavennaExports`, scene
   storage, tip ids and log categories under `ravenna.`. SwiftUI looks a literal up in the main
   bundle, so Ravenna's words are its source literals (its catalog keys them so) and every
-  `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
-  `strings_check.py` reads only `App/PaintByNumber`.
+  `String(localized:)` passes `bundle: .ravenna` (`bundle: .era` in a shared file): keep both when
+  adding a string there. `strings_check.py` reads `App/PaintByNumber` and `App/Shared`, never
+  `App/Ravenna`.
 - **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
   navigation titles' New York, the free paintings' count (1.1's `freePaintings.v2`, in `.standard`: Unlimited Paintings; every
   new mosaic takes one, a library picture's too, and each era's `UnlimitedPaintings` reads the

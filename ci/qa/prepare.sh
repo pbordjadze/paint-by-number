@@ -8,7 +8,7 @@
 set -euo pipefail
 UDID="$1"
 HOST=$(sed -n 's#.*static let endpoint = URL(string: "https://\([^/"]*\).*#\1#p' \
-  App/PaintByNumber/Features/Feedback/FeedbackUploader.swift)
+  App/Shared/Features/Feedback/FeedbackUploader.swift)
 if [[ -z "$HOST" ]]; then echo "::error::no host in FeedbackUploader.endpoint to block"; exit 1; fi
 printf '127.0.0.1 %s\n::1 %s\n' "$HOST" "$HOST" | sudo tee -a /etc/hosts > /dev/null
 sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true

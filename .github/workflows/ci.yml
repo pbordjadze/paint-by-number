@@ -269,7 +269,7 @@ jobs:
         # Everything that makes the line-art maps and templates the demos and tests seed
         # (ci/demo_caches.sh): a change to any of it starts from empty caches.
         env:
-          INPUTS: ${{ hashFiles('Sources/PaintCore/**', 'App/PaintByNumber/Generation/**', 'App/PaintByNumber/Model/ArtworkFactory.swift', 'App/PaintByNumber/Model/DemoTemplateCache.swift', 'App/PaintByNumber/Model/Library.swift', 'App/PaintByNumber/Model/Sample.swift', 'App/PaintByNumber/Features/Create/CreateModel.swift', 'App/PaintByNumber/Resources/Samples/**', 'App/PaintByNumber/Resources/Models/**') }}
+          INPUTS: ${{ hashFiles('Sources/PaintCore/**', 'App/PaintByNumber/Generation/**', 'App/Shared/Generation/**', 'App/PaintByNumber/Model/ArtworkFactory.swift', 'App/PaintByNumber/Model/DemoTemplateCache.swift', 'App/PaintByNumber/Model/Library.swift', 'App/PaintByNumber/Model/Sample.swift', 'App/PaintByNumber/Features/Create/CreateModel.swift', 'App/PaintByNumber/Resources/Samples/**', 'App/PaintByNumber/Resources/Models/**') }}
         run: |
           # `test` borrows ipad-ui's caches and `duo` ipad's (and neither saves them: they run only
           # some of the scenarios).

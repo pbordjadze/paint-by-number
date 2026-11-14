@@ -28,12 +28,12 @@ strings -a "$WORK/binary" > "$WORK/strings.txt"
 # Release EXCLUDED_SOURCE_FILE_NAMES leaves out (less its INCLUDED_SOURCE_FILE_NAMES), none since
 # 1.1 shipped Refine and the era door (painting-company row 236), and the files whose code is wholly
 # inside `#if DEBUG` (the demo and test launches' code), the app's and Paint by Mosaic's
-# (`App/Ravenna`).
+# (`App/Ravenna`) and the code they share (`App/Shared`).
 python3 - "$ROOT" > "$WORK/types.txt" <<'PY'
 import fnmatch, pathlib, re, shlex, sys
 root = pathlib.Path(sys.argv[1])
 project = (root / "App/PaintByNumber.xcodeproj/project.pbxproj").read_text()
-sources = sorted((root / "App/PaintByNumber").rglob("*.swift")) + sorted((root / "App/Ravenna").rglob("*.swift"))
+sources = [p for d in ("App/PaintByNumber", "App/Shared", "App/Ravenna") for p in sorted((root / d).rglob("*.swift"))]
 def setting(block, name):
     m = re.search(r"\b%s = (\"[^\"]*\"|[^;]*);" % name, block)
     return shlex.split(m.group(1).strip('"')) if m else []
