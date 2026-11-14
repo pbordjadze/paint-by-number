@@ -313,7 +313,7 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
 /// it would print, drawn once a finished painting.
 @Observable
 final class DoorGlimpses {
-    /// Long side of a glimpse, in pixels: a door at most `DoorMetrics.largest` points wide, at 3×.
+    /// Height of a glimpse, in pixels: a door at most `DoorMetrics.largest` points wide, at 3×.
     nonisolated static let pixelSize = 560
 
     private(set) var lines: CGImage?
@@ -361,12 +361,9 @@ final class DoorGlimpses {
     nonisolated static func closeUp(of canvas: CGSize) -> CGRect {
         let w = Double(canvas.width), h = Double(canvas.height)
         let aspect = Double(DoorMetrics.aspect)
-        var width = min(w, h) * 0.45
-        var height = width * aspect
-        if height > h {
-            height = h
-            width = h / aspect
-        }
+        // 0.45 × 1.08 of the short side fits either way.
+        let width = min(w, h) * 0.45
+        let height = width * aspect
         return CGRect(x: (w - width) / 2, y: (h - height) / 2, width: width, height: height)
     }
 }
