@@ -8,7 +8,10 @@ name: TestFlight
 # Friends & Family group with its What to Test and submits it for Beta App Review
 # (ci/testflight_testers.py): one button from `main` to testers. A push to a
 # `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
-# branches).
+# branches), and so does a push to `main` that changes what the app bundles (`bundled` lists the
+# paths), so that an error only App Store Connect sees, like 90535 (a bundle's Info.plist naming
+# an executable), shows the day it lands, not on release night (painting-company row 315). Every
+# other push to `main` stops at `bundled`, on Linux, and holds no macOS runner.
 # Signing is Xcode's cloud signing with an App Store Connect API key: the archive is built
 # unsigned, as the IPA job's is, and -exportArchive signs it with the team's cloud-managed
 # distribution certificate and an App Store profile it makes, so no certificate or profile lives
@@ -28,14 +31,10 @@ on:
         description: 'What to Test, shown to testers (empty: the standing text)'
         required: false
   push:
-    branches: ['claude/testflight-dryrun*']
+    branches: ['claude/testflight-dryrun*', 'main']
 
 permissions:
   contents: read
-
-concurrency:
-  group: testflight
-  cancel-in-progress: false
 
 env:
   PROJECT: App/PaintByNumber.xcodeproj
@@ -43,10 +42,45 @@ env:
   ARCHIVE: build/PaintByNumber.xcarchive
 
 jobs:
+  bundled:
+    name: Does this push change what the app bundles
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.diff.outputs.run }}
+    steps:
+      - uses: actions/checkout@v5
+        if: github.ref_name == 'main' && github.event_name == 'push'
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != main ] || [ "$GITHUB_EVENT_NAME" != push ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # The push's commits, from the main it moved (its last commit alone when that is
+          # unknown). Strings catalogs aside: nearly every merge changes one, and App Store
+          # Connect checks nothing in them.
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then BEFORE=HEAD~1; fi
+          changed=$(git diff --name-only "$BEFORE" HEAD -- \
+            App/PaintByNumber/Resources App/RavennaResources App/Config \
+            App/PaintByNumber.xcodeproj App/UnlimitedPaintings.storekit Package.swift \
+            .github/workflows/testflight.yml ':!*.xcstrings')
+          echo "$changed"
+          echo "run=$([ -n "$changed" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   upload:
     name: Archive, sign and upload to TestFlight
+    needs: bundled
+    if: needs.bundled.outputs.run == 'true'
     runs-on: xcode-27
     timeout-minutes: 45
+    # One upload at a time, and one dry run. An upload never waits in the dry runs' queue, where
+    # a newer run would replace it.
+    concurrency:
+      group: testflight-${{ github.event_name == 'workflow_dispatch' && inputs.upload && 'upload' || 'dry-run' }}
+      cancel-in-progress: false
     outputs:
       # The uploaded build, for `testers` (kept when a failed `testers` alone is re-run).
       build: ${{ steps.upload.outputs.build }}
