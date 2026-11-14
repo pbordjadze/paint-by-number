@@ -40,6 +40,8 @@ struct CompletionBar: View {
     var onChange: (() -> Void)?
     /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
     var original: OriginalWork?
+    /// Opens The Original's page (`PaintView`'s sheet).
+    var onOriginal: ((OriginalWork) -> Void)?
     #endif
 
     /// The bar's widest, and the doors' panel's.
@@ -71,7 +73,7 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, withoutLines: share.withoutLines)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, withoutLines: share.withoutLines)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }

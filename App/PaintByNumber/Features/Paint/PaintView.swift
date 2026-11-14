@@ -71,6 +71,10 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
+    #if UNRELEASED
+    /// The work The Original's page is up for (`AboutPainting`, the last door after Finished).
+    @State private var about: OriginalWork?
+    #endif
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
     /// for a painting opened finished): its seal bounces.
     @State private var sealBounces = 0
@@ -280,6 +284,13 @@ struct PaintView: View {
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
+        #if UNRELEASED
+        .sheet(item: $about) { work in
+            AboutPainting(work: work)
+                .pageSizedOnPad()
+                .besideTheFold()
+        }
+        #endif
         .sheet(isPresented: reviewsFeedback, onDismiss: thankForFeedback) {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
@@ -828,7 +839,7 @@ struct PaintView: View {
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
                 onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose,
-                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture))
+                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 })
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
             #else

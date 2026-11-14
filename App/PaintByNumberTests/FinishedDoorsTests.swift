@@ -21,16 +21,17 @@ struct FinishedDoorsTests {
         #expect(FinishedDoor.shown(changes: false, original: true) == [.another, .paper, .send, .original])
     }
 
-    /// Five doors: three over two where a row of five would be too small (a phone upright, an
-    /// iPad's panel), one row on a phone on its side.
+    /// Five doors: three over two where a row of five would be too small (a phone upright), one
+    /// row on an iPad's panel and on a phone on its side.
     @Test func fiveDoorsStandThreeOverTwo() throws {
         let phone = try #require(DoorMetrics.fitting(count: 5, width: 346, height: 417, dynamicTypeSize: .large))
         #expect(phone.columns == 3 && phone.rows == 2)
         #expect(phone.arch.width >= 100)
         #expect(3 * phone.arch.width + 2 * DoorMetrics.gap <= 346)
         let pad = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 600, dynamicTypeSize: .large))
-        #expect(pad.columns == 3 && pad.rows == 2)
-        #expect(pad.arch.width >= DoorMetrics.roomyRow && pad.arch.width <= DoorMetrics.largest)
+        // An iPad's panel keeps them in one row, so the painting keeps its room.
+        #expect(pad.columns == 5 && pad.rows == 1)
+        #expect(pad.arch.width >= DoorMetrics.snugRow && 5 * pad.arch.width + 4 * DoorMetrics.gap <= 528)
         let side = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 140, dynamicTypeSize: .large))
         #expect(side.columns == 5 && side.rows == 1)
     }

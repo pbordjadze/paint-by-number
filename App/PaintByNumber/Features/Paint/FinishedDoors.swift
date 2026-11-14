@@ -26,6 +26,9 @@ struct FinishedDoors: View {
     /// The Original: the work behind the library picture this painting was made from; nil (a
     /// painter's own photo) leaves the door out.
     var original: OriginalWork?
+    /// The Original's page, asked of the painting screen: a sheet hung in this panel would take
+    /// its capped text size and the bar's color scheme.
+    var onOriginal: ((OriginalWork) -> Void)?
     /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
     /// painting-company row 295).
     var withoutLines = false
@@ -41,7 +44,6 @@ struct FinishedDoors: View {
     @State private var sharedDoor: FinishedDoor?
     @State private var originalImage: CGImage?
     /// The work The Original's page is up for.
-    @State private var about: OriginalWork?
 
     var body: some View {
         let doors = FinishedDoor.shown(changes: onChange != nil, original: original != nil)
@@ -64,10 +66,6 @@ struct FinishedDoors: View {
                 return
             }
             originalImage = await SampleImages.shared.load(original.sample, maxPixelSize: DoorGlimpses.pixelSize)
-        }
-        .sheet(item: $about) { work in
-            AboutPainting(work: work)
-                .besideTheFold()
         }
         .task(id: session.revision) { await glimpses.prepare(for: session) }
         .task(id: next?.id) {
@@ -271,7 +269,7 @@ struct FinishedDoors: View {
         case .send:
             let template = session.template, painted = session.progress.painted, name = title, plain = withoutLines
             prepare(door) { try await Self.pictureFile(template, painted: painted, title: name, withoutLines: plain) }
-        case .original: about = original
+        case .original: if let original { onOriginal?(original) }
         }
     }
 
@@ -322,7 +320,7 @@ nonisolated enum FinishedDoor: String, CaseIterable, Identifiable, Sendable {
 }
 
 /// How big the doors are and how they are laid: in one row where each arch is still a door's size
-/// (an iPad, a phone on its side), else in two rows (two by two; five as three over two), never
+/// (an iPad, a phone on its side), else in two rows (two by two; five as three over two, which keep to one row from `snugRow`), never
 /// taller than the room they are given.
 nonisolated struct DoorMetrics: Equatable, Sendable {
     let columns: Int
@@ -339,6 +337,8 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
     static let smallest: CGFloat = 56
     /// One row is taken when its arches are at least this wide.
     static let roomyRow: CGFloat = 110
+    /// And a row of five or more when at least this wide.
+    static let snugRow: CGFloat = 88
 
     /// The doors' layout in `width` × `height` points, or nil where they don't fit.
     static func fitting(count: Int, width: CGFloat, height: CGFloat, dynamicTypeSize: DynamicTypeSize) -> DoorMetrics? {
@@ -353,7 +353,10 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
         }
         let row = arch(columns: count)
         let grid = arch(columns: max(min(2, count), (count + 1) / 2))
-        let best = row.arch.width >= roomyRow || row.arch.width >= grid.arch.width ? row : grid
+        // Five doors keep to one row a little sooner: on an iPad's panel two rows of large arches
+        // would take the painting's room.
+        let roomy = count > 4 ? snugRow : roomyRow
+        let best = row.arch.width >= roomy || row.arch.width >= grid.arch.width ? row : grid
         return best.arch.width >= smallest ? best : nil
     }
 

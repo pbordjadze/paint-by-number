@@ -292,7 +292,7 @@ below name both alike.
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
-  (painting-company row 120), five doors standing three over two: it opens `AboutPainting`, a
+  (painting-company row 120), five doors standing three over two on a phone upright and in one row on an iPad (`DoorMetrics.snugRow`): it opens `AboutPainting`, a
   sheet about the real work (`OriginalWork`, read from `library.json` alone: the picture, its
   title, maker and date, medium, where it is kept, the title it is cataloged under, the credit
   line), whose two buttons open the keeper's catalog entry and, where the record names one, the

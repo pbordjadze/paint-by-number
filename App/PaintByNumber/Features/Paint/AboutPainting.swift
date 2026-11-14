@@ -249,7 +249,7 @@ struct AboutPainting: View {
 #if DEBUG
 /// Demo scenarios of the page, as a sheet over the paper: `about-painting` (The Great Wave, a
 /// record with every fact and a Wikipedia article; `about-painting-dark` in dark appearance) and
-/// `about-photograph` (Earthrise, a record with a credit line alone).
+/// `about-photograph` (Earthrise, a record without medium, place or article).
 struct AboutPaintingDemo: View {
     let scenario: String
 
@@ -257,7 +257,7 @@ struct AboutPaintingDemo: View {
         let work = OriginalWork.of(scenario.hasPrefix("about-photograph") ? "earthrise" : "great-wave")
         Theme.paper.ignoresSafeArea()
             .sheet(isPresented: .constant(true)) {
-                if let work { AboutPainting(work: work) }
+                if let work { AboutPainting(work: work).pageSizedOnPad() }
             }
             .task {
                 guard let work else { return }
