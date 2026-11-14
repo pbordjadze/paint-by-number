@@ -138,7 +138,7 @@ struct PaintView: View {
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
-        isNamed: Bool = true,
+        isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil
     ) {
@@ -148,6 +148,7 @@ struct PaintView: View {
         self.onClose = onClose
         self.onName = onName
         self.isNamed = isNamed
+        self.asksForRating = asksForRating
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
