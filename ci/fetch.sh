@@ -7,7 +7,7 @@
 # screenshots under */shots/*.png and the quality regression under core/regression/
 # (regression.txt, regression.json, sheets/*/*.jpg).
 # Polls every 30 s for up to 180 min (a full run takes 30 on idle runners, up to 100 under load;
-# main's iPhone job may run 160). Run it in the background and read the report when done.
+# main's iPhone jobs may each run 160). Run it in the background and read the report when done.
 # A re-run of a commit (Re-run jobs, or a run started by hand on the same commit) finds the
 # commit's earlier report at once: give CI_RUN the run id, with `.<attempt>` for a re-run of the
 # same run (the run's URL and Re-run's attempt number), and only that run's report counts.

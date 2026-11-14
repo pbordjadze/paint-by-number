@@ -83,6 +83,11 @@
 			path = RavennaResources;
 			sourceTree = "<group>";
 		};
+		0A0000000000000000000D06 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +144,7 @@
 				0A0000000000000000000D03 /* PaintByNumberUITests */,
 				0A0000000000000000000D04 /* Ravenna */,
 				0A0000000000000000000D05 /* RavennaResources */,
+				0A0000000000000000000D06 /* Shared */,
 				0A0000000000000000000004 /* Config */,
 				0A0000000000000000000003 /* Products */,
 			);
@@ -183,6 +189,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				0A0000000000000000000D01 /* PaintByNumber */,
+				0A0000000000000000000D06 /* Shared */,
 			);
 			name = PaintByNumber;
 			packageProductDependencies = (
@@ -248,6 +255,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				0A0000000000000000000D04 /* Ravenna */,
+				0A0000000000000000000D06 /* Shared */,
 			);
 			name = Ravenna;
 			packageProductDependencies = (

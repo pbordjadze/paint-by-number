@@ -84,7 +84,7 @@ case "$CMD" in
     status="$(git show "refs/ci-shots/$TRAIN:STATUS.md" | sed '/^$/q')"
     grep -qE '^ipad: success$' <<< "$status" && grep -qE '^ipad-ui: success$' <<< "$status" \
       || die "the train's run isn't a green full run:"$'\n'"$status"
-    bad="$(grep -E '^(core|ipad|ipad-ui|iphone|compile|ipa): ' <<< "$status" | grep -vE ': (success|skipped)$' || true)"
+    bad="$(grep -E '^(core|ipad|ipad-ui|iphone|iphone-ui|compile|ipa): ' <<< "$status" | grep -vE ': (success|skipped)$' || true)"
     [[ -z "$bad" ]] || die "the train's run isn't green:"$'\n'"$bad"
     # GitHub skips a push whose head commit's message has a skip tag anywhere, even quoted.
     message="$(git log -1 --format=%B "$tip")"

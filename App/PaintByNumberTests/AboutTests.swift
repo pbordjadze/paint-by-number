@@ -72,7 +72,7 @@ struct PrivacyManifestTests {
         // PaintCore is linked into the app, so its sources answer to the same manifest
         // (Sources/pbn is a separate command-line tool and is not part of the app).
         var text = ""
-        for directory in ["App/PaintByNumber", "Sources/PaintCore"] {
+        for directory in ["App/PaintByNumber", "App/Shared", "Sources/PaintCore"] {
             let root = Fixtures.repositoryRoot.appending(path: directory, directoryHint: .isDirectory)
             let enumerator = try #require(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil))
             var found = false

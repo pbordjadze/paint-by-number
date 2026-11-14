@@ -9,6 +9,11 @@ are as they were in Ravenna's repository; what changed on the way in is in App/C
 Ravenna, which wins where they disagree (no own bundle identifier, icon, Info.plist, v0 carry-over
 or Paint menu any more; paths under `App/RavennaResources`).
 
+Since November 14, 2026 the files the two apps have in common are leaving `App/Ravenna` for
+`App/Shared`, compiled into both modules, with each seam they need named in the module's
+`App/SharedSeams.swift` (App/CLAUDE.md › Shared with Paint by Mosaic); a file named below that is
+no longer under `App/Ravenna` is there.
+
 ## Ravenna's seams
 
 Every change to the copy, kept small and listed here, so the copy can follow its source and one day

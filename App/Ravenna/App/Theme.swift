@@ -24,6 +24,8 @@ enum Theme {
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
     /// `outline`: rules and hairlines. Joint, #3A342A.
     static let outline = Color("Outline", bundle: .ravenna)
+    /// A failure's note: red, which reads on the bench (about 5:1).
+    static let errorInk = Color.red
     // Navigation titles are New York already: Paint by Moonlight styles them for the whole app.
 }
 
