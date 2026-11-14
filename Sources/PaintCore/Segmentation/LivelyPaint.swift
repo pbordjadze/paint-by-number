@@ -52,8 +52,27 @@ public enum LivelyPaint {
     static let vividChroma: ClosedRange<Float> = 0.1...0.2
     /// The chroma added, over the same ranges as `KitPaint.chromaGain`.
     static let gain: Float = 0.12
+    /// The shares of the painting over which a paint becomes a broad one (`Strength.calm`).
+    static let broad: ClosedRange<Float> = 0.08...0.25
     /// Below the lower chroma a paint is a grey and keeps its hue; above the upper it is a color.
     static let colored: ClosedRange<Float> = 0.02...0.06
+
+    /// How far a mix goes: the most a paint turns (a half-angle's tangent, as `turn`) and the
+    /// chroma it gains (as `gain`).
+    public struct Strength: Sendable, Equatable {
+        var turn: Float
+        var gain: Float
+        /// The share of the gain and the turn past lively paint's that a paint loses when it
+        /// covers much of the painting, fading in over `LivelyPaint.broad`: a blurred background
+        /// mixed as bold as the flower before it shouts (rich paint's critics: a mustard field
+        /// behind a monarch, an acid lime wall behind oleanders), and with none of lively
+        /// paint's gain a sky lost its gold (the third round's).
+        var calm: Float = 0
+        public static let lively = Strength(turn: LivelyPaint.turn, gain: LivelyPaint.gain)
+        /// Rich paint's (`PaintMix.rich`): about 24° of turn and twice the chroma, the broadest
+        /// paints mixed as lively paint mixes them.
+        public static let rich = Strength(turn: 0.21, gain: 0.24, calm: 1)
+    }
 
     /// `kit` (kit paint's paints) made lively, never closer than `minDistance` where kit's
     /// weren't. `shares` is the share of the painting each paint covers (`shares(of:)`), and
@@ -61,13 +80,17 @@ public enum LivelyPaint {
     /// palette's (another length, a value that is no number, none above zero) count every
     /// paint alike; a `hold` of another length is no skin anywhere.
     public static func mix(
-        _ kit: [PaletteColor], shares: [Float] = [], hold: [Float] = [], space: RGBColorSpace, minDistance: Float
+        _ kit: [PaletteColor], shares: [Float] = [], hold: [Float] = [], space: RGBColorSpace, minDistance: Float,
+        strength how: Strength = .lively
     ) -> [PaletteColor] {
         let n = kit.count
         guard n > 0 else { return kit }
         let held = hold.count == n ? hold.map { $0.isFinite ? min(max($0, 0), 1) : 0 } : [Float](repeating: 0, count: n)
-        let cover = shares.count == n && shares.allSatisfy({ $0.isFinite && $0 >= 0 }) && shares.contains(where: { $0 > 0 })
-            ? shares.map { $0.squareRoot() } : [Float](repeating: 1, count: n)
+        let covers = shares.count == n && shares.allSatisfy({ $0.isFinite && $0 >= 0 }) && shares.contains(where: { $0 > 0 })
+        let cover = covers ? shares.map { $0.squareRoot() } : [Float](repeating: 1, count: n)
+        let calmed = (0..<n).map { how.calm * (covers ? KitPaint.smoothstep(broad, shares[$0]) : 0) }
+        let gains = calmed.map { how.gain - $0 * max(0, how.gain - gain) }
+        let turns = calmed.map { how.turn - $0 * max(0, how.turn - turn) }
         let chroma = kit.map { ($0.oklab.y * $0.oklab.y + $0.oklab.z * $0.oklab.z).squareRoot() }
         let hue = kit.indices.map { chroma[$0] > 1e-6 ? SIMD2(kit[$0].oklab.y, kit[$0].oklab.z) / chroma[$0] : SIMD2<Float>(0, 0) }
         let color = chroma.map { KitPaint.smoothstep(colored, $0) }
@@ -96,10 +119,10 @@ public enum LivelyPaint {
             let pole = lighter > 0 ? warm : cool
             // Never past the pole: the half-tangent of the angle to it is |u × p| / (1 + u · p).
             let side = cross(hue[i], pole), along = 1 + (hue[i] * pole).sum()
-            let most = turn * abs(lighter) * (across + (1 - across) * along / 2)
+            let most = turns[i] * abs(lighter) * (across + (1 - across) * along / 2)
             let toPole = along > 1e-3 ? min(most, abs(side) / along) : most
             var s = (side >= 0 ? toPole : -toPole) * own * (1 - vivid * KitPaint.smoothstep(vividChroma, chroma[i]))
-            let more = chroma[i] * (1 + gain * (1 - held[i]) * strength * KitPaint.smoothstep(KitPaint.neutralChroma, chroma[i])
+            let more = chroma[i] * (1 + gains[i] * (1 - held[i]) * strength * KitPaint.smoothstep(KitPaint.neutralChroma, chroma[i])
                 * (1 - KitPaint.smoothstep(KitPaint.vividChroma, chroma[i])))
             // Kit paint's own chroma once in gamut: what a turn may not cost.
             let kept = chroma[i] - 0.002
