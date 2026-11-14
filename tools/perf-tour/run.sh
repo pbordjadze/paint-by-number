@@ -32,7 +32,7 @@
 # trace is then deleted unless -k keeps it. Recording costs the app time: judge frames by the
 # unrecorded runs.
 # Results: <outdir>/<scenario>-<run>.tsv (the log), .meta (the Mac's load, times), and summary.txt
-# (tools/perf-tour/summary.py on every log). A device's app is left open as its owner opens it, with no demo.
+# (tools/perf-tour/summary.py on every log; hitchtable.py says which fill each hitch is at). A device's app is left open as its owner opens it, with no demo.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KIND="$1"; UDID="$2"; OUT="$3"; shift 3
@@ -133,7 +133,11 @@ for scenario in "${SCENARIOS[@]}"; do
     fetch "$OUT/.tmp-$name"
     new=""
     for log in $(find "$OUT/.tmp-$name" -name 'tour-log-*.tsv' 2>/dev/null); do
-      [[ -n "$(find "$SEEN" -name "$(basename "$log")" 2>/dev/null)" ]] || new="$log"
+      # By its contents, not its name alone: a log is named for its process id, and a device just
+      # restarted gives the same small ids again, so a new log can carry an old one's name.
+      old=0
+      while IFS= read -r seen; do cmp -s "$log" "$seen" && old=1; done < <(find "$SEEN" -name "$(basename "$log")" 2>/dev/null)
+      [[ $old == 1 ]] || new="$log"
     done
     if [[ -n "$new" ]]; then
       cp "$new" "$OUT/$name.tsv"
