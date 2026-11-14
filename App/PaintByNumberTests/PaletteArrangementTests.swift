@@ -96,10 +96,12 @@ struct PaletteArrangementTests {
     @Test func placesAreKeptOnlyWhereTheOrderStays() {
         for order in PaletteOrder.allCases {
             #if UNRELEASED
-            #expect(PaintingLayout.paletteKeepsPlaces(order) == !order.followsProgress, "\(order)")
+            #expect(PaintingLayout.paletteKeepsPlaces(order, lines: 3) == !order.followsProgress, "\(order)")
             #else
-            #expect(!PaintingLayout.paletteKeepsPlaces(order), "\(order)")
+            #expect(!PaintingLayout.paletteKeepsPlaces(order, lines: 3), "\(order)")
             #endif
+            // One scrolling line packs in every build.
+            #expect(!PaintingLayout.paletteKeepsPlaces(order, lines: 1), "\(order)")
         }
     }
 

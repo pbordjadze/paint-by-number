@@ -332,7 +332,9 @@ below name both alike.
   so they never change as colors finish. In SideStore and Debug builds the palette stays put
   (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
   `placedColors`): every color of the painting keeps its place from the first fill to the last,
-  on every layout, and a finished one that is no longer in hand becomes a spent well there
+  on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
+  its start would keep the colors to come out of sight), and a finished one that is no longer in
+  hand becomes a spent well there
   (`SwatchButton.isSpent`: its paint as a faint wash inside a thin rim with a small check in the
   bar's ink, no numeral and no progress ring; a cross-fade, a cut under Reduce Motion), so nothing
   ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
