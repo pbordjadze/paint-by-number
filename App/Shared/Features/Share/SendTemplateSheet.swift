@@ -5,7 +5,7 @@ import PaintCore
 import SwiftUI
 
 /// "Send Template…": the page someone else will paint, blank, with the Original Photo switch
-/// (off until the painter turns it on; on in Paint by Mosaic: `includesPhotoByDefault`), then the share sheet with the
+/// (off until the painter turns it on, `includesPhotoByDefault`), then the share sheet with the
 /// `.moonlight` file (`ArtworkExporter.sharedPainting`), deleted once it closes. Present it as a
 /// sheet.
 struct SendTemplateSheet: View {
@@ -130,9 +130,8 @@ struct SendTemplateSheet: View {
     }
 
     /// Off: the photo is the private part of what is sent, so it goes only when the painter says
-    /// so (the critic's sweep of November 9; Paul's call, reversing October 18's on). Paint by
-    /// Mosaic's is still on (`EraSeam.sendsPhotoByDefault`).
-    static let includesPhotoByDefault = EraSeam.sendsPhotoByDefault
+    /// so (the critic's sweep of November 9; Paul's call, reversing October 18's on).
+    static let includesPhotoByDefault = false
 
     /// The note under the switch. A library picture (`isPicture`) is no one's own photo: sent, it
     /// is "the picture", and kept back there is nothing private to mention.
