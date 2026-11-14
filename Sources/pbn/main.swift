@@ -3,7 +3,7 @@
 // format is read too).
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
-//       [--paint-mix photo|kit|lively]
+//       [--paint-mix photo|kit|lively|rich]
 //       [--auto [--length quick|relaxed|detailed] [--taste fidelity|finished] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
@@ -15,7 +15,8 @@
 //       line-art.pgm (books with an edge map), vectorized.pgm (all smoothed boundaries).
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --paint-mix kit mixes the paints as a kit would (KitPaint), the regions unchanged, and
-//       lively spreads kit paint's hues for a broader variety of colors (LivelyPaint);
+//       lively spreads kit paint's hues for a broader variety of colors (LivelyPaint), rich
+//       turns them further and gives a face paints of its own (FacePaints);
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`;
 //       --taste finished scores the finished painting, AutoTaste);
 //       a coloring book splits the cells along the edge map's lines
