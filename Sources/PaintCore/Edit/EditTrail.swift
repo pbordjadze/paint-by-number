@@ -98,7 +98,7 @@ public struct EditTrail: Sendable {
         /// It had nothing to change (an eraser over bare paper).
         case nothing
         /// It could not be made, with the editor's reason: the template is as it was.
-        case declined(String)
+        case declined(TemplateEditor.Declined.Reason)
 
         public var isMade: Bool {
             if case .made = self { return true }
@@ -118,18 +118,36 @@ public struct EditTrail: Sendable {
         public init() {}
     }
 
+    /// One edit laid: the trail's verdict on it, and what the editor reported of the laying that
+    /// made (or left) the template, the edit's colors brought through the looks and repaints
+    /// before it. The counts of an edit are read here, never from the edit laid a second time on
+    /// its own, which lays other colors after a look (painting-company row 90).
+    public struct Laid: Sendable, Equatable {
+        public var verdict: Verdict
+        /// The editor's outcome; of an edit that did nothing, one that says so (`changed` false).
+        public var outcome: TemplateEditor.Outcome
+        /// Set when the template cannot be edited at all (no line art): the verdict is declined.
+        public var failure: TemplateEditor.Failure?
+    }
+
     /// Lays one more edit. One that does nothing (`Verdict.nothing`, `.declined`) leaves the trail
     /// as it was, and is not added to `edits`.
     @discardableResult
     public mutating func add(_ edit: TemplateEditor.Edit) -> Verdict {
-        let (next, verdict) = Self.lay(edit, on: template, after: recolors(before: edits.count))
-        guard verdict.isMade else { return verdict }
+        lay(edit).verdict
+    }
+
+    /// `add(_:)`, with what the editor reported of the edit (`Laid`).
+    @discardableResult
+    public mutating func lay(_ edit: TemplateEditor.Edit) -> Laid {
+        let (next, laid) = Self.lay(edit, on: template, after: recolors(before: edits.count))
+        guard laid.verdict.isMade else { return laid }
         if !edits.isEmpty { earlier[edits.count] = template }
         edits.append(edit)
         made.append(true)
         template = next
         Self.prune(&earlier)
-        return verdict
+        return laid
     }
 
     /// Makes the edits laid `target`. What it shares with the edits now laid, from the start, is
@@ -149,15 +167,15 @@ public struct EditTrail: Sendable {
             if position > 0 { kept[position] = current }
             let recolors = target.indices.prefix(position)
                 .filter { made[$0] && TemplateEditor.isRecolor(target[$0]) }.map { target[$0] }
-            var (next, verdict) = Self.lay(target[position], on: current, after: recolors)
+            var (next, laid) = Self.lay(target[position], on: current, after: recolors)
             // An eraser's rub laid again finding no line under it, on a base made again, takes
             // the line it was made on, a little way off now (`TemplateEditor.reanchored`). The
             // list keeps the edit as made, so the base it was made on lays it as it was.
-            if verdict == .nothing, let moved = TemplateEditor.reanchored(target[position], on: current) {
-                (next, verdict) = Self.lay(moved, on: current, after: recolors)
+            if laid.verdict == .nothing, let moved = TemplateEditor.reanchored(target[position], on: current) {
+                (next, laid) = Self.lay(moved, on: current, after: recolors)
             }
-            made.append(verdict.isMade)
-            switch verdict {
+            made.append(laid.verdict.isMade)
+            switch laid.verdict {
             case .made(let tooSmall):
                 replay.made += 1
                 if tooSmall { replay.tooSmall += 1 }
@@ -188,17 +206,23 @@ public struct EditTrail: Sendable {
         edits.indices.prefix(count).filter { made[$0] && TemplateEditor.isRecolor(edits[$0]) }.map { edits[$0] }
     }
 
+    /// The one laying of an edit of a list: its colors brought through `recolors`, the looks and
+    /// repaints made before it, and laid by the editor on `template`.
     private static func lay(
         _ edit: TemplateEditor.Edit, on template: Template, after recolors: [TemplateEditor.Edit]
-    ) -> (Template, Verdict) {
+    ) -> (Template, Laid) {
         do {
             let (next, outcome) = try TemplateEditor.apply(TemplateEditor.recolored(edit, by: recolors), to: template)
-            if let declined = outcome.declined { return (template, .declined(declined.reason)) }
-            guard outcome.changed else { return (template, .nothing) }
-            return (next, .made(tooSmall: !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0))
+            if let declined = outcome.declined { return (template, Laid(verdict: .declined(declined.reason), outcome: outcome)) }
+            guard outcome.changed else { return (template, Laid(verdict: .nothing, outcome: outcome)) }
+            let tooSmall = !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0
+            return (next, Laid(verdict: .made(tooSmall: tooSmall), outcome: outcome))
         } catch {
             // A template without line art has nothing to edit.
-            return (template, .declined("\(error)"))
+            var outcome = TemplateEditor.unchanged(template)
+            let reason = TemplateEditor.Declined.Reason.other("\(error)")
+            outcome.declined = TemplateEditor.Declined(reason: reason)
+            return (template, Laid(verdict: .declined(reason), outcome: outcome, failure: error as? TemplateEditor.Failure))
         }
     }
 

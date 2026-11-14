@@ -146,12 +146,12 @@ struct EditMergeToolTests {
         let inOne: [[SIMD2<Float>]] = [[Self.sky, SIMD2(150, 20)], [Self.sky]]
         for points in inOne {
             let (same, declined) = try TemplateEditor.apply(.merge(points: points), to: t)
-            #expect(declined.declined?.reason == TemplateEditor.mergeStaysInOneArea && !declined.changed && same == t, "\(points)")
+            #expect(declined.declined?.reason == .mergeStaysInOneArea && !declined.changed && same == t, "\(points)")
         }
         let none: [[SIMD2<Float>]] = [[SIMD2(-40, 30), SIMD2(-10, 130)], []]
         for points in none {
             let (same, declined) = try TemplateEditor.apply(.merge(points: points), to: t)
-            #expect(declined.declined?.reason == "the merge joins no areas" && !declined.changed && same == t, "\(points)")
+            #expect(declined.declined?.reason == .other("the merge joins no areas") && !declined.changed && same == t, "\(points)")
         }
         #expect(try TemplateEditor.apply(.merge(points: [SIMD2(.nan, 1), Self.sky]), to: t).1.declined != nil)
     }
