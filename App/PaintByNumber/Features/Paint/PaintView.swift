@@ -45,6 +45,8 @@ struct PaintView: View {
     /// ✎ Change (painting-company row 239): the drawing tools on this painting, any time; nil
     /// offers no button (the release, until the drawing tools ship).
     var onChange: (() -> Void)?
+    /// False as the screen is left: `ArtworkPaintingView.close`.
+    var hidesStatusBar = true
 
     @State private var controller = CanvasController()
     @Environment(\.startHandoff) private var startHandoff
@@ -129,9 +131,11 @@ struct PaintView: View {
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
         isNamed: Bool = true,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
+        hidesStatusBar: Bool = true
     ) {
         self.onChange = onChange
+        self.hidesStatusBar = hidesStatusBar
         self.session = session
         self.title = title
         self.onClose = onClose
@@ -157,7 +161,7 @@ struct PaintView: View {
         // canvas where it is.
         .ignoresSafeArea(.keyboard)
         // The canvas runs under the top edge: the clock would sit on the painting.
-        .statusBarHidden()
+        .statusBarHidden(hidesStatusBar)
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
