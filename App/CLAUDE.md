@@ -18,7 +18,8 @@ synchronized folder would bundle it into the app.
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
   draws again at every frame of an animation that moves or fades it, seen or not. While Start
   Painting hands over (`StartHandoff.shelfIsOutOfSight`, the create flow opaque over it) the shelf
-  therefore animates nothing (`shelfIsOutOfSight`, from `AppShellView`): the card of the painting
+  therefore animates nothing (`shelfSight`, from `AppShellView`, read as a change passes, so that
+  its turning at the tap doesn't update the whole shelf): the card of the painting
   just made moved in there, unseen, for half a second, and the flow's picture, gliding to its page
   above it, got 15 to 20 frames a second (painting-company row 292). Only then: as the flow's
   cover rises or falls the shelf is in view. Before animating anything that holds pictures, ask

@@ -10,7 +10,11 @@ extension EnvironmentValues {
     /// on the main thread at every frame, and that was half a second of it, unseen, while the
     /// flow's own picture moved to its page. Not for the flow's whole time up: as its cover
     /// rises or falls, the shelf is in view and animates as ever.
-    @Entry var shelfIsOutOfSight = false
+    ///
+    /// The hand-off itself, never another: read as a change passes (`transaction`), not in a body,
+    /// so that its turning doesn't make the whole shelf over at the Start tap (on the simulator a
+    /// quarter of a second of the shelf's views updated, unseen).
+    @Entry var shelfSight: StartHandoff?
 }
 
 /// The gallery: paintings in progress, ready to paint (nobody has painted on them yet) and
@@ -35,7 +39,7 @@ struct GalleryView: View {
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.shelfIsOutOfSight) private var isOutOfSight
+    @Environment(\.shelfSight) private var sight
     @State private var width: CGFloat = 0
     /// Where an open iPhone Duo's fold runs through the pages (`FoldPlace`), flat or not.
     @State private var foldPlace: FoldPlace?
@@ -147,12 +151,13 @@ struct GalleryView: View {
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards. Not out of sight
-        // (`shelfIsOutOfSight`): the card of the painting Start Painting is handing over would
-        // move in unseen, its neighbours with it.
-        .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: shownIDs)
-        .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: library.placeholders)
-        .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: shownDraft?.photoID)
-        .animation(isOutOfSight ? nil : .easeInOut(duration: 0.35), value: isBare)
+        // (`shelfSight`): the card of the painting Start Painting is handing over would move in
+        // unseen, its neighbours with it. Inside the animations below, so it has the last word.
+        .transaction { if sight?.shelfIsOutOfSight == true { $0.animation = nil } }
+        .animation(reduceMotion ? nil : .snappy, value: shownIDs)
+        .animation(reduceMotion ? nil : .snappy, value: library.placeholders)
+        .animation(reduceMotion ? nil : .snappy, value: shownDraft?.photoID)
+        .animation(.easeInOut(duration: 0.35), value: isBare)
         .alert("This painting can’t be restarted.", isPresented: $restartFailed) {}
         // A photo shared in from another app can't present over a question: the shell closes it.
         .onChange(of: hasQuestion) { _, asks in isAsking = asks }

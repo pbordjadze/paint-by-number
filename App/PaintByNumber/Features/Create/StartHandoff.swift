@@ -37,8 +37,9 @@ final class StartHandoff {
     /// Start Painting is saving the painting, or has: from here until the hand-off is `reset` the
     /// create flow is up and opaque over the shelf, which comes back into view only from the
     /// painting. What changes on the shelf meanwhile (the new painting's card, its thumbnail)
-    /// changes unseen (`EnvironmentValues.shelfIsOutOfSight`, which the shell sets from this).
-    private(set) var shelfIsOutOfSight = false
+    /// changes unseen (`EnvironmentValues.shelfSight`). Not observed: the shelf reads it as a
+    /// change passes, and nothing is to be made over when it turns.
+    @ObservationIgnored private(set) var shelfIsOutOfSight = false
     /// Counts the starts and the resets: a save that fails says which start it was (`startFailed`).
     @ObservationIgnored private var start = 0
 
