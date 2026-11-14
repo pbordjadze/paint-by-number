@@ -914,13 +914,15 @@ struct RefineGuidePageView: View {
                 DisclosureGroup(isExpanded: $showsHowItWorks) {
                     blockViews(rest)
                         .padding(.top, 10)
+                        .tint(Theme.signature)
                 } label: {
-                    // In the words' color, not the links' tint: Nightshade on the dark paper read
-                    // at 2 to 3:1 (the critic's round 1).
                     Text("How It Works")
                         .font(.headline)
-                        .foregroundStyle(.primary)
                 }
+                // The label and its chevron in the words' color, the links inside keeping the
+                // guide's tint: Nightshade on the dark paper read at 2 to 3:1 (the critic's round 1;
+                // a foreground style on the label alone lost to the group's tint).
+                .tint(.primary)
                 .accessibilityIdentifier("refine-guide-how-it-works")
             }
             #else

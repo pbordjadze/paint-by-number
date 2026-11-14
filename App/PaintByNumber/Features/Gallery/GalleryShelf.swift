@@ -40,8 +40,11 @@ struct GalleryShelf: View {
                                         Image(systemName: "moon.fill")
                                             .font(.title3)
                                             .foregroundStyle(Theme.gold)
-                                            .shadow(color: .black.opacity(0.4), radius: 3, y: 1)
-                                            .padding(12)
+                                            // On a dark disc: alone, it was lost on a warm picture
+                                            // (Oriental Poppies, CI's first look).
+                                            .padding(8)
+                                            .background(.black.opacity(0.45), in: .circle)
+                                            .padding(10)
                                             .accessibilityHidden(true)
                                     }
                                 }
