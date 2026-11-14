@@ -71,7 +71,11 @@ struct RefineEditsTests {
         #expect(!refinements.isFull)
         refinements.edits.append(.eraseLine(at: .zero))
         #expect(refinements.isFull)
+        #if UNRELEASED
+        #expect(RefineNote(kind: .full).text == "This painting has as many changes as Edit can keep.")
+        #else
         #expect(RefineNote(kind: .full).text == "This painting has as many changes as Refine can keep.")
+        #endif
     }
 
     /// Each kind of declined edit has its own words, and a count of edits left out reads right in

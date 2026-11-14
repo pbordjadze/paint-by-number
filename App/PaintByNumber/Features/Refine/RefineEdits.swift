@@ -220,8 +220,11 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
             String(localized: "refine.note.tooSmall", defaultValue: "That shape is too small for a number.",
                    comment: "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays")
         case .full:
-            String(localized: "refine.note.full", defaultValue: "This painting has as many changes as Refine can keep.",
-                   comment: "Refine screen toast: the painting already has the most edits Refine keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed")
+            RefineGuidePage.named(
+                String(localized: "refine.note.full", defaultValue: "This painting has as many changes as Refine can keep.",
+                       comment: "Refine screen toast: the painting already has the most edits Refine keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed"),
+                String(localized: "refine.note.full.edit", defaultValue: "This painting has as many changes as Edit can keep.",
+                       comment: "Edit screen toast (SideStore builds' name for Refine): the painting already has the most edits Edit keeps (2,000), so the painter's latest line, fill or color change was not made; nothing changed"))
         case .left(let count):
             String(localized: "refine.note.left", defaultValue: "\(count) edits no longer fit the new drawing and were left out.",
                    comment: "Refine screen toast after the sliders or a text correction made the template again: how many of the painter's edits no longer apply to it; the argument is the count")

@@ -59,6 +59,14 @@ struct AppShellView: View {
     /// the painting (`StartHandoff`).
     @State private var handoff = StartHandoff()
     @SceneStorage("openArtwork") private var openArtwork = ""
+    #if UNRELEASED
+    /// A painting opening through the arch (`ArchOpening`), and where the cards' pictures are.
+    @State private var archOpening: ArchOpening?
+    @State private var cardPlaces = CardPlaces()
+    /// The gallery falls back as the arch grows.
+    @State private var galleryRecedes = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #endif
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
     /// one landing after the painting was closed must not open it again.
@@ -78,12 +86,10 @@ struct AppShellView: View {
         let flowDraft = resumedDraft
         let flowIdentity = flowID
         NavigationStack(path: $path) {
-            GalleryView(
-                namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
-                onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
+            gallery
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
-                    guard let photo = photos.first, !isCreating else { return false }
+                    guard let photo = photos.first, !isCreating, !isArchOpening else { return false }
                     droppedPhoto = photo.data
                     isCreating = true
                     return true
@@ -111,13 +117,26 @@ struct AppShellView: View {
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }
+        #if UNRELEASED
+        .scaleEffect(galleryRecedes ? 0.92 : 1)
+        .overlay {
+            if let archOpening {
+                ArchOpeningView(
+                    opening: archOpening, handoff: handoff,
+                    onCovered: { stepThrough(archOpening) },
+                    onFinished: { self.archOpening = nil })
+                    .id(archOpening.id)
+            }
+        }
+        .environment(\.paintPicture, paintAnother)
+        #endif
         .environment(\.startHandoff, handoff)
         // The app's menu bar commands (Settings…, ⌘N, ⌘F): the gear's sheet, the + and the search field.
         .focusedSceneValue(\.gallery, GalleryFocus(
             // Not over another sheet or the create flow: one presentation can't present another
             // here, and the flag would stay set, leaving the shelf covered (review of polish7).
             openSettings: { if !isCovered { isShowingSettings = true } },
-            newPainting: { if !isCovered && path.isEmpty { isCreating = true } },
+            newPainting: { if !isCovered && !isArchOpening && path.isEmpty { isCreating = true } },
             search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
@@ -213,6 +232,74 @@ struct AppShellView: View {
         }
     }
 
+    private var gallery: GalleryView {
+        #if UNRELEASED
+        GalleryView(
+            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { if !isArchOpening { isCreating = true } },
+            onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks, onOpen: openThroughArch,
+            cardPlaces: cardPlaces)
+        #else
+        GalleryView(
+            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
+            onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
+        #endif
+    }
+
+    /// A painting is opening through the arch: nothing else opens over it meanwhile.
+    private var isArchOpening: Bool {
+        #if UNRELEASED
+        archOpening != nil
+        #else
+        false
+        #endif
+    }
+
+    #if UNRELEASED
+    /// A card tapped: its picture becomes an arch that grows into the room (`ArchOpening`). Pushed
+    /// the usual way while anything else is under way, or the card's place isn't known.
+    private func openThroughArch(_ artwork: Artwork) {
+        guard archOpening == nil, path.isEmpty, !isCreating, !handoff.isRunning,
+              let from = cardPlaces.rects[artwork.id], from.width > 1
+        else {
+            if archOpening == nil, !path.contains(artwork.id) { path.append(artwork.id) }
+            return
+        }
+        if !reduceMotion {
+            withAnimation(.timingCurve(0.65, 0, 0.35, 1, duration: ArchOpeningView.growth)) { galleryRecedes = true }
+        }
+        archOpening = ArchOpening(artwork: artwork, from: from)
+    }
+
+    /// The arch fills the screen: the painting is pushed under it as Start Painting's is under the
+    /// create flow's cover (`StartHandoff`), its zoom unseen.
+    private func stepThrough(_ opening: ArchOpening) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { galleryRecedes = false }
+        let id = opening.artwork.id
+        // A create flow opened meanwhile (a file from another app) keeps the hand-off for its own.
+        guard !isCreating, handoff.begin(id) else {
+            archOpening = nil
+            if !path.contains(id) { path = [id] }
+            return
+        }
+        path = [id]
+    }
+
+    /// Another One, a door after Finished: the create flow paints the library picture as the
+    /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,
+    /// it opens on the Paint page.
+    private func paintAnother(_ sample: Sample?) {
+        guard !isCreating, archOpening == nil else { return }
+        if let sample {
+            paint(sample)
+        } else {
+            flowID = UUID()
+            isCreating = true
+        }
+    }
+    #endif
+
     private var isShowingReceiveFailure: Binding<Bool> {
         Binding { receiveFailure != nil } set: { if !$0 { receiveFailure = nil } }
     }
@@ -272,7 +359,7 @@ struct AppShellView: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Paint", systemImage: "plus") { isCreating = true }
+                Button("Paint", systemImage: "plus") { if !isArchOpening { isCreating = true } }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
             }
