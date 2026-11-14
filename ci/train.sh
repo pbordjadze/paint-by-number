@@ -44,7 +44,7 @@ case "$CMD" in
       # merge keeps them, as a solo merge's message would, without the tags that steer CI: the
       # train's last merge is the commit CI reads them from.
       notes="$(git log -1 --format=%B "origin/$branch" \
-        | sed -E -e 's/\[(compile|iphone|ipa|duo|skip ci|ci skip|no ci|skip actions|actions skip)\]//gI' \
+        | sed -E -e 's/\[(compile|iphone|ipa|duo|release-tests|skip ci|ci skip|no ci|skip actions|actions skip)\]//gI' \
           -e '/^skip-checks: ?true$/Id' | sed -zE 's/\[test [^]]*\]//gI')"
       if git merge -q --no-ff -m "Merge $branch (night train $NAME)"$'\n\n'"$notes" "origin/$branch" > /dev/null 2>&1; then
         on+=("$branch")
@@ -84,7 +84,7 @@ case "$CMD" in
     status="$(git show "refs/ci-shots/$TRAIN:STATUS.md" | sed '/^$/q')"
     grep -qE '^ipad: success$' <<< "$status" && grep -qE '^ipad-ui: success$' <<< "$status" \
       || die "the train's run isn't a green full run:"$'\n'"$status"
-    bad="$(grep -E '^(core|ipad|ipad-ui|iphone|iphone-ui|compile|ipa): ' <<< "$status" | grep -vE ': (success|skipped)$' || true)"
+    bad="$(grep -E '^(core|ipad|ipad-ui|iphone|iphone-ui|release-tests|compile|ipa): ' <<< "$status" | grep -vE ': (success|skipped)$' || true)"
     [[ -z "$bad" ]] || die "the train's run isn't green:"$'\n'"$bad"
     # GitHub skips a push whose head commit's message has a skip tag anywhere, even quoted.
     message="$(git log -1 --format=%B "$tip")"
