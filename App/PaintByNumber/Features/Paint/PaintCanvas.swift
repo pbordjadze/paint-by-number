@@ -70,6 +70,7 @@ struct PaintCanvas: UIViewRepresentable {
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
+        view.isOutOfSight = context.environment.paintScreenIsWarmup
         view.watchesFirstFrame = watchesFirstFrame
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale

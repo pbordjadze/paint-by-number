@@ -176,6 +176,7 @@ struct TemplatePreviewView: View {
             .onDisappear {
                 PaintTips.desk.leave(.preview)
                 model.withdrawStart()
+                PaintScreenWarmup.letGo()
             }
             .onChange(of: model.isFinal) { _, isFinal in
                 if isFinal { previewFinal() }
@@ -408,6 +409,11 @@ struct TemplatePreviewView: View {
     private func previewFinal() {
         let canRefine = model.canRefine
         PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: canRefine)
+        // The painting screen is built once out of sight while the preview is still, so that Start
+        // Painting doesn't wait for its first build (`PaintScreenWarmup`).
+        if let template = model.preview?.template {
+            PaintScreenWarmup.warm(template) { [model] in model.isFinal && !model.startAsked }
+        }
         #if DEBUG
         // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
         if ShellDemo.current == .createUnlock { start() }
@@ -946,6 +952,8 @@ struct TemplatePreviewView: View {
     /// without the unlock and a free painting left, the unlock's sheet instead.
     private func start() {
         guard !isStarting, !model.startAsked else { return }
+        // The painting screen built out of sight goes before the real one is built.
+        PaintScreenWarmup.letGo()
         titleFocused = false
         let ownPhoto = isOwnPhoto
         if (Self.startsEarly || model.paintsNow) && !(model.isFinal && !model.isChoosingSettings) {
