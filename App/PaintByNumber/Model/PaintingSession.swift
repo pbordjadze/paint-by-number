@@ -67,6 +67,9 @@ final class PaintingSession {
     private(set) var progress: PaintProgress
     /// Palette index currently loaded on the brush.
     private(set) var selectedColor: Int?
+    /// Whether a color is on the brush. Set only when it flips, unlike `selectedColor`: the
+    /// painting screen's body reads this, so a change of color doesn't render the whole screen.
+    private(set) var hasSelectedColor: Bool
     /// Regions left to paint per palette color.
     private(set) var remainingByColor: [Int]
     /// Whether every area is painted, whether any is, and the colors with none left. Set only
@@ -262,6 +265,7 @@ final class PaintingSession {
         opensOnItsOwnColor = prepared.opensOnItsOwnColor
         openingColor = prepared.opening
         selectedColor = prepared.opening
+        hasSelectedColor = prepared.opening != nil
     }
 
     // MARK: Queries
@@ -321,6 +325,7 @@ final class PaintingSession {
         guard color != selectedColor else { return }
         if let color, !(0..<paletteCount).contains(color) { return }
         selectedColor = color
+        if hasSelectedColor != (color != nil) { hasSelectedColor = color != nil }
         canvas?.sessionDidChangeSelection(self)
     }
 
