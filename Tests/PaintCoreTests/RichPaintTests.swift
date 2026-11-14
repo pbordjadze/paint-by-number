@@ -62,6 +62,25 @@ struct RichPaintTests {
         #expect(FacePaints.roomy(labels, among: [true, false], radius: 7.6) == [false, false])
     }
 
+    /// Painting-company row 344's review: a split's paints stay a just-noticeable difference apart.
+    @Test func splitPaintsStayAJustNoticeableDifferenceApart() {
+        let skin = SIMD3<UInt8>(160, 124, 100), near = SIMD3<UInt8>(158, 127, 95)
+        var (close, importance, eyes, photo) = Self.scene(left: skin, right: near)
+        let gap = ColorScience.distance(
+            ColorScience.encodedToOKLab(SIMD3<Float>(skin) / 255, space: photo.colorSpace),
+            ColorScience.encodedToOKLab(SIMD3<Float>(near) / 255, space: photo.colorSpace))
+        #expect(gap >= FacePaints.apart && gap < SegmentationParameters.jnd)
+        #expect(FacePaints.split(&close, importance: importance, eyes: eyes, photo: photo, minRadius: { _ in 3 }) == 1)
+        #expect(ColorScience.distance(close.palette[10].oklab, close.palette[9].oklab) >= SegmentationParameters.jnd)
+        // A paint already where the jacket's half would land: the paint stays whole.
+        let ochre = SIMD3<UInt8>(158, 130, 84)
+        var (taken, _, _, _) = Self.scene(left: skin, right: ochre)
+        taken.palette[0] = PaletteColor(
+            oklab: ColorScience.encodedToOKLab(SIMD3<Float>(ochre) / 255, space: photo.colorSpace), space: photo.colorSpace)
+        #expect(FacePaints.split(&taken, importance: importance, eyes: eyes, photo: photo, minRadius: { _ in 3 }) == 0)
+        #expect(taken.regionColor == [9, 9] && taken.palette.count == 10)
+    }
+
     @Test func onlyAFacesSkinThatDiffersSplits() {
         let skin = SIMD3<UInt8>(160, 124, 100)
         // The neck in the same light: one paint still, mixed as the face is.

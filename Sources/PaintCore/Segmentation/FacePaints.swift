@@ -18,7 +18,9 @@
 /// recolored whole, and only where the new number fits: a region whose paint's number was
 /// shorter than the new one (paints 1 to 9 of 24) moves only if it holds the disc the longer
 /// number needs (`roomy`, as `RegionSimplifier.enforceLabelRoom` measures it); a thinner one
-/// keeps the old paint. Sums are taken a pixel at a time in raster order, so the same photo gives
+/// keeps the old paint. No paint ends nearer another than `SegmentationParameters.jnd` (the
+/// two halves of a split may be nearer than the settings' `minPaletteDistance`, which the
+/// mixes then keep as they find it). Sums are taken a pixel at a time in raster order, so the same photo gives
 /// the same paints on every device.
 enum FacePaints {
     /// The least of a paint's pixels each side keeps for it to split, and the fewest pixels on
@@ -109,17 +111,36 @@ enum FacePaints {
             let rgb = ColorScience.okLabToEncoded(paint.oklab + offset, space: space)
             return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: space), rgb: rgb)
         }
+        // No paint nearer than a just-noticeable difference: halves nearer than that are set that
+        // far apart about their middle, and a paint whose half would land that near another
+        // paint stays whole.
+        let jnd = SegmentationParameters.jnd
+        var added = 0
         for paint in chosen {
             let all = SIMD3<Float>((sums[paint][0] + sums[paint][1]) / Double(pixels[paint].x + pixels[paint].y))
             let old = segmentation.palette[paint]
+            var skin = mean(paint, 0) - all, rest = mean(paint, 1) - all
+            let gap = ColorScience.distance(skin, rest)
+            if gap < jnd {
+                let middle = (skin + rest) / 2, widen = jnd * 1.05 / gap
+                skin = middle + (skin - middle) * widen
+                rest = middle + (rest - middle) * widen
+            }
+            let halves = [moved(old, by: skin), moved(old, by: rest)]
+            let clear = ColorScience.distance(halves[0].oklab, halves[1].oklab) >= jnd
+                && segmentation.palette.indices.allSatisfy { other in
+                    other == paint || halves.allSatisfy { ColorScience.distance($0.oklab, segmentation.palette[other].oklab) >= jnd }
+                }
+            guard clear else { continue }
             facePaint[paint] = UInt32(segmentation.palette.count)
-            segmentation.palette.append(moved(old, by: mean(paint, 0) - all))
-            segmentation.palette[paint] = moved(old, by: mean(paint, 1) - all)
+            segmentation.palette.append(halves[0])
+            segmentation.palette[paint] = halves[1]
+            added += 1
         }
         for region in 0..<regionCount where onFace[region] {
             if let new = facePaint[Int(segmentation.regionColor[region])] { segmentation.regionColor[region] = new }
         }
-        return chosen.count
+        return added
     }
 
     /// Which of the regions `among` marks hold a disc of `radius`, in the sense of
