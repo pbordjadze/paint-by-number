@@ -1,20 +1,6 @@
 import Foundation
 import PaintCore
 
-/// `pbn edit`'s edits.json: an array of `{"kind": "draw" | "erase" | "eraseLine" | "fill",
-/// "points": [[x, y], ...]}` in canvas units, plus `"closed"` for a draw (the last point joins
-/// the first), `"radius"` for an erase (canvas units), `"reach"` for an eraseLine (canvas
-/// units) and `"color"` ([L, a, b], OKLab) or `"paint"` (the paint's number) for a fill or a
-/// `"paintArea"` (the area under the point alone), and `"paints"` (`[{"at": [x, y], "color": [L, a, b]}]`, `TemplateEditor.Paint`) for a draw that
-/// recolors the pieces it cuts, or a `"split"` (the Color Splitter: `"points"`, `"closed"`,
-/// `"paints"`), a `"cellEdge"` (Refine's Cell Edge: `"points"`, `"closed"`), a `"merge"` (Refine's
-/// Merge: `"points"`, the drag), a `"brush"` (Refine's Paint Brush: `"points"`, the stroke, `"radius"`
-/// and `"color"` or `"paint"` as a paintArea's), a `"reshape"` (Bend Line and Move Edge: `"points"`,
-/// [from, to], `"reach"`, and `"target"`, `"ink"` for Bend Line or `"edge"` for Move Edge, any line
-/// without it), a `"moveLabel"` (Move Number: `"points"`, [from, to], and `"reach"`), a `"look"` (Refine's Looks: `"look"`, a `TemplateEditor.Look` name, and
-/// `"strength"`, 0 to 1; `"lightness"` when given, else read from the template it is laid on) or a
-/// `"repaint"` (`"from"` and `"color"`, [L, a, b], and `"family"`). An edit of a kind pbn doesn't
-/// know is left out with a warning.
 /// A reshape's `"target"`: any line without one; `what` names it in the failure for another name.
 func reshapeTarget(_ name: String?, _ what: String) -> TemplateEditor.ReshapeTarget {
     guard let name else { return .any }
@@ -22,93 +8,48 @@ func reshapeTarget(_ name: String?, _ what: String) -> TemplateEditor.ReshapeTar
     return target
 }
 
+/// `pbn edit`'s edits.json: an array of edits as the app's `refinements.json` keeps them, read by
+/// the same decoder (`EditCoding`, whose doc comment lists each kind's fields and what a missing
+/// one means), in canvas units. Two things are pbn's own: a fill, a paintArea or a brush may name
+/// its color by `"paint"`, the paint's number in the template's palette, in place of `"color"`;
+/// and a look without `"lightness"` reads it from the template it is laid on (`runEdit`). An edit
+/// of a kind the decoder doesn't know is left out with a warning; one it knows and can't read (a
+/// brush without its `"radius"`, a look without its `"strength"`, an edit without `"points"`,
+/// which a look and a repaint give empty) fails the run.
 func loadTemplateEdits(_ path: String, palette: [PaletteColor]) -> [TemplateEditor.Edit] {
-    struct EntryPaint: Decodable {
-        var at: [Float]
-        var color: [Float]
-    }
+    /// An entry of the file: the edit `EditCoding` reads of it, nil for a kind it doesn't know.
     struct Entry: Decodable {
+        enum Keys: String, CodingKey { case kind }
         var kind: String
-        var points: [[Float]]
-        var closed: Bool?
-        var radius: Float?
-        var reach: Float?
-        var color: [Float]?
-        var paint: Int?
-        var paints: [EntryPaint]?
-        var look: String?
-        var strength: Float?
-        var lightness: [Float]?
-        var from: [Float]?
-        var family: Bool?
-        var target: String?
+        var edit: TemplateEditor.Edit?
+
+        init(from decoder: Decoder) throws {
+            kind = try decoder.container(keyedBy: Keys.self).decode(String.self, forKey: .kind)
+            edit = TemplateEditor.Edit.Kind(rawValue: kind) == nil ? nil : try TemplateEditor.Edit(from: decoder)
+        }
     }
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
+    let decoder = JSONDecoder()
+    decoder.userInfo[TemplateEditor.Edit.paletteKey] = palette
+    /// The edit an error is about, counted from 1.
+    func which(_ context: DecodingError.Context) -> String {
+        context.codingPath.first?.intValue.map { "edit \($0 + 1): " } ?? ""
+    }
     let entries: [Entry]
-    do { entries = try JSONDecoder().decode([Entry].self, from: data) } catch { fail("cannot decode \(path): \(error)") }
+    do {
+        entries = try decoder.decode([Entry].self, from: data)
+    } catch DecodingError.dataCorrupted(let context) {
+        fail("\(path): \(which(context))\(context.debugDescription)")
+    } catch DecodingError.keyNotFound(let key, let context) {
+        fail("\(path): \(which(context))it has no \"\(key.stringValue)\"")
+    } catch { fail("cannot decode \(path): \(error)") }
+    let kinds = TemplateEditor.Edit.Kind.allCases.map(\.rawValue)
     return entries.compactMap { entry in
-        let points = entry.points.map { p -> SIMD2<Float> in
-            guard p.count == 2 else { fail("\(path): points are [x, y]") }
-            return SIMD2(p[0], p[1])
-        }
-        let paints = entry.paints?.map { p -> TemplateEditor.Paint in
-            guard p.at.count == 2, p.color.count == 3 else { fail("\(path): a paint is {\"at\": [x, y], \"color\": [L, a, b]}") }
-            return TemplateEditor.Paint(at: SIMD2(p.at[0], p.at[1]), color: SIMD3(p.color[0], p.color[1], p.color[2]))
-        }
-        switch entry.kind {
-        case "draw":
-            return .draw(points: points, closed: entry.closed ?? false, paints: paints)
-        case "split":
-            return .split(points: points, closed: entry.closed ?? false, paints: paints ?? [])
-        case "cellEdge":
-            return .cellEdge(points: points, closed: entry.closed ?? false)
-        case "merge":
-            return .merge(points: points)
-        case "brush":
-            if let c = entry.color, c.count == 3 { return .brush(path: points, radius: entry.radius ?? 4, color: SIMD3(c[0], c[1], c[2])) }
-            if let n = entry.paint, (1...palette.count).contains(n) {
-                return .brush(path: points, radius: entry.radius ?? 4, color: palette[n - 1].oklab)
-            }
-            fail("\(path): a brush needs \"color\": [L, a, b] or \"paint\": a number of the palette")
-        case "reshape":
-            guard points.count == 2 else { fail("\(path): a reshape's points are [from, to]") }
-            return .reshape(
-                from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach,
-                target: reshapeTarget(entry.target, "\(path): a reshape's"))
-        case "moveLabel":
-            guard points.count == 2 else { fail("\(path): a moveLabel's points are [from, to]") }
-            return .moveLabel(from: points[0], to: points[1], reach: entry.reach ?? TemplateEditor.tapReach)
-        case "erase":
-            return .erase(path: points, radius: entry.radius ?? 4)
-        case "eraseLine":
-            guard let point = points.first else { fail("\(path): an eraseLine needs a point") }
-            return .eraseLine(at: point, reach: entry.reach ?? TemplateEditor.tapReach)
-        case "fill":
-            guard let point = points.first else { fail("\(path): a fill needs a point") }
-            if let c = entry.color, c.count == 3 { return .fill(at: point, color: SIMD3(c[0], c[1], c[2])) }
-            if let n = entry.paint, (1...palette.count).contains(n) { return .fill(at: point, color: palette[n - 1].oklab) }
-            fail("\(path): a fill needs \"color\": [L, a, b] or \"paint\": a number of the palette")
-        case "paintArea":
-            guard let point = points.first else { fail("\(path): a paintArea needs a point") }
-            if let c = entry.color, c.count == 3 { return .paintArea(at: point, color: SIMD3(c[0], c[1], c[2])) }
-            if let n = entry.paint, (1...palette.count).contains(n) { return .paintArea(at: point, color: palette[n - 1].oklab) }
-            fail("\(path): a paintArea needs \"color\": [L, a, b] or \"paint\": a number of the palette")
-        case "look":
-            guard let name = entry.look, let look = TemplateEditor.Look(rawValue: name) else {
-                fail("\(path): a look needs \"look\": one of \(TemplateEditor.Look.allCases.map(\.rawValue).joined(separator: ", "))")
-            }
-            return .look(look, strength: entry.strength ?? 1, lightness: entry.lightness ?? [])
-        case "repaint":
-            guard let f = entry.from, f.count == 3, let c = entry.color, c.count == 3 else {
-                fail("\(path): a repaint needs \"from\" and \"color\": [L, a, b]")
-            }
-            return .repaint(from: SIMD3(f[0], f[1], f[2]), to: SIMD3(c[0], c[1], c[2]), family: entry.family ?? false)
-        default:
+        if entry.edit == nil {
             FileHandle.standardError.write(Data(
-                "\(path): skipping an edit of kind \(entry.kind) (draw, split, cellEdge, merge, brush, reshape, moveLabel, erase, eraseLine, fill, paintArea, look or repaint)\n"
-                    .utf8))
-            return nil
+                "\(path): skipping an edit of kind \(entry.kind) (\(kinds.dropLast().joined(separator: ", ")) or \(kinds.last ?? ""))\n".utf8))
         }
+        return entry.edit
     }
 }
 
@@ -298,34 +239,19 @@ func runEdit(_ options: Options) throws {
         let took = ContinuousClock.now - began
         elapsed += took
         var step = EditReport.Step(
-            kind: "", changed: result.outcome.changed, declined: result.outcome.declined?.reason, lines: result.outcome.lines,
+            kind: "", changed: result.outcome.changed, declined: result.outcome.declined?.description, lines: result.outcome.lines,
             joins: result.outcome.joins, regionsSplit: result.outcome.regionsSplit, regionsMerged: result.outcome.regionsMerged,
             detailAreas: result.outcome.detailAreas, strokes: result.outcome.strokes, erased: result.outcome.erased,
             fills: result.outcome.fills, paintsAdded: result.outcome.paintsAdded, tooSmall: result.outcome.tooSmall.count,
             recolored: result.outcome.recolored, paintsChanged: result.outcome.paintsChanged,
             paintsMerged: result.outcome.paintsMerged, unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
             milliseconds: Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
-        switch edit {
-        case .draw(let points, let closed, _):
-            step.kind = "draw"
+        step.kind = edit.kind.rawValue
+        if case .draw(let points, let closed, _) = edit, result.outcome.changed {
             let line = closed ? points + [points[0]] : points
-            if result.outcome.changed {
-                let d = Deviation.measure(line.map { SIMD2(($0.x * 256).rounded() / 256, ($0.y * 256).rounded() / 256) }, in: result.template)
-                step.maxDeviation = d.middle
-                step.maxEndShift = d.ends
-            }
-        case .split: step.kind = "split"
-        case .cellEdge: step.kind = "cellEdge"
-        case .merge: step.kind = "merge"
-        case .brush: step.kind = "brush"
-        case .reshape: step.kind = "reshape"
-        case .moveLabel: step.kind = "moveLabel"
-        case .erase: step.kind = "erase"
-        case .eraseLine: step.kind = "eraseLine"
-        case .fill: step.kind = "fill"
-        case .paintArea: step.kind = "paintArea"
-        case .look: step.kind = "look"
-        case .repaint: step.kind = "repaint"
+            let d = Deviation.measure(line.map { SIMD2(($0.x * 256).rounded() / 256, ($0.y * 256).rounded() / 256) }, in: result.template)
+            step.maxDeviation = d.middle
+            step.maxEndShift = d.ends
         }
         step.reshaped = result.outcome.reshaped
         step.labelsMoved = result.outcome.labelsMoved

@@ -222,7 +222,7 @@ extension EditWork {
                 if hit.distanceSquared <= r2, grab == nil || hit.distanceSquared < grab!.d2 { grab = (nil, i, j, hit.point, hit.distanceSquared) }
             }
         }
-        guard let grab else { throw EditFailure.invalid(TemplateEditor.noLineNear) }
+        guard let grab else { throw EditFailure.declined(.noLineNear) }
 
         var plan = Reshape()
         plan.grabbed = grab.point
@@ -405,7 +405,7 @@ extension EditWork {
         func grabbedAt() -> Double { s[pieceStart[grabPiece] + pieces[grabPiece].firstIndex(of: grab.point)!] }
         var sg = grabbedAt()
         guard closed || (sg > 0 || startFree) && (sg < total || endFree) else {
-            throw EditFailure.invalid(TemplateEditor.lineHeldThere)
+            throw EditFailure.declined(.lineHeldThere)
         }
         /// How far along the chain the bend runs before the grabbed point and after it: the
         /// spread, at most to a held end (a loop's far point). A free end is not held (until

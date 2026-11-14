@@ -13,6 +13,9 @@ enum EditFailure: Error, Equatable {
     /// Lines lie closer than the lattice can tell apart, and the arrangement they make has
     /// outlines that touch or overlap.
     case collision(String)
+    /// The edit cannot be made for a reason its caller tells from the others
+    /// (`TemplateEditor.Declined.Reason`).
+    case declined(TemplateEditor.Declined.Reason)
 }
 
 /// A directed use of an edge: the edge walked forwards or backwards.
@@ -83,6 +86,15 @@ struct EditWork {
         var touched = Set<Int>()
         /// The pieces drawn lines cut regions into (`splitRegion`).
         var pieces = Set<Int>()
+
+        /// Whether the edit did anything to the template: a count of something done to it. The
+        /// others only say how (a line's joins, the regions, detail areas and strokes it made,
+        /// the paints added), and never stand without one of these. A new count says here which
+        /// it is.
+        var changed: Bool {
+            lines > 0 || erased > 0 || fills > 0 || recolored > 0 || paintsChanged > 0 || paintsMerged > 0 || regionsMerged > 0
+                || reshaped > 0 || labelsMoved > 0
+        }
     }
     var summary = Tally()
     /// The region each merged-away region continues as.

@@ -98,7 +98,7 @@ public struct EditTrail: Sendable {
         /// It had nothing to change (an eraser over bare paper).
         case nothing
         /// It could not be made, with the editor's reason: the template is as it was.
-        case declined(String)
+        case declined(TemplateEditor.Declined.Reason)
 
         public var isMade: Bool {
             if case .made = self { return true }
@@ -220,8 +220,9 @@ public struct EditTrail: Sendable {
         } catch {
             // A template without line art has nothing to edit.
             var outcome = TemplateEditor.unchanged(template)
-            outcome.declined = TemplateEditor.Declined(reason: "\(error)")
-            return (template, Laid(verdict: .declined("\(error)"), outcome: outcome, failure: error as? TemplateEditor.Failure))
+            let reason = TemplateEditor.Declined.Reason.other("\(error)")
+            outcome.declined = TemplateEditor.Declined(reason: reason)
+            return (template, Laid(verdict: .declined(reason), outcome: outcome, failure: error as? TemplateEditor.Failure))
         }
     }
 

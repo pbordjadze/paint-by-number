@@ -58,7 +58,7 @@ import Foundation
 ///   area has the first region's paint and number, and is a detail area only if the first was.
 ///   A paint left with no area leaves the palette as Only This Area's does. A merge that joins
 ///   fewer than two areas is declined, one whose drag never leaves the area it began in for
-///   `mergeStaysInOneArea` (Refine says it is one area already).
+///   `Declined.Reason.mergeStaysInOneArea` (Refine says it is one area already).
 /// - **Paint brush.** Refine's Paint Brush: everything within `radius` of the stroke (a disc for a
 ///   dab) becomes the paint a fill would take. The footprint's outline is laid as a closed cell
 ///   edge is, undrawn and clipped to the canvas, a piece with no room for a number not cut off;
@@ -141,17 +141,6 @@ public enum TemplateEditor {
     /// what it laid until its list is laid again.
     public static let version = 7
 
-    /// Why a Merge whose drag never left the area it began in is declined.
-    public static let mergeStaysInOneArea = "the merge stays in one area"
-    /// A Move Number drag that began on no number, and a Bend Line's or Move Edge's on no line
-    /// (Refine says to start the drag on one).
-    public static let noNumberNear = "no number is near enough to move"
-    public static let noLineNear = "no line is near enough to move"
-    /// A Bend Line's or Move Edge's drag that began on a junction, or the held end of a line.
-    public static let lineHeldThere = "the line is held where it was grabbed"
-    /// A drawn line that turns back along itself (Refine says so).
-    public static let lineDoublesBack = "the line doubles back on itself"
-
     public enum Edit: Sendable, Equatable {
         /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's
         /// colors of the pieces it cuts, nil for a draw made before lines took them (no nudge, no
@@ -218,8 +207,39 @@ public enum TemplateEditor {
 
     /// Why an edit was declined: the template is returned as it was.
     public struct Declined: Sendable, Equatable, CustomStringConvertible {
-        public var reason: String
-        public var description: String { reason }
+        /// The reasons told apart by whoever reads them (Refine has a note for each, the editor
+        /// a second try for some), and every other, in the editor's words. A caller switches
+        /// on the case; the words are for a log or a report (`description`).
+        public enum Reason: Sendable, Equatable, CustomStringConvertible {
+            /// A Merge whose drag never left the area it began in.
+            case mergeStaysInOneArea
+            /// A Move Number drag that began on no number, and a Bend Line's or Move Edge's on
+            /// no line (Refine says to start the drag on one).
+            case noNumberNear, noLineNear
+            /// A Bend Line's or Move Edge's drag that began on a junction, or the held end of a
+            /// line.
+            case lineHeldThere
+            /// A drawn line that turns back along itself (Refine says so).
+            case lineDoublesBack
+            /// Any other reason, as the editor words it.
+            case other(String)
+
+            /// The reason in English, as `pbn edit`'s stats.json and `pbn refine`'s refine.json
+            /// give it: these words stay as they are.
+            public var description: String {
+                switch self {
+                case .mergeStaysInOneArea: "the merge stays in one area"
+                case .noNumberNear: "no number is near enough to move"
+                case .noLineNear: "no line is near enough to move"
+                case .lineHeldThere: "the line is held where it was grabbed"
+                case .lineDoublesBack: "the line doubles back on itself"
+                case .other(let why): why
+                }
+            }
+        }
+
+        public var reason: Reason
+        public var description: String { reason.description }
     }
 
     /// What an edit did.
@@ -308,7 +328,7 @@ public enum TemplateEditor {
         if case .reshape(_, _, _, .ink) = edit { ink = true } else { ink = false }
         let laid = try lay(edit, on: template, verify: verify, reading: reading, rounded: ink)
         guard ink, case .reshape(let from, let to, let reach, _) = edit, let declined = laid.outcome.declined,
-              declined.reason != noLineNear, declined.reason != lineHeldThere
+              declined.reason != .noLineNear, declined.reason != .lineHeldThere
         else { return laid }
         // Bend Line's bow leaves a junction at a slant (`EditWork.falloff`'s pinned shape), which
         // a line meeting it there at a shallow angle may not allow: then the bow that leaves it
@@ -348,14 +368,15 @@ public enum TemplateEditor {
             } catch EditFailure.collision(let why) {
                 if k == radii.count - 1 {
                     var outcome = unchanged(template)
-                    outcome.declined = Declined(reason: why)
+                    outcome.declined = Declined(reason: .other(why))
                     return (template, outcome)
                 }
             } catch let failure as EditFailure {
                 var outcome = unchanged(template)
                 switch failure {
                 case .unsupported(let why): throw Failure.unsupported(why)
-                case .degenerate(let why), .invalid(let why), .collision(let why): outcome.declined = Declined(reason: why)
+                case .degenerate(let why), .invalid(let why), .collision(let why): outcome.declined = Declined(reason: .other(why))
+                case .declined(let reason): outcome.declined = Declined(reason: reason)
                 }
                 return (template, outcome)
             }
@@ -419,11 +440,7 @@ public enum TemplateEditor {
             try work.recolor(edit)
         }
         let s = work.summary
-        guard s.lines > 0 || s.erased > 0 || s.fills > 0 || s.recolored > 0 || s.paintsChanged > 0 || s.paintsMerged > 0
-            || s.regionsMerged > 0 || s.reshaped > 0 || s.labelsMoved > 0
-        else {
-            return (template, unchanged(template))
-        }
+        guard s.changed else { return (template, unchanged(template)) }
         let (result, mapping) = try work.finish()
         if verify {
             let report = result.validate(minLabelRadius: LabelSizing.minimumRadius)

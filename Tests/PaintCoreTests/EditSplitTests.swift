@@ -63,7 +63,7 @@ struct EditSplitTests {
     /// painter could see: declined.
     @Test func aSplitWithoutDifferentPaintsIsDeclined() throws {
         let (u, outcome) = try TemplateEditor.apply(.split(points: Self.across), to: Self.scene)
-        #expect(outcome.declined?.reason.contains("same paint") == true && u == Self.scene)
+        #expect(outcome.declined?.description.contains("same paint") == true && u == Self.scene)
     }
 
     @Test func aShadeLeansTowardThePhoto() {

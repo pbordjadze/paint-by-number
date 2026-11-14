@@ -285,4 +285,30 @@ struct EditTrailTests {
         #expect(failed.failure != nil && failed.outcome.declined != nil && !failed.outcome.changed)
         #expect(throws: TemplateEditor.Failure.self) { try TemplateEditor.apply(Self.edits, to: classic) }
     }
+
+    /// Why an edit was declined is a value a caller switches on, the same from the editor and
+    /// from the trail; its words, which `pbn`'s reports give, stay as they were.
+    @Test func aDeclinedEditSaysWhyAsAValue() throws {
+        typealias Reason = TemplateEditor.Declined.Reason
+        let scene = TemplateEditorTests.scene
+        let cases: [(Edit, Reason, String)] = [
+            (Self.doublingBack, .lineDoublesBack, "the line doubles back on itself"),
+            (.moveLabel(from: SIMD2(2, 2), to: SIMD2(30, 30)), .noNumberNear, "no number is near enough to move"),
+            (.reshape(from: SIMD2(100, 20), to: SIMD2(100, 30)), .noLineNear, "no line is near enough to move"),
+            (.reshape(from: SIMD2(100, 20), to: SIMD2(100, 30), target: .ink), .noLineNear, "no line is near enough to move"),
+            (.reshape(from: SIMD2(89, 72), to: SIMD2(89, 60)), .lineHeldThere, "the line is held where it was grabbed"),
+            (.merge(points: [EditMergeToolTests.sky]), .mergeStaysInOneArea, "the merge stays in one area"),
+        ]
+        for (edit, reason, words) in cases {
+            let outcome = try TemplateEditor.apply(edit, to: scene).outcome
+            #expect(outcome.declined?.reason == reason && outcome.declined?.description == words, "\(edit)")
+            var trail = EditTrail(base: scene)
+            #expect(trail.add(edit) == .declined(reason), "\(edit)")
+            #expect(reason.description == words)
+        }
+        // Any other reason is the editor's words, told from these by its case.
+        let other = try TemplateEditor.apply(.merge(points: []), to: scene).outcome.declined
+        #expect(other?.reason == .other("the merge joins no areas") && other?.description == "the merge joins no areas")
+        #expect(Reason.other("the merge stays in one area") != .mergeStaysInOneArea)
+    }
 }

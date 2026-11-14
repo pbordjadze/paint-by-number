@@ -55,8 +55,11 @@
 //       {"kind": "merge", "points": [...]}, {"kind": "brush", "points": [...], "radius": r,
 //       "color": [L, a, b] | "paint": n}, {"kind": "reshape", "points": [from, to], "reach": r,
 //       "target": "ink" | "edge"}, {"kind": "moveLabel", "points": [from, to], "reach": r},
-//       {"kind": "look", "look": "moonlit", "strength": 1}, {"kind": "repaint", "from": [L, a,
-//       b], "color": [L, a, b], "family": true}], all in canvas units (the
+//       {"kind": "look", "points": [], "look": "moonlit", "strength": 1}, {"kind": "repaint",
+//       "points": [], "from": [L, a, b], "color": [L, a, b], "family": true}], read as the app's
+//       refinements.json keeps its edits (PaintCore's EditCoding: every edit has its "points", a
+//       brush its "radius", a look its "strength"; "paint": n, a paint's number in place of a
+//       "color", is pbn's own), all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
 //       line drawn exactly as given and cutting the cell it closes (with "paints", nudged through
 //       the junctions it crosses beside and each piece it cuts recolored; --photo reads those

@@ -29,7 +29,7 @@ struct EditReshapeTests {
     static func declined(_ edit: Edit, on t: Template) throws -> String? {
         let (u, outcome) = try TemplateEditor.apply(edit, to: t)
         if outcome.declined != nil { #expect(u == t && !outcome.changed) }
-        return outcome.declined?.reason
+        return outcome.declined?.description
     }
 
     /// The horizon between the disc and the square bent up 12 units: the ground grows into the
