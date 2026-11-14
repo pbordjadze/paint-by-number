@@ -219,6 +219,7 @@ public struct EditTrail: Sendable {
             return (next, Laid(verdict: .made(tooSmall: tooSmall), outcome: outcome))
         } catch {
             // A template without line art has nothing to edit.
+            // The editor throws only `TemplateEditor.Failure`, which `failure` carries.
             var outcome = TemplateEditor.unchanged(template)
             let reason = TemplateEditor.Declined.Reason.other("\(error)")
             outcome.declined = TemplateEditor.Declined(reason: reason)

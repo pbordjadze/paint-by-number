@@ -112,7 +112,7 @@ import Foundation
 ///   one paint with or without its family (`recolor(_:by:)`). Paints that land within a
 ///   just-noticeable difference of each other become one, and areas that then share a paint
 ///   across an undrawn boundary one area. Edits laid after one bring their colors through it
-///   (`apply(_:to:verify:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
+///   (`apply(_:to:)` for a list, `EditTrail`), so a line drawn under a look takes the look.
 public enum TemplateEditor {
     /// What a list of edits makes of a given template, as a number kept with the edits a
     /// painting saves (the app's `TemplateRefinements.editorVersion`). Bump in the same commit as
