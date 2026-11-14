@@ -43,7 +43,6 @@ struct FinishedDoors: View {
     @State private var preparing: FinishedDoor?
     @State private var sharedDoor: FinishedDoor?
     @State private var originalImage: CGImage?
-    /// The work The Original's page is up for.
 
     var body: some View {
         let doors = FinishedDoor.shown(changes: onChange != nil, original: original != nil)
@@ -320,8 +319,9 @@ nonisolated enum FinishedDoor: String, CaseIterable, Identifiable, Sendable {
 }
 
 /// How big the doors are and how they are laid: in one row where each arch is still a door's size
-/// (an iPad, a phone on its side), else in two rows (two by two; five as three over two, which keep to one row from `snugRow`), never
-/// taller than the room they are given.
+/// (an iPad, a phone on its side), else in two rows (two by two; five as three over two), never
+/// taller than the room they are given. An iPad's panel widens for a fifth door
+/// (`CompletionBar.widestPanel(doors:)`), so its row of five is as large as a row of four.
 nonisolated struct DoorMetrics: Equatable, Sendable {
     let columns: Int
     let rows: Int
@@ -337,7 +337,9 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
     static let smallest: CGFloat = 56
     /// One row is taken when its arches are at least this wide.
     static let roomyRow: CGFloat = 110
-    /// And a row of five or more when at least this wide.
+    /// And a row of five or more when at least this wide, on a screen between a phone's and an
+    /// iPad's, where the panel can't widen all the way: their captions may take a second line
+    /// there, which the row's height has no room for under `labelHeight` alone.
     static let snugRow: CGFloat = 88
 
     /// The doors' layout in `width` × `height` points, or nil where they don't fit.

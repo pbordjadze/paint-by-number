@@ -3,8 +3,9 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// About this painting (painting-company row 120): the real work behind a library picture, read
-/// from `library.json` and from nowhere else, and the paintings that have one.
+/// The Original (painting-company row 120): the real work behind a library picture, read from
+/// `library.json` and from nowhere else, the paintings that have one, and what its page's
+/// placard ends on.
 struct AboutPaintingTests {
     private static let picture = Sample(
         id: "picture", title: "Picture",
@@ -60,14 +61,29 @@ struct AboutPaintingTests {
         #expect(work.source.absoluteString == "https://museum.example/1")
         #expect(work.medium == "Oil on fabric", "A medium starts with a capital")
         #expect(work.place == "A Museum, A City")
-        #expect(work.catalogTitle == "The Picture, Whole")
         #expect(work.wikipedia?.absoluteString == "https://en.wikipedia.org/wiki/Picture")
     }
 
     /// What a record lacks is left out, never filled in.
     @Test func aFactTheRecordLacksIsLeftOut() throws {
         let work = try #require(Self.works(#"{"id": "picture", "source": "https://museum.example/1", "medium": " "}"#)["picture"])
-        #expect(work.medium == nil && work.place == nil && work.catalogTitle == nil && work.wikipedia == nil)
+        #expect(work.medium == nil && work.place == nil && work.wikipedia == nil)
+    }
+
+    /// The placard's last line is where the work hangs; a record without a place ends on its
+    /// credit line, so a short label is still a whole one.
+    @Test func thePlacardEndsOnWhereItHangs() throws {
+        let hung = try #require(Self.works(#"{"id": "picture", "source": "https://museum.example/1", "place": "A Museum, A City"}"#)["picture"])
+        #expect(AboutPainting.keeper(of: hung) == "A Museum, A City")
+        let bare = try #require(Self.works(#"{"id": "picture", "source": "https://museum.example/1"}"#)["picture"])
+        #expect(AboutPainting.keeper(of: bare) == "A Museum, A Fund")
+    }
+
+    /// The picture has most of the sheet, and still some of a very short one.
+    @Test func thePictureIsThePagesHero() {
+        #expect(AboutPainting.pictureHeight(page: 700) > 350)
+        #expect(AboutPainting.pictureHeight(page: 700) < 700 - 250)
+        #expect(AboutPainting.pictureHeight(page: 200) == 180)
     }
 
     /// Only https pages open, and only the English Wikipedia's as its article.

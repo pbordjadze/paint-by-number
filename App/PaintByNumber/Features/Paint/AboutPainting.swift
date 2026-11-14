@@ -5,9 +5,9 @@ import os
 import SwiftUI
 
 /// The real work a library picture is of, as `library.json` records it (painting-company row
-/// 120): who made it and when (`Sample.Provenance`), what it is made of, where it is kept, the
-/// title its keeper catalogs it under, and the pages to read next, the keeper's own catalog entry
-/// and, where the record names one, its Wikipedia article. Nothing here is written by the app:
+/// 120): who made it and when (`Sample.Provenance`), what it is made of, where it is kept, and
+/// the pages to read next, the keeper's own catalog entry and, where the record names one, its
+/// Wikipedia article. Nothing here is written by the app:
 /// every line is the record's (`docs/picture-library.md` › The record), and a fact the record
 /// lacks is left out.
 nonisolated struct OriginalWork: Identifiable, Hashable, Sendable {
@@ -18,8 +18,6 @@ nonisolated struct OriginalWork: Identifiable, Hashable, Sendable {
     /// As the source words it ("Oil on canvas"), its first letter a capital.
     let medium: String?
     let place: String?
-    /// The source's own title, where the library's is shorter (the record's `work_title`).
-    let catalogTitle: String?
     let wikipedia: URL?
 
     var id: String { sample.id }
@@ -56,8 +54,7 @@ nonisolated struct OriginalWork: Identifiable, Hashable, Sendable {
                   let source = link(record.source) else { continue }
             works[record.id] = OriginalWork(
                 sample: sample, provenance: provenance, source: source, medium: sentence(record.medium),
-                place: text(record.place), catalogTitle: text(record.workTitle),
-                wikipedia: link(record.wikipedia, host: "en.wikipedia.org"))
+                place: text(record.place), wikipedia: link(record.wikipedia, host: "en.wikipedia.org"))
         }
         return works
     }
@@ -86,51 +83,57 @@ nonisolated struct OriginalWork: Identifiable, Hashable, Sendable {
         let source: String?
         let medium: String?
         let place: String?
-        let workTitle: String?
         let wikipedia: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case id, source, medium, place, wikipedia
-            case workTitle = "work_title"
-        }
     }
 }
 
-/// About this painting (painting-company row 120): the page behind The Original, the last door
-/// after Finished (`FinishedDoors`), shown only for a painting made from a library picture. The
-/// picture, its title, who made it and when, what the library records of the work, and the way
-/// out to the pages its keepers wrote: the links open in the browser, and the app sends nothing.
-/// SideStore and Debug builds until Paul has seen it.
+/// The Original (painting-company row 120): the page behind the last door after Finished
+/// (`FinishedDoors`), shown only for a painting made from a library picture, and named as its
+/// door is. It is the wall label the door draws: the picture, and under it one small placard set
+/// as a museum sets one, the title, who made it and when, what it is made of and, last and most
+/// present, where it hangs. A record without a place (a photograph) ends on its credit line
+/// there; otherwise the credit is one faint line under the placard. The one prominent action is
+/// the way to the keeper's own page, with Wikipedia's a plain link under it: both open in the
+/// browser, and the app sends nothing. SideStore and Debug builds until Paul has seen it.
 struct AboutPainting: View {
     let work: OriginalWork
 
     @Environment(\.dismiss) private var dismiss
     @State private var picture: CGImage?
 
-    /// The picture's long side, in pixels: the page's width on an iPad, at 2×.
+    /// The picture's long side, in pixels: the sheet's width on an iPad, at 2×.
     nonisolated static let pixelSize = 1200
+    /// The placard's widest: a label is a small card under a large picture, whatever the page.
+    nonisolated static let placardWidth: CGFloat = 340
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    original
-                    heading
-                    facts
-                    links
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: 28) {
+                        original(height: Self.pictureHeight(page: geo.size.height))
+                        VStack(spacing: 10) {
+                            placard
+                            footnote
+                        }
+                        links
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 24)
+                    // In the middle of the sheet where it all fits, so no part of the page
+                    // stands empty; from the top, scrolling, where it doesn't.
+                    .frame(maxWidth: .infinity, minHeight: geo.size.height)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 24)
-                .frame(maxWidth: 560)
-                .frame(maxWidth: .infinity)
             }
             .background(Theme.paper)
-            .navigationTitle(title)
+            .navigationTitle(Text("The Original"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", systemImage: "checkmark") { dismiss() }
-                        .tint(Theme.signature)
+                ToolbarItem(placement: .cancellationAction) {
+                    // In the words' color: the page's one tinted control is the catalog link, and
+                    // the app's accent is gold on dark paper.
+                    Button("Close", systemImage: "xmark") { dismiss() }
+                        .tint(.primary)
                 }
             }
         }
@@ -138,118 +141,112 @@ struct AboutPainting: View {
         .accessibilityIdentifier("about-painting")
     }
 
-    private var title: Text {
-        switch work.provenance.kind {
-        case .painting: Text("About This Painting")
-        case .photograph: Text("About This Photograph")
-        }
+    /// The picture's room on a page so tall: more than half of it, the label and the links
+    /// keeping theirs, and never less than a phone on its side can still read.
+    nonisolated static func pictureHeight(page: CGFloat) -> CGFloat {
+        max(180, page * 0.56)
     }
 
-    /// The picture itself, as the library has it: the title beside it names it for VoiceOver.
-    @ViewBuilder private var original: some View {
+    /// The picture itself, as the library has it: the placard under it names it for VoiceOver.
+    @ViewBuilder
+    private func original(height: CGFloat) -> some View {
         if let picture {
             Image(decorative: picture, scale: 1)
                 .resizable()
                 .scaledToFit()
-                .clipShape(.rect(cornerRadius: 4))
-                .shadow(color: .black.opacity(0.2), radius: 14, y: 8)
-                .frame(maxHeight: 340)
+                .clipShape(.rect(cornerRadius: 3))
+                .shadow(color: .black.opacity(0.22), radius: 16, y: 9)
+                .frame(maxHeight: height)
                 .accessibilityHidden(true)
         } else {
-            Color.clear.frame(height: 240)
+            Color.clear.frame(height: height)
         }
     }
 
-    private var heading: some View {
-        VStack(spacing: 6) {
+    /// Where the work hangs, the placard's last line; the credit line of a record without one.
+    nonisolated static func keeper(of work: OriginalWork) -> String {
+        work.place ?? work.provenance.credit
+    }
+
+    private var placard: some View {
+        VStack(alignment: .leading, spacing: 0) {
             Text(work.sample.title)
-                .font(.display(.title))
+                .font(.display(.title2))
             Text(Acknowledgements.byline(work.provenance))
-                .font(.title3)
-                .foregroundStyle(Theme.quietInk)
+                .font(.body)
+                .padding(.top, 3)
+            if let medium = work.medium {
+                Text(medium)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.quietInk)
+                    .padding(.top, 10)
+            }
+            Text(Self.keeper(of: work))
+                .font(.display(.headline, weight: .semibold))
+                .padding(.top, 14)
         }
-        .multilineTextAlignment(.center)
+        .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .frame(maxWidth: Self.placardWidth)
+        .background(Theme.surface, in: .rect(cornerRadius: 3))
+        .shadow(color: .black.opacity(0.12), radius: 3, y: 1.5)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("about-label")
     }
 
-    private struct Fact: Identifiable {
-        let id: String
-        let label: Text
-        let value: String
-    }
-
-    /// What the record has, in a museum label's order; the credit line always.
-    private var rows: [Fact] {
-        var rows: [Fact] = []
-        if let medium = work.medium { rows.append(Fact(id: "medium", label: Text("Medium"), value: medium)) }
-        if let place = work.place { rows.append(Fact(id: "place", label: Text("Where It’s Kept"), value: place)) }
-        if let catalogTitle = work.catalogTitle {
-            rows.append(Fact(id: "catalog-title", label: Text("Cataloged As"), value: catalogTitle))
-        }
-        rows.append(Fact(id: "credit", label: Text("Credit"), value: work.provenance.credit))
-        return rows
-    }
-
-    private var facts: some View {
-        let shown = rows
-        return VStack(alignment: .leading, spacing: 0) {
-            ForEach(shown) { fact in
-                VStack(alignment: .leading, spacing: 3) {
-                    fact.label
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Text(fact.value)
-                        .font(.body)
-                        .foregroundStyle(.primary)
-                }
+    /// The credit line, where the placard's last line isn't it already.
+    @ViewBuilder private var footnote: some View {
+        if work.place != nil {
+            Text(work.provenance.credit)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("about-\(fact.id)")
-                if fact.id != shown.last?.id {
-                    Divider().padding(.leading, 16)
-                }
-            }
+                .frame(maxWidth: Self.placardWidth - 36, alignment: .leading)
+                .accessibilityIdentifier("about-credit")
         }
-        .background(Theme.surface, in: .rect(cornerRadius: Theme.cardRadius, style: .continuous))
     }
 
-    /// The way out: what the painter reads next is the keeper's page, and Wikipedia's where the
-    /// record names the work's own article.
+    /// The way out: the keeper's page, and Wikipedia's where the record names the work's own
+    /// article.
     private var links: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 6) {
             Link(destination: work.source) {
                 Label("See the Catalog Entry", systemImage: "arrow.up.right")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 6)
             }
             .buttonStyle(.glassProminent)
             .tint(Theme.signature)
+            .controlSize(.large)
             .accessibilityHint(Text("Opens in your browser."))
             .accessibilityIdentifier("about-catalog")
             if let wikipedia = work.wikipedia {
                 Link(destination: wikipedia) {
-                    Label("Read on Wikipedia", systemImage: "book")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
+                    Text("Read on Wikipedia")
+                        .font(.subheadline)
+                        .underline()
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .contentShape(.rect)
                 }
-                .buttonStyle(.glass)
+                // In the words' color, never the accent's: that is gold on dark paper.
+                .tint(.primary)
                 .accessibilityHint(Text("Opens in your browser."))
                 .accessibilityIdentifier("about-wikipedia")
             }
         }
-        .controlSize(.large)
     }
 }
 
 #if DEBUG
-/// Demo scenarios of the page, as a sheet over the paper: `about-painting` (The Great Wave, a
-/// record with every fact and a Wikipedia article; `about-painting-dark` in dark appearance) and
-/// `about-photograph` (Earthrise, a record without medium, place or article).
+/// Demo scenarios of the page, as the sheet the painting screen gives it, over the paper:
+/// `about-painting` (The Great Wave, a record with every fact and a Wikipedia article;
+/// `about-painting-dark` in dark appearance) and `about-photograph` (Earthrise, a record without
+/// medium, place or article, whose placard ends on its credit line).
 struct AboutPaintingDemo: View {
     let scenario: String
 
@@ -257,7 +254,7 @@ struct AboutPaintingDemo: View {
         let work = OriginalWork.of(scenario.hasPrefix("about-photograph") ? "earthrise" : "great-wave")
         Theme.paper.ignoresSafeArea()
             .sheet(isPresented: .constant(true)) {
-                if let work { AboutPainting(work: work).pageSizedOnPad() }
+                if let work { AboutPainting(work: work) }
             }
             .task {
                 guard let work else { return }
