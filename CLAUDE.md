@@ -134,7 +134,7 @@ before planning app work).
   `tools/drawings/demo_page.py` draws the create flow's demo page (`ShellDemo.drawingPhoto`) for
   `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
-  `PaintByNumber/`, `Ravenna/` and `RavennaResources/` (the mosaic era, SideStore and Debug only), `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
+  `PaintByNumber/`, `Ravenna/` and `RavennaResources/` (the mosaic era), `Shared/` (the sources both compile: App/CLAUDE.md › Shared with Paint by Mosaic), `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
