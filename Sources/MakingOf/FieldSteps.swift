@@ -47,7 +47,7 @@ struct FieldBuild {
             Plane(width: pw, height: ph, data: field.map { Float($0) })
         }
 
-        // the template's lines as the show draws them, to 0.01 px (the plan file's precision)
+        // the template's lines as the show draws them, to 0.01 px (the precision the show keeps its lines at)
         let strokes = template.strokes.map { line in
             Polyline(line.points.map { Point(ExactMath.quantize($0.x, decimals: 2), ExactMath.quantize($0.y, decimals: 2)) })
         }

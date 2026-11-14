@@ -107,8 +107,8 @@ enum ExactMath {
         x.rounded(.toNearestOrEven)
     }
 
-    /// `x` rounded to `decimals` places as `halfEven(x * 10^decimals) / 10^decimals`: the plan file's
-    /// precision (`making_of_exact.quantize`).
+    /// `x` rounded to `decimals` places as `halfEven(x * 10^decimals) / 10^decimals`: the
+    /// precision the show keeps its lines and timing at (`making_of_exact.quantize`).
     static func quantize(_ x: Double, decimals: Int) -> Double {
         var scale = 1.0
         for _ in 0..<decimals { scale *= 10 }
