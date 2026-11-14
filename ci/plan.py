@@ -9,7 +9,8 @@ very files that run tested (main fast-forwarded to the branch, as a night train 
 commit of a branch that already held main, whose tree is its second parent's), main's run would
 only repeat them: about three hours of a macOS runner. So for a push to main this looks up
 the check runs of the pushed commit and of each parent with the same tree, and an entry whose job
-passed there, in another run, is left out; STATUS.md names the run it passed in. Anything else
+passed there, in another run a push started (one started by hand may have been given only some
+scenarios), is left out; STATUS.md names the run it passed in. Anything else
 (another branch, a run started by hand, a commit with other files, an API that doesn't answer)
 keeps every entry: leaving one out needs proof, running it needs none.
 
@@ -65,16 +66,22 @@ def check_runs(sha):
     return found
 
 
-def passed(lanes, runs, this_run):
-    """{entry: URL of the job it passed in} among `runs`, never a job of this run."""
-    mine = re.compile(rf"/actions/runs/{this_run}/")
+def pushed(run_id):
+    """Whether a push started the workflow run."""
+    return api(f"actions/runs/{run_id}")["event"] == "push"
+
+
+def passed(lanes, runs, this_run, pushed=pushed):
+    """{entry: URL of the job it passed in} among `runs`: a job of a run a push started, never
+    of this run."""
     before = {}
     for lane in lanes:
         for run in runs:
             url = run.get("html_url") or run.get("details_url") or ""
+            found = re.search(r"/actions/runs/(\d+)/", url)
             if (run.get("name") == NAMES.get(lane) and run.get("conclusion") == "success"
                     and (run.get("app") or {}).get("slug") == "github-actions"
-                    and "/actions/runs/" in url and not mine.search(url)):
+                    and found and found.group(1) != str(this_run) and pushed(found.group(1))):
                 before[lane] = url
                 break
     return before
@@ -113,11 +120,16 @@ def self_test():
         run(NAMES["release-tests"], "cancelled", 5),
         run("iPad — compile check", "success", 4),
     ]
-    assert passed(list(NAMES), runs, "7") == {"ipad": "https://github.com/o/r/actions/runs/5/job/51"}
-    assert passed(["ipad"], runs, "5") == {}
-    assert passed(["compile", "ipad-ui"], runs, "9") == {"ipad-ui": "https://github.com/o/r/actions/runs/7/job/71"}
+    def any_push(run_id):
+        return True
+
+    assert passed(list(NAMES), runs, "7", any_push) == {"ipad": "https://github.com/o/r/actions/runs/5/job/51"}
+    assert passed(["ipad"], runs, "5", any_push) == {}
+    assert passed(["compile", "ipad-ui"], runs, "9", any_push) == {"ipad-ui": "https://github.com/o/r/actions/runs/7/job/71"}
     # Run 7 is not run 70.
-    assert passed(["ipad-ui"], runs, "70") == {"ipad-ui": "https://github.com/o/r/actions/runs/7/job/71"}
+    assert passed(["ipad-ui"], runs, "70", any_push) == {"ipad-ui": "https://github.com/o/r/actions/runs/7/job/71"}
+    # A run started by hand proves nothing: it may have taken only some scenarios.
+    assert passed(list(NAMES), runs, "7", lambda run_id: run_id != "5") == {}
     workflow = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".github", "workflows", "ci.yml")
     with open(workflow) as f:
         text = f.read()

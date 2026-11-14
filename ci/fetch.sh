@@ -14,23 +14,29 @@
 # Reports written before the RUN file existed never match a CI_RUN.
 # A commit whose run gave way to a later push (a branch's run is cancelled by the next push; on
 # main an entry that waits gives its turn to a newer push's) gets that push's report, which
-# covers it, and a first line saying so; never with CI_RUN.
+# covers it, and a first line saying so: a full run's report (it has an `ipad` line) with no
+# entry cancelled, since one that gave way in its turn covers nothing; never with CI_RUN.
+# On main, where entries wait their turn, it polls for up to 360 min.
 set -euo pipefail
 SHA="$(git rev-parse "${1:-HEAD}")"
 OUT="${2:-ci-report}"
 BRANCH="${CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 REF="refs/ci-shots/${BRANCH}"
 SEEN=
-for _ in $(seq 1 360); do
+POLLS=360; [[ "$BRANCH" == main ]] && POLLS=720
+for _ in $(seq 1 "$POLLS"); do
   if git fetch -q origin "+${REF}:${REF}" 2>/dev/null; then
     RUN="$(git show "${REF}:RUN" 2>/dev/null || true)"
     COMMIT="$(git show "${REF}:COMMIT" 2>/dev/null || true)"
     LATER=
     if [[ -z "${CI_RUN:-}" && "$COMMIT" =~ ^[0-9a-f]{40}$ && "$COMMIT" != "$SHA" && "$COMMIT" != "$SEEN" ]]; then
       # Asked once for each report: the branch's history, to see whether this one's commit holds ours.
-      SEEN="$COMMIT"
-      git fetch -q origin "$BRANCH" 2>/dev/null || true
-      if git merge-base --is-ancestor "$SHA" "$COMMIT" 2>/dev/null; then LATER=1; fi
+      if git fetch -q origin "$BRANCH" 2>/dev/null; then
+        SEEN="$COMMIT"
+        HEAD_LINES="$(git show "${REF}:STATUS.md" 2>/dev/null | sed '/^$/q')"
+        if git merge-base --is-ancestor "$SHA" "$COMMIT" 2>/dev/null && grep -q '^ipad: ' <<< "$HEAD_LINES" \
+          && ! grep -qE ': (cancelled|no report)' <<< "$HEAD_LINES"; then LATER=1; fi
+      fi
     fi
     if [[ -n "$LATER" ]] || { [[ "$COMMIT" == "$SHA" ]] \
       && { [[ -z "${CI_RUN:-}" ]] || [[ "$RUN" == "$CI_RUN" || "${RUN%.*}" == "$CI_RUN" ]]; }; }; then

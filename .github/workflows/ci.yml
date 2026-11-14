@@ -104,6 +104,7 @@ jobs:
     permissions:
       contents: read
       checks: read
+      actions: read
     outputs:
       lanes: ${{ steps.plan.outputs.lanes }}
       before: ${{ steps.plan.outputs.before }}
@@ -430,18 +431,14 @@ jobs:
       - name: Nickname v2 platform contract (macOS)
         id: nickname
         if: ${{ !cancelled() && matrix.job == 'ipad' }}
-        env:
-          BEFORE: ${{ github.event.before }}
         run: |
-          # As the benchmark below: only when the package or its tests differ from the shipping
-          # branch (there: from where the push found it), or there is no base to compare with.
-          # Building them takes 4 minutes, and the app's own pins run on every push.
+          # On a branch, only when the package or its tests differ from the shipping branch
+          # (building them takes 4 minutes, and the app's own pins run on every push). The
+          # shipping branch's own runs always: the push before may have given this entry's turn up.
           set -o pipefail
           BASE=
           if [[ "$GITHUB_REF_NAME" != main ]]; then
             git fetch -q --depth=1 origin main && BASE=FETCH_HEAD
-          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
-            git fetch -q --depth=1 origin "$BEFORE" && BASE=FETCH_HEAD
           fi
           if [[ -n "$BASE" ]] && git diff --quiet "$BASE" -- Sources Package.swift Tests; then
             echo "PaintCore and its tests unchanged; skipped" | tee out/nickname-v2-test.log; exit 0
@@ -450,18 +447,14 @@ jobs:
       - name: Pipeline benchmark (Apple silicon)
         id: bench
         if: ${{ !cancelled() && env.RELEASE == '1' && env.COMPILE != '1' }}
-        env:
-          BEFORE: ${{ github.event.before }}
         run: |
-          # Only when PaintCore differs from the shipping branch (on the shipping branch itself:
-          # from where the push found it, as a night train lands several merges at once), so a
-          # feature branch's later app-only commits keep benchmarking its pipeline changes;
-          # app-only work skips the 2-minute benchmark. No base to compare with: it runs.
+          # On a branch, only when PaintCore differs from the shipping branch, so a feature
+          # branch's later app-only commits keep benchmarking its pipeline changes; app-only work
+          # skips the 2-minute benchmark. The shipping branch's own runs always (as the nickname
+          # contract above), and when there is no base to compare with.
           BASE=
           if [[ "$GITHUB_REF_NAME" != main ]]; then
             git fetch -q --depth=1 origin main && BASE=FETCH_HEAD
-          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
-            git fetch -q --depth=1 origin "$BEFORE" && BASE=FETCH_HEAD
           fi
           if [[ -n "$BASE" ]] && git diff --quiet "$BASE" -- Sources Package.swift; then
             echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
@@ -650,9 +643,9 @@ jobs:
             python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }} \
               || printf '%s\n' "core: ${{ needs.core.result }}" "${JOBS[@]/=/: }" "ipa: ${{ needs.ipa.result }}" \
                 "" "ci/report.py failed: no details (its error is in this job's log)"
-            if [[ "$GITHUB_REF_NAME" == main && ( "${{ needs.apple.result }}" == cancelled || "${{ needs.ipa.result }}" == cancelled ) ]]; then
+            if [[ "$GITHUB_REF_NAME" == main && ( "${{ needs.apple.result }}" == cancelled || "${{ needs.apple.result }}" == failure || "${{ needs.ipa.result }}" == cancelled ) ]]; then
               echo
-              echo "cancelled on main: a newer push took the entry's turn while it waited, and its run covers this commit (or the entry ran past its time limit: the run's page says which)"
+              echo "on main, an entry cancelled or with no report most likely gave its turn to a newer push while it waited, whose run covers this commit (or it ran past its time limit: the run's page says which)"
             fi
           } > STATUS.md
           cat STATUS.md
@@ -662,14 +655,34 @@ jobs:
           # main's runs overlap (the header), and one whose entries had passed before can finish
           # ahead of the run before it: a report never replaces that of a later commit. (No answer:
           # it is published as ever.)
-          if [[ "$GITHUB_REF_NAME" == main ]] \
-            && git -C ../src fetch -q --depth=1 origin "refs/ci-shots/main" 2> /dev/null \
-            && published="$(git -C ../src show FETCH_HEAD:COMMIT 2> /dev/null)" && [[ "$published" =~ ^[0-9a-f]{40}$ ]] \
-            && [[ "$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...${published}" --jq .status 2> /dev/null)" == ahead ]]; then
-            echo "refs/ci-shots/main already holds the report of $published, a later commit: this one stays in the log above"
-            exit 0
+          # Should another report land between the look and the push, the push is refused and
+          # looks again (LEASE).
+          LEASE=()
+          if [[ "$GITHUB_REF_NAME" == main ]] && git -C ../src fetch -q --depth=1 origin "refs/ci-shots/main" 2> /dev/null; then
+            LEASE=("--force-with-lease=refs/ci-shots/main:$(git -C ../src rev-parse FETCH_HEAD)")
+            published="$(git -C ../src show FETCH_HEAD:COMMIT 2> /dev/null || true)"
+            if [[ "$published" =~ ^[0-9a-f]{40}$ ]] \
+              && [[ "$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...${published}" --jq .status 2> /dev/null || true)" == ahead ]]; then
+              echo "::notice::refs/ci-shots/main already holds the report of $published, a later commit: this one stays in this job's log"
+              exit 0
+            fi
           fi
           git init -q && git checkout -q -b shots
           git add -A
           git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "CI report for ${GITHUB_SHA}"
-          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" "shots:refs/ci-shots/${GITHUB_REF_NAME}"
+          URL="https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git"
+          for attempt in 1 2 3; do
+            # A lease in --force's place: --force would win over it.
+            if git push -q "${LEASE[@]:---force}" "$URL" "shots:refs/ci-shots/${GITHUB_REF_NAME}"; then exit 0; fi
+            [[ ${#LEASE[@]} -gt 0 ]] || break
+            # Another of main's reports landed meanwhile: a later commit's stays, an earlier one's goes.
+            sleep 5
+            git -C ../src fetch -q --depth=1 origin "refs/ci-shots/main"
+            LEASE=("--force-with-lease=refs/ci-shots/main:$(git -C ../src rev-parse FETCH_HEAD)")
+            published="$(git -C ../src show FETCH_HEAD:COMMIT 2> /dev/null || true)"
+            if [[ "$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...${published}" --jq .status 2> /dev/null || true)" == ahead ]]; then
+              echo "::notice::refs/ci-shots/main now holds the report of $published, a later commit: this one stays in this job's log"
+              exit 0
+            fi
+          done
+          echo "::error::couldn't publish the report"; exit 1

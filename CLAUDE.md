@@ -594,7 +594,7 @@ commit's message carries the review's notes, which the train's merge keeps), gre
 check, and touching different files. A conductor session (on Sonnet) runs `ci/train.sh make <name>
 <branch>…` (merges each into `claude/train-<name>`, fresh from `origin/main`, leaves off one that
 conflicts, and pushes), waits with `CI_BRANCH=claude/train-<name> ci/fetch.sh`, and on green runs
-`ci/train.sh land <name>`: `main` fast-forwards to the train, the one merge of that `main` run (it
+`ci/train.sh land <name>`: `main` fast-forwards to the train, whose iPad entries `main` then leaves out (it
 refuses a red, stale, compile-only or test-only report, or a `main` that moved: make the train again). On red,
 `ci/train.sh who <name> <path>…` names the branch that changed the failing file; the conductor
 makes the train again without it, and that branch goes back to its session. The conductor reports
