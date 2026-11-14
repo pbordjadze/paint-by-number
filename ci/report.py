@@ -211,7 +211,7 @@ def main(argv):
     for job, result in jobs:
         job_dir = os.path.join(report, job)
         steps = outcomes(job_dir)
-        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "iphone-ui", "compile", "test", "duo"):
+        if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "iphone-ui", "release-tests", "compile", "test", "duo"):
             # A matrix job that left no artifact: planned but lost, or not planned at all.
             head.append(f"{job}: {job_result(None, result)}")
             continue

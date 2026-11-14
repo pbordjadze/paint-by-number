@@ -311,10 +311,15 @@ final class RefineUITests: XCTestCase {
         reset.tap()
         XCTAssertTrue(waitFor(pad, toMatch: changes("No changes")), "Reset didn't put the picture back: \(pad.value ?? "")")
 
-        // The page's words beyond its invitation are under How It Works (painting-company row 316).
+        // The page's words beyond its invitation are under How It Works (painting-company row 316);
+        // the release shows them all.
+        #if UNRELEASED
         let howItWorks = app.buttons["How It Works"].firstMatch
         XCTAssertTrue(howItWorks.waitForExistence(timeout: 5), "Merge's page has no How It Works")
         howItWorks.tap()
+        #else
+        XCTAssertFalse(app.buttons["How It Works"].exists, "The release's page folds its words under How It Works")
+        #endif
         let link = app.links["Cell Edge"].firstMatch
         XCTAssertTrue(link.waitForExistence(timeout: 5), "Merge's page doesn't link Cell Edge")
         link.tap()
