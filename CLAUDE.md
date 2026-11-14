@@ -146,7 +146,7 @@ before planning app work).
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
-  App Store's build; a branch's `[compile]` or `[test …]` runs one entry instead, CI
+  App Store's build; a branch's `[compile]`, `[test …]`, `[duo]` or `[release-tests]` runs one entry instead, CI
   feedback loop), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
@@ -624,7 +624,7 @@ him itself, with a push notification once he has gone quiet.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
 - **One merge per `main` run.** Every push to `main` takes all 5 macOS runners at first (the IPA's
-  for its build, then `release-tests` for about 35 minutes), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
+  for its build, and `release-tests` waits for one, then takes about 35 minutes), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.

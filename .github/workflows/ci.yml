@@ -162,7 +162,7 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
-    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || matrix.job == 'iphone-ui' && 'iPhone — UI tests' || matrix.job == 'release-tests' && 'iPad — App Store build, unit and UI tests' || 'iPhone — build, screenshots, unit tests' }}
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || matrix.job == 'iphone-ui' && 'iPhone — UI tests' || matrix.job == 'release-tests' && 'iPad — App Store build, its tests' || 'iPhone — build, screenshots, unit tests' }}
     runs-on: xcode-27
     # iPhone's screenshots and tests, in one job, took up to 158 minutes (November 13) and were cut
     # off at 75, 100 and 130 on slow runners; split in two (`iphone`, `iphone-ui`) each takes
@@ -204,7 +204,7 @@ jobs:
             release-tests)
               # The shipping branch's every run takes the unit tests alone (the build and 5 minutes
               # of tests; the UI tests took 70 more on November 14); asked for, all of them.
-              plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=$([[ "$GITHUB_REF_NAME" == main ]] && echo PaintByNumberTests)" SKIP=); CONFIG=ReleaseTests ;;
+              plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=$([[ "$GITHUB_REF_NAME" == main ]] && echo PaintByNumberTests || true)" SKIP=); CONFIG=ReleaseTests ;;
             test)
               # The run's `tests`, or every `[test …]` in the message (any case, as `contains` reads
               # it): UI test classes or Class/testMethod, the unit tests' suites (Swift Testing) or
