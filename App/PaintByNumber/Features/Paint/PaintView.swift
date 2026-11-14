@@ -161,7 +161,8 @@ struct PaintView: View {
         // The canvas runs under the top edge: the clock would sit on the painting.
         .statusBarHidden()
         .background(Color(uiColor: .systemGroupedBackground))
-        .focusedSceneValue(\.painting, PaintingFocus(
+        // Out of sight, the menu bar's commands stay the preview's.
+        .focusedSceneValue(\.painting, isWarmup ? nil : PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
             zenMode: $zenMode, isGivingFeedback: feedback != nil, giveFeedback: startFeedback, replay: replay,
             close: onClose))
