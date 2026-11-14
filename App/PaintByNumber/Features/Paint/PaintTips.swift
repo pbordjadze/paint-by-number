@@ -245,9 +245,11 @@ enum PaintTips {
     /// each invalidation is a datastore write, and the first one already settles the tip.
     private static var invalidated: Set<String> = []
 
+    /// Off the main thread: TipKit reads the tip's rules to do it, encoding their predicates,
+    /// which took 6 to 10 ms of the frame the launch's first fill landed in.
     private static func invalidate(_ tip: some Tip) {
         guard invalidated.insert(tip.id).inserted else { return }
-        tip.invalidate(reason: .actionPerformed)
+        Task.detached(priority: .utility) { tip.invalidate(reason: .actionPerformed) }
     }
 
     // MARK: Demos
