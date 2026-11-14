@@ -145,7 +145,7 @@ before planning app work).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
-  on `main`: `iphone`, all of it; a branch's `[compile]` or `[test …]` runs one entry instead, CI
+  on `main`: `iphone` and `iphone-ui`, the iPhone's share alike; a branch's `[compile]` or `[test …]` runs one entry instead, CI
   feedback loop), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
   (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
@@ -500,15 +500,16 @@ any port of it, when changing the fitter: work from the paper.
    that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines
    trimmed), `core/` (tests, strings check, `regression/` with its table and
    `sheets/<regime>/<sample>.jpg`), and per job
-   (`ipad`, `ipad-ui`, `iphone`, or the one `compile`, `test` or `duo`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
+   (`ipad`, `ipad-ui`, `iphone`, `iphone-ui`, or the one `compile`, `test` or `duo`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's own log lines
    during the run, every category of `Log`), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
    screenshots, runs the unit tests and the Settings UI tests, builds Release for
    `ci/check_release.sh` (problems land in `ipad/errors.txt` too) and benchmarks the pipeline
    (`ipad/bench.txt`, only when `Sources/` or `Package.swift` differ from `main`); `ipad-ui` builds
-   Debug and runs the other UI tests (the Plan step in `ci.yml` divides them). `iphone` (an
-   iPhone 17 Pro: screenshots, unit and UI tests) runs on `main`, via workflow_dispatch with
+   Debug and runs the other UI tests (the Plan step in `ci.yml` divides them). `iphone` and
+   `iphone-ui` (an iPhone 17 Pro, divided as the iPad's two are; one job ran past 140 of its 160
+   minutes until November 14, painting-company row 289) run on `main`, via workflow_dispatch with
    `iphone: true`, or for a commit whose message contains `[iphone]`. Simulator builds are arm64
    only. A test that fails runs once more and passes if that run does (`-retry-tests-on-failure`);
    STATUS.md names it, and a flake still needs its cause found. Demo and test launches keep the
@@ -518,8 +519,8 @@ any port of it, when changing the fitter: work from the paper.
 3. Turnaround is about 30 min on idle runners (both iPad jobs take about that), about 40 when the
    caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
    as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
-   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 4 (`iphone`,
-   about 110 min, is main's longest, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
+   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 5 (four simulator jobs and the
+   IPA; each iPhone job about 75 to 90 min, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
    push to the same branch cancels the older run, which then never reports. A job GitHub finds no
    `xcode-27` runner for in about 15 minutes is abandoned ("not acquired by Runner of type hosted";
    STATUS.md says so): re-run that job (twice on November 4, 2026). Work on
@@ -610,8 +611,8 @@ him itself, with a push notification once he has gone quiet.
   `[compile]`, `[test …]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
-- **One merge per `main` run.** Every push to `main` takes 4 of the 5 macOS runners for about
-  45 minutes. While main's run is going, queue merges, then merge them together.
+- **One merge per `main` run.** Every push to `main` takes all 5 macOS runners at first (the IPA's
+  for its build), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
