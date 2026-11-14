@@ -86,6 +86,9 @@ struct UnlockSheet: View {
         .scrollBounceBehavior(.basedOnSize)
         // At accessibility sizes the content outgrows any sheet: it opens full height, and scrolls.
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(contentHeight)])
+        // Opaque, as Paint by Moonlight's: on iPad the glass let the painting behind show through
+        // its words. On the bench its secondary and red notes read at AA (6:1 and 5:1).
+        .presentationBackground(Theme.surface)
         .task { await loadPrice() }
         // Bought here, restored, or approved while the sheet was up (Ask to Buy).
         .onChange(of: paintings.isUnlocked) { _, unlocked in
