@@ -157,6 +157,9 @@ struct FinishedDoors: View {
         .animation(.easeOut(duration: 0.25), value: sampleImage == nil)
     }
 
+    /// Send It's heart, one red in light and dark.
+    private static let heart = Color(red: 0.86, green: 0.1, blue: 0.2)
+
     /// The warm light at a door's threshold.
     private static let glow = Color(red: 1, green: 0.965, blue: 0.88)
 
@@ -175,9 +178,13 @@ struct FinishedDoors: View {
         }
     }
 
-    /// Send It's glimpse: the finished painting as a picture sent with love.
+    /// Send It's glimpse: the finished painting as a picture sent with love, lying on a warm
+    /// envelope that fills the door as the other doors' pictures do (the same in dark mode).
     private var card: some View {
         ZStack(alignment: .topTrailing) {
+            LinearGradient(
+                colors: [Color(red: 0.95, green: 0.86, blue: 0.74), Color(red: 0.87, green: 0.73, blue: 0.58)],
+                startPoint: .top, endPoint: .bottom)
             if let picture {
                 Image(decorative: picture, scale: 1)
                     .resizable()
@@ -191,7 +198,7 @@ struct FinishedDoors: View {
                     .padding(.top, metrics.arch.height * 0.14)
                 Image(systemName: "heart.fill")
                     .font(.system(size: max(11, metrics.arch.width * 0.11)))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Self.heart)
                     .padding(.top, metrics.arch.height * 0.3)
                     .padding(.trailing, metrics.arch.width * 0.16)
             }
