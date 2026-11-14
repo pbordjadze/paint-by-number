@@ -699,6 +699,40 @@ struct PaintingSessionTests {
         #expect(events() == [.rejected(region: 1, expectedColor: 1)])
     }
 
+    /// A wide stripe whose number was left little room where it moved to (off writing or a
+    /// drawn line, or by the painter) is still wide: its stored radius is the number's room,
+    /// not its size, and a tap beside it is no miss of a small area.
+    @Test func tapBesideALargeAreaWithASqueezedNumberIsNoMiss() {
+        var stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
+        stripes.regions[0].inscribedRadius = 3
+        stripes.labels[0].radius = 3
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        // Asked again, the kept size answers.
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        #expect(events() == [.rejected(region: 1, expectedColor: 1), .rejected(region: 1, expectedColor: 1)])
+        session.tap(at: SIMD2(70, 50), tolerance: 30)
+        #expect(session.isPainted(0), "within the tolerance itself the stripe is simply painted")
+    }
+
+    /// The size kept from a search that stopped at one tolerance doesn't answer a wider one:
+    /// a stripe 60 wide is no small area at 4 units, and is one at 40.
+    @Test func aSizeMeasuredAtOneToleranceIsMeasuredAgainAtAWiderOne() {
+        var stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
+        stripes.regions[0].inscribedRadius = 3
+        stripes.labels[0].radius = 3
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        session.tap(at: SIMD2(110, 50), tolerance: 40)
+        #expect(events() == [
+            .rejected(region: 1, expectedColor: 1), .rejected(region: 1, expectedColor: 1), .missedSmallArea(region: 0),
+        ])
+    }
+
     /// Progress of another template is an error to handle, not a trap.
     @Test func mismatchedProgressThrows() {
         let progress = PaintProgress(regionCount: template.regions.count + 1)

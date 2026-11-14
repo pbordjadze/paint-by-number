@@ -20,6 +20,9 @@ struct Metrics: Codable {
     /// smooth gradient is posterized into.
     var bandRings: Int
     var medianRegionArea: Float
+    /// These three are of the regions' sizes (`Template.inscribedRadius(ofRegion:upTo:)`), not
+    /// of `Region.inscribedRadius`, the room a number has where it sits: `minLabelRadius` and
+    /// `minLabelRoom` are the numbers'.
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
     var minInscribedRadius: Float
@@ -147,6 +150,18 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         minFontSize = min(minFontSize, size)
         if size < LabelSizing.minimumFontSize(detail: detail) - 1e-4 { belowLegible += 1 }
     }
+    // The regions' sizes, not the room of a number that moved off writing or a drawn line
+    // (`Template.inscribedRadius(ofRegion:upTo:)`). Only a region whose stored room is under the
+    // smallest size so far can lower it, so most are never measured.
+    var under2 = 0, under3 = 0, minRadius = Float.infinity
+    for r in t.regions.indices.sorted(by: { t.regions[$0].inscribedRadius < t.regions[$1].inscribedRadius }) {
+        let stored = t.regions[r].inscribedRadius
+        guard stored < 3 || stored < minRadius else { break }
+        let radius = t.inscribedRadius(ofRegion: r)
+        if radius < 2 { under2 += 1 }
+        if radius < 3 { under3 += 1 }
+        minRadius = min(minRadius, radius)
+    }
     let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
     return Metrics(
         width: t.width, height: t.height, colors: t.palette.count, regions: t.regions.count,
@@ -155,9 +170,9 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         p95DeltaE: sortedErrors.isEmpty ? 0 : sortedErrors[Int(Float(sortedErrors.count - 1) * 0.95)],
         bandRings: BandRings.count(out.segmentation, working: working),
         medianRegionArea: areas.isEmpty ? 0 : areas[areas.count / 2],
-        regionsUnderRadius2: t.regions.filter { $0.inscribedRadius < 2 }.count,
-        regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
-        minInscribedRadius: t.regions.map(\.inscribedRadius).min() ?? 0,
+        regionsUnderRadius2: under2,
+        regionsUnderRadius3: under3,
+        minInscribedRadius: minRadius.isFinite ? minRadius : 0,
         minPaletteDistance: minPal.isFinite ? minPal : 0,
         minPaletteDistanceFloor: settings.minPaletteDistance,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
