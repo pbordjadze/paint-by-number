@@ -44,6 +44,11 @@ name: CI
 # iPad is the primary device, its work split in two so a push waits for about half of it. The
 # shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and a
 # SideStore source listing the latest builds (branch `sidestore`).
+# A newer push to a branch cancels the branch's run. Nothing cancels main's (painting-company
+# row 345): every push there starts `core` at once, and each simulator entry and the IPA takes
+# its turn after the same entry of the push before; while one waits, a newer push takes its
+# place (the entry shows as cancelled in the older run, whose commit the newer run covers).
+# And main runs no entry that already passed on the same files (the `plan` job, ci/plan.py).
 
 on:
   push:
@@ -74,8 +79,9 @@ on:
 permissions:
   contents: read
 
+# main's runs each have a group of their own: its jobs take turns by entry (the header).
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref_name == 'main' && github.run_id || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -90,6 +96,29 @@ env:
   SCHEME: PaintByNumber
 
 jobs:
+  plan:
+    name: Plan the simulator entries
+    # The matrix's entries, less those main has no need to repeat (ci/plan.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: read
+    outputs:
+      lanes: ${{ steps.plan.outputs.lanes }}
+      before: ${{ steps.plan.outputs.before }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false, sparse-checkout: ci }
+      - name: Plan
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # compile, test, duo, release-tests and iphone as the header says; the report job asks
+          # the same (TEST_ONLY, DUO_ONLY, RELEASE_TESTS_ONLY).
+          LANES: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[release-tests]') || github.event.inputs.release_tests == 'true')) && '["release-tests"]' || github.ref_name == 'main' && '["ipad", "ipad-ui", "iphone", "iphone-ui", "release-tests"]' || (github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone", "iphone-ui"]' || '["ipad", "ipad-ui"]' }}
+        run: python3 ci/plan.py
+
   core:
     name: PaintCore tests and quality regression (Linux)
     runs-on: ubuntu-latest
@@ -156,14 +185,21 @@ jobs:
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.
         if: ${{ !cancelled() }}
         shell: bash
-        run: python3 ci/report.py --self-test
+        run: python3 ci/report.py --self-test && python3 ci/plan.py --self-test
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
     name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || matrix.job == 'iphone-ui' && 'iPhone — UI tests' || matrix.job == 'release-tests' && 'iPad — App Store build, its tests' || 'iPhone — build, screenshots, unit tests' }}
+    needs: plan
+    if: needs.plan.outputs.lanes != '[]'
     runs-on: xcode-27
+    # On main an entry waits for the same entry of the push before, and is never cut off for a
+    # newer one (the header); a branch's run has groups of its own.
+    concurrency:
+      group: ci-${{ github.ref_name == 'main' && 'main' || github.run_id }}-${{ matrix.job }}
+      cancel-in-progress: false
     # iPhone's screenshots and tests, in one job, took up to 158 minutes (November 13) and were cut
     # off at 75, 100 and 130 on slow runners; split in two (`iphone`, `iphone-ui`) each takes
     # about half. The limit stays for a slow runner on a cache miss.
@@ -171,9 +207,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # compile, test, duo, release-tests and iphone as the header says; the report job asks the
-        # same (TEST_ONLY, DUO_ONLY, RELEASE_TESTS_ONLY: env can't be read here).
-        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[release-tests]') || github.event.inputs.release_tests == 'true')) && '["release-tests"]' || github.ref_name == 'main' && '["ipad", "ipad-ui", "iphone", "iphone-ui", "release-tests"]' || (github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone", "iphone-ui"]' || '["ipad", "ipad-ui"]') }}
+        job: ${{ fromJSON(needs.plan.outputs.lanes) }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
@@ -396,8 +430,22 @@ jobs:
       - name: Nickname v2 platform contract (macOS)
         id: nickname
         if: ${{ !cancelled() && matrix.job == 'ipad' }}
+        env:
+          BEFORE: ${{ github.event.before }}
         run: |
+          # As the benchmark below: only when the package or its tests differ from the shipping
+          # branch (there: from where the push found it), or there is no base to compare with.
+          # Building them takes 4 minutes, and the app's own pins run on every push.
           set -o pipefail
+          BASE=
+          if [[ "$GITHUB_REF_NAME" != main ]]; then
+            git fetch -q --depth=1 origin main && BASE=FETCH_HEAD
+          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            git fetch -q --depth=1 origin "$BEFORE" && BASE=FETCH_HEAD
+          fi
+          if [[ -n "$BASE" ]] && git diff --quiet "$BASE" -- Sources Package.swift Tests; then
+            echo "PaintCore and its tests unchanged; skipped" | tee out/nickname-v2-test.log; exit 0
+          fi
           swift test --filter ColorNicknameV2Tests 2>&1 | tee out/nickname-v2-test.log | tail -60
       - name: Pipeline benchmark (Apple silicon)
         id: bench
@@ -465,6 +513,11 @@ jobs:
     permissions:
       contents: write
     runs-on: xcode-27
+    # One at a time on main, in the order pushed, so an older build never lands on a newer one's
+    # SideStore source; a build that waits gives way to a newer push's (the header).
+    concurrency:
+      group: ci-${{ github.ref_name == 'main' && 'main' || github.run_id }}-ipa
+      cancel-in-progress: false
     timeout-minutes: 30
     env:
       BUILD: ${{ github.run_number }}
@@ -538,7 +591,7 @@ jobs:
 
   report:
     name: Publish report
-    needs: [core, apple, ipa]
+    needs: [plan, core, apple, ipa]
     if: always()
     permissions:
       contents: write
@@ -550,9 +603,11 @@ jobs:
         with: { path: report }
       - name: Write status and push to refs/ci-shots/${{ github.ref_name }}
         env:
-          # The matrix's entries share its result; iphone and release-tests only when the matrix ran them.
-          RELEASE_TESTS: ${{ github.ref_name == 'main' && needs.apple.result || 'skipped' }}
-          IPHONE: ${{ (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && needs.apple.result || 'skipped' }}
+          GH_TOKEN: ${{ github.token }}
+          # The matrix's entries share its result: those the plan gave it. One it left out as
+          # passed before (ci/plan.py) says where; the others never ran.
+          LANES: ${{ needs.plan.outputs.lanes }}
+          BEFORE: ${{ needs.plan.outputs.before }}
         run: |
           mkdir -p report && cd report
           find . -name '*.log' | while read -r f; do
@@ -576,17 +631,44 @@ jobs:
             elif [[ "$RELEASE_TESTS_ONLY" == 1 ]]; then
               JOBS=(release-tests=${{ needs.apple.result }})
             else
-              JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE" iphone-ui="$IPHONE" release-tests="$RELEASE_TESTS")
+              JOBS=()
+              [[ -n "$LANES" ]] || LANES='[]'
+              [[ -n "$BEFORE" ]] || BEFORE='{}'
+              for job in ipad ipad-ui iphone iphone-ui release-tests; do
+                if jq -e --arg job "$job" 'index($job) != null' <<< "$LANES" > /dev/null; then
+                  JOBS+=("$job=${{ needs.apple.result }}")
+                elif url="$(jq -er --arg job "$job" '.[$job] // empty' <<< "$BEFORE")"; then
+                  JOBS+=("$job=before:$url")
+                else
+                  JOBS+=("$job=skipped")
+                fi
+              done
             fi
+            # A plan that failed ran no simulator entry: say so first.
+            if [[ "${{ needs.plan.result }}" != success ]]; then JOBS=(plan=${{ needs.plan.result }} "${JOBS[@]}"); fi
             # Should the script break, the jobs' results still reach the ref (and its waiters).
             python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }} \
               || printf '%s\n' "core: ${{ needs.core.result }}" "${JOBS[@]/=/: }" "ipa: ${{ needs.ipa.result }}" \
                 "" "ci/report.py failed: no details (its error is in this job's log)"
+            if [[ "$GITHUB_REF_NAME" == main && ( "${{ needs.apple.result }}" == cancelled || "${{ needs.ipa.result }}" == cancelled ) ]]; then
+              echo
+              echo "cancelled on main: a newer push took the entry's turn while it waited, and its run covers this commit (or the entry ran past its time limit: the run's page says which)"
+            fi
           } > STATUS.md
           cat STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           # Which run and attempt wrote it: a re-run of one commit rewrites the ref (ci/fetch.sh's CI_RUN).
           echo "${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}" > RUN
+          # main's runs overlap (the header), and one whose entries had passed before can finish
+          # ahead of the run before it: a report never replaces that of a later commit. (No answer:
+          # it is published as ever.)
+          if [[ "$GITHUB_REF_NAME" == main ]] \
+            && git -C ../src fetch -q --depth=1 origin "refs/ci-shots/main" 2> /dev/null \
+            && published="$(git -C ../src show FETCH_HEAD:COMMIT 2> /dev/null)" && [[ "$published" =~ ^[0-9a-f]{40}$ ]] \
+            && [[ "$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...${published}" --jq .status 2> /dev/null)" == ahead ]]; then
+            echo "refs/ci-shots/main already holds the report of $published, a later commit: this one stays in the log above"
+            exit 0
+          fi
           git init -q && git checkout -q -b shots
           git add -A
           git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "CI report for ${GITHUB_SHA}"
