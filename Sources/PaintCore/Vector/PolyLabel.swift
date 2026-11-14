@@ -177,10 +177,29 @@ enum PolyLabel {
         }
     }
 
-    /// Best-first search over the box for the maximum of `distance`.
+    /// `find` over the whole polygon, however many vertices it has, for a caller without a raster
+    /// seed to trust (`Template.inscribedRadius(ofRegion:upTo:)`). The search ends at the first
+    /// spot farther than `enough` from the outline, which is then what it returns.
+    static func findAnywhere(
+        _ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>, enough: Double = .infinity
+    ) -> (position: SIMD2<Double>, distance: Double) {
+        let outerEnd = poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0
+        guard outerEnd > 0 else { return (seed, 0) }
+        var minX = Double.infinity, minY = Double.infinity, maxX = -Double.infinity, maxY = -Double.infinity
+        for i in 0..<outerEnd {
+            let p = poly.points[i]
+            minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+        }
+        return search(minX: minX, minY: minY, maxX: maxX, maxY: maxY, precision: precision, seed: seed, enough: enough) {
+            poly.signedDistance($0, $1)
+        }
+    }
+
+    /// Best-first search over the box for the maximum of `distance`, or for the first spot
+    /// where it passes `enough`.
     private static func search(
         minX: Double, minY: Double, maxX: Double, maxY: Double, precision: Double, seed: SIMD2<Double>,
-        distance: (Double, Double) -> Double
+        enough: Double = .infinity, distance: (Double, Double) -> Double
     ) -> (position: SIMD2<Double>, distance: Double) {
         let width = maxX - minX, height = maxY - minY
         let cellSize = max(precision, min(width, height))
@@ -239,7 +258,7 @@ enum PolyLabel {
             }
             x += cellSize
         }
-        while !heap.isEmpty {
+        while !heap.isEmpty, best.d <= enough {
             let c = pop()
             if c.max - best.d <= precision { break }
             h = c.h / 2
