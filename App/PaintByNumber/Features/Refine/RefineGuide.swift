@@ -793,7 +793,7 @@ struct RefineGuidePageView: View {
             } else {
                 VStack(spacing: 0) {
                     pad(practice)
-                        .frame(height: min(max(360, proxy.size.height * 0.58), proxy.size.height * 0.85))
+                        .frame(height: Self.padHeight(width: proxy.size.width - 24, room: proxy.size.height))
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
                         .padding(.bottom, 4)
@@ -824,6 +824,18 @@ struct RefineGuidePageView: View {
     }
 
     // MARK: Practice
+
+    /// The practice pad's height above the words: its picture (4:3, both practice pictures) as
+    /// wide as the pad, with the pad's bar and palette, so no band of empty pad lies above and
+    /// below the picture and the invitation sits right under it (the critic's round 1); at least
+    /// 360 pt, and never more than 85% of the room.
+    static func padHeight(width: CGFloat, room: CGFloat) -> CGFloat {
+        let picture = max(0, width - 20) * 3 / 4
+        return min(max(360, picture + padChrome), room * 0.85)
+    }
+
+    /// The pad's bar (Undo, Redo, the layers, Reset) and palette, and the margins round them.
+    private static let padChrome: CGFloat = 124
 
     private func land() {
         guard !hasLanded else { return }
@@ -902,10 +914,15 @@ struct RefineGuidePageView: View {
                 DisclosureGroup(isExpanded: $showsHowItWorks) {
                     blockViews(rest)
                         .padding(.top, 10)
+                        .tint(Theme.signature)
                 } label: {
                     Text("How It Works")
                         .font(.headline)
                 }
+                // The label and its chevron in the words' color, the links inside keeping the
+                // guide's tint: Nightshade on the dark paper read at 2 to 3:1 (the critic's round 1;
+                // a foreground style on the label alone lost to the group's tint).
+                .tint(.primary)
                 .accessibilityIdentifier("refine-guide-how-it-works")
             }
             #else
