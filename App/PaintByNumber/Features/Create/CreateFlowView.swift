@@ -161,7 +161,7 @@ struct CreateFlowView: View {
                 }
             }
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
-            // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).
+            // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineModel.land`).
             // `create-refine-unlock` is ready once the sheet shows its price (`UnlockSheet`).
             if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil
                 && ShellDemo.current != .createRefineUnlock)
