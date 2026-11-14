@@ -45,7 +45,7 @@ struct EditWork {
         /// it is cut into the line's chains, which may bound a cell. Writing is letters over the
         /// drawing, not part of it: a line that met a letter that way would make the letter an
         /// outline, no longer writing, and a loop of it (an "o") a cell.
-        var joinsLines: Bool { alive && layer != LineLayer.color.rawValue && !writing }
+        var joinsLines: Bool { alive && LineLayer.isDrawn(layer) && !writing }
     }
 
     var t: Template
@@ -158,7 +158,7 @@ struct EditWork {
     }
 
     func isFrame(_ e: Int) -> Bool { t.edges[e].right == BoundaryEdge.outside }
-    func isInked(_ e: Int) -> Bool { layers[e] != LineLayer.color.rawValue }
+    func isInked(_ e: Int) -> Bool { LineLayer.isDrawn(layers[e]) }
 
     mutating func setPoints(_ e: Int, _ points: [LatticePoint]) {
         t.edges[e].pointStart = UInt32(t.points.count)

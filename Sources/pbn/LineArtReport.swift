@@ -229,7 +229,7 @@ struct LineArtReport: Codable {
 /// art or its layers don't match its edges.
 func forEachDrawnSegment(of t: Template, _ body: (SIMD2<Float>, SIMD2<Float>) -> Void) {
     guard let lines = t.lineArt, lines.edgeLayers.count == t.edges.count else { return }
-    for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
+    for (k, e) in t.edges.enumerated() where LineLayer.isDrawn(lines.edgeLayers[k]) {
         let pts = t.points(of: e)
         for j in pts.indices.dropFirst() { body(pts[j - 1], pts[j]) }
     }

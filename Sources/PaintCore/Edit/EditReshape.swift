@@ -212,7 +212,7 @@ extension EditWork {
             }
         }
         var lines: [(index: Int, points: [LatticePoint])] = []
-        for (i, s) in strokes.enumerated() where s.alive && s.layer != LineLayer.color.rawValue {
+        for (i, s) in strokes.enumerated() where s.alive && LineLayer.isDrawn(s.layer) {
             let pts = Self.dedupe(s.points.map(Lattice.point))
             guard pts.count >= 2 else { continue }
             lines.append((i, pts))
