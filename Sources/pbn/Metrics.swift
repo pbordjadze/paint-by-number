@@ -21,8 +21,10 @@ struct Metrics: Codable {
     var bandRings: Int
     var medianRegionArea: Float
     /// These three are of the regions' sizes (`Template.inscribedRadius(ofRegion:upTo:)`), not
-    /// of `Region.inscribedRadius`, the room a number has where it sits: `minLabelRadius` and
-    /// `minLabelRoom` are the numbers'.
+    /// of `Region.inscribedRadius`, the room a number has where it sits. So the gate's
+    /// `regionsUnderRadius2 == 0` says no region is smaller than 2, and no longer that no number
+    /// has less room than that where it moved to: a number's room is `minLabelRadius`,
+    /// `minLabelRoom`, `labelsBelowLegibleSize` and `pbn check`'s to guard.
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
     var minInscribedRadius: Float

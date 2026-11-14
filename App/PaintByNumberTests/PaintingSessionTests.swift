@@ -717,9 +717,11 @@ struct PaintingSessionTests {
         #expect(session.isPainted(0), "within the tolerance itself the stripe is simply painted")
     }
 
-    /// The size kept from a search that stopped at one tolerance doesn't answer a wider one:
-    /// a stripe 60 wide is no small area at 4 units, and is one at 40.
-    @Test func aSizeMeasuredAtOneToleranceIsMeasuredAgainAtAWiderOne() {
+    /// A stripe 60 wide is no small area at 4 units and is one at 40, asked in that order of
+    /// one session. (That a size found by a search stopped at a narrow tolerance is only a lower
+    /// bound, which this stripe can't show, its first spot being its widest, is PaintCore's
+    /// `RegionSizeTests.aLimitedSearchAnswersOnlyThatTheRegionIsBigger`.)
+    @Test func aWideAreaIsSmallAtAWiderTolerance() {
         var stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
         stripes.regions[0].inscribedRadius = 3
         stripes.labels[0].radius = 3
