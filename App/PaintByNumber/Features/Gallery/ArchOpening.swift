@@ -174,12 +174,12 @@ struct ArchOpeningView: View {
 
     /// A finished painting's Finished panel with its doors, as `PaintView` will lay it.
     private func expectedPanel(geo: GeometryProxy) -> CGFloat? {
-        let width = min(CompletionBar.panelWidth, geo.size.width - 2 * PaintingLayout.edge) - 2 * CompletionBar.doorsInset
+        let count = FinishedDoor.shown(changes: true, original: OriginalWork.of(opening.artwork.sampleName) != nil).count
+        let width = CompletionBar.doorsWidth(count: count, available: geo.size.width - 2 * PaintingLayout.edge)
         let room = geo.size.height * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact)
         let size = min(dynamicTypeSize, .xxLarge)
         guard let doors = DoorMetrics.fitting(
-            count: FinishedDoor.shown(changes: true, original: OriginalWork.of(opening.artwork.sampleName) != nil).count,
-            width: width,
+            count: count, width: width,
             height: room - CompletionBar.height - CompletionBar.doorsInset, dynamicTypeSize: size)
         else { return nil }
         let rows = CGFloat(doors.rows)

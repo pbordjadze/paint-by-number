@@ -22,16 +22,24 @@ struct FinishedDoorsTests {
     }
 
     /// Five doors: three over two where a row of five would be too small (a phone upright), one
-    /// row on an iPad's panel and on a phone on its side.
+    /// row on an iPad's panel, which is wider for them, and on a phone on its side.
     @Test func fiveDoorsStandThreeOverTwo() throws {
-        let phone = try #require(DoorMetrics.fitting(count: 5, width: 346, height: 417, dynamicTypeSize: .large))
+        let phone = try #require(DoorMetrics.fitting(
+            count: 5, width: CompletionBar.doorsWidth(count: 5, available: 378), height: 417, dynamicTypeSize: .large))
         #expect(phone.columns == 3 && phone.rows == 2)
         #expect(phone.arch.width >= 100)
         #expect(3 * phone.arch.width + 2 * DoorMetrics.gap <= 346)
-        let pad = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 600, dynamicTypeSize: .large))
-        // An iPad's panel keeps them in one row, so the painting keeps its room.
+        let wide = CompletionBar.doorsWidth(count: 5, available: 1000)
+        let pad = try #require(DoorMetrics.fitting(count: 5, width: wide, height: 600, dynamicTypeSize: .large))
         #expect(pad.columns == 5 && pad.rows == 1)
-        #expect(pad.arch.width >= DoorMetrics.snugRow && 5 * pad.arch.width + 4 * DoorMetrics.gap <= 528)
+        #expect(5 * pad.arch.width + 4 * DoorMetrics.gap <= wide)
+        // As large as a row of four, so each caption keeps its one line.
+        let four = try #require(DoorMetrics.fitting(
+            count: 4, width: CompletionBar.doorsWidth(count: 4, available: 1000), height: 600, dynamicTypeSize: .large))
+        #expect(pad.arch == four.arch && pad.arch.width >= DoorMetrics.roomyRow)
+        // A screen between the two, where the panel can't widen all the way, still keeps one row.
+        let between = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 600, dynamicTypeSize: .large))
+        #expect(between.columns == 5 && between.rows == 1 && between.arch.width >= DoorMetrics.snugRow)
         let side = try #require(DoorMetrics.fitting(count: 5, width: 528, height: 140, dynamicTypeSize: .large))
         #expect(side.columns == 5 && side.rows == 1)
     }
@@ -52,6 +60,15 @@ struct FinishedDoorsTests {
         let side = try #require(DoorMetrics.fitting(count: 4, width: 528, height: 140, dynamicTypeSize: .large))
         #expect(side.columns == 4 && side.rows == 1)
         #expect(side.arch.height + DoorMetrics.labelHeight(.large) + DoorMetrics.labelGap <= 140)
+    }
+
+    /// The panel is the bar's width with up to four doors, a door wider with five, and never
+    /// wider than the screen leaves it.
+    @Test func thePanelWidensForAFifthDoor() {
+        for count in 0...4 { #expect(CompletionBar.widestPanel(doors: count) == CompletionBar.panelWidth) }
+        #expect(CompletionBar.widestPanel(doors: 5) > CompletionBar.panelWidth + DoorMetrics.roomyRow)
+        #expect(CompletionBar.doorsWidth(count: 4, available: 1000) == 528)
+        #expect(CompletionBar.doorsWidth(count: 5, available: 378) == 346)
     }
 
     @Test func noRoomShowsNoDoors() {

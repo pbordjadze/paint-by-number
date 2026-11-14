@@ -75,8 +75,8 @@ can't be confirmed is dropped.
   `painting` or `photograph`, `source` an https URL, `retrieved` a `YYYY-MM-DD` date, no id
   twice. `work_title` and `evidence_url` are optional.
 - `medium`, `place` and `wikipedia` are optional too, and a painting's alone: SideStore and
-  Debug builds show them, with `work_title`, the credit line and a button to `source`, on the
-  page a finished library picture opens (About This Painting, painting-company row 120). The
+  Debug builds show them, with the credit line and a button to `source`, on the
+  page a finished library picture opens (The Original, painting-company row 120). The
   page writes nothing of its own, so each is a fact with a source, and one that isn't certain is
   left out: `medium` is the keeper's own wording, letter for letter (the page only capitalizes
   it); `place` is the institution that keeps the object `source` shows, with its city where its

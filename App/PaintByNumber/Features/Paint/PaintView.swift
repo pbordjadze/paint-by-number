@@ -287,7 +287,6 @@ struct PaintView: View {
         #if UNRELEASED
         .sheet(item: $about) { work in
             AboutPainting(work: work)
-                .pageSizedOnPad()
                 .besideTheFold()
         }
         #endif
@@ -873,11 +872,11 @@ struct PaintView: View {
         let bars = Self.topGap + barHeight(layout.regularChrome) + PaintingLayout.canvasGap + Self.bottomGap + Self.bookGap
         let room = layout.mode == .whole
             ? page * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact) : page - bars
-        let width = min(CompletionBar.panelWidth, controlsWidth - 2 * Self.edge) - 2 * CompletionBar.doorsInset
+        let count = FinishedDoor.shown(changes: onChange != nil, original: OriginalWork.of(libraryPicture) != nil).count
+        let width = CompletionBar.doorsWidth(count: count, available: controlsWidth - 2 * Self.edge)
         let height = room - CompletionBar.height - CompletionBar.doorsInset
         return DoorMetrics.fitting(
-            count: FinishedDoor.shown(changes: onChange != nil, original: OriginalWork.of(libraryPicture) != nil).count,
-            width: width, height: height,
+            count: count, width: width, height: height,
             dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
     }
     #endif

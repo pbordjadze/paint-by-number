@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Checks what library.json says about each painting's real work against its keeper's own record.
 
-The app's About This Painting page (painting-company row 120) shows a record's `medium`, `place`
-and `wikipedia` verbatim, so they are facts to audit like the rest (docs/picture-library.md › The
+The Original, the app's page about a library picture's real work (painting-company row 120), shows a
+record's `medium`, `place` and `wikipedia` verbatim, so they are facts to audit like the rest
+(docs/picture-library.md › The
 record). For every painting this fetches the museum's open-access record of the object its
 `source` names and compares:
 

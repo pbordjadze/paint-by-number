@@ -47,10 +47,26 @@ struct CompletionBar: View {
     var onOriginal: ((OriginalWork) -> Void)?
     #endif
 
-    /// The bar's widest, and the doors' panel's.
+    /// The bar's widest, and the panel's with up to four doors.
     nonisolated static let panelWidth: CGFloat = 560
     /// The doors' margin inside the panel, at its sides and foot.
     nonisolated static let doorsInset: CGFloat = 16
+
+    #if UNRELEASED
+    /// The panel's widest with so many doors: a fifth door (The Original) widens it by a door, so
+    /// a row of five on an iPad keeps the arches of a row of four, and their captions one line.
+    nonisolated static func widestPanel(doors: Int) -> CGFloat {
+        let door = (panelWidth - 2 * doorsInset - 3 * DoorMetrics.gap) / 4
+        return max(panelWidth, 2 * doorsInset + CGFloat(doors) * door + CGFloat(doors - 1) * DoorMetrics.gap)
+    }
+
+    /// The doors' room across, of `count` doors where the panel may be `available` wide: what
+    /// the panel lays them in, the painting screen measures them for (`PaintView.doorMetrics`)
+    /// and the gallery's opening expects (`ArchOpening`).
+    nonisolated static func doorsWidth(count: Int, available: CGFloat) -> CGFloat {
+        min(widestPanel(doors: count), available) - 2 * doorsInset
+    }
+    #endif
 
     var body: some View {
         #if UNRELEASED
@@ -80,7 +96,7 @@ struct CompletionBar: View {
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
-        .frame(maxWidth: Self.panelWidth)
+        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(changes: onChange != nil, original: original != nil).count))
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
         .task(id: session.revision) { await share.prepare(for: session) }

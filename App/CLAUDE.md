@@ -295,11 +295,16 @@ below name both alike.
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
-  (painting-company row 120), five doors standing three over two on a phone upright and in one row on an iPad (`DoorMetrics.snugRow`): it opens `AboutPainting`, a
-  sheet about the real work (`OriginalWork`, read from `library.json` alone: the picture, its
-  title, maker and date, medium, where it is kept, the title it is cataloged under, the credit
-  line), whose two buttons open the keeper's catalog entry and, where the record names one, the
-  work's Wikipedia article in the browser; the app sends nothing. `about-painting` (with `-dark`)
+  (painting-company row 120), five doors standing three over two on a phone upright and in one
+  row on an iPad, whose panel widens by a door for them (`CompletionBar.widestPanel(doors:)`;
+  `doorsWidth` keeps the panel, `PaintView.doorMetrics` and `ArchOpening` in step). It opens
+  `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
+  read from `library.json` alone): the picture, and under it one small placard, its title,
+  maker and date, medium and, last, where it hangs (a record without a place ends on its
+  credit line; otherwise the credit is one faint line under the placard). The catalog entry is
+  the page's one tinted control and Wikipedia's article, where the record names one, a plain
+  link in the words' color (the accent is gold in dark appearance); both open in the browser,
+  and the app sends nothing. `about-painting` (with `-dark`)
   and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
   the bar's ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
