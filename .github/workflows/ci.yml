@@ -198,17 +198,27 @@ jobs:
                 [[ "$name" =~ $form ]] || fail "not a test class, suite, Class/testMethod or unit: $name"
                 cls="${name%%/*}"
                 if grep -rqE "class $cls: XCTestCase" App/PaintByNumberUITests; then
+                  name="${name%"()"}"
                   if [[ "$name" == */* ]]; then
                     grep -qE "func ${name#*/}\(" $(grep -rlE "class $cls: XCTestCase|extension $cls[^A-Za-z0-9_]" App/PaintByNumberUITests) \
                       || fail "no ${name#*/} in $cls"
                   fi
                   only+=("PaintByNumberUITests/$name")
-                elif files="$(grep -rlE "(struct|class|enum|actor) $cls([^A-Za-z0-9_]|$)" App/PaintByNumberTests)"; then
-                  # Swift Testing names a test by its function, parentheses and all.
+                elif grep -rqE "(struct|class|enum|actor) $cls([^A-Za-z0-9_]|$)" App/PaintByNumberTests; then
+                  # Swift Testing names a test by its function and argument labels (`name()`,
+                  # `name(format:)`); a suite's tests may lie in its extensions' files too.
                   if [[ "$name" == */* ]]; then
                     test="${name#*/}"; test="${test%"()"}"
-                    grep -qE "func $test\(" $files || fail "no $test in $cls"
-                    name="$cls/$test()"
+                    files="$(grep -rlE "(struct|class|enum|actor|extension) $cls([^A-Za-z0-9_]|$)" App/PaintByNumberTests)"
+                    sig="$(grep -hoE "func $test\([^)]*\)" $files | head -1)"
+                    [[ -n "$sig" ]] || fail "no $test in $cls"
+                    params="${sig#*(}"; params="${params%)}"; labels=""
+                    IFS=, read -ra each <<< "$params"
+                    for param in "${each[@]}"; do
+                      param="${param#"${param%%[![:space:]]*}"}"
+                      if [[ -n "$param" ]]; then labels+="${param%%[ :]*}:"; fi
+                    done
+                    name="$cls/$test($labels)"
                   fi
                   only+=("PaintByNumberTests/$name")
                 else
