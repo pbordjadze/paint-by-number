@@ -110,8 +110,6 @@ struct PaletteBar: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// The color whose details popover is open (long-press on its swatch).
-    @State private var detailsColor: Int?
     @State private var position = ScrollPosition(idType: Int.self)
     @State private var scroll = ScrollState()
     /// Whether swatches lie past either end of the bar, which then fades there: a swatch cut by
@@ -363,17 +361,57 @@ struct PaletteBar: View {
         if let color = scroll.pending { reveal(color, animated: false) }
     }
 
+    /// The swatch of color `index`, from the session's values as this render reads them: each is a
+    /// view of its own that renders only when one of them changed (`SwatchButton`).
     private func swatch(_ index: Int) -> some View {
+        let scroll = scroll
+        return SwatchButton(
+            session: session, index: index, remaining: session.remainingByColor[index],
+            isComplete: session.isColorComplete(index), isSelected: session.selectedColor == index,
+            shake: shakes[index] ?? 0, axis: axis, metrics: metrics, reduceMotion: reduceMotion,
+            onFrame: { scroll.selectedSwatch = $0 })
+            .equatable()
+    }
+}
+
+/// One swatch of the palette as a button: tap to select (or, selected, to be shown an area), hold
+/// for the paint's details. Every fill changes the areas left, which the bar's body reads for all
+/// its swatches, so each swatch takes what it shows as plain values and is compared by them: a fill
+/// renders its own color's swatch and no other (with thirty paints, each tap built thirty
+/// buttons, popovers and VoiceOver values anew; painting-company row 299). Its body reads nothing
+/// of the session that changes while a painting is open.
+private struct SwatchButton: View, Equatable {
+    let session: PaintingSession
+    let index: Int
+    /// The color's areas left to paint.
+    let remaining: Int
+    let isComplete: Bool
+    let isSelected: Bool
+    /// Bumped to shake it.
+    let shake: Int
+    let axis: Axis
+    let metrics: PaletteMetrics
+    let reduceMotion: Bool
+    /// Told the swatch's global frame while it is the selected one (`PaletteBar.TipAnchors`).
+    let onFrame: (CGRect) -> Void
+    /// The details popover is open (a long press).
+    @State private var showsDetails = false
+
+    nonisolated static func == (a: SwatchButton, b: SwatchButton) -> Bool {
+        a.session === b.session && a.index == b.index && a.remaining == b.remaining && a.isComplete == b.isComplete
+            && a.isSelected == b.isSelected && a.shake == b.shake && a.axis == b.axis && a.metrics == b.metrics
+            && a.reduceMotion == b.reduceMotion
+    }
+
+    var body: some View {
+        let session = session, index = index, selected = isSelected
         let template = session.template
         let total = session.totalByColor[index]
-        let painted = total - session.remainingByColor[index]
-        let fraction = 1 - Double(session.remainingByColor[index]) / Double(max(total, 1))
-        let complete = session.isColorComplete(index)
-        let selected = session.selectedColor == index
-        let nickname = session.nickname(of: index)
-        return Button {
+        let painted = total - remaining
+        let fraction = 1 - Double(remaining) / Double(max(total, 1))
+        Button {
             // A long press that opened the details also ends in a release over the swatch.
-            guard detailsColor == nil else { return }
+            guard !showsDetails else { return }
             if selected {
                 session.showHint()
             } else {
@@ -382,9 +420,9 @@ struct PaletteBar: View {
             }
         } label: {
             Swatch(
-                number: index + 1, color: Self.paint(template, index), ink: Self.numeralInk(template, index), fraction: fraction,
-                isComplete: complete, isSelected: selected, metrics: metrics, reduceMotion: reduceMotion)
-                .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
+                number: index + 1, color: PaletteBar.paint(template, index), ink: PaletteBar.numeralInk(template, index),
+                fraction: fraction, isComplete: isComplete, isSelected: selected, metrics: metrics, reduceMotion: reduceMotion)
+                .modifier(Shake(amount: CGFloat(shake)))
         }
         .buttonStyle(.plain)
         // Lit under a trackpad's pointer, as a system button would be.
@@ -392,30 +430,27 @@ struct PaletteBar: View {
         .hoverEffect(.highlight)
         // Details take precedence over the button's selection gesture. Recognizing both
         // simultaneously let a held swatch select its color instead of opening the popover.
-        .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
-        .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
+        .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in showsDetails = true })
+        .popover(isPresented: $showsDetails, arrowEdge: axis == .horizontal ? .bottom : .trailing) {
             SwatchDetails(
-                number: index + 1, nickname: nickname, shade: session.colorTitles[index], hex: template.palette[index].hexCode)
+                number: index + 1, nickname: session.nickname(of: index), shade: session.colorTitles[index],
+                hex: template.palette[index].hexCode)
                 .presentationCompactAdaptation(.popover)
         }
         .accessibilityLabel(session.colorLabels[index])
         .accessibilityValue(PaintSpeech.colorProgress(painted: painted, total: total))
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
+        .accessibilityAction(named: Text("Show Color Details")) { showsDetails = true }
         // Where the bar's tips point (`TipAnchors`): kept in the scroll state, so a scroll
         // renders nothing.
         .onGeometryChange(for: CGRect.self) { selected ? $0.frame(in: .global) : .null } action: { frame in
-            if !frame.isNull { scroll.selectedSwatch = frame }
+            if !frame.isNull { onFrame(frame) }
         }
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(session.numberedColorNames[index])
         }
-    }
-
-    private func detailsBinding(_ index: Int) -> Binding<Bool> {
-        Binding(get: { detailsColor == index }, set: { if !$0 && detailsColor == index { detailsColor = nil } })
     }
 }
 

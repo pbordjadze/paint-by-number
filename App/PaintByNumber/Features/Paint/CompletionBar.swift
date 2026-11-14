@@ -185,7 +185,8 @@ struct FinishWarmup: View {
                 .accessibilityHidden(true)
                 .task {
                     Self.isDone = true
-                    try? await Task.sleep(for: .milliseconds(300))
+                    // With the screen's own first frames, not a moment into the painting.
+                    try? await Task.sleep(for: .milliseconds(50))
                     bounces += 1
                     // The bounce has drawn.
                     try? await Task.sleep(for: .milliseconds(600))
