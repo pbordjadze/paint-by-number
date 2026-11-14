@@ -408,8 +408,9 @@ struct PaintView: View {
                     .padding(layout.mode == .whole ? controls : Self.padding(layout.canvasFrame, within: geo.safeAreaInsets))
             }
 
-            if !session.isComplete {
-                // What finishing shows, met once a launch, out of sight.
+            if !session.isComplete, !isWarmup {
+                // What finishing shows, met once a launch, out of sight. Not in the create flow's
+                // own warm-up: its window is never drawn and goes before the seal could bounce.
                 FinishWarmup(session: session, share: completionShare)
                     .environment(\.colorScheme, chromeScheme)
             }

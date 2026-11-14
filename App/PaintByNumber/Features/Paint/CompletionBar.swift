@@ -161,8 +161,9 @@ struct CompletionBar: View {
 /// it is the first on the screen to draw through) was otherwise met for the first time under the
 /// last fill, as the camera set off for the whole painting: the main thread came to that frame
 /// 60 to 75 ms late on an iPad Air 5, and late again as the seal bounced (painting-company row
-/// 299). All of it is made once a launch, and the screen's own first build is at a still moment
-/// (out of sight before Start Painting, `PaintScreenWarmup`, or once its push has landed).
+/// 299). All of it is made once a launch, with the first frames of the first painting screen
+/// that is shown (never `PaintScreenWarmup`'s, which isn't drawn), where the screen's own first
+/// build is already late.
 /// Below the screen's bottom edge, taking no touches, hidden from VoiceOver and UI tests.
 struct FinishWarmup: View {
     let session: PaintingSession
@@ -190,6 +191,8 @@ struct FinishWarmup: View {
                     bounces += 1
                     // The bounce has drawn.
                     try? await Task.sleep(for: .milliseconds(600))
+                    // A painting closed before the bounce drew leaves it to the next.
+                    if Task.isCancelled { Self.isDone = false }
                     builds = false
                 }
         }

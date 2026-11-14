@@ -220,8 +220,10 @@ synchronized folder would bundle it into the app.
   progress, events) drives the canvas through `PaintingCanvas`; `PaintProgress` is what is saved.
   The app is single window: one live session per painting.
 - Every fill changes `progress` and `remainingByColor`, so `PaintView`'s body reads neither: it
-  reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
-  per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
+  reads `isComplete`, `isStarted`, `completedColors` and `hasSelectedColor`, written only when
+  they flip, and the per-fill views read the rest themselves (the badge's `ProgressGroup`,
+  `PaletteBar`, whose swatches are views compared by their values, `SwatchButton`: a fill
+  renders its own color's alone). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
 - The canvas is first responder (⌘Z, three-finger undo). A menu opened over it (More, the length
   chip, the Finished bar's Share) raised the software keyboard for it, with nothing to type into:
