@@ -1114,8 +1114,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   mosaics in `Application Support/Ravenna/Artworks`, exports in `tmp/RavennaExports`, scene
   storage, tip ids and log categories under `ravenna.`. SwiftUI looks a literal up in the main
   bundle, so Ravenna's words are its source literals (its catalog keys them so) and every
-  `String(localized:)` passes `bundle: .ravenna`: keep both when adding a string there.
-  `strings_check.py` reads only `App/PaintByNumber`.
+  `String(localized:)` passes `bundle: .ravenna` (`bundle: .era` in a shared file): keep both when
+  adding a string there. `strings_check.py` reads `App/PaintByNumber` and `App/Shared`, never
+  `App/Ravenna`.
 - **Shared on purpose:** TipKit (configured once, by `PaintTips.configure` at launch), the
   navigation titles' New York, the free paintings' count (1.1's `freePaintings.v2`, in `.standard`: Unlimited Paintings; every
   new mosaic takes one, a library picture's too, and each era's `UnlimitedPaintings` reads the
