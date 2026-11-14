@@ -46,8 +46,8 @@ import simd
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 /// - `paint-palette`: ~30 % painted, the palette in four rows in rainbow order (More › Palette)
 /// - `paint-palette-number`: ~30 % painted, the palette in three rows by number, filled down each
-///   column (`PaletteLayoutTests`); in SideStore and Debug builds each color left in the place it
-///   had at the start (`PalettePlaces`)
+///   column (`PaletteLayoutTests`); in SideStore and Debug builds every color in the place it had
+///   at the start, the finished ones as spent wells (`PaletteBar.keepsPlaces`)
 /// - `paint-long-text`, `paint-complete-long-text`: `paint-progress` and `paint-complete` with a long
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette

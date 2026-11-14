@@ -326,17 +326,18 @@ below name both alike.
   lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
   so they never change as colors finish. In SideStore and Debug builds the palette stays put
   (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
-  `PalettePlaces`): each color keeps the place its position in the order gives it, a finished one
-  leaves that place empty, a lane (a bottom bar's column, a side bar's row) leaves only once all
-  its places are empty, the lanes after it then moving up one with every swatch on its line (on
-  one line, the next color takes the finished one's place), and the bar keeps the length of all
-  the painting's colors, its swatches laid from its start, so it neither shrinks nor re-centers;
-  at a scrolling bar's end the content keeps its length until it is scrolled back
-  (`PaletteBar.shownEnd`), so it is always the colors after a finished one that move. An undo
-  puts a color back where it was. Not under Nearly Done or Most Left, which re-sort by the
-  painter's choice; the release packs the colors left at every finish, as 1.1 did. `paint-palette`
-  and `paint-palette-number` show the empty places, `paint-progress` an iPhone's strip from its
-  start.
+  `placedColors`): every color of the painting keeps its place from the first fill to the last,
+  on every layout, and a finished one that is no longer in hand becomes a spent well there
+  (`SwatchButton.isSpent`: its paint as a faint wash inside a thin rim with a small check in the
+  bar's ink, no numeral and no progress ring; a cross-fade, a cut under Reduce Motion), so nothing
+  ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
+  nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
+  its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
+  `swatch-N` stays the colors there are to paint. The selection moves on to the next color left
+  and the bar scrolls it into view past the wells; an undo puts the paint back in its well. Not
+  under Nearly Done or Most Left, which re-sort by the painter's choice; the release lets a
+  finished color leave and packs the rest, as 1.1 did. `paint-palette`, `paint-palette-number`
+  and `paint-progress` (with `paint-dark`) show the wells.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
