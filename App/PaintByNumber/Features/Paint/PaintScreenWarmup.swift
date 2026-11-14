@@ -13,11 +13,16 @@ import UIKit
 /// the app's and transparent, drawn once and thrown away; the real one finds it made. A hosting
 /// controller in no window lays the views out but makes none of UIKit's (nor the canvas), so the
 /// window is needed. In it the screen does nothing a painting does on appearing
-/// (`EnvironmentValues.paintScreenIsWarmup`): no tips, no feedback engine, no hand-off report.
+/// (`EnvironmentValues.paintScreenIsWarmup`): no tips, no feedback engine, no hand-off report, and
+/// its canvas takes no first responder and tells VoiceOver nothing (`CanvasView.isOutOfSight`).
 @MainActor
 enum PaintScreenWarmup {
     /// Once a launch: what it makes stays made.
     private static var isDone = false
+    /// Counts the warm-ups asked for and let go: one let go (`letGo`) doesn't build.
+    private static var generation = 0
+    /// The window the screen is built in, while it is.
+    private static var scratch: UIWindow?
 
     /// How long the preview is to have been final and still first: a painter who moves a slider at
     /// once makes it again, and the build would hitch under their finger.
@@ -25,35 +30,49 @@ enum PaintScreenWarmup {
     /// How long the screen stays built: the canvas draws a frame, then the window goes.
     static let shown = Duration.milliseconds(150)
 
-    /// Builds the painting screen for `template` out of sight, unless it has been built this launch
-    /// or `stillWanted` (asked after the quiet moment and again once the session is made) says no.
+    /// Builds the painting screen for `template` out of sight, unless it has been built this launch,
+    /// is let go meanwhile, or `stillWanted` (asked after the quiet moment and again once the
+    /// session is made) says no.
     static func warm(_ template: Template, stillWanted: @escaping @MainActor () -> Bool) {
         guard !isDone else { return }
+        generation += 1
+        let asked = generation
         Task { @MainActor in
             try? await Task.sleep(for: quiet)
-            guard !isDone, stillWanted() else { return }
+            guard !isDone, asked == generation, stillWanted() else { return }
             let session = await PaintingSession.make(template: template)
             _ = await RenderContext.ready()
-            guard !isDone, stillWanted(),
-                  let window = UIApplication.shared.connectedScenes
-                      .compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first,
-                  let scene = window.windowScene
+            // The scene in front, never one in the background, where the GPU may not be used.
+            guard !isDone, asked == generation, stillWanted(),
+                  UIApplication.shared.applicationState == .active,
+                  let scene = UIApplication.shared.connectedScenes
+                      .compactMap({ $0 as? UIWindowScene }).first(where: { $0.activationState == .foregroundActive }),
+                  let window = scene.keyWindow
             else { return }
             isDone = true
             #if DEBUG
             TourLog.trace("mark", "warm begin")
             #endif
-            let scratch = build(session, in: scene, like: window)
+            scratch = build(session, in: scene, like: window)
             #if DEBUG
             TourLog.trace("mark", "warm built")
             #endif
             try? await Task.sleep(for: shown)
-            scratch.isHidden = true
-            scratch.rootViewController = nil
-            #if DEBUG
-            TourLog.trace("mark", "warm end")
-            #endif
+            letGo()
         }
+    }
+
+    /// The preview goes, or Start Painting was tapped: a warm-up still waiting won't build, and the
+    /// screen built goes now, so the real one is never built beside it.
+    static func letGo() {
+        generation += 1
+        guard let window = scratch else { return }
+        scratch = nil
+        window.isHidden = true
+        window.rootViewController = nil
+        #if DEBUG
+        TourLog.trace("mark", "warm end")
+        #endif
     }
 
     /// A window beneath `window`, transparent and taking no touches, with the painting screen in it,

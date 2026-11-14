@@ -193,7 +193,7 @@ struct PaintView: View {
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // Choosing a color is something done: the tips' hand has not rested yet.
-        .onChange(of: session.selectedColor) { chrome.activity() }
+        .onChange(of: session.selectedColor) { if !isWarmup { chrome.activity() } }
         // The photo shown, held or kept, is the Photo control used.
         .onChange(of: peek.isShown) { _, shown in
             if shown { PaintTips.used(.benchShowPhoto) }

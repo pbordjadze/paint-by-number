@@ -98,6 +98,12 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     /// The first frame is on screen (a tenth of a second after the GPU finished it).
     private(set) var hasShownFirstFrame = false
+    /// Built out of sight before Start Painting (`PaintScreenWarmup`): it takes no first responder
+    /// from the screen in sight, and tells VoiceOver and Switch Control nothing. Set before the
+    /// canvas is in a window.
+    var isOutOfSight = false {
+        didSet { if isOutOfSight { wantsFocus = false } }
+    }
     /// The painter zoomed the canvas: a double tap or a pinch.
     var onZoomStep: (() -> Void)?
     /// A finger took hold of the canvas to move or zoom it (true), or let go and the camera came to
@@ -485,7 +491,7 @@ final class CanvasView: UIView, PaintingCanvas {
             setNeedsLayout()
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
-            Task { self.becomeFirstResponder() }
+            if !isOutOfSight { Task { self.becomeFirstResponder() } }
             NotificationCenter.default.addObserver(
                 self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         } else {
@@ -1713,7 +1719,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     private func postLayoutChanged(_ focus: Any?) {
-        guard UIAccessibility.isVoiceOverRunning || UIAccessibility.isSwitchControlRunning else { return }
+        guard !isOutOfSight, UIAccessibility.isVoiceOverRunning || UIAccessibility.isSwitchControlRunning else { return }
         UIAccessibility.post(notification: .layoutChanged, argument: focus)
     }
 
