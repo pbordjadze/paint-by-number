@@ -10,20 +10,23 @@ name: CI
 #            build checked for the privacy manifest and for Debug-only code that must not ship,
 #            and the pipeline benchmark
 #   ipad-ui  Debug build, the other UI tests
-#   iphone   Debug build, screenshots, unit and UI tests: on the shipping branch, main, or on
-#            request (workflow_dispatch's `iphone`, or `[iphone]` in the pushed commit's message)
-#   compile  `[compile]` in a branch's pushed commit's message (never main's), instead of the three above: the Debug
+#   iphone   Debug build, screenshots, unit tests and the Settings UI tests; and
+#   iphone-ui  Debug build, the other UI tests: both on the shipping branch, main, or on request
+#            (workflow_dispatch's `iphone`, or `[iphone]` in the pushed commit's message). One job
+#            ran past 140 of its 160 minutes (painting-company row 289), so the iPhone's work is
+#            split as the iPad's is.
+#   compile  `[compile]` in a branch's pushed commit's message (never main's), instead of the four above: the Debug
 #            build (app and both test targets), the Release build and its check, the SideStore
 #            build (as the IPA job's, for the simulator) and the warnings gate, on one runner and
 #            with no simulator; `core` only builds and checks the strings.
 #            A branch's quick check before it takes a full slot.
 #   test     `[test Class …]` in a branch's pushed commit's message (or the hand-started run's
-#            `tests`; never main's), instead of the three above: the Debug build and only those
+#            `tests`; never main's), instead of the four above: the Debug build and only those
 #            tests on the iPad: UI test classes (or Class/testMethod), unit test suites (or
 #            Suite/test), or `unit` for every unit test; after the demo caches' warm-up when they
 #            miss; no screenshots, no Release. A test's quick try; `core` runs as ever.
 #   duo      `[duo]` in a branch's pushed commit's message (or the hand-started run's `duo`; never
-#            main's), instead of the three above: the Debug build on the iPhone Duo, the foldable,
+#            main's), instead of the four above: the Debug build on the iPhone Duo, the foldable,
 #            and ci/duo.sh's screenshots of ci/duo-scenarios.txt in every pose (closed, turned,
 #            open, half open like a book and like a laptop, closed again), each scenario launched
 #            once and carried through them all, with its layout checked against the fold
@@ -144,19 +147,18 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   apple:
-    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || 'iPhone — build, screenshots, tests' }}
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || matrix.job == 'iphone-ui' && 'iPhone — UI tests' || 'iPhone — build, screenshots, unit tests' }}
     runs-on: xcode-27
-    # iPhone's screenshots and tests take about 80 minutes when a pipeline change empties the
-    # demo caches; 75 cut its tests off, and 100 did on a slow runner (main, October 18: its
-    # last green run took 85), and 130 did too (main's run 559, October 22: its tests had passed,
-    # 76 minutes on a runner some 15% slower than run 557's, whose job took 110).
+    # iPhone's screenshots and tests, in one job, took up to 158 minutes (November 13) and were cut
+    # off at 75, 100 and 130 on slow runners; split in two (`iphone`, `iphone-ui`) each takes
+    # about half. The limit stays for a slow runner on a cache miss.
     timeout-minutes: 160
     strategy:
       fail-fast: false
       matrix:
         # compile, test, duo and iphone as the header says; the report job asks the same (TEST_ONLY,
         # DUO_ONLY: env can't be read here).
-        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
+        job: ${{ fromJSON((github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone", "iphone-ui"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
@@ -175,7 +177,8 @@ jobs:
           case "${{ matrix.job }}" in
             ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
             ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
-            iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
+            iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
+            iphone-ui) plan=(DEVICE=iphone SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
             compile) plan=(DEVICE=ipad SHOTS=0 RELEASE=1 ONLY= SKIP=) ;;
             duo)     plan=(DEVICE=duo SHOTS=0 RELEASE=0 ONLY= SKIP= DUO=1) ;;
             test)
@@ -541,7 +544,7 @@ jobs:
             elif [[ "$DUO_ONLY" == 1 ]]; then
               JOBS=(duo=${{ needs.apple.result }})
             else
-              JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE")
+              JOBS=(ipad=${{ needs.apple.result }} ipad-ui=${{ needs.apple.result }} iphone="$IPHONE" iphone-ui="$IPHONE")
             fi
             # Should the script break, the jobs' results still reach the ref (and its waiters).
             python3 ../src/ci/report.py . core=${{ needs.core.result }} "${JOBS[@]}" ipa=${{ needs.ipa.result }} \
