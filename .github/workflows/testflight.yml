@@ -35,6 +35,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 env:
   PROJECT: App/PaintByNumber.xcodeproj
@@ -55,17 +56,23 @@ jobs:
       - id: diff
         env:
           BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$GITHUB_REF_NAME" != main ] || [ "$GITHUB_EVENT_NAME" != push ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          # The push's commits, from the main it moved (its last commit alone when that is
-          # unknown). Strings catalogs aside: nearly every merge changes one, and App Store
-          # Connect checks nothing in them.
+          # Every commit since the last main push this workflow passed on, so a change pushed
+          # with [skip ci] (no workflow runs for it) or one whose dry run failed is checked again;
+          # else the push's own commits; else its last commit alone. Strings catalogs aside:
+          # nearly every merge changes one, and App Store Connect checks nothing in them.
+          last=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/testflight.yml/runs?branch=main&event=push&status=success&per_page=1" \
+            --jq '.workflow_runs[0].head_sha // empty' 2>/dev/null || true)
+          if [ -n "$last" ] && git merge-base --is-ancestor "$last" HEAD 2>/dev/null; then BEFORE=$last; fi
           if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then BEFORE=HEAD~1; fi
+          echo "since $BEFORE"
           changed=$(git diff --name-only "$BEFORE" HEAD -- \
             App/PaintByNumber/Resources App/RavennaResources App/Config \
-            App/PaintByNumber.xcodeproj App/UnlimitedPaintings.storekit Package.swift \
+            App/PaintByNumber.xcodeproj Package.swift ci/xcode.sh ':(glob)App/**/*.metal' \
             .github/workflows/testflight.yml ':!*.xcstrings')
           echo "$changed"
           echo "run=$([ -n "$changed" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
@@ -182,6 +189,10 @@ jobs:
     name: Give the build to Friends & Family
     needs: upload
     if: needs.upload.outputs.build != ''
+    # In the uploads' queue, so the next upload waits for this one's testers.
+    concurrency:
+      group: testflight-upload
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
