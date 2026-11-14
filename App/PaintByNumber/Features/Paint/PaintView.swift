@@ -214,7 +214,7 @@ struct PaintView: View {
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // Choosing a color is something done: the tips' hand has not rested yet.
-        .onChange(of: session.selectedColor) { if !isWarmup { chrome.activity() } }
+        .background { SelectionWatch(session: session) { if !isWarmup { chrome.activity() } } }
         // The photo shown, held or kept, is the Photo control used.
         .onChange(of: peek.isShown) { _, shown in
             if shown { PaintTips.used(.benchShowPhoto) }
@@ -415,6 +415,13 @@ struct PaintView: View {
                     .environment(\.colorScheme, chromeScheme)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(layout.mode == .whole ? controls : Self.padding(layout.canvasFrame, within: geo.safeAreaInsets))
+            }
+
+            if !session.isComplete, !isWarmup {
+                // What finishing shows, met once a launch, out of sight. Not in the create flow's
+                // own warm-up: its window is never drawn and goes before the seal could bounce.
+                FinishWarmup(session: session, share: completionShare)
+                    .environment(\.colorScheme, chromeScheme)
             }
 
             // The capture's flash as feedback starts.
@@ -674,7 +681,7 @@ struct PaintView: View {
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
     private func badgeVariants(_ regular: Bool) -> [BadgeVariant] {
-        let showsColor = regular && !session.isComplete && session.selectedColor != nil
+        let showsColor = regular && !session.isComplete && session.hasSelectedColor
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))
@@ -968,6 +975,20 @@ struct PaintView: View {
     #endif
 }
 
+/// Tells `action` of each change of the selected color, from a view of its own: watched in the
+/// painting screen's body, every change of color (each finished color's, in Zen Mode under the
+/// fill that finished it) rendered the whole screen.
+private struct SelectionWatch: View {
+    let session: PaintingSession
+    let action: () -> Void
+
+    var body: some View {
+        Color.clear
+            .onChange(of: session.selectedColor) { action() }
+            .accessibilityHidden(true)
+    }
+}
+
 /// The progress badge's ring and percentage. They change with every fill, so they read the
 /// session in a view of their own: a fill re-renders them, not the painting screen around them.
 /// They show what is on the canvas, which during a replay is not what the painting holds
@@ -991,7 +1012,9 @@ private struct ProgressGroup: View {
                     .fixedSize()
             }
             if showsPercent {
-                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
+                // Formatted here: a `Text` with a format resolves through an attributed string,
+                // whose attribute scopes Foundation loads on its first change, under the first fill.
+                Text(verbatim: (Double(percent) / 100).formatted(.percent.precision(.fractionLength(0))))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(showsTitle ? Theme.quietInk : Color.primary)

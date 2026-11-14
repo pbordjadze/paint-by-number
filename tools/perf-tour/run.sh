@@ -17,6 +17,7 @@
 #                     making-of off (the app's default), nothing to buy (as a SideStore build)
 #   start-making-of   the same with Settings > The Making-of on: the show plays to its end
 #   zen-30            thirty fills in Zen Mode, a tap's and a drag's in turn (`paint-zen-30`)
+#   colors            ten fills that each finish a color, in Zen Mode (`paint-colors-10`)
 #   finish            the last fill, the flight to the whole painting and night falling (`paint-nightfall`)
 # Launch arguments override the app's stored settings for that launch only; nothing stored is changed.
 # Every setting a scenario's work depends on is given: Music (Sun, and Moon for the finish, whose
@@ -31,7 +32,7 @@
 # trace is then deleted unless -k keeps it. Recording costs the app time: judge frames by the
 # unrecorded runs.
 # Results: <outdir>/<scenario>-<run>.tsv (the log), .meta (the Mac's load, times), and summary.txt
-# (tools/perf-tour/summary.py on every log). A device's app is left open as its owner opens it, with no demo.
+# (tools/perf-tour/summary.py on every log; hitchtable.py says which fill each hitch is at). A device's app is left open as its owner opens it, with no demo.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KIND="$1"; UDID="$2"; OUT="$3"; shift 3
@@ -48,7 +49,7 @@ while getopts "i:b:n:r:t:k" flag; do
   esac
 done
 shift $((OPTIND - 1))
-SCENARIOS=("$@"); [[ ${#SCENARIOS[@]} -eq 0 ]] && SCENARIOS=(launch forming forming-cold start start-making-of zen-30 finish)
+SCENARIOS=("$@"); [[ ${#SCENARIOS[@]} -eq 0 ]] && SCENARIOS=(launch forming forming-cold start start-making-of zen-30 colors finish)
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 
 # <scenario> -> the launch arguments, how long it plays (seconds) and the segment its log must hold.
@@ -61,6 +62,7 @@ plan() {
     start)           ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf NO); PLAY=28; SEGMENT=start ;;
     start-making-of) ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf YES); PLAY=75; SEGMENT=start ;;
     zen-30)          ARGS=(-demo paint-zen-30 -zenMode YES); PLAY=114; SEGMENT=zen-30 ;;
+    colors)          ARGS=(-demo paint-colors-10 -zenMode YES); PLAY=48; SEGMENT=colors ;;
     finish)          ARGS=(-demo paint-nightfall); PLAY=22; SEGMENT=finish; SKY=moon ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac
@@ -131,7 +133,11 @@ for scenario in "${SCENARIOS[@]}"; do
     fetch "$OUT/.tmp-$name"
     new=""
     for log in $(find "$OUT/.tmp-$name" -name 'tour-log-*.tsv' 2>/dev/null); do
-      [[ -n "$(find "$SEEN" -name "$(basename "$log")" 2>/dev/null)" ]] || new="$log"
+      # By its contents, not its name alone: a log is named for its process id, and a device just
+      # restarted gives the same small ids again, so a new log can carry an old one's name.
+      old=0
+      while IFS= read -r seen; do cmp -s "$log" "$seen" && old=1; done < <(find "$SEEN" -name "$(basename "$log")" 2>/dev/null)
+      [[ $old == 1 ]] || new="$log"
     done
     if [[ -n "$new" ]]; then
       cp "$new" "$OUT/$name.tsv"

@@ -212,7 +212,7 @@ below name both alike.
   `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
   memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
   itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
-  as for a painter's own photo), and `paint-zen-30` paints thirty Zen fills: with them
+  as for a painter's own photo), `paint-zen-30` paints thirty Zen fills and `paint-colors-10` ten that each finish a color: with them
   `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames
   themselves (`PerformanceTour`, the UI test, is for what only a touch reaches).
 - What no simulator has is checked through seams: `HapticsPlayer(isSupported: true)` and
@@ -252,8 +252,10 @@ below name both alike.
   progress, events) drives the canvas through `PaintingCanvas`; `PaintProgress` is what is saved.
   The app is single window: one live session per painting.
 - Every fill changes `progress` and `remainingByColor`, so `PaintView`'s body reads neither: it
-  reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
-  per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
+  reads `isComplete`, `isStarted`, `completedColors` and `hasSelectedColor`, written only when
+  they flip, and the per-fill views read the rest themselves (the badge's `ProgressGroup`,
+  `PaletteBar`, whose swatches are views compared by their values, `SwatchButton`: a fill
+  renders its own color's alone). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
 - The canvas is first responder (⌘Z, three-finger undo). A menu opened over it (More, the length
   chip, the Finished bar's Share) raised the software keyboard for it, with nothing to type into:
@@ -278,7 +280,8 @@ below name both alike.
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
-  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. From the painter's second
+  `isComplete`; built once a launch out of sight as the first painting screen opens, `FinishWarmup`,
+  so the last fill doesn't meet its views, symbols and bounce for the first time) and its seal bounces once it is up, for a painting finished on screen. From the painter's second
   painting finished on screen, once per app version, Apple's rating prompt is asked for after the finale
   (`RatingPrompt`, row 341; never in demo or test launches). The
   progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
