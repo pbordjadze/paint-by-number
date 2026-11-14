@@ -1,8 +1,7 @@
 /// The connected areas of a picture or of a plane of keys.
 struct RegionLabels: Sendable, Equatable {
     /// For each cell, the number of its area, from 0. `Int32` is the show's one type for an index
-    /// of an area or a paint (`Arrival.regionMinimum` and `PaintFlow` take these planes as they
-    /// are), signed so that -1 can mark no owner.
+    /// of an area or a paint (`Arrival.regionMinimum` takes these planes as they are), signed so that -1 can mark no owner.
     var labels: Plane<Int32>
     var count: Int
 }

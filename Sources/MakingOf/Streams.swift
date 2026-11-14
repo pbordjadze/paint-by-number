@@ -1,9 +1,11 @@
 import PaintCore
 
-/// What a stream of the show's random draws is for. Each purpose and index (a step, a stroke, a
-/// noise grid) has a stream of its own, so a draw count in one, such as a retry while sampling
-/// spots, can never shift another.
+/// What a stream of the show's random draws is for. Each purpose and index has a stream of its
+/// own, so a draw count in one, such as a retry while sampling spots, can never shift another.
 public enum ShowStream: UInt64, Sendable {
+    /// The show draws from `seeds` (step 3's k-means++, `PaintSeeds`) and from `fields` on. The
+    /// others were the crew show's and keep their numbers, so no later purpose takes one; the
+    /// sampling tests still draw from them, here and in the Python.
     case homes = 1, spots, noise, seeds, strokes
     /// The field show's (`FieldShow`): its purposes run from here on, one for each step and the
     /// last for its noise (`ShowStreams.field(_:)`).

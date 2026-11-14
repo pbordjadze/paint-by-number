@@ -32,7 +32,7 @@ struct FieldBuild {
 
     /// - Parameters:
     ///   - survivors: the layers' (`ShowLayers.survivors`).
-    ///   - seeds: step 3's k-means++ seeds (`PaintSeeds`), the same ones the crew's show drops.
+    ///   - seeds: step 3's k-means++ seeds (`PaintSeeds`).
     static func make(
         pictures: ShowPictures, survivors: Plane<Float>, template: ShowTemplate, spec: ShowSpec, seed: UInt64,
         seeds: [PaintSeed], paints: PaintColors, cancel: CancellationCheck
@@ -97,8 +97,8 @@ struct FieldBuild {
             let (first, last) = (at.min()!, at.max()!)
             fuses.append(at)
             lines.append(StrokeSchedule.Stroke(
-                index: n, walked: false, start: first, duration: last - first, jagged: jagged, smooth: smooth,
-                cumulative: Polyline(smooth).cumulative, relax: cells.map { relax[$0] }))
+                index: n, start: first, duration: last - first, jagged: jagged, smooth: smooth,
+                relax: cells.map { relax[$0] }))
         }
 
         var rng = plan.streams.field(5)
