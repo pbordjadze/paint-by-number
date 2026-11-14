@@ -55,10 +55,10 @@ struct FeedbackSheet: View {
                         .frame(maxWidth: .infinity, maxHeight: 300)
                         .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
                         .accessibilityElement()
-                        .accessibilityLabel(Text("Your mosaic with your marks"))
+                        .accessibilityLabel(Text("Your painting with your marks", bundle: .era))
                 }
                 Section {
-                    TextField("What would make this mosaic better?", text: $draft.note, axis: .vertical)
+                    TextField(text: $draft.note, axis: .vertical) { Text("What would make this painting better?", bundle: .era) }
                         .lineLimit(3...10)
                         .accessibilityIdentifier("feedback-note")
                 } header: {
@@ -138,7 +138,7 @@ struct FeedbackSheet: View {
 
     private var included: some View {
         Section {
-            Label("The mosaic with your marks, and each mark close up", systemImage: "photo")
+            Label { Text("The painting with your marks, and each mark close up", bundle: .era) } icon: { Image(systemName: "photo") }
             Label("Its template, settings and progress", systemImage: "square.grid.3x3")
             LabeledContent {
                 Text(verbatim: "\(draft.capture.app), \(draft.capture.device), \(draft.capture.system)")
@@ -157,9 +157,9 @@ struct FeedbackSheet: View {
             Text("Included")
         } footer: {
             if draft.canIncludePhoto {
-                Text("Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on.")
+                Text("Send goes straight to the people who make Paint by Moonlight. Your photo helps us remake the painting; it goes only if you turn it on.", bundle: .era)
             } else {
-                Text("Send goes straight to the people who make Paint by Mosaic.")
+                Text("Send goes straight to the people who make Paint by Moonlight.", bundle: .era)
             }
         }
     }
@@ -190,7 +190,7 @@ struct FeedbackSheet: View {
     }
 
     private var progressText: String {
-        phase == .sending ? String(localized: "Sending…", bundle: .ravenna) : String(localized: "Preparing your feedback…", bundle: .ravenna)
+        phase == .sending ? String(localized: "Sending…", bundle: .era) : String(localized: "Preparing your feedback…", bundle: .era)
     }
 
     private func send() {
@@ -302,7 +302,7 @@ private struct MarkRow: View {
     }
 
     private var title: String {
-        String(localized: "feedback.mark.title", defaultValue: "Mark \(number)", bundle: .ravenna,
+        String(localized: "feedback.mark.title", defaultValue: "Mark \(number)", bundle: .era,
                comment: "Feedback's review sheet: the name of one of the marks drawn on the painting; the argument is its number")
     }
 }

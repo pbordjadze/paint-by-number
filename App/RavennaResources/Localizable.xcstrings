@@ -25,9 +25,69 @@
       "comment": "Settings row, and the title of the screen it opens, crediting the sample pictures, artwork, and the code, models and methods behind the template engine",
       "extractionState": "manual"
     },
+    "Can’t Open Painting": {
+      "comment": "Title of the recovery screen shown when a painting's file can't be read",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t Open Mosaic"
+          }
+        }
+      }
+    },
     "Contact": {
       "comment": "Settings › About row that writes an email to the developers; the address shows beside it",
       "extractionState": "manual"
+    },
+    "Delete Painting": {
+      "comment": "Button on the recovery screen that deletes the painting that can't be opened",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Mosaic"
+          }
+        }
+      }
+    },
+    "Delete this painting?": {
+      "comment": "Title of the confirmation dialog for deleting a painting",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this mosaic?"
+          }
+        }
+      }
+    },
+    "Draw on the painting, pinch to zoom": {
+      "comment": "Feedback mode's top bar on the painting screen: hint under its title, also its VoiceOver hint",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draw on the mosaic, pinch to zoom"
+          }
+        }
+      }
+    },
+    "gallery.recovery.mayRepaint": {
+      "comment": "Recovery screen text added for a damaged painting the painter refined in an earlier version: regenerating it keeps their edits, but its paints are chosen again and may differ",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your changes will be made again, but some of its colors may come out different."
+          }
+        }
+      }
     },
     "Painting": {
       "comment": "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
@@ -49,13 +109,29 @@
       "comment": "The gallery's navigation title: the app's name",
       "extractionState": "manual"
     },
-    "Send goes straight to the people who make Paint by Mosaic.": {
+    "Send goes straight to the people who make Paint by Moonlight.": {
       "comment": "Feedback's review sheet: footer under what is sent; Send delivers the feedback to the developers directly",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send goes straight to the people who make Paint by Mosaic."
+          }
+        }
+      }
     },
-    "Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on.": {
+    "Send goes straight to the people who make Paint by Moonlight. Your photo helps us remake the painting; it goes only if you turn it on.": {
       "comment": "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send goes straight to the people who make Paint by Mosaic. Your photo helps us lay the mosaic again; it goes only if you turn it on."
+          }
+        }
+      }
     },
     "template.colorsOf": {
       "comment": "How many colors a template kept of the number the Colors slider asked for, the rest unused; the arguments are the kept count and the asked count, e.g. 21 of 24 colors",
@@ -72,6 +148,54 @@
     "Thank you for supporting Paint by Mosaic.": {
       "comment": "Footer of Settings › Unlimited Paintings once the purchase is bought",
       "extractionState": "manual"
+    },
+    "The painting couldn’t be prepared for sending.": {
+      "comment": "Send Template sheet: shown when the painting's file can't be made (its template can't be read)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The mosaic couldn’t be prepared for sending."
+          }
+        }
+      }
+    },
+    "The painting with your marks, and each mark close up": {
+      "comment": "Feedback's review sheet: a row of what is sent, the pictures",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The mosaic with your marks, and each mark close up"
+          }
+        }
+      }
+    },
+    "What would make this painting better?": {
+      "comment": "Feedback's review sheet: placeholder of the note field",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What would make this mosaic better?"
+          }
+        }
+      }
+    },
+    "Your painting with your marks": {
+      "comment": "Feedback's review sheet: VoiceOver label of the picture of the painting with the marks drawn on it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your mosaic with your marks"
+          }
+        }
+      }
     },
     "Your photos and mosaics stay on this device unless you share them or choose to send feedback. Paint by Mosaic has no accounts, ads or tracking.": {
       "comment": "Footer of the About section in Settings: the privacy statement",
@@ -351,10 +475,6 @@
     },
     "Can’t Find It?": {
       "comment": "Title of a tip shown after a minute with no fill while the selected color has areas left, at the selected color",
-      "extractionState": "manual"
-    },
-    "Can’t Open Mosaic": {
-      "comment": "Title of the recovery screen shown when a painting's file can't be read",
       "extractionState": "manual"
     },
     "Can’t Show the Canvas": {
@@ -933,10 +1053,6 @@
       "comment": "Context menu item that deletes a painting from the gallery",
       "extractionState": "manual"
     },
-    "Delete Mosaic": {
-      "comment": "Button on the recovery screen that deletes the painting that can't be opened",
-      "extractionState": "manual"
-    },
     "Delete this mosaic?": {
       "comment": "Title of the confirmation dialog for deleting a painting",
       "extractionState": "manual"
@@ -963,10 +1079,6 @@
     },
     "Draw a line, and the rows of tiles follow it.": {
       "comment": "Refine's hint under its controls: the Lines tool",
-      "extractionState": "manual"
-    },
-    "Draw on the mosaic, pinch to zoom": {
-      "comment": "Feedback mode's top bar on the painting screen: hint under its title, also its VoiceOver hint",
       "extractionState": "manual"
     },
     "Drop to Create a Mosaic": {
@@ -3365,14 +3477,6 @@
       "comment": "Refine: VoiceOver's name for the drawing area while it shows the mosaic",
       "extractionState": "manual"
     },
-    "The mosaic couldn’t be prepared for sending.": {
-      "comment": "Send Template sheet: shown when the painting's file can't be made (its template can't be read)",
-      "extractionState": "manual"
-    },
-    "The mosaic with your marks, and each mark close up": {
-      "comment": "Feedback's review sheet: a row of what is sent, the pictures",
-      "extractionState": "manual"
-    },
     "The Paints’ Names": {
       "comment": "Header in Acknowledgements of the section crediting the materials the paints are named after, and the title of its screen",
       "extractionState": "manual"
@@ -3665,10 +3769,6 @@
       "comment": "Feedback's review sheet: placeholder of the comment field of a mark drawn on the painting",
       "extractionState": "manual"
     },
-    "What would make this mosaic better?": {
-      "comment": "Feedback's review sheet: placeholder of the note field",
-      "extractionState": "manual"
-    },
     "Whole": {
       "comment": "Panel choice: all of the photo is laid",
       "extractionState": "manual"
@@ -3691,10 +3791,6 @@
     },
     "Your marks and notes will be lost.": {
       "comment": "Message of the confirmation before leaving feedback mode with marks or a note",
-      "extractionState": "manual"
-    },
-    "Your mosaic with your marks": {
-      "comment": "Feedback's review sheet: VoiceOver label of the picture of the painting with the marks drawn on it",
       "extractionState": "manual"
     },
     "Your next free painting comes tomorrow.": {

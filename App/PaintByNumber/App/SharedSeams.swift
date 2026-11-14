@@ -26,6 +26,15 @@ nonisolated enum EraSeam {
     static let offersQuietPainting = false
     #endif
 
+    /// The app's name as the painter reads it (a printed template's footer).
+    static var appName: String { String(localized: "Paint by Moonlight") }
+
+    /// A printed template's "Creator" metadata, which no one is shown.
+    static let pdfCreator = "Paint by Moonlight"
+
+    /// Whether Send Template… starts with Original Photo on: off until the painter turns it on.
+    static let sendsPhotoByDefault = false
+
     /// How a feedback report records the app it came from (`FeedbackCapture.app`, from
     /// `AppInfo.summary`): the relay files both eras' reports, and this one's is the plain version.
     static func feedbackApp(_ summary: String) -> String { summary }

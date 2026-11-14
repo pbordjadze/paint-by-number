@@ -12,6 +12,9 @@ struct PaintingRecoveryView: View {
     var progress: Double?
     /// The last attempt to regenerate failed.
     var didFail = false
+    /// A painting refined before its paints were kept with its refinements: made again, its paints
+    /// may differ, which the painter is told before choosing to (painting-company row 278).
+    var mayRepaint = false
     var onRegenerate: () -> Void
     var onDelete: () -> Void
     var onClose: () -> Void
@@ -36,7 +39,7 @@ struct PaintingRecoveryView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Regenerating")
                 .accessibilityValue(String(
-                    localized: "gallery.recovery.progressValue", defaultValue: "\(Int((progress * 100).rounded())) percent",
+                    localized: "gallery.recovery.progressValue", defaultValue: "\(Int((progress * 100).rounded())) percent", bundle: .era,
                     comment: "VoiceOver value of the regeneration progress bar: a whole percentage"))
             } else {
                 VStack(spacing: 12) {
@@ -50,10 +53,14 @@ struct PaintingRecoveryView: View {
                     // Last and set apart: never beside the way out.
                     if let artwork {
                         // Glass draws its label in the tint, whatever the role.
-                        Button("Delete Mosaic", systemImage: "trash", role: .destructive) { confirmsDelete = true }
+                        Button(role: .destructive) {
+                            confirmsDelete = true
+                        } label: {
+                            Label { Text("Delete Painting", bundle: .era) } icon: { Image(systemName: "trash") }
+                        }
                             .buttonStyle(.glass)
                             .tint(.red)
-                            .confirmationDialog("Delete this mosaic?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+                            .confirmationDialog(Text("Delete this painting?", bundle: .era), isPresented: $confirmsDelete, titleVisibility: .visible) {
                                 Button(DeleteConfirmation.buttonTitle(for: artwork), role: .destructive, action: onDelete)
                             } message: {
                                 DeleteConfirmationMessage(artwork: artwork)
@@ -68,7 +75,7 @@ struct PaintingRecoveryView: View {
     private var canRegenerate: Bool { artwork != nil && failure == .damaged(canRegenerate: true) }
 
     private var title: String {
-        failure == .needsNewerApp ? String(localized: "Needs a Newer Version", bundle: .ravenna) : String(localized: "Can’t Open Mosaic", bundle: .ravenna)
+        failure == .needsNewerApp ? String(localized: "Needs a Newer Version", bundle: .era) : String(localized: "Can’t Open Painting", bundle: .era)
     }
 
     private var systemImage: String {
@@ -81,34 +88,39 @@ struct PaintingRecoveryView: View {
         case .needsNewerApp:
             if let paintingTitle = artwork?.title, !paintingTitle.isEmpty {
                 text = String(localized: "gallery.recovery.newer.titled",
-                              defaultValue: "“\(paintingTitle)” was made with a newer version of Paint by Moonlight. Update the app to keep painting it.", bundle: .ravenna,
+                              defaultValue: "“\(paintingTitle)” was made with a newer version of Paint by Moonlight. Update the app to keep painting it.", bundle: .era,
                               comment: "Recovery screen text for a painting made by a newer app version; the argument is the painting's title")
             } else {
                 text = String(localized: "gallery.recovery.newer.untitled",
-                              defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.", bundle: .ravenna,
+                              defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.", bundle: .era,
                               comment: "Recovery screen text for an untitled painting made by a newer app version")
             }
         case .damaged(canRegenerate: true) where artwork != nil:
             if artwork?.isStarted == true {
                 text = String(localized: "gallery.recovery.damaged.regenerableFresh",
-                              defaultValue: "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh.", bundle: .ravenna,
+                              defaultValue: "Its file is damaged. It can be made again from its photo, but its paint can’t be saved: it will start fresh.", bundle: .era,
                               comment: "Recovery screen text for a damaged painting that has paint on it and can be regenerated from its photo")
             } else {
                 text = String(localized: "gallery.recovery.damaged.regenerable",
-                              defaultValue: "Its file is damaged. It can be made again from its photo.", bundle: .ravenna,
+                              defaultValue: "Its file is damaged. It can be made again from its photo.", bundle: .era,
                               comment: "Recovery screen text for a damaged painting that can be regenerated from its photo")
             }
         case .unreadable:
             text = String(localized: "gallery.recovery.unreadable",
-                          defaultValue: "It couldn’t be opened just now. Nothing changed: go back and try again.", bundle: .ravenna,
+                          defaultValue: "It couldn’t be opened just now. Nothing changed: go back and try again.", bundle: .era,
                           comment: "Recovery screen text when a painting's files exist but couldn't be read (a passing storage error)")
         case .damaged:
             text = String(localized: "gallery.recovery.damaged.unavailable",
-                          defaultValue: "Its file is damaged, and its photo is gone, so it can’t be made again.", bundle: .ravenna,
+                          defaultValue: "Its file is damaged, and its photo is gone, so it can’t be made again.", bundle: .era,
                           comment: "Recovery screen text for a damaged painting whose original photo is gone")
         }
+        if canRegenerate, mayRepaint {
+            text += "\n\n" + String(localized: "gallery.recovery.mayRepaint",
+                                    defaultValue: "Your changes will be made again, but some of its colors may come out different.", bundle: .era,
+                                    comment: "Recovery screen text added for a damaged painting the painter refined in an earlier version: regenerating it keeps their edits, but its paints are chosen again and may differ")
+        }
         if didFail {
-            text += "\n\n" + String(localized: "gallery.recovery.retry", defaultValue: "Regenerating didn’t work. Try again.", bundle: .ravenna,
+            text += "\n\n" + String(localized: "gallery.recovery.retry", defaultValue: "Regenerating didn’t work. Try again.", bundle: .era,
                                     comment: "Recovery screen text added after a failed regeneration attempt")
         }
         return text

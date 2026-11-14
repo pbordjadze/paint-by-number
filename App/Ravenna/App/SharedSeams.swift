@@ -26,6 +26,15 @@ nonisolated enum EraSeam {
     /// Whether the painting screen goes quiet once an area is painted (`QuietPainting`): always.
     static let offersQuietPainting = true
 
+    /// The app's name as the painter reads it (a printed template's footer).
+    static var appName: String { String(localized: "Paint by Mosaic", bundle: .ravenna) }
+
+    /// A printed template's "Creator" metadata, which no one is shown.
+    static let pdfCreator = "Paint by Mosaic"
+
+    /// Whether Send Template… starts with Original Photo on: on, as Ravenna's own app had it.
+    static let sendsPhotoByDefault = true
+
     /// How a feedback report records the app it came from (`FeedbackCapture.app`, from
     /// `AppInfo.summary`): by name, since its reports reach Paint by Moonlight's relay.
     static func feedbackApp(_ summary: String) -> String { "Ravenna \(summary)" }

@@ -79,7 +79,7 @@ struct FeedbackBar: View {
                     Text(name)
                         .font(.subheadline.weight(.semibold))
                     if style == .full {
-                        Text("Draw on the painting, pinch to zoom")
+                        Text("Draw on the painting, pinch to zoom", bundle: .era)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -94,13 +94,13 @@ struct FeedbackBar: View {
         .glassEffect(.regular, in: .capsule)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(name))
-        .accessibilityHint(Text("Draw on the painting, pinch to zoom"))
+        .accessibilityHint(Text("Draw on the painting, pinch to zoom", bundle: .era))
         .accessibilityAddTraits(.isHeader)
         .accessibilityShowsLargeContentViewer()
     }
 
     private var name: String {
-        String(localized: "feedback.mode.title", defaultValue: "Feedback",
+        String(localized: "feedback.mode.title", defaultValue: "Feedback", bundle: .era,
                comment: "Feedback mode's top bar on the painting screen: its title, while the painter marks the painting and writes notes for the developers")
     }
 

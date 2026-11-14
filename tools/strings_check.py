@@ -56,8 +56,10 @@ SHARED_SOURCES = "App/Shared"
 # Paint by Mosaic's catalog: a shared file's `String(localized:)` reads this era's catalog
 # (`bundle: .era`, the app's own here and this one there), so each of its keys is in both.
 ERA_CATALOG = "App/RavennaResources/Localizable.xcstrings"
-# The shared files among the sources scanned (filled by `swift_sources`).
+# The shared files among the sources scanned (filled by `swift_sources`), and the keys they look
+# up in the era's catalog, each (file, line, key).
 SHARED_FILES = set()
+ERA_KEYS = []
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
@@ -110,7 +112,7 @@ NON_UI_CALLS = {
 # text). Each needs a reason.
 ALLOWED_LITERALS = {
     # The PDF's "Creator" metadata names the app; it is not displayed text.
-    ("Export/PDFExporter.swift", "Paint by Moonlight"),
+    ("App/SharedSeams.swift", "Paint by Moonlight"),
     # A label Xcode's GPU debugger shows for a Metal pass.
     ("Canvas/RenderContext.swift", "Outline coverage"),
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).
@@ -449,6 +451,13 @@ def scan_file(rel, source, usages, findings):
         # Translator comments are text for translators, never shown.
         if "comment" in labels:
             consumed.update(id(t) for t in labels["comment"] if t.kind == "str")
+        # A SwiftUI literal whose words differ by era: `Text("…", bundle: .era)`, in a shared file.
+        if "bundle" in labels and call.name in IMPLICIT_CALLS and not call.member:
+            literal = literal_of(positional[0][1]) if positional else None
+            if rel not in SHARED_FILES or "".join(str(t.value) for t in labels["bundle"] if t.kind != "str") != ".era":
+                findings.append(Finding(rel, call.line, f"{call.name}: `bundle:` is for App/Shared's files alone (`bundle: .era`)"))
+            elif literal is not None:
+                ERA_KEYS.append((rel, literal.line, literal.text))
         if call.name == "Text" and not call.member and call.args and call.args[0][0] == "verbatim":
             consumed.update(id(t) for t in depth_zero_strings(call.args[0][1]))
         elif call.name == "String" and not call.member and call.args and call.args[0][0] == "localized":
@@ -520,6 +529,8 @@ def explicit(rel, call, key_tokens, labels, usages, findings, consumed):
     if rel in SHARED_FILES and call.name == "String":
         if bundle != ".era":
             findings.append(Finding(rel, call.line, f"{what}: a shared file passes `bundle: .era`, or Paint by Mosaic reads the app's words"))
+        elif not key.interpolations:
+            ERA_KEYS.append((rel, key.line, key.text))
     elif bundle is not None:
         findings.append(Finding(rel, call.line, f"{what}: `bundle:` is for App/Shared's files alone (`bundle: .era`)"))
     if key.interpolations:
@@ -790,9 +801,9 @@ def run(root):
     era_path = root / ERA_CATALOG
     if SHARED_FILES and era_path.exists():
         era = json.loads(era_path.read_text(encoding="utf-8")).get("strings", {})
-        for usage in usages:
-            if usage.path in SHARED_FILES and usage.default is not None and usage.key not in era:
-                findings.append(Finding(usage.path, usage.line, f'"{usage.key}" is not in {ERA_CATALOG}: Paint by Mosaic would show the default here'))
+        for rel, line, key in ERA_KEYS:
+            if key not in era:
+                findings.append(Finding(rel, line, f'"{key}" is not in {ERA_CATALOG}: Paint by Mosaic would show the app\'s words here'))
     info_path = root / INFOPLIST_CATALOG
     if not info_path.exists():
         findings.append(Finding(INFOPLIST_CATALOG, 0, "missing"))
@@ -927,6 +938,18 @@ def self_test():
     findings = []
     check_infoplist(catalog({**base, "Image": entry("Image")}), project, findings)
     expect(any("no INFOPLIST_KEY_Image" in str(f) for f in findings), "stale document type entry not reported")
+
+    # Shared files (App/Shared): `bundle: .era` required on String(localized:), allowed on a
+    # SwiftUI literal, and refused everywhere else.
+    SHARED_FILES.add("Shared.swift")
+    usages, findings = scan('let a = String(localized: "k", defaultValue: "V", bundle: .era, comment: "c"); let b = Text("Words", bundle: .era)', "Shared.swift")
+    expect(not findings and sorted(k for _, _, k in ERA_KEYS) == ["Words", "k"], f"shared forms: {[str(f) for f in findings]} {ERA_KEYS}")
+    _, findings = scan('let a = String(localized: "k", defaultValue: "V", comment: "c")', "Shared.swift")
+    expect(any("bundle: .era" in str(f) for f in findings), "a shared String(localized:) without bundle not reported")
+    _, findings = scan('let a = String(localized: "k", defaultValue: "V", bundle: .era, comment: "c"); let b = Text("Words", bundle: .era)')
+    expect(len(findings) == 2, f"bundle: outside a shared file not reported twice: {[str(f) for f in findings]}")
+    SHARED_FILES.clear()
+    ERA_KEYS.clear()
 
     for failure in failures:
         print("self-test FAILED:", failure)

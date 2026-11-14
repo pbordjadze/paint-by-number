@@ -4,16 +4,16 @@ import os
 import PaintCore
 import SwiftUI
 
-/// "Send Template…": the page someone else will paint, blank, with the Original Photo switch (on
-/// unless the painter turns it off; Paul, October 18: "maybe on by default"), then the share
-/// sheet with the `.moonlight` file (`ArtworkExporter.sharedPainting`), deleted once it closes.
-/// Present it as a sheet.
+/// "Send Template…": the page someone else will paint, blank, with the Original Photo switch
+/// (off until the painter turns it on; on in Paint by Mosaic: `includesPhotoByDefault`), then the share sheet with the
+/// `.moonlight` file (`ArtworkExporter.sharedPainting`), deleted once it closes. Present it as a
+/// sheet.
 struct SendTemplateSheet: View {
     let artwork: Artwork
     @Environment(Library.self) private var library
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @State private var includesPhoto = true
+    @State private var includesPhoto = SendTemplateSheet.includesPhotoByDefault
     @State private var preview: CGImage?
     @State private var isPreparing = false
     @State private var file: URL?
@@ -54,9 +54,9 @@ struct SendTemplateSheet: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 if failed {
-                    Text("The mosaic couldn’t be prepared for sending.")
+                    Text("The painting couldn’t be prepared for sending.", bundle: .era)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.errorInk)
                         .multilineTextAlignment(.center)
                 }
                 HStack(spacing: 12) {
@@ -85,11 +85,12 @@ struct SendTemplateSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .presentationDetents([.height(contentHeight)])
-        // Opaque, as Paint by Moonlight's: on iPad the glass let the painting behind show through
-        // its words. On the bench its secondary and red notes read at AA (6:1 and 5:1).
+        // Solid: the sheet's glass smeared the gallery's card behind it into the page above.
         .presentationBackground(Theme.surface)
+        .besideTheFold()
         .background {
-            ActivityShareSheet(items: file.map { [$0] } ?? []) { completed in finishSharing(completed: completed) }
+            // Below the sheet on iPad: centred over it, Send…'s popover covered the page it sends.
+            ActivityShareSheet(items: file.map { [$0] } ?? [], below: true) { completed in finishSharing(completed: completed) }
         }
         .task { await loadPreview() }
         // Swiped away with the file made, or still being made: it mustn't stay behind.
@@ -119,7 +120,7 @@ struct SendTemplateSheet: View {
         .shadow(color: .black.opacity(0.12), radius: 6, y: 2)
         .accessibilityElement()
         .accessibilityLabel(Text(String(
-            localized: "send.preview", defaultValue: "A blank copy of “\(artwork.title)”",
+            localized: "send.preview", defaultValue: "A blank copy of “\(artwork.title)”", bundle: .era,
             comment: "VoiceOver label of the page shown in Send Template; the argument is the painting's title")))
     }
 
@@ -128,24 +129,29 @@ struct SendTemplateSheet: View {
         return Color(.sRGB, red: Double(tone.x), green: Double(tone.y), blue: Double(tone.z))
     }
 
+    /// Off: the photo is the private part of what is sent, so it goes only when the painter says
+    /// so (the critic's sweep of November 9; Paul's call, reversing October 18's on). Paint by
+    /// Mosaic's is still on (`EraSeam.sendsPhotoByDefault`).
+    static let includesPhotoByDefault = EraSeam.sendsPhotoByDefault
+
     /// The note under the switch. A library picture (`isPicture`) is no one's own photo: sent, it
     /// is "the picture", and kept back there is nothing private to mention.
     static func explanation(canIncludePhoto: Bool, includesPhoto: Bool, isPicture: Bool) -> String {
         if !canIncludePhoto || (isPicture && !includesPhoto) {
             String(localized: "send.explanation.noPhoto",
-                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included.", bundle: .ravenna,
+                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included.", bundle: .era,
                    comment: "Send Template's note when the painting has no photo to send, or is of a library picture with the Original Photo switch off")
         } else if isPicture {
             String(localized: "send.explanation.picture",
-                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and the picture to peek at.", bundle: .ravenna,
+                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and the picture to peek at.", bundle: .era,
                    comment: "Send Template's note for a painting of a library picture (not the painter's own photo) with the Original Photo switch on")
         } else if includesPhoto {
             String(localized: "send.explanation.photo",
-                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and your photo to peek at.", bundle: .ravenna,
+                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included, and your photo to peek at.", bundle: .era,
                    comment: "Send Template's note with the Original Photo switch on")
         } else {
             String(localized: "send.explanation.drawingOnly",
-                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included. Your photo stays on this device.", bundle: .ravenna,
+                   defaultValue: "They get a blank copy of this page to paint, your changes to the drawing included. Your photo stays on this device.", bundle: .era,
                    comment: "Send Template's note with the Original Photo switch off")
         }
     }
