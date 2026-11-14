@@ -178,7 +178,8 @@ struct ArchOpeningView: View {
         let room = geo.size.height * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact)
         let size = min(dynamicTypeSize, .xxLarge)
         guard let doors = DoorMetrics.fitting(
-            count: FinishedDoor.allCases.count, width: width,
+            count: FinishedDoor.shown(changes: true, original: OriginalWork.of(opening.artwork.sampleName) != nil).count,
+            width: width,
             height: room - CompletionBar.height - CompletionBar.doorsInset, dynamicTypeSize: size)
         else { return nil }
         let rows = CGFloat(doors.rows)

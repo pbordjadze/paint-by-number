@@ -49,6 +49,10 @@ struct PaintView: View {
     /// ✎ Change (painting-company row 239): the drawing tools on this painting, any time; nil
     /// offers no button (the release, until the drawing tools ship).
     var onChange: (() -> Void)?
+    /// The library picture this painting was made from (`Artwork.sampleName`); nil for a painter's
+    /// own photo. Finished, its doors then lead to the page about the real work (`AboutPainting`,
+    /// SideStore and Debug builds).
+    var libraryPicture: String?
     /// False as the screen is left: `ArtworkPaintingView.close`.
     var hidesStatusBar = true
     /// Told when the painter turns the finished painting's lines off or on (More › Show Lines, in
@@ -157,11 +161,13 @@ struct PaintView: View {
         isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
-        hidesStatusBar: Bool = true, hidesLines: Bool = false, onHidesLines: ((Bool) -> Void)? = nil
+        libraryPicture: String? = nil, hidesStatusBar: Bool = true, hidesLines: Bool = false,
+        onHidesLines: ((Bool) -> Void)? = nil
     ) {
         self.onHidesLines = onHidesLines
         _linesHidden = State(initialValue: hidesLines)
         self.onChange = onChange
+        self.libraryPicture = libraryPicture
         self.hidesStatusBar = hidesStatusBar
         self.session = session
         self.title = title
@@ -822,7 +828,7 @@ struct PaintView: View {
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
                 onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose,
-                doors: doors, onChange: onChange)
+                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture))
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
             #else
@@ -852,7 +858,8 @@ struct PaintView: View {
         let width = min(CompletionBar.panelWidth, controlsWidth - 2 * Self.edge) - 2 * CompletionBar.doorsInset
         let height = room - CompletionBar.height - CompletionBar.doorsInset
         return DoorMetrics.fitting(
-            count: FinishedDoor.shown(changes: onChange != nil).count, width: width, height: height,
+            count: FinishedDoor.shown(changes: onChange != nil, original: OriginalWork.of(libraryPicture) != nil).count,
+            width: width, height: height,
             dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
     }
     #endif
