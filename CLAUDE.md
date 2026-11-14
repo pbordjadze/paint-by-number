@@ -142,7 +142,8 @@ before planning app work).
   check, in the build of your choice: On a Mac) and `perf-tour/` (the app measured by its own
   `-tourLog`: `run.sh` plays the demo scenarios with no UI test driving them, `summary.py` reads a
   log, `analyze.py` a device trace beside it).
-- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
+- `ci/` scripts and `.github/workflows/ci.yml`: jobs `plan` (`ci/plan.py`: on `main`, the simulator
+  entries that already passed on the same files are left out), `core` (Linux: PaintCore tests, the feedback relay's
   tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
@@ -518,12 +519,16 @@ any port of it, when changing the fitter: work from the paper.
    templates and line-art maps they make on disk (DEBUG `DemoTemplateCache`, `LineArtMapsCache`),
    and each job keeps them between runs in the Actions cache (`ci/demo_caches.sh`), keyed by the
    files that make them; on a miss `ipad-ui` makes the UI tests' first (its warm-up).
-3. Turnaround is about 30 min on idle runners (both iPad jobs take about that), about 40 when the
-   caches miss (a change to the pipeline, the models or the pictures: the screenshots take twice
-   as long and `ipad-ui` warms up first), and 60 to 100 under load (the night of October 17: a
-   median of 78), since only 5 macOS jobs run at once: a branch push takes 2, `main` 6 (four simulator jobs,
-   `release-tests` and the IPA, so one waits for the IPA's runner; each iPhone job about 75 to 90 min, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
-   push to the same branch cancels the older run, which then never reports. A job GitHub finds no
+3. Turnaround: each iPad job runs 85 to 100 min once a runner takes it (November 14: the 142
+   screenshots 43 of them, the other UI tests 70, a build 10 to 25), and waits for that runner
+   first, an hour or more on a busy day, since only 5 macOS jobs run at once: a branch push
+   takes 2, `main` up to 6 (four simulator jobs, `release-tests` and the IPA; each iPhone job
+   about 75 to 90 min, cut off at 160). `ci/fetch.sh` waits up to 180 min. A newer
+   push to the same branch cancels the older run, which then never reports: `ci/fetch.sh` gives
+   the newer push's report in its place. Nothing cancels `main`'s (painting-company row 345): each push starts `core`
+   at once, and each simulator entry and the IPA takes its turn after the same entry of the push
+   before; an entry still waiting when a newer push comes gives it its turn (cancelled in the older
+   run's report, which says so; the newer run covers its commit). A job GitHub finds no
    `xcode-27` runner for in about 15 minutes is abandoned ("not acquired by Runner of type hosted";
    STATUS.md says so): re-run that job (twice on November 4, 2026). Work on
    something else while it runs.
@@ -589,7 +594,7 @@ commit's message carries the review's notes, which the train's merge keeps), gre
 check, and touching different files. A conductor session (on Sonnet) runs `ci/train.sh make <name>
 <branch>…` (merges each into `claude/train-<name>`, fresh from `origin/main`, leaves off one that
 conflicts, and pushes), waits with `CI_BRANCH=claude/train-<name> ci/fetch.sh`, and on green runs
-`ci/train.sh land <name>`: `main` fast-forwards to the train, the one merge of that `main` run (it
+`ci/train.sh land <name>`: `main` fast-forwards to the train, whose iPad entries `main` then leaves out (it
 refuses a red, stale, compile-only or test-only report, or a `main` that moved: make the train again). On red,
 `ci/train.sh who <name> <path>…` names the branch that changed the failing file; the conductor
 makes the train again without it, and that branch goes back to its session. The conductor reports
@@ -623,8 +628,15 @@ him itself, with a push notification once he has gone quiet.
   `[compile]`, `[test …]`, `[duo]`, `[release-tests]`, `[iphone]` and `[ipa]` the same way on branches.
 - **Still ask first** before a TestFlight or App Store upload, a change to the app's name or
   icon, and deleting or retiring anything Paul made or named.
-- **One merge per `main` run.** Every push to `main` takes all 5 macOS runners at first (the IPA's
-  for its build, and `release-tests` waits for one, then takes about 35 minutes), the iPad's two for about 45 minutes and the iPhone's two for about 90. While main's run is going, queue merges, then merge them together.
+- **Merge when you're green; bring `main` into your branch first.** A merge never cuts `main`'s
+  run off (CI feedback loop, step 3), so nothing waits for it to finish. What a merge costs is
+  `main`'s run after it: all five entries, about six and a half hours of runner time, unless
+  the merge leaves `main` with the very files your branch's green run tested. Then `main` runs
+  only the iPhone's entries, `release-tests` and the IPA (`ci/plan.py`). So merge `origin/main`
+  into the branch, let that commit's full run go green, and merge it while `main` still stands
+  where you merged it from (a fast-forward, or a merge commit: its files are the branch's). If
+  `main` has moved on, merge anyway when the newcomers touch other files: `main`'s full run
+  judges the two together.
 - **Model choice.** Taste, design, writing and review stay on Opus. Mechanical work (watching
   CI, reading transcripts, fixtures, renames) goes to Sonnet or Haiku subagents. Only Paul
   lowers a session's model or effort.
