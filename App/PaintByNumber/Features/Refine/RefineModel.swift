@@ -603,13 +603,16 @@ final class RefineModel {
             // Bedtime); every other edit is there the moment it lands.
             let fades = tool.paints && !reduceMotion && painting != nil && image?.preview != painting?.preview
             let before = base?.template.palette
-            // Another template may number its areas anew: the mark goes with the one it was on.
-            if base?.id != preview.id { tinyMarked = nil }
+            let renumbered = base?.id != preview.id
+            // The first change of the landing, so what shows the painting takes it with the fade
+            // (a view is laid out again in the transaction of the first change it reads).
             withAnimation(fades ? .easeInOut(duration: 0.35) : nil) {
                 base = preview
                 // Only a painting of this template: an older one would show lines that are gone.
                 painting = image?.preview == preview.id ? image : nil
             }
+            // Another template may number its areas anew: the mark goes with the one it was on.
+            if renumbered { tinyMarked = nil }
             tiny = RefineTinyAreas.find(in: preview.template)
             if tinyShown >= tiny.count { tinyShown = -1 }
             let landed = RefinePalette.landing(

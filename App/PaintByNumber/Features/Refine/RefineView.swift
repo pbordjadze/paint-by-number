@@ -161,6 +161,8 @@ struct RefineView: View {
     var body: some View {
         stage
         .onAppear {
+            // Before the first landing, which may start ahead of the canvas's own appearing.
+            refine.surroundings = surroundings
             if !isPractice { PaintTips.desk.enter(.refine) }
             // Once: Try Painting's cover makes it disappear and appear again, and the history and
             // what Cancel puts back are the screen's, not the cover's.

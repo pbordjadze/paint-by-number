@@ -42,8 +42,11 @@ struct RefineTinyBadge: View {
     private var model: CreateModel { refine.model }
 
     var body: some View {
-        if !refine.tiny.isEmpty, model.note == nil, library?.drafts.saveFailed != model.photoID, let template = refine.base?.template {
+        // The template is read at the tap, not here (there is one whenever there are tiny
+        // numbers): the badge comes and goes at once with the count, not in a landing's fade.
+        if !refine.tiny.isEmpty, model.note == nil, library?.drafts.saveFailed != model.photoID {
             Button {
+                guard let template = refine.base?.template else { return }
                 refine.tinyShown = (refine.tinyShown + 1) % refine.tiny.count
                 let label = refine.tiny[refine.tinyShown].label
                 refine.tinyMarked = refine.tiny[refine.tinyShown].region
