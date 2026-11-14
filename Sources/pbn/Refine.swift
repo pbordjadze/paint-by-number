@@ -334,9 +334,12 @@ func runRefine(_ options: Options) throws {
             // As the app lays it (`CreateModel.laying`): a drawn line with the photo's colors.
             let painted = TemplateEditor.painted(edit, on: t, photo: photo)
             step.edit = painted
-            let (_, outcome) = try TemplateEditor.apply(painted, to: t)
             let before = trail.edits
-            switch trail.add(painted) {
+            // The counts below are of this laying, the one that made the template, its colors
+            // through the looks and repaints before it.
+            let laid = trail.lay(painted)
+            let outcome = laid.outcome
+            switch laid.verdict {
             case .made(let tooSmall):
                 undo.append(before)
                 redo.removeAll()

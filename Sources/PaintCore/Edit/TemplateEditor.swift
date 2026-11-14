@@ -482,26 +482,24 @@ public enum TemplateEditor {
         return wrap(paints)
     }
 
-    private static func unchanged(_ template: Template) -> Outcome {
+    /// The outcome of an edit that left `template` as it was.
+    static func unchanged(_ template: Template) -> Outcome {
         var outcome = Outcome()
         outcome.continued = Array(0..<template.regions.count)
         return outcome
     }
 
     /// Applies edits in order; one that is declined leaves the template as it was for the next.
-    /// Each brings its colors through the looks and repaints made before it (`recolored`).
-    public static func apply(
-        _ edits: [Edit], to template: Template, verify: Bool = true
-    ) throws -> (template: Template, outcomes: [Outcome]) {
-        var current = template
+    /// Each brings its colors through the looks and repaints made before it (`recolored`): the
+    /// laying is `EditTrail`'s, edit by edit, with each one's outcome.
+    public static func apply(_ edits: [Edit], to template: Template) throws -> (template: Template, outcomes: [Outcome]) {
+        var trail = EditTrail(base: template)
         var outcomes: [Outcome] = []
-        var recolors: [Edit] = []
         for edit in edits {
-            let (next, outcome) = try apply(recolored(edit, by: recolors), to: current, verify: verify)
-            if isRecolor(edit), outcome.changed { recolors.append(edit) }
-            current = next
-            outcomes.append(outcome)
+            let laid = trail.lay(edit)
+            if let failure = laid.failure { throw failure }
+            outcomes.append(laid.outcome)
         }
-        return (current, outcomes)
+        return (trail.template, outcomes)
     }
 }

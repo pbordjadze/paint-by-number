@@ -237,4 +237,52 @@ struct EditTrailTests {
         let replay = try trail.move(to: Self.edits)
         #expect(replay.made == 0 && replay.left == Self.edits.count && trail.template == classic)
     }
+
+    /// What the trail reports of an edit is the laying that made its template: after a look, a
+    /// fill in a color of the photo lands on the paint the look made of it and adds none. The
+    /// same fill laid on its own on that template, its color not brought through the look, is
+    /// another edit with other counts (what `pbn refine` once reported: painting-company row 90).
+    @Test func anEditsOutcomeIsOfTheLayingThatMadeTheTemplate() throws {
+        let scene = TemplateEditorTests.scene
+        let at = SIMD2<Float>(140, 55)
+        let under = scene.regions[try TemplateEditorTests.region(scene, at.x, at.y)].colorIndex
+        let look = TemplateEditor.look(.moonlit, strength: 1, on: scene)
+        var trail = EditTrail(base: scene)
+        #expect(trail.lay(look).outcome.paintsChanged > 0)
+        let looked = trail.template
+        try #require(looked.palette.count == scene.palette.count)
+        // A paint of the photo's that is not the tapped area's.
+        let other = try #require(scene.palette.indices.first { $0 != Int(under) })
+        let fill = Edit.fill(at: at, color: scene.palette[other].oklab)
+
+        let laid = trail.lay(fill)
+        let through = try TemplateEditor.apply(TemplateEditor.recolored(fill, by: [look]), to: looked)
+        #expect(laid.verdict == .made(tooSmall: false) && laid.failure == nil)
+        #expect(laid.outcome == through.outcome && trail.template == through.template)
+        #expect(laid.outcome.fills == 1 && laid.outcome.paintsAdded == 0)
+        let alone = try TemplateEditor.apply(fill, to: looked)
+        #expect(alone.outcome.paintsAdded == 1 && alone.template != trail.template)
+
+        // A list laid at once reports the same, edit by edit.
+        let list = try TemplateEditor.apply([look, fill], to: scene)
+        #expect(list.template == trail.template && list.outcomes.count == 2 && list.outcomes[1] == laid.outcome)
+    }
+
+    /// An edit that does nothing reports that too, and leaves the trail as it was.
+    @Test func anEditLeftOutReportsItsOutcome() throws {
+        var trail = EditTrail(base: TemplateEditorTests.scene)
+        let nothing = trail.lay(Self.overPaper)
+        #expect(nothing.verdict == .nothing && !nothing.outcome.changed && nothing.outcome.declined == nil)
+        let declined = trail.lay(Self.doublingBack)
+        #expect(!declined.outcome.changed && declined.outcome.declined != nil && declined.failure == nil)
+        if case .declined = declined.verdict {} else { Issue.record("a line doubling back was not declined") }
+        #expect(trail.edits.isEmpty && trail.template == trail.base)
+
+        var classic = TemplateEditorTests.scene
+        classic.lineArt = nil
+        var none = EditTrail(base: classic)
+        let failed = none.lay(Self.edits[0])
+        #expect(failed.failure != nil && failed.outcome.declined != nil && !failed.outcome.changed)
+        #expect(throws: TemplateEditor.Failure.self) { try TemplateEditor.apply(Self.edits, to: classic) }
+    }
 }

@@ -280,23 +280,21 @@ func runEdit(_ options: Options) throws {
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 
     var elapsed = Duration.zero
-    var t = before
+    // Laid as the app lays them (`EditTrail`): each edit brings its colors through the looks and
+    // repaints made before it.
+    var trail = EditTrail(base: before)
     var steps: [EditReport.Step] = []
     var continued = Array(0..<before.regions.count)
-    // The looks and repaints made so far, which later edits bring their colors through, as the app's
-    // EditTrail does.
-    var recolors: [TemplateEditor.Edit] = []
     for given in edits {
-        let result: (template: Template, outcome: TemplateEditor.Outcome)
+        let t = trail.template
         let began = ContinuousClock.now
         var edit = photo.map { TemplateEditor.painted(given, on: t, photo: $0) } ?? given
         if case .look(let look, let strength, let lightness) = edit, lightness.isEmpty {
             edit = TemplateEditor.look(look, strength: strength, on: t)
         }
-        do {
-            result = try TemplateEditor.apply(TemplateEditor.recolored(edit, by: recolors), to: t)
-        } catch { fail("cannot edit: \(error)") }
-        if result.outcome.changed, TemplateEditor.isRecolor(edit) { recolors.append(edit) }
+        let laid = trail.lay(edit)
+        if let failure = laid.failure { fail("cannot edit: \(failure)") }
+        let result = (template: trail.template, outcome: laid.outcome)
         let took = ContinuousClock.now - began
         elapsed += took
         var step = EditReport.Step(
@@ -333,8 +331,8 @@ func runEdit(_ options: Options) throws {
         step.labelsMoved = result.outcome.labelsMoved
         steps.append(step)
         continued = continued.map { $0 < result.outcome.continued.count ? result.outcome.continued[$0] : $0 }
-        t = result.template
     }
+    let t = trail.template
     let milliseconds = Double(elapsed.components.seconds) * 1000 + Double(elapsed.components.attoseconds) / 1e15
 
     // Regions the edits left as they were: the same outline, fill, numbers and paint.
