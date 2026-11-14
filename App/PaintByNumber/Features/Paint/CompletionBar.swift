@@ -33,6 +33,9 @@ struct CompletionBar: View {
     /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
     var isNamed = true
     let onClose: (() -> Void)?
+    /// Built out of sight (`FinishWarmup`): no tip hangs from it, and its share menu is made with
+    /// no picture to share.
+    var isWarmup = false
 
     var body: some View {
         // The row as it is where the painting's name fits on one line; on a narrower bar (a small
@@ -51,7 +54,7 @@ struct CompletionBar: View {
         // and the Large Content Viewer shows its buttons enlarged.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .capsule)
-        .task(id: session.revision) { await share.prepare(for: session) }
+        .task(id: isWarmup ? 0 : session.revision) { await share.prepare(for: session) }
     }
 
     private func row(seal: Bool, titleLines: Int) -> some View {
@@ -119,11 +122,11 @@ struct CompletionBar: View {
             // The only hint after a finish: over the bar, which sits at the bottom. On the place
             // both buttons share: hung from Replay alone, it stayed up over the replay it started,
             // its view gone before its binding turned false.
-            .gentleTip(.benchReplay, arrowEdge: .bottom)
-            if let picture = share.picture {
+            .gentleTip(.benchReplay, active: !isWarmup, arrowEdge: .bottom)
+            // UIImage keeps the picture's Display P3 colors.
+            let shareImage: Image? = isWarmup ? Image(systemName: "photo") : share.picture.map { Image(uiImage: UIImage(cgImage: $0)) }
+            if let shareImage {
                 let name = title.isEmpty ? String(localized: "Painting") : title
-                // UIImage keeps the picture's Display P3 colors.
-                let shareImage = Image(uiImage: UIImage(cgImage: picture))
                 Menu {
                     ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
                         Label("Share Picture", systemImage: "photo")
@@ -148,6 +151,46 @@ struct CompletionBar: View {
                 .fixedSize()
                 .accessibilityShowsLargeContentViewer()
             }
+        }
+    }
+}
+
+/// The completion bar built out of sight as the first painting screen of a launch opens, and gone
+/// a moment later. What a finish shows (the bar's views and their type metadata, its symbols and
+/// their first lookup in the system's catalog, the share menu, the seal's bounce and the renderer
+/// it is the first on the screen to draw through) was otherwise met for the first time under the
+/// last fill, as the camera set off for the whole painting: the main thread came to that frame
+/// 60 to 75 ms late on an iPad Air 5, and late again as the seal bounced (painting-company row
+/// 299). All of it is made once a launch, and the screen's own first build is at a still moment
+/// (out of sight before Start Painting, `PaintScreenWarmup`, or once its push has landed).
+/// Below the screen's bottom edge, taking no touches, hidden from VoiceOver and UI tests.
+struct FinishWarmup: View {
+    let session: PaintingSession
+    let share: CompletionShare
+    @State private var builds = !FinishWarmup.isDone
+    @State private var bounces = 0
+
+    /// Once a launch: what it makes stays made.
+    private static var isDone = false
+
+    var body: some View {
+        if builds {
+            CompletionBar(
+                session: session, title: "", share: share, sealBounces: bounces, onReplay: {}, onStopReplay: {},
+                onShareTimelapse: {}, onClose: {}, isWarmup: true)
+                .fixedSize()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .offset(y: 400)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .task {
+                    Self.isDone = true
+                    try? await Task.sleep(for: .milliseconds(300))
+                    bounces += 1
+                    // The bounce has drawn.
+                    try? await Task.sleep(for: .milliseconds(600))
+                    builds = false
+                }
         }
     }
 }

@@ -17,6 +17,7 @@
 #                     making-of off (the app's default), nothing to buy (as a SideStore build)
 #   start-making-of   the same with Settings > The Making-of on: the show plays to its end
 #   zen-30            thirty fills in Zen Mode, a tap's and a drag's in turn (`paint-zen-30`)
+#   colors            ten fills that each finish a color, in Zen Mode (`paint-colors-10`)
 #   finish            the last fill, the flight to the whole painting and night falling (`paint-nightfall`)
 # Launch arguments override the app's stored settings for that launch only; nothing stored is changed.
 # Every setting a scenario's work depends on is given: Music (Sun, and Moon for the finish, whose
@@ -48,7 +49,7 @@ while getopts "i:b:n:r:t:k" flag; do
   esac
 done
 shift $((OPTIND - 1))
-SCENARIOS=("$@"); [[ ${#SCENARIOS[@]} -eq 0 ]] && SCENARIOS=(launch forming forming-cold start start-making-of zen-30 finish)
+SCENARIOS=("$@"); [[ ${#SCENARIOS[@]} -eq 0 ]] && SCENARIOS=(launch forming forming-cold start start-making-of zen-30 colors finish)
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 
 # <scenario> -> the launch arguments, how long it plays (seconds) and the segment its log must hold.
@@ -61,6 +62,7 @@ plan() {
     start)           ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf NO); PLAY=28; SEGMENT=start ;;
     start-making-of) ARGS=(-demo create-preview -demoFixedPictures YES -demoStart YES -demoUnlocked YES -playsMakingOf YES); PLAY=75; SEGMENT=start ;;
     zen-30)          ARGS=(-demo paint-zen-30 -zenMode YES); PLAY=114; SEGMENT=zen-30 ;;
+    colors)          ARGS=(-demo paint-colors-10 -zenMode YES); PLAY=48; SEGMENT=colors ;;
     finish)          ARGS=(-demo paint-nightfall); PLAY=22; SEGMENT=finish; SKY=moon ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac

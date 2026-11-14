@@ -32,6 +32,9 @@ import simd
 /// - `paint-quiet`, `paint-quiet-dark`: `paint-progress`, then an area of the selected color is
 ///   painted and the top bar fades to Back, the progress ring and Hint (`QuietPainting`; Debug
 ///   and SideStore builds)
+/// - `paint-zen-30`, `paint-colors-10`: the performance tour's (`tools/perf-tour/run.sh`): thirty
+///   fills of a painting a fifth painted; ten fills that each finish a color, every color having
+///   been left one area
 /// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
 ///   with the gallery's, the create flow's and Settings' tip scenarios the only ones that show
 ///   tips (`PaintTips.configure`)
@@ -265,6 +268,12 @@ private final class Demo {
             paint(fraction: 0.4)
         case "paint-zen-30":
             paint(fraction: 0.2)
+        case "paint-colors-10":
+            // Every color one area from finished (its roomiest, so each fill is seen).
+            let kept = Dictionary(grouping: t.regions.indices) { Int(t.regions[$0].colorIndex) }
+                .compactMapValues { areas in areas.max { t.regions[$0].inscribedRadius < t.regions[$1].inscribedRadius } }
+            session.paint(order.filter { kept[session.colorOf($0)] != $0 }, from: .zero, animated: false)
+            if let first = order.first(where: { !session.isPainted($0) }) { session.select(color: session.colorOf(first)) }
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
@@ -430,6 +439,26 @@ private final class Demo {
             }
             TourLog.trace("mark", "zen-30 end fills=%ld", fills)
             Log.demo.notice("demo paint-zen-30: \(fills, privacy: .public) fills")
+            return
+        }
+        if scenario == "paint-colors-10" {
+            // No UI test attached: ten fills that each finish a color (its shine, its swatch gone,
+            // the next color picked, Zen Mode's flight on), one every 3.3 s. The painting itself
+            // is never finished: that is `paint-finish`.
+            let t = session.template
+            TourLog.trace("mark", "colors begin")
+            try? await Task.sleep(for: .seconds(3))
+            var fills = 0
+            while fills < 10, session.progress.regionCount - session.progress.paintedCount > 1 {
+                guard let color = session.selectedColor,
+                      let area = t.regions.indices.first(where: { !session.isPainted($0) && session.colorOf($0) == color })
+                else { break }
+                session.paint([area], from: Self.center(t, area), animated: true)
+                fills += 1
+                try? await Task.sleep(for: .seconds(3.3))
+            }
+            TourLog.trace("mark", "colors end fills=%ld", fills)
+            Log.demo.notice("demo paint-colors-10: \(fills, privacy: .public) fills")
             return
         }
         if scenario.hasPrefix("paint-quiet") {
