@@ -133,7 +133,12 @@ struct FinishedDoors: View {
             Theme.surface
             switch door {
             case .another: fill(sampleImage, fallback: "photo.on.rectangle")
-            case .change: fill(glimpses.lines, fallback: "pencil")
+            case .change:
+                fill(glimpses.lines, fallback: "pencil")
+                // The lines laid over the paint, where a finished classic painting has dissolved them.
+                if glimpses.lines != nil, let ink = glimpses.ink {
+                    fill(ink, fallback: "pencil").blendMode(.multiply)
+                }
             case .paper: fill(glimpses.paper, fallback: "printer")
             case .send: card
             }
@@ -305,6 +310,9 @@ final class DoorGlimpses {
     nonisolated static let pixelSize = 560
 
     private(set) var lines: CGImage?
+    /// The lines alone on paper, multiplied over `lines`: a classic painting's edges fade away
+    /// between painted areas, and Change It is about its lines.
+    private(set) var ink: CGImage?
     private(set) var paper: CGImage?
     @ObservationIgnored private var revision: Int?
 
@@ -312,25 +320,29 @@ final class DoorGlimpses {
         guard session.isComplete, revision != session.revision else { return }
         let target = session.revision
         revision = target
-        let (lines, paper) = await Self.render(template: session.template, progress: session.progress)
+        let (lines, ink, paper) = await Self.render(template: session.template, progress: session.progress)
         guard revision == target else { return }
         self.lines = lines
+        self.ink = ink
         self.paper = paper
-        if lines == nil || paper == nil { revision = nil }
+        if lines == nil || ink == nil || paper == nil { revision = nil }
     }
 
     @concurrent
-    private static func render(template: Template, progress: PaintProgress) async -> (CGImage?, CGImage?) {
+    private static func render(template: Template, progress: PaintProgress) async -> (CGImage?, CGImage?, CGImage?) {
         let rect = closeUp(of: CGSize(width: template.width, height: template.height))
         let height = Double(pixelSize)
         let size = CGSize(width: (height / Double(DoorMetrics.aspect)).rounded(), height: height)
         let lines = CanvasSnapshot.render(
             template: template, progress: progress, rect: rect, size: size,
             options: CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: lineWidth))
+        let ink = CanvasSnapshot.render(
+            template: template, progress: nil, rect: rect, size: size,
+            options: CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: lineWidth))
         let paper = CanvasSnapshot.render(
             template: template, progress: nil, rect: rect, size: size,
             options: CanvasSnapshot.Options(outlines: true, numbers: true, outlineWidth: lineWidth))
-        return (lines, paper)
+        return (lines, ink, paper)
     }
 
     /// Lines as dark as the mockups' (`factory/pieces/doors/`): the whole picture at a door's size
