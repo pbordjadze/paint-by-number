@@ -3,6 +3,7 @@ import Foundation
 import Observation
 import os
 import PaintCore
+import StoreKit
 import SwiftUI
 import TipKit
 import UIKit
@@ -31,6 +32,9 @@ struct PaintView: View {
     var onName: (() -> Void)?
     /// False while the painting has only the name the app gave it (`Artwork.isNamed`).
     var isNamed = true
+    /// A painter's own painting, saved in the gallery: finishing it may ask for a rating
+    /// (`RatingPrompt`). Refine's Try Painting and the demos don't.
+    var asksForRating = false
     /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
@@ -59,6 +63,12 @@ struct PaintView: View {
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
     /// for a painting opened finished): its seal bounces.
     @State private var sealBounces = 0
+    /// Bumped when a painting finished on this screen is the moment to ask for a rating
+    /// (`RatingPrompt`); the ask waits for the finale, and leaving the screen cancels it.
+    @State private var ratingMoment = 0
+    /// This painting has been counted as finished: undoing a fill and finishing again doesn't
+    /// count it twice.
+    @State private var countedFinish = false
     /// The progress badge names the painting (the top bar's layout that fits has room for it):
     /// the completion bar doesn't name it twice.
     @State private var badgeShowsTitle = false
@@ -72,6 +82,7 @@ struct PaintView: View {
     /// Where a half-open iPhone Duo's fold lies across the screen (`FoldPlace`), in the safe area.
     @State private var foldPlace: FoldPlace?
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.requestReview) private var requestReview
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -129,7 +140,7 @@ struct PaintView: View {
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil, onName: (() -> Void)? = nil,
-        isNamed: Bool = true,
+        isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
         hidesStatusBar: Bool = true
@@ -141,6 +152,7 @@ struct PaintView: View {
         self.onClose = onClose
         self.onName = onName
         self.isNamed = isNamed
+        self.asksForRating = asksForRating
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
@@ -199,7 +211,11 @@ struct PaintView: View {
         .onChange(of: peek.isShown) { _, shown in
             if shown { PaintTips.used(.benchShowPhoto) }
         }
-        .onChange(of: session.isComplete) { _, complete in
+        .onChange(of: session.isComplete) { was, complete in
+            if complete, !was, asksForRating, !countedFinish {
+                countedFinish = true
+                if RatingPrompt.forLaunch?.paintingFinished() == true { ratingMoment += 1 }
+            }
             guard complete, !reduceMotion else { return }
             Task {
                 // As the completion bar settles.
@@ -213,6 +229,14 @@ struct PaintView: View {
         }
         .task {
             if let onTemplateFrame { await reportTemplate(to: onTemplateFrame) }
+        }
+        .task(id: ratingMoment) {
+            guard ratingMoment > 0 else { return }
+            // After the completion bar, the shine and nightfall have played.
+            try? await Task.sleep(for: .seconds(RatingPrompt.delay))
+            guard !Task.isCancelled, session.isComplete, !session.isReplaying else { return }
+            RatingPrompt.forLaunch?.asked()
+            requestReview()
         }
         .task(id: ObjectIdentifier(session)) {
             guard let onFirstFrame else { return }

@@ -246,7 +246,9 @@ synchronized folder would bundle it into the app.
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
-  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
+  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. From the painter's second
+  painting finished on screen, once per app version, Apple's rating prompt is asked for after the finale
+  (`RatingPrompt`, row 341; never in demo or test launches). The
   progress badge then names no color (nothing is on the brush), the top bar has no Hint, and the
   completion bar names the painting only when the badge doesn't (`badgeShowsTitle`, from the top
   bar's row that fits); during a replay its ring and
