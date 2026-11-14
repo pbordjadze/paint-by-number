@@ -13,6 +13,9 @@ wide each (`--width`), to look at with the Read tool or hand to a critic. For li
     tools/kit_eval.py run --set SET --out B --before "--paint-mix kit" -- --paint-mix lively
     tools/paint_mix_sheet.py --out sheets release=A/before kit=A/after lively=B/after
 
+and rich paint (row 344) the same way, `-- --paint-mix rich`. `tools/face_paints.py` lists the
+paints on a face beside the photo's colours there.
+
 Requires Pillow.
 """
 import argparse

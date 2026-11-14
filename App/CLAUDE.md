@@ -634,9 +634,11 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   waiting Refine is) → the winner's draft (unless it is that candidate
   and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
   (a `withTaskCancellationHandler` flag reaches every candidate's thread).
-- Lively paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company rows 191, 326): a
-  photo's new painting records `paintMix: .lively` (`CreateModel.newPaintMix`, PaintCore's
-  `LivelyPaint` on `KitPaint`; `.kit` until row 326, and a painting that recorded it keeps it), so
+- Rich paint (SideStore and Debug builds, `#if UNRELEASED`; painting-company rows 191, 326, 344): a
+  photo's new painting records `paintMix: .rich` (`CreateModel.newPaintMix`, PaintCore's
+  `LivelyPaint` on `KitPaint`, with `FacePaints`: a face's own paints, up to six more than the
+  count asked for, which the draft preview doesn't show; `.kit` until row 326 and `.lively` until
+  344, and a painting that recorded one keeps it), so
   its paints are a kit's, bolder than the regions' means, skin lifted toward peach, a family's
   lights turned warm and its shadows cool, and the
   tuning `subjectCellSize` 2.5 and `faceCellSize` 3 (`CreateModel.newTuning`: the subject's

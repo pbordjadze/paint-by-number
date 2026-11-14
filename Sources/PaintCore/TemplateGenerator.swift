@@ -125,12 +125,18 @@ public struct TemplateGenerator: Sendable {
         let buffer = twice && observer != nil ? SnapshotBuffer() : nil
         var (segmentation, weights, plan) = try segmented(
             kit ? nil : pinned, centers: nil, observer: buffer?.observer ?? observer, spanning: twice ? 0.1...0.4 : 0.1...0.7)
+        // Rich paint gives a face paints of its own, before anything counts the paints.
+        if mix == .rich {
+            FacePaints.split(
+                &segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working,
+                minRadius: { parameters.minRadius(digits: $0) })
+        }
         // Which paints are on a face, for kit paint's skin, while the importance is at hand.
         var faces = kit
             ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
         var mixes = kit
         // How much of the painting each paint covers, for lively paint's families.
-        var shares = mix == .lively ? LivelyPaint.shares(of: segmentation) : []
+        var shares = mix == .lively || mix == .rich ? LivelyPaint.shares(of: segmentation) : []
         if let mix, let pinned {
             let means = segmentation.palette
             let mixed = mix.mixed(means, shares: shares, space: segmentation.colorSpace, minDistance: settings.minPaletteDistance, faces: faces)

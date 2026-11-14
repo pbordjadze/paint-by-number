@@ -403,12 +403,14 @@ final class CreateModel {
         ).normalized
     }
 
-    /// How a new painting's paints are mixed: a kit's paints with their hues spread (PaintCore's
-    /// `LivelyPaint`, on `KitPaint`) in SideStore and Debug builds, until it is chosen for a
-    /// release (painting-company rows 191, 326); the regions' own colors in the release. A drawing's paints come from its palette set. The
+    /// How a new painting's paints are mixed: rich paint (PaintCore's `PaintMix.rich`: a kit's
+    /// paints with their hues spread, `LivelyPaint` on `KitPaint`, a face painted with paints of
+    /// its own, `FacePaints`, so the painting may have a few more paints than were asked for)
+    /// in SideStore and Debug builds, until it is chosen for a release (painting-company rows
+    /// 191, 326, 344); the regions' own colors in the release. A drawing's paints come from its palette set. The
     /// painting records it, so it regenerates as it was made.
     #if UNRELEASED
-    nonisolated static let newPaintMix: PaintMix? = .lively
+    nonisolated static let newPaintMix: PaintMix? = .rich
     #else
     nonisolated static let newPaintMix: PaintMix? = nil
     #endif
@@ -1813,7 +1815,7 @@ final class CreateModel {
                     // Its paints as the painting's will be, but for faces' skin, which needs the eyes
                     // a draft has none of (`KitPaint.faces(of:…)`); the candidate's count bounds how close.
                     template.palette = mix.mixed(
-                        template.palette, shares: mix == .lively ? LivelyPaint.shares(of: template) : [], space: template.colorSpace,
+                        template.palette, shares: mix == .kit ? [] : LivelyPaint.shares(of: template), space: template.colorSpace,
                         minDistance: GenerationSettings(colorCount: template.palette.count).minPaletteDistance)
                 }
                 guard let preview = try? Self.makePreview(

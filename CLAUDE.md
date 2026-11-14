@@ -49,8 +49,11 @@ before planning app work).
     (`CreateModel.newPaintMix`); with it the subject's body loosened (`subjectCellSize`) and Auto's
     `AutoTaste.finished`, which values the finished painting over ΔE. Lively paint (`LivelyPaint`,
     `--paint-mix lively`, `PaintMix.mixed`; painting-company row 326): kit paint's paints with their
-    hues spread, a family's lights turned warm and its shadows cool, for a broader variety of colors;
-    SideStore builds ask for it in kit's place (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    hues spread, a family's lights turned warm and its shadows cool, for a broader variety of colors.
+    Rich paint (`--paint-mix rich`, `PaintMix.rich`; row 344): lively paint turned further, a broad
+    background left calm, and a face given paints of its own (`FacePaints.split`, the one mix that
+    recolors regions and adds paints, at the palette's end) with a pale face's shadows mixed warm
+    (`KitPaint.shade`); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline

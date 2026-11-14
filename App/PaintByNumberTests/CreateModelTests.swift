@@ -72,8 +72,8 @@ struct CreateModelTests {
         #expect(model.decision?.candidates.map(\.settings) == decision.candidates.map(\.settings))
     }
 
-    /// In SideStore and Debug builds a photo's painting has lively paint, a kit's paints with
-    /// their hues spread (painting-company rows 191, 326): the regions Auto chose, the paints bolder, and the suggestion still reads as one.
+    /// In SideStore and Debug builds a photo's painting has rich paint, a kit's paints with
+    /// their hues spread (painting-company rows 191, 326, 344): the regions Auto chose, the paints bolder, and the suggestion still reads as one.
     @Test func newPaintingsHaveTheBuildsPaints() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
