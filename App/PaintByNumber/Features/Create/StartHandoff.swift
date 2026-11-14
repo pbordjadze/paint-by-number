@@ -34,6 +34,14 @@ final class StartHandoff {
         self.timeout = timeout
     }
 
+    /// Start Painting is saving the painting, or has: from here until the hand-off is `reset` the
+    /// create flow is up and opaque over the shelf, which comes back into view only from the
+    /// painting. What changes on the shelf meanwhile (the new painting's card, its thumbnail)
+    /// changes unseen (`EnvironmentValues.shelfIsOutOfSight`, which the shell sets from this).
+    private(set) var shelfIsOutOfSight = false
+    /// Counts the starts and the resets: a save that fails says which start it was (`startFailed`).
+    @ObservationIgnored private var start = 0
+
     var phase: StartHandoffLogic.Phase { logic.phase }
     /// A hand-off is under way or waiting to be taken in: the cover is up for it.
     var isRunning: Bool { logic.isRunning }
@@ -44,10 +52,27 @@ final class StartHandoff {
     /// The painting `id` is opening under the cover, or the cover still waits for it past its time.
     func isAwaiting(_ id: UUID) -> Bool { logic.isAwaiting(id) }
 
+    /// The create flow is about to save the painting Start Painting asked for. Returns the start's
+    /// number, for `startFailed`.
+    func willStart() -> Int {
+        start += 1
+        shelfIsOutOfSight = true
+        return start
+    }
+
+    /// The save of start `number` failed: its flow stays as it was, and may yet be closed over the
+    /// shelf. Ignored from a flow that is no longer the one starting (another replaced it since).
+    func startFailed(_ number: Int) {
+        if number == start { shelfIsOutOfSight = false }
+    }
+
     /// Start has saved the painting `id`. True when the shell is to push it now; false when a
     /// hand-off is already under way, so a second Start does not push it twice.
     func begin(_ id: UUID) -> Bool {
         guard logic.begin(id) else { return false }
+        #if DEBUG
+        TourLog.trace("mark", "handoff begin")
+        #endif
         fallback = Task { [weak self, timeout] in
             try? await Task.sleep(for: timeout)
             guard !Task.isCancelled else { return }
@@ -61,13 +86,20 @@ final class StartHandoff {
     /// painting is the one being opened, and once the flow has dissolved.
     func paintingDrew(_ id: UUID, templateRect: CGRect) {
         guard logic.paintingDrew(id, templateRect: templateRect) else { return }
+        #if DEBUG
+        TourLog.trace("mark", "handoff drew")
+        #endif
         fallback?.cancel()
         fallback = nil
     }
 
     /// The create flow has dissolved into the painting (or faded out of its way).
     func complete() {
+        #if DEBUG
+        if logic.complete() { TourLog.trace("mark", "start end") }
+        #else
         logic.complete()
+        #endif
     }
 
     /// The cover is gone, or a new flow replaced the one handing over.
@@ -75,11 +107,17 @@ final class StartHandoff {
         fallback?.cancel()
         fallback = nil
         logic.reset()
+        start += 1
+        shelfIsOutOfSight = false
     }
 
     private func timeOut() {
         fallback = nil
+        #if DEBUG
+        if logic.timeOut() { TourLog.trace("mark", "handoff timed out") }
+        #else
         logic.timeOut()
+        #endif
     }
 }
 

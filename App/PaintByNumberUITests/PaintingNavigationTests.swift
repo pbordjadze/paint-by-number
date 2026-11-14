@@ -143,6 +143,7 @@ final class PaintingNavigationTests: XCTestCase {
         }
     }
 
+    #if UNRELEASED
     /// Quiet painting: once an area is painted the bar fades to Back, the progress ring and Hint,
     /// and a tap on the ring brings Undo and More back.
     @MainActor
@@ -162,6 +163,7 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(waitUntil(timeout: 5) { !ring.exists }, "The ring stayed once the bar came back")
         attachScreenshot(of: app, named: "shown")
     }
+    #endif
 
     /// The Hint button flies the camera to an unpainted area.
     @MainActor
@@ -303,12 +305,19 @@ final class PaintingNavigationTests: XCTestCase {
         attachScreenshot(of: app, named: "keyboard-painted")
         XCTAssertNotEqual(painted, unpainted, "Couldn't paint the hinted color")
 
-        app.typeKey("z", modifierFlags: .command)
-        sleep(1)
-        XCTAssertNotEqual(state(), painted, "⌘Z didn't undo")
+        // The first ⌘Z of a launch is sometimes lost in a simulator under XCUITest, as its first ⌘F and
+        // ⌘+ are (`KeyboardShortcutTests.press`; this test failed one run in two on a Mac for it,
+        // November 12, 2026): it is pressed again when nothing came of it. Whether a real keyboard's
+        // first press is lost too is not known.
+        var undone = false
+        for attempt in 1...3 where !undone {
+            if attempt > 1 { XCTContext.runActivity(named: "Nothing came of ⌘Z, pressed \(attempt - 1) time(s): pressing it again") { _ in } }
+            app.typeKey("z", modifierFlags: .command)
+            undone = waitUntil(timeout: 4) { state() != painted }
+        }
+        XCTAssertTrue(undone, "⌘Z didn't undo")
         app.typeKey("z", modifierFlags: [.command, .shift])
-        sleep(1)
-        XCTAssertEqual(state(), painted, "⇧⌘Z didn't redo")
+        XCTAssertTrue(waitUntil(timeout: Self.stateTimeout) { state() == painted }, "⇧⌘Z didn't redo")
     }
 
     /// The Photo control: a tap keeps the photo shown until the next tap; a hold only peeks.

@@ -74,7 +74,12 @@ nonisolated enum LineArtInputs {
     @concurrent
     static func maps(for image: CGImage) async throws -> Maps {
         #if DEBUG
-        if let cached = LineArtMapsCache.maps(for: image) { return cached }
+        TourLog.trace("mark", "maps begin")
+        if let cached = LineArtMapsCache.maps(for: image) {
+            TourLog.trace("mark", "maps end cached")
+            return cached
+        }
+        defer { TourLog.trace("mark", "maps end computed") }
         #endif
         async let eyes = findEyes(in: image)
         async let objects = findObjects(in: image)

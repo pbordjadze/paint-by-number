@@ -1,11 +1,12 @@
+#if UNRELEASED
 import CoreGraphics
 import QuartzCore
 import Testing
 @testable import PaintByNumber
 
-/// Night falling over a finished painting (`Nightfall`, SideStore and Debug builds): about three
-/// seconds by Moon with a crescent and two stars, a warm evening light alone by Sun, no motion
-/// under Reduce Motion, and it stays on the painting as the camera moves.
+/// Night falling over a finished painting (`Nightfall`, SideStore and Debug builds, so these tests
+/// are theirs too): about three seconds by Moon with a crescent and two stars, a warm evening light
+/// alone by Sun, no motion under Reduce Motion, and it stays on the painting as the camera moves.
 @MainActor
 struct NightfallTests {
     private let painting = CGRect(x: 20, y: 80, width: 400, height: 300)
@@ -85,3 +86,4 @@ struct NightfallTests {
         #expect(bounds.width > square.width * 0.8 && bounds.height > square.height * 0.9)
     }
 }
+#endif

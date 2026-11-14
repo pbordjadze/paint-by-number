@@ -236,6 +236,9 @@ struct TemplatePreviewView: View {
         if let onClose, !isEnlarged {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
+                    // Not while Refine or the Panel covers the preview: keys still reach a covered
+                    // screen, and Esc there would close the flow under it.
+                    .keyboardShortcut(isRefining || isFraming ? nil : .cancelAction)
                     .disabled(isStarting)
             }
         }

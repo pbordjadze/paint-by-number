@@ -20,6 +20,11 @@ import Foundation
 /// after the shelf's hint was used (opening the painting): it alone waits for neither the gap nor
 /// something done.
 ///
+/// Watch It Again, on a finished page, waits for none of the limits either: a finish is the
+/// moment that matters most and comes once a painting, and a newcomer's first one, an hour into
+/// their first day, found every limit spent and got no tip at all (onboarding round,
+/// painting-company row 263).
+///
 /// A refused hint is not kept. `refusal(for:)` changes nothing and the pacing has no queue: the hint
 /// comes up again only when its moment next comes, and is judged then, as the design says ("it is not
 /// queued to appear right after").
@@ -114,6 +119,7 @@ nonisolated struct TipPacing: Codable, Equatable, Sendable {
         if showing != nil { return .anotherShowing }
         if !quiet.isDisjoint(with: .silence) { return .quiet }
         if quiet.contains(.pageFinished) && id != .benchReplay { return .replayOnly }
+        if quiet.contains(.pageFinished) { return nil }
 
         if day == Self.dayKey(now, calendar: calendar), shownToday >= Self.hintsPerDay { return .dayFull }
         if continuesSession(at: now) {

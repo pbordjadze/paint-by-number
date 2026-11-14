@@ -114,6 +114,9 @@ struct PaletteBar: View {
     @State private var detailsColor: Int?
     @State private var position = ScrollPosition(idType: Int.self)
     @State private var scroll = ScrollState()
+    /// Whether swatches lie past either end of the bar, which then fades there: a swatch cut by
+    /// the bar's edge alone didn't say the bar scrolls (QA, November 7, the seventh on an iPhone).
+    @State private var more = PaletteOverflow()
 
     /// Where the scroll view and the bar's clipped glass are, and how far it has scrolled. A
     /// reference, so that scrolling renders nothing.
@@ -124,6 +127,51 @@ struct PaletteBar: View {
         var clip = CGRect.null
         /// A color to bring into view once both frames are known (the bar appearing).
         var pending: Int?
+        /// The selected swatch's global frame, and where the bar's tips last pointed.
+        var selectedSwatch = CGRect.null
+        var tipAnchors: TipAnchors?
+    }
+
+    /// Where the bar's two tips point, in the bar's own space: Can't Find It at the selected
+    /// swatch, Tap to Paint at its lane across the whole bar, so the popover hangs clear of the
+    /// swatches (from the swatch it covered the line above, the colors it asked for: QA, November
+    /// 7) yet its arrow is on the selected color (it pointed at the bar's middle: painting-company
+    /// row 263).
+    struct TipAnchors: Equatable {
+        var swatch: CGRect
+        var lane: CGRect
+    }
+
+    /// The anchors for a selected swatch at `swatch` in a bar at `bar` (both global), the swatch
+    /// cut to what the bar shows; nil while either is unknown or the swatch is out of view.
+    static func tipAnchors(swatch: CGRect, bar: CGRect, axis: Axis) -> TipAnchors? {
+        guard !swatch.isNull, !bar.isNull else { return nil }
+        let shown = swatch.offsetBy(dx: -bar.minX, dy: -bar.minY)
+            .intersection(CGRect(origin: .zero, size: bar.size))
+        guard !shown.isNull, shown.width > 0, shown.height > 0 else { return nil }
+        let lane = axis == .horizontal
+            ? CGRect(x: shown.minX, y: 0, width: shown.width, height: bar.height)
+            : CGRect(x: 0, y: shown.minY, width: bar.width, height: shown.height)
+        return TipAnchors(swatch: shown, lane: lane)
+    }
+
+    /// Where the bar's tips hang: measured as one of them takes the turn (the body reads the
+    /// turn), otherwise where they last did. The frames live in the scroll state, so the palette
+    /// scrolling renders nothing.
+    private var barTipAnchors: TipAnchors? {
+        guard let turn = PaintTips.desk.turn, turn == .benchTap || turn == .benchFind else { return scroll.tipAnchors }
+        if let anchors = Self.tipAnchors(swatch: scroll.selectedSwatch, bar: scroll.clip, axis: axis) {
+            scroll.tipAnchors = anchors
+        }
+        return scroll.tipAnchors
+    }
+
+    /// An invisible place for a tip to hang from: `rect`'s size, or the whole bar while it is nil.
+    private func tipPlace(_ rect: CGRect?) -> some View {
+        Color.clear
+            .frame(width: rect?.width, height: rect?.height)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The color whose swatch was just shaken (its count went up), the lowest if several were.
@@ -179,6 +227,8 @@ struct PaletteBar: View {
         // A caption needs room for a long name even when few swatches are left.
         let minLength = caption ? 260 * metrics.scale : 0
         let transition: AnyTransition = reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity)
+        let anchors = barTipAnchors
+        let tipEdge: Edge = axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing
         VStack(spacing: 0) {
             if caption {
                 CurrentColorLabel(session: session, font: .system(size: metrics.captionFontSize, weight: .semibold))
@@ -188,11 +238,22 @@ struct PaletteBar: View {
             }
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 along {
-                    ForEach(lanes.indices, id: \.self) { lane in
-                        across {
-                            ForEach(lanes[lane], id: \.self) { index in
-                                swatch(index).id(index)
-                                    .transition(transition)
+                    if lineCount == 1 {
+                        // One line: the swatches themselves, by color, so a finished color leaves and
+                        // the rest slide along. In lanes kept by position every later swatch moved to
+                        // another lane, and each ran its leaving and coming in at once: the whole strip
+                        // blinked at every finish (the Mac's QA, November 10).
+                        ForEach(colors, id: \.self) { index in
+                            swatch(index).id(index)
+                                .transition(transition)
+                        }
+                    } else {
+                        ForEach(lanes.indices, id: \.self) { lane in
+                            across {
+                                ForEach(lanes[lane], id: \.self) { index in
+                                    swatch(index).id(index)
+                                        .transition(transition)
+                                }
                             }
                         }
                     }
@@ -204,8 +265,10 @@ struct PaletteBar: View {
             .scrollPosition($position)
             .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { _, geometry in
                 scroll.geometry = geometry
+                more = PaletteOverflow(geometry, axis: axis)
                 revealPending()
             }
+            .mask { PaletteFade(more: more, axis: axis) }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                 scroll.frame = frame
                 revealPending()
@@ -234,6 +297,22 @@ struct PaletteBar: View {
         }
         .clipShape(.rect(cornerRadius: radius))
         .glassEffect(.regular, in: .rect(cornerRadius: radius))
+        // Both palette tips hang from the bar, pointing at the selected swatch (`TipAnchors`):
+        // over a bottom bar, beside a trailing one, and over it again at the largest text sizes,
+        // where beside would leave no room for the words. One pair of tips for the bar, not one
+        // per swatch: every swatch's ran TipKit's popoverTip, and its Regex, as it rendered. Each
+        // hangs from a place laid over the bar, since popoverTip points at the whole of its view.
+        // The places take no touch, TipKit's anchor included: over the bar (all of it until a tip
+        // first measures them, then the selected swatch's lane) they took the swatches' taps and
+        // long presses (CI, polish6's full run). The popover is presented apart and keeps its own.
+        .overlay(alignment: .topLeading) {
+            tipPlace(anchors?.lane).gentleTip(.benchTap, arrowEdge: tipEdge).placed(at: anchors?.lane)
+                .allowsHitTesting(false)
+        }
+        .overlay(alignment: .topLeading) {
+            tipPlace(anchors?.swatch).gentleTip(.benchFind, arrowEdge: tipEdge).placed(at: anchors?.swatch)
+                .allowsHitTesting(false)
+        }
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
     }
 
@@ -299,6 +378,9 @@ struct PaletteBar: View {
                 .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
         }
         .buttonStyle(.plain)
+        // Lit under a trackpad's pointer, as a system button would be.
+        .contentShape(.hoverEffect, Circle())
+        .hoverEffect(.highlight)
         // Details take precedence over the button's selection gesture. Recognizing both
         // simultaneously let a held swatch select its color instead of opening the popover.
         .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
@@ -312,12 +394,11 @@ struct PaletteBar: View {
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
-        // The tips about the selected color (Tap to Paint, Can't Find It?) point at its swatch: over
-        // a bottom bar, beside a trailing one, and over it again at the largest text sizes, where
-        // beside would leave no room for the words.
-        .gentleTip(
-            .benchTap, .benchFind, active: selected,
-            arrowEdge: axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing)
+        // Where the bar's tips point (`TipAnchors`): kept in the scroll state, so a scroll
+        // renders nothing.
+        .onGeometryChange(for: CGRect.self) { selected ? $0.frame(in: .global) : .null } action: { frame in
+            if !frame.isNull { scroll.selectedSwatch = frame }
+        }
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(session.numberedColorNames[index])
@@ -452,5 +533,54 @@ nonisolated private struct Shake: GeometryEffect {
 
     func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX: 5 * sin(amount * .pi * 4), y: 0))
+    }
+}
+
+/// Whether a palette's swatches run on past the start or the end of its bar.
+struct PaletteOverflow: Equatable {
+    var before = false
+    var after = false
+
+    init() {}
+
+    init(_ geometry: ScrollGeometry, axis: Axis) {
+        let visible = geometry.visibleRect, content = geometry.contentSize
+        if axis == .horizontal {
+            before = visible.minX > 1
+            after = visible.maxX < content.width - 1
+        } else {
+            before = visible.minY > 1
+            after = visible.maxY < content.height - 1
+        }
+    }
+}
+
+/// The palette's mask: opaque, but fading out toward an end with swatches past it.
+private struct PaletteFade: View {
+    let more: PaletteOverflow
+    let axis: Axis
+    /// The bar's end padding: a swatch brought into view (`PaletteWindow`) stays clear of the fade.
+    private static let length = PaletteMetrics.endPadding
+
+    var body: some View {
+        let layout = axis == .horizontal ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+        layout {
+            fade(shown: more.before, from: axis == .horizontal ? .leading : .top)
+            Rectangle()
+            fade(shown: more.after, from: axis == .horizontal ? .trailing : .bottom)
+        }
+    }
+
+    private func fade(shown: Bool, from edge: UnitPoint) -> some View {
+        LinearGradient(colors: [shown ? .black.opacity(0.15) : .black, .black], startPoint: edge,
+                       endPoint: UnitPoint(x: 1 - edge.x, y: 1 - edge.y))
+            .frame(width: axis == .horizontal ? Self.length : nil, height: axis == .vertical ? Self.length : nil)
+    }
+}
+
+private extension View {
+    /// Lays the view at `rect`'s origin in a top-leading overlay (at the overlay's own while nil).
+    func placed(at rect: CGRect?) -> some View {
+        padding(.leading, rect?.minX ?? 0).padding(.top, rect?.minY ?? 0)
     }
 }

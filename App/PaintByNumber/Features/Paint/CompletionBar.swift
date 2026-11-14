@@ -134,7 +134,7 @@ struct CompletionBar: View {
                     Button(action: onName) {
                         Text(title)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.quietInk)
                             .lineLimit(titleLines)
                     }
                     .buttonStyle(.plain)
@@ -150,7 +150,7 @@ struct CompletionBar: View {
                         }
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.quietInk)
                     .lineLimit(titleLines)
                 }
             }

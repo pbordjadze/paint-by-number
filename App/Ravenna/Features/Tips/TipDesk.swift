@@ -24,6 +24,10 @@ final class TipDesk {
     /// Counts the changes of the Tips switch; a screen that offers when tips come on (the shelf,
     /// after Show Tips Again) watches it.
     private(set) var answers = 0
+    /// Counts the times the shelf came back into view under a screen that went (a painting,
+    /// New Painting, Settings): back from a painting the shelf appears before the painting screen
+    /// has left, so its own appearance offered nothing. Pacing still judges what it offers.
+    private(set) var shelfReturns = 0
 
     /// Tests and demos that show no tips: nothing is offered.
     @ObservationIgnored var isMuted = false
@@ -53,8 +57,14 @@ final class TipDesk {
     private static let needsAnchor: Set<TipID> = Set(TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar })
 
     /// How long TipKit gets to find a tip eligible (a donation or a parameter just changed), and
-    /// the least a moment waits before it takes the first one that is.
+    /// the least a moment waits before it takes the first one that is. Counted in looks, one each
+    /// `poll`, not by the clock alone: a stall of the main actor as a painting opens (seconds,
+    /// under load) used the whole window before TipKit had been asked twice, and the first tip
+    /// never came (`testTheFirstTipsLeadIntoThePainting`, painting-company row 263). The clock still
+    /// bounds it, at `eligibilityLimit`.
     private static let eligibilityWindow: Duration = .seconds(3)
+    private static let poll: Duration = .milliseconds(100)
+    private static let eligibilityLimit: Duration = .seconds(12)
     private static let settle: Duration = .milliseconds(350)
     /// The longest a moment waits for the hand to rest.
     private static let restWindow: Duration = .seconds(12)
@@ -93,11 +103,14 @@ final class TipDesk {
 
     // MARK: Where the painter is
 
-    /// A screen appears. Going to another screen is something done.
+    /// A screen appears. Going to another screen is something done. A screen it covers keeps
+    /// quiet: its tip goes and its moment is called off.
     func enter(_ place: TipPlace) {
         places.removeAll { $0 == place }
         places.append(place)
         if place == .shelf { servedShelf = false }
+        if let offering, !isInView(offering.place) { stopOffering() }
+        if let turn, !isInView(turn.place) { release(turn) }
         noteActivity()
     }
 
@@ -106,6 +119,7 @@ final class TipDesk {
         places.removeAll { $0 == place }
         if offering?.place == place { stopOffering() }
         if let turn, turn.place == place { retire(turn) }
+        if place != .shelf, isInView(.shelf) { shelfReturns += 1 }
         noteActivity()
     }
 
@@ -227,7 +241,9 @@ final class TipDesk {
         let clock = ContinuousClock()
         let began = clock.now
         var chosen: TipID?
+        var looks = 0
         while !Task.isCancelled {
+            looks += 1
             // The rules read the tips-on parameter, which TipKit takes from here only once it has
             // loaded its datastore: say again what it should be until it does.
             let tipsOn = TipPreference.isEnabled(in: store.defaults)
@@ -247,17 +263,21 @@ final class TipDesk {
                 notice("no tip of \(Self.names(candidates)) is eligible: \(Self.statuses(candidates))")
                 return
             }
-            if clock.now - began >= Self.eligibilityWindow { break }
-            try? await Task.sleep(for: .milliseconds(100))
+            let waited = clock.now - began
+            if (waited >= Self.eligibilityWindow && Self.poll * looks >= Self.eligibilityWindow)
+                || waited >= Self.eligibilityLimit { break }
+            try? await Task.sleep(for: Self.poll)
         }
         guard let id = chosen, !Task.isCancelled else {
             notice("nothing was eligible in time: \(Self.statuses(candidates))")
             return
         }
 
-        // The hand rests: nothing done for `rest`, however long it takes (within reason).
+        // The hand rests: nothing done for `rest`, however long it takes (within reason, counted
+        // from here, so a long wait for TipKit leaves this its own).
+        let resting = clock.now
         while clock.now - lastActivity < rest {
-            guard !Task.isCancelled, clock.now - began < Self.restWindow else {
+            guard !Task.isCancelled, clock.now - resting < Self.restWindow else {
                 notice("\(id.rawValue) gave up waiting for the hand to rest")
                 return
             }
@@ -419,21 +439,45 @@ final class TipDesk {
 
 /// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
 /// at a time.
+///
+/// TipKit's `popoverTip` parses a Regex each time it is called, with a tip or nil (the type name
+/// of its `AnyTip`, in TipKitCore's `String.init(type:)`; on a painting with every tip hidden, 25
+/// parses in 24 calls, no tip made: `tools/tip_regex_count.py`), so a tip built once and kept
+/// would save nothing; this modifier goes on as few views as can point instead: one per place on
+/// a screen, never one per swatch (painting-company row 263). Its popover stays attached all the
+/// while, presented by its binding turning true: one attached at the turn, its binding true
+/// already, never came up. To point at part of a view, modify a view laid over that part: iOS
+/// 27.2's `popoverTip` pointed at the whole palette bar handed `.rect(.rect(_:))` for its
+/// `attachmentAnchor` (`PaletteBar.TipAnchors`).
 private struct GentleTipModifier: ViewModifier {
     let ids: TipSet
     var active: Bool
     var arrowEdge: Edge?
+    /// The tip this view pointed last, which TipKit keeps being handed once its turn has gone.
+    @State private var pointed: TipID?
 
     func body(content: Content) -> some View {
-        // `isPresented: nil` leaves it to TipKit to show and dismiss the popover by the tip's status
-        // (and picks the one overload of `popoverTip` that takes an arrow edge that may be nil).
-        content.popoverTip(active ? PaintTips.desk.tip(among: ids) : nil, isPresented: nil, arrowEdge: arrowEdge)
+        // Read here, in the body, so the popover follows the desk's turn. Presented by a binding
+        // to it alone, which closing the popover (its ×, a tap outside) sets, ending the turn.
+        // Once the view has pointed a tip, TipKit is never handed nil again, only the binding
+        // false: iOS 27's TipKit left a presented popover up, its text and all, when its tip went to
+        // nil (CI, November 4: Tap to Paint stayed over the swatch after the fill used it, whether
+        // the popover was presented by the tip's status or by this binding).
+        let shown = active ? PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil } : nil
+        let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
+        content
+            .popoverTip((shown ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
+            // A tap outside the popover does what it was aimed at and closes the tip.
+            .background { TipPassthrough(isShown: shown != nil) { isPresented.wrappedValue = false } }
+            .onChange(of: shown, initial: true) { _, now in
+                if let now { pointed = now }
+            }
     }
 }
 
 extension View {
-    /// A popover tip of whichever of `ids` has the turn, while `active` (a view that stands for
-    /// others, like the selected swatch, is active for one). `arrowEdge` is the popover's side of
+    /// A popover tip of whichever of `ids` has the turn, while `active` (of views that stand in
+    /// for one another, like the preview's two places for the sliders, one is active). `arrowEdge` is the popover's side of
     /// the view it points at: `.top` hangs it below, `.bottom` above, `.trailing` beside; nil lets
     /// the system choose.
     func gentleTip(_ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil) -> some View {

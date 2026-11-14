@@ -202,8 +202,9 @@ enum LayeredLines {
             let field = LineDetection.strength(contours, width: w, height: h)
             try cancel.throwIfCancelled()
             let smooth = Gaussian.filter(field, width: w, height: h, sigma: LineDetection.responseSigma, orderX: 0, orderY: 0)
-            let levels = smooth.map { UInt8(min(max($0, 0), 1) * 255 + 0.5) }
-            return Self.maxFilter(levels, width: w, height: h, radius: contourReach).map { Float($0) / 255 }
+            let levels = [UInt8](inParallel: smooth.count) { UInt8(min(max(smooth[$0], 0), 1) * 255 + 0.5) }
+            let widened = Self.maxFilter(levels, width: w, height: h, radius: contourReach)
+            return [Float](inParallel: widened.count) { Float(widened[$0]) / 255 }
         }
         try cancel.throwIfCancelled()
 
@@ -308,7 +309,8 @@ enum LayeredLines {
         let walls = LineLayering.walls(lines, width: w, height: h)
         var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in
             var cells = try clock.measure("lineArt.cells.split") { () throws -> CellMap in
-                let paint = segmentation.labels.storage.map { segmentation.regionColor[Int($0)] }
+                let regions = segmentation.labels.storage, regionColor = segmentation.regionColor
+                let paint = [UInt32](inParallel: regions.count) { regionColor[Int(regions[$0])] }
                 return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
             }
             stats.cellsSplit = cells.count
@@ -369,7 +371,7 @@ enum LayeredLines {
         var final = finalCells
         let kept = final.compactPalette(paletteCount: paints.count)
         let split = Segmentation(
-            labels: RegionMap(width: w, height: h, storage: final.label.map { UInt32($0) }),
+            labels: RegionMap(width: w, height: h, storage: [UInt32](inParallel: final.label.count) { UInt32(final.label[$0]) }),
             regionColor: final.color, palette: kept.map { paints[$0] }, colorSpace: segmentation.colorSpace)
         let detailRegions = final.kept.indices.filter { final.kept[$0] }.map { UInt32($0) }
         stats.cells = final.count
@@ -378,10 +380,9 @@ enum LayeredLines {
 
         // Which stretches still bound cells after the joins, and which now run inside one.
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = [], drawnInterior: [[SIMD2<Float>]] = []
-        let distance = Self.boundaryDistance(final.label, width: w, height: h)
         try cancel.throwIfCancelled()
         for (k, line) in (edited?.drawing.lines ?? lines).enumerated() {
-            let flags = Self.near(line, distance: distance, width: w)
+            let flags = Self.near(line, cells: final.label, width: w, height: h)
             boundary += line.pieces(keeping: flags, freeCuts: true)
             let drawn = (edited?.drawing.origin[k] ?? -1) >= 0
             // A piece shorter than the layering's minimum run is a boundary stretch's end
@@ -461,80 +462,96 @@ enum LayeredLines {
     static func annotate(_ t: Template, plan: Plan, cancel: CancellationCheck) throws -> TemplateLineArt {
         let w = t.width, h = t.height
         let walls = LineLayering.walls(plan.boundaryLines, width: w, height: h)
-        let r2 = annotateNear * annotateNear
-        var distances: [[Float]] = []
-        for l in 0..<3 {
-            try cancel.throwIfCancelled()
-            distances.append(DistanceTransform.squaredEDT(width: w, height: h) { walls.layer[$0] == UInt8(l) }.storage)
-        }
+        // A line of a layer runs along a sample when one of its pixels lies within `annotateNear`:
+        // asked at the samples (`Reach`), not of a distance transform a layer.
+        let reach = Reach(squaredRadius: annotateNear * annotateNear)
         try cancel.throwIfCancelled()
         let strength = Self.maxFilter(walls.strength, width: w, height: h, radius: Int(annotateNear.rounded(.up)))
         try cancel.throwIfCancelled()
         var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
         var weights = [UInt8](repeating: 0, count: t.edges.count)
         // Near the painter's edits: each sample of an edge, and the drawn stretches of edges a
-        // line runs along only in part.
-        var samples: [EdgeSample] = []
-        var partial: [EdgeRun] = []
-        for (k, e) in t.edges.enumerated() {
-            var covered = SIMD4<Float>(repeating: 0)
-            var strengthSum: Float = 0, strengthLength: Float = 0
-            let pts = t.points(of: e)
-            let sampling = plan.exact && e.right != BoundaryEdge.outside
-            samples.removeAll(keepingCapacity: true)
-            var previous = pts.first!
-            for p in pts.dropFirst() {
-                let length = simdLength(p - previous)
-                let steps = max(1, Int(length.rounded(.up)))
-                for step in 0..<steps {
-                    let q = previous + (p - previous) * ((Float(step) + 0.5) / Float(steps))
-                    let x = min(max(Int((q.x - 0.5).rounded()), 0), w - 1), y = min(max(Int((q.y - 0.5).rounded()), 0), h - 1)
-                    let i = y * w + x
-                    var layer = 3
-                    for l in 0..<3 where distances[l][i] <= r2 { layer = l; break }
-                    let piece = length / Float(steps)
-                    covered[layer] += piece
-                    if layer < 3 {
-                        strengthSum += Float(strength[i]) * piece
-                        strengthLength += piece
+        // line runs along only in part. An edge is its own work (its layer, its weight, its
+        // stretches), so the edges go in chunks, their stretches joined in the edges' order.
+        let partial: [EdgeRun] = layers.withUnsafeMutableBufferPointer { layerBuffer in
+            weights.withUnsafeMutableBufferPointer { weightBuffer in
+                let layer = UncheckedSendable(layerBuffer.baseAddress!), weight = UncheckedSendable(weightBuffer.baseAddress!)
+                return Parallel.mapChunks(t.edges.count, chunk: 128) { range -> [EdgeRun] in
+                    var samples: [EdgeSample] = []
+                    var partial: [EdgeRun] = []
+                    for k in range {
+                        let e = t.edges[k]
+                        var covered = SIMD4<Float>(repeating: 0)
+                        var strengthSum: Float = 0, strengthLength: Float = 0
+                        let pts = t.points(of: e)
+                        let sampling = plan.exact && e.right != BoundaryEdge.outside
+                        samples.removeAll(keepingCapacity: true)
+                        var previous = pts.first!
+                        for p in pts.dropFirst() {
+                            let length = simdLength(p - previous)
+                            let steps = max(1, Int(length.rounded(.up)))
+                            for step in 0..<steps {
+                                let q = previous + (p - previous) * ((Float(step) + 0.5) / Float(steps))
+                                let x = min(max(Int((q.x - 0.5).rounded()), 0), w - 1), y = min(max(Int((q.y - 0.5).rounded()), 0), h - 1)
+                                let i = y * w + x
+                                // The first layer with a line in reach.
+                                var layer = 3
+                                for (dx, dy) in reach.offsets {
+                                    let xx = x + dx, yy = y + dy
+                                    guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
+                                    let l = Int(walls.layer[yy * w + xx])
+                                    if l < layer {
+                                        layer = l
+                                        if l == 0 { break }
+                                    }
+                                }
+                                let piece = length / Float(steps)
+                                covered[layer] += piece
+                                if layer < 3 {
+                                    strengthSum += Float(strength[i]) * piece
+                                    strengthLength += piece
+                                }
+                                if sampling {
+                                    let erased = plan.erased?[i] ?? 0
+                                    samples.append(EdgeSample(
+                                        position: q, layer: erased == LineEdits.rubbedOut ? 3 : layer, length: piece,
+                                        strength: Float(strength[i]), erased: erased != 0))
+                                }
+                            }
+                            previous = p
+                        }
+                        // The drawn layer along most of the edge (the stronger on ties), unless more of the
+                        // edge has no line at all.
+                        var drawnBest = -1
+                        for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
+                        var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
+                        if sampling {
+                            // Drawn where a line runs along it: whole, not at all, or in stretches over an
+                            // undrawn edge.
+                            let runs = Self.drawnRuns(samples)
+                            if runs.isEmpty {
+                                best = 3
+                            } else if runs.count == 1 && runs[0] == 0...(samples.count - 1) {
+                                best = drawnBest
+                            } else {
+                                best = 3
+                                for run in runs {
+                                    partial.append(Self.edgeRun(samples[run], from: run.lowerBound == 0 ? pts.first : nil,
+                                                                to: run.upperBound == samples.count - 1 ? pts.last : nil, region: e.left))
+                                }
+                            }
+                        }
+                        layer.value[k] = UInt8(best)
+                        if best < 3 {
+                            weight.value[k] = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
+                        } else if e.right != BoundaryEdge.outside {
+                            let a = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab
+                            let b = t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
+                            weight.value[k] = UInt8((min(ColorScience.distance(a, b) / colorWeightReference, 1) * 255).rounded())
+                        }
                     }
-                    if sampling {
-                        let erased = plan.erased?[i] ?? 0
-                        samples.append(EdgeSample(
-                            position: q, layer: erased == LineEdits.rubbedOut ? 3 : layer, length: piece,
-                            strength: Float(strength[i]), erased: erased != 0))
-                    }
-                }
-                previous = p
-            }
-            // The drawn layer along most of the edge (the stronger on ties), unless more of the
-            // edge has no line at all.
-            var drawnBest = -1
-            for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
-            var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
-            if sampling {
-                // Drawn where a line runs along it: whole, not at all, or in stretches over an
-                // undrawn edge.
-                let runs = Self.drawnRuns(samples)
-                if runs.isEmpty {
-                    best = 3
-                } else if runs.count == 1 && runs[0] == 0...(samples.count - 1) {
-                    best = drawnBest
-                } else {
-                    best = 3
-                    for run in runs {
-                        partial.append(Self.edgeRun(samples[run], from: run.lowerBound == 0 ? pts.first : nil,
-                                                    to: run.upperBound == samples.count - 1 ? pts.last : nil, region: e.left))
-                    }
-                }
-            }
-            layers[k] = UInt8(best)
-            if best < 3 {
-                weights[k] = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
-            } else if e.right != BoundaryEdge.outside {
-                let a = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab
-                let b = t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
-                weights[k] = UInt8((min(ColorScience.distance(a, b) / colorWeightReference, 1) * 255).rounded())
+                    return partial
+                }.flatMap { $0 }
             }
         }
 
@@ -658,28 +675,30 @@ enum LayeredLines {
 
     /// Pixels with a 4-neighbour of another label.
     static func boundaryPixels<T: Equatable>(_ labels: [T], width w: Int, height h: Int) -> [Bool] {
-        var out = [Bool](repeating: false, count: w * h)
-        for y in 0..<h {
-            for x in 0..<w {
-                let i = y * w + x
-                if x + 1 < w && labels[i] != labels[i + 1] { out[i] = true; out[i + 1] = true }
-                if y + 1 < h && labels[i] != labels[i + w] { out[i] = true; out[i + w] = true }
+        [Bool](inParallel: w * h) { i in
+            let y = i / w, x = i - y * w, label = labels[i]
+            return (x + 1 < w && labels[i + 1] != label) || (x > 0 && labels[i - 1] != label)
+                || (y + 1 < h && labels[i + w] != label) || (y > 0 && labels[i - w] != label)
+        }
+    }
+
+    /// Per point of a line, whether a cell boundary (a pixel with a 4-neighbour of another cell,
+    /// as `boundaryPixels` marks them) runs within `trimNear` (short runs follow their neighbours:
+    /// short gaps inside the line close, short pieces go). Asked at the line's own points
+    /// (`Reach`): the cells' boundaries need no distance transform for it.
+    static func near(_ line: DrawnLine, cells: [Int32], width w: Int, height h: Int) -> [Bool] {
+        let reach = Reach(squaredRadius: trimNear * trimNear)
+        var keep = cells.withUnsafeBufferPointer { label in
+            line.points.map { p in
+                // The point's pixel, as `LineLayering.pixelIndex(of:width:height:)` has it.
+                let px = min(max(Int(p.x.rounded()), 0), w - 1), py = min(max(Int(p.y.rounded()), 0), h - 1)
+                return reach.touches(x: px, y: py, width: w, height: h) { x, y in
+                    let i = y * w + x, cell = label[i]
+                    return (x + 1 < w && label[i + 1] != cell) || (x > 0 && label[i - 1] != cell)
+                        || (y + 1 < h && label[i + w] != cell) || (y > 0 && label[i - w] != cell)
+                }
             }
         }
-        return out
-    }
-
-    /// Squared distance from every pixel to the nearest cell-boundary pixel.
-    static func boundaryDistance(_ labels: [Int32], width w: Int, height h: Int) -> [Float] {
-        let boundary = boundaryPixels(labels, width: w, height: h)
-        return DistanceTransform.squaredEDT(width: w, height: h) { boundary[$0] }.storage
-    }
-
-    /// Per point of a line, whether a cell boundary runs within `trimNear` (short runs follow
-    /// their neighbours: short gaps inside the line close, short pieces go).
-    static func near(_ line: DrawnLine, distance: [Float], width w: Int) -> [Bool] {
-        let h = distance.count / w
-        var keep = line.points.map { distance[LineLayering.pixelIndex(of: $0, width: w, height: h)] <= trimNear * trimNear }
         let arc = line.arcLength
         let n = keep.count
         for flag in [false, true] {

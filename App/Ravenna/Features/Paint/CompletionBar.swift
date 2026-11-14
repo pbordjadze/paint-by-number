@@ -26,14 +26,37 @@ struct CompletionBar: View {
     let onClose: (() -> Void)?
 
     var body: some View {
+        // The row as it is where the painting's name fits on one line; on a narrower bar (a small
+        // phone, larger text) the seal makes room for it first, and then the name wraps to a
+        // second line. Text never shrinks, and Replay, Share and Done keep their size.
+        ViewThatFits(in: .horizontal) {
+            row(seal: true, titleLines: 1)
+            row(seal: false, titleLines: 1)
+            row(seal: false, titleLines: 2)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 8)
+        .frame(minHeight: Self.height)
+        .frame(maxWidth: 560)
+        // One compact row even at the largest text sizes: the canvas insets assume its height,
+        // and the Large Content Viewer shows its buttons enlarged.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .glassEffect(.regular, in: .capsule)
+        .task(id: session.revision) { await share.prepare(for: session) }
+    }
+
+    private func row(seal: Bool, titleLines: Int) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(.tint)
-                .symbolEffect(.bounce, value: sealBounces)
-                .accessibilityHidden(true)
+            if seal {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.tint)
+                    .symbolEffect(.bounce, value: sealBounces)
+                    .accessibilityHidden(true)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
+                    .lineLimit(1)
                 Group {
                     if title.isEmpty || !showsTitle {
                         Text("Every tile is set.")
@@ -43,18 +66,20 @@ struct CompletionBar: View {
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+                .lineLimit(titleLines)
             }
-            // The buttons keep their size on a phone; the caption shrinks, then truncates.
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
-            if session.isReplaying {
-                GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
-            } else {
-                GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
-                    // The only hint after a finish: over the bar, which sits at the bottom.
-                    .gentleTip(.benchReplay, arrowEdge: .bottom)
+            Group {
+                if session.isReplaying {
+                    GlassIconButton(systemImage: "stop.fill", label: "Stop", action: onStopReplay)
+                } else {
+                    GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
+                }
             }
+            // The only hint after a finish: over the bar, which sits at the bottom. On the place
+            // both buttons share: hung from Replay alone, it stayed up over the replay it started,
+            // its view gone before its binding turned false.
+            .gentleTip(.benchReplay, arrowEdge: .bottom)
             if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
                 // UIImage keeps the picture's Display P3 colors.
@@ -84,15 +109,6 @@ struct CompletionBar: View {
                 .accessibilityShowsLargeContentViewer()
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 8)
-        .frame(minHeight: Self.height)
-        .frame(maxWidth: 560)
-        // One compact row even at the largest text sizes: the canvas insets assume its height,
-        // and the Large Content Viewer shows its buttons enlarged.
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-        .glassEffect(.regular, in: .capsule)
-        .task(id: session.revision) { await share.prepare(for: session) }
     }
 }
 

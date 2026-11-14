@@ -53,6 +53,7 @@ final class CreateFlowTests: XCTestCase {
             "Panning moved the divider, or a second double tap didn't fit the layers again")
     }
 
+    #if UNRELEASED
     /// Start Painting tapped before the painting is made says Preparing…, and the painting opens by
     /// itself once it is (SideStore and Debug builds). `-slowFullResolution` keeps the full
     /// resolution waiting, as a phone's does.
@@ -74,7 +75,9 @@ final class CreateFlowTests: XCTestCase {
             app.staticTexts["The Great Wave, 0 percent painted"].waitForExistence(timeout: 180),
             "The painting didn't open by itself once it was made")
     }
+    #endif
 
+    #if UNRELEASED
     /// A slider touched while an early Start waits calls it off: Start Painting comes back, and no
     /// painting opens.
     @MainActor
@@ -101,6 +104,7 @@ final class CreateFlowTests: XCTestCase {
         sleep(5)
         XCTAssertFalse(app.staticTexts["The Great Wave, 0 percent painted"].exists, "A called-off Start opened the painting")
     }
+    #endif
 
     /// The preview's title field offers the sample's name and names the painting with what
     /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)

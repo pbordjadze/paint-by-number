@@ -19,6 +19,25 @@ enum PencilAction {
     case tap, squeeze
     /// The Pencil left the canvas after a stroke.
     case lifted
+
+    /// What the Pencil's own gestures do on the painting screen: a double tap takes the next color
+    /// with areas left, a squeeze shows a hint, and a stroke's end is `pencilUsed`'s to hear (the
+    /// tips').
+    func perform(
+        on session: PaintingSession, feedback: FeedbackEngine = .shared, showHint: () -> Void, pencilUsed: () -> Void
+    ) {
+        switch self {
+        case .tap:
+            if let current = session.selectedColor, let next = session.nextIncompleteColor(after: current) {
+                session.select(color: next)
+                feedback.selectionChanged()
+            }
+        case .squeeze:
+            showHint()
+        case .lifted:
+            pencilUsed()
+        }
+    }
 }
 
 /// The painting surface: a `CAMetalLayer` driven by an invisible `UIScrollView` overlay so
@@ -55,6 +74,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     var initialCamera: CanvasCamera?
     var onPencilAction: ((PencilAction) -> Void)?
+    /// "Only Draw with Apple Pencil" (Settings › Apple Pencil), asked at each touch; a test answers
+    /// for it.
+    var prefersPencilOnlyDrawing: () -> Bool = { UIPencilInteraction.prefersPencilOnlyDrawing }
     /// Scales fill, sparkle and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
     /// Loads the photo the painting was made from, the first time it is shown.
@@ -606,6 +628,11 @@ final class CanvasView: UIView, PaintingCanvas {
         cameraAnimation = CameraAnimation(
             fromZoom: scrollView.zoomScale, toZoom: zoom, fromOffset: scrollView.contentOffset, toOffset: offset,
             start: CACurrentMediaTime(), duration: duration, fits: fits)
+        #if DEBUG
+        TourLog.trace("flight", "from=%.3f,%.1f,%.1f\tto=%.3f,%.1f,%.1f\tduration=%.3f\tfits=%ld",
+            scrollView.zoomScale, scrollView.contentOffset.x, scrollView.contentOffset.y,
+            zoom, offset.x, offset.y, duration, fits ? 1 : 0)
+        #endif
         requestRender()
     }
 
@@ -628,6 +655,9 @@ final class CanvasView: UIView, PaintingCanvas {
         if t >= 1 {
             o = a.toOffset
             cameraAnimation = nil
+            #if DEBUG
+            TourLog.trace("land", "late=%.1f", (time - a.start - a.duration) * 1000)
+            #endif
         }
         apply(zoom: t >= 1 ? a.toZoom : z, offset: o)
         if t >= 1 { cameraDidSettle() }
@@ -827,10 +857,26 @@ final class CanvasView: UIView, PaintingCanvas {
     func requestRender() {
         needsRender = true
         idleTicks = 0
+        #if DEBUG
+        if displayLink?.isPaused == true { tourRested = true }
+        #endif
         displayLink?.isPaused = false
     }
 
     fileprivate func tick(_ link: CADisplayLink) {
+        #if DEBUG
+        let tourStart = CACurrentMediaTime(), tourFrames = framesRendered
+        defer {
+            if TourLog.isOn {
+                // `rest`: the display link was paused before this tick, so its gap is a rest, not a wait.
+                TourLog.trace("tick", "gap=%.2f\twork=%.2f\tdrew=%ld\trest=%ld",
+                    (link.timestamp - tourLastTick) * 1000, (CACurrentMediaTime() - tourStart) * 1000,
+                    framesRendered > tourFrames ? 1 : 0, tourRested ? 1 : 0)
+            }
+            tourLastTick = link.timestamp
+            tourRested = false
+        }
+        #endif
         stepCameraAnimation(at: CACurrentMediaTime())
         let time = Float(link.targetTimestamp - epoch)
         let camera = currentCamera()
@@ -873,6 +919,10 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
+    #if DEBUG
+    private var tourLastTick: CFTimeInterval = 0
+    private var tourRested = true
+    #endif
     private var skippedFrames = 0
     /// The frame `watchesFirstFrame` waits for is on its way to the screen.
     private var isAwaitingFirstFrame = false
@@ -1433,7 +1483,7 @@ final class CanvasView: UIView, PaintingCanvas {
             return
         }
         // "Only Draw with Apple Pencil": fingers navigate (double-tap still zooms), pointers paint.
-        if tapWasFinger && UIPencilInteraction.prefersPencilOnlyDrawing {
+        if tapWasFinger && prefersPencilOnlyDrawing() {
             lastTap = (t, view, false)
             return
         }
@@ -1448,7 +1498,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     @objc private func handleDragPaint(_ g: UILongPressGestureRecognizer) {
-        guard !UIPencilInteraction.prefersPencilOnlyDrawing else { return }
+        guard !prefersPencilOnlyDrawing() else { return }
         let p = canvasPoint(g.location(in: zoomView))
         let radius = Float(Self.brushRadius / scrollView.zoomScale)
         switch g.state {

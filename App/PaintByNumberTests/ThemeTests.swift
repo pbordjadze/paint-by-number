@@ -27,6 +27,19 @@ struct ThemeTests {
         }
     }
 
+    /// Words that say something failed read on the paper and on sheets in both appearances, to
+    /// WCAG AA, where the system's red gave 3.2:1 on the light paper (QA, November 7).
+    @Test(arguments: [ColorScheme.light, .dark])
+    func errorInkPassesAAOnPaperAndSheets(_ scheme: ColorScheme) {
+        var environment = EnvironmentValues()
+        environment.colorScheme = scheme
+        for ground in [Theme.paper, Theme.surface] {
+            let back = ground.resolve(in: environment)
+            let text = Self.over(Theme.errorInk.resolve(in: environment), back)
+            #expect(Self.contrast(text, back) >= 4.5, "\(scheme): \(Self.contrast(text, back))")
+        }
+    }
+
     /// `top` laid over the opaque `bottom` by its opacity, as the screen blends: in sRGB's encoded
     /// components (blended in linear light, the light paper's ink came out at 3:1, which the
     /// screen, measured, doesn't show).

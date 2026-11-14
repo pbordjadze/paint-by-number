@@ -332,6 +332,9 @@ struct CompareView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
             .background(.black.opacity(0.62), in: .capsule)
+            // A label on the picture, which VoiceOver hears as the comparison's: past this size it
+            // covered a third of the picture.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 }
 

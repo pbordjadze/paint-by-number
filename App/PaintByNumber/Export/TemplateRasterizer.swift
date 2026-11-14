@@ -79,11 +79,58 @@ nonisolated enum TemplateRasterizer {
 
     /// Renders to an image whose long side is `maxPixelSize` pixels.
     /// - Parameter painted: Painted flag per region (`PaintProgress.painted`); nil = none.
-    static func image(_ t: Template, painted: [Bool]? = nil, style: Style, maxPixelSize: Int) -> CGImage? {
+    /// - Parameter inBands: Draw it a band of rows at a time, on every core (`drawInBands`): much sooner
+    ///   there, and not byte for byte the picture drawn whole.
+    static func image(_ t: Template, painted: [Bool]? = nil, style: Style, maxPixelSize: Int, inBands: Bool = false) -> CGImage? {
         let size = pixelSize(of: t, maxPixelSize: maxPixelSize)
         guard let ctx = makeContext(width: size.width, height: size.height, colorSpace: t.colorSpace) else { return nil }
-        draw(t, painted: painted, style: style, in: ctx, rect: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+        let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        if !(inBands && drawInBands(t, painted: painted, style: style, into: ctx, rect: rect)) {
+            draw(t, painted: painted, style: style, in: ctx, rect: rect)
+        }
         return ctx.makeImage()
+    }
+
+    /// Rows of a band of `drawInBands`: the same on every device, so a picture is cut the same way everywhere.
+    static let bandRows = 128
+
+    /// `draw` into the whole of `ctx` (a bitmap context of `makeContext`'s, `rect` all of it) a band of rows at a
+    /// time, on as many cores as there are: each band is a context of its own over its rows of `ctx`'s pixels.
+    /// The picture is there in about a quarter of the time (the drawing was the last tenth of a second of making
+    /// a painting, on one core). It is not byte for byte the picture drawn whole: CoreGraphics clips the shapes
+    /// to each band and the cut edges round differently, so about one byte in seven thousand comes out up to 3
+    /// levels off (5 where a classic picture's fills meet). Paul took that for the create flow's preview
+    /// (painting-company row 292); every other picture (thumbnails, exports, print) is drawn whole.
+    /// False, with nothing usable drawn, when the picture can't be drawn so (no vector geometry, numbers, too few
+    /// rows, no band context): the caller draws it whole.
+    private static func drawInBands(_ t: Template, painted: [Bool]?, style: Style, into ctx: CGContext, rect: CGRect) -> Bool {
+        let width = ctx.width, height = ctx.height
+        guard !t.rings.isEmpty, !style.numbers, height >= 2 * bandRows, let data = ctx.data, let space = ctx.colorSpace else {
+            return false
+        }
+        // Built once: every band fills the same paths, read on every core, so immutable copies (CoreGraphics
+        // promises thread safety for those alone).
+        let fills = fillPaths(t, painted: resolvedPainted(t, painted: painted, style: style), style: style).map { $0?.copy() }
+        let bytesPerRow = ctx.bytesPerRow, info = ctx.bitmapInfo.rawValue
+        let pixels = UncheckedSendable(data)
+        var drawn = [Bool](repeating: false, count: (height + bandRows - 1) / bandRows)
+        drawn.withUnsafeMutableBufferPointer { buffer in
+            let done = UncheckedSendable(buffer.baseAddress!)
+            Parallel.forEachChunk(height, chunk: bandRows) { rows in
+                guard let band = CGContext(
+                    data: pixels.value + rows.lowerBound * bytesPerRow, width: width, height: rows.count, bitsPerComponent: 8,
+                    bytesPerRow: bytesPerRow, space: space, bitmapInfo: info)
+                else { return }
+                // y-down as `makeContext`'s, the band's rows where the whole picture has them.
+                band.translateBy(x: 0, y: CGFloat(rows.count))
+                band.scaleBy(x: 1, y: -1)
+                band.translateBy(x: 0, y: -CGFloat(rows.lowerBound))
+                band.interpolationQuality = .high
+                draw(t, painted: painted, style: style, in: band, rect: rect, fills: fills, banded: true)
+                done.value[rows.lowerBound / bandRows] = true
+            }
+        }
+        return !drawn.contains(false)
     }
 
     static func pngData(_ t: Template, painted: [Bool]? = nil, style: Style, maxPixelSize: Int) -> Data? {
@@ -105,9 +152,12 @@ nonisolated enum TemplateRasterizer {
     /// Draws the template into `rect` of a y-down context (bitmap or PDF page).
     /// - Parameter rasterResolution: Pixel size used for the region-map fallback; defaults
     ///   to the device size of `rect`.
+    /// - Parameter fills: `fillPaths` made already (`drawInBands` shares them between its bands).
+    /// - Parameter banded: `ctx` is one band of a picture drawn in bands: it takes the lines within a
+    ///   line's reach of its rows too.
     static func draw(
         _ t: Template, painted: [Bool]?, style: Style, in ctx: CGContext, rect: CGRect,
-        rasterResolution: CGSize? = nil
+        rasterResolution: CGSize? = nil, fills: [CGPath?]? = nil, banded: Bool = false
     ) {
         guard t.width > 0, t.height > 0, rect.width > 0, rect.height > 0 else { return }
         let flags = resolvedPainted(t, painted: painted, style: style)
@@ -124,11 +174,13 @@ nonisolated enum TemplateRasterizer {
         if t.rings.isEmpty {
             drawRegionMap(t, painted: flags, style: style, in: ctx, resolution: deviceSize)
         } else {
-            drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
+            drawVectorFills(t, paths: fills ?? fillPaths(t, painted: flags, style: style), style: style, in: ctx, scale: scale)
             if let lines = DrawableLineArt(t) {
-                if style.drawsDrawing { drawBookOutlines(t, lines: lines, painted: flags, style: style, in: ctx, scale: scale) }
+                if style.drawsDrawing {
+                    drawBookOutlines(t, lines: lines, painted: flags, style: style, in: ctx, scale: scale, banded: banded)
+                }
             } else if style.outlineWidth > 0 {
-                drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
+                drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale, banded: banded)
             }
         }
         if style.numbers { drawNumbers(t, painted: flags, style: style, in: ctx) }
@@ -168,9 +220,10 @@ nonisolated enum TemplateRasterizer {
 
     // MARK: Vector path
 
-    private static func drawVectorFills(_ t: Template, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat) {
-        // One even-odd path per distinct fill. Regions never overlap, so even-odd over a
-        // union of regions (outer rings + holes) fills exactly those regions.
+    /// One even-odd path per distinct fill (a paint painted, then a paint sketched), nil where nothing has it.
+    /// Regions never overlap, so even-odd over a union of regions (outer rings + holes) fills exactly those
+    /// regions.
+    private static func fillPaths(_ t: Template, painted: [Bool], style: Style) -> [CGPath?] {
         let paletteCount = t.palette.count
         var paths = [CGMutablePath?](repeating: nil, count: paletteCount * 2)
         for index in t.regions.indices {
@@ -191,6 +244,11 @@ nonisolated enum TemplateRasterizer {
             }
             paths[key] = path
         }
+        return paths
+    }
+
+    private static func drawVectorFills(_ t: Template, paths: [CGPath?], style: Style, in ctx: CGContext, scale: CGFloat) {
+        let paletteCount = t.palette.count
         // A hairline in the fill color closes anti-aliasing seams between neighbours.
         let seam = 0.7 / max(scale, 0.0001)
         ctx.setLineJoin(.round)
@@ -206,9 +264,13 @@ nonisolated enum TemplateRasterizer {
         }
     }
 
-    private static func drawVectorOutlines(_ t: Template, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat) {
-        // A PDF sheet shows part of a large template: edges outside it would still bloat the file.
-        let visible = ctx.boundingBoxOfClipPath
+    private static func drawVectorOutlines(
+        _ t: Template, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat, banded: Bool = false
+    ) {
+        // A PDF sheet shows part of a large template: edges outside it would still bloat the file. A band of a
+        // picture drawn in bands keeps the edges within a line's reach of it: an edge just outside has ink inside.
+        let reach = banded ? (style.outlineWidth + 2) / max(scale, 0.0001) : 0
+        let visible = ctx.boundingBoxOfClipPath.insetBy(dx: -reach, dy: -reach)
         let path = CGMutablePath()
         for edge in t.edges where edge.right != BoundaryEdge.outside {
             if style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)] { continue }
@@ -230,12 +292,15 @@ nonisolated enum TemplateRasterizer {
     /// paper (`.print`), where no highlight shows a color's cells and nothing is painted, the
     /// color edges go underneath first, as dotted guides.
     private static func drawBookOutlines(
-        _ t: Template, lines: DrawableLineArt, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
+        _ t: Template, lines: DrawableLineArt, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat,
+        banded: Bool = false
     ) {
-        let visible = ctx.boundingBoxOfClipPath
         let units = 1 / max(scale, 0.0001)
         let weight = (style.lineWeight ?? .stored()).factor
         let base = style.outlineWidth > 0 ? style.outlineWidth : Style.finished.outlineWidth
+        // A band of a picture drawn in bands keeps the lines within a line's reach of it (`drawVectorOutlines`).
+        let reach = banded ? (base * CGFloat(ColoringBookLook.widthFactor * weight) + 2) * units : 0
+        let visible = ctx.boundingBoxOfClipPath.insetBy(dx: -reach, dy: -reach)
         ctx.saveGState()
         ctx.setLineJoin(.round)
         ctx.setLineCap(.round)

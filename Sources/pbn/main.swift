@@ -149,22 +149,38 @@
 //       if any fail. Without a table it checks the built-in vocabulary (default 2), including
 //       its canonical anchors. Proposed tables are not installed or written into templates
 
+//
+// PBN_BANDS=<n> in the environment makes the pipeline split its work as a device with n bands does (twice its
+// cores: an iPad Air's 16, a ten-core Mac's 20): a template must come out the same whatever the number, and the
+// template hashes run under it to show that at the app's sizes (tools/book_hashes.py --bands).
+
+import Foundation
+import PaintCore
+
 let args = CommandLine.arguments
 guard args.count >= 2 else { fail("usage: pbn generate|drawing|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
-switch args[1] {
-case "generate": try runGenerate(options)
-case "drawing": try runDrawing(options)
-case "edit": try runEdit(options)
-case "refine": try runRefine(options)
-case "practice": try runPractice(options)
-case "suggest": try runSuggest(options)
-case "trace": try runTrace(options)
-case "check": try runCheck(options)
-case "names": try runNames(options)
-case "vocab": runVocabCheck(options)
-case "bench": try runBench(options)
-default:
-    fail("unknown command \(args[1])")
+func run(_ command: String, _ options: Options) throws {
+    switch command {
+    case "generate": try runGenerate(options)
+    case "drawing": try runDrawing(options)
+    case "edit": try runEdit(options)
+    case "refine": try runRefine(options)
+    case "practice": try runPractice(options)
+    case "suggest": try runSuggest(options)
+    case "trace": try runTrace(options)
+    case "check": try runCheck(options)
+    case "names": try runNames(options)
+    case "vocab": runVocabCheck(options)
+    case "bench": try runBench(options)
+    default:
+        fail("unknown command \(command)")
+    }
+}
+
+if let bands = ProcessInfo.processInfo.environment["PBN_BANDS"].flatMap({ Int($0) }) {
+    try Parallel.withBandCount(bands) { try run(args[1], options) }
+} else {
+    try run(args[1], options)
 }
