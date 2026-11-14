@@ -183,7 +183,7 @@ struct UnlockSheet: View {
                 .foregroundStyle(Theme.quietInk)
         case .failed(let message):
             Text(message)
-                .foregroundStyle(.red)
+                .foregroundStyle(Theme.errorInk)
         }
     }
 

@@ -56,7 +56,7 @@ struct SendTemplateSheet: View {
                 if failed {
                     Text("The painting couldn’t be prepared for sending.")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.errorInk)
                         .multilineTextAlignment(.center)
                 }
                 HStack(spacing: 12) {
