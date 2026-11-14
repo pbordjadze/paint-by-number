@@ -50,6 +50,9 @@ import sys
 from pathlib import Path
 
 APP_SOURCES = "App/PaintByNumber"
+# The code the app shares with Paint by Mosaic, compiled into the app target too (App/CLAUDE.md ›
+# Ravenna): its files are named as the app's are, by their path under the folder.
+SHARED_SOURCES = "App/Shared"
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
@@ -552,11 +555,11 @@ def library_usages(text, path=LIBRARY):
 
 
 def swift_sources(root):
-    base = root / APP_SOURCES
-    for path in sorted(base.rglob("*.swift")):
-        rel = path.relative_to(base).as_posix()
-        if rel not in DEBUG_ONLY_FILES:
-            yield rel, path
+    for base in (root / APP_SOURCES, root / SHARED_SOURCES):
+        for path in sorted(base.rglob("*.swift")):
+            rel = path.relative_to(base).as_posix()
+            if rel not in DEBUG_ONLY_FILES:
+                yield rel, path
 
 
 def scan_sources(sources):
