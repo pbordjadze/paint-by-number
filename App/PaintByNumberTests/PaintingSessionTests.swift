@@ -1001,6 +1001,31 @@ struct PaintingSessionTests {
         let resumed = try PaintingSession(template: template, progress: progress)
         #expect(resumed.isStarted && !resumed.isComplete && resumed.completedColors == [color])
     }
+
+    /// The painting screen's body reads `hasSelectedColor`, never `selectedColor`: going from one
+    /// color to another, as every finished color does, must not notify it.
+    @Test func hasSelectedColorChangesOnlyWhenItFlips() throws {
+        let session = PaintingSession(template: template)
+        try #require(session.paletteCount >= 2)
+        func notifies(_ change: () -> Void) -> Bool {
+            let observed = ObservedChange()
+            withObservationTracking {
+                _ = session.hasSelectedColor
+            } onChange: {
+                observed.fired = true
+            }
+            change()
+            return observed.fired
+        }
+        session.select(color: nil)
+        #expect(!session.hasSelectedColor)
+        let picked = notifies { session.select(color: 0) }
+        #expect(picked && session.hasSelectedColor && session.selectedColor == 0)
+        let changed = notifies { session.select(color: 1) }
+        #expect(!changed && session.hasSelectedColor && session.selectedColor == 1)
+        let putDown = notifies { session.select(color: nil) }
+        #expect(putDown && !session.hasSelectedColor && session.selectedColor == nil)
+    }
 }
 
 /// What a `withObservationTracking` change handler saw: the handler is `@Sendable`, and here it
