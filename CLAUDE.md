@@ -563,7 +563,9 @@ any port of it, when changing the fitter: work from the paper.
    Friends & Family group (public link on) with its What to Test and submits it for Beta App
    Review (`ci/testflight_testers.py`; the `TestFlight testers` workflow does the same for a build
    by hand); a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its
-   commit. The repository is
+   commit, and so is a push to `main` that changes what the app bundles (resources, Info.plist,
+   the project, `Package.swift`; the workflow's `bundled` job), so App Store Connect's validation
+   errors show the day they land. The repository is
    public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the
