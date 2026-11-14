@@ -3,6 +3,102 @@ import PaintCore
 import SwiftUI
 import UIKit
 
+/// What one finger (or the Pencil) does on the Refine screen.
+nonisolated enum RefineTool: Hashable, CaseIterable {
+    /// Draws lines as they are drawn.
+    case pen
+    /// Draws the shape picked (`RefineShape`) across a drag.
+    case shape
+    /// The Toolbox's Bend Line: a drag moves the line under it, bending it near where it was
+    /// grabbed (`TemplateEditor.Edit.reshape`).
+    case bendLine
+    /// Rubs out what it touches; a tap takes out a dab.
+    case eraser
+    /// Rubs lines out, or takes out the one tapped, junction to junction (`LineChains`).
+    case smartEraser
+    /// The Toolbox's Select: a tap picks the cell under it, which shows its outline and a bar
+    /// with its paint (`RefineSelectionBar`); a tap on it again lets it go.
+    case select
+    /// The Toolbox's Cell Edge: a stroke divides a cell where it goes and draws no line, both
+    /// sides keeping the paint (`TemplateEditor.Edit.cellEdge`).
+    case cellEdge
+    /// The Toolbox's Merge: a drag across cells joins them into the first, boundaries and all
+    /// (`TemplateEditor.Edit.merge`).
+    case merge
+    /// The Toolbox's Move Edge: a drag moves a cell's boundary, inked or not, so the cell and its
+    /// neighbour change shape (`TemplateEditor.Edit.reshape`, as Bend Line's).
+    case moveEdge
+    /// A tap makes the closed shape under it an area of its own in the photo's color there, or
+    /// clears that again (`EditFills`).
+    case fill
+    /// The Toolbox's Bucket: a tap gives the cell under it the current paint
+    /// (`TemplateEditor.Edit.paintArea`).
+    case bucket
+    /// The Toolbox's Paint Brush: the stroke's footprint takes the current paint, joining the
+    /// cells of that paint it meets (`TemplateEditor.Edit.brush`); a tap is a dab.
+    case brush
+    /// The Toolbox's Eyedropper: a tap makes the cell's paint the current paint, or over the
+    /// photo the photo's color there.
+    case eyedropper
+    /// The Toolbox's Edit Paint: the current paint takes a new color everywhere it's used
+    /// (`RefineColorsPanel`'s picker); a tap on a cell makes its paint the current one.
+    case editPaint
+    /// The Toolbox's Looks over every paint (`RefineColorsPanel`'s row).
+    case looks
+    /// The Toolbox's Move Number: a drag moves a number within its cell
+    /// (`TemplateEditor.Edit.moveLabel`).
+    case moveNumber
+    /// The text the app found corrected: a tap turns a found line off or on again, a drag marks
+    /// one it missed.
+    case text
+    /// The Toolbox's Try Painting: the painting screen on the template as it stands, saving
+    /// nothing. An action, never the finger's tool.
+    case tryPainting
+
+    /// The Toolbox's group the tool stands in (`RefineGroup`), which lists its tools in the order
+    /// they are declared here: a new tool doesn't compile without its place.
+    var group: RefineGroup {
+        switch self {
+        case .pen, .shape, .bendLine, .eraser, .smartEraser: .ink
+        case .select, .cellEdge, .merge, .moveEdge, .fill: .cells
+        case .bucket, .brush, .eyedropper, .editPaint, .looks: .paint
+        case .moveNumber: .numbers
+        case .text, .tryPainting: .see
+        }
+    }
+
+    /// The tool the Pencil's Switch Between Current Tool and Eraser picks: a drawing tool's
+    /// eraser, an eraser's pen.
+    var pencilPartner: RefineTool? {
+        switch self {
+        case .pen, .shape: .eraser
+        case .eraser, .smartEraser: .pen
+        case .fill, .text, .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine,
+             .moveEdge, .moveNumber, .tryPainting:
+            nil
+        }
+    }
+
+    /// What the tool does shows in the painting (paints, and a cell edge, which draws no line), so
+    /// the painting shows beneath it.
+    /// The tool drags something already there (a line, an edge, a number), drawing no ink.
+    var drags: Bool { self == .bendLine || self == .moveEdge || self == .moveNumber }
+
+    /// A one-finger drag does something with the tool (`RefineModel.draw`); the others only tap.
+    var strokes: Bool {
+        switch self {
+        case .pen, .shape, .bendLine, .eraser, .smartEraser, .cellEdge, .merge, .moveEdge, .brush, .moveNumber, .text: true
+        case .select, .fill, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: false
+        }
+    }
+
+    var paints: Bool {
+        self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
+    }
+
+    var erases: Bool { self == .eraser || self == .smartEraser }
+}
+
 // MARK: Names, symbols, hints and keys
 
 /// What Refine's tools and groups are called, drawn as and lettered, wherever they show: the rail,

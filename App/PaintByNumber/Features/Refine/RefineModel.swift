@@ -849,6 +849,14 @@ final class RefineModel {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { layers.set(layer, shown: true) }
     }
 
+    /// How `tool` works, with the figure and the curve in hand (`RefineView.hint(for:shape:bending:)`).
+    func hint(for tool: RefineTool) -> String {
+        RefineView.hint(for: tool, shape: shape, bending: curve != nil)
+    }
+
+    /// A tool's symbol; Shapes' is the figure's in hand.
+    func symbol(_ kind: RefineTool) -> String { RefineView.symbol(kind, shape: shape) }
+
     /// A tool's button: picks it; Try Painting opens the painting screen instead.
     func toolTapped(_ tool: RefineTool) {
         if tool == .tryPainting {
@@ -1001,6 +1009,12 @@ final class RefineModel {
     /// The current paint's number less one, when the painting has it.
     var currentIndex: Int? {
         RefinePalette.index(of: currentPaint, in: base?.template.palette ?? [])
+    }
+
+    /// What a swatch dropped on another does: in Edit Paint, `mergePaints`; elsewhere nothing.
+    var paletteMerge: ((Int, Int) -> Void)? {
+        guard tool == .editPaint else { return nil }
+        return { from, into in self.mergePaints(from, into: into) }
     }
 
     /// Edit Paint's swatch dropped on another: paint `from` takes the color of `into`, so the two

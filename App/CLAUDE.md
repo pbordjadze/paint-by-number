@@ -137,7 +137,7 @@ below name both alike.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`, the Toolbox's `RefineStudio` and `RefineToolbox`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, the screen's layout and bars, over `RefineModel`, its state and what its gestures do; its panels `RefinePicture`, `RefineToolRail`, `RefineToolOptions`, `RefineTopControls`; `RefineTool`, the tools and their names, hints and keys; `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`, the Toolbox's `RefineStudio` and `RefineToolbox`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
   the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `EmptyGalleryView` (its sketch paints
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
@@ -770,7 +770,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
     (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
-    in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
+    in labelled sections (`RefineToolRail`; where the screen is too short for them, an iPad
     on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
     is more below), on iPhone the groups are tabs over a row of the
     group's tools. A phone on its side (compact height, every iPhone in landscape, the Pro Max
@@ -799,7 +799,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
     which the first Bucket tap adds as a paint; every color it picks that no paint has waits
-    after the paints with a plus, in the order picked, until poured, `RefineView.newColors`,
+    after the paints with a plus, in the order picked, until poured, `RefineModel.newColors`,
     `RefinePaletteBar.unpoured`), the Bucket (`.paintArea` with the current paint,
     each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
@@ -834,7 +834,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
     each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
-    says, until the next touch, tool or template (`RefineView.tinyMarked`). The badge and Start
+    says, until the next touch, tool or template (`RefineModel.tinyMarked`). The badge and Start
     From lie in the canvas's top trailing corner, or just inside the picture's where it reaches
     the top (`topControlsInsets`; on a phone on its side, in the tools' column), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
@@ -905,7 +905,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     `pipelineVersion`; what an edit doesn't reach is bit for bit what it was (`CreateModelTests`).
     Until an edit lands (`CreateModel.settledEdits` reaches its number) it shows over the template
     in the drawing's own ink (`RefineInkLayer`; a fill as a swatch, `RefineFillLayer`, which then
-    tints the area in its paint), and `RefineView.land` swaps the new drawing, the painting
+    tints the area in its paint), and `RefineModel.land` swaps the new drawing, the painting
     beneath it and the end of the pending ink in together, so nothing flickers.
   - **One queue.** Every change Refine makes (an edit, a text correction, Undo, Redo,
     Cancel) runs in its turn on `CreateModel`'s queue, from the state the ones before it left, and
