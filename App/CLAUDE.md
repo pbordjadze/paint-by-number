@@ -712,6 +712,32 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
   `PaintNowTests`.
+- **The picture forming** (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 293;
+  `FormingPlan`, `Features/Create/Forming.swift`): a picture picked on the Paint page waits as its
+  photo alone, with no draft, painted picture or divider over it (`CompareView` with no `after`),
+  under one status that keeps its words whatever stage the making is at ("Making the painting…",
+  announced to VoiceOver once). Once the template to be painted is made (no earlier: a draft is
+  another template, of a smaller canvas) its lines are drawn in across the photo, left to right
+  (`CompareView.lines`: stroked once, a soft-edged mask travelling over them, `drawIn` 0.7 s,
+  eased), while the photo calms 45% toward the paper under them (`wash`), so the ink reads on a
+  dark or busy picture; paper and ink are the page's own, dark paper's too (`FormingPlan.sheet`,
+  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
+  `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
+  picture is the washed photo under those lines
+  (`PictureDeparture.Content.forming`: photo, wash, lines and page laid out once at the page's
+  place, `lay(at:)`, and carried there by one transform, `FormingPlan.carry`, since a page
+  coming in on the way under an animating frame stood at the frame's end ahead of the rest;
+  the lines as heavy as the preview drew them until then, `PreviewPictureProbe.lineScale`,
+  and for the move stroked as the canvas's own), which dries the rest of the way
+  into the page as the canvas draws it (`HandoffPage`, whose numbers come with it) during the
+  glide, in the hand-off's own `settle`, the wash going on to plain paper under the lines
+  (`paperOpacity`) so no row of photo shows at the page's foot and the ink never fades: from the
+  lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
+  the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
+  Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
+  settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios
+  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`), and
+  `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
   the library's tiles `library-picture`, labelled by title and creator. The inline photo picker is

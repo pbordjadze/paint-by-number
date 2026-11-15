@@ -48,6 +48,12 @@ struct TemplatePreviewView: View {
     @State private var tunedSetting: Setting?
     /// The painter opened Adjust, and the card shows its settings from then on (`foldsSettings`).
     @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
+    #if UNRELEASED
+    /// With the show on, the picture forming brings no lines: the show takes the photo.
+    @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
+    /// VoiceOver has heard the picture forming's one status.
+    @State private var hasAnnouncedForming = false
+    #endif
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -515,13 +521,9 @@ struct TemplatePreviewView: View {
     private var canvas: some View {
         VStack {
             if let source = model.source {
-                CompareView(
-                    photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
-                    afterLabel: model.previewStyle.name,
-                    beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
-                    compares: !model.isScratch && !isWaitOnly, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                comparison(of: source)
                     .background {
-                        if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect) }
+                        if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect, canvas: size) }
                     }
                     .overlay(alignment: .bottom) {
                         status.padding(14)
@@ -548,8 +550,100 @@ struct TemplatePreviewView: View {
         .duoProbe("preview-picture")
     }
 
+    /// The photo beside the template's picture; while the picture forms (`FormingPlan`,
+    /// SideStore and Debug builds), the photo alone, and the template's lines over it once it
+    /// is made: no draft and no painted picture ever shows there.
+    private func comparison(of source: CreateModel.Source) -> CompareView {
+        #if UNRELEASED
+        if isForming {
+            return CompareView(
+                photo: source.preview, after: nil, afterID: "none", afterLabel: model.previewStyle.name,
+                compares: false, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged,
+                lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw,
+                // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
+                linesBegan: { [pictureProbe] in pictureProbe?.linesBegan = .now })
+        }
+        #endif
+        return CompareView(
+            photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
+            afterLabel: model.previewStyle.name,
+            beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
+            compares: !model.isScratch && !isWaitOnly, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+    }
+
+    #if UNRELEASED
+    /// Whether the wait is the picture forming (`FormingPlan`).
+    private var isForming: Bool {
+        FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
+    }
+
+    private var hasFailed: Bool {
+        if case .failed = model.phase { return true }
+        return false
+    }
+
+    /// The `create-forming` demo holds the wait: its template is made and never shows.
+    private var holdsTheWait: Bool {
+        #if DEBUG
+        ShellDemo.current?.formingHold == .waiting
+        #else
+        false
+        #endif
+    }
+
+    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn.
+    private var heldDraw: CGFloat? {
+        #if DEBUG
+        if ShellDemo.current?.formingHold == .lines { return 1 }
+        if ShellDemo.current?.formingHold == .drawing { return 0.5 }
+        #endif
+        return nil
+    }
+
+    /// What the picture forming shows over the photo.
+    private var forming: FormingPlan.Shown {
+        FormingPlan.shown(
+            isMade: model.isFinal && !model.isChoosingSettings && !holdsTheWait, hasFailed: hasFailed,
+            reduceMotion: reduceMotion, playsShow: playsMakingOf)
+    }
+
+    /// The picture forming's one status: the same words from the photo's opening until the
+    /// template is made, whatever stage the making is at, and told to VoiceOver once.
+    private var formingStatus: some View {
+        let shows = forming.status
+        return Group {
+            if shows {
+                StatusCapsule {
+                    ProgressView().controlSize(.small)
+                    Text("Making the painting…")
+                }
+                .onAppear {
+                    guard !hasAnnouncedForming else { return }
+                    hasAnnouncedForming = true
+                    Announcer.announce(String(localized: "Making the painting…"))
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: shows)
+    }
+    #endif
+
     @ViewBuilder
     private var status: some View {
+        #if UNRELEASED
+        if isForming && !hasFailed {
+            formingStatus
+        } else {
+            stagedStatus
+        }
+        #else
+        stagedStatus
+        #endif
+    }
+
+    /// The status of each stage of the making, and of a change's.
+    @ViewBuilder
+    private var stagedStatus: some View {
         Group {
             switch model.phase {
             case .loading, .analyzing, .suggesting:
@@ -951,6 +1045,10 @@ struct TemplatePreviewView: View {
     /// start (`CreateModel.askForStart`).
     private func startPickedPicture() {
         guard model.source != nil else { return }
+        #if DEBUG
+        // `create-forming`, `-drawing` and `-lines` hold the picture forming: nothing starts.
+        if let hold = ShellDemo.current?.formingHold, hold != .page { return }
+        #endif
         start()
     }
 
@@ -1155,11 +1253,23 @@ private extension View {
 final class PreviewPictureProbe {
     private weak var view: UIView?
     private var aspect: CGFloat = 0
+    private var canvas: CGSize = .zero
+    /// When the picture forming's lines began to be drawn over the picture (`FormingPlan`).
+    var linesBegan: ContinuousClock.Instant?
 
-    /// `view` has the comparison's frame, and the photo the `aspect`.
-    func anchor(_ view: UIView, aspect: CGFloat) {
+    /// `view` has the comparison's frame, and the photo the `aspect`; `canvas` is the space the
+    /// comparison sizes its lines by (`CompareView.canvasSize`).
+    func anchor(_ view: UIView, aspect: CGFloat, canvas: CGSize = .zero) {
         self.view = view
         self.aspect = aspect
+        self.canvas = canvas
+    }
+
+    /// How heavy the comparison draws lines over the picture where it is (`CompareView.canvasScale`):
+    /// the picture forming's lines leave for the painting as heavy as they were (`FormingPlan`).
+    var lineScale: CGFloat? {
+        guard let picture else { return nil }
+        return CompareView.canvasScale(of: picture.size, aspect: aspect, canvas: canvas)
     }
 
     /// The window the preview is in: the screen the painting will have.
@@ -1181,6 +1291,8 @@ final class PreviewPictureProbe {
 private struct PreviewPictureAnchor: UIViewRepresentable {
     let probe: PreviewPictureProbe
     let aspect: CGFloat
+    /// The preview's size, which the comparison sizes its lines by.
+    var canvas: CGSize = .zero
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
@@ -1189,7 +1301,7 @@ private struct PreviewPictureAnchor: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UIView, context: Context) {
-        probe.anchor(view, aspect: aspect)
+        probe.anchor(view, aspect: aspect, canvas: canvas)
     }
 }
 

@@ -93,6 +93,32 @@ final class StartHandoffUITests: XCTestCase {
         returnToGallery(from: app, byEdgeSwipe: true)
     }
 
+    /// A picture picked on the Paint page forms and opens by itself (painting-company row 293):
+    /// the frames are of the end of its wait and its passage into the painting, slowed. In Debug
+    /// builds the photo stays, takes its lines and dries into the page; the release's build shows
+    /// its drafts. Either way no Start Painting shows and the painting opens.
+    @MainActor
+    func testSlowedPickedPictureFormsIntoThePainting() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create", "-handoffFallback", "30", "-handoffSlowdown", "5"]
+        app.launch()
+        _ = app.buttons["choose-photo"].waitForExistence(timeout: 20)
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        let picture = app.buttons.matching(identifier: "library-picture").firstMatch
+        XCTAssertTrue(picture.waitForExistence(timeout: 30), "The Library shows no painting")
+        XCTAssertTrue(reveal(picture, in: app), "The first library painting can't be reached")
+        picture.tap()
+
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        let frames = captureFrames(timeout: 240, keep: 40) { changes in changes.holdsStill(for: 4) && badge.exists }
+        attachFrames(frames, named: "slowed-forming")
+
+        let opened = waitForPaintingWithoutStart(in: app, timeout: 60)
+        attachScreenshot(of: app, named: "formed-painting-opened")
+        XCTAssertTrue(opened, "Picking a library painting didn't open the painting")
+    }
+
     // MARK: - Steps
 
     /// The create flow on the first fixed picture's preview, with the show on or off.
