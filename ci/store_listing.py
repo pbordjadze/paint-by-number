@@ -20,6 +20,11 @@ keeps it; a key or field left out is left as it is, and a list of strings is its
     otherLocales         {"en-GB": {"keywords": …}, …}: other English storefronts' listings,
                          LOCALE's app info and version text respelled (colour), with their own
                          keywords, promotional text or subtitle; made when missing
+    locales              {"de-DE": {…}, "es-MX": {"like": "es-ES"}, …}: the listing in other
+                         languages (`TRANSLATED_LOCALES`), each giving every text field LOCALE's
+                         listing has (name optional: the brand stays), its URLs LOCALE's; "like"
+                         copies another locale's words to a storefront that reads the same
+                         language; made when missing. The app's own words are tools/l10n.py's
     inAppPurchases       {product id: {"reviewNote": …}}: written only where App Store Connect
                          has none
     nomination           a featuring nomination for Apple's editors (Nomination's attributes):
@@ -89,13 +94,18 @@ FIELDS = {
 # LOCALE's, respelled.
 OTHER_LOCALES = ("en-GB", "en-AU", "en-CA")
 LOCALE_FIELDS = ("keywords", "promotionalText", "subtitle")
+# The listing in other languages: App Store Connect's locale codes, one for each language the app
+# speaks (tools/l10n.py LANGUAGES), and a second storefront where its readers share the words.
+TRANSLATED_LOCALES = ("de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "it", "ja", "ko", "nl-NL", "pt-BR",
+                      "zh-Hans", "zh-Hant")
+TRANSLATED_FIELDS = ("name", "subtitle", "keywords", "promotionalText", "description", "whatsNew")
 # The prose respelled for them (never a URL).
 PROSE = ("name", "subtitle", "description", "keywords", "promotionalText", "whatsNew")
 NOMINATION = {"name": str, "type": ("APP_LAUNCH", "APP_ENHANCEMENTS", "NEW_CONTENT"), "description": str,
               "publishStartDate": str, "deviceFamilies": list, "locales": list, "supplementalMaterialsUris": list,
               "hasInAppEvents": bool, "launchInSelectMarketsFirst": bool, "preOrderEnabled": bool, "notes": str,
               "submit": bool}
-SECTIONS = (*FIELDS, "accessibility", "availability", "otherLocales", "inAppPurchases", "nomination")
+SECTIONS = (*FIELDS, "accessibility", "availability", "otherLocales", "locales", "inAppPurchases", "nomination")
 
 
 def read_listing(path):
@@ -105,12 +115,12 @@ def read_listing(path):
         raise APIError(f"{path.name}: unknown sections {', '.join(sorted(unknown))}")
     def joined(section, field, value):
         text = (FIELDS.get(section, {}).get(field) is str or (section == "nomination" and NOMINATION.get(field) is str)
-                or field in LOCALE_FIELDS or field == "reviewNote")
+                or field in LOCALE_FIELDS or field in TRANSLATED_FIELDS or field == "reviewNote")
         return "\n".join(value) if text and isinstance(value, list) else value
     def each(section, fields):
         if section in FIELDS or section == "nomination":
             return {field: joined(section, field, value) for field, value in fields.items()}
-        if section in ("otherLocales", "inAppPurchases"):
+        if section in ("otherLocales", "locales", "inAppPurchases"):
             return {key: {field: joined(section, field, value) for field, value in own.items()} for key, own in fields.items()}
         return fields
     return {section: each(section, fields) for section, fields in listing.items()}
@@ -131,6 +141,27 @@ def problems(listing):
                         found.append(f"otherLocales {locale}.{field} is {len(value)} characters, over {LIMITS[field]}")
                 found += [f"otherLocales {locale}.{k} is not one of {', '.join(LOCALE_FIELDS)}"
                           for k in fields[locale] if k not in LOCALE_FIELDS]
+            continue
+        if section == "locales":
+            base = {**listing.get("appInfoLocalization", {}), **listing.get("versionLocalization", {})}
+            needed = [k for k in TRANSLATED_FIELDS if k != "name" and base.get(k)]
+            for locale, own in fields.items():
+                if locale not in TRANSLATED_LOCALES:
+                    found.append(f"locales: {locale} is not one of {', '.join(TRANSLATED_LOCALES)}")
+                if "like" in own:
+                    other = fields.get(own["like"], {})
+                    if set(own) != {"like"} or not other or "like" in other:
+                        found.append(f"locales {locale}: \"like\" names another locale given here in full, alone")
+                    continue
+                found += [f"locales {locale}.{k} is not one of {', '.join(TRANSLATED_FIELDS)}"
+                          for k in own if k not in TRANSLATED_FIELDS]
+                found += [f"locales {locale}.{k} is missing: it would show the English" for k in needed
+                          if not own.get(k)]
+                for field, value in own.items():
+                    if not isinstance(value, str):
+                        found.append(f"locales {locale}.{field} should be text")
+                    elif field in LIMITS and len(value) > LIMITS[field]:
+                        found.append(f"locales {locale}.{field} is {len(value)} characters, over {LIMITS[field]}")
             continue
         if section == "inAppPurchases":
             found += [f"inAppPurchases {product}: only reviewNote is set here, as text" for product, own in fields.items()
@@ -304,20 +335,32 @@ def respelled(text):
     return re.sub(r"\b([Cc])olor", r"\1olour", text)
 
 
+def own_words(listing, locale):
+    """What one other locale says in its own words (a "like" followed)."""
+    if locale in listing.get("locales", {}):
+        own = listing["locales"][locale]
+        return listing["locales"][own["like"]] if "like" in own else own
+    return listing.get("otherLocales", {}).get(locale, {})
+
+
 def locale_listing(listing, locale):
     """One other locale's fields, app info's and version's together: LOCALE's, its prose
-    respelled, then its own words."""
+    respelled (another language's: only its URLs), then its own words."""
     base = {**listing.get("appInfoLocalization", {}), **listing.get("versionLocalization", {})}
+    if locale in listing.get("locales", {}):
+        return {**{k: v for k, v in base.items() if k not in PROSE or k == "name"}, **own_words(listing, locale)}
     merged = {k: respelled(v) if k in PROSE and isinstance(v, str) else v for k, v in base.items()}
-    return {**merged, **listing.get("otherLocales", {}).get(locale, {})}
+    return {**merged, **own_words(listing, locale)}
 
 
 def other_locales(client, work, version, info, listing):
-    """Each other English locale's listing: LOCALE's own, respelled, with its own keywords; created
-    when the version or the app info has none for that locale yet."""
+    """Each other locale's listing: an English one LOCALE's own, respelled, with its own keywords,
+    another language's its own words with LOCALE's URLs; created when the version or the app info
+    has none for that locale yet."""
     def localizations(kind, parent_path):
         return {i["attributes"]["locale"]: i for i in client.call("GET", f"{parent_path}/{kind}")["data"]}
-    for locale, own in listing["otherLocales"].items():
+    for locale in [*listing.get("otherLocales", {}), *listing.get("locales", {})]:
+        own = own_words(listing, locale)
         fields = locale_listing(listing, locale)
         wanted_info = {k: v for k, v in fields.items() if k in listing.get("appInfoLocalization", {}) or k in own
                        and k in FIELDS["appInfoLocalization"]}
@@ -484,7 +527,7 @@ def main():
         work.accessibility(app["id"], family, answers)
     if "availability" in listing:
         availability(client, work, app["id"], listing["availability"])
-    if "otherLocales" in listing and version and info:
+    if ("otherLocales" in listing or "locales" in listing) and version and info:
         other_locales(client, work, version, info, listing)
     if "inAppPurchases" in listing:
         in_app_purchases(client, work, app["id"], listing["inAppPurchases"])

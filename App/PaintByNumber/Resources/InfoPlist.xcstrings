@@ -5,7 +5,67 @@
       "comment" : "The app's name under its icon on the Home Screen and in Settings",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paint by Moonlight"
@@ -17,10 +77,70 @@
       "comment" : "Name of the document type the app declares for images, shown by the system when a photo is opened in Paint by Moonlight from the share sheet or Files (CFBundleTypeName in Config/Info.plist)",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Image"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イメージ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagem"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影像"
           }
         }
       }
@@ -29,10 +149,70 @@
       "comment" : "Shown in the system alert that asks permission to use the camera (Take Photo in the create flow)",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight nutzt die Kamera, um ein Foto aufzunehmen, das du in ein Malen-nach-Zahlen-Bild verwandeln kannst. Das Foto bleibt auf deinem Gerät."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paint by Moonlight uses the camera to take a photo you can turn into a paint-by-numbers picture. The photo stays on your device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight usa la cámara para hacer una foto que puedes convertir en un cuadro para pintar por números. La foto se queda en tu dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight utilise l’appareil photo pour prendre une photo que vous pouvez transformer en tableau à peindre par numéros. La photo reste sur votre appareil."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight usa la fotocamera per scattare una foto che puoi trasformare in un quadro da dipingere con i numeri. La foto resta sul tuo dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlightは、塗り絵にできる写真を撮るためにカメラを使います。写真はデバイスに残ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight는 숫자 색칠 그림으로 바꿀 사진을 찍기 위해 카메라를 사용해요. 사진은 기기에만 남아요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight gebruikt de camera om een foto te maken die je kunt omzetten in een schilderij op nummer. De foto blijft op je apparaat."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Paint by Moonlight usa a câmera para tirar uma foto que você pode transformar numa pintura com números. A foto fica no seu aparelho."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight 使用相机拍摄照片，你可以把它变成一幅数字油画。照片会保留在你的设备上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight 會使用相機拍攝照片，讓你把它變成一幅數字油畫。照片會留在你的裝置上。"
           }
         }
       }
@@ -41,10 +221,70 @@
       "comment" : "Shown in the system alert that asks permission to add pictures to the photo library (Save Image or Save Video in the share sheet, sharing a painting or its time-lapse)",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight sichert ein Bild oder seinen Zeitraffer in deiner Fotomediathek, wenn du beim Teilen „Bild sichern“ oder „Video sichern“ wählst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paint by Moonlight saves a painting or its time-lapse to your photo library when you choose Save Image or Save Video as you share it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight guarda un cuadro o su time-lapse en tu fototeca cuando eliges Guardar imagen o Guardar vídeo al compartirlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight enregistre un tableau ou sa vidéo en accéléré dans votre photothèque quand vous choisissez Enregistrer l’image ou Enregistrer la vidéo en le partageant."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight salva un quadro o il suo time-lapse nella tua libreria foto quando scegli Salva immagine o Salva video durante la condivisione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlightは、共有するときに「画像を保存」または「ビデオを保存」を選ぶと、絵やそのタイムラプスを写真ライブラリに保存します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight는 공유할 때 이미지 저장이나 비디오 저장을 고르면 그림이나 타임랩스를 사진 보관함에 저장해요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight bewaart een schilderij of de timelapse ervan in je fotobibliotheek als je bij het delen kiest voor Bewaar afbeelding of Bewaar video."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Paint by Moonlight salva uma pintura ou o time-lapse dela na sua fototeca quando você escolhe Salvar Imagem ou Salvar Vídeo ao compartilhar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当你在分享时选择“存储图像”或“存储视频”，Paint by Moonlight 会把画作或它的延时视频存储到你的照片图库。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當你在分享時選擇「儲存影像」或「儲存影片」，Paint by Moonlight 會把畫作或它的縮時影片儲存到你的照片圖庫。"
           }
         }
       }
@@ -53,10 +293,70 @@
       "comment" : "Name of the document type of a painting sent to someone else to paint (a .moonlight file), shown by the system when it is opened from Messages, AirDrop or Files (CFBundleTypeName and UTTypeDescription in Config/Info.plist)",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight-Bild"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paint by Moonlight Painting"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuadro de Paint by Moonlight"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tableau Paint by Moonlight"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quadro di Paint by Moonlight"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlightの絵"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight 그림"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight-schilderij"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pintura do Paint by Moonlight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight 画作"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight 畫作"
           }
         }
       }
