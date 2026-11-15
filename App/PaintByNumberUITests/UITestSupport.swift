@@ -122,7 +122,8 @@ extension XCTestCase {
     }
 
     /// Taps Print… and waits for the system's print dialog, known by its own Print button (the
-    /// menu's item is "Print…") or its Printer and Copies rows, then cancels it. The screen is
+    /// menu's item is "Print…") or its Printer and Copies rows, then closes it, by Cancel or,
+    /// where it has none (a popover), a tap outside it, and checks it went. The screen is
     /// attached as `print-<what>`. A simulator that shows no dialog this can see skips the test,
     /// its tree attached as `print-tree-<what>`: the item was there and took the tap.
     @MainActor
@@ -141,8 +142,12 @@ extension XCTestCase {
         let cancel = app.buttons["Cancel"].firstMatch
         if cancel.waitForExistence(timeout: 5) {
             cancel.tap()
-            XCTAssertTrue(dialog.waitForNonExistence(timeout: 10), "\(what): Cancel left the print dialog up")
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).tap()
         }
+        let closed = dialog.waitForNonExistence(timeout: 10)
+        if !closed { attachTree(of: app, named: "print-tree-\(what)") }
+        XCTAssertTrue(closed, "\(what): the print dialog stayed up")
     }
 
     /// Waits for a confirmation dialog to show `labels` (its title, its message, its buttons) and

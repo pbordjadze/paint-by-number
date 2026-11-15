@@ -57,6 +57,8 @@ struct GalleryView: View {
     /// The template the print dialog is up for (`printTemplate(of:)`), and the card it hangs from.
     @State private var printJob: TemplatePrintJob?
     @State private var printingCard: Artwork.ID?
+    /// The template's PDF being made for it; called off when the gallery is left.
+    @State private var printTask: Task<Void, Never>?
     /// The top of the pages is in view, where the bar's tips lie.
     @State private var showsTop = true
 
@@ -151,7 +153,11 @@ struct GalleryView: View {
             PaintTips.desk.enter(.shelf)
             PaintTips.shelfMoment(library)
         }
-        .onDisappear { PaintTips.desk.leave(.shelf) }
+        .onDisappear {
+            PaintTips.desk.leave(.shelf)
+            // A template still being made for Print… has no gallery to hang its dialog from.
+            printTask?.cancel()
+        }
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
@@ -433,8 +439,11 @@ struct GalleryView: View {
         }
         // But for Print, which newcomers looked for here and never found inside Share
         // (painting-company row 240): straight to the print dialog.
-        Button("Print…", systemImage: "printer") { printTemplate(of: artwork) }
-            .accessibilityIdentifier("print-template")
+        // Not offered where the device can't print, as Restart isn't with nothing to clear.
+        if PrintSheet.isAvailable {
+            Button("Print…", systemImage: "printer") { printTemplate(of: artwork) }
+                .accessibilityIdentifier("print-template")
+        }
         Divider()
         // Nothing to clear on a painting nobody has painted on. Red, as in the painting's More
         // menu: it clears the painting.
@@ -501,13 +510,18 @@ struct GalleryView: View {
     }
 
     /// Print…: makes the template's PDF, the one Print Template… shares, then opens the print
-    /// dialog on it from the painting's card.
+    /// dialog on it from the painting's card. One at a time: asked again while a PDF is being made
+    /// or the dialog is up, it does nothing.
     private func printTemplate(of artwork: Artwork) {
         PaintTips.used(.shelfHold)
+        guard printTask == nil, printJob == nil else { return }
         let store = library.store, paper = PDFExporter.Paper.default(for: Locale.current.region)
-        Task {
+        printTask = Task {
+            defer { printTask = nil }
             do {
                 let job = try await TemplatePrintJob.saved(store: store, artwork: artwork, paper: paper)
+                // The gallery was left meanwhile (a painting opened): no dialog on coming back.
+                guard !Task.isCancelled else { return }
                 printingCard = artwork.id
                 printJob = job
             } catch {

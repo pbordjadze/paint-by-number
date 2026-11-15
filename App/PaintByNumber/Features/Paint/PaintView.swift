@@ -71,6 +71,7 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     /// The template the print dialog is up for (More › Print…).
     @State private var printJob: TemplatePrintJob?
+    @State private var preparingPrint = false
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
     #if UNRELEASED
@@ -775,8 +776,10 @@ struct PaintView: View {
                 paletteMenu
             }
             // Where newcomers looked for it first (painting-company row 240).
-            Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
-                .accessibilityIdentifier("print-template")
+            if offersPrint {
+                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                    .accessibilityIdentifier("print-template")
+            }
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
@@ -921,13 +924,21 @@ struct PaintView: View {
         timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress))
     }
 
+    /// More offers Print… for a painting of the gallery's (`asksForRating`: Refine's Try Painting
+    /// is a trial that saves nothing, not a painting to print), where the device can print.
+    private var offersPrint: Bool { asksForRating && PrintSheet.isAvailable }
+
     /// More › Print…: the template as Print Template… prints it, lines, numbers and the color key,
-    /// whatever is painted, from the live session; then the print dialog.
+    /// whatever is painted, from the live session; then the print dialog. One at a time: asked
+    /// again while a PDF is being made or the dialog is up, it does nothing.
     private func printTemplate() {
+        guard !preparingPrint, printJob == nil else { return }
+        preparingPrint = true
         let template = session.template, nicknames = session.colorNicknames
         let name = title.isEmpty ? String(localized: "Painting") : title
         let paper = PDFExporter.Paper.default(for: Locale.current.region)
         Task {
+            defer { preparingPrint = false }
             do {
                 printJob = try await TemplatePrintJob.open(template: template, title: name, nicknames: nicknames, paper: paper)
             } catch {

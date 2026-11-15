@@ -1288,7 +1288,9 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
 or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save.
-Printing takes no free painting. `TemplatePrintTests`; `GalleryActionsTests` and
+Printing takes no free painting. One dialog at a time (the controller is the system's one), and
+Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it
+only for a painting of the gallery's, `PaintView.asksForRating`). `TemplatePrintTests`; `GalleryActionsTests` and
 `PaintingNavigationTests` tap it (`checkPrintDialog`, which skips where the simulator shows no
 dialog it can see). Paint by Mosaic has no Print… yet. The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
