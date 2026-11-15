@@ -143,7 +143,7 @@ below name both alike.
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  `CompletionBar`, `FinishedDoors` and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
   The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
@@ -227,7 +227,8 @@ below name both alike.
   answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
-  captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
+  captured in dark appearance, `long-text` ones with doubled strings, `+de` and `+ja` ones in
+  that language; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-send` (with `-dark`,
   `-long-text`) is Send Template's sheet, `gallery-received` (with `-dark`) opens a refined painting
   sent with its photo as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the
@@ -292,14 +293,28 @@ below name both alike.
   `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
   finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
-  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot;
-  during a replay its ring and
+  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
+  A painting made from a library picture (`Artwork.sampleName`, handed on as
+  `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
+  (painting-company row 120), five doors standing three over two on a phone upright and in one
+  row on an iPad, whose panel widens by a door for them (`CompletionBar.widestPanel(doors:)`;
+  `doorsWidth` keeps the panel, `PaintView.doorMetrics` and `ArchOpening` in step). It opens
+  `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
+  read from `library.json` alone): the picture, and under it one small placard, its title,
+  maker and date, medium and, last, where it hangs (a record without a place has no such
+  line), the credit one faint line under the placard; on an iPad the sheet is page-sized, so
+  the links stay in view. The catalog entry is
+  the page's one tinted control and Wikipedia's article, where the record names one, a plain
+  link in the words' color (the accent is gold in dark appearance); both open in the browser,
+  and the app sends nothing. `about-painting` (with `-dark`)
+  and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
+  the bar's ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
   the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
-- Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
+- Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
@@ -314,7 +329,24 @@ below name both alike.
   `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
   double tap and the Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
-  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen. The palette's
+  lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
+  so they never change as colors finish. In SideStore and Debug builds the palette stays put
+  (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
+  `placedColors`): every color of the painting keeps its place from the first fill to the last,
+  on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
+  its start would keep the colors to come out of sight), and a finished one that is no longer in
+  hand becomes a spent well there
+  (`SwatchButton.isSpent`: what is left of its paint, a thinner wash set well in inside a thin rim, no
+  numeral, check or progress ring; a cross-fade, a cut under Reduce Motion), so nothing
+  ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
+  nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
+  its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
+  `swatch-N` stays the colors there are to paint. The selection moves on to the next color left
+  and the bar scrolls it into view past the wells; an undo puts the paint back in its well. Not
+  under Nearly Done or Most Left, which re-sort by the painter's choice; the release lets a
+  finished color leave and packs the rest, as 1.1 did. `paint-palette`, `paint-palette-number`
+  and `paint-progress` (with `paint-dark`) show the wells.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
@@ -510,6 +542,21 @@ Conventions).
   sheet's writing stays in its light ink); `TemplateRasterizer.drawBookOutlines` switches where
   the region is painted (never in `.print`) and `LineArtDrawing.paths(within:overPaint:)` splits
   it out over the painting (Refine's). Unpainted and every other line stay in the ink.
+- A finished book as paint alone (SideStore and Debug builds, `#if UNRELEASED`; painting-company
+  row 295): More › Show Lines, offered on a finished coloring book, turned off takes the
+  drawing's ink from the picture. Only a finished painting's: an undo, a restart or a replay has
+  its lines, and finishing again loses them with the finale's shine (`CanvasView.hidesLines`,
+  `inkChanged`: an ease of `inkFadeDuration`, a cut under Reduce Motion and for a painting opened
+  so). The writing stays, since no paint draws it: the canvas's scene marks every writing stroke
+  (`OutlineGeometry(_:marksWriting:)`, `writingMark` beside `lightWritingMark`) and the shader
+  fades the rest by `CanvasFrame.inkHidden` (`lineMode.y`); pictures draw the writing alone
+  under `TemplateRasterizer.Style.withoutInk` (`hidingLines`), `CanvasSnapshot.Options.withoutInk`.
+  The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
+  build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
+  gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
+  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
+  `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
   pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in

@@ -5,7 +5,8 @@ import SwiftUI
 /// `-demo <name>` (see `DemoMode`); Release builds always show the shell. SideStore and Debug
 /// builds show Ravenna instead while the secret door's clock is set back (`EraDoor`), and its own
 /// scenarios, `-demo ravenna-<name>`; `era-passage` sets the clock back at launch and holds the
-/// passage half laid.
+/// passage half laid; `about-painting` and `about-photograph` are the page about a library
+/// picture's real work (`AboutPaintingDemo`).
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -36,6 +37,10 @@ struct RootView: View {
             PaintDemoView(scenario: scenario)
         case let scenario? where scenario.hasPrefix("making-of"):
             MakingOfDemoView(scenario: scenario)
+        #if UNRELEASED
+        case let scenario? where scenario.hasPrefix("about-"):
+            AboutPaintingDemo(scenario: scenario)
+        #endif
         default:
             AppShellView()
         }

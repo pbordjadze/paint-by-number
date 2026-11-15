@@ -102,6 +102,14 @@ struct ArtworkPaintingView: View {
         isNaming = true
     }
 
+    /// More › Show Lines on the finished painting: the painting keeps the choice, and its
+    /// gallery picture follows it (`Library.setHidesLines`).
+    private func linesHidden(_ hidden: Bool) {
+        guard let session = autosaver?.session else { return }
+        let library = library, id = artworkID, template = session.template, progress = session.progress
+        Task { await library.setHidesLines(id, hidden, template: template, progress: progress) }
+    }
+
     private func saveName() {
         let typed = nameText.trimmingCharacters(in: .whitespacesAndNewlines)
         library.rename(artworkID, to: typed.isEmpty ? namingTitle : typed)
@@ -149,7 +157,8 @@ struct ArtworkPaintingView: View {
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
-                    onChange: changeAction, hidesStatusBar: !leaving)
+                    onChange: changeAction, libraryPicture: artwork?.sampleName, hidesStatusBar: !leaving,
+                    hidesLines: artwork?.paintsWithoutLines ?? false, onHidesLines: { linesHidden($0) })
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }

@@ -69,6 +69,42 @@ struct PaletteArrangementTests {
         #expect(PaletteBar.lanes([], lines: 2).isEmpty)
     }
 
+    /// The palette stays put (painting-company row 293): where it keeps its places, every color
+    /// of the painting has one from the first fill to the last, so a finished color (a spent
+    /// well) leaves the others where they were. The release's palette lets the finished color go and packs the rest.
+    @Test func aFinishedColorKeepsItsPlace() throws {
+        let template = Fixtures.mosaic
+        let session = PaintingSession(template: template, nicknameSeed: 42)
+        let all = (0..<session.paletteCount).filter { session.totalByColor[$0] > 0 }
+        try #require(all.count > 3)
+        #expect(PaletteBar.placedColors(session) == all)
+        #expect(PaletteBar.visibleColors(session) == all)
+        #expect(all.count == PaletteBar.visibleColorCount(template), "the layout counts another palette's lines")
+        // A color that isn't in hand is finished.
+        let finished = try #require(all.last { $0 != session.selectedColor })
+        session.paint(
+            template.regions.indices.filter { Int(template.regions[$0].colorIndex) == finished }, from: .zero, animated: false)
+        #expect(session.isColorComplete(finished))
+        #expect(PaletteBar.placedColors(session) == all)
+        #expect(PaletteBar.visibleColors(session) == all.filter { $0 != finished })
+        // Three lines: every color on the line and in the lane it had, the finished one too.
+        #expect(PaletteBar.lanes(PaletteBar.placedColors(session), lines: 3) == PaletteBar.lanes(all, lines: 3))
+    }
+
+    /// Only SideStore and Debug builds keep the places, and not in an order that follows the
+    /// areas left, which re-sorts by the painter's choice; the release packs the palette as it did.
+    @Test func placesAreKeptOnlyWhereTheOrderStays() {
+        for order in PaletteOrder.allCases {
+            #if UNRELEASED
+            #expect(PaintingLayout.paletteKeepsPlaces(order, lines: 3) == !order.followsProgress, "\(order)")
+            #else
+            #expect(!PaintingLayout.paletteKeepsPlaces(order, lines: 3), "\(order)")
+            #endif
+            // One scrolling line packs in every build.
+            #expect(!PaintingLayout.paletteKeepsPlaces(order, lines: 1), "\(order)")
+        }
+    }
+
     /// A one-line phone bar 378 pt long, 56 pt a swatch: the bar scrolls a hidden swatch whole into
     /// view with 16 pt to spare on the side it comes in from, and not at all for one in view.
     @Test func theBarScrollsTheSelectedSwatchWholeIntoView() {

@@ -20,7 +20,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
     let points: any MTLBuffer           // float2 boundary polyline points, then stroke points
     let segments: any MTLBuffer         // uint2 (first point, line) per segment
     let lineRegions: any MTLBuffer      // uint2 (left, right) per line (edge, then stroke)
-    let lineLayers: any MTLBuffer       // float LineLayer per line (`OutlineGeometry.lightWritingMark` added for writing on dark paint)
+    let lineLayers: any MTLBuffer       // float LineLayer per line (`OutlineGeometry.lightWritingMark` or `writingMark` added for writing)
     let segmentCount: Int
     /// Whether the template draws as a coloring book (`CanvasUniforms.setColoringBookLines`), not
     /// with classic lines (`setClassicLines`).
@@ -50,7 +50,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         let palette = t.palette.map { CanvasColor.linearP3($0, space: t.colorSpace) }
         paletteLinear = palette
         let colors = t.regions.map { SIMD4(palette[Int($0.colorIndex)], Float($0.colorIndex)) }
-        let lines = OutlineGeometry(t)
+        let lines = OutlineGeometry(t, marksWriting: true)
 
         // Numbers: size each run by the shared `LabelSizing` rule (the same as thumbnails, PDFs
         // and SVG; a detail area's down to its own floor), capped so huge regions don't shout,

@@ -25,7 +25,7 @@ struct FrameUniforms {
     float4 photo;       // x: source photo opacity
     float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
     float4 lineWidth;   // line width (px) per layer
-    float4 lineMode;    // x: 1 for a coloring book
+    float4 lineMode;    // x: 1 for a coloring book, y: how far its drawing's ink has gone (0 shown, 1 gone; writing stays)
     float4 lightInk;    // rgb: the tone writing over a dark paint draws in once its region is painted
 };
 
@@ -51,6 +51,7 @@ struct GlyphInstance {
 
 constant float kWetSettle = 0.7;
 constant float kLightWriting = 4.0;      // OutlineGeometry.lightWritingMark (CanvasScene's line layers)
+constant float kWriting = 8.0;           // OutlineGeometry.writingMark: any other writing
 constant uint kOutside = 0xFFFFFFFFu;    // BoundaryEdge.outside (PaintCore): no region on that side
 
 static float4 toClip(float2 px, constant FrameUniforms &u) {
@@ -248,7 +249,8 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 // cells are not outlined (the fill's highlight shows them); its color edges have no ink
 // (lineAlpha.w = 0). Writing over a dark paint (a stroke whose layer carries `kLightWriting`,
 // `OutlineGeometry.lightWritingMark`) is drawn in the light tone `lightInk` as its region is
-// painted, so it reads on the paint instead of vanishing into it.
+// painted, so it reads on the paint instead of vanishing into it. A finished book shown without
+// its ink (lineMode.y) keeps only its writing (either mark), which no paint draws.
 
 struct OutlineOut {
     float4 position [[position]];
@@ -271,8 +273,9 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     uint2 seg = segments[iid];
     uint2 nb = lineRegions[seg.y];
     float rawLayer = lineLayers[seg.y];
-    bool lightWriting = rawLayer > kLightWriting - 0.5;
-    uint layer = min(uint(rawLayer - (lightWriting ? kLightWriting : 0.0) + 0.5), 3u);
+    bool writing = rawLayer > kLightWriting - 0.5;
+    bool lightWriting = writing && rawLayer < kWriting - 0.5;
+    uint layer = min(uint(rawLayer - (lightWriting ? kLightWriting : writing ? kWriting : 0.0) + 0.5), 3u);
     float now = u.time.x;
     bool book = u.lineMode.x > 0.5;
     float left = paintedAmount(states[nb.x], now);
@@ -296,6 +299,8 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     // handed over to; the selected width eases with it, `CanvasLook`).
     float strong = selected ? u.outline.z : 0.0;
     float alpha = mix(lineAlpha, max(lineAlpha, u.ink.a) * 1.3, strong) * visible * (width / drawn);
+    // The finished picture without its ink: every line but the writing fades with `lineMode.y`.
+    if (book && !writing) alpha *= 1.0 - saturate(u.lineMode.y);
     float hw = 0.5 * drawn;
 
     float2 a = toPixels(points[seg.x], u);
