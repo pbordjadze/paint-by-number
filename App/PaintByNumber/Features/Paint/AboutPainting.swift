@@ -141,11 +141,15 @@ struct AboutPainting: View {
         .accessibilityIdentifier("about-painting")
     }
 
-    /// The picture's room on a page so tall: more than half of it, the label and the links
-    /// keeping theirs, and never less than a phone on its side can still read.
+    /// The picture's room on a page so tall: more than half of it where the label and the links
+    /// keep theirs in view under it (`labelAndLinks`: the ways out are what the page is for),
+    /// and never less than a phone on its side can still read.
     nonisolated static func pictureHeight(page: CGFloat) -> CGFloat {
-        max(180, page * 0.56)
+        max(180, min(page * 0.56, page - labelAndLinks))
     }
+
+    /// About what the placard, its credit line, the links and the page's spacing take.
+    nonisolated static let labelAndLinks: CGFloat = 420
 
     /// The picture itself, as the library has it: the placard under it names it for VoiceOver.
     @ViewBuilder
@@ -163,11 +167,6 @@ struct AboutPainting: View {
         }
     }
 
-    /// Where the work hangs, the placard's last line; the credit line of a record without one.
-    nonisolated static func keeper(of work: OriginalWork) -> String {
-        work.place ?? work.provenance.credit
-    }
-
     private var placard: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(work.sample.title)
@@ -181,9 +180,12 @@ struct AboutPainting: View {
                     .foregroundStyle(Theme.quietInk)
                     .padding(.top, 10)
             }
-            Text(Self.keeper(of: work))
-                .font(.display(.headline, weight: .semibold))
-                .padding(.top, 14)
+            // Where it hangs, the label's last line: quieter than the title it answers.
+            if let place = work.place {
+                Text(place)
+                    .font(.display(.headline, weight: .regular))
+                    .padding(.top, 14)
+            }
         }
         .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
@@ -191,24 +193,26 @@ struct AboutPainting: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 16)
         .frame(maxWidth: Self.placardWidth)
-        .background(Theme.surface, in: .rect(cornerRadius: 3))
-        .shadow(color: .black.opacity(0.12), radius: 3, y: 1.5)
+        // The card's shadow, not its words'.
+        .background {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Theme.surface)
+                .shadow(color: .black.opacity(0.12), radius: 3, y: 1.5)
+        }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("about-label")
     }
 
-    /// The credit line, where the placard's last line isn't it already.
-    @ViewBuilder private var footnote: some View {
-        if work.place != nil {
-            Text(work.provenance.credit)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: Self.placardWidth - 36, alignment: .leading)
-                .accessibilityIdentifier("about-credit")
-        }
+    /// The keeper's credit line, faint under the label: a catalog number is no part of it.
+    private var footnote: some View {
+        Text(work.provenance.credit)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: Self.placardWidth - 36, alignment: .leading)
+            .accessibilityIdentifier("about-credit")
     }
 
     /// The way out: the keeper's page, and Wikipedia's where the record names the work's own
@@ -254,7 +258,7 @@ struct AboutPaintingDemo: View {
         let work = OriginalWork.of(scenario.hasPrefix("about-photograph") ? "earthrise" : "great-wave")
         Theme.paper.ignoresSafeArea()
             .sheet(isPresented: .constant(true)) {
-                if let work { AboutPainting(work: work) }
+                if let work { AboutPainting(work: work).pageSizedOnPad() }
             }
             .task {
                 guard let work else { return }

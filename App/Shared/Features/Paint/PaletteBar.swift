@@ -549,23 +549,22 @@ private struct Swatch: View {
     let fraction: Double
     let isComplete: Bool
     let isSelected: Bool
-    /// A spent well (`SwatchButton.isSpent`): the paint as a faint wash inside a thin rim, set
-    /// in from the swatch's edge, with a small check in the bar's own ink; no numeral and no
-    /// progress ring, so it stays behind the swatches still to paint, in light and dark.
+    /// A spent well (`SwatchButton.isSpent`): what is left of the paint, a thinner wash of its
+    /// own color inside a thin rim, set well in from the swatch's edge; no numeral, no check and
+    /// no progress ring, so the wells stay behind the swatches still to paint and read as the
+    /// paints used, not as a list ticked off.
     let isSpent: Bool
     let metrics: PaletteMetrics
     let reduceMotion: Bool
 
     var body: some View {
         ZStack {
-            Circle().fill(color).opacity(isSpent ? 0.22 : 1)
-                .padding(isSpent ? 3 : 0)
+            Circle().fill(color).opacity(isSpent ? 0.55 : 1)
+                .padding(isSpent ? 7 : 0)
             Circle().strokeBorder(isSpent ? Color.primary.opacity(0.16) : Color.black.opacity(0.12), lineWidth: isSpent ? 1 : 0.5)
-                .padding(isSpent ? 3 : 0)
+                .padding(isSpent ? 7 : 0)
             if isSpent {
-                Image(systemName: "checkmark")
-                    .font(.system(size: metrics.checkmarkSize * 0.8, weight: .bold))
-                    .foregroundStyle(Color.primary.opacity(0.5))
+                EmptyView()
             } else if isComplete {
                 Image(systemName: "checkmark")
                     .font(.system(size: metrics.checkmarkSize, weight: .heavy))

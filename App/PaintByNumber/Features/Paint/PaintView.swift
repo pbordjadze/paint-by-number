@@ -287,6 +287,8 @@ struct PaintView: View {
         #if UNRELEASED
         .sheet(item: $about) { work in
             AboutPainting(work: work)
+                // An iPad's default form sheet is shorter than the picture, its label and the links.
+                .pageSizedOnPad()
                 .besideTheFold()
         }
         #endif

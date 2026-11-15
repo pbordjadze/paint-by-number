@@ -70,19 +70,20 @@ struct AboutPaintingTests {
         #expect(work.medium == nil && work.place == nil && work.wikipedia == nil)
     }
 
-    /// The placard's last line is where the work hangs; a record without a place ends on its
-    /// credit line, so a short label is still a whole one.
+    /// The placard's last line is where the work hangs; a record without a place has none, and
+    /// its credit line stays the faint line under the label.
     @Test func thePlacardEndsOnWhereItHangs() throws {
         let hung = try #require(Self.works(#"{"id": "picture", "source": "https://museum.example/1", "place": "A Museum, A City"}"#)["picture"])
-        #expect(AboutPainting.keeper(of: hung) == "A Museum, A City")
+        #expect(hung.place == "A Museum, A City")
         let bare = try #require(Self.works(#"{"id": "picture", "source": "https://museum.example/1"}"#)["picture"])
-        #expect(AboutPainting.keeper(of: bare) == "A Museum, A Fund")
+        #expect(bare.place == nil && !bare.provenance.credit.isEmpty)
     }
 
     /// The picture has most of the sheet, and still some of a very short one.
     @Test func thePictureIsThePagesHero() {
-        #expect(AboutPainting.pictureHeight(page: 700) > 350)
-        #expect(AboutPainting.pictureHeight(page: 700) < 700 - 250)
+        #expect(AboutPainting.pictureHeight(page: 1200) > 600)
+        // A phone's sheet: the label and the links stay in view under it.
+        #expect(AboutPainting.pictureHeight(page: 700) == 700 - AboutPainting.labelAndLinks)
         #expect(AboutPainting.pictureHeight(page: 200) == 180)
     }
 

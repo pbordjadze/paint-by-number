@@ -300,8 +300,9 @@ below name both alike.
   `doorsWidth` keeps the panel, `PaintView.doorMetrics` and `ArchOpening` in step). It opens
   `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
   read from `library.json` alone): the picture, and under it one small placard, its title,
-  maker and date, medium and, last, where it hangs (a record without a place ends on its
-  credit line; otherwise the credit is one faint line under the placard). The catalog entry is
+  maker and date, medium and, last, where it hangs (a record without a place has no such
+  line), the credit one faint line under the placard; on an iPad the sheet is page-sized, so
+  the links stay in view. The catalog entry is
   the page's one tinted control and Wikipedia's article, where the record names one, a plain
   link in the words' color (the accent is gold in dark appearance); both open in the browser,
   and the app sends nothing. `about-painting` (with `-dark`)
@@ -335,8 +336,8 @@ below name both alike.
   on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
   its start would keep the colors to come out of sight), and a finished one that is no longer in
   hand becomes a spent well there
-  (`SwatchButton.isSpent`: its paint as a faint wash inside a thin rim with a small check in the
-  bar's ink, no numeral and no progress ring; a cross-fade, a cut under Reduce Motion), so nothing
+  (`SwatchButton.isSpent`: what is left of its paint, a thinner wash set well in inside a thin rim, no
+  numeral, check or progress ring; a cross-fade, a cut under Reduce Motion), so nothing
   ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
   nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
   its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
