@@ -12,7 +12,7 @@ import argparse, math, random
 from PIL import Image, ImageDraw
 
 WAIT, COVER, FALL, STILL, TOTAL = 0.45, 0.55, 0.9, 0.45, 2.95
-SWAP = WAIT + COVER; FALLEN = SWAP + FALL; CLEARS = FALLEN + STILL; CLEAR = TOTAL - CLEARS
+SWAP = WAIT + COVER * 0.75; LAID = WAIT + COVER; FALLEN = LAID + FALL; CLEARS = FALLEN + STILL; CLEAR = TOTAL - CLEARS
 GOLD = (201, 162, 74)
 
 def ease(x):
@@ -29,7 +29,7 @@ def crescent(x, y, side):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out"); ap.add_argument("--width", type=float, default=1032)
-    ap.add_argument("--height", type=float, default=1376); ap.add_argument("--at", type=float, default=SWAP + FALL * 0.55)
+    ap.add_argument("--height", type=float, default=1376); ap.add_argument("--at", type=float, default=LAID + FALL * 0.55)
     ap.add_argument("--scale", type=float, default=1)
     a = ap.parse_args(); k = a.scale; t = a.at
     W, H = a.width, a.height; size = (int(W * k), int(H * k))
@@ -46,7 +46,7 @@ def main():
     for row in range(size[1]):
         f = row / max(1, size[1] - 1)
         sd.line([(0, row), (size[0], row)], fill=tuple(int(top[i] + (bottom[i] - top[i]) * f) for i in range(3)) + (int(255 * night),))
-    spread = min(1, max(0, (t - WAIT) / COVER / 0.75))
+    spread = 1 if t >= SWAP else min(1, max(0, (t - WAIT) / COVER / 0.75))
     mask = Image.new("L", size, 0)
     front = far * spread
     ImageDraw.Draw(mask).ellipse([(cx - front) * k, (cy - front) * k, (cx + front) * k, (cy + front) * k], fill=255)
@@ -54,7 +54,7 @@ def main():
     img = img.convert("RGB"); d = ImageDraw.Draw(img, "RGBA")
 
     gold = 1 - ease(((t - CLEARS) / CLEAR - 0.3) / 0.7)
-    up = ease(((t - SWAP) / FALL - 0.3) / 0.2) * gold
+    up = ease(((t - LAID) / FALL - 0.3) / 0.2) * gold
     if up > 0:
         side = min(160, max(64, min(W, H) * 0.2))
         moon = [(x * k, y * k) for x, y in crescent(W / 2 - side / 2, H * 0.36 - side / 2, side)]
@@ -86,12 +86,12 @@ def main():
                 delay = min(1, radius / far + rnd.random() * 0.06)
                 lean = rnd.random() - 0.5
                 if not (-side < x < W + side and -side < y < H + side): continue
-                if t < SWAP:
+                if t < LAID:
                     local = ((t - WAIT) / COVER - delay * 0.75) / 0.25
                     if local <= 0: continue
                     e = min(1, local); op = e; sc = 1.35 - 0.35 * (1 - (1 - e) ** 3)
                 else:
-                    local = ((t - SWAP) / FALL - (1 - delay) * 0.7) / 0.3
+                    local = ((t - LAID) / FALL - (1 - delay) * 0.7) / 0.3
                     if local >= 1: continue
                     e = max(0, local); op = 1 - e * e; sc = 1 - 0.12 * e
                     y += pitch * 5 * e * e * (1 + lean); ang += 2.4 * lean * e

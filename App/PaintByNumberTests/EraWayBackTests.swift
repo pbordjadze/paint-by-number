@@ -5,7 +5,7 @@ import Testing
 
 /// The way back from Paint by Mosaic (painting-company row 281; `EraWayBack`, SideStore and Debug
 /// builds): the wall's tiles come down from the top on a night with the crescent and a few
-/// stars, which clears over the gallery, in the way in's time, the era swapped only under the
+/// stars, which clears over the gallery, in the way in's time, the era swapped only under a
 /// whole wall. The release plays the way in's passage both ways.
 @MainActor
 struct EraWayBackTests {
@@ -19,7 +19,9 @@ struct EraWayBackTests {
         #expect(EraWayBack.total == EraPassage.total)
         #expect(EraWayBack.wait == EraPassage.wait, "the sheet that asked goes first, as on the way in")
         #expect(EraWayBack.wait < EraWayBack.swap)
-        #expect(EraWayBack.swap < EraWayBack.halfFallen && EraWayBack.halfFallen < EraWayBack.fallen)
+        #expect(EraWayBack.swap < EraWayBack.laid, "the swap's work is over before anything falls")
+        #expect(EraWayBack.swap - EraWayBack.wait > 0.4, "and comes well after the sheet that asked has gone")
+        #expect(EraWayBack.laid < EraWayBack.halfFallen && EraWayBack.halfFallen < EraWayBack.fallen)
         #expect(EraWayBack.fallen < EraWayBack.clears && EraWayBack.clears < EraWayBack.total)
         #expect(abs(EraWayBack.clear - 0.6) < 1e-9)
         #expect(EraWayBack.cover < EraPassage.cover / 2, "the wall comes over quickly: it is leaving")
@@ -40,17 +42,27 @@ struct EraWayBackTests {
         }
     }
 
-    @Test func theEraIsSwappedOnlyUnderTheWholeWall() {
-        let whole = EraWayBack.TileState(opacity: 1, scale: 1, drop: 0, turn: 0)
+    @Test func theEraIsSwappedOnlyUnderAWholeCover() {
+        // The cover is the night, whole and opaque from the swap until it clears; not a moment
+        // sooner, and nothing falls until the wall over it is whole too.
         #expect(EraWayBack.bed(at: EraWayBack.swap) == 1)
         #expect(EraWayBack.night(at: EraWayBack.swap) == 1)
+        #expect(EraWayBack.bed(at: EraWayBack.swap - 0.01) < 1)
+        let whole = EraWayBack.TileState(opacity: 1, scale: 1, drop: 0, turn: 0)
         for delay in delays {
             for index in [0, 1, 17, 2000] {
-                #expect(EraWayBack.tile(delay: delay, index: index, at: EraWayBack.swap) == whole, "\(delay)")
+                #expect(EraWayBack.tile(delay: delay, index: index, at: EraWayBack.laid) == whole, "\(delay)")
+                for step in 0...10 {
+                    let time = EraWayBack.swap + (EraWayBack.laid - EraWayBack.swap) * Double(step) / 10
+                    let state = EraWayBack.tile(delay: delay, index: index, at: time)
+                    #expect((state?.drop ?? 0) == 0 && (state?.turn ?? 0) == 0)
+                }
             }
         }
-        // Not a moment sooner: the last course is still being set.
-        let before = EraWayBack.tile(delay: 1, index: 0, at: EraWayBack.swap - 0.01)
+        // The last course is still being set as the era goes in.
+        let last = EraWayBack.tile(delay: 1, index: 0, at: EraWayBack.swap)
+        #expect((last?.opacity ?? 0) < 1)
+        let before = EraWayBack.tile(delay: 1, index: 0, at: EraWayBack.laid - 0.01)
         #expect((before?.opacity ?? 0) < 1)
         #expect(EraWayBack.tile(delay: 0.5, index: 0, at: EraWayBack.wait) == nil)
         #expect(EraWayBack.bed(at: EraWayBack.wait) == 0)
@@ -62,7 +74,7 @@ struct EraWayBackTests {
         #expect(EraWayBack.tile(delay: 1, index: 3, at: early) == nil)
 
         let whole = EraWayBack.TileState(opacity: 1, scale: 1, drop: 0, turn: 0)
-        let loosening = EraWayBack.swap + EraWayBack.fall * 0.1
+        let loosening = EraWayBack.laid + EraWayBack.fall * 0.1
         let top = try #require(EraWayBack.tile(delay: 1, index: 3, at: loosening))
         #expect(top.opacity < 1 && top.drop > 0 && top.scale < 1)
         #expect(EraWayBack.tile(delay: 0.5, index: 3, at: loosening) == whole)
@@ -73,7 +85,7 @@ struct EraWayBackTests {
         // A tile only ever falls: down, and fainter.
         var last = whole
         for step in 0...40 {
-            let time = EraWayBack.swap + EraWayBack.fall * Double(step) / 40
+            let time = EraWayBack.laid + EraWayBack.fall * Double(step) / 40
             guard let state = EraWayBack.tile(delay: 0.6, index: 3, at: time) else { continue }
             #expect(state.drop >= last.drop && state.opacity <= last.opacity)
             last = state
@@ -104,7 +116,7 @@ struct EraWayBackTests {
         #expect(EraWayBack.night(at: EraWayBack.total) < 1e-9)
         #expect(EraWayBack.gold(at: EraWayBack.total) < 1e-9)
         // The crescent rises as the courses over it go: nothing of it behind the whole wall.
-        #expect(EraWayBack.moon(at: EraWayBack.swap) == 0)
+        #expect(EraWayBack.moon(at: EraWayBack.laid) == 0)
         #expect(EraWayBack.moon(at: EraWayBack.halfFallen) == 1 && EraWayBack.moon(at: EraWayBack.total) == 1)
         let clearing = EraWayBack.clears + EraWayBack.clear * 0.6
         #expect(EraWayBack.gold(at: clearing) > EraWayBack.night(at: clearing))
@@ -123,7 +135,7 @@ struct EraWayBackTests {
                                    width: star.side, height: star.side)
                 #expect(screen.contains(place) && !place.intersects(sky.moon), "\(size)")
                 #expect(star.side < sky.moon.width / 3)
-                #expect(star.appears > EraWayBack.swap)
+                #expect(star.appears > EraWayBack.laid)
                 #expect(star.appears + EraWayBack.starPop <= EraWayBack.clears)
                 #expect(EraWayBack.star(appearing: star.appears, at: star.appears).opacity == 0)
                 let out = EraWayBack.star(appearing: star.appears, at: EraWayBack.clears)

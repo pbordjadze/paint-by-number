@@ -5,7 +5,8 @@ import SwiftUI
 /// The secret door (painting-company row 234): the app's year, set back to 0547 in Settings ›
 /// About (tap the Year row, roll its wheel), opens Ravenna, the mosaic era (the `Ravenna`
 /// module); rolled forward again in Ravenna's own Settings, it brings Paint by Moonlight back.
-/// SideStore and Debug builds only. With the door closed nothing is stored and nothing changes.
+/// From 1.1 in every build (painting-company row 236). With the door closed nothing is stored and
+/// nothing changes.
 enum Era: String {
     case moonlight
     case byzantium
@@ -367,8 +368,9 @@ struct EraPassage: View {
 /// The way back from Paint by Mosaic to Paint by Moonlight (painting-company row 281), the way
 /// in's counterpart: when each thing happens and how far along it is, the drawing left to
 /// `EraPassage`. After the same wait, the wall's tiles come over the screen quickly (`cover`), in
-/// the way in's order, on a bed of night; the era is swapped under them at `swap`; they let go
-/// from the top courses down, each loosening, dropping and fading (`fall`), so the wall comes
+/// the way in's order, on a bed of night; the era is swapped at `swap`, once that bed is whole and
+/// the last courses are still being set, so the work of the swap is over before anything falls;
+/// from `laid` they let go from the top courses down, each loosening, dropping and fading (`fall`), so the wall comes
 /// down on the night with its crescent; a few stars come out and the night stands a moment
 /// (`still`); then it clears over the gallery, the crescent and stars last (`clear`). As long as
 /// the way in, and nothing in it is drawn at random: a size and a time give one frame.
@@ -377,17 +379,22 @@ enum EraWayBack {
     static let cover: TimeInterval = 0.55
     static let fall: TimeInterval = 0.9
     static let still: TimeInterval = 0.45
-    /// The screen is wholly tiles: the era goes in beneath.
-    static var swap: TimeInterval { wait + cover }
+    /// How far through the cover the bed of night is whole, the last courses still to set.
+    private static let bedded = 0.75
+    /// The screen is wholly night and tiles: the era goes in beneath, a moment before the wall
+    /// is whole, so a main thread kept busy by the swap costs the fall none of its opening.
+    static var swap: TimeInterval { wait + cover * bedded }
+    /// The wall is whole, and its top courses begin to let go.
+    static var laid: TimeInterval { wait + cover }
     /// The last tile is gone.
-    static var fallen: TimeInterval { swap + fall }
+    static var fallen: TimeInterval { laid + fall }
     /// The night begins to clear.
     static var clears: TimeInterval { fallen + still }
     /// The way in's length exactly; the clearing takes what the rest leaves (0.6 s).
     static var total: TimeInterval { EraPassage.total }
     static var clear: TimeInterval { total - clears }
     /// Where the `era-passage-back` demo holds it: the upper courses gone, the crescent showing.
-    static var halfFallen: TimeInterval { swap + fall * 0.55 }
+    static var halfFallen: TimeInterval { laid + fall * 0.55 }
 
     /// A tile's course sets how late it is laid (`delay`, 0 at the bottom's middle to 1 at the
     /// farthest corner) and, turned round, how early it falls: the last three tenths of the fall
@@ -406,13 +413,13 @@ enum EraWayBack {
     /// The tile `index` of the layout, laid at `delay`, at a time; nil while it isn't there.
     static func tile(delay: Double, index: Int, at elapsed: TimeInterval) -> TileState? {
         guard elapsed > wait, elapsed < fallen else { return nil }
-        if elapsed < swap {
+        if elapsed < laid {
             let local = ((elapsed - wait) / cover - delay * 0.75) / 0.25
             guard local > 0 else { return nil }
             let eased = min(1, local)
             return TileState(opacity: eased, scale: 1.35 - 0.35 * (1 - pow(1 - eased, 3)), drop: 0, turn: 0)
         }
-        let local = ((elapsed - swap) / fall - (1 - delay) * stagger) / (1 - stagger)
+        let local = ((elapsed - laid) / fall - (1 - delay) * stagger) / (1 - stagger)
         guard local < 1 else { return nil }
         let loose = max(0, local)
         let lean = sway(index)
@@ -427,9 +434,9 @@ enum EraWayBack {
     }
 
     /// How far the bed of night has spread under the courses being laid, 0 to 1 of the way to the
-    /// farthest corner; whole a quarter of the cover before the last tile is.
+    /// farthest corner; whole from `swap`, a quarter of the cover before the last tile is.
     static func bed(at elapsed: TimeInterval) -> Double {
-        min(1, max(0, (elapsed - wait) / cover / 0.75))
+        elapsed >= swap ? 1 : min(1, max(0, (elapsed - wait) / cover / bedded))
     }
 
     /// The night's opacity: whole until it clears, gone a little before the end.
@@ -446,7 +453,7 @@ enum EraWayBack {
     /// above the middle of every screen), whole before `halfFallen`, so no gold glints in the
     /// joints of a wall still standing.
     static func moon(at elapsed: TimeInterval) -> Double {
-        ease(((elapsed - swap) / fall - 0.3) / 0.2)
+        ease(((elapsed - laid) / fall - 0.3) / 0.2)
     }
 
     struct Star: Equatable {

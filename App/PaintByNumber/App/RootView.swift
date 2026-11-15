@@ -2,9 +2,9 @@ import Ravenna
 import SwiftUI
 
 /// Routes to the app shell. Debug builds route to a demo scenario when launched with
-/// `-demo <name>` (see `DemoMode`); Release builds always show the shell. SideStore and Debug
-/// builds show Ravenna instead while the secret door's clock is set back (`EraDoor`), and its own
-/// scenarios, `-demo ravenna-<name>`; `era-passage` sets the clock back at launch and holds the
+/// `-demo <name>` (see `DemoMode`); Release builds always show the shell. Every
+/// build shows Ravenna instead while the secret door's clock is set back (`EraDoor`), Debug builds
+/// its own scenarios too, `-demo ravenna-<name>`; `era-passage` sets the clock back at launch and holds the
 /// passage half laid; `era-passage-back` and `era-passage-night` (SideStore and Debug builds) play
 /// the way back over the gallery and hold it with the tiles half fallen, the night showing
 /// through, and at its still night, the crescent and stars out; `about-painting` and
