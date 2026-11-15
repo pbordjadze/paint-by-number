@@ -1,5 +1,5 @@
-"""Exact arithmetic for the making-of show's discrete decisions: where the crew stands and which
-pixel a seed lands on.
+"""Exact arithmetic for the making-of show's discrete decisions: which pixel a seed lands on, which
+area a pixel is in, where a line runs.
 
 Everything here is integer arithmetic or IEEE double arithmetic made of `+ - * /` and `sqrt` in a
 fixed order, so Sources/MakingOf (ExactMath.swift, Labeling.swift, ...) gets the same bits on any
@@ -118,8 +118,9 @@ def half_even(x):
 
 
 def quantize(x, places):
-    """`x` to `places` decimals as `half_even(x * 10^places) / 10^places`: the plan file's precision,
-    written so that the Swift port reproduces it (Python's `round(x, n)` has no short equivalent)."""
+    """`x` to `places` decimals as `half_even(x * 10^places) / 10^places`: the precision the show
+    keeps its lines and timing at, written so that the Swift port reproduces it (Python's
+    `round(x, n)` has no short equivalent)."""
     scale = float(10 ** places)
     return half_even(x * scale) / scale
 
@@ -145,19 +146,6 @@ def oklab(rgb):
     return np.stack([0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
                      1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
                      0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s], axis=-1)
-
-
-def box_sum(a, r):
-    """Sums of the integer plane `a` over the window of radius `r` around each cell, a window that
-    sticks out of the plane counting the edge cell again (`np.pad(mode='edge')`): rows, then columns."""
-    a = np.asarray(a, dtype=np.int64)
-    for axis in (0, 1):
-        pad = [(0, 0), (0, 0)]
-        pad[axis] = (r + 1, r)
-        c = np.cumsum(np.pad(a, pad, mode='edge'), axis=axis)
-        a = np.take(c, np.arange(2 * r + 1, c.shape[axis]), axis=axis) \
-            - np.take(c, np.arange(0, c.shape[axis] - 2 * r - 1), axis=axis)
-    return a
 
 
 def percentile(values, percent):

@@ -12,16 +12,35 @@
 # commit's earlier report at once: give CI_RUN the run id, with `.<attempt>` for a re-run of the
 # same run (the run's URL and Re-run's attempt number), and only that run's report counts.
 # Reports written before the RUN file existed never match a CI_RUN.
+# A commit whose run gave way to a later push (a branch's run is cancelled by the next push; on
+# main an entry that waits gives its turn to a newer push's) gets that push's report, which
+# covers it, and a first line saying so: a full run's report (it has an `ipad` line) with no
+# entry cancelled, since one that gave way in its turn covers nothing; never with CI_RUN.
+# On main, where entries wait their turn, it polls for up to 360 min.
 set -euo pipefail
 SHA="$(git rev-parse "${1:-HEAD}")"
 OUT="${2:-ci-report}"
 BRANCH="${CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 REF="refs/ci-shots/${BRANCH}"
-for _ in $(seq 1 360); do
+SEEN=
+POLLS=360; [[ "$BRANCH" == main ]] && POLLS=720
+for _ in $(seq 1 "$POLLS"); do
   if git fetch -q origin "+${REF}:${REF}" 2>/dev/null; then
     RUN="$(git show "${REF}:RUN" 2>/dev/null || true)"
-    if [[ "$(git show "${REF}:COMMIT" 2>/dev/null)" == "$SHA" ]] \
-      && { [[ -z "${CI_RUN:-}" ]] || [[ "$RUN" == "$CI_RUN" || "${RUN%.*}" == "$CI_RUN" ]]; }; then
+    COMMIT="$(git show "${REF}:COMMIT" 2>/dev/null || true)"
+    LATER=
+    if [[ -z "${CI_RUN:-}" && "$COMMIT" =~ ^[0-9a-f]{40}$ && "$COMMIT" != "$SHA" && "$COMMIT" != "$SEEN" ]]; then
+      # Asked once for each report: the branch's history, to see whether this one's commit holds ours.
+      if git fetch -q origin "$BRANCH" 2>/dev/null; then
+        SEEN="$COMMIT"
+        HEAD_LINES="$(git show "${REF}:STATUS.md" 2>/dev/null | sed '/^$/q')"
+        if git merge-base --is-ancestor "$SHA" "$COMMIT" 2>/dev/null && grep -q '^ipad: ' <<< "$HEAD_LINES" \
+          && ! grep -qE ': (cancelled|no report)' <<< "$HEAD_LINES"; then LATER=1; fi
+      fi
+    fi
+    if [[ -n "$LATER" ]] || { [[ "$COMMIT" == "$SHA" ]] \
+      && { [[ -z "${CI_RUN:-}" ]] || [[ "$RUN" == "$CI_RUN" || "${RUN%.*}" == "$CI_RUN" ]]; }; }; then
+      if [[ -n "$LATER" ]]; then echo "The report of $COMMIT, a later push that holds $SHA: its run covers this commit."; fi
       rm -rf "$OUT" && mkdir -p "$OUT"
       git archive "${REF}" | tar -x -C "$OUT"
       cat "$OUT/STATUS.md"

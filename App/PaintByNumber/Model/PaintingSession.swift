@@ -67,6 +67,9 @@ final class PaintingSession {
     private(set) var progress: PaintProgress
     /// Palette index currently loaded on the brush.
     private(set) var selectedColor: Int?
+    /// Whether a color is on the brush. Set only when it flips, unlike `selectedColor`: the
+    /// painting screen's body reads this, so a change of color doesn't render the whole screen.
+    private(set) var hasSelectedColor: Bool
     /// Regions left to paint per palette color.
     private(set) var remainingByColor: [Int]
     /// Whether every area is painted, whether any is, and the colors with none left. Set only
@@ -101,6 +104,9 @@ final class PaintingSession {
     @ObservationIgnored weak var canvas: PaintingCanvas?
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
     @ObservationIgnored private var lastInteraction: ContinuousClock.Instant?
+    /// The sizes `isSmall` measured: a region's inscribed radius as searched up to `limit`, so
+    /// a radius over its limit says only that the region is bigger than the limit.
+    @ObservationIgnored private var regionSizes: [Int: (radius: Float, limit: Float)] = [:]
     @ObservationIgnored private let clock = ContinuousClock()
     /// Automatically select the next unfinished color along the palette when the selected one
     /// is completed (`nextIncompleteColor`).
@@ -262,6 +268,7 @@ final class PaintingSession {
         opensOnItsOwnColor = prepared.opensOnItsOwnColor
         openingColor = prepared.opening
         selectedColor = prepared.opening
+        hasSelectedColor = prepared.opening != nil
     }
 
     // MARK: Queries
@@ -321,6 +328,7 @@ final class PaintingSession {
         guard color != selectedColor else { return }
         if let color, !(0..<paletteCount).contains(color) { return }
         selectedColor = color
+        if hasSelectedColor != (color != nil) { hasSelectedColor = color != nil }
         canvas?.sessionDidChangeSelection(self)
     }
 
@@ -569,12 +577,27 @@ final class PaintingSession {
         var bestD = Float.infinity
         forEachRegion(inDiscAt: point, radius: radius) { region, d2 in
             if d2 < bestD && !progress.isPainted(region) && colorOf(region) == color
-                && template.regions[region].inscribedRadius <= maxInscribedRadius {
+                && isSmall(region, within: maxInscribedRadius) {
                 bestD = d2
                 best = region
             }
         }
         return best
+    }
+
+    /// Whether `region`'s largest inscribed disc fits within `radius`. A region's stored radius
+    /// is the room of its number, less than the region's size once the number has moved off
+    /// writing or a drawn line or the painter has moved it, so a region it calls small is
+    /// measured (`Template.inscribedRadius(ofRegion:upTo:)`), once: its size is kept.
+    private func isSmall(_ region: Int, within radius: Float) -> Bool {
+        guard radius < .infinity else { return true }
+        guard template.regions[region].inscribedRadius <= radius else { return false }
+        if let size = regionSizes[region], size.radius <= size.limit || size.limit >= radius {
+            return size.radius <= radius
+        }
+        let measured = template.inscribedRadius(ofRegion: region, upTo: radius)
+        regionSizes[region] = (measured, radius)
+        return measured <= radius
     }
 
     /// Visits the pixels of the eligible regions within `r` of the segment a→b (the area a brush

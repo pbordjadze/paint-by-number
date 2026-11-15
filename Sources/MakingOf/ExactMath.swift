@@ -1,5 +1,5 @@
-/// Exact arithmetic for the show's discrete decisions: where the crew stands and which pixel a seed
-/// lands on. Everything here is integer arithmetic or IEEE double arithmetic made of `+ - * /` and
+/// Exact arithmetic for the show's discrete decisions: which pixel a seed lands on, which area a
+/// pixel is in. Everything here is integer arithmetic or IEEE double arithmetic made of `+ - * /` and
 /// `squareRoot()` in a fixed order (Swift does not fuse a multiply and an add), and
 /// `tools/factory/making_of_exact.py` makes the same bits, so both test suites compare with `==`.
 /// Nothing calls `pow`, `cbrt` or `hypot`, whose last bits differ between C libraries, and nothing
@@ -107,8 +107,8 @@ enum ExactMath {
         x.rounded(.toNearestOrEven)
     }
 
-    /// `x` rounded to `decimals` places as `halfEven(x * 10^decimals) / 10^decimals`: the plan file's
-    /// precision (`making_of_exact.quantize`).
+    /// `x` rounded to `decimals` places as `halfEven(x * 10^decimals) / 10^decimals`: the
+    /// precision the show keeps its lines and timing at (`making_of_exact.quantize`).
     static func quantize(_ x: Double, decimals: Int) -> Double {
         var scale = 1.0
         for _ in 0..<decimals { scale *= 10 }
@@ -142,50 +142,10 @@ enum ExactMath {
         return da * da + db * db + dc * dc
     }
 
-    /// Sums of an integer plane over the window of radius `r` around each cell, a window that
-    /// sticks out of the plane counting the edge cell again (`np.pad(mode='edge')`): rows, then
-    /// columns, as sliding sums. Exact while a window's sum fits `Int32`.
-    static func boxSums<T: BinaryInteger>(_ plane: Plane<T>, radius r: Int) -> Plane<Int32> {
-        let w = plane.width, h = plane.height
-        guard w > 0, h > 0 else { return Plane(width: w, height: h, repeating: 0) }
-        var rows = [Int32](repeating: 0, count: w * h)
-        for y in 0..<h {
-            let base = y * w
-            func cell(_ x: Int) -> Int32 { Int32(truncatingIfNeeded: plane.data[base + min(max(x, 0), w - 1)]) }
-            var sum: Int32 = 0
-            for dx in -r...r { sum += cell(dx) }
-            for x in 0..<w {
-                rows[base + x] = sum
-                sum += cell(x + r + 1) - cell(x - r)
-            }
-        }
-        var out = [Int32](repeating: 0, count: w * h)
-        var column = [Int32](repeating: 0, count: w)
-        for dy in -r...r {
-            let base = min(max(dy, 0), h - 1) * w
-            for x in 0..<w { column[x] += rows[base + x] }
-        }
-        for y in 0..<h {
-            let base = y * w
-            for x in 0..<w { out[base + x] = column[x] }
-            let entering = min(y + r + 1, h - 1) * w, leaving = min(max(y - r, 0), h - 1) * w
-            for x in 0..<w { column[x] += rows[entering + x] - rows[leaving + x] }
-        }
-        return Plane(width: w, height: h, data: out)
-    }
-
-    /// The `percent`th percentile (an integer) of `values`, linear between the two ranks around it,
-    /// as numpy's default but written out: `lo + (hi - lo) * rem / 100` with the rank
-    /// `(n - 1) * percent / 100` split into a whole part and `rem` hundredths.
-    static func percentile(_ values: [Int32], percent: Int) -> Double {
-        guard !values.isEmpty else { return 0 }
-        let sorted = values.sorted()
-        let (lo, rem) = ((sorted.count - 1) * percent).quotientAndRemainder(dividingBy: 100)
-        let a = Int(sorted[lo]), b = Int(sorted[min(lo + 1, sorted.count - 1)])
-        return Double(a) + Double((b - a) * rem) / 100
-    }
-
-    /// `percentile(_:percent:)` of values given as counts: `counts[v]` cells hold the value `v`.
+    /// The `percent`th percentile (an integer) of values given as counts (`counts[v]` cells hold the
+    /// value `v`), linear between the two ranks around it, as numpy's default but written out:
+    /// `lo + (hi - lo) * rem / 100` with the rank `(n - 1) * percent / 100` split into a whole part
+    /// and `rem` hundredths (`percentile` in `making_of_exact.py`).
     static func percentile(counts: [Int], percent: Int) -> Double {
         let total = counts.reduce(0, +)
         guard total > 0 else { return 0 }

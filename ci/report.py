@@ -4,7 +4,8 @@
     ci/report.py <report-dir> <job>=<result> ...
 
 The arguments name every job in the order STATUS.md lists them, with the result the workflow
-gives it (`needs.<job>.result`; a simulator job of the matrix gets the matrix's). The first
+gives it (`needs.<job>.result`; a simulator job of the matrix gets the matrix's, and one main
+left out as passed before, `before:<the job it passed in>`: ci/plan.py). The first
 lines keep the form `<job>: <result>` that readers of STATUS.md look for. A simulator job
 (its artifact holds `outcomes.txt`) gets its own result from its steps' outcomes, then a line
 of details below: its steps, its tests' counts, the tests that failed or passed only when run
@@ -211,6 +212,9 @@ def main(argv):
     for job, result in jobs:
         job_dir = os.path.join(report, job)
         steps = outcomes(job_dir)
+        if result.startswith("before:"):
+            head.append(f"{job}: success, on the same files in {result.removeprefix('before:')}")
+            continue
         if steps is None and not os.path.isdir(job_dir) and result != "skipped" and job in ("ipad", "ipad-ui", "iphone", "iphone-ui", "release-tests", "compile", "test", "duo"):
             # A matrix job that left no artifact: planned but lost, or not planned at all.
             head.append(f"{job}: {job_result(None, result)}")
@@ -264,6 +268,11 @@ def self_test():
     assert job_result([("build", "success"), ("tests", "success"), ("release", "skipped")], "failure") == "success"
     assert job_result(None, "cancelled") == "cancelled"
     assert job_result(None, "abandoned").startswith("no report (abandoned: never got a runner")
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()) as printed:
+        main(["report.py", os.devnull, "ipad=before:https://github.com/o/r/actions/runs/5/job/51", "iphone=skipped"])
+    assert printed.getvalue() == "ipad: success, on the same files in https://github.com/o/r/actions/runs/5/job/51\niphone: skipped\n", printed.getvalue()
     log = "2026-10-07 11:55:06.6 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo] Main thread {} ({}), 3 frames:"
     assert stalls([
         log.format("stuck for 2.25 seconds", "stall 1"), log.format("stuck for 7.3 seconds", "stall 1"),

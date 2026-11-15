@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import summary
 
 OWN = {"launch": ["launch"], "forming": ["maps", "forming"], "forming-cold": ["maps", "forming"], "start": ["start"],
-       "start-making-of": ["start"], "zen-30": ["zen-30"], "finish": ["finish"]}
+       "start-making-of": ["start"], "zen-30": ["zen-30"], "colors": ["colors"], "finish": ["finish"]}
 NUMBERS = [("seconds", "s"), ("hitches", ""), ("hitch_ms", "ms late"), ("missed_60hz_frames", "missed"),
            ("tick_work_median_ms", "work ms"), ("footprint_mb_max", "MB"), ("peak_mb_since_launch", "peak MB")]
 

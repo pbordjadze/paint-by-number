@@ -3,7 +3,7 @@
 // format is read too).
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
-//       [--paint-mix photo|kit|lively]
+//       [--paint-mix photo|kit|lively|rich]
 //       [--auto [--length quick|relaxed|detailed] [--taste fidelity|finished] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
@@ -15,7 +15,8 @@
 //       line-art.pgm (books with an edge map), vectorized.pgm (all smoothed boundaries).
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --paint-mix kit mixes the paints as a kit would (KitPaint), the regions unchanged, and
-//       lively spreads kit paint's hues for a broader variety of colors (LivelyPaint);
+//       lively spreads kit paint's hues for a broader variety of colors (LivelyPaint), rich
+//       turns them further and gives a face paints of its own (FacePaints);
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`;
 //       --taste finished scores the finished painting, AutoTaste);
 //       a coloring book splits the cells along the edge map's lines
@@ -55,8 +56,11 @@
 //       {"kind": "merge", "points": [...]}, {"kind": "brush", "points": [...], "radius": r,
 //       "color": [L, a, b] | "paint": n}, {"kind": "reshape", "points": [from, to], "reach": r,
 //       "target": "ink" | "edge"}, {"kind": "moveLabel", "points": [from, to], "reach": r},
-//       {"kind": "look", "look": "moonlit", "strength": 1}, {"kind": "repaint", "from": [L, a,
-//       b], "color": [L, a, b], "family": true}], all in canvas units (the
+//       {"kind": "look", "points": [], "look": "moonlit", "strength": 1}, {"kind": "repaint",
+//       "points": [], "from": [L, a, b], "color": [L, a, b], "family": true}], read as the app's
+//       refinements.json keeps its edits (PaintCore's EditCoding: every edit has its "points", a
+//       brush its "radius", a look its "strength"; "paint": n, a paint's number in place of a
+//       "color", is pbn's own), all in canvas units (the
 //       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
 //       line drawn exactly as given and cutting the cell it closes (with "paints", nudged through
 //       the junctions it crosses beside and each piece it cuts recolored; --photo reads those

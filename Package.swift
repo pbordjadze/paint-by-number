@@ -25,7 +25,7 @@ let package = Package(
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
-        // The making-of show: its crew, layers and reveal fields, planned and built from a spec the
+        // The making-of show: its layers and the fields each step grows by, built from a spec the
         // Lamp edits, so a checked build in Release (no -Ounchecked, unlike PaintCore); Debug app
         // builds still get PaintCore's -O, or its per-pixel loops would run unoptimized.
         .target(

@@ -699,6 +699,42 @@ struct PaintingSessionTests {
         #expect(events() == [.rejected(region: 1, expectedColor: 1)])
     }
 
+    /// A wide stripe whose number was left little room where it moved to (off writing or a
+    /// drawn line, or by the painter) is still wide: its stored radius is the number's room,
+    /// not its size, and a tap beside it is no miss of a small area.
+    @Test func tapBesideALargeAreaWithASqueezedNumberIsNoMiss() {
+        var stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
+        stripes.regions[0].inscribedRadius = 3
+        stripes.labels[0].radius = 3
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        // Asked again, the kept size answers.
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        #expect(events() == [.rejected(region: 1, expectedColor: 1), .rejected(region: 1, expectedColor: 1)])
+        session.tap(at: SIMD2(70, 50), tolerance: 30)
+        #expect(session.isPainted(0), "within the tolerance itself the stripe is simply painted")
+    }
+
+    /// A stripe 60 wide is no small area at 4 units and is one at 40, asked in that order of
+    /// one session. (That a size found by a search stopped at a narrow tolerance is only a lower
+    /// bound, which this stripe can't show, its first spot being its widest, is PaintCore's
+    /// `RegionSizeTests.aLimitedSearchAnswersOnlyThatTheRegionIsBigger`.)
+    @Test func aWideAreaIsSmallAtAWiderTolerance() {
+        var stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
+        stripes.regions[0].inscribedRadius = 3
+        stripes.labels[0].radius = 3
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        session.tap(at: SIMD2(110, 50), tolerance: 40)
+        #expect(events() == [
+            .rejected(region: 1, expectedColor: 1), .rejected(region: 1, expectedColor: 1), .missedSmallArea(region: 0),
+        ])
+    }
+
     /// Progress of another template is an error to handle, not a trap.
     @Test func mismatchedProgressThrows() {
         let progress = PaintProgress(regionCount: template.regions.count + 1)
@@ -1000,6 +1036,31 @@ struct PaintingSessionTests {
         for r in areas { progress.paint(r) }
         let resumed = try PaintingSession(template: template, progress: progress)
         #expect(resumed.isStarted && !resumed.isComplete && resumed.completedColors == [color])
+    }
+
+    /// The painting screen's body reads `hasSelectedColor`, never `selectedColor`: going from one
+    /// color to another, as every finished color does, must not notify it.
+    @Test func hasSelectedColorChangesOnlyWhenItFlips() throws {
+        let session = PaintingSession(template: template)
+        try #require(session.paletteCount >= 2)
+        func notifies(_ change: () -> Void) -> Bool {
+            let observed = ObservedChange()
+            withObservationTracking {
+                _ = session.hasSelectedColor
+            } onChange: {
+                observed.fired = true
+            }
+            change()
+            return observed.fired
+        }
+        session.select(color: nil)
+        #expect(!session.hasSelectedColor)
+        let picked = notifies { session.select(color: 0) }
+        #expect(picked && session.hasSelectedColor && session.selectedColor == 0)
+        let changed = notifies { session.select(color: 1) }
+        #expect(!changed && session.hasSelectedColor && session.selectedColor == 1)
+        let putDown = notifies { session.select(color: nil) }
+        #expect(putDown && !session.hasSelectedColor && session.selectedColor == nil)
     }
 }
 

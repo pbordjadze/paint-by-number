@@ -237,4 +237,78 @@ struct EditTrailTests {
         let replay = try trail.move(to: Self.edits)
         #expect(replay.made == 0 && replay.left == Self.edits.count && trail.template == classic)
     }
+
+    /// What the trail reports of an edit is the laying that made its template: after a look, a
+    /// fill in a color of the photo lands on the paint the look made of it and adds none. The
+    /// same fill laid on its own on that template, its color not brought through the look, is
+    /// another edit with other counts (what `pbn refine` once reported: painting-company row 90).
+    @Test func anEditsOutcomeIsOfTheLayingThatMadeTheTemplate() throws {
+        let scene = TemplateEditorTests.scene
+        let at = SIMD2<Float>(140, 55)
+        let under = scene.regions[try TemplateEditorTests.region(scene, at.x, at.y)].colorIndex
+        let look = TemplateEditor.look(.moonlit, strength: 1, on: scene)
+        var trail = EditTrail(base: scene)
+        #expect(trail.lay(look).outcome.paintsChanged > 0)
+        let looked = trail.template
+        try #require(looked.palette.count == scene.palette.count)
+        // A paint of the photo's that is not the tapped area's.
+        let other = try #require(scene.palette.indices.first { $0 != Int(under) })
+        let fill = Edit.fill(at: at, color: scene.palette[other].oklab)
+
+        let laid = trail.lay(fill)
+        let through = try TemplateEditor.apply(TemplateEditor.recolored(fill, by: [look]), to: looked)
+        #expect(laid.verdict == .made(tooSmall: false) && laid.failure == nil)
+        #expect(laid.outcome == through.outcome && trail.template == through.template)
+        #expect(laid.outcome.fills == 1 && laid.outcome.paintsAdded == 0)
+        let alone = try TemplateEditor.apply(fill, to: looked)
+        #expect(alone.outcome.paintsAdded == 1 && alone.template != trail.template)
+
+        // A list laid at once reports the same, edit by edit.
+        let list = try TemplateEditor.apply([look, fill], to: scene)
+        #expect(list.template == trail.template && list.outcomes.count == 2 && list.outcomes[1] == laid.outcome)
+    }
+
+    /// An edit that does nothing reports that too, and leaves the trail as it was.
+    @Test func anEditLeftOutReportsItsOutcome() throws {
+        var trail = EditTrail(base: TemplateEditorTests.scene)
+        let nothing = trail.lay(Self.overPaper)
+        #expect(nothing.verdict == .nothing && !nothing.outcome.changed && nothing.outcome.declined == nil)
+        let declined = trail.lay(Self.doublingBack)
+        #expect(!declined.outcome.changed && declined.outcome.declined != nil && declined.failure == nil)
+        if case .declined = declined.verdict {} else { Issue.record("a line doubling back was not declined") }
+        #expect(trail.edits.isEmpty && trail.template == trail.base)
+
+        var classic = TemplateEditorTests.scene
+        classic.lineArt = nil
+        var none = EditTrail(base: classic)
+        let failed = none.lay(Self.edits[0])
+        #expect(failed.failure != nil && failed.outcome.declined != nil && !failed.outcome.changed)
+        #expect(throws: TemplateEditor.Failure.self) { try TemplateEditor.apply(Self.edits, to: classic) }
+    }
+
+    /// Why an edit was declined is a value a caller switches on, the same from the editor and
+    /// from the trail; its words, which `pbn`'s reports give, stay as they were.
+    @Test func aDeclinedEditSaysWhyAsAValue() throws {
+        typealias Reason = TemplateEditor.Declined.Reason
+        let scene = TemplateEditorTests.scene
+        let cases: [(Edit, Reason, String)] = [
+            (Self.doublingBack, .lineDoublesBack, "the line doubles back on itself"),
+            (.moveLabel(from: SIMD2(2, 2), to: SIMD2(30, 30)), .noNumberNear, "no number is near enough to move"),
+            (.reshape(from: SIMD2(100, 20), to: SIMD2(100, 30)), .noLineNear, "no line is near enough to move"),
+            (.reshape(from: SIMD2(100, 20), to: SIMD2(100, 30), target: .ink), .noLineNear, "no line is near enough to move"),
+            (.reshape(from: SIMD2(89, 72), to: SIMD2(89, 60)), .lineHeldThere, "the line is held where it was grabbed"),
+            (.merge(points: [EditMergeToolTests.sky]), .mergeStaysInOneArea, "the merge stays in one area"),
+        ]
+        for (edit, reason, words) in cases {
+            let outcome = try TemplateEditor.apply(edit, to: scene).outcome
+            #expect(outcome.declined?.reason == reason && outcome.declined?.description == words, "\(edit)")
+            var trail = EditTrail(base: scene)
+            #expect(trail.add(edit) == .declined(reason), "\(edit)")
+            #expect(reason.description == words)
+        }
+        // Any other reason is the editor's words, told from these by its case.
+        let other = try TemplateEditor.apply(.merge(points: []), to: scene).outcome.declined
+        #expect(other?.reason == .other("the merge joins no areas") && other?.description == "the merge joins no areas")
+        #expect(Reason.other("the merge stays in one area") != .mergeStaysInOneArea)
+    }
 }
