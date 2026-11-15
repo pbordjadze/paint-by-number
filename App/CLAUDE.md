@@ -227,7 +227,8 @@ below name both alike.
   answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
-  captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
+  captured in dark appearance, `long-text` ones with doubled strings, `+de` and `+ja` ones in
+  that language; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-send` (with `-dark`,
   `-long-text`) is Send Template's sheet, `gallery-received` (with `-dark`) opens a refined painting
   sent with its photo as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the

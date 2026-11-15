@@ -10,6 +10,8 @@
 set -euo pipefail
 VERSION=27.1
 DIR="/Applications/Xcode_$VERSION.app/Contents/Developer"
+# The Mac of our own (the `pbm-mac` runner) names it its own way.
+[[ -d "$DIR" || ! -d "/Applications/Xcode-$VERSION.0.app" ]] || DIR="/Applications/Xcode-$VERSION.0.app/Contents/Developer"
 [[ -d "$DIR" ]] || { echo "::error::Xcode $VERSION is not on this runner ($DIR); installed: $(ls -d /Applications/Xcode*.app 2>/dev/null | xargs -n1 basename | tr '\n' ' ')"; exit 1; }
 echo "DEVELOPER_DIR=$DIR" >> "${GITHUB_ENV:-/dev/null}"
 export DEVELOPER_DIR="$DIR"
