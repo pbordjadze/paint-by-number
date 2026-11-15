@@ -30,15 +30,18 @@ nonisolated enum StickerMaker {
         var cutOutsTried = 0
         for artwork in artworks {
             let base = "sticker-\(artwork.id.uuidString)-\(artwork.thumbnailVersion)"
-            let plain = base + ".png", cut = base + "-cut.png", noCut = base + "-nocut"
+            let plain = base + ".png", noPlain = base + "-noprint", cut = base + "-cut.png", noCut = base + "-nocut"
             func has(_ name: String) -> Bool { files.fileExists(atPath: shelf.url(name).path) }
             let triesCut = !has(cut) && !has(noCut) && cutOutsTried < cutOuts
-            if !has(plain) || triesCut {
+            if (!has(plain) && !has(noPlain)) || triesCut {
                 guard let template = try? store.readTemplate(artwork.id),
                       let painting = TemplateRasterizer.image(template, style: .finished, maxPixelSize: 1024)
                 else { continue }
-                if !has(plain), let data = framed(painting).flatMap(ImageCodec.pngData), data.count <= mostBytes {
-                    try? shelf.write(data, named: plain)
+                if !has(plain), !has(noPlain) {
+                    // A print Messages wouldn't take is noted, not drawn again at every layout.
+                    let data = framed(painting).flatMap(ImageCodec.pngData)
+                    let fits = data.map { $0.count <= mostBytes } ?? false
+                    try? shelf.write(fits ? data ?? Data() : Data(), named: fits ? plain : noPlain)
                 }
                 if triesCut {
                     cutOutsTried += 1
@@ -50,7 +53,7 @@ nonisolated enum StickerMaker {
                 stickers.append(OutsideShelf.Stickers.Sticker(painting: artwork.id, title: artwork.title, picture: name))
                 kept.insert(name)
             }
-            if has(noCut) { kept.insert(noCut) }
+            for name in [noCut, noPlain] where has(name) { kept.insert(name) }
         }
         do {
             try shelf.write(OutsideShelf.Stickers(stickers: stickers), to: .stickers)

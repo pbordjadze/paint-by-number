@@ -43,6 +43,9 @@ configurations = re.findall(r"isa = XCBuildConfiguration;\s*buildSettings = \{([
 # and sticker extensions name the app too).
 blocks = [b for b, name in configurations if name == "Release" and re.search(r"\bPRODUCT_BUNDLE_IDENTIFIER = com\.pbordjadze\.paintbynumber;", b)]
 if len(blocks) != 1: sys.exit("expected one Release configuration of the app target, found %d" % len(blocks))
+# An extension's version is its app's (Xcode warns of any other, and CI fails on a warning).
+versions = set(re.findall(r"\bMARKETING_VERSION = ([^;]+);", project))
+if len(versions) != 1: sys.exit("the targets' MARKETING_VERSION differ: %s" % ", ".join(sorted(versions)))
 excluded, included = setting(blocks[0], "EXCLUDED_SOURCE_FILE_NAMES"), setting(blocks[0], "INCLUDED_SOURCE_FILE_NAMES")
 def matches(path, patterns): return any(fnmatch.fnmatchcase(path.name, p) for p in patterns)
 left_out = [p for p in sources if matches(p, excluded) and not matches(p, included)]

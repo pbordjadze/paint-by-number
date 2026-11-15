@@ -34,15 +34,36 @@ enum OutsideDesk {
     /// How many finished paintings the frame turns through, and have stickers.
     static let mostFinished = 24
 
+    // MARK: One at a time
+
+    /// The last job on the shelf. The shell, a painting's screen and the app's leaving all come
+    /// here at once (a widget tapped opens the app and a painting together), and two that read
+    /// the same taps or sweep the same pictures must not cross: each waits for the one before.
+    private static var last: Task<Void, Never>?
+
+    private static func inTurn(_ work: @escaping @MainActor () async -> Void) async {
+        let before = last
+        let task = Task {
+            await before?.value
+            await work()
+        }
+        last = task
+        await task.value
+    }
+
     // MARK: Coming back
 
     /// Paints the areas the widget showed painted into the painting they belong to, unless it
     /// is `open` on screen (its screen does that itself, `absorb(into:artwork:)`), then lays
-    /// the shelf out again without keeping the caller.
-    static func comeBack(to library: Library, open: UUID?) async {
-        guard let shelf, let now = await waiting(on: shelf), now.artwork != open else { return }
-        await absorb(now, into: library, shelf: shelf)
-        Task { await layOut(library) }
+    /// the shelf out again without keeping the caller. With `only`, a painting being opened,
+    /// nothing is done for any other: its open waits for no one else's work.
+    static func comeBack(to library: Library, open: UUID?, only: UUID? = nil) async {
+        guard let shelf else { return }
+        await inTurn {
+            guard let now = await waiting(on: shelf), now.artwork != open, only == nil || now.artwork == only else { return }
+            await absorb(now, into: library, shelf: shelf)
+            Task { await layOut(library) }
+        }
     }
 
     /// The shelf's painting when taps wait to be painted into it.
@@ -122,11 +143,15 @@ enum OutsideDesk {
         BackgroundSaving.shared.hold { await layOut(library, leaving: true) }
     }
 
-    /// Lays out the painting in progress (unless taps wait to be painted into it: their
-    /// pictures must stay) and the finished paintings, has the widgets read them, then lays
-    /// out the stickers. `leaving` the foreground the app has seconds, so no sticker's subject
-    /// is looked for then (`cutOutStickers`).
+    /// Lays out the painting in progress (unless taps wait that still fit it: their pictures
+    /// must stay) and the finished paintings, has the widgets read them, then lays out the
+    /// stickers. `leaving` the foreground the app has seconds, so no sticker's subject is
+    /// looked for then (`cutOutStickers`).
     static func layOut(_ library: Library, leaving: Bool = false) async {
+        await inTurn { await layOutInTurn(library, leaving: leaving) }
+    }
+
+    private static func layOutInTurn(_ library: Library, leaving: Bool) async {
         guard let shelf else { return }
         await library.flush()
         let usable = library.artworks.filter { !$0.needsNewerApp }
@@ -135,8 +160,7 @@ enum OutsideDesk {
         let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
         let store = library.store
         await Background.run {
-            let waiting = shelf.now().map { shelf.taps(for: $0) > 0 } ?? false
-            if !waiting { layOutNow(current, store: store, shelf: shelf) }
+            layOutNow(current, store: store, shelf: shelf)
             layOutFinished(finished, store: store, shelf: shelf)
         }
         WidgetCenter.shared.reloadAllTimelines()
@@ -147,14 +171,24 @@ enum OutsideDesk {
     /// subjects of a few paintings more.
     static func cutOutStickers(_ library: Library) async {
         guard let shelf else { return }
-        let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
-        await StickerMaker.layOut(finished, store: library.store, shelf: shelf)
+        await inTurn {
+            let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
+            await StickerMaker.layOut(finished, store: library.store, shelf: shelf)
+        }
     }
 
-    nonisolated private static func layOutNow(_ artwork: Artwork?, store: ArtworkStore, shelf: OutsideShelf) {
-        guard let artwork,
-              let template = try? store.readTemplate(artwork.id),
-              let saved = try? store.readProgress(artwork.id, regionCount: template.regions.count), saved.problem == nil,
+    /// The painting in progress, as saved. Taps that wait are left with their pictures only
+    /// while they still fit it (the same painting, as many areas painted as their first picture
+    /// shows): taps counted against an older state, as when the widget is tapped while the app
+    /// is still laying out on its way out, show pictures of a painting that has moved on, and go.
+    nonisolated static func layOutNow(_ artwork: Artwork?, store: ArtworkStore, shelf: OutsideShelf) {
+        let template = artwork.flatMap { try? store.readTemplate($0.id) }
+        let saved = artwork.flatMap { artwork in template.flatMap { try? store.readProgress(artwork.id, regionCount: $0.regions.count) } }
+        if let artwork, let saved, saved.problem == nil, let laid = shelf.now(), shelf.taps(for: laid) > 0,
+           laid.artwork == artwork.id, laid.steps.first?.painted == saved.progress.paintedCount {
+            return
+        }
+        guard let artwork, let template, let saved, saved.problem == nil,
               let now = now(of: artwork, template: template, progress: saved.progress, shelf: shelf)
         else {
             try? FileManager.default.removeItem(at: shelf.url(OutsideShelf.File.now.rawValue))
@@ -180,7 +214,13 @@ enum OutsideDesk {
         let names = ColorNameText.nicknames(for: template.palette, seed: artwork.nicknameSeed, version: artwork.nicknameVersion)
         func paint(of region: Int) -> OutsideShelf.Now.Paint {
             let color = Int(template.regions[region].colorIndex)
-            let rgb = template.palette[color].rgb
+            // The palette is in the template's space; the shelf's colors are sRGB.
+            var rgb = template.palette[color].rgb
+            if template.colorSpace == .displayP3 {
+                let linear = ColorScience.p3ToSRGBLinear(
+                    SIMD3(ColorScience.decodeSRGB(rgb.x), ColorScience.decodeSRGB(rgb.y), ColorScience.decodeSRGB(rgb.z)))
+                rgb = SIMD3(ColorScience.encodeSRGB(linear.x), ColorScience.encodeSRGB(linear.y), ColorScience.encodeSRGB(linear.z))
+            }
             func byte(_ channel: Float) -> Int { Int((min(max(channel, 0), 1) * 255).rounded()) }
             return OutsideShelf.Now.Paint(number: color + 1, name: names[color], red: byte(rgb.x), green: byte(rgb.y), blue: byte(rgb.z))
         }
@@ -234,17 +274,23 @@ struct OutsideComings: ViewModifier {
     /// The painting on screen.
     let open: UUID?
     @Environment(\.scenePhase) private var scenePhase
+    /// The app was in the background, or has just launched: the stickers' subjects are looked
+    /// for once as it comes forward, not each time an alert or Control Center passes over it.
+    @State private var wasAway = true
 
     func body(content: Content) -> some View {
         content
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
+                    let cutsOut = wasAway
+                    wasAway = false
                     Task {
                         await OutsideDesk.comeBack(to: library, open: open)
-                        await OutsideDesk.cutOutStickers(library)
+                        if cutsOut { await OutsideDesk.cutOutStickers(library) }
                     }
-                } else if phase == .background, open == nil {
-                    OutsideDesk.layOutOnLeaving(library)
+                } else if phase == .background {
+                    wasAway = true
+                    if open == nil { OutsideDesk.layOutOnLeaving(library) }
                 }
             }
             .task { await OutsideDesk.layOutIfEmpty(library) }

@@ -1223,8 +1223,9 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   picture. The app paints those areas for real when it next comes forward (`OutsideDesk.comeBack`
   into the saved painting, `absorb(into:artwork:)` into the one on screen, as taps of the
   painter's own), then lays the shelf out again. Always absorb, then lay out: laying out starts
-  the count over, and leaves the pictures alone while taps wait. Taps that no longer fit the
-  painting (it changed since) are dropped.
+  the count over, and leaves the pictures alone while taps wait that still fit the painting.
+  Taps that no longer fit it (it changed since) are dropped. The desk does one job at a time
+  (`inTurn`): a widget tapped brings the shell and a painting's screen there together.
 - **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
 - **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
   extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as

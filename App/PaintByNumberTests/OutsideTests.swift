@@ -151,6 +151,35 @@ struct OutsideDeskTests {
         #expect(try library.store.readProgress(artwork.id, regionCount: template.regions.count).progress == two)
         #expect(shelf.taps(for: now) == 0)
     }
+
+    /// Laying out leaves waiting taps and their pictures alone while they fit the painting as
+    /// saved; once it has moved on (the widget tapped while the app was still on its way out,
+    /// against the layout before), they go and the painting is laid out as it stands.
+    @Test func layingOutKeepsOnlyTapsThatStillFit() async throws {
+        let library = makeLibrary()
+        let artwork = try await mosaic(in: library)
+        let template = Fixtures.mosaic
+        var progress = PaintProgress(regionCount: template.regions.count)
+        OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf)
+        let first = try #require(shelf.now())
+        #expect(first.steps.first?.painted == 0 && first.steps.count == OutsideFills.most + 1)
+        shelf.addTap()
+        OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf)
+        #expect(shelf.now() == first && shelf.taps(for: first) == 1)
+
+        let unplanned = try #require((0..<template.regions.count).first { region in !first.steps.contains { $0.region == region } })
+        progress.paint(unplanned)
+        library.saveProgress(progress, for: artwork.id)
+        await library.flush()
+        OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf)
+        let second = try #require(shelf.now())
+        #expect(second.token != first.token && second.steps.first?.painted == 1)
+        #expect(shelf.taps(for: second) == 0)
+        for step in first.steps { #expect(!FileManager.default.fileExists(atPath: shelf.url(step.picture).path)) }
+
+        OutsideDesk.layOutNow(nil, store: library.store, shelf: shelf)
+        #expect(shelf.now() == nil)
+    }
 }
 
 struct StickerMakerTests {

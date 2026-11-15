@@ -277,7 +277,8 @@ struct ArtworkPaintingView: View {
     /// The areas the widget's Paint One Area showed painted while the app was away go into the
     /// painting on screen, are saved, and the shelf is laid out from there (`OutsideDesk`).
     private func absorbWidgetAreas() {
-        guard let autosaver else { return }
+        // Not under ✎ Change's tools or during a replay: the taps wait for the next coming back.
+        guard let autosaver, change == nil, presentedChange == nil, !autosaver.session.isReplaying else { return }
         let library = library
         Task {
             guard await OutsideDesk.absorb(into: autosaver.session, artwork: autosaver.artworkID) > 0 else { return }
@@ -291,7 +292,7 @@ struct ArtworkPaintingView: View {
         guard autosaver == nil, failure == nil else { return }
         #if UNRELEASED
         // Before the painting is read: what the widget painted while the app was away.
-        await OutsideDesk.comeBack(to: library, open: nil)
+        await OutsideDesk.comeBack(to: library, open: nil, only: artworkID)
         #endif
         do {
             let document = try await library.loadForPainting(artworkID)
