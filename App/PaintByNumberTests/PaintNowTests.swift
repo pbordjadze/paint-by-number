@@ -125,6 +125,25 @@ struct PaintNowTests {
         #expect(draft.template == made.template)
     }
 
+    /// Try Painting in a painting's ✎ Change names the paints as that painting does, a received
+    /// one by its sender's seed at its recorded vocabulary (painting-company row 269); in a create
+    /// flow, as the painting Start will make.
+    @Test func changeNamesPaintsAsThePaintingDoes() async throws {
+        let library = makeLibrary()
+        let created = try await library.create(draft(photo: try photo()))
+        let made = try await library.regenerate(artwork: created.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
+        var artwork = try #require(library.artwork(with: created.id))
+        let inputs = try await library.changeInputs(for: artwork.id)
+        artwork.sentNicknameSeed = 0x9E37_79B9_7F4A_7C15
+        artwork.nicknameVersion = 1
+        let model = CreateModel(previewStyle: .painting)
+        #expect(model.paintNames == SharedPainting.Nicknames(
+            seed: ColorNickname.seed(for: model.paintingID), version: ColorNickname.currentVersion))
+        model.load(artwork: artwork, photo: inputs.photo, template: made.template, refinements: inputs.refinements)
+        await model.settled()
+        #expect(model.paintNames == SharedPainting.Nicknames(seed: 0x9E37_79B9_7F4A_7C15, version: 1))
+    }
+
     /// The length chip's re-cut records the length it was cut for.
     @Test func recuttingRecordsTheLength() async throws {
         let library = makeLibrary()

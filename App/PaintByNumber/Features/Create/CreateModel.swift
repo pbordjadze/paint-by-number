@@ -23,6 +23,15 @@ final class CreateModel {
     /// seeded by it (`ColorNickname.seed(for:)`), and Try Painting names them as the painting will
     /// (QA, November 7: with seed 0 it renamed most paints, "Golden Hour" to "Lantern Glow").
     let paintingID = UUID()
+    /// The names of the painting a ✎ Change is of (`load(artwork:)`): its own seed, which for a
+    /// received painting is its sender's (`Artwork.nicknameSeed`), at the version it records.
+    /// Nil in a create flow, whose painting is `paintingID`'s.
+    private(set) var changedPaintNames: SharedPainting.Nicknames?
+    /// What Try Painting names the paints by: as the painting will name them.
+    var paintNames: SharedPainting.Nicknames {
+        changedPaintNames
+            ?? SharedPainting.Nicknames(seed: ColorNickname.seed(for: paintingID), version: ColorNickname.currentVersion)
+    }
 
     struct Source {
         let image: RGBAImage
@@ -672,6 +681,7 @@ final class CreateModel {
     /// from the photo with its pinned paints and the edits laid. Nothing is suggested and no
     /// draft is kept: Done gives the painting its new template (`Library.adopt`).
     func load(artwork: Artwork, photo: Data, template: Template, refinements: TemplateRefinements) {
+        changedPaintNames = SharedPainting.Nicknames(seed: artwork.nicknameSeed, version: artwork.nicknameVersion)
         let blank = refinements.start == .blank
         let saved = CreateDraft(
             photoID: UUID(), title: artwork.title, defaultTitle: artwork.title, settings: artwork.settings, lines: 0.5,

@@ -123,6 +123,36 @@ struct SendTemplateTests {
         #expect(old.nicknameVersion == ColorNickname.currentVersion)
     }
 
+    /// At either vocabulary the received painting's palette reads as its sender's
+    /// (painting-company row 269), sent on it still does, and made again from its photo it keeps
+    /// the seed and vocabulary its new paints are named by, as the sender's own would.
+    @Test(arguments: [1, 2])
+    func receivedPaletteReadsAsItsSenders(version: Int) async throws {
+        let library = makeLibrary()
+        var artwork = try await sender(library)
+        artwork.nicknameVersion = version
+        try library.store.writeMeta(artwork)
+        let template = try library.store.readTemplate(artwork.id)
+        let shown = PaintingSession(template: template, nicknameSeed: artwork.nicknameSeed, nicknameVersion: artwork.nicknameVersion)
+            .colorNicknames
+
+        let received = try await library.receive(
+            ArtworkExporter.sharedPainting(store: library.store, artwork: artwork, includesPhoto: true), fallbackTitle: nil)
+        #expect(received.sentNicknameSeed == ColorNickname.seed(for: artwork.id) && received.nicknameVersion == version)
+        let document = try await library.loadForPainting(received.id)
+        #expect(PaintingSession(
+            template: document.template, nicknameSeed: received.nicknameSeed, nicknameVersion: received.nicknameVersion
+        ).colorNicknames == shown)
+
+        let onward = try SharedPaintingCodec.decode(
+            ArtworkExporter.sharedPainting(store: library.store, artwork: received, includesPhoto: false))
+        #expect(onward.nicknames == SharedPainting.Nicknames(seed: ColorNickname.seed(for: artwork.id), version: version))
+
+        _ = try await library.regenerate(artwork: received.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
+        let remade = try #require(library.artwork(with: received.id))
+        #expect(remade.nicknameSeed == artwork.nicknameSeed && remade.nicknameVersion == version)
+    }
+
     /// With the photo, the painting has it for the photo peek and to be made again from; never the
     /// sender's refinements.
     @Test func receivedPaintingKeepsTheSentPhoto() async throws {

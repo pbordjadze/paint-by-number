@@ -893,7 +893,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
-    screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
+    screen on the template as it stands, `RefineTrial`, saving nothing, its paints named as the
+    painting's will be: `CreateModel.paintNames`, in ✎ Change the painting's own). The Layers button in the
     top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
     28, in place of the views; hung under the bar, `RefineLayersAnchor`; at night it and an area's
     card lie on the card's surface, `RefinePopoverBacking`, as the glass alone took on the paint
