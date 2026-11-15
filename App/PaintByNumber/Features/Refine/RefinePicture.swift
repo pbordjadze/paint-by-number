@@ -88,8 +88,7 @@ private struct RefinePaintedLayers: View {
     let photo: CGImage
 
     var body: some View {
-        // In a container of its own: as bare siblings in the stack above, these never took a
-        // change of the layers (`create-refine-layers` kept the paint whole over no photo).
+        // In a container of its own, which the painting's cross-fade animates (`paintingFades`).
         ZStack {
             // The paper, beneath every layer: it shows where the paint and the photo are
             // hidden or faint.
@@ -117,6 +116,7 @@ private struct RefinePaintedLayers: View {
                     .transition(.opacity)
             }
         }
+        .animation(refine.paintingFades ? .easeInOut(duration: 0.35) : nil, value: refine.painting?.preview)
     }
 }
 

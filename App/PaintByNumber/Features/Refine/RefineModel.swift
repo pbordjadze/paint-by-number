@@ -66,6 +66,8 @@ final class RefineModel {
     var showsLayers = false
     /// The template on screen painted, for the paint layer, with its preview's id.
     var painting: (preview: UUID, image: CGImage)?
+    /// Whether the painting that landed last cross-fades in (`land`).
+    var paintingFades = false
     /// The template the screen draws over: the newest at full resolution.
     var base: CreateModel.Preview?
     /// The edits sent that `base` doesn't show yet, which the screen draws over it.
@@ -394,10 +396,9 @@ final class RefineModel {
     // MARK: Touches
 
     func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
-        if touch == .began {
-            tinyMarked = nil
-            revealLayer()
-        }
+        if touch == .began { tinyMarked = nil }
+        // Last, after the touch's own changes (`show`).
+        defer { if touch == .began { revealLayer() } }
         switch tool {
         case .pen, .cellEdge, .merge, .brush, .eraser, .smartEraser: follow(touch, at: point)
         case .shape: drawShape(touch, at: point)
@@ -604,13 +605,15 @@ final class RefineModel {
             let fades = tool.paints && !reduceMotion && painting != nil && image?.preview != painting?.preview
             let before = base?.template.palette
             let renumbered = base?.id != preview.id
-            // The first change of the landing, so what shows the painting takes it with the fade
-            // (a view is laid out again in the transaction of the first change it reads).
-            withAnimation(fades ? .easeInOut(duration: 0.35) : nil) {
-                base = preview
-                // Only a painting of this template: an older one would show lines that are gone.
-                painting = image?.preview == preview.id ? image : nil
-            }
+            // No `withAnimation` here: the landing's other changes follow in this same turn, and
+            // SwiftUI flushed an animated change pending at the next write inside that write's
+            // `willSet`, where a view read the value before it and was never told of it again
+            // (`create-refine-layers` kept the paint whole over no photo). The painting fades by
+            // its own animation (`paintingFades`, `RefinePaintedLayers`).
+            paintingFades = fades
+            base = preview
+            // Only a painting of this template: an older one would show lines that are gone.
+            painting = image?.preview == preview.id ? image : nil
             // Another template may number its areas anew: the mark goes with the one it was on.
             if renumbered { tinyMarked = nil }
             tiny = RefineTinyAreas.find(in: preview.template)
@@ -684,7 +687,8 @@ final class RefineModel {
 
     func tap(at point: SIMD2<Float>) {
         tinyMarked = nil
-        revealLayer()
+        // Last, after the tap's own changes (`show`).
+        defer { revealLayer() }
         switch tool {
         case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
             break
@@ -847,6 +851,9 @@ final class RefineModel {
         show(layer)
     }
 
+    /// Fades the layer in: the last change of its turn, wherever it is called. A change written
+    /// after it in the same turn has SwiftUI flush the fade inside that change's `willSet`, where
+    /// a view reads the value before the change and is never told of it (`land`).
     func show(_ layer: RefineLayers.Layer) {
         guard !layers.shows(layer) else { return }
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { layers.set(layer, shown: true) }
@@ -913,8 +920,11 @@ final class RefineModel {
     /// The picture alone on screen (a four-finger tap, ⌃⌘F), or the tools and bars back.
     func toggleFullScreen() {
         FeedbackEngine.shared.selectionChanged()
-        withAnimation(reduceMotion ? nil : .snappy) { fullScreen.toggle() }
-        keysRequest += 1
+        // One change of one turn (`show`): the keys asked again in the full screen's own transaction.
+        withAnimation(reduceMotion ? nil : .snappy) {
+            fullScreen.toggle()
+            keysRequest += 1
+        }
     }
 
     /// The whole picture on screen (⌘0), as a quick pinch in fits it.
@@ -995,9 +1005,9 @@ final class RefineModel {
         else { return }
         FeedbackEngine.shared.selectionChanged()
         currentPaint = color
-        show(.paint)
         let at = canvasPoint(point)
         submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
+        show(.paint)
         if !isPractice { PaintTips.refineEdited() }
     }
 
