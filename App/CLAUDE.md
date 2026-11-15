@@ -719,14 +719,16 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   another template, of a smaller canvas) its lines are drawn in across the photo, left to right
   (`CompareView.lines`: stroked once, a soft-edged mask travelling over them, `drawIn` 0.7 s,
   eased), while the photo calms 45% toward the paper under them (`wash`), so the ink reads on a
-  dark or busy picture. The hand-off's lift waits for the rest of the drawing (`liftWait`, from
+  dark or busy picture; paper and ink are the page's own, dark paper's too (`FormingPlan.sheet`,
+  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
   `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
   picture is the washed photo under those lines
   (`PictureDeparture.Content.forming`: the lines drawn once and scaled with the picture, as heavy
   as the preview drew them, `PreviewPictureProbe.lineScale`), which dries the rest of the way
   into the page as the canvas draws it (`HandoffPage`, whose numbers come with it) during the
-  glide, in the hand-off's own `settle`, paper under the page so no row of photo shows at its
-  foot: from the lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
+  glide, in the hand-off's own `settle`, the wash going on to plain paper under the lines
+  (`paperOpacity`) so no row of photo shows at the page's foot and the ink never fades: from the
+  lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
   the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
   Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
   settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios

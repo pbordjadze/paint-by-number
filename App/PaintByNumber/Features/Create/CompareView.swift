@@ -32,8 +32,10 @@ struct CompareView: View {
     var lines: LineArtDrawing?
     /// A demo's hold: how much of the lines is drawn (nil: drawn in as they come).
     var linesHeld: CGFloat?
-    /// How much of the lines is drawn, 0 to 1, and the photo's wash with it.
-    @State private var drawn: CGFloat = 0
+    /// Told as the lines begin to be drawn in.
+    var linesBegan: (() -> Void)?
+    /// The drawing whose lines are drawn in, or are being: another's start undrawn.
+    @State private var drawnLines: UUID?
     #endif
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat = 0.5
@@ -79,22 +81,7 @@ struct CompareView: View {
 
                         #if UNRELEASED
                         if let lines {
-                            Rectangle()
-                                .fill(LineArtDrawing.paper)
-                                .opacity(FormingPlan.wash * drawn)
-                                .allowsHitTesting(false)
-                            // Stroked once: the drawing in is a mask moving over it.
-                            LineArtLayer(drawing: lines, picture: picture, scale: canvasScale(of: picture), overPaint: true)
-                                .equatable()
-                                .frame(width: size.width, height: size.height)
-                                .mask(alignment: .topLeading) { sweep(over: visible) }
-                                .onAppear {
-                                    if let linesHeld {
-                                        drawn = linesHeld
-                                    } else {
-                                        withAnimation(.easeInOut(duration: FormingPlan.drawIn)) { drawn = 1 }
-                                    }
-                                }
+                            formingLayers(lines, picture: picture, size: size, visible: visible)
                         }
                         #endif
 
@@ -309,11 +296,38 @@ struct CompareView: View {
     }
 
     #if UNRELEASED
+    /// The picture forming over the photo: its wash toward the page's paper, and the lines of
+    /// `lines`, stroked once, drawn in by a mask moving over them. The drawing in begins as the
+    /// layer of these lines appears, and is undone as it goes, so lines that come again (or
+    /// another template's) are drawn in again.
+    @ViewBuilder
+    private func formingLayers(_ lines: LineArtDrawing, picture: CGRect, size: CGSize, visible: CGRect) -> some View {
+        let id: UUID = lines.id
+        let drawn: CGFloat = linesHeld ?? (drawnLines == id ? 1 : 0)
+        let wash: Double = FormingPlan.wash * Double(drawn)
+        FormingPaper()
+            .opacity(wash)
+        FormingLines(drawing: lines, picture: picture, scale: canvasScale(of: picture))
+            .equatable()
+            .frame(width: size.width, height: size.height)
+            .mask(alignment: .topLeading) { sweep(drawn, over: visible) }
+            .id(id)
+            .onAppear {
+                guard linesHeld == nil else { return }
+                linesBegan?()
+                withAnimation(.easeInOut(duration: FormingPlan.drawIn)) { drawnLines = id }
+            }
+            .onDisappear {
+                if drawnLines == id { drawnLines = nil }
+            }
+    }
+
     /// What shows of the forming lines over the card at `visible`: everything up to an edge that
     /// travels from its left to its right as `drawn` goes from 0 to 1, soft over `feather`.
-    private func sweep(over visible: CGRect) -> some View {
-        let feather = visible.width * FormingPlan.feather
-        let width = visible.width + feather
+    private func sweep(_ drawn: CGFloat, over visible: CGRect) -> some View {
+        let feather: CGFloat = visible.width * CGFloat(FormingPlan.feather)
+        let width: CGFloat = visible.width + feather
+        let x: CGFloat = visible.minX - width * (1 - drawn)
         return HStack(spacing: 0) {
             Rectangle()
             LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
@@ -321,7 +335,7 @@ struct CompareView: View {
         }
         .environment(\.layoutDirection, .leftToRight)
         .frame(width: width, height: visible.height)
-        .offset(x: visible.minX - width * (1 - drawn), y: visible.minY)
+        .offset(x: x, y: visible.minY)
     }
     #endif
 
