@@ -138,7 +138,7 @@ before planning app work).
   `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
   `PaintByNumber/`, `Ravenna/` and `RavennaResources/` (the mosaic era), `Shared/` (the sources both compile: App/CLAUDE.md › Shared with Paint by Mosaic), `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
-  `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
+  `Config/Info.plist`; `Outside/`, `MoonlightWidgets/` and `MoonlightStickers/` (the widget and sticker extensions, SideStore's for now: App/CLAUDE.md › Outside the app); map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
   (the app's Core ML models from their source weights); on a Mac with Xcode, `checks.sh` (every

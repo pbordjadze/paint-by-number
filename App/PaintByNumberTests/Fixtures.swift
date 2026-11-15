@@ -159,6 +159,11 @@ struct PixelReader {
         data = buffer
     }
 
+    /// Alpha at (x, y), 0...255.
+    func alpha(x: Int, y: Int) -> Int {
+        Int(data[(min(max(y, 0), height - 1) * width + min(max(x, 0), width - 1)) * 4 + 3])
+    }
+
     /// RGB at (x, y), origin top-left.
     subscript(x: Int, y: Int) -> SIMD3<Int> {
         let cx = min(max(x, 0), width - 1), cy = min(max(y, 0), height - 1)

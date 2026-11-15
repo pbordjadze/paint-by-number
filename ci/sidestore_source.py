@@ -64,7 +64,8 @@ app = {
     "downloadURL": latest["downloadURL"],
     "size": latest["size"],
     "appPermissions": {
-        "entitlements": [],
+        # The app group its widgets and stickers read (the IPA job signs it in ad hoc).
+        "entitlements": ["com.apple.security.application-groups"],
         "privacy": {k: v for k, v in sorted(info.items()) if k.startswith("NS") and k.endswith("UsageDescription")},
     },
 }

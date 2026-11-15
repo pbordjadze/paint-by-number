@@ -240,12 +240,20 @@ struct ArtworkPaintingView: View {
         }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
-            guard phase != .active else { return }
+            guard phase != .active else {
+                #if UNRELEASED
+                absorbWidgetAreas()
+                #endif
+                return
+            }
             FeedbackEngine.shared.rest()
             autosaver?.saveNow(refreshThumbnail: true)
             if phase == .background {
                 let library = library
                 BackgroundSaving.shared.hold { await library.flush() }
+                #if UNRELEASED
+                OutsideDesk.layOutOnLeaving(library)
+                #endif
             }
         }
         .onDisappear {
@@ -256,8 +264,26 @@ struct ArtworkPaintingView: View {
         }
     }
 
+    #if UNRELEASED
+    /// The areas the widget's Paint One Area showed painted while the app was away go into the
+    /// painting on screen, are saved, and the shelf is laid out from there (`OutsideDesk`).
+    private func absorbWidgetAreas() {
+        guard let autosaver else { return }
+        let library = library
+        Task {
+            guard await OutsideDesk.absorb(into: autosaver.session, artwork: autosaver.artworkID) > 0 else { return }
+            autosaver.saveNow(refreshThumbnail: true)
+            await OutsideDesk.layOut(library)
+        }
+    }
+    #endif
+
     private func open() async {
         guard autosaver == nil, failure == nil else { return }
+        #if UNRELEASED
+        // Before the painting is read: what the widget painted while the app was away.
+        await OutsideDesk.comeBack(to: library, open: nil)
+        #endif
         do {
             let document = try await library.loadForPainting(artworkID)
             _ = await RenderContext.ready()

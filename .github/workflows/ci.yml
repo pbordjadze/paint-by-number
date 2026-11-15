@@ -423,6 +423,9 @@ jobs:
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='UNRELEASED $(inherited)' EXCLUDED_SOURCE_FILE_NAMES= \
             2>&1 | tee out/sidestore-build.log | tail -60
+          # Its widgets and stickers are in it (the App Store's build leaves them out).
+          ls build/sidestore/Build/Products/Release-iphonesimulator/PaintByNumber.app/PlugIns/MoonlightWidgets.appex \
+            build/sidestore/Build/Products/Release-iphonesimulator/PaintByNumber.app/PlugIns/MoonlightStickers.appex > /dev/null
       - name: Compiler warnings
         id: warnings
         # A new warning in the app, its tests or PaintCore fails the job (main has none).
@@ -538,6 +541,14 @@ jobs:
           APP=build/PaintByNumber.xcarchive/Products/Applications/PaintByNumber.app
           mkdir -p build/ipa/Payload
           cp -R "$APP" build/ipa/Payload/
+          # The widgets and the stickers read what the app lays out in its app group. An unsigned
+          # build names no group, so each is signed ad hoc with the group's entitlement, the
+          # extensions first: SideStore reads it there and gives its own signature the same.
+          for appex in build/ipa/Payload/PaintByNumber.app/PlugIns/*.appex; do
+            codesign --force --sign - --entitlements App/Config/Outside.entitlements "$appex"
+          done
+          codesign --force --sign - --entitlements App/Config/Outside.entitlements build/ipa/Payload/PaintByNumber.app
+          codesign -d --entitlements - build/ipa/Payload/PaintByNumber.app 2>/dev/null | grep -q "$(sed -n 's/.*<string>\(group\..*\)<\/string>.*/\1/p' App/Config/Outside.entitlements)"
           (cd build/ipa && zip -qry ../../out/PaintByNumber.ipa Payload)
           ls -l out/PaintByNumber.ipa
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
