@@ -806,7 +806,11 @@ struct PaintView: View {
             Text("All paint will be cleared.")
         }
         // An iPad's print dialog points at this menu's button too.
-        .background { PrintSheet(job: printJob) { printJob = nil } }
+        .background {
+            PrintSheet(job: printJob) { finished in
+                if printJob?.id == finished { printJob = nil }
+            }
+        }
     }
 
     #if UNRELEASED
@@ -930,9 +934,9 @@ struct PaintView: View {
 
     /// More › Print…: the template as Print Template… prints it, lines, numbers and the color key,
     /// whatever is painted, from the live session; then the print dialog. One at a time: asked
-    /// again while a PDF is being made or the dialog is up, it does nothing.
+    /// again while a PDF is being made, it does nothing.
     private func printTemplate() {
-        guard !preparingPrint, printJob == nil else { return }
+        guard !preparingPrint else { return }
         preparingPrint = true
         let template = session.template, nicknames = session.colorNicknames
         let name = title.isEmpty ? String(localized: "Painting") : title

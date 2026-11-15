@@ -44,11 +44,16 @@ nonisolated struct TemplatePrintJob: Identifiable, Sendable {
 /// The print counterpart of `ActivityShareSheet`.
 struct PrintSheet: UIViewControllerRepresentable {
     let job: TemplatePrintJob?
-    /// Called once the dialog closes, or when it couldn't open.
-    let onFinish: () -> Void
+    /// Called with the job's id once its dialog closes, or when it couldn't open. A job is let
+    /// go by its id: a newer one may have taken its place.
+    let onFinish: (TemplatePrintJob.ID) -> Void
 
     /// False where the device can't print at all: Print… is then not offered.
     static var isAvailable: Bool { UIPrintInteractionController.isPrintingAvailable }
+
+    /// Whether the dialog has come up for this job: one that never did (the view it hangs from
+    /// isn't on screen) is dropped by whoever made it.
+    static func hasShown(_ job: TemplatePrintJob.ID) -> Bool { Controller.shownJob == job }
 
     func makeUIViewController(context: Context) -> Controller { Controller() }
 
@@ -64,15 +69,17 @@ struct PrintSheet: UIViewControllerRepresentable {
 
     final class Controller: UIViewController {
         var job: TemplatePrintJob?
-        var onFinish: (() -> Void)?
-        private var presentedJob: TemplatePrintJob.ID?
-        /// The system has one print dialog (`UIPrintInteractionController.shared`): while it is
-        /// up, nothing sets it up again.
+        var onFinish: ((TemplatePrintJob.ID) -> Void)?
+        /// The system has one print dialog (`UIPrintInteractionController.shared`), so what it
+        /// shows is kept for every controller: the job it last came up for, which is never
+        /// shown twice (a view laid out again has a new controller and, for a moment, the job
+        /// that just closed), and whether it is up.
+        static private(set) var shownJob: TemplatePrintJob.ID?
         private static var isShowing = false
         /// What the dialog on screen calls as it closes: its job's own closure, not a
         /// controller's, since a view laid out again meanwhile has another controller and the
         /// job must still be let go.
-        private static var finishShowing: (() -> Void)?
+        private static var finishShowing: ((TemplatePrintJob.ID) -> Void)?
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
@@ -80,9 +87,16 @@ struct PrintSheet: UIViewControllerRepresentable {
         }
 
         func presentIfNeeded() {
-            guard let job, job.id != presentedJob, !Self.isShowing, let view = viewIfLoaded, view.window != nil
-            else { return }
-            presentedJob = job.id
+            guard let job, job.id != Self.shownJob, let view = viewIfLoaded, view.window != nil else { return }
+            // Another job while a dialog counts as up: Print… was asked for again, which no one
+            // can do under a dialog. The system took it down without a word (the app left the
+            // foreground, an iPad's popover lost its card), so it is closed here.
+            if Self.isShowing, let stale = Self.shownJob {
+                UIPrintInteractionController.shared.dismiss(animated: false)
+                Self.closed(stale)
+            }
+            let id = job.id
+            Self.shownJob = id
             Self.isShowing = true
             Self.finishShowing = onFinish
             let info = UIPrintInfo.printInfo()
@@ -91,24 +105,27 @@ struct PrintSheet: UIViewControllerRepresentable {
             let printer = UIPrintInteractionController.shared
             printer.printInfo = info
             printer.printingItem = job.pdf
-            let completion = Self.completion { Controller.closed() }
+            let completion = Self.completion { Controller.closed(id) }
             // An iPad's dialog hangs from this view; an iPhone's (a Duo's too) is the system's sheet.
             let shown = traitCollection.userInterfaceIdiom == .pad
                 ? printer.present(from: view.bounds, in: view, animated: true, completionHandler: completion)
                 : printer.present(animated: true, completionHandler: completion)
             if !shown {
                 Log.library.error("The print dialog didn't open")
-                Self.closed()
+                Self.closed(id)
             }
         }
 
-        /// The dialog is gone: the shared controller lets go of the PDF, then the job is let go.
-        private static func closed() {
+        /// The job's dialog is gone: the shared controller lets go of the PDF, then the job is
+        /// let go. Once a job: a completion that comes after its dialog was closed here, a newer
+        /// one perhaps up, changes nothing.
+        private static func closed(_ id: TemplatePrintJob.ID) {
+            guard isShowing, shownJob == id else { return }
             isShowing = false
             UIPrintInteractionController.shared.printingItem = nil
             let finish = finishShowing
             finishShowing = nil
-            finish?()
+            finish?(id)
         }
 
         /// Built outside the main actor: UIKit may call it on any thread.
