@@ -42,9 +42,42 @@ import Foundation
 /// kind of line alone; a missing one is `any`, what every reshape grabbed before, and one this
 /// build does not know fails the edit as an unknown look does. A missing `reach` of a
 /// `moveLabel` is the editor's own, as a reshape's.
+///
+/// This is the one decoder of an edit, `pbn edit`'s too. Its edits.json may also name the color
+/// of a fill, a paintArea or a brush by its paint's number (`"paint": n`, when it gives no
+/// `"color"`), which only a decoder handed the palette reads (`paletteKey`): the app hands none,
+/// and a `refinements.json` is read as ever.
 extension TemplateEditor.Edit: Codable {
+    /// The kinds of edit, by the names a file keeps them under (`"kind"`).
+    public enum Kind: String, Sendable, CaseIterable {
+        case draw, split, cellEdge, merge, brush, reshape, moveLabel, erase, eraseLine, fill, paintArea, look, repaint
+    }
+
+    public var kind: Kind {
+        switch self {
+        case .draw: .draw
+        case .split: .split
+        case .cellEdge: .cellEdge
+        case .merge: .merge
+        case .brush: .brush
+        case .reshape: .reshape
+        case .moveLabel: .moveLabel
+        case .erase: .erase
+        case .eraseLine: .eraseLine
+        case .fill: .fill
+        case .paintArea: .paintArea
+        case .look: .look
+        case .repaint: .repaint
+        }
+    }
+
+    /// A decoder's `userInfo` key for the palette (`[PaletteColor]`) whose numbers a file's
+    /// `"paint": n` names, 1 the first (`pbn edit`, which reads the palette of the template it
+    /// edits).
+    public static let paletteKey = CodingUserInfoKey(rawValue: "PaintCore.TemplateEditor.Edit.palette")!
+
     private enum CodingKeys: String, CodingKey {
-        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family, target
+        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family, target, paint
     }
     private enum PaintKeys: String, CodingKey { case at, color }
 
@@ -53,11 +86,14 @@ extension TemplateEditor.Edit: Codable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let kind = try c.decode(String.self, forKey: .kind)
+        let kindName = try c.decode(String.self, forKey: .kind)
+        guard let kind = Kind(rawValue: kindName) else {
+            throw DecodingError.dataCorruptedError(forKey: .kind, in: c, debugDescription: "unknown kind of edit: \(kindName)")
+        }
         let points = try c.decode([SIMD2<Float>].self, forKey: .points)
         func point() throws -> SIMD2<Float> {
             guard let first = points.first else {
-                throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a \(kind) edit needs a point")
+                throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a \(kind.rawValue) edit needs a point")
             }
             return first
         }
@@ -84,19 +120,30 @@ extension TemplateEditor.Edit: Codable {
             }
             return SIMD3(color[0], color[1], color[2])
         }
+        /// The color of a fill, a paintArea or a brush: its `color`, else the paint its `paint`
+        /// numbers in the palette the decoder was handed.
+        func paint() throws -> SIMD3<Float> {
+            guard !c.contains(.color), let palette = decoder.userInfo[Self.paletteKey] as? [PaletteColor],
+                  let number = try c.decodeIfPresent(Int.self, forKey: .paint)
+            else { return try lab(.color) }
+            guard number >= 1, number <= palette.count else {
+                throw DecodingError.dataCorruptedError(forKey: .paint, in: c, debugDescription: "there is no paint \(number)")
+            }
+            return palette[number - 1].oklab
+        }
         switch kind {
-        case "draw":
+        case .draw:
             self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints())
-        case "split":
+        case .split:
             self = .split(
                 points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints() ?? [])
-        case "cellEdge":
+        case .cellEdge:
             self = .cellEdge(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false)
-        case "merge":
+        case .merge:
             self = .merge(points: points)
-        case "brush":
-            self = .brush(path: points, radius: try c.decode(Float.self, forKey: .radius), color: try lab(.color))
-        case "reshape":
+        case .brush:
+            self = .brush(path: points, radius: try c.decode(Float.self, forKey: .radius), color: try paint())
+        case .reshape:
             guard points.count == 2 else {
                 throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a reshape is [from, to]")
             }
@@ -110,21 +157,21 @@ extension TemplateEditor.Edit: Codable {
             self = .reshape(
                 from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach,
                 target: target)
-        case "moveLabel":
+        case .moveLabel:
             guard points.count == 2 else {
                 throw DecodingError.dataCorruptedError(forKey: .points, in: c, debugDescription: "a moveLabel is [from, to]")
             }
             self = .moveLabel(
                 from: points[0], to: points[1], reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
-        case "erase":
+        case .erase:
             self = .erase(path: points, radius: try c.decodeIfPresent(Float.self, forKey: .radius) ?? Self.defaultRadius)
-        case "eraseLine":
+        case .eraseLine:
             self = .eraseLine(at: try point(), reach: try c.decodeIfPresent(Float.self, forKey: .reach) ?? TemplateEditor.tapReach)
-        case "fill":
-            self = .fill(at: try point(), color: try lab(.color))
-        case "paintArea":
-            self = .paintArea(at: try point(), color: try lab(.color))
-        case "look":
+        case .fill:
+            self = .fill(at: try point(), color: try paint())
+        case .paintArea:
+            self = .paintArea(at: try point(), color: try paint())
+        case .look:
             let name = try c.decode(String.self, forKey: .look)
             guard let look = TemplateEditor.Look(rawValue: name) else {
                 throw DecodingError.dataCorruptedError(forKey: .look, in: c, debugDescription: "unknown look: \(name)")
@@ -132,72 +179,58 @@ extension TemplateEditor.Edit: Codable {
             self = .look(
                 look, strength: try c.decode(Float.self, forKey: .strength),
                 lightness: try c.decodeIfPresent([Float].self, forKey: .lightness) ?? [])
-        case "repaint":
+        case .repaint:
             self = .repaint(
                 from: try lab(.from), to: try lab(.color), family: try c.decodeIfPresent(Bool.self, forKey: .family) ?? false)
-        default:
-            throw DecodingError.dataCorruptedError(forKey: .kind, in: c, debugDescription: "unknown kind of edit: \(kind)")
         }
     }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(kind.rawValue, forKey: .kind)
         switch self {
         case .draw(let points, let closed, let paints):
-            try c.encode("draw", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
             if let paints { try encode(paints, in: &c) }
         case .split(let points, let closed, let paints):
-            try c.encode("split", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
             try encode(paints, in: &c)
         case .cellEdge(let points, let closed):
-            try c.encode("cellEdge", forKey: .kind)
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
         case .merge(let points):
-            try c.encode("merge", forKey: .kind)
             try c.encode(points, forKey: .points)
         case .brush(let path, let radius, let color):
-            try c.encode("brush", forKey: .kind)
             try c.encode(path, forKey: .points)
             try c.encode(radius, forKey: .radius)
             try c.encode([color.x, color.y, color.z], forKey: .color)
         case .reshape(let from, let to, let reach, let target):
-            try c.encode("reshape", forKey: .kind)
             try c.encode([from, to], forKey: .points)
             try c.encode(reach, forKey: .reach)
             if target != .any { try c.encode(target.rawValue, forKey: .target) }
         case .moveLabel(let from, let to, let reach):
-            try c.encode("moveLabel", forKey: .kind)
             try c.encode([from, to], forKey: .points)
             try c.encode(reach, forKey: .reach)
         case .erase(let path, let radius):
-            try c.encode("erase", forKey: .kind)
             try c.encode(path, forKey: .points)
             try c.encode(radius, forKey: .radius)
         case .eraseLine(let point, let reach):
-            try c.encode("eraseLine", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode(reach, forKey: .reach)
         case .fill(let point, let color):
-            try c.encode("fill", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode([color.x, color.y, color.z], forKey: .color)
         case .paintArea(let point, let color):
-            try c.encode("paintArea", forKey: .kind)
             try c.encode([point], forKey: .points)
             try c.encode([color.x, color.y, color.z], forKey: .color)
         case .look(let look, let strength, let lightness):
-            try c.encode("look", forKey: .kind)
             try c.encode([SIMD2<Float>](), forKey: .points)
             try c.encode(look, forKey: .look)
             try c.encode(strength, forKey: .strength)
             if !lightness.isEmpty { try c.encode(lightness, forKey: .lightness) }
         case .repaint(let from, let to, let family):
-            try c.encode("repaint", forKey: .kind)
             try c.encode([SIMD2<Float>](), forKey: .points)
             try c.encode([from.x, from.y, from.z], forKey: .from)
             try c.encode([to.x, to.y, to.z], forKey: .color)

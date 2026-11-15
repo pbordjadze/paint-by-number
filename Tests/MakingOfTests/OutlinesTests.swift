@@ -2,26 +2,11 @@ import PaintCore
 import Testing
 @testable import MakingOf
 
-/// The stair-stepped outlines, their schedule and the lines drawn at a time against
-/// `making_of_reveal.py` (`Fixtures/reveal-small.json`). Everything is exact (`==`): geometry uses
-/// only `+ - * /`, `sqrt`, and correctly rounded rounding, in the reference's order. Measured
-/// difference to the reference: 0 (each stroke's points are compared by a fingerprint of every
-/// coordinate, three strokes in full).
+/// The stair-stepped outlines and their relaxing, by hand: the same cases as `OutlinesTests` in
+/// `tools/tests/test_making_of_reveal.py`. Everything is exact (`==`): geometry uses only `+ - * /`,
+/// `sqrt`, and correctly rounded rounding, in the reference's order. The lines of a whole show are
+/// compared with the Python's in `FieldShowTests` (`fields-small.json`).
 @Suite struct OutlinesTests {
-    private let fixture: RevealFixture
-    private let schedule: StrokeSchedule
-
-    init() throws {
-        fixture = try RevealFixture.load()
-        schedule = Self.schedule(fixture, traces: fixture.traces)
-    }
-
-    private static func schedule(_ f: RevealFixture, traces: [Trace]) -> StrokeSchedule {
-        StrokeSchedule(
-            strokes: f.strokes, traces: traces, inkArrival: f.arrival(4), relaxArrival: f.arrival(5), spec: f.spec,
-            petHeight: f.inputs.petHeight, streams: f.streams)
-    }
-
     // MARK: staircase
 
     @Test func aStraightLineSnapsToTheGridAndKeepsItsPairs() {
@@ -65,169 +50,40 @@ import Testing
         #expect(coarse.count == 61)
     }
 
-    // MARK: schedule
+    // MARK: relaxing
 
-    @Test func theScheduleMatchesTheReference() {
-        let want = fixture.expected.strokes
-        #expect(schedule.strokes.count == want.count)
-        for (stroke, pin) in zip(schedule.strokes, want) {
-            let at = "stroke \(stroke.index)"
-            #expect(stroke.walked == pin.walked, "\(at)")
-            #expect(stroke.start == pin.t0, "\(at)")
-            #expect(stroke.duration == pin.dur, "\(at)")
-            #expect(stroke.jagged.count == pin.jagged && stroke.smooth.count == pin.smooth, "\(at)")
-            #expect(stroke.length == pin.length, "\(at)")
-            #expect(fingerprint(stroke.jagged) == pin.jaggedFingerprint, "\(at)")
-            #expect(fingerprint(stroke.smooth) == pin.smoothFingerprint, "\(at)")
-            #expect(fingerprint(stroke.relax) == pin.relaxFingerprint, "\(at)")
-            #expect(stroke.relax.min() == pin.relaxMin && stroke.relax.max() == pin.relaxMax, "\(at)")
-        }
-    }
-
-    @Test func threeStrokesMatchPointForPoint() {
-        for pin in fixture.expected.strokeDetail {
-            let stroke = schedule.strokes[pin.index]
-            #expect(stroke.jagged.map { [$0.x, $0.y] } == pin.jagged)
-            #expect(stroke.smooth.map { [$0.x, $0.y] } == pin.smooth)
-            #expect(stroke.cumulative == pin.cumulative)
-            #expect(stroke.relax == pin.relax)
-        }
-    }
-
-    @Test func linesAreDrawnInTheReferencesOrder() {
-        let order = schedule.strokes.indices.sorted { (schedule.strokes[$0].start, $0) < (schedule.strokes[$1].start, $1) }
-        #expect(order == fixture.expected.order)
-    }
-
-    @Test func walkedLinesKeepTheirTracesAndTheRestStartInsideTheInkStep() {
-        let timing = fixture.timing
-        let style = ScheduleStyle.standard
-        let begins = timing.start(ScheduleTiming.inkStep)
-        let ends = begins + timing.step - style.inkEndMargin
-        let walked = Dictionary(uniqueKeysWithValues: fixture.traces.map { ($0.stroke, $0) })
-        #expect(!walked.isEmpty && walked.count < schedule.strokes.count)
-        for stroke in schedule.strokes {
-            if let trace = walked[stroke.index] {
-                #expect(stroke.walked && stroke.start == trace.start && stroke.duration == trace.duration)
-            } else {
-                #expect(!stroke.walked)
-                #expect(stroke.start >= begins + style.strokeEarliest || stroke.start == max(begins, ends - stroke.duration))
-                #expect(stroke.start + stroke.duration <= ends + 1e-12)
-                let calm = style.strokeMinTime...(style.strokeMaxTime / timing.pace(style))
-                #expect(calm.contains(stroke.duration))
-            }
-        }
-    }
-
-    @Test func aLinesWaitIsItsOwnDrawWhoeverElseIsWalked() {
-        // each line's jitter comes from the stream of its index, so walking another line (or
-        // none) moves no other line
-        let none = Self.schedule(fixture, traces: [])
-        let walked = Set(fixture.traces.map(\.stroke))
-        #expect(none.strokes.allSatisfy { !$0.walked })
-        for stroke in schedule.strokes where !walked.contains(stroke.index) {
-            #expect(none.strokes[stroke.index].start == stroke.start)
-            #expect(none.strokes[stroke.index].duration == stroke.duration)
-        }
-    }
-
-    // MARK: lines at a time
-
-    @Test func theLinesAtEachTimeMatchTheReference() {
-        for pin in fixture.expected.lines {
-            let lines = schedule.lines(at: pin.time)
-            #expect(lines.map(\.stroke) == pin.lines.map(\.stroke), "t = \(pin.time)")
-            #expect(lines.map(\.points.count) == pin.lines.map(\.points), "t = \(pin.time)")
-            #expect(lines.map(\.value) == pin.lines.map(\.value), "t = \(pin.time)")
-            #expect(fingerprint(lines.flatMap(\.points)) == pin.fingerprint, "t = \(pin.time)")
+    /// Two lines as the show keeps them, the ripple reaching the first's points from 10 s on, a tenth
+    /// of a second apart, and the second's all at 11 s.
+    private func strokes() -> [StrokeSchedule.Stroke] {
+        let lines = [[Point(3, 4), Point(40, 22), Point(61, 9)], [Point(10, 30), Point(10, 50)]]
+        return lines.enumerated().map { n, points in
+            let (jagged, smooth) = StrokeSchedule.staircase(points, grid: 5)
+            let relax = jagged.indices.map { n == 0 ? 10 + 0.1 * Double($0) : 11 }
+            return StrokeSchedule.Stroke(index: n, start: 0, duration: 1, jagged: jagged, smooth: smooth, relax: relax)
         }
     }
 
     @Test func theFinishedTemplateIsTheSmoothLinesAndTheFirstIsTheStairs() {
-        let jagged = schedule.relaxed(at: -.infinity)
-        let smooth = schedule.relaxed(at: .infinity)
-        #expect(fingerprint(jagged.flatMap(\.points)) == fixture.expected.bounds.jaggedFingerprint)
-        #expect(fingerprint(smooth.flatMap(\.points)) == fixture.expected.bounds.smoothFingerprint)
-        for (line, stroke) in zip(jagged, schedule.strokes) { #expect(line.points == stroke.jagged) }
-        for (line, stroke) in zip(smooth, schedule.strokes) { #expect(line.points == stroke.smooth) }
-        #expect(schedule.lines(at: fixture.timing.end + 1) == smooth, "from the end on, the finished template")
-    }
-
-    @Test func nothingIsDrawnBeforeTheInkStep() {
-        let begins = fixture.timing.start(ScheduleTiming.inkStep)
-        #expect(schedule.lines(at: 0).isEmpty && schedule.lines(at: begins - 0.001).isEmpty)
-        #expect(schedule.lines(at: -.infinity).isEmpty)
-    }
-
-    @Test func theInkStepsLinesOnlyGrowAndDarken() {
-        let timing = fixture.timing
-        var seen: [Int: InkLine] = [:]
-        let stop = timing.start(ScheduleTiming.templateStep)
-        var t = timing.start(ScheduleTiming.inkStep)
-        while t < stop {
-            let lines = schedule.lines(at: t)
-            #expect(seen.keys.allSatisfy { key in lines.contains { $0.stroke == key } }, "a line begun stays")
-            for line in lines {
-                #expect(line.points.count >= 2 && line.value > 0 && line.value <= 1)
-                if let earlier = seen[line.stroke] {
-                    #expect(Array(line.points.prefix(earlier.points.count)) == earlier.points, "a prefix only extends")
-                    #expect(line.points.count >= earlier.points.count && line.value >= earlier.value)
-                }
-                seen[line.stroke] = line
-            }
-            t += 1 / 30
+        let strokes = strokes()
+        let jagged = StrokeSchedule.relaxed(strokes, at: -.infinity, over: 0.4)
+        let smooth = StrokeSchedule.relaxed(strokes, at: .infinity, over: 0.4)
+        for (line, stroke) in zip(jagged, strokes) {
+            #expect(line.points == stroke.jagged && line.stroke == stroke.index && line.value == 1)
         }
-        // by the step's end every line is down in full, along its whole outline
-        let final = schedule.lines(at: stop - 1e-9)
-        #expect(final.map(\.stroke) == Array(schedule.strokes.indices))
-        for line in final { #expect(line.points == schedule.strokes[line.stroke].jagged) }
+        for (line, stroke) in zip(smooth, strokes) { #expect(line.points == stroke.smooth) }
     }
 
-    @Test func aWalkedLineIsInFullInkAndTheRestDarkenFromGrey() {
-        let style = ScheduleStyle.standard
-        let walked = schedule.strokes.first { $0.walked }!
-        let calm = schedule.strokes.first { !$0.walked }!
-        let ramp = fixture.spec.outlines.inkRamp
-        let early = schedule.inked(at: walked.start + walked.duration / 2)
-        #expect(early.first { $0.stroke == walked.index }?.value == 1)
-        let begun = schedule.inked(at: calm.start + 0.5 * calm.duration).first { $0.stroke == calm.index }
-        let darker = schedule.inked(at: calm.start + calm.duration + ramp + 0.01).first { $0.stroke == calm.index }
-        #expect((begun?.value ?? 0) > style.inkGrey && (begun?.value ?? 1) < 1)
-        #expect(darker?.value == 1, "at the end of its ramp a line is in full ink, exactly")
-    }
-
-    @Test func aTimeIsAnsweredTheSameInAnyOrder() {
-        let timing = fixture.timing
-        let times = [timing.start(4) + 1.1, timing.start(5) + 0.4, timing.start(4) + 0.2, timing.start(5) + 2.0, timing.start(4) + 1.1]
-        let forward = times.map { schedule.lines(at: $0) }
-        let backward = times.reversed().map { schedule.lines(at: $0) }.reversed()
-        #expect(forward == Array(backward))
-        #expect(forward[0] == forward[4])
-    }
-
-    @Test func theTemplateStepRelaxesEachPointWhenTheRippleReachesIt() {
-        let relaxTime = fixture.spec.outlines.relax
-        let ripple = schedule.strokes.flatMap(\.relax)
-        let t = (ripple.min()! + ripple.max()!) / 2
-        var before = 0, during = 0, after = 0
-        for line in schedule.relaxed(at: t) {
-            let stroke = schedule.strokes[line.stroke]
-            for (i, point) in line.points.enumerated() {
-                let m = (t - stroke.relax[i]) / relaxTime
-                if m <= 0 {
-                    before += 1
-                    #expect(point == stroke.jagged[i], "not reached yet: still the stairs")
-                } else if m >= 1 {
-                    after += 1
-                    #expect(point == stroke.smooth[i], "done: exactly the smooth curve")
-                } else {
-                    during += 1
-                    let (a, b) = (stroke.jagged[i], stroke.smooth[i])
-                    #expect(point.x >= min(a.x, b.x) && point.x <= max(a.x, b.x) && point.y >= min(a.y, b.y) && point.y <= max(a.y, b.y))
-                }
-            }
-        }
-        #expect(before > 0 && after > 0, "midway the ripple has passed some points and not reached others")
-        _ = during
+    @Test func eachPointRelaxesWhenTheRippleReachesIt() {
+        let strokes = strokes()
+        let lines = StrokeSchedule.relaxed(strokes, at: 10.5, over: 0.4)
+        let (first, a) = (lines[0].points, strokes[0])
+        #expect(first[0] == a.smooth[0], "reached 0.5 s ago: smooth")
+        #expect(first[1] == a.smooth[1], "0.4 s ago: just done, exactly")
+        #expect(first[5] == a.jagged[5], "reached now: still the stairs")
+        #expect(first.last == a.jagged.last, "not reached yet")
+        let m = 0.5 * 0.5 * (3 - 2 * 0.5)               // the third point, half way: eased
+        #expect(abs(first[3].x - (a.jagged[3].x * (1 - m) + a.smooth[3].x * m)) < 1e-12)
+        #expect(abs(first[3].y - (a.jagged[3].y * (1 - m) + a.smooth[3].y * m)) < 1e-12)
+        #expect(lines[1].points == strokes[1].jagged)
     }
 }

@@ -177,16 +177,45 @@ enum PolyLabel {
         }
     }
 
-    /// Best-first search over the box for the maximum of `distance`.
+    /// `find` over the whole polygon, for a caller without a raster seed to trust
+    /// (`Template.inscribedRadius(ofRegion:upTo:)`). The search ends at the first spot farther
+    /// than `enough` from the outline, or once it has measured `maxEvaluations` spots (each
+    /// costs a pass over every vertex), and returns the best spot it had by then; `complete`
+    /// is false when the count ran out.
+    static func findAnywhere(
+        _ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>, enough: Double = .infinity, maxEvaluations: Int = .max
+    ) -> (position: SIMD2<Double>, distance: Double, complete: Bool) {
+        let outerEnd = poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0
+        guard outerEnd > 0 else { return (seed, 0, true) }
+        var minX = Double.infinity, minY = Double.infinity, maxX = -Double.infinity, maxY = -Double.infinity
+        for i in 0..<outerEnd {
+            let p = poly.points[i]
+            minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+        }
+        var evaluations = 0
+        let found = search(
+            minX: minX, minY: minY, maxX: maxX, maxY: maxY, precision: precision, seed: seed, enough: enough,
+            maxEvaluations: maxEvaluations
+        ) {
+            evaluations += 1
+            return poly.signedDistance($0, $1)
+        }
+        return (found.position, found.distance, evaluations < maxEvaluations || found.distance > enough)
+    }
+
+    /// Best-first search over the box for the maximum of `distance`, or for the first spot
+    /// where it passes `enough`, or for the best of the first `maxEvaluations` spots measured.
     private static func search(
         minX: Double, minY: Double, maxX: Double, maxY: Double, precision: Double, seed: SIMD2<Double>,
-        distance: (Double, Double) -> Double
+        enough: Double = .infinity, maxEvaluations: Int = .max, distance: (Double, Double) -> Double
     ) -> (position: SIMD2<Double>, distance: Double) {
         let width = maxX - minX, height = maxY - minY
         let cellSize = max(precision, min(width, height))
 
+        var evaluations = 0
         func cell(_ x: Double, _ y: Double, _ h: Double) -> Cell {
-            Cell(x: x, y: y, h: h, d: distance(x, y))
+            evaluations += 1
+            return Cell(x: x, y: y, h: h, d: distance(x, y))
         }
 
         var best = cell(minX + width / 2, minY + height / 2, 0)
@@ -231,15 +260,15 @@ enum PolyLabel {
 
         var h = cellSize / 2
         var x = minX
-        while x < maxX {
+        while x < maxX, evaluations < maxEvaluations {
             var y = minY
-            while y < maxY {
+            while y < maxY, evaluations < maxEvaluations {
                 consider(x + h, y + h, h)
                 y += cellSize
             }
             x += cellSize
         }
-        while !heap.isEmpty {
+        while !heap.isEmpty, best.d <= enough, evaluations < maxEvaluations {
             let c = pop()
             if c.max - best.d <= precision { break }
             h = c.h / 2

@@ -431,7 +431,7 @@ enum LayeredLines {
         let t = vector.template
         let art = try annotate(t, plan: plan, cancel: cancel)
         var lines: [DrawnLine] = []
-        for (k, e) in t.edges.enumerated() where art.edgeLayers[k] != LineLayer.color.rawValue {
+        for (k, e) in t.edges.enumerated() where LineLayer.isDrawn(art.edgeLayers[k]) {
             let corners = t.points(of: e).map { $0 - SIMD2(0.5, 0.5) }
             guard var previous = corners.first else { continue }
             var points = [previous]

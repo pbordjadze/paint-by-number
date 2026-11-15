@@ -40,11 +40,10 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import making_of_fields  # noqa: E402
-import making_of_inputs  # noqa: E402
 import making_of_layers as layers  # noqa: E402
 import making_of_reveal as reveal  # noqa: E402
 
-CARD_BAND = making_of_inputs.CARD_BAND
+CARD_BAND = 232         # px below the picture, for the step's card
 FONT_DIR = '/usr/share/fonts/X11/Type1'
 CHARTER = os.path.join(FONT_DIR, 'c0648bt_.pfb')
 CHARTER_ITALIC = os.path.join(FONT_DIR, 'c0649bt_.pfb')

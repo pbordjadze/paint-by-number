@@ -143,16 +143,16 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case full
 
         /// What to say of an edit that was declined, and why the editor declined it.
-        init(declined edit: TemplateEditor.Edit, because reason: String = "") {
+        init(declined edit: TemplateEditor.Edit, because reason: TemplateEditor.Declined.Reason = .other("")) {
             switch edit {
-            case .draw: self = reason == TemplateEditor.lineDoublesBack ? .doublesBack : .notDrawn
+            case .draw: self = reason == .lineDoublesBack ? .doublesBack : .notDrawn
             case .split: self = .notSplit
             case .cellEdge: self = .notDivided
-            case .merge: self = reason == TemplateEditor.mergeStaysInOneArea ? .oneArea : .notMerged
+            case .merge: self = reason == .mergeStaysInOneArea ? .oneArea : .notMerged
             case .brush: self = .notPainted
             case .reshape(_, _, _, let target):
-                self = reason == TemplateEditor.noLineNear ? (target == .edge ? .grabEdge : .grabLine) : .notReshaped
-            case .moveLabel: self = reason == TemplateEditor.noNumberNear ? .grabNumber : .notMoved
+                self = reason == .noLineNear ? (target == .edge ? .grabEdge : .grabLine) : .notReshaped
+            case .moveLabel: self = reason == .noNumberNear ? .grabNumber : .notMoved
             case .erase, .eraseLine: self = .notErased
             case .fill: self = .notFilled
             case .look, .repaint, .paintArea: self = .notRecolored

@@ -241,13 +241,10 @@ class TideCompositor(compose.Compositor):
 
 
 def show_inputs(snapshots, svg, spec, seed):
-    """The pictures, the template and what the show is built from (`making_of_inputs.build`). The show
-    draws no guardian, but its spots and seeds are still drawn for the spec's crew, as they were when
-    it had one: the fixtures pin them. Configures making_of_pets from the spec."""
-    pets.configure(spec)
+    """The pictures, the template and what the show is built from (`making_of_inputs.build`)."""
     pictures = inputs.Pictures(snapshots)
     template = inputs.Template(svg, pictures.size[0])
-    built = inputs.build(pictures, template, spec, seed, pets.ORDER[:len(spec['crew']['pets'])])
+    built = inputs.build(pictures, template, spec, seed)
     return pictures, template, built
 
 
@@ -402,8 +399,7 @@ class FieldShow:
             iy = np.clip(S[:, 1].astype(int), 0, H - 1)
             at = fuse[iy, ix]
             self.fuses.append(at)
-            self.strokes.append(reveal.Stroke(n, False, float(at.min()), float(at.max() - at.min()), J, S,
-                                              pets.cumulative(S), relax[iy, ix]))
+            self.strokes.append(reveal.Stroke(n, float(at.min()), float(at.max() - at.min()), J, S, relax[iy, ix]))
         rng = pets.stream(seed, STREAM_FIELDS + 5, 0)
         self.number_times = []
         for x, y, _ in built.numbers:

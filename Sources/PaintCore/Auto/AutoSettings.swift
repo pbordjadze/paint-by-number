@@ -275,7 +275,9 @@ public enum AutoSettings {
         let fidelity = colorError(t, image: image, weights: weights)
 
         let regions = t.regions.count
-        let tiny = t.regions.reduce(0) { $0 + ($1.inscribedRadius < tinyRadius ? 1 : 0) }
+        // By the region's size, not the room its number was left where it moved off writing.
+        let isTiny = t.regions.indices.map { t.inscribedRadius(ofRegion: $0, upTo: tinyRadius) < tinyRadius }
+        let tiny = isTiny.reduce(0) { $0 + ($1 ? 1 : 0) }
         var room = Float.infinity
         for label in t.labels {
             let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
@@ -304,7 +306,7 @@ public enum AutoSettings {
             fidelityTerms *= AutoTaste.fidelityShare
             if seconds < band.lowerBound { penalty = 0 }
             var count = 0
-            for region in t.regions where region.inscribedRadius < tinyRadius && region.labelCount > 0 {
+            for (r, region) in t.regions.enumerated() where isTiny[r] && region.labelCount > 0 {
                 let p = t.labels[Int(region.labelStart)].position
                 let x = min(max(Int(p.x), 0), w - 1), y = min(max(Int(p.y), 0), h - 1)
                 if weights[y * w + x] >= AutoTaste.subjectImportance { count += 1 }

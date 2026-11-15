@@ -22,8 +22,7 @@ public struct SeedRing: Sendable, Equatable {
 /// - the stage: the photo (-1), one of the steps (0 to 5), the finished drawing (6);
 /// - the card of each step, fading in and out inside its step, so two cards never show at once;
 /// - the seed rings of the paints step;
-/// - the crew's fade at the show's end, and the hand-off from the finished drawing to the real
-///   template as the steps end.
+/// - the hand-off from the finished drawing to the real template as the steps end.
 ///
 /// `ScheduleStyle` holds the numbers (its overlays), `making_of_reveal.py` is the reference.
 public struct Timeline: Sendable, Equatable {
@@ -85,13 +84,7 @@ public struct Timeline: Sendable, Equatable {
         return SeedRing(x: seed.x, y: seed.y, radius: seeds.dot * (1 + style.ringSwell * sin(.pi * u) * (1 - u)), alpha: alpha)
     }
 
-    // MARK: Crew and hand-off
-
-    /// How much of the crew shows at `t` (0...1): all of it until the last `crewFadeOut` of the show,
-    /// which dims it as the painting screen arrives, never while it waves.
-    public func crewFade(at t: Double) -> Double {
-        min(max((duration - t) / style.crewFadeOut, 0), 1)
-    }
+    // MARK: Hand-off
 
     /// How far the real template has taken over from the finished drawing (0...1): over `handoff`
     /// from the end of the steps.

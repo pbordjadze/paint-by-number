@@ -103,13 +103,14 @@ before planning app work).
   reference `tools/factory/making_of_{exact,inputs,layers,compose,reveal,fields}.py`, which
   `making_of_clip.py` plays with Pillow (stills and video). The first show, with a crew, is gone: its
   Swift port was retired on October 23, 2026, and its Python left with the Marginarium (below).
-  `making_of_pets.py` keeps its planner, SplitMix64 and streams, which the fixtures' inputs are
-  still drawn with; what the crew show shared and the field show doesn't use (`Arrival`'s visits,
-  `PaintFlow`, `StopWeights`, `StrokeSchedule`'s traces) stays, pinned by the fixtures, until it
-  leaves with its checks (backlog). Fixtures in
+  `making_of_pets.py` keeps SplitMix64 and the streams; what the crew show shared and the field show
+  never used left with its checks and the reveal fixture (painting-company row 110), and the spec's
+  `crew`, `pose` and `timing.outro` are decoded strictly but read by no show. `tools/factory/making_of_hashes.py`
+  prints hashes of everything the reference show makes, to compare before and after a change that
+  must move no frame. Fixtures in
   `Tests/MakingOfTests/Fixtures/` are written by that Python and replayed by the tests:
   `show-small/inputs-small.json` by `making_of_inputs.py` (recipe in `test_making_of_inputs.py`),
-  `reveal-small.json` by `making_of_reveal.py --fixture`, `layers-small.json` and
+  `layers-small.json` and
   `compose-small.json` by `tools/tests/test_making_of_layers.py --write-goldens`, and
   `fields-small.json` by `tools/tests/test_making_of_fields.py --write-goldens`. `python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'` (numpy,
   Pillow; CI `core`) fails when a committed fixture is not what the Python makes now.
@@ -583,7 +584,10 @@ any port of it, when changing the fitter: work from the paper.
    Friends & Family group (public link on) with its What to Test and submits it for Beta App
    Review (`ci/testflight_testers.py`; the `TestFlight testers` workflow does the same for a build
    by hand); a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its
-   commit. The repository is
+   commit, and so is a push to `main` that changes what the app bundles (resources, Info.plist,
+   the project, shaders, `Package.swift`, the Xcode version; the workflow's `bundled` job, which
+   reads every commit since its last green main run, `[skip ci]` ones too), so App Store
+   Connect's validation errors show the day they land. The repository is
    public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the

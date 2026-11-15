@@ -192,7 +192,7 @@ extension EditWork {
             groups.join(left(e), right(e)!)
         }
         var reached = 0
-        for i in strokes.indices where strokes[i].alive && strokes[i].layer != LineLayer.color.rawValue {
+        for i in strokes.indices where strokes[i].alive && LineLayer.isDrawn(strokes[i].layer) {
             let cut = rub.uncovered(strokes[i].points.map(Lattice.point))
             guard cut.broken else { continue }
             let stroke = strokes[i]
@@ -223,7 +223,7 @@ extension EditWork {
             lines.append(.edge(e))
             geometry.append(lattice(of: e))
         }
-        for (i, s) in strokes.enumerated() where s.alive && s.layer != LineLayer.color.rawValue {
+        for (i, s) in strokes.enumerated() where s.alive && LineLayer.isDrawn(s.layer) {
             let pts = Self.dedupe(s.points.map(Lattice.point))
             guard pts.count >= 2 else { continue }
             lines.append(.stroke(i))
@@ -334,7 +334,7 @@ extension EditWork {
             let b = box(of: e)
             if near(b.lo, b.hi) { lines.append(lattice(of: e)) }
         }
-        for s in strokes where s.alive && s.layer != LineLayer.color.rawValue && !s.writing && s.points.count >= 2 {
+        for s in strokes where s.alive && LineLayer.isDrawn(s.layer) && !s.writing && s.points.count >= 2 {
             let line = s.points.map(Lattice.point)
             let lo = line.reduce(line[0]) { pointwiseMin($0, $1) }, hi = line.reduce(line[0]) { pointwiseMax($0, $1) }
             if near(lo, hi) { lines.append(line) }

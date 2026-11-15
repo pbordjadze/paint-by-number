@@ -3,7 +3,7 @@ import PaintCore
 
 /// The picture of the show at a moment, one pixel at a time: a pure CPU reference of what each
 /// step does to the layers, which the app's Metal shader transliterates. Nothing is drawn here:
-/// the crew, the ink step's pen and the template's outlines, the numbers, the seed rings and the
+/// the ink step's pen and the template's outlines, the numbers, the seed rings and the
 /// cards belong to the renderer, which passes the lines' coverage in as `ink` where the step has any.
 /// `Compositor` in `tools/factory/making_of_compose.py` is the same formulas on the same names;
 /// `CompositorTests` compares the two.

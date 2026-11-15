@@ -18,7 +18,7 @@ struct EditMoveLabelTests {
     static func declined(_ edit: Edit, on t: Template) throws -> String? {
         let (u, outcome) = try TemplateEditor.apply(edit, to: t)
         if outcome.declined != nil { #expect(u == t && !outcome.changed) }
-        return outcome.declined?.reason
+        return outcome.declined?.description
     }
 
     /// The sky's number dragged to the sky's left: it sits where the finger lifted, sized for the
@@ -92,7 +92,7 @@ struct EditMoveLabelTests {
             let held = TemplateEditor.labelNear(on: t, at: at, reach: TemplateEditor.tapReach)
             let (u, outcome) = try TemplateEditor.apply(.moveLabel(from: at, to: at + SIMD2(0.5, 0)), to: t)
             guard let held else {
-                #expect(outcome.declined?.reason.contains("no number") == true)
+                #expect(outcome.declined?.description.contains("no number") == true)
                 continue
             }
             #expect(t.labels(ofRegion: held.region).contains(held.label))

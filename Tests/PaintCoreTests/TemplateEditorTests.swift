@@ -50,7 +50,7 @@ struct TemplateEditorTests {
     /// An edit that must be made, on a template that validates, giving one that validates.
     static func apply(_ edit: TemplateEditor.Edit, to t: Template) throws -> (Template, TemplateEditor.Outcome) {
         let (out, outcome) = try TemplateEditor.apply(edit, to: t)
-        #expect(outcome.declined == nil, "\(outcome.declined?.reason ?? "")")
+        #expect(outcome.declined == nil, "\(outcome.declined?.description ?? "")")
         expectValid(out)
         return (out, outcome)
     }
@@ -812,7 +812,7 @@ struct TemplateEditorTests {
                 if let why = outcome.declined {
                     declined += 1
                     // Only where lines lie closer than the lattice can tell apart.
-                    let benign = ["the line", "the lines", "a line", "outlines", "the result is not valid: edges"].contains { why.reason.hasPrefix($0) }
+                    let benign = ["the line", "the lines", "a line", "outlines", "the result is not valid: edges"].contains { why.description.hasPrefix($0) }
                     #expect(benign, "seed \(seed) step \(step): \(edit) -> \(why)")
                     #expect(next == t)
                 } else if outcome.changed {

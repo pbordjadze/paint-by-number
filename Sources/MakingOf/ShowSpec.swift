@@ -3,8 +3,11 @@ import Foundation
 /// The making-of show's spec: `making-of.json`, which the Lamp edits. Decoding is strict (version
 /// 1, the six steps in order, known poses, no unknown key at any level, every duration and length
 /// positive and within the bounds below), so a bad edit throws, with the key in the error, and
-/// never reaches the planner. Times are seconds; crew lengths are in the guardian's own height; a
-/// `height` is a share of the picture's shorter side.
+/// never reaches the show. Times are seconds; crew lengths are in the guardian's own height; a
+/// `height` is a share of the picture's shorter side. The show reads the timing, the steps' cards,
+/// the tones, the sketch, the seeds and the outlines; `crew`, a step's `pose` and `timing.outro`
+/// were the first show's, with a crew, and are still checked so the file's version 1 stays what it
+/// was (painting-company row 110).
 public struct ShowSpec: Sendable, Equatable, Decodable {
     public static let version = 1
     /// The largest file `init(json:)` reads.
@@ -83,7 +86,7 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
         public var down: Double
     }
 
-    /// The crew's motion; `making_of_pets.py` explains each number.
+    /// The first show's crew and its motion, which no show reads now.
     public struct Crew: Sendable, Equatable {
         public var pets: [String]
         public var height: Double

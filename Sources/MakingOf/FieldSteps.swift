@@ -32,7 +32,7 @@ struct FieldBuild {
 
     /// - Parameters:
     ///   - survivors: the layers' (`ShowLayers.survivors`).
-    ///   - seeds: step 3's k-means++ seeds (`PaintSeeds`), the same ones the crew's show drops.
+    ///   - seeds: step 3's k-means++ seeds (`PaintSeeds`).
     static func make(
         pictures: ShowPictures, survivors: Plane<Float>, template: ShowTemplate, spec: ShowSpec, seed: UInt64,
         seeds: [PaintSeed], paints: PaintColors, cancel: CancellationCheck
@@ -47,7 +47,7 @@ struct FieldBuild {
             Plane(width: pw, height: ph, data: field.map { Float($0) })
         }
 
-        // the template's lines as the show draws them, to 0.01 px (the plan file's precision)
+        // the template's lines as the show draws them, to 0.01 px (the precision the show keeps its lines at)
         let strokes = template.strokes.map { line in
             Polyline(line.points.map { Point(ExactMath.quantize($0.x, decimals: 2), ExactMath.quantize($0.y, decimals: 2)) })
         }
@@ -97,8 +97,8 @@ struct FieldBuild {
             let (first, last) = (at.min()!, at.max()!)
             fuses.append(at)
             lines.append(StrokeSchedule.Stroke(
-                index: n, walked: false, start: first, duration: last - first, jagged: jagged, smooth: smooth,
-                cumulative: Polyline(smooth).cumulative, relax: cells.map { relax[$0] }))
+                index: n, start: first, duration: last - first, jagged: jagged, smooth: smooth,
+                relax: cells.map { relax[$0] }))
         }
 
         var rng = plan.streams.field(5)

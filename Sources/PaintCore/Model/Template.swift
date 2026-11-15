@@ -118,8 +118,11 @@ public struct Region: Sendable, Hashable {
     public var area: Float
     /// Integer bounding box of the (smoothed) polygon in canvas units.
     public var bounds: PixelBounds
-    /// Radius of the largest inscribed disc of the polygon (≈ how big a number fits); the
-    /// primary label sits at its centre.
+    /// The room of the primary label where it sits: the radius of the polygon's largest
+    /// inscribed disc while the label is at its pole, and less once the label has moved off
+    /// writing or a drawn line (`LabelKeepOut`) or the painter has moved it (Move Number). So it
+    /// is never more than the region's size, which `Template.inscribedRadius(ofRegion:upTo:)`
+    /// measures: ask that, not this, how big a region is.
     public var inscribedRadius: Float
     /// Span into `Template.rings` (first ring is the outer boundary; others are holes).
     public var ringStart: UInt32
