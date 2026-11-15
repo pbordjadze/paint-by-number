@@ -90,8 +90,11 @@ struct FineTuneSheet: View {
     /// where it opened, so a painting not tuned there keeps its own exactly.
     private var made: GenerationSettings {
         var made = settings
-        // Colors where it opened asks for what the painting was cut with.
-        if Int(colorCount.rounded()) != paints { made.colorCount = Int(colorCount.rounded()) }
+        // Colors moves the count the painting was cut for by as many as the slider moved from the
+        // paints it has (which rich paint makes more or fewer), so every move asks for a change
+        // the way it went; where it opened asks for what the painting was cut with.
+        let moved = Int(colorCount.rounded()) - paints
+        if moved != 0 { made.colorCount = settings.colorCount + moved }
         made.detail = Float(detail)
         if hasLines && lines != openingLines {
             made.lineArt = Self.lineArt(settings.lineArt, lines: lines)
