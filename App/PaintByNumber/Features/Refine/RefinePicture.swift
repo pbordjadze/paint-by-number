@@ -88,30 +88,34 @@ private struct RefinePaintedLayers: View {
     let photo: CGImage
 
     var body: some View {
-        // The paper, beneath every layer: it shows where the paint and the photo are
-        // hidden or faint.
-        Rectangle()
-            .fill(LineArtDrawing.paper)
-            .frame(width: refine.picture.width, height: refine.picture.height)
-            .position(x: refine.picture.midX, y: refine.picture.midY)
-        if refine.layers.photo || refine.base == nil {
-            Image(decorative: photo, scale: 1)
-                .resizable()
-                .interpolation(.high)
+        // In a container of its own: as bare siblings in the stack above, these never took a
+        // change of the layers (`create-refine-layers` kept the paint whole over no photo).
+        ZStack {
+            // The paper, beneath every layer: it shows where the paint and the photo are
+            // hidden or faint.
+            Rectangle()
+                .fill(LineArtDrawing.paper)
                 .frame(width: refine.picture.width, height: refine.picture.height)
                 .position(x: refine.picture.midX, y: refine.picture.midY)
-                .opacity(refine.base == nil ? 1 : refine.layers.photoOpacity)
-        }
-        if let painted = refine.painted {
-            Image(decorative: painted, scale: 1)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: refine.picture.width, height: refine.picture.height)
-                .position(x: refine.picture.midX, y: refine.picture.midY)
-                .opacity(refine.layers.paintOpacity)
-                // New colors cross-fade in (`land`).
-                .id(refine.painting?.preview)
-                .transition(.opacity)
+            if refine.layers.photo || refine.base == nil {
+                Image(decorative: photo, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: refine.picture.width, height: refine.picture.height)
+                    .position(x: refine.picture.midX, y: refine.picture.midY)
+                    .opacity(refine.base == nil ? 1 : refine.layers.photoOpacity)
+            }
+            if let painted = refine.painted {
+                Image(decorative: painted, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: refine.picture.width, height: refine.picture.height)
+                    .position(x: refine.picture.midX, y: refine.picture.midY)
+                    .opacity(refine.layers.paintOpacity)
+                    // New colors cross-fade in (`land`).
+                    .id(refine.painting?.preview)
+                    .transition(.opacity)
+            }
         }
     }
 }
