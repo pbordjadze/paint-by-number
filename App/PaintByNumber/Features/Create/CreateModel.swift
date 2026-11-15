@@ -1718,7 +1718,7 @@ final class CreateModel {
                 }
                 handled(serial)
             case .declined(let why):
-                Log.create.info("An edit was declined: \(why, privacy: .public)")
+                Log.create.info("An edit was declined: \(why.description, privacy: .public)")
                 say(.init(declined: edit, because: why))
                 handled(serial)
             }

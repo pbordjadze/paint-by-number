@@ -1,6 +1,6 @@
 import PaintCore
 
-/// The draws the crew needs from PaintCore's `SplitMix64`, which stays as it is. `SplitMix64` in
+/// The draws the show needs from PaintCore's `SplitMix64`, which stays as it is. `SplitMix64` in
 /// `making_of_pets.py` has the same ones, bit for bit; both test suites pin the first values of
 /// seed 1. Taking `next() % n` for a bounded draw is biased by about n / 2^64: nothing here can
 /// tell.
@@ -26,10 +26,5 @@ extension SplitMix64 {
             out.swapAt(i, below(i + 1))
         }
         return out
-    }
-
-    /// One of `items`, which must not be empty.
-    mutating func choice<T>(_ items: [T]) -> T {
-        items[below(items.count)]
     }
 }

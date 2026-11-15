@@ -11,8 +11,9 @@ public struct Point: Sendable, Equatable {
     }
 }
 
-/// The length of (dx, dy): plain arithmetic and a square root, as `norm` in `making_of_pets.py`,
-/// so a comparison turns the same way there and here (a C library's `hypot` rounds differently).
+/// The length of (dx, dy): plain arithmetic and a square root, as `cumulative` in
+/// `making_of_pets.py` sums a line, so a comparison turns the same way there and here (a C library's
+/// `hypot` rounds differently).
 func norm(_ dx: Double, _ dy: Double) -> Double {
     (dx * dx + dy * dy).squareRoot()
 }
@@ -58,28 +59,4 @@ public struct Polyline: Sendable, Equatable {
     }
 
     public var length: Double { cumulative.last ?? 0 }
-
-    /// The line drawn from its other end. Its distances are summed from there, not mirrored.
-    public var reversed: Polyline { Polyline(points.reversed()) }
-
-    /// Where `dist` along the line is.
-    func point(at dist: Double) -> Point {
-        Point(interp(dist, cumulative) { points[$0].x }, interp(dist, cumulative) { points[$0].y })
-    }
-
-    /// How many points are at or behind `dist` along the line (`numpy.searchsorted` to the right).
-    func pointsBehind(_ dist: Double) -> Int {
-        var lo = 0
-        var hi = cumulative.count
-        while lo < hi {
-            let mid = (lo + hi) / 2
-            if cumulative[mid] <= dist { lo = mid + 1 } else { hi = mid }
-        }
-        return lo
-    }
-
-    /// How far right the line runs over the 2 px after `dist` along it.
-    func ahead(at dist: Double) -> Double {
-        interp(min(dist + 2, length), cumulative) { points[$0].x } - interp(dist, cumulative) { points[$0].x }
-    }
 }

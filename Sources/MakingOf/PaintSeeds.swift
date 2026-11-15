@@ -18,8 +18,7 @@ public struct PaintSeed: Sendable, Equatable {
 }
 
 /// The paints of the palette picture: its distinct colors, ascending as `r << 16 | g << 8 | b`,
-/// and for each pixel the index of its color among them (an `Int32` like every area label, so
-/// `PaintFlow` takes it as it is).
+/// and for each pixel the index of its color among them (an `Int32` like every area label).
 struct PaintColors: Sendable, Equatable {
     var keys: [UInt32]
     var index: Plane<Int32>
@@ -74,8 +73,8 @@ enum PaintSeeds {
     }
 
     /// The seeds a show drops: `seeds(smoothed:...)` from the show's own `.seeds` stream, dropping
-    /// from the paints step of the spec's timing as the plan file keeps it (4 decimals), so the crew's
-    /// show and the field show drop the same ones.
+    /// from the paints step of the spec's timing to 4 decimals, as `making_of_inputs.build` keeps it,
+    /// so the Python's show and this one drop the same ones.
     static func seeds(pictures: ShowPictures, paints: PaintColors, spec: ShowSpec, seed: UInt64) -> [PaintSeed] {
         let intro = ExactMath.quantize(spec.timing.intro, decimals: 4)
         let step = ExactMath.quantize(spec.timing.step, decimals: 4)

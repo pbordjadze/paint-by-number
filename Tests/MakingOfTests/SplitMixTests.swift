@@ -22,12 +22,9 @@ import Testing
         #expect(draws == [0.7982965513102983, 0.8610236150419454, 0.9398509637553787])
     }
 
-    @Test func boundedDrawsAndChoice() {
+    @Test func boundedDraws() {
         var rng = SplitMix64(seed: 1)
         #expect((0..<8).map { _ in rng.below(10) } == [5, 9, 0, 5, 1, 8, 5, 3])
-        rng = SplitMix64(seed: 1)
-        let signs: [Int] = (0..<8).map { _ in rng.choice([-1, 1]) }
-        #expect(signs == [1, 1, -1, 1, 1, -1, 1, 1])
     }
 
     @Test func permutationsShuffleFromTheBack() {
@@ -68,7 +65,7 @@ import Testing
     }
 }
 
-/// `numpy.interp`, whose rounding the planner's comparisons follow. The values come from numpy.
+/// `numpy.interp`, whose rounding the lines' stair steps follow. The values come from numpy.
 @Suite struct InterpTests {
     @Test func linesAndEnds() {
         let xp = [0.0, 10, 20]

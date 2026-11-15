@@ -189,7 +189,7 @@ struct EditPaintAreaTests {
 
         // Paint 10.
         let (same, declined) = try TemplateEditor.apply(.paintArea(at: c, color: boxed.palette[9].oklab), to: boxed)
-        #expect(declined.declined?.reason.contains("no room") == true && !declined.changed && same == boxed)
+        #expect(declined.declined?.description.contains("no room") == true && !declined.changed && same == boxed)
         var trail = EditTrail(base: boxed)
         if case .declined = trail.add(.paintArea(at: c, color: boxed.palette[9].oklab)) {} else { Issue.record("a cramped area was painted") }
 

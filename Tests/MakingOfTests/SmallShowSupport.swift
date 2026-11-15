@@ -26,37 +26,15 @@ struct SmallShow {
         expected = try JSONDecoder().decode(ExpectedInputs.self, from: Data(contentsOf: directory.appendingPathComponent("inputs-small.json")))
     }
 
-    /// `making_of_inputs.py`'s JSON.
+    /// `making_of_inputs.py`'s JSON, as far as the tests read it (its `inputs` are the Python's own:
+    /// the size, the timing and the template's lines as its show keeps them).
     struct ExpectedInputs: Decodable {
-        /// What the crew's plan was made from (the Python's crew still is): its sizes and seed.
-        struct Inputs: Decodable {
-            struct Member: Decodable {
-                var id: String
-                var start: [Double]
-            }
-
-            var size: [Double]
-            var petHeight: Double
-            var intro: Double
-            var step: Double
-            var seed: UInt64
-            var pets: [Member]
-            var candidates: [[[Double]]]
-            var strokes: [[[Double]]]
-            var frameHeight: Double
-        }
-
         struct Trace: Decodable {
+            /// How many merged regions the simplified picture has.
             var labels: Int
-            var inkPixels: Int
-            var percentile95: Double
-            /// The sum of each step's weights; null for the steps with none.
-            var weightTotals: [Double?]
-            var homes: [[Int]]
         }
 
         var seed: UInt64
-        var inputs: Inputs
         /// [time, x, y, paint] each.
         var seeds: [[Double]]
         /// The palette picture's colors, `r << 16 | g << 8 | b`, ascending.

@@ -334,9 +334,12 @@ func runRefine(_ options: Options) throws {
             // As the app lays it (`CreateModel.laying`): a drawn line with the photo's colors.
             let painted = TemplateEditor.painted(edit, on: t, photo: photo)
             step.edit = painted
-            let (_, outcome) = try TemplateEditor.apply(painted, to: t)
             let before = trail.edits
-            switch trail.add(painted) {
+            // The counts below are of this laying, the one that made the template, its colors
+            // through the looks and repaints before it.
+            let laid = trail.lay(painted)
+            let outcome = laid.outcome
+            switch laid.verdict {
             case .made(let tooSmall):
                 undo.append(before)
                 redo.removeAll()
@@ -350,18 +353,18 @@ func runRefine(_ options: Options) throws {
                 step.verdict = "nothing"
             case .declined(let why):
                 step.verdict = "declined"
-                step.declined = why
+                step.declined = why.description
                 switch painted {
-                case .draw: step.toast = why == TemplateEditor.lineDoublesBack ? "That line doubles back on itself." : "That line couldn’t be drawn there."
+                case .draw: step.toast = why == .lineDoublesBack ? "That line doubles back on itself." : "That line couldn’t be drawn there."
                 case .split: step.toast = "That area couldn’t be split there."
                 case .cellEdge: step.toast = "That area couldn’t be divided there."
                 case .merge:
-                    step.toast = why == TemplateEditor.mergeStaysInOneArea ? "That’s already one area." : "Those areas couldn’t be joined."
+                    step.toast = why == .mergeStaysInOneArea ? "That’s already one area." : "Those areas couldn’t be joined."
                 case .brush: step.toast = "That couldn’t be painted there."
                 case .reshape(_, _, _, let target):
-                    step.toast = why != TemplateEditor.noLineNear ? "That line couldn’t be moved there."
+                    step.toast = why != .noLineNear ? "That line couldn’t be moved there."
                         : target == .edge ? "Start the drag on the border between two cells." : "Start the drag on a line."
-                case .moveLabel: step.toast = why == TemplateEditor.noNumberNear ? "Start the drag on a number." : "There’s no room for that number there."
+                case .moveLabel: step.toast = why == .noNumberNear ? "Start the drag on a number." : "There’s no room for that number there."
                 case .erase, .eraseLine: step.toast = "That couldn’t be erased."
                 case .fill: step.toast = "That shape couldn’t be filled."
                 case .paintArea, .look: step.toast = "Those colors couldn’t be changed."

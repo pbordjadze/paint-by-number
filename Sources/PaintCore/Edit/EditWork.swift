@@ -13,6 +13,9 @@ enum EditFailure: Error, Equatable {
     /// Lines lie closer than the lattice can tell apart, and the arrangement they make has
     /// outlines that touch or overlap.
     case collision(String)
+    /// The edit cannot be made for a reason its caller tells from the others
+    /// (`TemplateEditor.Declined.Reason`).
+    case declined(TemplateEditor.Declined.Reason)
 }
 
 /// A directed use of an edge: the edge walked forwards or backwards.
@@ -45,7 +48,7 @@ struct EditWork {
         /// it is cut into the line's chains, which may bound a cell. Writing is letters over the
         /// drawing, not part of it: a line that met a letter that way would make the letter an
         /// outline, no longer writing, and a loop of it (an "o") a cell.
-        var joinsLines: Bool { alive && layer != LineLayer.color.rawValue && !writing }
+        var joinsLines: Bool { alive && LineLayer.isDrawn(layer) && !writing }
     }
 
     var t: Template
@@ -83,6 +86,15 @@ struct EditWork {
         var touched = Set<Int>()
         /// The pieces drawn lines cut regions into (`splitRegion`).
         var pieces = Set<Int>()
+
+        /// Whether the edit did anything to the template: a count of something done to it. The
+        /// others only say how (a line's joins, the regions, detail areas and strokes it made,
+        /// the paints added), and never stand without one of these. A new count says here which
+        /// it is.
+        var changed: Bool {
+            lines > 0 || erased > 0 || fills > 0 || recolored > 0 || paintsChanged > 0 || paintsMerged > 0 || regionsMerged > 0
+                || reshaped > 0 || labelsMoved > 0
+        }
     }
     var summary = Tally()
     /// The region each merged-away region continues as.
@@ -158,7 +170,7 @@ struct EditWork {
     }
 
     func isFrame(_ e: Int) -> Bool { t.edges[e].right == BoundaryEdge.outside }
-    func isInked(_ e: Int) -> Bool { layers[e] != LineLayer.color.rawValue }
+    func isInked(_ e: Int) -> Bool { LineLayer.isDrawn(layers[e]) }
 
     mutating func setPoints(_ e: Int, _ points: [LatticePoint]) {
         t.edges[e].pointStart = UInt32(t.points.count)

@@ -14,98 +14,25 @@ public struct InkLine: Sendable, Equatable {
     }
 }
 
-/// How the template's lines are drawn: first in the ink step, as stair-stepped pixel outlines
-/// (the way tracing starts), laid down along their paths (the guardians walk some) while the grey
-/// lifts; then in the template step the outlines relax into the template's smooth curves,
-/// rippling out from where the crew works.
+/// How the template's lines are drawn: first in the ink step, as stair-stepped pixel outlines (the
+/// way tracing starts), burnt along their paths like a fuse (`FieldShow.burning`); then in the
+/// template step the outlines relax into the template's smooth curves, as a second fuse reaches them.
 ///
-/// Every line has a `Stroke`: when it is drawn, its stair-stepped points paired one for one with
-/// its smooth ones, and when the ripple reaches each. `lines(at:)` is a pure function of time, so
-/// the show can seek (and hold still for Reduce Motion): the pen at time t is each line's prefix
-/// at the ink value it has by then. `making_of_reveal.py` is the reference and equals this bit
-/// for bit.
-public struct StrokeSchedule: Sendable {
+/// Every line has a `Stroke`: when the fuse runs along it, its stair-stepped points paired one for
+/// one with its smooth ones, and when the ripple reaches each. `staircase` and `relaxed` are pure, so
+/// the show can seek (and hold still for Reduce Motion). `making_of_reveal.py` is the reference and
+/// equals this bit for bit.
+public enum StrokeSchedule {
     public struct Stroke: Sendable, Equatable {
         /// The line's index in the template's strokes.
         public var index: Int
-        /// Whether a guardian walks along it, drawing it under its feet.
-        public var walked: Bool
+        /// When the fuse first reaches the line, and how long it takes to run all of it.
         public var start: Double
         public var duration: Double
         public var jagged: [Point]
         public var smooth: [Point]
-        /// The distance along `smooth` to each of its points.
-        public var cumulative: [Double]
         /// When the template step's ripple reaches each point.
         public var relax: [Double]
-
-        public var length: Double { cumulative.last ?? 0 }
-    }
-
-    public let strokes: [Stroke]
-    private let timing: ScheduleTiming
-    private let crew: ShowSpec.Crew
-    private let outlines: ShowSpec.Outlines
-    private let petHeight: Double
-    private let style: ScheduleStyle
-
-    /// - Parameters:
-    ///   - strokes: the template's lines, in pixels of the working image (the plan's inputs).
-    ///   - traces: the lines the crew walked, drawn from their start to end by the guardian (the field
-    ///     show has none).
-    ///   - inkArrival: the ink step's `Arrival.field`, which a line the crew doesn't walk begins after.
-    ///   - relaxArrival: the template step's, which a point relaxes after.
-    ///   - streams: each such line's wait is a draw from the `.strokes` stream of its index.
-    public init(
-        strokes lines: [Polyline], traces: [Trace], inkArrival: Plane<Double>, relaxArrival: Plane<Double>,
-        spec: ShowSpec, petHeight: Double, streams: ShowStreams, style: ScheduleStyle = .standard
-    ) {
-        let timing = ScheduleTiming(spec)
-        let (width, height) = (inkArrival.width, inkArrival.height)
-        precondition(relaxArrival.width == width && relaxArrival.height == height, "both fields cover the picture")
-        let pace = timing.pace(style)
-        let inkStart = timing.start(ScheduleTiming.inkStep)
-        let inkEnd = inkStart + timing.step - style.inkEndMargin
-        let walkedBy = Dictionary(traces.map { ($0.stroke, $0) }, uniquingKeysWith: { $1 })
-        var strokes: [Stroke] = []
-        for (n, line) in lines.enumerated() {
-            let trace = walkedBy[n]
-            let points = trace?.line.points ?? line.points
-            let (jagged, smooth) = Self.staircase(points, grid: spec.outlines.grid, spacing: style.staircaseSpacing)
-            let cumulative = Polyline(smooth).cumulative
-            var start = trace?.start ?? 0
-            var duration = trace?.duration ?? 0
-            if trace == nil {
-                let x = Self.pixel(points[0].x, below: width)
-                let y = Self.pixel(points[0].y, below: height)
-                var rng = streams.stream(.strokes, n)
-                let wait = rng.uniform(0, style.strokeJitter)
-                start = max(inkArrival[x, y] + wait, inkStart + style.strokeEarliest)
-                duration = min(
-                    max((cumulative.last ?? 0) / (style.strokeSpeed * Double(width) * pace), style.strokeMinTime),
-                    style.strokeMaxTime / pace)
-                if start + duration > inkEnd { start = max(inkStart, inkEnd - duration) }
-            }
-            let relax = smooth.map { relaxArrival[Self.pixel($0.x, below: width), Self.pixel($0.y, below: height)] }
-            strokes.append(Stroke(
-                index: n, walked: trace != nil, start: start, duration: duration, jagged: jagged, smooth: smooth,
-                cumulative: cumulative, relax: relax))
-        }
-        self.strokes = strokes
-        self.timing = timing
-        crew = spec.crew
-        outlines = spec.outlines
-        self.petHeight = petHeight
-        self.style = style
-    }
-
-    /// A line walked to the end can fall a rounding short of its length (about 4e-15 px): within this
-    /// of it, it is whole.
-    private static let wholeWithin = 1e-9
-
-    /// The pixel a coordinate falls in, kept inside the picture.
-    private static func pixel(_ v: Double, below n: Int) -> Int {
-        min(max(truncated(v), 0), n - 1)
     }
 
     /// A smooth polyline as the stair-stepped outline it was fitted to: resampled every `spacing`
@@ -145,46 +72,10 @@ public struct StrokeSchedule: Sendable {
         return (jagged, paired)
     }
 
-    // MARK: Lines at a time
-
-    /// The lines at time `t` of the show: none before the ink step, then the ink step's, the
-    /// template step's relaxing ones, and the finished smooth ones from the show's end on.
-    public func lines(at t: Double) -> [InkLine] {
-        if t < timing.start(ScheduleTiming.inkStep) { return [] }
-        if t < timing.start(ScheduleTiming.templateStep) { return inked(at: t) }
-        return relaxed(at: t < timing.end ? t : .infinity)
-    }
-
-    /// The ink step's lines: each line begun, drawn along its stair-stepped outline as far as it has
-    /// got. A walked line is in full ink under the guardian's feet; the others darken from grey to ink.
-    public func inked(at t: Double) -> [InkLine] {
-        var lines: [InkLine] = []
-        for stroke in strokes where t >= stroke.start {
-            var drawn: Double
-            if stroke.walked {
-                drawn = crew.traced(t - stroke.start, stroke.length, petHeight)
-            } else {
-                drawn = ease((t - stroke.start) / stroke.duration) * stroke.length
-            }
-            if stroke.length - drawn < Self.wholeWithin { drawn = stroke.length }
-            let count = Self.pointsBehind(stroke.cumulative, drawn)
-            if count < 2 { continue }
-            let u = min(max((t - stroke.start) / (stroke.duration + outlines.inkRamp), 0), 1)
-            let value = stroke.walked ? 1.0 : style.inkGrey * (1 - u) + u
-            lines.append(InkLine(stroke: stroke.index, points: Array(stroke.jagged[..<count]), value: value))
-        }
-        return lines
-    }
-
-    /// The template step's lines: every point on its way from its stair-stepped place to the
-    /// smooth curve, as far as the ripple from the crew has reached it, in full ink. `t = .infinity`
-    /// is the finished template, `-.infinity` the outlines before any of it.
-    public func relaxed(at t: Double) -> [InkLine] {
-        Self.relaxed(strokes, at: t, over: outlines.relax)
-    }
-
-    /// `relaxed(at:)` for any strokes, a point taking `relaxTime` seconds from the ripple reaching
-    /// it to being smooth (the field show's, which has its own ripple but this same relaxing).
+    /// The template step's lines: every point of `strokes` on its way from its stair-stepped place to
+    /// the smooth curve, as far as the ripple has reached it (`Stroke.relax`), a point taking
+    /// `relaxTime` seconds from then to being smooth, in full ink. `t = .infinity` is the finished
+    /// template, `-.infinity` the outlines before any of it.
     static func relaxed(_ strokes: [Stroke], at t: Double, over relaxTime: Double) -> [InkLine] {
         strokes.map { stroke in
             let points = (0..<stroke.jagged.count).map { i -> Point in
@@ -195,25 +86,4 @@ public struct StrokeSchedule: Sendable {
             return InkLine(stroke: stroke.index, points: points, value: 1)
         }
     }
-
-    /// How many of the ascending `distances` are at or before `d` (`numpy.searchsorted` to the right).
-    private static func pointsBehind(_ distances: [Double], _ d: Double) -> Int {
-        var lo = 0
-        var hi = distances.count
-        while lo < hi {
-            let mid = (lo + hi) / 2
-            if distances[mid] <= d { lo = mid + 1 } else { hi = mid }
-        }
-        return lo
-    }
-}
-
-/// A line drawn from one end to the other over a while, rather than laid down where it lies.
-public struct Trace: Sendable, Equatable {
-    /// The line's index in the strokes.
-    public var stroke: Int
-    public var start: Double
-    public var duration: Double
-    /// In drawing order, which may be the stroke's reversed.
-    public var line: Polyline
 }
