@@ -11,9 +11,10 @@ import UIKit
 /// from a finished painting, each a tall arch with a glimpse of where it leads. Another One paints
 /// a new picture from the library (Tonight's Picture while the gallery doesn't hold it, else the
 /// next night's), Change It opens Edit on this painting, On Paper prints its template and Send It
-/// shares the finished picture. No frames or knobs: the shape and the glimpse are the door
-/// (the mockups' critic rounds, `factory/pieces/doors/`). SideStore and Debug builds until Paul has
-/// seen it; the release keeps the plain Finished bar.
+/// shares the finished picture; a painting made from a library picture has one more, The Original,
+/// the page about the real work (`AboutPainting`, painting-company row 120). No frames or knobs:
+/// the shape and the glimpse are the door (the mockups' critic rounds, `factory/pieces/doors/`).
+/// SideStore and Debug builds until Paul has seen it; the release keeps the plain Finished bar.
 struct FinishedDoors: View {
     let session: PaintingSession
     let title: String
@@ -22,6 +23,15 @@ struct FinishedDoors: View {
     let metrics: DoorMetrics
     /// Change It: Edit on this painting (`PaintView.onChange`); nil leaves the door out.
     var onChange: (() -> Void)?
+    /// The Original: the work behind the library picture this painting was made from; nil (a
+    /// painter's own photo) leaves the door out.
+    var original: OriginalWork?
+    /// The Original's page, asked of the painting screen: a sheet hung in this panel would take
+    /// its capped text size and the bar's color scheme.
+    var onOriginal: ((OriginalWork) -> Void)?
+    /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
+    /// painting-company row 295).
+    var withoutLines = false
 
     @Environment(\.paintPicture) private var paintPicture
     @Environment(Library.self) private var library: Library?
@@ -32,14 +42,16 @@ struct FinishedDoors: View {
     @State private var sharedFile: URL?
     @State private var preparing: FinishedDoor?
     @State private var sharedDoor: FinishedDoor?
+    @State private var originalImage: CGImage?
 
     var body: some View {
-        let doors = FinishedDoor.shown(changes: onChange != nil)
+        let doors = FinishedDoor.shown(changes: onChange != nil, original: original != nil)
         let next = nextPicture
-        Grid(horizontalSpacing: DoorMetrics.gap, verticalSpacing: DoorMetrics.rowGap) {
+        // Rows of their own, not a grid: a last row with fewer doors stands in the middle.
+        VStack(spacing: DoorMetrics.rowGap) {
             ForEach(0..<metrics.rows, id: \.self) { row in
                 // Top-aligned, so a door whose label wraps doesn't push its neighbours' arches down.
-                GridRow(alignment: .top) {
+                HStack(alignment: .top, spacing: DoorMetrics.gap) {
                     ForEach(doors.dropFirst(row * metrics.columns).prefix(metrics.columns)) { door in
                         button(door, next: next)
                     }
@@ -47,6 +59,13 @@ struct FinishedDoors: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .task(id: original?.id) {
+            guard let original else {
+                originalImage = nil
+                return
+            }
+            originalImage = await SampleImages.shared.load(original.sample, maxPixelSize: DoorGlimpses.pixelSize)
+        }
         .task(id: session.revision) { await glimpses.prepare(for: session) }
         .task(id: next?.id) {
             guard let next else {
@@ -110,6 +129,7 @@ struct FinishedDoors: View {
         case .change: Text("Change It")
         case .paper: Text("On Paper")
         case .send: Text("Send It")
+        case .original: Text("The Original")
         }
     }
 
@@ -121,6 +141,7 @@ struct FinishedDoors: View {
         case .change: return Text("Edit its lines")
         case .paper: return Text("Print and paint it")
         case .send: return Text("To someone you love")
+        case .original: return Text("Who made it")
         }
     }
 
@@ -141,6 +162,7 @@ struct FinishedDoors: View {
                 }
             case .paper: fill(glimpses.paper, fallback: "printer")
             case .send: card
+            case .original: wall
             }
             // Moonlight from inside the door: a soft glow at its threshold.
             LinearGradient(
@@ -155,6 +177,7 @@ struct FinishedDoors: View {
         .contentShape(arch)
         .animation(.easeOut(duration: 0.25), value: glimpses.lines == nil)
         .animation(.easeOut(duration: 0.25), value: sampleImage == nil)
+        .animation(.easeOut(duration: 0.25), value: originalImage == nil)
     }
 
     /// Send It's heart, one red in light and dark.
@@ -206,6 +229,32 @@ struct FinishedDoors: View {
         .frame(width: metrics.arch.width, height: metrics.arch.height)
     }
 
+    /// The Original's glimpse: the library's picture hung on a gallery wall, its label under it
+    /// (the same in dark mode, as Send It's envelope is).
+    private var wall: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.33, green: 0.40, blue: 0.38), Color(red: 0.24, green: 0.30, blue: 0.29)],
+                startPoint: .top, endPoint: .bottom)
+            if let originalImage {
+                VStack(alignment: .trailing, spacing: max(3, metrics.arch.height * 0.035)) {
+                    Image(decorative: originalImage, scale: 1)
+                        .resizable()
+                        .scaledToFit()
+                        .shadow(color: .black.opacity(0.4), radius: 5, y: 3)
+                    // The wall label.
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.white.opacity(0.85))
+                        .frame(width: metrics.arch.width * 0.16, height: max(3, metrics.arch.height * 0.045))
+                }
+                .frame(width: metrics.arch.width * 0.7, height: metrics.arch.height * 0.56)
+                .padding(.top, metrics.arch.height * 0.16)
+                .transition(.opacity)
+            }
+        }
+        .frame(width: metrics.arch.width, height: metrics.arch.height)
+    }
+
     // MARK: Opening
 
     private func open(_ door: FinishedDoor, next: Sample?) {
@@ -217,8 +266,9 @@ struct FinishedDoors: View {
             let paper = PDFExporter.Paper.default(for: Locale.current.region)
             prepare(door) { try await Self.paperFile(template, title: name, paper: paper, nicknames: nicknames) }
         case .send:
-            let template = session.template, painted = session.progress.painted, name = title
-            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name) }
+            let template = session.template, painted = session.progress.painted, name = title, plain = withoutLines
+            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name, withoutLines: plain) }
+        case .original: if let original { onOriginal?(original) }
         }
     }
 
@@ -245,9 +295,11 @@ struct FinishedDoors: View {
     }
 
     @concurrent
-    private static func pictureFile(_ template: Template, painted: [Bool], title: String) async throws -> URL {
+    private static func pictureFile(
+        _ template: Template, painted: [Bool], title: String, withoutLines: Bool
+    ) async throws -> URL {
         guard let data = TemplateRasterizer.pngData(
-            template, painted: painted, style: .finished, maxPixelSize: ArtworkExporter.imagePixelSize)
+            template, painted: painted, style: .finished.hidingLines(withoutLines, painted: painted), maxPixelSize: ArtworkExporter.imagePixelSize)
         else { throw ArtworkExporter.ExportError.renderFailed }
         return try ArtworkExporter.temporaryFile(data, name: title, pathExtension: "png")
     }
@@ -255,18 +307,21 @@ struct FinishedDoors: View {
 
 /// The doors, in the order they stand.
 nonisolated enum FinishedDoor: String, CaseIterable, Identifiable, Sendable {
-    case another, change, paper, send
+    case another, change, paper, send, original
 
     var id: String { rawValue }
 
-    /// The doors a painting shows: Change It only where Edit can open it.
-    static func shown(changes: Bool) -> [FinishedDoor] {
-        allCases.filter { $0 != .change || changes }
+    /// The doors a painting shows: Change It only where Edit can open it, The Original only for a
+    /// painting made from a library picture.
+    static func shown(changes: Bool, original: Bool) -> [FinishedDoor] {
+        allCases.filter { ($0 != .change || changes) && ($0 != .original || original) }
     }
 }
 
 /// How big the doors are and how they are laid: in one row where each arch is still a door's size
-/// (an iPad, a phone on its side), else two by two, never taller than the room they are given.
+/// (an iPad, a phone on its side), else in two rows (two by two; five as three over two), never
+/// taller than the room they are given. An iPad's panel widens for a fifth door
+/// (`CompletionBar.widestPanel(doors:)`), so its row of five is as large as a row of four.
 nonisolated struct DoorMetrics: Equatable, Sendable {
     let columns: Int
     let rows: Int
@@ -282,6 +337,10 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
     static let smallest: CGFloat = 56
     /// One row is taken when its arches are at least this wide.
     static let roomyRow: CGFloat = 110
+    /// And a row of five or more when at least this wide, on a screen between a phone's and an
+    /// iPad's, where the panel can't widen all the way: their captions may take a second line
+    /// there, which the row's height has no room for under `labelHeight` alone.
+    static let snugRow: CGFloat = 88
 
     /// The doors' layout in `width` × `height` points, or nil where they don't fit.
     static func fitting(count: Int, width: CGFloat, height: CGFloat, dynamicTypeSize: DynamicTypeSize) -> DoorMetrics? {
@@ -295,8 +354,11 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
             return DoorMetrics(columns: columns, rows: rows, arch: CGSize(width: w, height: (w * aspect).rounded(.down)))
         }
         let row = arch(columns: count)
-        let grid = arch(columns: min(2, count))
-        let best = row.arch.width >= roomyRow || row.arch.width >= grid.arch.width ? row : grid
+        let grid = arch(columns: max(min(2, count), (count + 1) / 2))
+        // Five doors keep to one row a little sooner: on an iPad's panel two rows of large arches
+        // would take the painting's room.
+        let roomy = count > 4 ? snugRow : roomyRow
+        let best = row.arch.width >= roomy || row.arch.width >= grid.arch.width ? row : grid
         return best.arch.width >= smallest ? best : nil
     }
 

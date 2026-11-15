@@ -76,7 +76,8 @@ nonisolated struct CanvasUniforms {
     /// Line width (px) per layer; classic templates draw every line `outline.x` wide.
     var lineWidth: SIMD4<Float> = .zero
     /// x: 1 for a coloring book (`setColoringBookLines`: lines never dissolve under paint and the
-    /// selected color's cells get no outline).
+    /// selected color's cells get no outline); y: how far its drawing's ink has gone (0 shown,
+    /// 1 gone: `CanvasFrame.inkHidden`).
     var lineMode: SIMD4<Float> = .zero
     /// rgb: the tone writing over a dark paint is drawn in once its region is painted
     /// (`CanvasPalette.lightTone`).
@@ -111,11 +112,12 @@ nonisolated extension CanvasUniforms {
 
     /// A coloring book's lines (`ColoringBookLook`): every drawn layer `width` px wide in the
     /// full ink, color edges not drawn, every line kept whole over the paint, and the shader's
-    /// book mode.
-    mutating func setColoringBookLines(width: Float) {
+    /// book mode. `inkHidden` (0…1) fades every line but the writing: the finished picture
+    /// without its ink.
+    mutating func setColoringBookLines(width: Float, inkHidden: Float = 0) {
         lineAlpha = SIMD4(1, 1, 1, 0)
         lineWidth = SIMD4(width, width, width, 0)
-        lineMode = SIMD4(1, 0, 0, 0)
+        lineMode = SIMD4(1, min(max(inkHidden, 0), 1), 0, 0)
     }
 
     /// The constants for `frame`: the one place a frame's uniforms are packed, for the live
@@ -130,7 +132,7 @@ nonisolated extension CanvasUniforms {
         outline = SIMD4(frame.outlineWidth, frame.selectedOutlineWidth, frame.hatch, frame.numbersShown)
         switch frame.lines {
         case .classic: setClassicLines()
-        case .coloringBook(let width): setColoringBookLines(width: width)
+        case .coloringBook(let width): setColoringBookLines(width: width, inkHidden: frame.inkHidden)
         }
         labels = frame.labels
         numbers = frame.numbers
@@ -164,6 +166,9 @@ nonisolated struct CanvasFrame {
     /// How visible the numbers are (0…1).
     var numbersShown: Float
     var lines: Lines
+    /// How far a coloring book's ink has gone from its finished picture (0 shown, 1 gone, its
+    /// writing kept: painting-company row 295); classic lines dissolve under paint by themselves.
+    var inkHidden: Float
     /// As `CanvasUniforms.labels` and `.numbers`.
     var labels: SIMD4<Float>
     var numbers: SIMD4<Float>
