@@ -176,6 +176,7 @@ below name both alike.
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`; the sky they play in is `App/Sky.swift`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
+- `Outside/` (`#if UNRELEASED`): the app's side of its widgets and stickers (Outside the app, below).
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).
@@ -1228,6 +1229,48 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
+
+## Outside the app: widgets and stickers
+
+SideStore and Debug builds only (painting-company rows 348 and 349). Two extensions, each a
+synchronized folder and a target of its own: `App/MoonlightWidgets` (WidgetKit: Painting in
+Progress, with its Paint One Area button, on the Home Screen and the Lock Screen; Finished
+Paintings, the frame, a painting a day, which StandBy shows too) and `App/MoonlightStickers`
+(Messages: the finished paintings as stickers). Neither links PaintCore or reads a painting.
+
+- **The shelf.** `App/Outside/OutsideShelf.swift` (Foundation only, compiled into the app and
+  both extensions; its doc comment is the reference) is a folder of the app group,
+  `Outside/`: pictures the app drew and three lists. The paintings stay in the app's own folder,
+  with one writer.
+- **The app's side** (`App/PaintByNumber/Outside/`, `#if UNRELEASED`): `OutsideDesk` lays the
+  shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
+  `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
+  (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
+  (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
+  whose finish is the app's), the finished paintings' pictures, and their stickers
+  (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
+  subject cut out of the finished painting; Vision runs for a few paintings at a time, and only
+  with the app in front, `OutsideDesk.cutOutStickers`: leaving, the app has seconds).
+- **Paint One Area** writes one number (`OutsideShelf.addTap`) and the widget shows the next
+  picture. The app paints those areas for real when it next comes forward (`OutsideDesk.comeBack`
+  into the saved painting, `absorb(into:artwork:)` into the one on screen, as taps of the
+  painter's own), then lays the shelf out again. Always absorb, then lay out: laying out starts
+  the count over, and leaves the pictures alone while taps wait that still fit the painting.
+  Taps that no longer fit it (it changed since) are dropped. The desk does one job at a time
+  (`inTurn`): a widget tapped brings the shell and a painting's screen there together.
+- **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
+- **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
+  extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as
+  `ci.yml` and `tools/checks.sh` do); `ci/check_release.sh` fails on a Release app with PlugIns.
+  The extensions sign only in Debug, where the three targets carry the app group
+  (`Config/Outside.entitlements`). The `ipa` job signs the SideStore build ad hoc with that
+  entitlement, so SideStore, which signs again under the installer's team, gives the three a
+  group of that team; `OutsideShelf.groups(of:)` finds its name (`ALTAppGroups`).
+- **Demo and test launches lay nothing out** (`OutsideDesk.shelf` is nil); `OutsideTests` hand
+  the desk, the plan and the sticker maker a shelf in a temporary folder.
+- **Words** are each extension's own `Localizable.xcstrings` (its literals are looked up in its
+  own bundle), written by hand as the app's; `tools/strings_check.py` doesn't read them.
+- Paint by Mosaic's mosaics aren't on the shelf.
 
 ## Sharing and exports
 

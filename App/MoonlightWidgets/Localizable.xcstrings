@@ -1,0 +1,70 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ painted" : {
+      "comment" : "Painting in Progress widget, under the painting's title: how much of it is painted. The argument is a percentage, like 42%",
+      "extractionState" : "manual"
+    },
+    "Finish a painting and it hangs here." : {
+      "comment" : "Finished Paintings widget with no finished painting to show",
+      "extractionState" : "manual"
+    },
+    "Finished Paintings" : {
+      "comment" : "Widget gallery: the name of the widget that shows a finished painting",
+      "extractionState" : "manual"
+    },
+    "Next: %lld · %@" : {
+      "comment" : "Painting in Progress widget on the Lock Screen: the next paint's number and its name",
+      "extractionState" : "manual"
+    },
+    "Next: paint %lld" : {
+      "comment" : "Painting in Progress widget on the Lock Screen: the next paint's number, for a paint without a name",
+      "extractionState" : "manual"
+    },
+    "One of your finished paintings, a new one each day." : {
+      "comment" : "Widget gallery: what the Finished Paintings widget does",
+      "extractionState" : "manual"
+    },
+    "Open to keep painting" : {
+      "comment" : "Painting in Progress widget, in the button's place once the widget has painted all the areas it can: a tap opens the app",
+      "extractionState" : "manual"
+    },
+    "Open to paint the last area" : {
+      "comment" : "Painting in Progress widget, in the button's place when one area is left: the last is painted in the app",
+      "extractionState" : "manual"
+    },
+    "Paint One Area" : {
+      "comment" : "Painting in Progress widget: the button that paints the next area of the painting; also the action's name",
+      "extractionState" : "manual"
+    },
+    "Paint by Moonlight" : {
+      "comment" : "The app's name, where a Lock Screen widget has no painting to name",
+      "extractionState" : "manual"
+    },
+    "Paint one area, %lld, %@" : {
+      "comment" : "Painting in Progress widget, VoiceOver label of the Paint One Area button: the next paint's number and its name",
+      "extractionState" : "manual"
+    },
+    "Paint one area, paint %lld" : {
+      "comment" : "Painting in Progress widget, VoiceOver label of the Paint One Area button: the next paint's number, for a paint without a name",
+      "extractionState" : "manual"
+    },
+    "Painting in Progress" : {
+      "comment" : "Widget gallery: the name of the widget that shows the painting in progress",
+      "extractionState" : "manual"
+    },
+    "Paints the next area of your painting in progress." : {
+      "comment" : "What the Paint One Area action does, where the system describes it",
+      "extractionState" : "manual"
+    },
+    "Start a painting and it waits for you here." : {
+      "comment" : "Painting in Progress widget with no painting to show",
+      "extractionState" : "manual"
+    },
+    "Your painting as it stands. Paint One Area fills in the next area, right here." : {
+      "comment" : "Widget gallery: what the Painting in Progress widget does. Paint One Area is its button",
+      "extractionState" : "manual"
+    }
+  },
+  "version" : "1.0"
+}
