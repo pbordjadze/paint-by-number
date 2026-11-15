@@ -227,7 +227,7 @@ final class GalleryActionsTests: XCTestCase {
     func testSearchNarrowsToMatchingTitles() {
         let app = launchGallery()
         _ = revealCard("The Great Wave", in: app)
-        let field = app.searchFields.firstMatch
+        let field = searchField(in: app)
         XCTAssertTrue(field.waitForExistence(timeout: 10), "The gallery has no search field")
         field.tap()
         field.typeText("re")

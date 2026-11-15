@@ -19,7 +19,19 @@ extension PaintTips {
 
     /// The shelf appeared, its library changed, or tips were switched on.
     static func shelfMoment(_ library: Library) {
-        desk.offer(desk.shelfCandidates(library.tipFacts), in: .shelf, rest: .milliseconds(900))
+        desk.offer(shelfTips(desk.shelfCandidates(library.tipFacts)), in: .shelf, rest: .milliseconds(900))
+    }
+
+    /// The shelf's tips the gallery has a view to point from. Under the tab bar (SideStore and
+    /// Debug builds, painting-company row 328) the gallery's bar has no +, the Paint tab being
+    /// it: its tip is left out, or the desk would pick it first, find nothing to point it at, and
+    /// the visit's moment would be spent with the tips after it unsaid.
+    static func shelfTips(_ due: [TipID]) -> [TipID] {
+        #if UNRELEASED
+        due.filter { $0 != .shelfNewPainting }
+        #else
+        due
+        #endif
     }
 
     // MARK: The bench

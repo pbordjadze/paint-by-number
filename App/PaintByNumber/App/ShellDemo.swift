@@ -14,7 +14,12 @@ import PaintCore
 /// - `gallery-favorites`, `gallery-favorites-dark`: the fixed pictures' paintings with two
 ///   favorites and the Show filter on Favorites.
 /// - `gallery-search`, `gallery-search-dark`: the same paintings with "re" typed in the search
-///   field (two results).
+///   field (two results; in SideStore and Debug builds on the search tab, the library's pictures
+///   it finds under them).
+/// - `paint-tab`, `paint-tab-dark`, `search-tab` (SideStore and Debug builds, whose shell has the
+///   system's tab bar, `ShellTabs`; the release's build shows its gallery): `gallery`'s paintings
+///   with the Paint tab selected, the Paint page under its large title; and with the search tab
+///   selected and nothing typed: every painting, then the library.
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state, once its sketch has painted itself (SideStore and Debug).
@@ -25,7 +30,8 @@ import PaintCore
 /// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
 ///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
 ///   Discard; the second with every localized string twice as long.
-/// - `create`: the photo picker step of the create flow.
+/// - `create`: the Paint page over an empty gallery: the create flow's first step, or the Paint
+///   tab in SideStore and Debug builds (`opensPaintPage`), as in the `create-samples` scenarios.
 /// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
 ///   iPad shows both); the second with every localized string twice as long.
 /// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
@@ -115,7 +121,7 @@ enum ShellDemo: Equatable {
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
-         settings, settingsLongText, settingsAcknowledgements, settingsClock
+         settings, settingsLongText, settingsAcknowledgements, settingsClock, paintTab, searchTab
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -170,6 +176,8 @@ enum ShellDemo: Equatable {
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
         case "settings-clock": .settingsClock
+        case "paint-tab", "paint-tab-dark": .paintTab
+        case "search-tab": .searchTab
         default: nil
         }
     }()
@@ -200,7 +208,7 @@ enum ShellDemo: Equatable {
     /// pictures: Earthrise, and Red Fuji).
     private var favoriteSamples: [String] {
         let positions: [Int] = switch self {
-        case .gallery, .gallerySearch: [2]
+        case .gallery, .gallerySearch, .paintTab, .searchTab: [2]
         case .galleryFavorites: [2, 5]
         default: []
         }
@@ -214,8 +222,30 @@ enum ShellDemo: Equatable {
 
     var sendsTemplate: Bool { self == .gallerySend }
 
+    /// The scenario shows the Paint page with nothing picked: the create flow's first step, or
+    /// in SideStore and Debug builds the Paint tab (`tab`).
+    var opensPaintPage: Bool { self == .create || opensSamples }
+
+    #if UNRELEASED
+    /// The tab the scenario opens on (`ShellTabs`).
+    var tab: ShellTab {
+        if opensPaintPage || self == .paintTab { return .paint }
+        if self == .gallerySearch || self == .searchTab { return .search }
+        return .gallery
+    }
+    #endif
+
+    /// The Paint page is a tab, with no create flow to open for it.
+    private static var paintPageIsATab: Bool {
+        #if UNRELEASED
+        true
+        #else
+        false
+        #endif
+    }
+
     var opensCreateFlow: Bool {
-        self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
+        opensPaintPage && !Self.paintPageIsATab || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
             || self == .createTip || self == .createDrawing || self == .createRefineUnlock || formingHold != nil
     }
@@ -356,7 +386,7 @@ enum ShellDemo: Equatable {
 
     func prepare(_ library: Library) {
         switch self {
-        case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites:
+        case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites, .paintTab, .searchTab:
             let favorites = favoriteSamples
             library.seed(DemoMode.photos.isEmpty ? galleryItems : photoItems, completion: { _ in
                 for artwork in library.artworks {

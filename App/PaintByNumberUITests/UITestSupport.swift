@@ -233,6 +233,47 @@ extension XCTestCase {
         return app
     }
 
+    /// Whether the shell on screen has the system's tab bar (SideStore and Debug builds,
+    /// painting-company row 328; the release's build has the gallery alone, with its + and its
+    /// own search field): its Gallery tab is there. Asked of what is on screen, not of the build,
+    /// so a test runs against either shell. A painting and anything that covers the shell hide
+    /// the bar, so ask from the gallery, the Paint page or the search.
+    @MainActor
+    func hasTabBar(_ app: XCUIApplication) -> Bool {
+        app.buttons["Gallery"].firstMatch.exists
+    }
+
+    /// What only the gallery has, in either shell: its bar's gear (`gallery-settings`). On screen it
+    /// means the gallery is, with no painting pushed over it and nothing covering it; a button
+    /// named Paint doesn't, being the Paint tab's under the tab bar and the gallery's + without.
+    @MainActor
+    func galleryMark(in app: XCUIApplication) -> XCUIElement {
+        app.buttons["gallery-settings"].firstMatch
+    }
+
+    /// The search field of the painter's paintings: the gallery's own, or under the tab bar the
+    /// search tab's, which is opened for it.
+    @MainActor
+    func searchField(in app: XCUIApplication) -> XCUIElement {
+        let field = app.searchFields.firstMatch
+        if !field.exists, hasTabBar(app) {
+            app.buttons["Search"].firstMatch.tap()
+        }
+        return field
+    }
+
+    /// From the Paint page back to the gallery: the Gallery tab under the tab bar, the cancel key
+    /// where the page is the create flow's first step (an Esc typed by XCUITest never reaches the
+    /// app, so the key is ⌘.).
+    @MainActor
+    func leavePaintPage(in app: XCUIApplication) {
+        if hasTabBar(app) {
+            app.buttons["Gallery"].firstMatch.tap()
+        } else {
+            app.typeKey(".", modifierFlags: .command)
+        }
+    }
+
     /// Waits for the preview's settings to be chosen: its chip shows once they are.
     /// Start Painting is no sign of it, as it works from the first draft (SideStore and Debug
     /// builds, so every UI test run).
