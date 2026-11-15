@@ -7,7 +7,8 @@ import SwiftUI
 import WidgetKit
 
 /// The app's side of what lives outside it (painting-company rows 348 and 349): lays the shelf
-/// out (`OutsideShelf`) for the widgets and the stickers whenever the app leaves the foreground,
+/// out (`OutsideShelf`) for the widgets and the stickers when a painting is closed and whenever
+/// the app leaves the foreground,
 /// and, coming back, paints for real the areas the widget's Paint One Area showed painted.
 ///
 /// The order is always absorb, then lay out: laying out starts the count of taps over.
@@ -151,6 +152,17 @@ enum OutsideDesk {
         await inTurn { await layOutInTurn(library, leaving: leaving) }
     }
 
+    /// The painting the shelf was last laid out with, as it stood then.
+    private struct Laid {
+        var token: String
+        var artwork: UUID
+        var modified: Date
+        var thumbnail: Int
+        var title: String
+    }
+
+    private static var laid: Laid?
+
     private static func layOutInTurn(_ library: Library, leaving: Bool) async {
         guard let shelf else { return }
         await library.flush()
@@ -159,10 +171,19 @@ enum OutsideDesk {
             ?? usable.filter { !$0.isStarted && !$0.isComplete }.max { $0.modifiedAt < $1.modifiedAt }
         let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
         let store = library.store
-        await Background.run {
-            layOutNow(current, store: store, shelf: shelf)
+        let state = current.map { Laid(token: "", artwork: $0.id, modified: $0.modifiedAt, thumbnail: $0.thumbnailVersion, title: $0.title) }
+        let before = laid
+        let token = await Background.run { () -> String? in
+            // Laid out already as it stands (the painting was closed a moment ago, and now the
+            // app leaves): its pictures are not drawn again in the seconds leaving has.
+            let stands = before != nil && state != nil && before?.token == shelf.now()?.token
+                && before?.artwork == state?.artwork && before?.modified == state?.modified
+                && before?.thumbnail == state?.thumbnail && before?.title == state?.title
+            if !stands { layOutNow(current, store: store, shelf: shelf) }
             layOutFinished(finished, store: store, shelf: shelf)
+            return shelf.now()?.token
         }
+        laid = state.flatMap { state in token.map { Laid(token: $0, artwork: state.artwork, modified: state.modified, thumbnail: state.thumbnail, title: state.title) } }
         WidgetCenter.shared.reloadAllTimelines()
         await StickerMaker.layOut(finished, store: store, shelf: shelf, cutOuts: leaving ? 0 : StickerMaker.mostCutOutsALayout)
     }
@@ -291,6 +312,16 @@ struct OutsideComings: ViewModifier {
                 } else if phase == .background {
                     wasAway = true
                     if open == nil { OutsideDesk.layOutOnLeaving(library) }
+                }
+            }
+            .onChange(of: open) { old, new in
+                // A painting was closed: the shelf is laid out with the app in front, where
+                // there is time, once the screen's last save is on its way, and leaving then
+                // finds it done.
+                guard old != nil, new == nil else { return }
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    await OutsideDesk.layOut(library)
                 }
             }
             .task { await OutsideDesk.layOutIfEmpty(library) }

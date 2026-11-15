@@ -1211,7 +1211,7 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   `Outside/`: pictures the app drew and three lists. The paintings stay in the app's own folder,
   with one writer.
 - **The app's side** (`App/PaintByNumber/Outside/`, `#if UNRELEASED`): `OutsideDesk` lays the
-  shelf out whenever the app leaves the foreground (`OutsideComings` on the shell;
+  shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
   `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
   (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
   (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
