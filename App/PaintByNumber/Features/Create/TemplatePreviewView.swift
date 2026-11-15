@@ -313,7 +313,7 @@ struct TemplatePreviewView: View {
 
     private func setEnlarged(_ enlarged: Bool) {
         titleFocused = false
-        withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
+        withAnimation(reduceMotion ? nil : .settle) { isTuning = enlarged }
     }
 
     /// Whether Close answers Esc: not while Refine covers the preview.
@@ -734,7 +734,7 @@ struct TemplatePreviewView: View {
     private var adjustButton: some View {
         Button {
             titleFocused = false
-            withAnimation(reduceMotion ? nil : .snappy) { opensSettings.toggle() }
+            withAnimation(reduceMotion ? nil : .settle) { opensSettings.toggle() }
         } label: {
             HStack(spacing: 4) {
                 Text("Adjust")

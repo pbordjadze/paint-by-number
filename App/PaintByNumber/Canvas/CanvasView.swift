@@ -169,6 +169,8 @@ final class CanvasView: UIView, PaintingCanvas {
     private var photoTexture: (any MTLTexture)?
     private var photoTask: Task<Void, Never>?
     private var photoFade = Fade(from: 0, to: 0, duration: 0.2)
+    /// The lantern's spread (`photoIsLantern`).
+    private var photoReveal = Fade(from: 0, to: 0, duration: 0.55)
     /// When every fill painted so far has landed (renderer clock).
     private var fillsLand = CanvasClock.never
     /// The finish's flight, waiting for the last fill to land (`finish`).
@@ -986,7 +988,8 @@ final class CanvasView: UIView, PaintingCanvas {
             selection: selected.map { (color: $0, paint: paint) },
             hovered: isReplaying ? -1 : hoverRegion, pulsing: pulseRegion, bumped: bumpRegion,
             brush: brush, shine: (start: shineStart, color: shineColor),
-            photoOpacity: photoFade.value(at: time)))
+            photoOpacity: photoIsLantern ? (photoReveal.value(at: time) > 0 ? 1 : 0) : photoFade.value(at: time),
+            photoReveal: photoIsLantern ? photoReveal.value(at: time) : -1))
     }
 
     /// The selected color shows, easing in with its hatch gliding in as on a pick: the canvas a
@@ -1053,10 +1056,22 @@ final class CanvasView: UIView, PaintingCanvas {
         return UncheckedSendable(texture)
     }
 
+    /// Show Photo opens as a lantern in SideStore and Debug builds (painting-company row 351): the
+    /// photo whole inside a soft circle spreading from the page's top edge, and drawn back the
+    /// same way. Reduce Motion and the release fade it.
+    private var photoIsLantern: Bool {
+        #if UNRELEASED
+        !reduceMotion
+        #else
+        false
+        #endif
+    }
+
     private func fadePhoto(to target: Float) {
         let t = now()
         photoFade.retarget(to: target, at: t)
-        activeUntil = max(activeUntil, t + photoFade.duration + 0.05)
+        photoReveal.retarget(to: target, at: t)
+        activeUntil = max(activeUntil, t + max(photoFade.duration, photoReveal.duration) + 0.05)
         requestRender()
     }
 

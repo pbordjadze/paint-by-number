@@ -14,22 +14,22 @@ struct FinishedDoorsTests {
         #expect(FinishedDoor.shown(changes: false) == [.another, .paper, .send])
     }
 
-    /// An iPhone upright: two by two, the arches as large as the mockups' (about 150 points).
+    /// An iPhone upright: two by two, the doors as large as the mockups' (about 150 points).
     @Test func aPhoneLaysThemTwoByTwo() throws {
         let doors = try #require(DoorMetrics.fitting(count: 4, width: 346, height: 417, dynamicTypeSize: .large))
         #expect(doors.columns == 2 && doors.rows == 2)
-        #expect(doors.arch.width >= 140 && doors.arch.width <= DoorMetrics.largest)
-        #expect(abs(doors.arch.height - doors.arch.width * DoorMetrics.aspect) < 1)
+        #expect(doors.door.width >= 140 && doors.door.width <= DoorMetrics.largest)
+        #expect(abs(doors.door.height - doors.door.width * DoorMetrics.aspect) < 1)
     }
 
     /// An iPad's panel (560 points) and a phone on its side: one row.
     @Test func aWidePanelLaysThemInOneRow() throws {
         let pad = try #require(DoorMetrics.fitting(count: 4, width: 528, height: 800, dynamicTypeSize: .large))
         #expect(pad.columns == 4 && pad.rows == 1)
-        #expect(pad.arch.width >= DoorMetrics.roomyRow)
+        #expect(pad.door.width >= DoorMetrics.roomyRow)
         let side = try #require(DoorMetrics.fitting(count: 4, width: 528, height: 140, dynamicTypeSize: .large))
         #expect(side.columns == 4 && side.rows == 1)
-        #expect(side.arch.height + DoorMetrics.labelHeight(.large) + DoorMetrics.labelGap <= 140)
+        #expect(side.door.height + DoorMetrics.labelHeight(.large) + DoorMetrics.labelGap <= 140)
     }
 
     @Test func noRoomShowsNoDoors() {
@@ -61,15 +61,6 @@ struct FinishedDoorsTests {
             #expect(abs(rect.midX - Double(w) / 2) < 0.001 && abs(rect.midY - Double(h) / 2) < 0.001)
             #expect(rect.width <= Double(min(w, h)) * 0.45 + 0.001)
         }
-    }
-
-    @Test func anArchHasARoundTopUntilItFlattens() {
-        let rect = CGRect(x: 0, y: 0, width: 100, height: 108)
-        let round = ArchShape().path(in: rect)
-        #expect(!round.contains(CGPoint(x: 2, y: 2)), "The arch's top corner is filled")
-        #expect(round.contains(CGPoint(x: 50, y: 2)))
-        let flat = ArchShape(roundness: 0, footRadius: 0).path(in: rect)
-        #expect(flat.contains(CGPoint(x: 1, y: 1)))
     }
 }
 #endif

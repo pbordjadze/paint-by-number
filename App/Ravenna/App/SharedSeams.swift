@@ -26,6 +26,9 @@ nonisolated enum EraSeam {
     /// Whether the painting screen goes quiet once an area is painted (`QuietPainting`): always.
     static let offersQuietPainting = true
 
+    /// Whether the selected color's name rolls into place when it changes: not in this era.
+    static let rollsLabels = false
+
     /// Whether the palette keeps the lines it was given once fewer colors are left: no, it takes
     /// no more lines than it has colors.
     static let paletteKeepsItsLines = false

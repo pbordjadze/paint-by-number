@@ -138,7 +138,7 @@ nonisolated extension CanvasUniforms {
         if let cursor = frame.brush { brush = SIMD4(cursor.center.x, cursor.center.y, cursor.radius, 1) }
         shine = SIMD4(frame.shine.start, Float(frame.shine.color), 0, 0)
         ids = SIMD4(Int32(frame.selection?.color ?? -1), Int32(frame.hovered), Int32(frame.pulsing), Int32(frame.bumped))
-        photo = SIMD4(frame.photoOpacity, 0, 0, 0)
+        photo = SIMD4(frame.photoOpacity, frame.photoReveal, 0, 0)
     }
 }
 
@@ -180,6 +180,10 @@ nonisolated struct CanvasFrame {
     /// A light sweep over finished paint: its start and palette color (-1 = everything).
     var shine: (start: Float, color: Int)
     var photoOpacity: Float
+    /// How far the lantern Show Photo opens in SideStore builds has spread (0…1: from the page's
+    /// top edge until it covers the page; painting-company row 351), or -1: the photo shows whole,
+    /// at `photoOpacity`.
+    var photoReveal: Float
 
     enum Lines {
         /// Every layer the classic line (`setClassicLines`).

@@ -22,7 +22,7 @@ struct FrameUniforms {
     float4 brush;       // xy: position (px), z: radius (px), w: opacity
     float4 shine;       // x: start of a light sweep over finished paint, y: its color (-1 = all)
     int4   ids;         // x: selected color, y: hovered region, z: pulsing region, w: bumped region
-    float4 photo;       // x: source photo opacity
+    float4 photo;       // x: source photo opacity, y: the lantern's spread (0…1; < 0: none)
     float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
     float4 lineWidth;   // line width (px) per layer
     float4 lineMode;    // x: 1 for a coloring book
@@ -413,6 +413,15 @@ fragment float4 photoFragment(RectOut in [[stage_in]],
     constexpr sampler trilinear(filter::linear, mip_filter::linear, address::clamp_to_edge);
     float2 uv = (in.position.xy - u.transform.xy) / (u.viewport.zw * u.transform.z);
     float a = u.photo.x;
+    // The lantern (painting-company row 351): the photo inside a soft circle that grows from the
+    // middle of the page's top edge until it covers the page.
+    if (u.photo.y >= 0) {
+        float2 size = u.viewport.zw * u.transform.z;
+        float2 centre = u.transform.xy + float2(size.x * 0.5, 0);
+        float feather = 0.18 * min(size.x, size.y) + 1;
+        float r = u.photo.y * (length(float2(size.x * 0.5, size.y)) + feather);
+        a *= 1 - smoothstep(r - feather, r, distance(in.position.xy, centre));
+    }
     return float4(photo.sample(trilinear, uv).rgb * a, a);     // premultiplied
 }
 

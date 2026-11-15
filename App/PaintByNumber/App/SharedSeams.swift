@@ -26,6 +26,13 @@ nonisolated enum EraSeam {
     static let offersQuietPainting = false
     #endif
 
+    /// Whether the selected color's name rolls into place when it changes (painting-company row 351).
+    #if UNRELEASED
+    static let rollsLabels = true
+    #else
+    static let rollsLabels = false
+    #endif
+
     /// Whether the palette keeps the lines it was given once fewer colors are left: the painting
     /// screen was laid out for them (`PaintingLayout`).
     static let paletteKeepsItsLines = true

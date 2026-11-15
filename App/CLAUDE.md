@@ -7,10 +7,17 @@ synchronized folder would bundle it into the app.
 
 ## Gotchas
 
-- In SideStore and Debug builds a gallery card opens its painting through an arch (`ArchOpening`,
-  painting-company row 332): the shell's overlay grows the card's picture into the room, then
-  pushes the painting under it through `StartHandoff`, as Start Painting does under its cover; the
-  way back is still the zoom. The same builds use 1.3's names (row 331): Edit for Refine and ✎
+- SideStore and Debug builds carry row 351's quieter touches (`App/Quirks.swift`, the mock
+  `factory/pieces/quirks/` in painting-company): `.settle`, the house curve, for the app's own
+  panels and toasts (`.snappy` in the release); a gallery card's progress as a waxing moon
+  (`ProgressMoon`, `MoonPhase`); the gallery's first cards after a launch coming out one by one
+  (`StarsComeOut`, never in demo or test launches); a card set down with a small tilt as its
+  painting closes (`SetDown`, `AppShellView`'s `settlingCard`); Show Photo opening as a lantern
+  (`CanvasView.photoIsLantern`: `CanvasFrame.photoReveal`, the photo shader's `photo.y`); the
+  current color's name rolling up (`CurrentColorLabel`, `EraSeam.rollsLabels`, never in Paint by
+  Mosaic). Reduce Motion fades or shows each at once. The doors after Finished are plain cards
+  (row 351 took their arches, and the arch opening from the gallery, out).
+- SideStore and Debug builds use 1.3's names (row 331): Edit for Refine and ✎
   Change, Art for the Paint page's paintings, Colors for Refine's Paint group and layer (the Tool
   Guide's words through `RefineGuidePage.named`); UI tests see these names.
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
@@ -120,7 +127,7 @@ A file under `App/Shared/` is in the place it would have under `App/PaintByNumbe
 below name both alike.
 
 
-- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
+- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `Quirks`, `LineWeight`,
   `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
