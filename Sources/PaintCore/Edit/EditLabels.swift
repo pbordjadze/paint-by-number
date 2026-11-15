@@ -143,14 +143,14 @@ extension EditWork {
         let alive = t.regions.indices.filter { regionAlive[$0] }
         guard let nearest = TemplateEditor.nearestLabel(
             in: alive, labels: { labels[$0] ?? Array(t.labels(ofRegion: $0)) }, at: from, reach: reach)
-        else { throw EditFailure.invalid(TemplateEditor.noNumberNear) }
+        else { throw EditFailure.declined(.noNumberNear) }
         let r = nearest.region
         var own = labels[r] ?? Array(t.labels(ofRegion: r))
         let position = Lattice.position(to)
         guard own[nearest.index].position != position else { return }
         guard contains(r, to) == .inside else { throw EditFailure.invalid("there is no room for the number there") }
         let poly = Self.flatPolygon(polygons(of: r))
-        let inked = strokes.filter { $0.alive && $0.region == r && $0.layer != LineLayer.color.rawValue }
+        let inked = strokes.filter { $0.alive && $0.region == r && LineLayer.isDrawn($0.layer) }
         let keepOut = LabelKeepOut(rects: [], lines: inked.map { LabelKeepOut.Line($0.points) })
         let p = Lattice.double(to)
         let room = min(poly.signedDistance(p.x, p.y), keepOut.distance(p.x, p.y))

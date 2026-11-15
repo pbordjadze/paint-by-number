@@ -380,7 +380,7 @@ extension ShowPictures {
         var worstFuse = 0.0, worstRelax = 0.0, worstSpan = 0.0
         for (n, want) in g.strokes.enumerated() {
             let stroke = show.strokes[n]
-            #expect(stroke.index == n && !stroke.walked && stroke.jagged.count == want.points && stroke.smooth.count == want.points)
+            #expect(stroke.index == n && stroke.jagged.count == want.points && stroke.smooth.count == want.points)
             #expect(show.fuses[n].count == want.points)
             for (got, pin) in zip(show.fuses[n], want.fuse) { worstFuse = max(worstFuse, abs(got - pin)) }
             for (got, pin) in zip(stroke.relax, want.relax) { worstRelax = max(worstRelax, abs(got - pin)) }

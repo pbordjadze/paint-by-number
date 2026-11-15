@@ -113,7 +113,7 @@ extension EditWork {
             visit(b)
         }
         guard let first = order.first else { throw EditFailure.invalid("the merge joins no areas") }
-        guard order.count > 1 else { throw EditFailure.invalid(TemplateEditor.mergeStaysInOneArea) }
+        guard order.count > 1 else { throw EditFailure.declined(.mergeStaysInOneArea) }
         var members = [first]
         var joined: Set<Int> = [first]
         for r in order.dropFirst() {

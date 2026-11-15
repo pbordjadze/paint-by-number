@@ -50,7 +50,7 @@ struct EditCellEdgeTests {
     /// and is declined for it; a cell edge is made for that.
     @Test func aSplitLaidTheSameWayIsDeclinedForItsOnePaint() throws {
         let (same, split) = try TemplateEditor.apply(.split(points: Self.across), to: Self.scene)
-        #expect(split.declined?.reason.contains("same paint") == true && same == Self.scene)
+        #expect(split.declined?.description.contains("same paint") == true && same == Self.scene)
         let (_, edge) = try TemplateEditor.apply(.cellEdge(points: Self.across), to: Self.scene)
         #expect(edge.changed && edge.declined == nil)
     }
@@ -59,7 +59,7 @@ struct EditCellEdgeTests {
     @Test func aCellEdgeThatDividesNothingIsDeclined() throws {
         let t = Self.scene
         let (u, outcome) = try TemplateEditor.apply(.cellEdge(points: [SIMD2(80, 20), SIMD2(110, 25)]), to: t)
-        #expect(outcome.declined?.reason.contains("divides no area") == true && !outcome.changed && u == t)
+        #expect(outcome.declined?.description.contains("divides no area") == true && !outcome.changed && u == t)
         var trail = EditTrail(base: t)
         if case .declined = trail.add(.cellEdge(points: [SIMD2(80, 20), SIMD2(110, 25)])) {} else { Issue.record("not declined") }
         #expect(trail.edits.isEmpty)

@@ -9,9 +9,11 @@ the release pbn, twice, and checks the results against the committed baseline
 tools/baseline/regression.json:
 
   hard invariants  pbn succeeds; `pbn check` validates the template; the two runs give
-                   byte-identical templates; no region under radius 2; palette distance
-                   at least the floor the segmentation enforces; no label below legible
-                   size
+                   byte-identical templates; no region under radius 2 (the region's own
+                   size: a number moved off writing or a drawn line may have less room
+                   than that where it sits, which `pbn check` and the next but one guard);
+                   palette distance at least the floor the segmentation enforces; no label
+                   below legible size
   tolerance bands  mean ΔE at most baseline × 1.05; region count within ±15 %; template
                    bytes within ±20 %
   informational    p95 ΔE, band rings (`bandRings`: regions a smooth gradient is posterized

@@ -298,7 +298,7 @@ class FieldShowTests(unittest.TestCase):
             self.assertGreater(at, clear)
             self.assertLessEqual(at, self.starts[6])
 
-    def test_the_paints_drop_the_crew_shows_own_seeds(self):
+    def test_the_paints_drop_the_inputs_seeds(self):
         pictures, template, built = fields.show_inputs(
             str(SNAPSHOTS), str(SNAPSHOTS / "template.svg"), load_spec(), SEED)
         self.assertEqual(self.show.seeds, built.seeds)
@@ -435,13 +435,6 @@ class TimelineTests(unittest.TestCase):
             fade = 0.15 / math.sqrt(1.5 / step)
             self.assertAlmostEqual(reveal.card_fade(0, 0.6 + fade, 0.6, step), 1.0, places=12)
             self.assertLess(reveal.card_fade(0, 0.6 + fade * 0.99, 0.6, step), 1.0)
-
-    def test_the_crew_fades_out_over_the_last_of_the_show(self):
-        self.assertEqual(reveal.crew_fade(18.0, 19.0), 1.0)
-        self.assertEqual(reveal.crew_fade(18.7, 19.0), 1.0)
-        self.assertAlmostEqual(reveal.crew_fade(18.85, 19.0), 0.5, places=12)
-        self.assertEqual(reveal.crew_fade(19.0, 19.0), 0.0)
-        self.assertEqual(reveal.crew_fade(25.0, 19.0), 0.0)
 
     def test_the_handoff_runs_as_the_steps_end(self):
         end = self.INTRO + 6 * self.STEP

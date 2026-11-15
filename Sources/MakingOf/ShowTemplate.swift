@@ -60,11 +60,10 @@ public struct ShowTemplate: Sendable, Equatable {
         var lineWidth = max(0.5, plain)
         if let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
             lineWidth *= Self.bookWidth
-            let drawn = { (layer: UInt8) in layer != LineLayer.color.rawValue }
-            for (k, edge) in t.edges.enumerated() where drawn(lines.edgeLayers[k]) && edge.pointCount >= 2 {
+            for (k, edge) in t.edges.enumerated() where LineLayer.isDrawn(lines.edgeLayers[k]) && edge.pointCount >= 2 {
                 strokes.append(scaled(t.points(of: edge)))
             }
-            for stroke in lines.strokes where drawn(stroke.layer) && stroke.pointCount >= 2 {
+            for stroke in lines.strokes where LineLayer.isDrawn(stroke.layer) && stroke.pointCount >= 2 {
                 let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
                 guard end <= lines.strokePoints.count else { continue }
                 strokes.append(scaled(lines.strokePoints[start..<end]))

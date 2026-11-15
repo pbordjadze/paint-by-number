@@ -2,8 +2,7 @@
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_pets.py'
 
-Needs numpy. Sources/MakingOf's SplitMixTests pin the same draws. The crew planner itself is
-exercised through the fixtures it made (test_making_of_inputs.py, test_making_of_reveal.py)."""
+Needs numpy. Sources/MakingOf's SplitMixTests pin the same draws."""
 
 from pathlib import Path
 import sys
@@ -31,11 +30,9 @@ class SplitMixTests(unittest.TestCase):
         self.assertEqual([rng.uniform(0.6, 0.95) for _ in range(3)],
                          [0.7982965513102983, 0.8610236150419454, 0.9398509637553787])
 
-    def test_bounded_draws_and_choice(self):
+    def test_bounded_draws(self):
         rng = pets.SplitMix64(1)
         self.assertEqual([rng.below(10) for _ in range(8)], [5, 9, 0, 5, 1, 8, 5, 3])
-        rng = pets.SplitMix64(1)
-        self.assertEqual([rng.choice([-1, 1]) for _ in range(8)], [1, 1, -1, 1, 1, -1, 1, 1])
 
     def test_permutations_shuffle_from_the_back(self):
         self.assertEqual(pets.SplitMix64(1).permutation(8), [4, 3, 2, 7, 5, 6, 0, 1])

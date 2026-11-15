@@ -68,27 +68,20 @@ import Testing
         for (i, want) in pins { #expect(ExactMath.srgbLinear[i] == want) }
     }
 
-    @Test func boxSumsCountTheEdgeAgain() {
-        let plane = Plane<Int>(width: 5, height: 4, data: [1, 0, 0, 2, 0, 0, 3, 1, 0, 0, 0, 0, 0, 5, 1, 4, 0, 1, 0, 2])
-        #expect(ExactMath.boxSums(plane, radius: 1).data == [7, 6, 8, 5, 4, 5, 5, 11, 9, 9, 11, 9, 10, 10, 11, 16, 10, 7, 12, 15])
-        #expect(ExactMath.boxSums(plane, radius: 2).data == [
-            13, 21, 19, 17, 15, 23, 26, 23, 20, 20, 33, 31, 27, 23, 25, 43, 36, 31, 26, 30])
-        // a window wider than the plane: every cell sees every row and column, the edges over and over
-        #expect(ExactMath.boxSums(plane, radius: 5).data == [
-            146, 135, 124, 113, 102, 167, 155, 143, 131, 119, 188, 175, 162, 149, 136, 209, 195, 181, 167, 153])
-    }
-
-    @Test func boxSumsOfASinglePixelPlane() {
-        #expect(ExactMath.boxSums(Plane<UInt8>(width: 1, height: 1, data: [3]), radius: 2).data == [75])
-    }
-
     @Test func percentilesInterpolateBetweenRanks() {
-        #expect(ExactMath.percentile([5, 1, 4, 2, 3], percent: 95) == 4.8)
-        #expect(ExactMath.percentile([5, 1, 4, 2, 3], percent: 50) == 3)
-        #expect(ExactMath.percentile([7], percent: 95) == 7)
-        #expect(ExactMath.percentile(Array(0...20), percent: 95) == 19)
-        #expect(ExactMath.percentile(Array(repeating: 0, count: 19) + [100], percent: 95) == 5)
-        #expect(ExactMath.percentile([3, 3, 3], percent: 95) == 3)
+        /// `values` as counts: how many cells hold each value from 0 up.
+        func counts(_ values: [Int]) -> [Int] {
+            var out = [Int](repeating: 0, count: (values.max() ?? 0) + 1)
+            for v in values { out[v] += 1 }
+            return out
+        }
+        #expect(ExactMath.percentile(counts: counts([5, 1, 4, 2, 3]), percent: 95) == 4.8)
+        #expect(ExactMath.percentile(counts: counts([5, 1, 4, 2, 3]), percent: 50) == 3)
+        #expect(ExactMath.percentile(counts: counts([7]), percent: 95) == 7)
+        #expect(ExactMath.percentile(counts: counts(Array(0...20)), percent: 95) == 19)
+        #expect(ExactMath.percentile(counts: counts(Array(repeating: 0, count: 19) + [100]), percent: 95) == 5)
+        #expect(ExactMath.percentile(counts: counts([3, 3, 3]), percent: 95) == 3)
+        #expect(ExactMath.percentile(counts: [], percent: 95) == 0 && ExactMath.percentile(counts: [0, 0], percent: 95) == 0)
     }
 
     @Test func weightedPicksFindTheFirstEntryPastTheValue() {

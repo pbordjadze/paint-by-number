@@ -136,7 +136,7 @@ struct EditBrushTests {
         let (same, outcome) = try TemplateEditor.apply(.brush(path: [SIMD2(100, 100), SIMD2(140, 105)], radius: 6, color: groundPaint), to: t)
         #expect(!outcome.changed && outcome.declined == nil && same == t)
         let (fine, declined) = try TemplateEditor.apply(.brush(path: [SIMD2(100, 100), SIMD2(140, 105)], radius: 0.5, color: Self.magenta), to: t)
-        #expect(declined.declined?.reason.contains("no room for a number") == true && fine == t)
+        #expect(declined.declined?.description.contains("no room for a number") == true && fine == t)
         var trail = EditTrail(base: t)
         if case .declined = trail.add(.brush(path: [SIMD2(100, 100)], radius: 0.5, color: Self.magenta)) {} else {
             Issue.record("not declined")

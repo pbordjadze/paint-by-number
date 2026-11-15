@@ -1,10 +1,10 @@
-"""The making-of crew's inputs against the Swift port's numbers: exact arithmetic, the draws, and the
-whole small fixture.
+"""What the making-of show is built from against the Swift port's numbers: exact arithmetic, the
+draws, and the whole small fixture.
 
     python3 -m unittest discover -s tools/tests -p 'test_making_of_inputs.py'
 
 Needs numpy and Pillow. Tests/MakingOfTests holds the same numbers (ExactMathTests, LabelingTests,
-SamplingTests, StopWeightsTests) and reads the same fixture,
+SamplingTests, LineMaskTests) and reads the same fixture,
 `Fixtures/show-small/inputs-small.json`: regenerate it, after changing making_of_exact.py or
 making_of_inputs.py, with
 
@@ -92,17 +92,6 @@ class ExactMathTests(unittest.TestCase):
             c = i / 255
             self.assertAlmostEqual(v, c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4, delta=1e-15)
 
-    def test_box_sums_count_the_edge_again(self):
-        a = np.array([[1, 0, 0, 2, 0], [0, 3, 1, 0, 0], [0, 0, 0, 5, 1], [4, 0, 1, 0, 2]])
-        self.assertEqual(exact.box_sum(a, 1).tolist(),
-                         [[7, 6, 8, 5, 4], [5, 5, 11, 9, 9], [11, 9, 10, 10, 11], [16, 10, 7, 12, 15]])
-        self.assertEqual(exact.box_sum(a, 2).tolist(),
-                         [[13, 21, 19, 17, 15], [23, 26, 23, 20, 20], [33, 31, 27, 23, 25], [43, 36, 31, 26, 30]])
-        self.assertEqual(exact.box_sum(a, 5).tolist(),
-                         [[146, 135, 124, 113, 102], [167, 155, 143, 131, 119], [188, 175, 162, 149, 136],
-                          [209, 195, 181, 167, 153]])
-        self.assertEqual(exact.box_sum(np.array([[3]]), 2).tolist(), [[75]])
-
     def test_percentiles_interpolate_between_ranks(self):
         self.assertEqual(exact.percentile([5, 1, 4, 2, 3], 95), 4.8)
         self.assertEqual(exact.percentile([5, 1, 4, 2, 3], 50), 3.0)
@@ -148,7 +137,7 @@ class LineMaskTests(unittest.TestCase):
     def test_pixels_within_reach_of_a_line_are_inked(self):
         strokes = [np.array([(1.0, 1.5), (12.0, 1.5), (12.0, 7.25)]), np.array([(3.0, 5.0), (3.5, 5.2)]),
                    np.array([(6.0, 6.0), (6.0, 6.0)])]
-        mask = exact.line_mask(14, 9, strokes, 1.5 / 2 + inputs.LINE_REACH)
+        mask = exact.line_mask(14, 9, strokes, 1.5 / 2 + 0.33)
         self.assertEqual([''.join('#' if v else '.' for v in row) for row in mask],
                          [".###########..", "#############.", ".############.", "...........##.", "..##.......##.",
                           "..#####....##.", ".....##....##.", "...........##.", ".............."])
@@ -216,9 +205,6 @@ class SeedingTests(unittest.TestCase):
         self.assertEqual(inputs.kmeanspp(self.LAB[:0], 6, rng), [])
         self.assertEqual(rng.random(), 0.5056482214915431)
 
-    def test_bands_split_the_picture_between_its_margins(self):
-        self.assertEqual(inputs.bands(1024, 0.12, 3), [122, 382, 641, 901])
-        self.assertEqual(inputs.bands(216, 0.12, 1), [25, 190])
 
 
 class TemplateTests(unittest.TestCase):
@@ -238,11 +224,10 @@ class TemplateTests(unittest.TestCase):
 class SmallShowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        pets.configure(SPEC)
         cls.expected = json.loads((SMALL / "inputs-small.json").read_text(encoding="utf-8"))
         cls.pictures = inputs.Pictures(str(SMALL))
         cls.template = inputs.Template(str(SMALL / "template.svg"), cls.pictures.size[0])
-        cls.built = inputs.build(cls.pictures, cls.template, SPEC, 7, SPEC["crew"]["pets"])
+        cls.built = inputs.build(cls.pictures, cls.template, SPEC, 7)
 
     def test_the_fixture_is_what_the_code_makes(self):
         b = self.built
@@ -258,14 +243,6 @@ class SmallShowTests(unittest.TestCase):
                             "--out", str(out)], check=True)
             self.assertEqual(out.read_text(encoding="utf-8"), (SMALL / "inputs-small.json").read_text(encoding="utf-8"))
 
-    def test_inputs_are_at_the_precision_the_plan_file_keeps(self):
-        self.assertEqual(pets.quantized(self.built.inputs), self.built.inputs)
-
-    def test_the_planner_takes_them(self):
-        planned = pets.plan(self.built.inputs)
-        self.assertEqual(len(planned.pets), 3)
-        self.assertEqual(len(planned.visits), 6)
-
     def test_seeds_land_in_time_order_on_the_grid(self):
         seeds = self.built.seeds
         self.assertEqual(len(seeds), len(self.built.paint_keys))
@@ -276,24 +253,21 @@ class SmallShowTests(unittest.TestCase):
             self.assertEqual((int(y) - 21) % 6, 0)
             self.assertTrue(0 <= paint < len(self.built.paint_keys))
 
-    def test_the_same_seed_gives_the_same_inputs_and_another_gives_others(self):
-        again = inputs.build(self.pictures, self.template, SPEC, 7, SPEC["crew"]["pets"])
-        self.assertEqual(again.inputs, self.built.inputs)
-        other = inputs.build(self.pictures, self.template, SPEC, 8, SPEC["crew"]["pets"])
+    def test_the_same_seed_gives_the_same_seeds_and_another_gives_others(self):
+        again = inputs.build(self.pictures, self.template, SPEC, 7)
+        self.assertEqual((again.inputs, again.seeds), (self.built.inputs, self.built.seeds))
+        other = inputs.build(self.pictures, self.template, SPEC, 8)
         self.assertEqual(other.inputs["strokes"], self.built.inputs["strokes"])
-        self.assertNotEqual(other.inputs["candidates"][0], self.built.inputs["candidates"][0])
+        self.assertNotEqual(other.seeds, self.built.seeds)
 
-    def test_a_steps_spots_come_from_its_own_stream(self):
-        W, H = self.pictures.size
-        room = np.zeros((H, W))
-        room[40:136, 25:191] = 1.0
-        rng = pets.stream(7, pets.STREAM_SPOTS, 1)
-        spots = inputs.sample_stops(room.ravel(), W, 12, rng, 0.1 * W)
-        self.assertEqual(self.built.inputs["candidates"][1], [[float(x), float(y)] for x, y in spots])
+    def test_lines_are_kept_to_a_hundredth_of_a_pixel(self):
+        for line, kept in zip(self.template.strokes, self.built.inputs["strokes"]):
+            self.assertEqual(kept, [[exact.quantize(float(x), 2), exact.quantize(float(y), 2)] for x, y in line])
+            self.assertEqual(kept, [[round(x, 2), round(y, 2)] for x, y in kept])
 
 
 class FallbackTests(unittest.TestCase):
-    """Pictures no photo makes. Tests/MakingOfTests' CrewInputsFallbackTests expect the same numbers."""
+    """Pictures no photo makes."""
 
     class Flat:
         def __init__(self, w, h):
@@ -301,31 +275,14 @@ class FallbackTests(unittest.TestCase):
             self.working = self.smoothed = self.palette = self.simplified = np.full((h, w, 3), [120, 130, 140], dtype=np.uint8)
             self.structure = np.zeros((h, w), dtype=np.uint8)
 
-    @classmethod
-    def setUpClass(cls):
-        pets.configure(SPEC)
+    def build(self, w, h):
+        return inputs.build(self.Flat(w, h), inputs.Template(str(SMALL / "template.svg"), w), SPEC, 7)
 
-    def build(self, w, h, ids):
-        return inputs.build(self.Flat(w, h), inputs.Template(str(SMALL / "template.svg"), w), SPEC, 7, ids)
+    def test_a_flat_picture_has_one_paint_and_one_seed(self):
+        self.assertEqual(self.build(20, 14).seeds, [(5.72, 13.0, 5.0, 0)])
 
-    def test_a_picture_with_little_room_is_drawn_from_everywhere(self):
-        b = self.build(20, 14, SPEC["crew"]["pets"])
-        self.assertEqual(b.inputs["candidates"], [
-            [[3, 5], [10, 3], [16, 3], [9, 5], [15, 4], [4, 3], [5, 5], [11, 4], [13, 3], [2, 4], [8, 3], [17, 5], [13, 5], [17, 3], [7, 5]],
-            [[12, 4], [4, 3], [4, 5], [14, 5], [6, 5], [16, 4], [6, 3], [10, 4], [8, 4], [14, 3], [2, 3], [2, 5]],
-            [[13, 5]],
-            [[6, 3], [15, 5], [11, 4], [17, 5], [17, 3], [4, 3], [13, 4], [15, 3], [2, 4], [8, 4], [4, 5], [6, 5]],
-            [],
-            [[3, 4], [5, 3], [17, 5], [10, 5]]])
-        self.assertEqual(b.seeds, [(5.72, 13.0, 5.0, 0)])
-
-    def test_a_picture_smaller_than_the_crew_shares_its_homes(self):
-        b = self.build(2, 2, [f"pet-{i}" for i in range(20)])
-        homes = [[0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [0, 0], [1, 0], [0, 1], [1, 1], [1, 0], [0, 1], [0, 0]]
-        self.assertEqual(b.inputs["candidates"][0][:12], homes)
-        self.assertEqual([len(c) for c in b.inputs["candidates"]], [16, 4, 0, 4, 0, 4])
-        self.assertEqual([p["start"] for p in b.inputs["pets"]], [homes[i % 12] for i in range(20)])
-        self.assertEqual(b.seeds, [])
+    def test_a_picture_too_small_for_the_grid_has_no_seed(self):
+        self.assertEqual(self.build(2, 2).seeds, [])
 
 
 if __name__ == "__main__":

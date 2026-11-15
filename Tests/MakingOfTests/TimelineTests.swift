@@ -57,13 +57,6 @@ import Testing
         }
     }
 
-    @Test func theCrewFadesOutOverTheLastOfTheShow() throws {
-        let timeline = try timeline()
-        #expect(timeline.crewFade(at: 18) == 1 && timeline.crewFade(at: 18.7) == 1)
-        #expect(abs(timeline.crewFade(at: 18.85) - 0.5) < 1e-12)
-        #expect(timeline.crewFade(at: 19) == 0 && timeline.crewFade(at: 25) == 0)
-    }
-
     @Test func theHandoffRunsAsTheStepsEnd() throws {
         let timeline = try timeline()
         let end = timeline.timing.end

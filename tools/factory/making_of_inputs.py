@@ -1,37 +1,29 @@
 #!/usr/bin/env python3
-"""What the making-of crew is planned from, chosen exactly: where each guardian pops in, the spots every
-step's jobs are done at, the k-means++ seeds step 3 drops, and the template's lines.
+"""What the making-of show is built from, chosen exactly: the k-means++ seeds step 3 drops, the
+paints, the merged regions, and the template's lines and numbers.
 
 Usage:
-  making_of_inputs.py <generate-out> <snapshots> [--spec JSON] [--seed 7] [--crew N]
-                      [--pet-height SHARE] [--width PX] [--out FILE]
+  making_of_inputs.py <generate-out> <snapshots> [--spec JSON] [--seed 7] [--width PX] [--out FILE]
 
 <generate-out> is `pbn generate`'s output directory (template.svg), <snapshots> its `--snapshots`
 directory. Writes {"seed", "inputs", "seeds", "paints", "trace"} as JSON (stdout, or --out):
-`inputs` is what `making_of_pets.plan` takes, at the precision
-the plan file keeps; `seeds` are step 3's [time, x, y, paint]; `paints` the distinct colours of
-palette.ppm as r << 16 | g << 8 | b, in order (a seed's paint is an index into it); `trace` the
+`inputs` is the picture's size, the spec's timing and the template's lines, at the precision the show
+keeps them (0.01 px, 0.0001 s); `seeds` are step 3's [time, x, y, paint]; `paints` the distinct colours
+of palette.ppm as r << 16 | g << 8 | b, in order (a seed's paint is an index into it); `trace` the
 numbers on the way, for finding where a port first differs.
 
 Every random draw is SplitMix64's (`making_of_pets.stream`, one stream per purpose) and every
 quantity a draw or a comparison turns on is an integer or a double made of `+ - * /` and `sqrt`
-(making_of_exact.py), so Sources/MakingOf (ExactMath, Labeling, Sampling) gets the same numbers bit
-for bit; its crew inputs (`CrewInputs.make`) were retired with the crew show on October 23, 2026.
-It works at the snapshots' size, as the app does; --width resamples the pictures first, as
-making_of_layers.py does, for a clip at another size.
-
-The weights the spots are drawn by (all multiplied by `room`, the picture without a margin where a
-guardian would stand in a corner):
-  step 0 and homes  the structure plus 0.35: the edges first, but the whole picture is visited
-  step 1            the same everywhere
-  step 3            1 / sqrt(area) of the merged region a pixel is in, so small regions are visited
-  step 5            where the numbers are, in the open: away from where lines run thick
-Step 2's are the seeds' places, and step 4's lines are the strokes.
+(making_of_exact.py), so Sources/MakingOf (ExactMath, Labeling, Sampling, PaintSeeds) gets the same
+numbers bit for bit. It works at the snapshots' size, as the app does; --width resamples the pictures
+first, as making_of_layers.py does, for a clip at another size. The crew show's inputs (where each
+guardian popped in and the spots of every step's jobs, drawn by weights of their own) left with its
+planner (painting-company row 110); `sample_stops` stays for the field show's seeds
+(making_of_fields.born).
 """
 
 import argparse
 import json
-import math
 import os
 import re
 import sys
@@ -46,13 +38,8 @@ import making_of_pets  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SPEC = os.path.join(ROOT, 'App', 'PaintByNumber', 'Resources', 'making-of.json')
 
-CARD_BAND = 232         # px below the picture, which the farewell walks off the bottom of
-INK_STEP = 4            # drawn by walking along the strokes: no spots
 PATIENCE = 40           # rounds of draws before `sample_stops` settles for fewer spots
 RELAX = 0.85            # the spacing's share kept each round that came up short
-# px past a line's half width at which a pixel still counts as inked, as resvg's rasterization of it
-# does (a pixel at least a sixth covered): its pixel count on the parrots, 18814 against 18844
-LINE_REACH = 0.33
 # k-means++ chroma stretch, as in the segmentation grid.
 CHROMA = np.array([1.0, 1.6, 1.6])
 
@@ -170,76 +157,23 @@ def paint_rgb(keys):
     return np.stack([(keys >> 16) & 255, (keys >> 8) & 255, keys & 255], axis=1)
 
 
-def bands(width, margin, count):
-    """Column edges that split the picture between its margins into `count` bands: the margin, then
-    steps of an equal share, truncated (numpy's linspace written out)."""
-    lo, hi = margin * width, (1 - margin) * width
-    step = (hi - lo) / count
-    return [int(lo + step * i) for i in range(count)] + [int(hi)]
-
-
 class Built:
-    """What `build` made: `inputs` (the plan's, as a dict), `seeds` [(time, x, y, paint)], `paint_keys`
-    and `paint_of` (each pixel's index among them), `sim_labels` and `sim_n` (the merged regions),
-    `strokes` and `numbers` (the template's, unquantized), `trace`."""
+    """What `build` made: `inputs` (the size, the timing, the seed and the template's lines, as a dict),
+    `seeds` [(time, x, y, paint)], `paint_keys` and `paint_of` (each pixel's index among them),
+    `sim_labels` and `sim_n` (the merged regions), `strokes` and `numbers` (the template's,
+    unquantized), `trace`."""
 
 
-def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=None):
-    """The crew's inputs for `ids` (guardians, in crew order) at the pictures' size, with the show's `seed`
-    (the planner's too). `pet_height` overrides the spec's share of the shorter side."""
+def build(pictures, template, spec, seed):
+    """What the show is built from at the pictures' size, with the show's `seed`."""
     W, H = pictures.size
-    crew, timing = spec['crew'], spec['timing']
+    timing = spec['timing']
     intro, step = exact.quantize(float(timing['intro']), 4), exact.quantize(float(timing['step']), 4)
     starts = [intro + k * step for k in range(6)]
-    pet_h = exact.quantize((pet_height or float(crew['height'])) * min(W, H), 2)
-    margin = float(crew['margin'])
-    n = len(ids)
     trace = {}
 
-    # a guardian's spot keeps all of it in the picture and off its edges, so nobody works in a corner
-    room = np.zeros((H, W))
-    x0 = int(margin * W)
-    y0 = int(margin * H + pet_h)
-    room[y0:max(H - 8, y0), x0:max(W - x0, x0)] = 1.0
-
     sim_labels, sim_n = exact.label_regions(exact.color_keys(pictures.simplified))
-    area = np.bincount(sim_labels.ravel(), minlength=sim_n)[sim_labels].astype(np.float64)
-    count = np.zeros((H, W))
-    for x, y, _ in template.numbers:
-        count[int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))] += 1
-    # for the numbers a guardian picks the open spots, where few lines run, so it doesn't stand tangled
-    # in the finished drawing's ink
-    ink = exact.line_mask(W, H, template.strokes, template.line_width / 2 + LINE_REACH)
-    density = exact.box_sum(ink, max(1, int(0.35 * pet_h)))
-    p95 = exact.percentile(density, 95)
-    gap = 1 - np.minimum(density / (p95 + 1e-6), 1.0)
-    weights = [
-        (4.0 * pictures.structure + 357.0) * room,             # s / 255 + 0.35, in units of 1/1020
-        room,
-        None,
-        np.sqrt(area) / area * room,
-        None,
-        (count + 1e-6) * (0.05 + gap * gap) * room,
-    ]
     trace['labels'] = sim_n
-    trace['inkPixels'] = int(ink.sum())
-    trace['percentile95'] = p95
-    trace['weightTotals'] = [None if w is None else float(exact.cumulative(w.ravel())[-1]) for w in weights]
-
-    # they pop in one to a band, each at its first job, so the first step starts everywhere at once
-    nb = max(1, min(int(crew['bands']), n))
-    edges = bands(W, margin, nb)
-    rng = making_of_pets.stream(seed, making_of_pets.STREAM_HOMES, 0)
-    yy, xx = np.mgrid[0:H, 0:W]
-    reach = 0.2 * W
-    homes = []
-    for b in range(nb):
-        band = np.zeros((H, W))
-        band[:, edges[b]:edges[b + 1]] = weights[0][:, edges[b]:edges[b + 1]]
-        for hx, hy in homes:                    # apart across band edges too
-            band[(xx - hx) ** 2 + (yy - hy) ** 2 < reach * reach] = 0
-        homes += sample_stops(band.ravel(), W, sum(1 for j in range(n) if j * nb // n == b), rng, spacing=reach)
-    trace['homes'] = [list(h) for h in homes]
 
     # step 3's seeds: real pixels of the smoothed picture, chosen by the method itself
     keys, paint_of = paints_of(pictures.palette)
@@ -255,27 +189,11 @@ def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=N
         d2 = distance2(paint_lab, sample_lab[c])
         seeds.append((starts[2] + 0.12 + j * drop, float(grid[c][0]), float(grid[c][1]), int(np.argmin(d2))))
 
-    candidates = []
-    for k in range(6):
-        if k == 2:
-            spots = [(x, y) for _, x, y, _ in seeds]
-        elif k == INK_STEP:
-            spots = []                          # its lines are the strokes
-        else:
-            spots = sample_stops(weights[k].ravel(), W, n * 4, making_of_pets.stream(seed, making_of_pets.STREAM_SPOTS, k),
-                                 spacing=0.1 * W)
-            if k == 0:
-                spots = homes + spots           # each guardian pops in at its first job
-        candidates.append(spots)
-
     px = lambda v: exact.quantize(float(v), 2)
-    spots = lambda pts: [[px(x), px(y)] for x, y in pts]
     out = Built()
     out.inputs = {
-        'size': [px(W), px(H)], 'petHeight': pet_h, 'intro': intro, 'step': step, 'seed': int(seed),
-        'pets': [{'id': pid, 'start': spots([homes[i % len(homes)]])[0]} for i, pid in enumerate(ids)],
-        'candidates': [spots(c) for c in candidates], 'strokes': [spots(s) for s in template.strokes],
-        'frameHeight': px(H + exit_band)}
+        'size': [px(W), px(H)], 'intro': intro, 'step': step, 'seed': int(seed),
+        'strokes': [[[px(x), px(y)] for x, y in s] for s in template.strokes]}
     out.seeds, out.paint_keys, out.paint_of = seeds, keys, paint_of
     out.sim_labels, out.sim_n = sim_labels, sim_n
     out.strokes, out.numbers, out.trace = template.strokes, template.numbers, trace
@@ -288,18 +206,14 @@ def main():
     ap.add_argument('snapshots')
     ap.add_argument('--spec', default=SPEC)
     ap.add_argument('--seed', type=int, default=7)
-    ap.add_argument('--crew', type=int, help="the first N of the spec's crew (default all of it)")
-    ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's shorter side")
     ap.add_argument('--width', type=int, help="the pictures' width in px (default the snapshots')")
     ap.add_argument('--out', help='write the JSON here instead of to stdout')
     a = ap.parse_args()
     with open(a.spec, encoding='utf-8') as f:
         spec = json.load(f)
-    making_of_pets.configure(spec)
-    ids = making_of_pets.ORDER[:a.crew or len(spec['crew']['pets'])]
     pictures = Pictures(a.snapshots, a.width)
     template = Template(os.path.join(a.generated, 'template.svg'), pictures.size[0])
-    built = build(pictures, template, spec, a.seed, ids, pet_height=a.pet_height)
+    built = build(pictures, template, spec, a.seed)
     doc = {'seed': a.seed, 'inputs': built.inputs, 'seeds': [list(s) for s in built.seeds],
            'paints': [int(k) for k in built.paint_keys], 'trace': built.trace}
     text = json.dumps(doc, separators=(',', ':'))
