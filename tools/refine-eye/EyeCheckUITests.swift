@@ -7,7 +7,7 @@ import XCTest
 ///
 /// How to run (on a Mac, a simulator of your own, an iPad Pro 13-inch):
 ///   copy this file into each worktree's `App/PaintByNumberUITests/` (the folder is synced), then
-///   `tools/refine-eye/run_eye.sh <worktree> <tag> <udid> <out dir> [testEyeCases|testEyeMarkedLook|testEyeStates|testEyeStartFrom|testEyeStills]`
+///   `tools/refine-eye/run_eye.sh <worktree> <tag> <udid> <out dir> [testEyeCases|testEyeMarkedLook|testEyeStates|testEyeStartFrom|testEyeDrop|testEyeRepeat|testEyeStills]`
 ///   for each build, and `tools/refine-eye/eye.py` on what it wrote (its header).
 /// Each action is preceded by `eye: <step> <epoch>` in the test's output, which `eye.py` lines up
 /// with the recording; `eye-frame <name>: x y w h` gives an element's frame in points for a crop.
@@ -188,6 +188,47 @@ final class EyeCheckUITests: XCTestCase {
         mark("start-gone-2"); landing(on: canvas) { app.buttons["refine-redo"].tap() }
         sleep(3); try still("start-4-gone")
         mark("end")
+    }
+
+    /// A swatch dropped on the picture while the paint is hidden: it pours there and shows the
+    /// paint again (`RefineModel.dropped`), which fades in. With Select, whose band holds the
+    /// palette and which shows no layer itself.
+    @MainActor
+    func testEyeDrop() throws {
+        let app = launch("create-refine")
+        let canvas = app.descendants(matching: .any)["refine-canvas"]
+        sleep(3)
+        pickTool("select", app); sleep(2)
+        set("paint", false, app); closeLayers(app); sleep(2)
+        let swatch = app.buttons["refine-paint-2"]
+        XCTAssertTrue(swatch.waitForExistence(timeout: 10), "No swatch 2")
+        mark("drop")
+        landing(on: canvas) {
+            swatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(
+                forDuration: 1.0, thenDragTo: canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)),
+                withVelocity: .slow, thenHoldForDuration: 0.5)
+        }
+        sleep(3)
+        mark("end")
+    }
+
+    /// One scenario launched again and again, a still of each (`<out>/shots/<tag>-<scenario>-<n>.png`),
+    /// for a state that shows only sometimes: `EYE_SCENARIO`, `EYE_TIMES` (10), in dark
+    /// appearance when the scenario's name says `dark`. Each launch prints `eye-launch <n> <epoch>`.
+    @MainActor
+    func testEyeRepeat() throws {
+        let env = ProcessInfo.processInfo.environment
+        let scenario = try XCTUnwrap(env["EYE_SCENARIO"], "EYE_SCENARIO names the scenario")
+        let times = Int(env["EYE_TIMES"] ?? "") ?? 10
+        XCUIDevice.shared.appearance = scenario.contains("dark") ? .dark : .light
+        defer { XCUIDevice.shared.appearance = .light }
+        for n in 1...times {
+            print(String(format: "eye-launch %d %.3f", n, Date().timeIntervalSince1970))
+            let app = launch(scenario)
+            sleep(10)
+            try still(String(format: "%@-%02d", scenario, n))
+            app.terminate()
+        }
     }
 
     // MARK: - Helpers
