@@ -265,7 +265,7 @@ enum ShellDemo: Equatable {
     var opensLayers: Bool { self == .createRefineLayers }
 
     /// Refine opens the Tool Guide on this page, ready once its practice canvas shows
-    /// (`RefineView.land`).
+    /// (`RefineModel.land`).
     var opensGuide: RefineGuideTopic? {
         switch self {
         case .createRefineGuide: .tool(.merge)
