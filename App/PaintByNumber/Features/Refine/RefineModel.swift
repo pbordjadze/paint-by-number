@@ -68,9 +68,6 @@ final class RefineModel {
     var painting: (preview: UUID, image: CGImage)?
     /// Whether the painting that landed last cross-fades in (`land`).
     var paintingFades = false
-    /// Counts the layers a tool or a touch showed again (`show`): they fade in, where the Layers
-    /// panel's own switches show and hide at once.
-    var layerShown = 0
     /// The template the screen draws over: the newest at full resolution.
     var base: CreateModel.Preview?
     /// The edits sent that `base` doesn't show yet, which the screen draws over it.
@@ -855,11 +852,10 @@ final class RefineModel {
     }
 
     /// Shows the layer, which fades in: written plainly, as a landing is (`land`), and what draws
-    /// the layers animates the change itself (`layerShown`).
+    /// the layers animates the change itself (`RefineLayers.revealed`).
     func show(_ layer: RefineLayers.Layer) {
         guard !layers.shows(layer) else { return }
-        layers.set(layer, shown: true)
-        layerShown += 1
+        layers.reveal(layer)
     }
 
     /// How `tool` works, with the figure and the curve in hand (`RefineView.hint(for:shape:bending:)`).

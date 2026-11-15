@@ -18,6 +18,10 @@ nonisolated struct RefineLayers: Hashable {
     var paintOpacity: Double = 1
     var photo = false
     var photoOpacity: Double = 1
+    /// Counts the layers a tool or a touch showed again (`reveal`), which fade in where the
+    /// Layers panel's own switches show and hide at once. Kept with the layers so the two change
+    /// in one write: apart, a render between them took the layer in without its fade.
+    var revealed = 0
 
     /// Every cell in its paint, as the picture will look finished: Refine opens on it.
     static let painting = RefineLayers()
@@ -44,6 +48,12 @@ nonisolated struct RefineLayers: Hashable {
         case .paint: paint = shown
         case .photo: photo = shown
         }
+    }
+
+    /// Shows `layer` again, counted, so it fades in (`revealed`).
+    mutating func reveal(_ layer: Layer) {
+        set(layer, shown: true)
+        revealed += 1
     }
 
     /// How much of the paint shows, 0 to 1.
