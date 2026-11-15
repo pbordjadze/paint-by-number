@@ -10,14 +10,17 @@ import UIKit
 /// and, in SideStore and Debug builds, a drawing on paper; then The Library, its paintings
 /// and photographs. A picture picked opens as a painting with no preview step
 /// (`CreateModel.paintsNow`); a blank page opens the drawing tools (`CreateModel.loadScratch()`).
+/// The page only says what was picked (`PaintChoice`): the create flow loads it. In SideStore and
+/// Debug builds the page is also the Paint tab (`PaintTab`, painting-company row 328), a place of
+/// its own with nothing to close (`onClose` nil): the bar's large title, and no ×.
 ///
 /// No inline photo picker: the Shelf scrolls, and the inline picker scrolls out of process,
 /// which a scroll view around it can't arbitrate (a drag on it moved neither); on iPhone its grid
 /// never took a tap either (Sept 30, Oct 4 and 9). A Photo presents the full system picker.
 struct PhotoSourceView: View {
-    let model: CreateModel
-    var onClose: () -> Void
-    var onPicked: () -> Void
+    /// Closes the create flow this page is the first step of; nil on the Paint tab.
+    var onClose: (() -> Void)?
+    var onChoose: (PaintChoice) -> Void
 
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
@@ -35,7 +38,8 @@ struct PhotoSourceView: View {
     private var isWide: Bool { width >= 600 }
     private var horizontalPadding: CGFloat { isWide ? 32 : 20 }
     /// At accessibility sizes the title leaves the bar for a line of its own atop the page.
-    private var titleOnPage: Bool { dynamicTypeSize.isAccessibilitySize }
+    /// The Paint tab keeps the bar's large title at every size, as short as it is.
+    private var titleOnPage: Bool { onClose != nil && dynamicTypeSize.isAccessibilitySize }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -71,12 +75,14 @@ struct PhotoSourceView: View {
             height = size.height
         }
         .navigationTitle("Paint")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(onClose == nil ? .large : .inline)
         .toolbar(removing: titleOnPage ? .title : nil)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark", action: onClose)
-                    .keyboardShortcut(.cancelAction)
+            if let onClose {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close", systemImage: "xmark", action: onClose)
+                        .keyboardShortcut(.cancelAction)
+                }
             }
         }
         // The full picker, for A Photo.
@@ -85,9 +91,7 @@ struct PhotoSourceView: View {
             guard let item else { return }
             browsedItem = nil
             PaintTips.photoChosen()
-            model.paintsNow = true
-            model.load(item: item)
-            onPicked()
+            onChoose(.item(item))
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
@@ -95,12 +99,9 @@ struct PhotoSourceView: View {
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
-                model.paintsNow = true
-                model.load(imageData: data)
-                onPicked()
+                onChoose(.photo(data))
             } onFailure: {
-                model.fail(.cameraCapture)
-                onPicked()
+                onChoose(.cameraFailed)
             }
             .ignoresSafeArea()
         }
@@ -215,9 +216,7 @@ struct PhotoSourceView: View {
 
     private func pick(_ sample: Sample) {
         PaintTips.photoChosen()
-        model.paintsNow = true
-        model.load(sample: sample)
-        onPicked()
+        onChoose(.sample(sample))
     }
 
     /// The full picker, for a photo.
@@ -233,10 +232,30 @@ struct PhotoSourceView: View {
     /// A blank page, straight into the drawing tools.
     private func startFromScratch() {
         PaintTips.photoChosen()
-        model.paintsNow = false
-        // Back from a page drawn on and Blank Page again: that page, not a fresh one.
-        if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
-        onPicked()
+        onChoose(.blankPage)
+    }
+}
+
+/// What the painter picked on the Paint page, for the create flow to load (`CreateFlowView.choose`).
+enum PaintChoice {
+    /// Tonight's Picture, or one of The Library's.
+    case sample(Sample)
+    /// A photo from the system picker.
+    case item(PhotosPickerItem)
+    /// A photo the camera took, as JPEG data.
+    case photo(Data)
+    /// The camera's shot couldn't be used: the flow says so.
+    case cameraFailed
+    /// Blank Page: the drawing tools on plain paper.
+    case blankPage
+
+    /// Picked in a sheet or a cover of the page's own (the system picker, the camera), which is
+    /// still closing when the choice is made.
+    var comesFromASheet: Bool {
+        switch self {
+        case .item, .photo, .cameraFailed: true
+        case .sample, .blankPage: false
+        }
     }
 }
 

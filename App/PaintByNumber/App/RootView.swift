@@ -33,7 +33,8 @@ struct RootView: View {
             CanvasUnavailableView(onClose: {})
                 .background(Theme.paper)
                 .task { DemoMode.markReady() }
-        case let scenario? where scenario.hasPrefix("paint"):
+        // `paint-tab` is the shell's (`ShellDemo`), not a painting screen's.
+        case let scenario? where scenario.hasPrefix("paint") && ShellDemo.current == nil:
             PaintDemoView(scenario: scenario)
         case let scenario? where scenario.hasPrefix("making-of"):
             MakingOfDemoView(scenario: scenario)
