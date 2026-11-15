@@ -1,6 +1,7 @@
 #if UNRELEASED
 import CoreGraphics
 import Foundation
+import os
 import PaintCore
 
 /// Makes the stickers of the finished paintings (painting-company row 349) and lays them on the

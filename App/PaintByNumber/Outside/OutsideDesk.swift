@@ -1,6 +1,7 @@
 #if UNRELEASED
 import CoreGraphics
 import Foundation
+import os
 import PaintCore
 import SwiftUI
 import WidgetKit
@@ -28,8 +29,8 @@ enum OutsideDesk {
 
     /// The long side of the widget's pictures, in pixels: sharp in a large widget, and well
     /// inside what a widget may draw.
-    static let nowPixels = 480
-    static let finishedPixels = 900
+    nonisolated static let nowPixels = 480
+    nonisolated static let finishedPixels = 900
     /// How many finished paintings the frame turns through, and have stickers.
     static let mostFinished = 24
 

@@ -39,8 +39,9 @@ def setting(block, name):
     return shlex.split(m.group(1).strip('"')) if m else []
 # Each configuration is `isa`, then its `buildSettings = { … };` (no braces inside), then its name.
 configurations = re.findall(r"isa = XCBuildConfiguration;\s*buildSettings = \{([^{}]*)\};\s*name = (\w+);", project)
-# The app target's Release configuration: the one that names the app.
-blocks = [b for b, name in configurations if name == "Release" and "INFOPLIST_KEY_CFBundleDisplayName" in b]
+# The app target's Release configuration: the one with the app's bundle identifier (the widget
+# and sticker extensions name the app too).
+blocks = [b for b, name in configurations if name == "Release" and re.search(r"\bPRODUCT_BUNDLE_IDENTIFIER = com\.pbordjadze\.paintbynumber;", b)]
 if len(blocks) != 1: sys.exit("expected one Release configuration of the app target, found %d" % len(blocks))
 excluded, included = setting(blocks[0], "EXCLUDED_SOURCE_FILE_NAMES"), setting(blocks[0], "INCLUDED_SOURCE_FILE_NAMES")
 def matches(path, patterns): return any(fnmatch.fnmatchcase(path.name, p) for p in patterns)
