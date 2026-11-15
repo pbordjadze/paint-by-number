@@ -214,7 +214,8 @@ struct StickerMakerTests {
         let pixels = PixelReader(cut)
         #expect(pixels.alpha(x: 0, y: 0) == 0)
         #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 2) == 255)
-        #expect(pixels.alpha(x: cut.width / 2, y: 2) == 255)
+        // Inside the white edge; its outermost pixels are soft, as the mask is scaled up.
+        #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 16) == 255)
 
         var speck = [Bool](repeating: false, count: width * height)
         speck[0] = true
