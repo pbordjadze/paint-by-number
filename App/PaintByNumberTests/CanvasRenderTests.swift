@@ -50,6 +50,7 @@ struct CanvasRenderTests {
             origin: SIMD2(3, 4), scale: 2, pointScale: 3, targetSize: SIMD2(640, 480), canvasSize: SIMD2(320, 240),
             palette: .darkPaper, shadowOpacity: 0.25, outlineOpacity: 0.5,
             outlineWidth: 1.5, selectedOutlineWidth: 2.5, hatch: 1, numbersShown: 0.75, lines: .coloringBook(width: 4),
+            inkHidden: 0.25,
             labels: SIMD4(1, 2, 3, 4), numbers: SIMD4(5, 6, 7, 1), time: SIMD4(8, 9, 10, 11),
             selection: (color: 2, paint: paint), hovered: 5, pulsing: 6, bumped: 7,
             brush: (center: SIMD2(12, 13), radius: 14), shine: (start: 15, color: 2), photoOpacity: 0.5))
@@ -58,7 +59,7 @@ struct CanvasRenderTests {
         #expect(u.lightInk == SIMD4(CanvasPalette.darkPaper.ink, 1) && u.rim.w == CanvasPalette.darkPaper.rimOpacity)
         #expect(u.selected == SIMD4(paint, 1) && u.accent == SIMD4(CanvasPalette.darkPaper.accent(for: paint), CanvasPalette.darkPaper.hatchCeiling))
         #expect(u.outline == SIMD4(1.5, 2.5, 1, 0.75))
-        #expect(u.lineWidth == SIMD4(4, 4, 4, 0) && u.lineMode.x == 1)
+        #expect(u.lineWidth == SIMD4(4, 4, 4, 0) && u.lineMode == SIMD4(1, 0.25, 0, 0))
         #expect(u.labels == SIMD4(1, 2, 3, 4) && u.numbers == SIMD4(5, 6, 7, 1) && u.time == SIMD4(8, 9, 10, 11))
         #expect(u.ids == SIMD4(2, 5, 6, 7) && u.brush == SIMD4(12, 13, 14, 1) && u.shine == SIMD4(15, 2, 0, 0))
         #expect(u.photo.x == 0.5)
@@ -66,7 +67,7 @@ struct CanvasRenderTests {
         let idle = CanvasUniforms(CanvasFrame(
             origin: .zero, scale: 1, pointScale: 1, targetSize: SIMD2(1, 1), canvasSize: SIMD2(1, 1),
             palette: .light, shadowOpacity: 0, outlineOpacity: 0.5, outlineWidth: 1, selectedOutlineWidth: 1, hatch: 0,
-            numbersShown: 1, lines: .classic, labels: .zero, numbers: .zero, time: .zero,
+            numbersShown: 1, lines: .classic, inkHidden: 1, labels: .zero, numbers: .zero, time: .zero,
             selection: (color: 1, paint: nil), hovered: -1, pulsing: -1, bumped: -1, brush: nil,
             shine: (start: CanvasClock.never, color: -1), photoOpacity: 0))
         #expect(idle.ids.x == 1 && idle.selected.w == 0 && idle.brush == .zero)
@@ -513,7 +514,7 @@ struct CanvasRenderTests {
                     canvasSize: SIMD2(Float(t.width), Float(t.height)), palette: .light, shadowOpacity: 0,
                     outlineOpacity: look.outlineOpacity, outlineWidth: look.outlineWidth,
                     selectedOutlineWidth: look.selectedOutlineWidth, hatch: shown, numbersShown: 1, lines: look.lines,
-                    labels: look.labels, numbers: look.numbers, time: SIMD4(0, -10, CanvasClock.never, CanvasClock.never),
+                    inkHidden: 0, labels: look.labels, numbers: look.numbers, time: SIMD4(0, -10, CanvasClock.never, CanvasClock.never),
                     selection: selected.map { (color: $0, paint: scene.paletteLinear[$0]) },
                     hovered: -1, pulsing: -1, bumped: -1, brush: nil, shine: (start: CanvasClock.never, color: -1),
                     photoOpacity: 0))

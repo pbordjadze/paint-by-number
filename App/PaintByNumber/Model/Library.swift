@@ -202,7 +202,7 @@ final class Library {
         let store = self.store
         try await Background.run {
             let progress = draft.progress ?? PaintProgress(regionCount: draft.template.regions.count)
-            let thumbnail = Library.thumbnailPNG(draft.template, painted: progress.painted)
+            let thumbnail = Library.thumbnailPNG(draft.template, painted: progress.painted, withoutLines: false)
             let source = draft.photo.flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
             }
@@ -371,6 +371,17 @@ final class Library {
         persistMeta(artwork)
     }
 
+    /// The painter's choice to see this painting, finished, with its lines or as paint alone
+    /// (`Artwork.hidesLines`; painting-company row 295). A finished painting's thumbnail is
+    /// drawn again to match, from `progress` (the open painting's, which its file may lag).
+    func setHidesLines(_ id: UUID, _ hides: Bool, template: Template? = nil, progress: PaintProgress) async {
+        guard var artwork = artwork(with: id), !artwork.needsNewerApp, (artwork.hidesLines ?? false) != hides else { return }
+        artwork.hidesLines = hides
+        replace(artwork, resort: false)
+        persistMeta(artwork)
+        if progress.isComplete { await refreshThumbnail(id, template: template, progress: progress) }
+    }
+
     /// Starts a painting over. False when it can't be: written by a newer app, gone, or its
     /// template can't be read just now; nothing changes then.
     @discardableResult
@@ -431,9 +442,10 @@ final class Library {
     func refreshThumbnail(_ id: UUID, template: Template? = nil, progress: PaintProgress) async -> Bool {
         // A painting deleted meanwhile (closing the screen it was deleted from) has no thumbnail to make.
         guard let existing = artwork(with: id), !existing.needsNewerApp else { return false }
+        let withoutLines = existing.paintsWithoutLines
         let written = await enqueue(id) { store in
             let t = try template ?? store.readTemplate(id)
-            guard let png = Library.thumbnailPNG(t, painted: progress.painted) else { return }
+            guard let png = Library.thumbnailPNG(t, painted: progress.painted, withoutLines: withoutLines) else { return }
             try store.writeThumbnail(png, for: id)
         }.value
         guard written, var artwork = artwork(with: id) else { return written }
@@ -475,7 +487,7 @@ final class Library {
         var everyOneDrawn = true
         var drawnCount = 0
         for (id, regionCount) in artworks.filter({ !$0.needsNewerApp }).map({ ($0.id, $0.regionCount) }) {
-            guard artwork(with: id) != nil else { continue }
+            guard let withoutLines = artwork(with: id)?.paintsWithoutLines else { continue }
             // Progress is read in the painting's own queue, after any save of it waiting there
             // (the painting reopened at launch, closed meanwhile), so the thumbnail never shows
             // less than was saved.
@@ -488,7 +500,9 @@ final class Library {
                 }
                 // Damaged progress keeps its thumbnail: opening the painting starts it over and draws one.
                 guard saved.problem == nil || saved.problem == .missing,
-                      let png = try Library.thumbnailPNG(store.readTemplate(id), painted: saved.progress.painted) else { return }
+                      let png = try Library.thumbnailPNG(
+                          store.readTemplate(id), painted: saved.progress.painted, withoutLines: withoutLines)
+                else { return }
                 try store.writeThumbnail(png, for: id)
             }.value
             guard drawn else {
@@ -646,10 +660,11 @@ final class Library {
             return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), refinements)
         }
         let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
+        let withoutLines = artwork.paintsWithoutLines
         let (progress, thumbnail, hasPhoto) = await Background.run { () -> (PaintProgress, Data?, Bool) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
-            return (progress, Library.thumbnailPNG(template, painted: progress.painted), store.hasSource(id))
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted, withoutLines: withoutLines), store.hasSource(id))
         }
         try Task.checkCancellation()
 
@@ -712,10 +727,11 @@ final class Library {
             let old = try Library.readTemplate(id, from: store)
             return (old, try Library.readProgress(id, regionCount: old?.regions.count ?? 0, from: store))
         }
+        let withoutLines = artwork.paintsWithoutLines
         let (progress, thumbnail, hasPhoto) = await Background.run { () -> (PaintProgress, Data?, Bool) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
-            return (progress, Library.thumbnailPNG(template, painted: progress.painted), store.hasSource(id))
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted, withoutLines: withoutLines), store.hasSource(id))
         }
         try Task.checkCancellation()
         var updated = self.artwork(with: id) ?? artwork
@@ -852,8 +868,12 @@ final class Library {
         }
     }
 
-    private nonisolated static func thumbnailPNG(_ template: Template, painted: [Bool]) -> Data? {
-        TemplateRasterizer.pngData(template, painted: painted, style: .thumbnail, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
+    /// The gallery's picture of a painting; `withoutLines` (`Artwork.paintsWithoutLines`), a
+    /// finished one is drawn as paint alone.
+    private nonisolated static func thumbnailPNG(_ template: Template, painted: [Bool], withoutLines: Bool) -> Data? {
+        TemplateRasterizer.pngData(
+            template, painted: painted, style: .thumbnail.hidingLines(withoutLines, painted: painted),
+            maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
     }
 
     /// A stable partition: each group keeps the order it came in.

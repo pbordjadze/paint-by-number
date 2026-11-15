@@ -45,7 +45,7 @@ nonisolated enum HandoffPage {
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
             palette: palette, shadowOpacity: 0, outlineOpacity: canvasLook.outlineOpacity,
             outlineWidth: canvasLook.outlineWidth, selectedOutlineWidth: canvasLook.selectedOutlineWidth, hatch: 0,
-            numbersShown: 1, lines: canvasLook.lines, labels: canvasLook.labels, numbers: canvasLook.numbers,
+            numbersShown: 1, lines: canvasLook.lines, inkHidden: 0, labels: canvasLook.labels, numbers: canvasLook.numbers,
             time: SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never),
             selection: nil, hovered: -1, pulsing: -1, bumped: -1, brush: nil,
             shine: (start: CanvasClock.never, color: -1), photoOpacity: 0)

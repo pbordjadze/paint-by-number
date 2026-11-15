@@ -23,12 +23,14 @@ nonisolated enum ArtworkExporter {
     /// Long side of shared images, in pixels.
     static let imagePixelSize = 4096
 
-    /// The painting as a PNG: finished if it is, otherwise its current state with the
-    /// unpainted areas sketched in.
+    /// The painting as a PNG: finished if it is (as paint alone where the painter hides its
+    /// lines, `Artwork.paintsWithoutLines`), otherwise its current state with the unpainted
+    /// areas sketched in.
     static func paintingPNG(store: ArtworkStore, artwork: Artwork) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let progress = try store.readProgress(artwork.id, regionCount: template.regions.count).progress
-        let style: TemplateRasterizer.Style = progress.isComplete ? .finished : .thumbnail
+        let style = (progress.isComplete ? TemplateRasterizer.Style.finished : .thumbnail)
+            .hidingLines(artwork.paintsWithoutLines, painted: progress.painted)
         guard let data = TemplateRasterizer.pngData(template, painted: progress.painted, style: style, maxPixelSize: imagePixelSize) else {
             throw ExportError.renderFailed
         }

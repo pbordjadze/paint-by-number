@@ -65,6 +65,10 @@
       "comment" : "Finished painting, a door under the Finished bar: prints the painting's template",
       "extractionState" : "manual"
     },
+    "Opens in your browser." : {
+      "comment" : "The Original, the page about the real work behind a library picture: VoiceOver hint of the links that open the work’s catalog entry and its Wikipedia article",
+      "extractionState" : "manual"
+    },
     "Print and paint it" : {
       "comment" : "Finished painting, under the On Paper door: print the template and paint it with real paints",
       "extractionState" : "manual"
@@ -175,6 +179,22 @@
     },
     "One purchase unlocks the drawing tools and as many new paintings as you like." : {
       "comment" : "The Unlimited Paintings sheet opened from Settings, in builds where every new painting takes a free painting (1.1)",
+      "extractionState" : "manual"
+    },
+    "Read on Wikipedia" : {
+      "comment" : "The Original, the page about the real work behind a library picture: plain link that opens the work’s Wikipedia article, in the browser",
+      "extractionState" : "manual"
+    },
+    "See the Catalog Entry" : {
+      "comment" : "The Original, the page about the real work behind a library picture: button that opens the work’s page at the museum or agency that keeps it, in the browser",
+      "extractionState" : "manual"
+    },
+    "The Original" : {
+      "comment" : "Finished painting, a door under the Finished bar, only for a painting made from a library picture: opens the page about the real work, a painting, a print or a photograph; also that page’s title",
+      "extractionState" : "manual"
+    },
+    "Who made it" : {
+      "comment" : "Finished painting, the line under The Original door: its page says who made the real work, when, and where it is kept",
       "extractionState" : "manual"
     },
     "paint.lengthChip" : {
@@ -1822,7 +1842,7 @@
       "extractionState" : "manual"
     },
     "Close" : {
-      "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet), and in Refine's Select bar on iPhone the area's card open in it",
+      "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet, The Original’s page), and in Refine's Select bar on iPhone the area's card open in it",
       "extractionState" : "manual"
     },
     "Color Key" : {
@@ -5787,6 +5807,10 @@
     },
     "Show Hint" : {
       "comment" : "Paint menu item (iPad menu bar): show an area to paint next",
+      "extractionState" : "manual"
+    },
+    "Show Lines" : {
+      "comment" : "Painting screen's More menu, on a finished painting: a switch that shows the painting with its drawing's lines, or off, as paint alone",
       "extractionState" : "manual"
     },
     "Show Numbers" : {

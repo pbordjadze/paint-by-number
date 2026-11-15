@@ -49,6 +49,19 @@ nonisolated enum TemplateRasterizer {
         var drawsDrawing = true
         /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
         var lineWeight: LineWeight?
+        /// The finished picture as paint alone (painting-company row 295): of a coloring book's
+        /// drawing only its writing is drawn, which no paint draws; the lines go. A classic
+        /// template's lines are the style's own.
+        var withoutInk = false
+
+        /// This style for a painting that hides its finished picture's lines when `hides`
+        /// (`Artwork.paintsWithoutLines`): without the ink once every area of `painted` is
+        /// painted (or the style paints them all), as it is until then.
+        func hidingLines(_ hides: Bool, painted: [Bool]?) -> Style {
+            var style = self
+            style.withoutInk = hides && (paintAll || painted.map { !$0.isEmpty && !$0.contains(false) } ?? false)
+            return style
+        }
 
         /// Gallery thumbnails: painted regions in color, the rest a pale wash of theirs.
         static let thumbnail = Style(
@@ -290,7 +303,8 @@ nonisolated enum TemplateRasterizer {
     /// hidden by paint, except writing over a painted paint too dark for the ink
     /// (`DrawableLineArt.lightWriting`), which is in the style's paper tone, as on the canvas. On
     /// paper (`.print`), where no highlight shows a color's cells and nothing is painted, the
-    /// color edges go underneath first, as dotted guides.
+    /// color edges go underneath first, as dotted guides. A style `withoutInk` draws the writing
+    /// alone.
     private static func drawBookOutlines(
         _ t: Template, lines: DrawableLineArt, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat,
         banded: Bool = false
@@ -323,10 +337,12 @@ nonisolated enum TemplateRasterizer {
             }
         }
         let drawing = CGMutablePath(), light = CGMutablePath()
-        for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside && DrawableLineArt.isDrawn(lines.edgeLayers[e]) {
+        for (e, edge) in t.edges.enumerated()
+        where !style.withoutInk && edge.right != BoundaryEdge.outside && DrawableLineArt.isDrawn(lines.edgeLayers[e]) {
             addPolyline(t.points(of: edge), to: drawing, within: visible)
         }
-        for (k, stroke) in lines.strokes.enumerated() where DrawableLineArt.isDrawn(stroke.layer) {
+        for (k, stroke) in lines.strokes.enumerated()
+        where DrawableLineArt.isDrawn(stroke.layer) && (!style.withoutInk || lines.writing[k]) {
             let onPaint = style.lines == .screen && lines.lightWriting[k] && painted[Int(stroke.region)]
             addPolyline(lines.points(of: stroke), to: onPaint ? light : drawing, within: visible)
         }
