@@ -64,6 +64,13 @@ final class ScratchUITests: XCTestCase {
             }
             let header = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.minY - 40))
             header.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.99)))
+            // Once more, slowly, should the first pass not take: on main's iPhone run of
+            // November 14 the sheet stayed up after it, on both tries (it closed on the next run).
+            if !waitUntil(timeout: 3, { !picker.exists }), picker.exists, picker.isHittable {
+                attachScreenshot(of: app, named: "scratch-new-paint-second-drag")
+                header.press(forDuration: 0.3, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.99)),
+                             withVelocity: .slow, thenHoldForDuration: 0)
+            }
         } else {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
         }

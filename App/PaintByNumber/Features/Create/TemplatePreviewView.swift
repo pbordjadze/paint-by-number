@@ -200,9 +200,12 @@ struct TemplatePreviewView: View {
             }
             .onChange(of: isRefining) { _, refining in
                 if refining {
+                    PaintScreenWarmup.letGo()
                     PaintTips.refineOpened()
                     hasRefined = true
-                } else if model.isScratch {
+                } else if !model.isScratch {
+                    warmPaintScreen()
+                } else {
                     // A blank page has no preview (painting-company row 239): Done on a page drawn
                     // on goes straight into the painting, Cancel or a page left blank back to Paint.
                     if !model.refiningCancelled && model.refinements.changeCount > 0 {
@@ -414,16 +417,23 @@ struct TemplatePreviewView: View {
         PaintTips.sliderMoved(colorsOrDetail: keyPath == \CreateModel.colorCount || keyPath == \CreateModel.detail)
     }
 
+    /// The painting screen built once out of sight while the preview is still, so that Start
+    /// Painting doesn't wait for its first build (`PaintScreenWarmup`). Not under Refine, nor for a
+    /// page from scratch, which has no preview to rest on: its window and its hitch would come
+    /// under the painter's finger, in the drawing tools. Asked again as Refine closes on a preview.
+    private func warmPaintScreen() {
+        guard let template = model.preview?.template, model.isFinal, !model.isScratch, !isRefining else { return }
+        PaintScreenWarmup.warm(template) { [model, refining = $isRefining] in
+            model.isFinal && !model.startAsked && !refining.wrappedValue
+        }
+    }
+
     /// The template is final: the moment of the preview's tips. The suggestion's is only while the
     /// settings are still the suggested ones.
     private func previewFinal() {
         let canRefine = model.canRefine
         PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: canRefine)
-        // The painting screen is built once out of sight while the preview is still, so that Start
-        // Painting doesn't wait for its first build (`PaintScreenWarmup`).
-        if let template = model.preview?.template {
-            PaintScreenWarmup.warm(template) { [model] in model.isFinal && !model.startAsked }
-        }
+        warmPaintScreen()
         #if DEBUG
         // `create-unlock` taps Start Painting once its painting is made, with no free painting left.
         if ShellDemo.current == .createUnlock { start() }
