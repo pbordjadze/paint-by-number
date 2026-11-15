@@ -191,6 +191,11 @@ final class RefineModel {
             }
             if let topic = demo.opensGuide { guide = topic }
         }
+        // Make Cell's tip comes only while its button shows: on a phone, in Cells.
+        if DemoMode.forcedTip == .refineFill {
+            tool = .select
+            group = RefineGroup.of(.select)
+        }
         #endif
     }
 

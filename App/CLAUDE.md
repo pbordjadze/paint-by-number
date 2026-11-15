@@ -438,7 +438,15 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   these, the bar's and the page's have no
   TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
   it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card
-  anchors its tip only while it is mostly in view). A screen reports the
+  anchors its tip only while it is mostly in view). No tip where its thing isn't
+  (painting-company row 240): a tip whose view may be away has its turn only while one is on
+  screen (`TipDesk.needsAnchor`: the cards', the bar's, and Make Cell's, whose button on iPhone
+  shows only in Cells, `TipID.hidesWithItsTab`, asked for again as Cells comes up,
+  `PaintTips.refineCellsShown`), and Peek at the Photo is never offered on a painting drawn on
+  a blank start, whose photo is its page (`TipMoments.photoIsWorthAPeek`,
+  `PaintingDocument.startsBlank`). `.cardTip`'s popover keeps
+  `.presentationCompactAdaptation(.popover)` on its content outside any condition: inside one, a
+  phone got a blank sheet. A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
   for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused

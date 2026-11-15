@@ -233,6 +233,18 @@ struct LibraryTests {
         #expect(try await library.loadForPainting(photographed.id).hasPhoto)
     }
 
+    /// A painting drawn on a blank start opens saying so: its photo is the page it was drawn on,
+    /// and the painting screen offers no tip about peeking at it (painting-company row 240).
+    @Test func aPaintingDrawnOnABlankStartOpensSayingSo() async throws {
+        let library = makeLibrary()
+        var drawn = draft(photo: try stripesPhoto())
+        drawn.refinements.start = .blank
+        let page = try await library.create(drawn)
+        #expect(try await library.loadForPainting(page.id).startsBlank)
+        let photographed = try await library.create(draft(photo: try stripesPhoto()))
+        #expect(try await library.loadForPainting(photographed.id).startsBlank == false)
+    }
+
     /// A painting keeps the id its create flow chose (`CreateModel.paintingID`), which seeds its
     /// paints' nicknames, so Try Painting, before it exists, names them as it will (QA, November 7).
     @Test func aNewPaintingKeepsTheIdItsFlowChose() async throws {

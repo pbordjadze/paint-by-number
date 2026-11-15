@@ -53,6 +53,9 @@ struct PaintView: View {
     /// own photo. Finished, its doors then lead to the page about the real work (`AboutPainting`,
     /// SideStore and Debug builds).
     var libraryPicture: String?
+    /// The painting was drawn on a blank start (`PaintingDocument.startsBlank`): its photo is no
+    /// original to peek at, and no tip says so.
+    var startsBlank = false
     /// False as the screen is left: `ArtworkPaintingView.close`.
     var hidesStatusBar = true
     /// Told when the painter turns the finished painting's lines off or on (More › Show Lines, in
@@ -165,9 +168,10 @@ struct PaintView: View {
         isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
-        libraryPicture: String? = nil, hidesStatusBar: Bool = true, hidesLines: Bool = false,
+        libraryPicture: String? = nil, startsBlank: Bool = false, hidesStatusBar: Bool = true, hidesLines: Bool = false,
         onHidesLines: ((Bool) -> Void)? = nil
     ) {
+        self.startsBlank = startsBlank
         self.onHidesLines = onHidesLines
         _linesHidden = State(initialValue: hidesLines)
         self.onChange = onChange
@@ -210,7 +214,7 @@ struct PaintView: View {
             guard !isWarmup else { return }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
-            chrome.hasPhoto = photoLoader != nil
+            chrome.hasPhoto = TipMoments.photoIsWorthAPeek(hasPhoto: photoLoader != nil, startsBlank: startsBlank)
             // A painting just started is opened under the create flow's cover, where a tip's
             // popover can't present: the bench and its tips begin once the cover is gone.
             if startHandoff?.isRunning != true { chrome.observe(session) }

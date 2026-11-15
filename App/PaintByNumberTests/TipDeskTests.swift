@@ -234,6 +234,19 @@ struct TipDeskTests {
         for id in TipID.allCases { #expect(f.desk.tip(among: TipSet([id])) == nil, "\(id)") }
     }
 
+    /// A tip about a view that may not be on screen is given its turn only while one is: the
+    /// shelf's cards, the bar's buttons, and Make Cell, whose button on a phone is in a tab that
+    /// may not be showing (its turn was given and spent with nothing to see, painting-company
+    /// row 240).
+    @Test func aTipAboutAViewThatMayBeAwayWaitsForIt() {
+        #expect(TipDesk.needsAnchor.contains(.refineFill))
+        for id in TipID.allCases {
+            #expect(
+                TipDesk.needsAnchor.contains(id) == (id.hangsFromCard || id.liesUnderTheBar || id.hidesWithItsTab), "\(id)")
+        }
+        #expect(TipID.allCases.filter(\.hidesWithItsTab) == [.refineFill])
+    }
+
     /// The tip modifiers hold a `TipSet` so that SwiftUI can compare them bit for bit and skip their
     /// bodies when their screen renders again: it must stay plain data, with a bit for every tip.
     @Test func aTipSetIsPlainDataWithABitForEveryTip() {

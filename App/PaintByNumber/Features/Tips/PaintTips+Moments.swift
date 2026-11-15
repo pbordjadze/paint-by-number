@@ -104,6 +104,14 @@ extension PaintTips {
         desk.offer([.refineFill], in: .refine, rest: .milliseconds(1500))
     }
 
+    /// Cells' tools come into view, Make Cell among them: its tip, if a line closed such a shape
+    /// while the button was out of view (a phone's other tabs; `TipID.hidesWithItsTab`). Never in
+    /// place of a moment being waited out.
+    static func refineCellsShown() {
+        guard desk.offeringPlace == nil else { return }
+        desk.offer([.refineFill], in: .refine, rest: .milliseconds(1500))
+    }
+
     static func refineFilled() {
         used(.refineFill)
     }

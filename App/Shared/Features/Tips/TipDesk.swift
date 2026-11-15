@@ -53,8 +53,10 @@ final class TipDesk {
     /// bar's button in its bar).
     @ObservationIgnored private var anchored: [TipID: Int] = [:]
     /// Tips about a view that may not be there: a card the shelf builds only near the screen, a bar
-    /// button that goes while the preview is enlarged. Given a turn only while one is (`TipAnchor`).
-    private static let needsAnchor: Set<TipID> = Set(TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar })
+    /// button that goes while the preview is enlarged, a tool's button in a tab that isn't showing.
+    /// Given a turn only while one is (`TipAnchor`).
+    static let needsAnchor: Set<TipID> = Set(
+        TipID.allCases.filter { $0.hangsFromCard || $0.liesUnderTheBar || $0.hidesWithItsTab })
 
     /// How long TipKit gets to find a tip eligible (a donation or a parameter just changed), and
     /// the least a moment waits before it takes the first one that is. Counted in looks, one each
@@ -472,6 +474,8 @@ private struct GentleTipModifier: ViewModifier {
             .onChange(of: shown, initial: true) { _, now in
                 if let now { pointed = now }
             }
+            // While this view is on screen it can point its tips (`TipDesk.needsAnchor`).
+            .modifier(TipAnchor(ids: ids, isPresent: active))
     }
 }
 
@@ -498,12 +502,13 @@ private struct OwnPopoverTipModifier: ViewModifier {
         let shown = PaintTips.desk.turn.flatMap { ids.contains($0) ? $0 : nil }
         let isPresented = Binding(get: { shown != nil }, set: { if !$0, let shown { PaintTips.closed(shown) } })
         content.popover(isPresented: isPresented, arrowEdge: arrowEdge) {
-            if let shown {
-                TipView(shown.tip, isPresented: nil, arrowEdge: nil)
-                    .frame(minWidth: 260, idealWidth: 340, maxWidth: 360)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .presentationCompactAdaptation(.popover)
-            }
+            // The adaptation is on the popover's content whatever the turn: inside a condition it
+            // never reached the presentation, and a phone got a sheet, blank but for the tip
+            // (painting-company row 240).
+            TipView(shown?.tip, isPresented: nil, arrowEdge: nil)
+                .frame(minWidth: 260, idealWidth: 340, maxWidth: 360)
+                .fixedSize(horizontal: false, vertical: true)
+                .presentationCompactAdaptation(.popover)
         }
     }
 }

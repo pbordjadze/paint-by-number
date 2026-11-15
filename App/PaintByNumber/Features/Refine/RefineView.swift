@@ -185,6 +185,10 @@ struct RefineView: View {
         .onChange(of: model.note?.kind == .tooSmall) { _, small in
             if small, !isPractice { PaintTips.refineLineDrawn() }
         }
+        // On a phone its button was in a tab not showing then, and the tip waited: Cells shows it.
+        .onChange(of: refine.group) { _, group in
+            if group == .cells, !isPractice { PaintTips.refineCellsShown() }
+        }
         .onChange(of: refine.layers) { layersChanged?(refine.layers) }
         #if DEBUG
         .onChange(of: refine.picture) {
