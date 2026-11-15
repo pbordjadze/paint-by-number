@@ -42,7 +42,7 @@ for entry in "${SCENARIOS[@]}"; do
   rm -f "$MARKER"
   launch_args=(-demo "${scenario%+*}")
   [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
-  [[ "$scenario" == *+* ]] && launch_args+=($(ci/language_args.sh "${scenario##*+}"))
+  [[ "$scenario" == *+* ]] && launch_args+=($("$(dirname "$0")/language_args.sh" "${scenario##*+}"))
   step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" "${launch_args[@]}" 2>&1 | tr '\n' ' ')"
   started=$SECONDS
   while [[ ! -f "$MARKER" && $((SECONDS - started)) -lt $delay ]]; do sleep 0.25; done

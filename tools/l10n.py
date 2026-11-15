@@ -60,6 +60,8 @@ CATALOGS = OrderedDict([
 SOURCES = "tools/l10n/translated-from.json"
 
 SPECIFIER = re.compile(r"%(?:(\d+)\$)?(lld|ld|d|lf|f|@)")
+# Any conversion String(format:) would read, to catch one SPECIFIER doesn't allow.
+ANY_PERCENT = re.compile(r"%%|%(?:\d+\$)?[-+ #0]*\d*(?:\.\d+)?(?:hh|h|ll|l|q|z|t|j)?[a-zA-Z@]|%")
 GUIDE_LINK = re.compile(r"\]\((guide:[^)]*)\)")
 
 
@@ -74,14 +76,27 @@ def save(name, catalog, root=ROOT):
     (root / path).write_text(text, encoding="utf-8")
 
 
+def read_unit(loc):
+    """A localization as text, {category: text} for a plural, or None where it isn't one of those."""
+    if not isinstance(loc, dict):
+        return None
+    if "variations" in loc:
+        plural = loc["variations"].get("plural") if isinstance(loc["variations"], dict) else None
+        if not isinstance(plural, dict) or set(loc["variations"]) != {"plural"}:
+            return None
+        forms = OrderedDict((c, (v.get("stringUnit") or {}).get("value") if isinstance(v, dict) else None)
+                            for c, v in plural.items())
+        return None if any(not isinstance(t, str) for t in forms.values()) else forms
+    value = (loc.get("stringUnit") or {}).get("value")
+    return value if isinstance(value, str) else None
+
+
 def english(key, entry):
     """The English: a string, or {category: form} for a plural."""
     en = entry.get("localizations", {}).get("en")
     if en is None:
         return key  # a literal key is its own English
-    if "variations" in en:
-        return OrderedDict((c, v["stringUnit"]["value"]) for c, v in en["variations"]["plural"].items())
-    return en["stringUnit"]["value"]
+    return read_unit(en)
 
 
 def fingerprint(text):
@@ -113,12 +128,15 @@ def save_sources(sources, root=ROOT):
 
 def translation(entry, lang):
     """The translation as `apply` takes it: a string, {category: form}, or None."""
-    loc = entry.get("localizations", {}).get(lang)
-    if loc is None:
-        return None
-    if "variations" in loc:
-        return OrderedDict((c, v["stringUnit"]["value"]) for c, v in loc["variations"]["plural"].items())
-    return loc.get("stringUnit", {}).get("value")
+    return read_unit(entry.get("localizations", {}).get(lang))
+
+
+def needs_review(entry, lang):
+    """Xcode marks a translation so when its English changes in Xcode's editor."""
+    loc = entry.get("localizations", {}).get(lang) or {}
+    units = [loc.get("stringUnit")] if "stringUnit" in loc else [
+        v.get("stringUnit") for v in (loc.get("variations") or {}).get("plural", {}).values() if isinstance(v, dict)]
+    return any(isinstance(u, dict) and u.get("state") == "needs_review" for u in units)
 
 
 # ----------------------------------------------------------------------------------------------
@@ -128,8 +146,11 @@ def arguments(text):
     """{argument index: type} of a format string, or a message when it can't be read."""
     found, nextIndex = {}, 1
     numbered = unnumbered = False
+    for m in ANY_PERCENT.finditer(text):
+        if m.group(0) != "%%" and not SPECIFIER.fullmatch(m.group(0)):
+            return f"“{m.group(0)}” is not a placeholder the app passes (write %% for a percent sign)"
     for m in SPECIFIER.finditer(text):
-        kind = "@" if m.group(2) == "@" else ("f" if m.group(2) in ("f", "lf") else "d")
+        kind = m.group(2)
         if m.group(1):
             numbered, index = True, int(m.group(1))
         else:
@@ -201,6 +222,8 @@ def state(name, key, entry, lang, sources):
     """"done", "missing" or "stale"."""
     if translation(entry, lang) is None:
         return "missing"
+    if needs_review(entry, lang):
+        return "stale"
     made_from = sources.get(name, {}).get(key, {}).get(lang)
     if made_from is not None and made_from != fingerprint(english(key, entry)):
         return "stale"
@@ -277,7 +300,11 @@ def check(root=ROOT):
     errors = []
     sources = load_sources(root)
     for name, (path, _) in CATALOGS.items():
-        _, strings = entries(name, root)
+        try:
+            _, strings = entries(name, root)
+        except (OSError, json.JSONDecodeError, KeyError) as error:
+            errors.append((path, f"can't be read: {error}"))
+            continue
         for key, entry in strings.items():
             text = english(key, entry)
             for lang, loc in entry.get("localizations", {}).items():
@@ -286,15 +313,24 @@ def check(root=ROOT):
                 if lang not in LANGUAGES:
                     errors.append((path, f'"{key}": {lang} is not in tools/l10n.py LANGUAGES'))
                     continue
+                if text is None:
+                    errors.append((path, f'"{key}": its English is not a string or a plural this tool reads'))
+                    break
+                value = translation(entry, lang)
+                if value is None:
+                    errors.append((path, f'"{key}" {lang}: not a string or a plural this tool reads'))
+                    continue
                 units = [loc.get("stringUnit")] if "stringUnit" in loc else [
                     v.get("stringUnit") for v in loc.get("variations", {}).get("plural", {}).values()]
-                if any(u is None or u.get("state") != "translated" for u in units):
-                    errors.append((path, f'"{key}" {lang}: state must be "translated"'))
+                if any(u.get("state") not in ("translated", "needs_review") for u in units):
+                    errors.append((path, f'"{key}" {lang}: state must be "translated" (or Xcode\'s "needs_review")'))
                 errors += [(path, f'"{key}" {lang}: {m}') for m in problems(text, translation(entry, lang), lang)]
         for key in sources.get(name, {}):
             if key not in strings:
                 errors.append((SOURCES, f'"{name}/{key}" is no longer in {path}: drop it'))
     summary = {}
+    if errors:
+        return errors, summary
     for name, lang, counts in status(root):
         for k in ("missing", "stale"):
             summary[k] = summary.get(k, 0) + counts[k]
@@ -313,6 +349,9 @@ def self_test():
     expect(problems("Area %lld", "Bereich %1$lld", "de") == [], "numbered one")
     expect(problems("Area %lld", "Bereich %@", "de") != [], "type change")
     expect(problems("Area %lld", "Bereich", "de") != [], "dropped")
+    expect(problems("Area %lld", "Bereich %d", "de") != [], "%d for an Int")
+    expect(problems("Done", "Fertig 50 %", "de") != [], "stray percent")
+    expect(problems("Done", "Fertig 50 %%", "de") == [], "escaped percent")
     expect(problems("See [Merge](guide:merge).", "Siehe [Zusammenführen](guide:merge).", "de") == [], "link")
     expect(problems("See [Merge](guide:merge).", "Siehe [Zusammenführen](guide:merg).", "de") != [], "broken link")
     plural = {"one": "%lld color", "other": "%lld colors"}
