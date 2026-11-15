@@ -111,7 +111,7 @@ final class StartHandoffUITests: XCTestCase {
         picture.tap()
 
         let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
-        let frames = captureFrames(timeout: 240, keep: 40) { changes in badge.exists && changes.holdsStill(for: 4) }
+        let frames = captureFrames(timeout: 240, keep: 40) { changes in changes.holdsStill(for: 4) && badge.exists }
         attachFrames(frames, named: "slowed-forming")
 
         let opened = waitForPaintingWithoutStart(in: app, timeout: 60)

@@ -717,7 +717,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   canvas draws it (`HandoffPage`, whose numbers come with it) during the glide, in the hand-off's
   own `settle`: the passage has the release's durations and marks. Reduce Motion: no lines, and
   the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
-  Making-of on: no lines, the show takes the photo as ever. A page from scratch, a drawing and the
+  Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
   settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios
   `create-forming`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`), and
   `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
