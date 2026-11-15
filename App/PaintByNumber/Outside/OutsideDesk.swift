@@ -13,12 +13,15 @@ import WidgetKit
 @MainActor
 enum OutsideDesk {
     /// The shelf, nil where there is none to lay out: a build without the app group, and demo
-    /// and test launches, which keep a throwaway library (tests set their own).
-    static var shelf: OutsideShelf? = launchShelf()
+    /// and test launches, which keep a throwaway library (tests hand the desk a shelf of their
+    /// own). `-demoOutside YES` lays a demo's library out all the same, to look at the widgets
+    /// and the stickers with paintings in every state.
+    static let shelf: OutsideShelf? = launchShelf()
 
     private static func launchShelf() -> OutsideShelf? {
         #if DEBUG
-        if DemoMode.isActive || DemoMode.isTestHost { return nil }
+        if DemoMode.isTestHost { return nil }
+        if DemoMode.isActive, !UserDefaults.standard.bool(forKey: "demoOutside") { return nil }
         #endif
         return OutsideShelf.shared()
     }
