@@ -58,11 +58,22 @@ final class EraDoor {
         if let passage { shown = passage }
         passage = nil
     }
+
+    #if DEBUG && UNRELEASED
+    /// The `era-passage-back` and `era-passage-night` demos: the way back played over the gallery,
+    /// with no Paint by Mosaic loaded to leave (their stills hold it where the night hides both).
+    func playDemoWayBack() {
+        passage = .moonlight
+    }
+    #endif
 }
 
 /// The passage between eras: tiles are set over the whole screen, row on row out from the bottom's
 /// middle like the courses of an apse, the new era goes in beneath them, and they lift away. Under
-/// Reduce Motion the screen dims to the apse's dark and back.
+/// Reduce Motion the screen dims to the apse's dark and back. In SideStore and Debug builds the
+/// way back to Paint by Moonlight is its own (`EraWayBack`, painting-company row 281): the tiles
+/// come down from the top courses, on a night with the crescent and a few stars, which clears
+/// over the gallery.
 struct EraPassage: View {
     let door: EraDoor
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -76,20 +87,40 @@ struct EraPassage: View {
     static let lift: TimeInterval = 1.0
     static var total: TimeInterval { wait + cover + hold + lift }
 
+    /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight, with
+    /// motion, in SideStore and Debug builds. Every other passage is the tiles set and lifted.
+    static func isWayBack(to destination: Era, reduceMotion: Bool) -> Bool {
+        #if UNRELEASED
+        return destination == .moonlight && !reduceMotion
+        #else
+        return false
+        #endif
+    }
+
+    /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
+    /// over (seconds from its start).
+    static func moments(to destination: Era, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
+        #if UNRELEASED
+        if isWayBack(to: destination, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
+        #endif
+        return (wait + cover, total)
+    }
+
     var body: some View {
         if let destination = door.passage {
             TimelineView(.animation) { context in
                 let elapsed = Self.held(start.map { context.date.timeIntervalSince($0) } ?? 0)
+                let timing = Self.moments(to: destination, reduceMotion: reduceMotion)
                 Canvas { graphics, size in
-                    draw(in: &graphics, size: size, elapsed: elapsed)
+                    draw(in: &graphics, size: size, elapsed: elapsed, destination: destination)
                 }
-                .onChange(of: elapsed >= Self.wait + Self.cover) { _, covered in
+                .onChange(of: elapsed >= timing.covered) { _, covered in
                     if covered && !settledCover {
                         settledCover = true
                         door.covered()
                     }
                 }
-                .onChange(of: elapsed >= Self.total) { _, done in
+                .onChange(of: elapsed >= timing.done) { _, done in
                     if done { door.passed() }
                 }
             }
@@ -101,9 +132,9 @@ struct EraPassage: View {
                 start = .now
                 settledCover = false
                 #if DEBUG
-                if DemoMode.scenario == "era-passage" {
+                if let hold = Self.demoHold {
                     Task {
-                        try? await Task.sleep(for: .seconds(Self.wait + Self.cover * 0.67 + 0.5))
+                        try? await Task.sleep(for: .seconds(hold + 0.5))
                         DemoMode.markReady()
                     }
                 }
@@ -113,11 +144,26 @@ struct EraPassage: View {
         }
     }
 
-    /// The `era-passage` demo holds the passage two thirds of the way through its cover, the
-    /// gallery half laid over, for a screenshot (Debug builds).
+    #if DEBUG
+    /// Where a demo holds the passage for a screenshot: `era-passage` two thirds of the way
+    /// through its cover, the gallery half laid over; `era-passage-back` the way back with its
+    /// tiles half fallen, and `era-passage-night` its still night, just before it clears.
+    private static var demoHold: TimeInterval? {
+        switch DemoMode.scenario {
+        case "era-passage": return wait + cover * 0.67
+        #if UNRELEASED
+        case "era-passage-back": return EraWayBack.halfFallen
+        case "era-passage-night": return EraWayBack.clears
+        #endif
+        default: return nil
+        }
+    }
+    #endif
+
+    /// The passage's time, stopped where a demo holds it (Debug builds).
     private static func held(_ elapsed: TimeInterval) -> TimeInterval {
         #if DEBUG
-        if DemoMode.scenario == "era-passage" { return min(elapsed, wait + cover * 0.67) }
+        if let hold = demoHold { return min(elapsed, hold) }
         #endif
         return elapsed
     }
@@ -131,7 +177,13 @@ struct EraPassage: View {
         let color: Color
     }
 
-    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era) {
+        #if UNRELEASED
+        if Self.isWayBack(to: destination, reduceMotion: reduceMotion) {
+            drawWayBack(in: &graphics, size: size, elapsed: elapsed)
+            return
+        }
+        #endif
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
         if reduceMotion {
             let fade = 0.35
@@ -165,16 +217,7 @@ struct EraPassage: View {
             }
             let side = tile.side * scale
             let turn = CGAffineTransform(translationX: tile.centre.x, y: tile.centre.y).rotated(by: tile.angle)
-            let face = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
-            graphics.fill(Path(roundedRect: face, cornerRadius: side * 0.12).applying(turn),
-                          with: .color(tile.color.opacity(opacity)))
-            // The light on the glass: a bright edge along the course, a shade along the other.
-            let lit = CGRect(x: face.minX + side * 0.12, y: face.minY + side * 0.08, width: side * 0.76, height: side * 0.14)
-            graphics.fill(Path(roundedRect: lit, cornerRadius: side * 0.07).applying(turn),
-                          with: .color(.white.opacity(0.22 * opacity)))
-            let shade = CGRect(x: face.minX + side * 0.1, y: face.maxY - side * 0.16, width: side * 0.8, height: side * 0.1)
-            graphics.fill(Path(roundedRect: shade, cornerRadius: side * 0.05).applying(turn),
-                          with: .color(.black.opacity(0.18 * opacity)))
+            Self.set(tile, side: side, turn: turn, opacity: opacity, in: &graphics)
         }
         // The setting bed: the apse's dark in the joints, spread only as far as the courses are laid,
         // so the old era shows beyond them until the cover is whole.
@@ -190,6 +233,74 @@ struct EraPassage: View {
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
         }
     }
+
+    /// Draws one tessera, `side` across, placed and turned by `turn`.
+    private static func set(_ tile: Tile, side: CGFloat, turn: CGAffineTransform, opacity: Double,
+                            in graphics: inout GraphicsContext) {
+        let face = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+        graphics.fill(Path(roundedRect: face, cornerRadius: side * 0.12).applying(turn),
+                      with: .color(tile.color.opacity(opacity)))
+        // The light on the glass: a bright edge along the course, a shade along the other.
+        let lit = CGRect(x: face.minX + side * 0.12, y: face.minY + side * 0.08, width: side * 0.76, height: side * 0.14)
+        graphics.fill(Path(roundedRect: lit, cornerRadius: side * 0.07).applying(turn),
+                      with: .color(.white.opacity(0.22 * opacity)))
+        let shade = CGRect(x: face.minX + side * 0.1, y: face.maxY - side * 0.16, width: side * 0.8, height: side * 0.1)
+        graphics.fill(Path(roundedRect: shade, cornerRadius: side * 0.05).applying(turn),
+                      with: .color(.black.opacity(0.18 * opacity)))
+    }
+
+    #if UNRELEASED
+    /// The night behind the wall: deepest overhead, a little of the dusk toward the horizon.
+    private static let zenith = Color(red: 0.047, green: 0.043, blue: 0.098)
+    private static let horizon = Color(red: 0.118, green: 0.086, blue: 0.243)
+
+    /// The way back (`EraWayBack` says when): the night, its crescent and stars, and over them
+    /// the tiles, set quickly and then let go.
+    private func drawWayBack(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        guard elapsed > EraWayBack.wait else { return }
+        let layout = Self.layout(in: size)
+        // The night is the tiles' setting bed too, spread only as far as the courses are laid, so
+        // Paint by Mosaic shows beyond them until the cover is whole.
+        let night = EraWayBack.night(at: elapsed)
+        if night > 0 {
+            var sky = graphics
+            sky.opacity = night
+            let spread = EraWayBack.bed(at: elapsed)
+            if spread < 1 {
+                let front = layout.farthest * CGFloat(spread)
+                let centre = layout.centre
+                sky.clip(to: Path(ellipseIn: CGRect(x: centre.x - front, y: centre.y - front, width: 2 * front, height: 2 * front)))
+            }
+            sky.fill(Path(CGRect(origin: .zero, size: size)),
+                     with: .linearGradient(Gradient(colors: [Self.zenith, Self.horizon]),
+                                           startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+        }
+        let gold = EraWayBack.gold(at: elapsed)
+        let moon = EraWayBack.moon(at: elapsed) * gold
+        if moon > 0 {
+            let sky = EraWayBack.sky(in: size)
+            // The crescent as the app inks it, an outline, with a breath of its gold inside.
+            let crescent = Path(Crescent.cgPath(in: sky.moon))
+            graphics.fill(crescent, with: .color(Theme.gold.opacity(0.16 * moon)))
+            graphics.stroke(crescent, with: .color(Theme.gold.opacity(moon)),
+                            style: StrokeStyle(lineWidth: min(4, max(2, sky.moon.width * 0.04)), lineCap: .round, lineJoin: .round))
+            for star in sky.stars {
+                let state = EraWayBack.star(appearing: star.appears, at: elapsed)
+                guard state.opacity > 0 else { continue }
+                let side = star.side * CGFloat(state.scale)
+                let place = CGRect(x: star.centre.x - side / 2, y: star.centre.y - side / 2, width: side, height: side)
+                graphics.fill(Path(Sparkle.starPath(in: place)), with: .color(Theme.gold.opacity(state.opacity * gold)))
+            }
+        }
+        guard elapsed < EraWayBack.fallen else { return }
+        for (index, tile) in layout.tiles.enumerated() {
+            guard let state = EraWayBack.tile(delay: tile.delay, index: index, at: elapsed) else { continue }
+            let centre = CGPoint(x: tile.centre.x, y: tile.centre.y + layout.pitch * CGFloat(state.drop))
+            let turn = CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: CGFloat(tile.angle + state.turn))
+            Self.set(tile, side: tile.side * CGFloat(state.scale), turn: turn, opacity: state.opacity, in: &graphics)
+        }
+    }
+    #endif
 
     struct Layout {
         let size: CGSize
@@ -251,6 +362,142 @@ struct EraPassage: View {
         return tiles
     }
 }
+
+#if UNRELEASED
+/// The way back from Paint by Mosaic to Paint by Moonlight (painting-company row 281), the way
+/// in's counterpart: when each thing happens and how far along it is, the drawing left to
+/// `EraPassage`. After the same wait, the wall's tiles come over the screen quickly (`cover`), in
+/// the way in's order, on a bed of night; the era is swapped under them at `swap`; they let go
+/// from the top courses down, each loosening, dropping and fading (`fall`), so the wall comes
+/// down on the night with its crescent; a few stars come out and the night stands a moment
+/// (`still`); then it clears over the gallery, the crescent and stars last (`clear`). As long as
+/// the way in, and nothing in it is drawn at random: a size and a time give one frame.
+enum EraWayBack {
+    static let wait = EraPassage.wait
+    static let cover: TimeInterval = 0.55
+    static let fall: TimeInterval = 0.9
+    static let still: TimeInterval = 0.45
+    /// The screen is wholly tiles: the era goes in beneath.
+    static var swap: TimeInterval { wait + cover }
+    /// The last tile is gone.
+    static var fallen: TimeInterval { swap + fall }
+    /// The night begins to clear.
+    static var clears: TimeInterval { fallen + still }
+    /// The way in's length exactly; the clearing takes what the rest leaves (0.6 s).
+    static var total: TimeInterval { EraPassage.total }
+    static var clear: TimeInterval { total - clears }
+    /// Where the `era-passage-back` demo holds it: the upper courses gone, the crescent showing.
+    static var halfFallen: TimeInterval { swap + fall * 0.55 }
+
+    /// A tile's course sets how late it is laid (`delay`, 0 at the bottom's middle to 1 at the
+    /// farthest corner) and, turned round, how early it falls: the last three tenths of the fall
+    /// are the lowest course's own.
+    private static let stagger = 0.7
+
+    struct TileState: Equatable {
+        var opacity: Double
+        var scale: Double
+        /// How far it has dropped, in tile pitches.
+        var drop: Double
+        /// How far it has turned from its course, in radians.
+        var turn: Double
+    }
+
+    /// The tile `index` of the layout, laid at `delay`, at a time; nil while it isn't there.
+    static func tile(delay: Double, index: Int, at elapsed: TimeInterval) -> TileState? {
+        guard elapsed > wait, elapsed < fallen else { return nil }
+        if elapsed < swap {
+            let local = ((elapsed - wait) / cover - delay * 0.75) / 0.25
+            guard local > 0 else { return nil }
+            let eased = min(1, local)
+            return TileState(opacity: eased, scale: 1.35 - 0.35 * (1 - pow(1 - eased, 3)), drop: 0, turn: 0)
+        }
+        let local = ((elapsed - swap) / fall - (1 - delay) * stagger) / (1 - stagger)
+        guard local < 1 else { return nil }
+        let loose = max(0, local)
+        let lean = sway(index)
+        return TileState(opacity: 1 - loose * loose, scale: 1 - 0.12 * loose,
+                         drop: 5 * loose * loose * (1 + lean), turn: 2.4 * lean * loose)
+    }
+
+    /// Each tile's own lean as it falls, -0.5 to 0.5, from its place in the layout alone.
+    static func sway(_ index: Int) -> Double {
+        var random = PassageRandom(seed: UInt64(truncatingIfNeeded: index))
+        return random.next() - 0.5
+    }
+
+    /// How far the bed of night has spread under the courses being laid, 0 to 1 of the way to the
+    /// farthest corner; whole a quarter of the cover before the last tile is.
+    static func bed(at elapsed: TimeInterval) -> Double {
+        min(1, max(0, (elapsed - wait) / cover / 0.75))
+    }
+
+    /// The night's opacity: whole until it clears, gone a little before the end.
+    static func night(at elapsed: TimeInterval) -> Double {
+        1 - ease((elapsed - clears) / clear / 0.8)
+    }
+
+    /// The crescent's and the stars' opacity: they outlast the night a moment, over the gallery.
+    static func gold(at elapsed: TimeInterval) -> Double {
+        1 - ease(((elapsed - clears) / clear - 0.3) / 0.7)
+    }
+
+    /// The crescent's own coming: it rises as the courses over it let go (it stands a little
+    /// above the middle of every screen), whole before `halfFallen`, so no gold glints in the
+    /// joints of a wall still standing.
+    static func moon(at elapsed: TimeInterval) -> Double {
+        ease(((elapsed - swap) / fall - 0.3) / 0.2)
+    }
+
+    struct Star: Equatable {
+        let centre: CGPoint
+        let side: CGFloat
+        /// When it comes out (seconds from the passage's start).
+        let appears: TimeInterval
+    }
+
+    struct NightSky: Equatable {
+        /// The crescent's square.
+        let moon: CGRect
+        let stars: [Star]
+    }
+
+    /// How long a star takes to come out.
+    static let starPop: TimeInterval = 0.24
+
+    /// The night's sky for a screen: the crescent above the middle, and five stars placed by
+    /// hand round it, coming out from the top down as the last tiles fall, all out before the
+    /// night clears.
+    static func sky(in size: CGSize) -> NightSky {
+        let side = min(160, max(64, min(size.width, size.height) * 0.2))
+        let moon = CGRect(x: size.width / 2 - side / 2, y: size.height * 0.36 - side / 2, width: side, height: side)
+        // Across, down, and the star's size beside the crescent's.
+        let places: [(x: CGFloat, y: CGFloat, side: CGFloat)] =
+            [(0.77, 0.13, 0.22), (0.24, 0.17, 0.30), (0.85, 0.40, 0.26), (0.15, 0.47, 0.20), (0.68, 0.60, 0.24)]
+        var stars: [Star] = []
+        for (index, place) in places.enumerated() {
+            stars.append(Star(centre: CGPoint(x: size.width * place.x, y: size.height * place.y),
+                              side: side * place.side, appears: fallen - 0.25 + 0.11 * Double(index)))
+        }
+        return NightSky(moon: moon, stars: stars)
+    }
+
+    /// A star that comes out at `appearing`: it fades in and pops a little past its size.
+    static func star(appearing: TimeInterval, at elapsed: TimeInterval) -> (opacity: Double, scale: Double) {
+        let s = elapsed - appearing
+        guard s > 0 else { return (0, 0.3) }
+        let opacity = min(1, s / 0.12)
+        if s < 0.14 { return (opacity, 0.3 + 0.82 * ease(s / 0.14)) }
+        return (opacity, 1.12 - 0.12 * ease((s - 0.14) / (starPop - 0.14)))
+    }
+
+    /// Smoothstep, held at its ends.
+    private static func ease(_ x: Double) -> Double {
+        let t = min(1, max(0, x))
+        return t * t * (3 - 2 * t)
+    }
+}
+#endif
 
 /// The passage's own little generator (SplitMix64), so it lays the same tiles every time.
 private struct PassageRandom {

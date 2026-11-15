@@ -1202,9 +1202,17 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
   Ravenna's Settings › About has the same Year row (0547) whose wheel, rolled to the present or later,
   calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
-  while the door is shut). `EraDoorTests` and `SettingsTests.testTheClockSetBack…` (through the
-  door and back); `settings-clock` screenshots the wheel, `era-passage` (`RootView`) the passage
-  held two thirds laid.
+  while the door is shut). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row
+  281) the way back is its own, in the way in's 2.95 s (`EraWayBack`, the times and states;
+  `EraPassage.drawWayBack`): the tiles come over quickly on a bed of night, the era is swapped
+  under the whole wall, they let go from the top courses down, the crescent rising as its
+  courses go and five stars coming out (`Theme.gold`), the night stands a moment and clears
+  over the gallery, the gold last. Reduce Motion, and the release both ways, keep the one
+  passage (`EraPassage.isWayBack`, `moments`). `EraDoorTests`, `EraWayBackTests` and
+  `SettingsTests.testTheClockSetBack…` (through the door and back); `settings-clock` screenshots
+  the wheel, `era-passage` (`RootView`) the passage held two thirds laid, `era-passage-back`
+  the way back with its tiles half fallen and `era-passage-night` its still night
+  (`tools/ravenna/way_back_preview.py` draws either off the device).
 - **Kept apart in one process:** resources through `Bundle.ravenna` (never `Bundle.main`, but for
   the HED model, which is the app's own file), settings in `UserDefaults.ravenna` (every
   `@AppStorage` through `.defaultAppStorage`; launch arguments are still read from `.standard`),
