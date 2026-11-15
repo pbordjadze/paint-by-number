@@ -38,8 +38,11 @@ final class TipDesk {
     @ObservationIgnored private var history: TipHistory
     @ObservationIgnored private let store: TipStore
     @ObservationIgnored private let now: () -> Date
-    /// The moment being waited out, with the screen it belongs to: when that goes, so does it.
-    @ObservationIgnored private var offering: (place: TipPlace, task: Task<Void, Never>)?
+    /// The moment being waited out, with the screen it belongs to: when that goes, so does it. It
+    /// is over once its task ends, with a turn or without (`number` tells it from the moment that
+    /// took its place).
+    @ObservationIgnored private var offering: (place: TipPlace, task: Task<Void, Never>, number: Int)?
+    @ObservationIgnored private var offers = 0
     /// The screen whose moment is being waited out.
     var offeringPlace: TipPlace? { offering?.place }
     @ObservationIgnored private var watching: Task<Void, Never>?
@@ -227,9 +230,17 @@ final class TipDesk {
         notice("offer in \(place.rawValue): \(Self.names(candidates)), wanted \(Self.names(wanted))")
         guard !wanted.isEmpty else { return }
         stopOffering()
+        offers += 1
+        let number = offers
         offering = (place, Task { [weak self] in
             await self?.run(wanted, place: place, rest: rest, quiet: quiet)
-        })
+            self?.offerEnded(number)
+        }, number)
+    }
+
+    /// A moment's wait is over. One called off has gone already, and another may be in its place.
+    private func offerEnded(_ number: Int) {
+        if offering?.number == number { offering = nil }
     }
 
     /// Whether `place` is the screen the painter is on, and nothing covers it.

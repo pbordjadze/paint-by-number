@@ -13,9 +13,12 @@ nonisolated struct PaintingDocument: Sendable {
     var notice: OpenNotice? = nil
     /// Whether the painting keeps a photo to peek at: one sent without its photo has none.
     var hasPhoto = true
-    /// Whether the painting was drawn on a blank start (`TemplateRefinements.Start.blank`: Blank
-    /// Page, whose photo is its white paper, or Refine's Start From): Photo shows no original of
-    /// it, and no tip says it does (`TipMoments.photoIsWorthAPeek`).
+    /// Whether the painting was drawn on a blank start (`TemplateRefinements.Start.blank`): Blank
+    /// Page, whose photo is its white paper, so Photo shows no original and no tip says it does
+    /// (`TipMoments.photoIsWorthAPeek`). A photo refined with Start From › Blank reads the same,
+    /// though its photo is an original: nothing a painting stores tells the two apart (a page
+    /// from scratch is known only to its draft, `CreateDraft.scratch`), so it gets no such tip
+    /// either; its Photo button is there all the same.
     var startsBlank = false
 }
 

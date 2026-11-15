@@ -227,6 +227,25 @@ struct TipDeskTests {
         f.desk.leave(.bench)
     }
 
+    /// A moment that ends, with a turn or without, is no longer being waited out: one that found
+    /// no view to point at must not keep the next from being offered (Make Cell's, asked for again
+    /// as its tab comes into view, `PaintTips.refineCellsShown`; painting-company row 240).
+    /// Whether the second gives a turn is TipKit's to say, which these tests leave alone.
+    @Test func aMomentThatEndedIsNoLongerWaitedOut() async throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.desk.enter(.refine)
+        f.desk.offer([.refineFill], in: .refine, rest: .zero)
+        #expect(f.desk.offeringPlace == .refine)
+        try await waitUntil(timeout: .seconds(30)) { f.desk.offeringPlace == nil }
+        #expect(f.desk.turn == nil)
+        f.desk.anchor([.refineFill], present: true)
+        f.desk.offer([.refineFill], in: .refine, rest: .zero)
+        #expect(f.desk.offeringPlace == .refine)
+        f.desk.leave(.refine)
+        #expect(f.desk.offeringPlace == nil)
+    }
+
     @Test func noTipHasTheTurnBeforeOneIsGiven() throws {
         let f = try fixture()
         defer { f.cleanup() }

@@ -65,6 +65,9 @@ nonisolated enum TipMoments {
     /// Whether Peek at the Photo has something to say: the painting keeps a photo, and it is the
     /// picture the painting was made from. One drawn on a blank start keeps the page it was drawn
     /// on (Blank Page's white paper), where Photo shows no original (painting-company row 240).
+    /// A photo drawn over from Refine's Start From › Blank counts as one too, its photo an
+    /// original or not: a painting records the blank start, never which way it came
+    /// (`PaintingDocument.startsBlank`), and a tip withheld costs less than one about white paper.
     static func photoIsWorthAPeek(hasPhoto: Bool, startsBlank: Bool) -> Bool {
         hasPhoto && !startsBlank
     }

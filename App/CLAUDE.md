@@ -445,7 +445,10 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   shows only in Cells, `TipID.hidesWithItsTab`, asked for again as Cells comes up,
   `PaintTips.refineCellsShown`), and Peek at the Photo is never offered on a painting drawn on
   a blank start, whose photo is its page (`TipMoments.photoIsWorthAPeek`,
-  `PaintingDocument.startsBlank`). `.cardTip`'s popover keeps
+  `PaintingDocument.startsBlank`; a photo refined with Start From › Blank gets none either,
+  since a painting stores the blank start and nothing that tells it from a Blank Page; its
+  Photo button stays). A moment is waited out only while its task runs (`TipDesk.offering`
+  clears when it ends, with a turn or without). `.cardTip`'s popover keeps
   `.presentationCompactAdaptation(.popover)` on its content outside any condition: inside one, a
   phone got a blank sheet. A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
