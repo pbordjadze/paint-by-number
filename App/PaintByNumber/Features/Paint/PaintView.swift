@@ -359,12 +359,17 @@ struct PaintView: View {
             // Tips about the page itself: a card at the top of the page as it first fits, with no
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
-            if feedback == nil, PaintTips.desk.pageTip != nil {
+            // On a phone, in SideStore and Debug builds, the card lies in the margin over the
+            // page instead, just under the bar, on an opaque surface (`TipForm.margin`,
+            // painting-company row 240): a page that leaves no margin has it over its top.
+            if feedback == nil, let pageTip = PaintTips.desk.turn, pageTip.liesOnThePage {
                 let visiblePadding = layout.visibleCanvasPadding(safe: geo.safeAreaInsets)
-                TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
+                let inMargin = TipForm.of(
+                    pageTip, isCompact: sizeClass == .compact, isAccessibilitySize: dynamicTypeSize.isAccessibilitySize) == .margin
+                pageTipCard(pageTip, opaque: inMargin)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
-                    .padding(.top, pageTipInset(in: CGSize(
+                    .padding(.top, inMargin ? Self.pageTipMargin : pageTipInset(in: CGSize(
                         width: geo.size.width - visiblePadding.leading - visiblePadding.trailing,
                         height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -551,6 +556,20 @@ struct PaintView: View {
     /// How far into the page the page tips lie, and how wide they grow.
     private static let pageTipDepth: CGFloat = 32
     private static let pageTipWidth: CGFloat = 420
+    /// How far under the bar a page tip in the margin lies (`TipForm.margin`).
+    private static let pageTipMargin: CGFloat = 8
+
+    /// A page tip's card, on the card's opaque surface where it lies in the margin, next to the
+    /// picture or over its top.
+    @ViewBuilder
+    private func pageTipCard(_ id: TipID, opaque: Bool) -> some View {
+        let tip = TipView(id.tip, isPresented: nil, arrowEdge: nil)
+        if opaque {
+            tip.tipBackground(Theme.surface)
+        } else {
+            tip
+        }
+    }
 
     // MARK: Top bar
 

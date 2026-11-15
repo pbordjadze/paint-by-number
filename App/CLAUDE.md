@@ -372,7 +372,8 @@ below name both alike.
   quarter bigger, always. `paint-quiet` (with `-dark`) is its screenshot.
 - Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
   lie on the page as a card with no arrow, just inside its top as it first fits
-  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").
+  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow"); on a phone, in
+  SideStore and Debug builds, in the margin under the bar (`TipForm.margin`, Tips).
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -459,6 +460,23 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   Feedback is on, and after a finish only Replay Painting, which waits for none of the limits. Tap to Paint and Draw Your Own Lines alone wait for
   neither the gap nor something done (`TipID.isHowTo`). State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
   `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
+- **Which form where** (`TipForm`, `App/Shared/Features/Tips/TipForm.swift`; painting-company
+  row 240): `TipForm.of(id, isCompact:isAccessibilitySize:)` is the one rule, and `TipFormTests`
+  pins it for every tip. `usual` is the form above, the release's everywhere and every build's
+  on a regular width. In SideStore and Debug builds (`EraSeam.tipsKeepOffTheirSubject`, a seam,
+  so Paint by Mosaic's tips stay as they are) a compact width keeps every tip off what it
+  explains: TipKit's popover, as wide as a phone and of clear glass, lay over the comparison,
+  the Pen's options, the picture. A popover tip becomes `.beside`: SwiftUI's own popover from the
+  same view and edge, the tip drawn by the app (`TipCard`: no wider than `TipForm.besideWidth`,
+  on `Theme.surface`, opaque over a picture; `.gentleTip` keeps both popovers attached and
+  presents one, so its view is one view whatever the width, and `TipPassthrough` serves both;
+  TipKit counts no display of it, so the desk says it once, `TipDesk.drewBeside`). A card over
+  the screen becomes `.margin`: the same card on the opaque surface, the page's three just under
+  the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
+  Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
+  picture's foot for the small one (`CompareView.DividerTipFoot`), which hangs under the
+  picture. At the accessibility text sizes every tip keeps its usual form. A popover of the
+  app's own keeps `.presentationCompactAdaptation(.popover)` outside any condition.
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
   tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
   The first shelf visit, once the starter pages show, gives A Page Is Waiting with no question asked

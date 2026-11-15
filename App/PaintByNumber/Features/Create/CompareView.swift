@@ -100,6 +100,16 @@ struct CompareView: View {
 
                     placed(Self.cardShape.strokeBorder(Theme.hairline, lineWidth: 0.5), in: visible)
                         .allowsHitTesting(false)
+
+                    #if UNRELEASED
+                    // On a compact width Compare Photo and Page hangs under the picture, pointing
+                    // up at its foot: from the handle it lay over the comparison it tells of
+                    // (painting-company row 240; `TipForm.beside`).
+                    if after != nil, compares {
+                        placed(DividerTipFoot(), in: CGRect(x: visible.minX, y: visible.maxY - 1, width: visible.width, height: 1))
+                            .allowsHitTesting(false)
+                    }
+                    #endif
                 }
                 .frame(width: size.width, height: size.height)
                 .coordinateSpace(.named(Self.space))
@@ -370,13 +380,25 @@ struct CompareView: View {
                     DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                         .onChanged { value in moveDivider(to: value.location.x, in: size) }
                 )
-                // Compare Photo and Page: hung below the handle.
-                .gentleTip(.newPaintingDivider, arrowEdge: .top)
+                // Compare Photo and Page: hung below the handle (TipKit's popover; the small one
+                // of a compact width hangs from `DividerTipFoot`).
+                .gentleTip(.newPaintingDivider, arrowEdge: .top, only: .popover)
         }
         .position(x: x, y: visible.midY)
     }
 
     private static let space = "compare"
+
+    #if UNRELEASED
+    /// Where Compare Photo and Page hangs from on a compact width: the picture's foot. A view of
+    /// its own with nothing passed in, so the picture's renders (a drag of the divider) don't run
+    /// its tip's modifier.
+    private struct DividerTipFoot: View {
+        var body: some View {
+            Color.clear.gentleTip(.newPaintingDivider, arrowEdge: .top, only: .beside)
+        }
+    }
+    #endif
 
     /// The photo's first picture arrives from the trailing edge, the divider sweeping from there
     /// to the middle: before and after, shown rather than said. Once per photo, when the view
