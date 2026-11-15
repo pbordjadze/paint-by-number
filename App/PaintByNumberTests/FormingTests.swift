@@ -51,11 +51,20 @@ struct FormingTests {
         #expect(FormingPlan.passage(forms: false, reduceMotion: true) == .preview)
     }
 
-    /// The lines are all there before the picture moves, in time the hand-off spends anyway, and
-    /// the photo dries in the hand-off's own settling: forming adds nothing to the wait.
-    @Test func formingTakesTheHandoffNoLonger() {
-        #expect(FormingPlan.linesArrive > 0)
-        #expect(FormingPlan.linesArrive <= StartHandoffPlan.lift + StartHandoffPlan.clear)
+    /// The lines are drawn in long enough to follow, slowed with the hand-off, over a photo
+    /// calmed part of the way to the paper; the lift waits for what is left of the drawing and
+    /// no longer, and the photo dries in the hand-off's own settling.
+    @Test func theLinesAreDrawnInBeforeTheLift() {
+        #expect(FormingPlan.drawIn == 1.4 * StartHandoffPlan.glide)
+        #expect(FormingPlan.drawIn >= 0.6 && FormingPlan.drawIn / StartHandoffPlan.glide <= 1.6)
+        #expect(FormingPlan.wash >= 0.35 && FormingPlan.wash <= 0.5)
+        #expect(FormingPlan.feather > 0 && FormingPlan.feather < 0.5)
+        #expect(FormingPlan.liftWait(sinceLines: 0) == FormingPlan.drawIn)
+        #expect(abs(FormingPlan.liftWait(sinceLines: FormingPlan.drawIn / 2) - FormingPlan.drawIn / 2) < 1e-9)
+        // A save that outlasted the drawing waits for nothing; a clock gone backward, no longer than the drawing.
+        #expect(FormingPlan.liftWait(sinceLines: FormingPlan.drawIn) == 0)
+        #expect(FormingPlan.liftWait(sinceLines: 30) == 0)
+        #expect(FormingPlan.liftWait(sinceLines: -5) == FormingPlan.drawIn)
         #expect(FormingPlan.dries == StartHandoffPlan.settle)
         #expect(FormingPlan.dries <= StartHandoffPlan.glide)
     }

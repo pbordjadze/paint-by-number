@@ -28,8 +28,12 @@ struct CompareView: View {
     var fillsSpace = false
     #if UNRELEASED
     /// The picture forming (`FormingPlan`): the lines of the template to be painted, which
-    /// arrive over the photo in the canvas's ink.
+    /// are drawn in across the photo in the canvas's ink while it calms toward the paper.
     var lines: LineArtDrawing?
+    /// A demo's hold: how much of the lines is drawn (nil: drawn in as they come).
+    var linesHeld: CGFloat?
+    /// How much of the lines is drawn, 0 to 1, and the photo's wash with it.
+    @State private var drawn: CGFloat = 0
     #endif
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat = 0.5
@@ -74,15 +78,24 @@ struct CompareView: View {
                             }
 
                         #if UNRELEASED
-                        ZStack {
-                            if let lines {
-                                LineArtLayer(drawing: lines, picture: picture, scale: canvasScale(of: picture), overPaint: true)
-                                    .equatable()
-                                    .frame(width: size.width, height: size.height)
-                                    .transition(.opacity)
-                            }
+                        if let lines {
+                            Rectangle()
+                                .fill(LineArtDrawing.paper)
+                                .opacity(FormingPlan.wash * drawn)
+                                .allowsHitTesting(false)
+                            // Stroked once: the drawing in is a mask moving over it.
+                            LineArtLayer(drawing: lines, picture: picture, scale: canvasScale(of: picture), overPaint: true)
+                                .equatable()
+                                .frame(width: size.width, height: size.height)
+                                .mask(alignment: .topLeading) { sweep(over: visible) }
+                                .onAppear {
+                                    if let linesHeld {
+                                        drawn = linesHeld
+                                    } else {
+                                        withAnimation(.easeInOut(duration: FormingPlan.drawIn)) { drawn = 1 }
+                                    }
+                                }
                         }
-                        .animation(.easeOut(duration: FormingPlan.linesArrive), value: lines?.id)
                         #endif
 
                         if after != nil, compares {
@@ -294,6 +307,23 @@ struct CompareView: View {
                 .frame(width: size.width, height: size.height)
         }
     }
+
+    #if UNRELEASED
+    /// What shows of the forming lines over the card at `visible`: everything up to an edge that
+    /// travels from its left to its right as `drawn` goes from 0 to 1, soft over `feather`.
+    private func sweep(over visible: CGRect) -> some View {
+        let feather = visible.width * FormingPlan.feather
+        let width = visible.width + feather
+        return HStack(spacing: 0) {
+            Rectangle()
+            LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                .frame(width: feather)
+        }
+        .environment(\.layoutDirection, .leftToRight)
+        .frame(width: width, height: visible.height)
+        .offset(x: visible.minX - width * (1 - drawn), y: visible.minY)
+    }
+    #endif
 
     private static let cardShape = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 

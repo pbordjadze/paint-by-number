@@ -63,11 +63,12 @@ import PaintCore
 ///   a Drawing, SideStore and Debug builds): a page of shapes and strokes drawn at launch and
 ///   photographed askew on a dark table (`drawingPhoto`), cleaned and made a painting, the
 ///   palette set's picker in the card; ready once the painting is final.
-/// - `create-forming`, `create-forming-lines`, `create-forming-page`: the picture forming
-///   (`FormingPlan`, SideStore and Debug builds; painting-company row 293), the photograph
-///   starter picked as on the Paint page and held at a moment each (`formingHold`): the photo
-///   alone under its one status; the made template's lines over the photo, nothing started;
-///   and, started, the page it has dried into at the painting's place, before the painting opens.
+/// - `create-forming`, `create-forming-drawing`, `create-forming-lines`, `create-forming-page`:
+///   the picture forming (`FormingPlan`, SideStore and Debug builds; painting-company row 293),
+///   the photograph starter picked as on the Paint page and held at a moment each
+///   (`formingHold`): the photo alone under its one status; the made template's lines half drawn
+///   across the photo, half washed; all drawn over the washed photo, nothing started; and,
+///   started, the page it has dried into at the painting's place, before the painting opens.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
@@ -113,7 +114,7 @@ enum ShellDemo: Equatable {
          galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
-         createCustom, createForming, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, settingsClock
 
     static let current: ShellDemo? = {
@@ -152,6 +153,7 @@ enum ShellDemo: Equatable {
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-forming": .createForming
+        case "create-forming-drawing": .createFormingDrawing
         case "create-forming-lines": .createFormingLines
         case "create-forming-page": .createFormingPage
         case "create-from-file": .createFromFile
@@ -222,7 +224,9 @@ enum ShellDemo: Equatable {
     enum FormingHold {
         /// The wait: the template is made and never shows.
         case waiting
-        /// The lines over the photo: nothing starts.
+        /// The lines half drawn across the photo, which has half its wash: nothing starts.
+        case drawing
+        /// The lines all drawn over the washed photo: nothing starts.
         case lines
         /// Started: the page at the painting's place, which never opens.
         case page
@@ -233,6 +237,7 @@ enum ShellDemo: Equatable {
     var formingHold: FormingHold? {
         switch self {
         case .createForming: .waiting
+        case .createFormingDrawing: .drawing
         case .createFormingLines: .lines
         case .createFormingPage: .page
         default: nil
@@ -265,7 +270,7 @@ enum ShellDemo: Equatable {
         // A painting and a photograph: the library's starters, or the first two fixed pictures.
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
-        case .createTip, .createForming, .createFormingLines, .createFormingPage: pictures.dropFirst().first
+        case .createTip, .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage: pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
              .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createRefineUnlock:
             DemoMode.photos.first ?? pictures.first
@@ -427,7 +432,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
-             .createForming, .createFormingLines, .createFormingPage,
+             .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage,
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break

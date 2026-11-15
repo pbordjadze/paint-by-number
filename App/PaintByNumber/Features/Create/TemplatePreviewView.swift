@@ -559,7 +559,7 @@ struct TemplatePreviewView: View {
             return CompareView(
                 photo: source.preview, after: nil, afterID: "none", afterLabel: model.previewStyle.name,
                 compares: false, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged,
-                lines: forming.lines ? model.preview?.drawing : nil)
+                lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw)
         }
         #endif
         return CompareView(
@@ -589,6 +589,15 @@ struct TemplatePreviewView: View {
         #endif
     }
 
+    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn.
+    private var heldDraw: CGFloat? {
+        #if DEBUG
+        if ShellDemo.current?.formingHold == .lines { return 1 }
+        if ShellDemo.current?.formingHold == .drawing { return 0.5 }
+        #endif
+        return nil
+    }
+
     /// What the picture forming shows over the photo.
     private var forming: FormingPlan.Shown {
         FormingPlan.shown(
@@ -614,6 +623,10 @@ struct TemplatePreviewView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: shows)
+        // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
+        .onChange(of: forming.lines, initial: true) { _, lines in
+            if lines { pictureProbe?.linesBegan = .now }
+        }
     }
     #endif
 
@@ -1035,7 +1048,7 @@ struct TemplatePreviewView: View {
     private func startPickedPicture() {
         guard model.source != nil else { return }
         #if DEBUG
-        // `create-forming` and `create-forming-lines` hold the picture forming: nothing starts.
+        // `create-forming`, `-drawing` and `-lines` hold the picture forming: nothing starts.
         if let hold = ShellDemo.current?.formingHold, hold != .page { return }
         #endif
         start()
@@ -1243,6 +1256,8 @@ final class PreviewPictureProbe {
     private weak var view: UIView?
     private var aspect: CGFloat = 0
     private var canvas: CGSize = .zero
+    /// When the picture forming's lines began to be drawn over the picture (`FormingPlan`).
+    var linesBegan: ContinuousClock.Instant?
 
     /// `view` has the comparison's frame, and the photo the `aspect`; `canvas` is the space the
     /// comparison sizes its lines by (`CompareView.canvasSize`).
