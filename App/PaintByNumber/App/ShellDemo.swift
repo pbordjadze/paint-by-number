@@ -93,6 +93,8 @@ import PaintCore
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-open-new` (`-dark`): a painting not begun, cut for a Painting Length: its length chip
 ///   under the bar and, in SideStore and Debug builds, ✎ Change beside Undo.
+/// - `gallery-fine-tune` (`-dark`, `-long-text`; SideStore and Debug builds): that painting with
+///   its length chip's Fine-Tune sheet up (`FineTuneSheet`).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
 /// - `gallery-received`, `gallery-received-dark`: a painting someone sent opened in the app, as
@@ -108,7 +110,7 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
-         galleryDraft, galleryOpen, galleryOpenNew, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createForming, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
@@ -127,6 +129,7 @@ enum ShellDemo: Equatable {
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-open-new", "gallery-open-new-dark": .galleryOpenNew
+        case "gallery-fine-tune", "gallery-fine-tune-dark", "gallery-fine-tune-long-text": .galleryFineTune
         case "gallery-send", "gallery-send-dark", "gallery-send-long-text": .gallerySend
         case "gallery-received", "gallery-received-dark": .galleryReceived
         case "gallery-damaged": .galleryDamaged
@@ -407,7 +410,7 @@ enum ShellDemo: Equatable {
         case .galleryOpen:
             let painted = ProcessInfo.processInfo.arguments.contains("-playHarness") ? 0.0 : 0.42
             library.seed([Library.SeedItem(sample: pictures[0], painted: painted, photoMaxPixelSize: 560)])
-        case .galleryOpenNew:
+        case .galleryOpenNew, .galleryFineTune:
             // A painting not begun, cut for a length: its length chip and ✎ Change in the bar.
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0, photoMaxPixelSize: 560, paintingLength: .relaxed)])
         case .galleryDamaged:
