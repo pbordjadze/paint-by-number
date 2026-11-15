@@ -9,9 +9,9 @@ import UIKit
 /// resolved apart from the screen's, and a stroke under the finger lays out these alone.
 ///
 /// What the layers' switches and the painting change is read by views of their own below, never
-/// here: a view is laid out again in the transaction of the first change it reads, so one that
-/// read the tool too would take a newly shown layer in with the tool's change, at once, where
-/// it fades in (`RefineModel.show`), and a landing's new colors likewise (`RefineModel.land`).
+/// here, and each animates what fades in it by itself: a layer a tool shows again
+/// (`RefineModel.show`, `layerShown`) and a landing's new colors (`RefineModel.land`,
+/// `paintingFades`). The model writes both plainly.
 struct RefinePictureLayers: View {
     let refine: RefineModel
     let photo: CGImage
@@ -65,6 +65,9 @@ struct RefinePictureLayers: View {
         }
     }
 
+    /// How a layer a tool or a touch shows again fades in (`RefineModel.show`).
+    static let layerFade = Animation.easeInOut(duration: 0.2)
+
     /// The picture's card, whose corners the layers are masked to.
     static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 }
@@ -86,6 +89,7 @@ extension RefineModel {
 private struct RefinePaintedLayers: View {
     let refine: RefineModel
     let photo: CGImage
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         // In a container of its own, which the painting's cross-fade animates (`paintingFades`).
@@ -117,6 +121,7 @@ private struct RefinePaintedLayers: View {
             }
         }
         .animation(refine.paintingFades ? .easeInOut(duration: 0.35) : nil, value: refine.painting?.preview)
+        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layerShown)
     }
 }
 
@@ -124,9 +129,10 @@ private struct RefinePaintedLayers: View {
 /// the painting and the picture's place and zoom alone (`RefinePictureLayers`).
 private struct RefineDrawnLines: View {
     let refine: RefineModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        // In a container of its own, as the painted layers are (`RefinePaintedLayers`).
+        // In a container of its own, which the ink's fade animates (`layerShown`).
         ZStack {
             if let base = refine.base, refine.layers.ink {
                 let showsPhoto = refine.showsPhoto
@@ -136,6 +142,7 @@ private struct RefineDrawnLines: View {
                     .equatable()
             }
         }
+        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layerShown)
     }
 }
 
@@ -176,7 +183,6 @@ private struct RefineShownNumbers: View {
     let refine: RefineModel
 
     var body: some View {
-        // In a container of its own, as the painted layers are (`RefinePaintedLayers`).
         ZStack {
             if refine.layers.numbers || refine.group == .numbers || refine.tinyMarked != nil {
                 RefineNumbersDrawn(refine: refine)
