@@ -152,13 +152,13 @@ enum OutsideDesk {
         await inTurn { await layOutInTurn(library, leaving: leaving) }
     }
 
-    /// The painting the shelf was last laid out with, as it stood then.
-    private struct Laid {
+    /// The painting the shelf was last laid out with, as it was saved then.
+    nonisolated struct Laid: Sendable, Equatable {
         var token: String
         var artwork: UUID
-        var modified: Date
-        var thumbnail: Int
         var title: String
+        var modified: Date
+        var progress: PaintProgress
     }
 
     private static var laid: Laid?
@@ -171,19 +171,12 @@ enum OutsideDesk {
             ?? usable.filter { !$0.isStarted && !$0.isComplete }.max { $0.modifiedAt < $1.modifiedAt }
         let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
         let store = library.store
-        let state = current.map { Laid(token: "", artwork: $0.id, modified: $0.modifiedAt, thumbnail: $0.thumbnailVersion, title: $0.title) }
         let before = laid
-        let token = await Background.run { () -> String? in
-            // Laid out already as it stands (the painting was closed a moment ago, and now the
-            // app leaves): its pictures are not drawn again in the seconds leaving has.
-            let stands = before != nil && state != nil && before?.token == shelf.now()?.token
-                && before?.artwork == state?.artwork && before?.modified == state?.modified
-                && before?.thumbnail == state?.thumbnail && before?.title == state?.title
-            if !stands { layOutNow(current, store: store, shelf: shelf) }
+        laid = await Background.run {
+            let now = layOutNow(current, store: store, shelf: shelf, standing: before)
             layOutFinished(finished, store: store, shelf: shelf)
-            return shelf.now()?.token
+            return now
         }
-        laid = state.flatMap { state in token.map { Laid(token: $0, artwork: state.artwork, modified: state.modified, thumbnail: state.thumbnail, title: state.title) } }
         WidgetCenter.shared.reloadAllTimelines()
         await StickerMaker.layOut(finished, store: store, shelf: shelf, cutOuts: leaving ? 0 : StickerMaker.mostCutOutsALayout)
     }
@@ -202,12 +195,22 @@ enum OutsideDesk {
     /// while they still fit it (the same painting, as many areas painted as their first picture
     /// shows): taps counted against an older state, as when the widget is tapped while the app
     /// is still laying out on its way out, show pictures of a painting that has moved on, and go.
-    nonisolated static func layOutNow(_ artwork: Artwork?, store: ArtworkStore, shelf: OutsideShelf) {
+    ///
+    /// `standing` is what this launch last laid out: while the shelf still holds it and the
+    /// painting is saved as it was then (its areas, the paint in hand, its name), the pictures
+    /// stand and none is drawn again, so a painting closed a moment ago costs the app's leaving
+    /// nothing. Returns what the shelf now holds of the painting, nil when that isn't known.
+    @discardableResult
+    nonisolated static func layOutNow(_ artwork: Artwork?, store: ArtworkStore, shelf: OutsideShelf, standing: Laid? = nil) -> Laid? {
         let template = artwork.flatMap { try? store.readTemplate($0.id) }
         let saved = artwork.flatMap { artwork in template.flatMap { try? store.readProgress(artwork.id, regionCount: $0.regions.count) } }
+        if let artwork, let saved, saved.problem == nil, let standing, shelf.now()?.token == standing.token,
+           standing == Laid(token: standing.token, artwork: artwork.id, title: artwork.title, modified: artwork.modifiedAt, progress: saved.progress) {
+            return standing
+        }
         if let artwork, let saved, saved.problem == nil, let laid = shelf.now(), shelf.taps(for: laid) > 0,
            laid.artwork == artwork.id, laid.steps.first?.painted == saved.progress.paintedCount {
-            return
+            return nil
         }
         guard let artwork, let template, let saved, saved.problem == nil,
               let now = now(of: artwork, template: template, progress: saved.progress, shelf: shelf)
@@ -215,14 +218,16 @@ enum OutsideDesk {
             try? FileManager.default.removeItem(at: shelf.url(OutsideShelf.File.now.rawValue))
             shelf.clearTaps()
             shelf.sweep(prefix: "now-", keeping: [])
-            return
+            return nil
         }
         do {
             try shelf.write(now, to: .now)
             shelf.clearTaps()
             shelf.sweep(prefix: "now-", keeping: Set(now.steps.map(\.picture)))
+            return Laid(token: now.token, artwork: artwork.id, title: artwork.title, modified: artwork.modifiedAt, progress: saved.progress)
         } catch {
             Log.library.error("Laying out the widget's painting failed: \(String(describing: error), privacy: .public)")
+            return nil
         }
     }
 

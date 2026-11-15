@@ -180,6 +180,29 @@ struct OutsideDeskTests {
         OutsideDesk.layOutNow(nil, store: library.store, shelf: shelf)
         #expect(shelf.now() == nil)
     }
+
+    /// What this launch laid out stands while the painting is saved as it was: nothing is
+    /// drawn again. A change of the paint in hand alone, or a shelf another layout wrote,
+    /// is drawn anew.
+    @Test func aLayoutStandsWhileThePaintingIsAsSaved() async throws {
+        let library = makeLibrary()
+        let artwork = try await mosaic(in: library)
+        let laid = try #require(OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf))
+        let first = try #require(shelf.now())
+        #expect(laid.token == first.token)
+        #expect(OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf, standing: laid) == laid)
+        #expect(shelf.now() == first)
+
+        var progress = PaintProgress(regionCount: Fixtures.mosaic.regions.count)
+        progress.inHand = 1
+        library.saveProgress(progress, for: artwork.id, recording: false)
+        await library.flush()
+        let again = try #require(OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf, standing: laid))
+        #expect(again.token != laid.token && shelf.now()?.token == again.token)
+
+        OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf)
+        #expect(OutsideDesk.layOutNow(artwork, store: library.store, shelf: shelf, standing: again)?.token != again.token)
+    }
 }
 
 struct StickerMakerTests {
