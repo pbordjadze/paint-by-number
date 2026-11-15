@@ -41,12 +41,32 @@ struct CompletionBar: View {
     var doors: DoorMetrics?
     /// Change It's way into Edit (`PaintView.onChange`).
     var onChange: (() -> Void)?
+    /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
+    var original: OriginalWork?
+    /// Opens The Original's page (`PaintView`'s sheet).
+    var onOriginal: ((OriginalWork) -> Void)?
     #endif
 
-    /// The bar's widest, and the doors' panel's.
+    /// The bar's widest, and the panel's with up to four doors.
     nonisolated static let panelWidth: CGFloat = 560
     /// The doors' margin inside the panel, at its sides and foot.
     nonisolated static let doorsInset: CGFloat = 16
+
+    #if UNRELEASED
+    /// The panel's widest with so many doors: a fifth door (The Original) widens it by a door, so
+    /// a row of five on an iPad keeps the arches of a row of four, and their captions one line.
+    nonisolated static func widestPanel(doors: Int) -> CGFloat {
+        let door = (panelWidth - 2 * doorsInset - 3 * DoorMetrics.gap) / 4
+        return max(panelWidth, 2 * doorsInset + CGFloat(doors) * door + CGFloat(doors - 1) * DoorMetrics.gap)
+    }
+
+    /// The doors' room across, of `count` doors where the panel may be `available` wide: what
+    /// the panel lays them in, the painting screen measures them for (`PaintView.doorMetrics`)
+    /// and the gallery's opening expects (`ArchOpening`).
+    nonisolated static func doorsWidth(count: Int, available: CGFloat) -> CGFloat {
+        min(widestPanel(doors: count), available) - 2 * doorsInset
+    }
+    #endif
 
     var body: some View {
         #if UNRELEASED
@@ -72,11 +92,11 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, withoutLines: share.withoutLines)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
-        .frame(maxWidth: Self.panelWidth)
+        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(changes: onChange != nil, original: original != nil).count))
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
         .task(id: session.revision) { await share.prepare(for: session) }
@@ -253,23 +273,30 @@ final class CompletionShare {
     private(set) var picture: CGImage?
     /// The session revision `picture` shows (or is being rendered for).
     @ObservationIgnored private var revision: Int?
+    /// The picture is the painting as paint alone, without its drawing's lines (`PaintView`'s
+    /// Show Lines; painting-company row 295). A change has the next `prepare` render it again.
+    @ObservationIgnored var withoutLines = false {
+        didSet { if withoutLines != oldValue { revision = nil } }
+    }
 
     func prepare(for session: PaintingSession) async {
         guard session.isComplete, revision != session.revision else { return }
-        let target = session.revision
+        let target = session.revision, plain = withoutLines
         revision = target
         picture = nil
-        let image = await Self.render(template: session.template, progress: session.progress)
-        // Undone and finished again meanwhile: that completion renders its own.
-        guard revision == target else { return }
+        let image = await Self.render(template: session.template, progress: session.progress, withoutLines: plain)
+        // Undone and finished again, or its lines turned, meanwhile: that one renders its own.
+        guard revision == target, withoutLines == plain else { return }
         picture = image
         // A failed render may succeed next time the bar appears.
         if image == nil { revision = nil }
     }
 
     @concurrent
-    private static func render(template: Template, progress: PaintProgress) async -> CGImage? {
+    private static func render(template: Template, progress: PaintProgress, withoutLines: Bool) async -> CGImage? {
         let size = CanvasSnapshot.fittedSize(for: template, longSide: 2048)
-        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting)
+        var options = CanvasSnapshot.Options.painting
+        options.withoutInk = withoutLines
+        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: options)
     }
 }

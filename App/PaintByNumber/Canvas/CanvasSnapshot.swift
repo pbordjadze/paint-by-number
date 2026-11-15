@@ -19,6 +19,9 @@ nonisolated enum CanvasSnapshot {
         var highlight: Int?
         /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
         var lineWeight: LineWeight?
+        /// The finished picture as paint alone: of a coloring book's drawing only its writing is
+        /// drawn (`CanvasFrame.inkHidden`; painting-company row 295).
+        var withoutInk = false
 
         /// The artwork as painted so far: unpainted regions stay paper, no line art (a coloring
         /// book keeps its drawing, `drawsLines(for:)`).
@@ -127,7 +130,7 @@ nonisolated enum CanvasSnapshot {
             targetSize: SIMD2(Float(w), Float(h)), canvasSize: SIMD2(canvasW, canvasH),
             palette: options.palette, shadowOpacity: 0, outlineOpacity: options.palette.outlineOpacity,
             outlineWidth: width, selectedOutlineWidth: width, hatch: highlight == nil ? 0 : 1,
-            numbersShown: options.numbers ? 1 : 0, lines: lines,
+            numbersShown: options.numbers ? 1 : 0, lines: lines, inkHidden: options.withoutInk ? 1 : 0,
             labels: SIMD4(5, 7, rect == nil ? .greatestFiniteMagnitude : closeUpMaxFontPixels, 0),
             numbers: SIMD4(0.8, 0.9, 0.04, 0),
             time: SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never),

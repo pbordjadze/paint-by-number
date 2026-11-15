@@ -63,6 +63,22 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var titled: Bool?
     var isNamed: Bool { titled ?? true }
 
+    /// True when the painter chose to see this painting, finished, as paint alone, without its
+    /// drawing's lines (More › Show Lines turned off; painting-company row 295). Absent until
+    /// then, and from every `meta.json` before it, which reads as lines shown. Every build keeps
+    /// it as written; only SideStore and Debug builds set it or draw by it (`paintsWithoutLines`).
+    var hidesLines: Bool?
+    /// Whether this painting's finished picture is drawn without its lines: on the canvas, in
+    /// its gallery thumbnail and in the pictures shared of it. The release draws every painting
+    /// with its lines, whatever the file says.
+    var paintsWithoutLines: Bool {
+        #if UNRELEASED
+        hidesLines == true
+        #else
+        false
+        #endif
+    }
+
     /// What this painting's derived paint names are seeded by (`ColorNickname.assign`).
     var nicknameSeed: UInt64 { sentNicknameSeed ?? ColorNickname.seed(for: id) }
 
@@ -130,7 +146,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
         case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion, receivedDigest
         case sentNicknameSeed = "nicknameSeed"
-        case titled
+        case titled, hidesLines
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -168,6 +184,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
             sentNicknameSeed = try? c.decodeIfPresent(UInt64.self, forKey: .sentNicknameSeed)
             titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
+            hidesLines = try? c.decodeIfPresent(Bool.self, forKey: .hidesLines)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -191,6 +208,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         receivedDigest = try? c.decodeIfPresent(String.self, forKey: .receivedDigest)
         sentNicknameSeed = try? c.decodeIfPresent(UInt64.self, forKey: .sentNicknameSeed)
         titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
+        hidesLines = try? c.decodeIfPresent(Bool.self, forKey: .hidesLines)
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }

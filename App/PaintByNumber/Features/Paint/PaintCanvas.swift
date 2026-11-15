@@ -45,6 +45,8 @@ struct PaintCanvas: UIViewRepresentable {
     /// Space taken by floating chrome, in the canvas's own (full-screen) coordinates.
     var chromeInsets = EdgeInsets()
     var showsNumbers = true
+    /// The finished painting shows without its lines (`CanvasView.hidesLines`).
+    var hidesLines = false
     var paperAppearance = PaperAppearance.default
     /// How heavy a coloring book's drawing is (Settings › Line Weight); classic templates ignore it.
     var lineWeight = LineWeight.default
@@ -78,6 +80,8 @@ struct PaintCanvas: UIViewRepresentable {
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
         view.lineWeight = lineWeight
+        // Before the canvas is on screen: a painting left without its lines opens without them.
+        view.hidesLines = hidesLines
         controller.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -89,6 +93,7 @@ struct PaintCanvas: UIViewRepresentable {
             chromeInsets, rightToLeft: context.environment.layoutDirection == .rightToLeft)
         view.showsNumbers = showsNumbers
         view.reduceMotion = context.environment.accessibilityReduceMotion
+        view.hidesLines = hidesLines
         view.paperAppearance = paperAppearance
         view.lineWeight = lineWeight
         view.onPencilAction = onPencilAction

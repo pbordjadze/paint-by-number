@@ -8,7 +8,10 @@ name: TestFlight
 # Friends & Family group with its What to Test and submits it for Beta App Review
 # (ci/testflight_testers.py): one button from `main` to testers. A push to a
 # `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
-# branches).
+# branches), and so does a push to `main` that changes what the app bundles (`bundled` lists the
+# paths), so that an error only App Store Connect sees, like 90535 (a bundle's Info.plist naming
+# an executable), shows the day it lands, not on release night (painting-company row 315). Every
+# other push to `main` stops at `bundled`, on Linux, and holds no macOS runner.
 # Signing is Xcode's cloud signing with an App Store Connect API key: the archive is built
 # unsigned, as the IPA job's is, and -exportArchive signs it with the team's cloud-managed
 # distribution certificate and an App Store profile it makes, so no certificate or profile lives
@@ -28,14 +31,11 @@ on:
         description: 'What to Test, shown to testers (empty: the standing text)'
         required: false
   push:
-    branches: ['claude/testflight-dryrun*']
+    branches: ['claude/testflight-dryrun*', 'main']
 
 permissions:
   contents: read
-
-concurrency:
-  group: testflight
-  cancel-in-progress: false
+  actions: read
 
 env:
   PROJECT: App/PaintByNumber.xcodeproj
@@ -43,10 +43,51 @@ env:
   ARCHIVE: build/PaintByNumber.xcarchive
 
 jobs:
+  bundled:
+    name: Does this push change what the app bundles
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.diff.outputs.run }}
+    steps:
+      - uses: actions/checkout@v5
+        if: github.ref_name == 'main' && github.event_name == 'push'
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != main ] || [ "$GITHUB_EVENT_NAME" != push ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Every commit since the last main push this workflow passed on, so a change pushed
+          # with [skip ci] (no workflow runs for it) or one whose dry run failed is checked again;
+          # else the push's own commits; else its last commit alone. Strings catalogs aside:
+          # nearly every merge changes one, and App Store Connect checks nothing in them.
+          last=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/testflight.yml/runs?branch=main&event=push&status=success&per_page=1" \
+            --jq '.workflow_runs[0].head_sha // empty' 2>/dev/null || true)
+          if [ -n "$last" ] && git merge-base --is-ancestor "$last" HEAD 2>/dev/null; then BEFORE=$last; fi
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then BEFORE=HEAD~1; fi
+          echo "since $BEFORE"
+          changed=$(git diff --name-only "$BEFORE" HEAD -- \
+            App/PaintByNumber/Resources App/RavennaResources App/Config \
+            App/PaintByNumber.xcodeproj Package.swift ci/xcode.sh ':(glob)App/**/*.metal' \
+            .github/workflows/testflight.yml ':!*.xcstrings')
+          echo "$changed"
+          echo "run=$([ -n "$changed" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   upload:
     name: Archive, sign and upload to TestFlight
+    needs: bundled
+    if: needs.bundled.outputs.run == 'true'
     runs-on: xcode-27
     timeout-minutes: 45
+    # One upload at a time, and one dry run. An upload never waits in the dry runs' queue, where
+    # a newer run would replace it.
+    concurrency:
+      group: testflight-${{ github.event_name == 'workflow_dispatch' && inputs.upload && 'upload' || 'dry-run' }}
+      cancel-in-progress: false
     outputs:
       # The uploaded build, for `testers` (kept when a failed `testers` alone is re-run).
       build: ${{ steps.upload.outputs.build }}
@@ -148,6 +189,10 @@ jobs:
     name: Give the build to Friends & Family
     needs: upload
     if: needs.upload.outputs.build != ''
+    # In the uploads' queue, so the next upload waits for this one's testers.
+    concurrency:
+      group: testflight-upload
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
