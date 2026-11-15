@@ -236,7 +236,7 @@ struct ArtworkPaintingView: View {
         #if UNRELEASED
         .sheet(isPresented: $fineTuning) {
             if let artwork {
-                FineTuneSheet(settings: artwork.settings) { recut(with: $0) }
+                FineTuneSheet(settings: artwork.settings, paints: artwork.colorCount) { recut(with: $0) }
                     .besideTheFold()
             }
         }

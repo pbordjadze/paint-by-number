@@ -5,11 +5,16 @@ import SwiftUI
 /// Fine-Tune (painting-company row 352): the length chip's way to a painting's Colors, Detail and
 /// Lines, which went with the create flow's preview when a picked picture began opening straight
 /// as a painting (row 239). Its sliders are the preview's (`SettingSlider`), opening on what the
-/// painting was cut with, each with a detent there; Cut Again makes the painting again with them
-/// (`Library.retune`). SideStore and Debug builds, until Paul chooses it for a release.
+/// painting was cut with, each with a detent there, Colors on the paints its palette has (rich
+/// paint gives a face paints of its own and drops any unused, so the count asked for is not the
+/// count the painter sees); Cut Again makes the painting again with them (`Library.retune`). A
+/// compact sheet, as tall as its sliders, so the painting stays in view above it. SideStore and
+/// Debug builds, until Paul chooses it for a release.
 struct FineTuneSheet: View {
     /// What the painting was cut with.
     let settings: GenerationSettings
+    /// The paints the painting has.
+    let paints: Int
     var onCut: (GenerationSettings) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -17,11 +22,14 @@ struct FineTuneSheet: View {
     @State private var detail: Double
     @State private var lines: Double
     private let openingLines: Double
+    /// The sliders' height, which the sheet's is fitted to.
+    @State private var contentHeight: CGFloat = 300
 
-    init(settings: GenerationSettings, onCut: @escaping (GenerationSettings) -> Void) {
+    init(settings: GenerationSettings, paints: Int, onCut: @escaping (GenerationSettings) -> Void) {
         self.settings = settings
+        self.paints = min(max(paints, GenerationSettings.colorCountRange.lowerBound), GenerationSettings.colorCountRange.upperBound)
         self.onCut = onCut
-        _colorCount = State(initialValue: Double(settings.colorCount))
+        _colorCount = State(initialValue: Double(self.paints))
         _detail = State(initialValue: Double(settings.detail))
         let position = Self.linesPosition(of: settings.lineArt)
         _lines = State(initialValue: position)
@@ -32,15 +40,11 @@ struct FineTuneSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    Text("Cut the picture again with more or fewer colors, areas and lines.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
                     SettingSlider(
                         title: "Colors", value: TemplatePreviewView.colorPosition(colorCount),
                         onChange: { colorCount = TemplatePreviewView.colorCount(at: $0) },
                         valueText: Int(colorCount.rounded()).formatted(),
-                        detent: TemplatePreviewView.colorPosition(Double(settings.colorCount)), onEditing: { _ in })
+                        detent: TemplatePreviewView.colorPosition(Double(paints)), onEditing: { _ in })
                         .accessibilityIdentifier("fine-tune-colors")
                     SettingSlider(
                         title: "Detail", value: detail, onChange: { detail = $0 },
@@ -56,6 +60,7 @@ struct FineTuneSheet: View {
                     }
                 }
                 .padding(20)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
             .navigationTitle("Fine-Tune")
             .navigationBarTitleDisplayMode(.inline)
@@ -74,7 +79,8 @@ struct FineTuneSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        // The navigation bar's height above the sliders.
+        .presentationDetents([.height(contentHeight + 64), .large])
     }
 
     /// Classic line art has no lines to tune.
@@ -84,7 +90,8 @@ struct FineTuneSheet: View {
     /// where it opened, so a painting not tuned there keeps its own exactly.
     private var made: GenerationSettings {
         var made = settings
-        made.colorCount = Int(colorCount.rounded())
+        // Colors where it opened asks for what the painting was cut with.
+        if Int(colorCount.rounded()) != paints { made.colorCount = Int(colorCount.rounded()) }
         made.detail = Float(detail)
         if hasLines && lines != openingLines {
             made.lineArt = Self.lineArt(settings.lineArt, lines: lines)
