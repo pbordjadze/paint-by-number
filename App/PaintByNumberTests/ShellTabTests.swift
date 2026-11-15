@@ -46,16 +46,27 @@ struct ShellTabTests {
         #expect(ShellDemo.createPreview.opensCreateFlow)
     }
 
-    @Test func aPickFromASystemSheetWaitsForItToClose() {
-        #expect(PaintChoice.photo(Data()).comesFromASheet)
-        #expect(PaintChoice.cameraFailed.comesFromASheet)
-        #expect(!PaintChoice.blankPage.comesFromASheet)
+    @Test func theShelfOffersNoTipAboutAButtonItLacks() {
+        let due: [TipID] = [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfSettings]
+        #expect(PaintTips.shelfTips(due) == [.shelfStarter, .shelfHold, .shelfSettings])
+        #expect(PaintTips.shelfTips([.shelfNewPainting]).isEmpty)
+    }
+
+    @Test func aBlankPageFromTheTabResumesThePageBegun() {
+        #expect(ShellTab.resumesDraft(scratch: true))
+        #expect(!ShellTab.resumesDraft(scratch: false))
+        #expect(!ShellTab.resumesDraft(scratch: nil))
     }
     #else
     @Test func thePaintPageIsTheCreateFlowsFirstStep() {
         #expect(ShellDemo.create.opensPaintPage)
         #expect(ShellDemo.create.opensCreateFlow)
         #expect(ShellDemo.createPreview.opensCreateFlow)
+    }
+
+    @Test func theShelfOffersEveryTipDue() {
+        let due: [TipID] = [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfSettings]
+        #expect(PaintTips.shelfTips(due) == due)
     }
     #endif
 }

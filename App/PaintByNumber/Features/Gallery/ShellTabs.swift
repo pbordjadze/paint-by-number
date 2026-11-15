@@ -17,6 +17,11 @@ nonisolated enum ShellTab: String, CaseIterable, Sendable {
     /// Paint tab as it was.
     func holding(openPainting: UUID?) -> ShellTab { openPainting == nil ? self : .gallery }
 
+    /// Blank Page on the Paint tab goes on with the draft there is when that is a page from
+    /// scratch (`CreateDraft.scratch`): each cover has a create flow of its own, so the page begun
+    /// in the last one is the draft's, and a fresh page's first line would take its place.
+    static func resumesDraft(scratch: Bool?) -> Bool { scratch == true }
+
     /// This launch, for a scene to tell the tab it stored in an earlier one.
     static let launch = UUID().uuidString
 }

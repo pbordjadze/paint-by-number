@@ -82,6 +82,10 @@ struct AppShellView: View {
     @State private var searchPlaces = CardPlaces()
     /// What was picked on the Paint tab, for the create flow to open on.
     @State private var pickedOnTab: PaintChoice?
+    /// The create flow's cover is on screen: `isCreating` alone only says it was asked for.
+    @State private var flowIsUp = false
+    /// Blank Page on the Paint tab is reading the page begun before (`resumeScratch`).
+    @State private var isResumingScratch = false
     #endif
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
@@ -131,6 +135,7 @@ struct AppShellView: View {
             pickedSample = nil
             resumedDraft = nil
             forgetTabPick()
+            flowWent()
             handoff.reset()
             presentIncomingImage()
         }) {
@@ -139,6 +144,9 @@ struct AppShellView: View {
             .environment(library)
             .environment(paintings)
             .environment(\.startHandoff, handoff)
+            #if UNRELEASED
+            .onAppear { flowIsUp = true }
+            #endif
             // The flow draws its own background and leaves the cover clear, so that it can fade to
             // the painting opened beneath it.
             .presentationBackground(.clear)
@@ -372,6 +380,13 @@ struct AppShellView: View {
         #endif
     }
 
+    /// The create flow's cover has gone.
+    private func flowWent() {
+        #if UNRELEASED
+        flowIsUp = false
+        #endif
+    }
+
     #if UNRELEASED
     /// A tab's own screen shows no bar from the moment a painting is on its way in under a cover
     /// (Start Painting saving, the arch growing) until that is over: the painting pushed beneath
@@ -396,21 +411,17 @@ struct AppShellView: View {
     }
 
     /// What was picked on the Paint tab opens in the create flow, as a pick of its own first page
-    /// does: a picture forming on its way to the painting, a blank page in the drawing tools.
+    /// does: a picture forming on its way to the painting, a blank page in the drawing tools. The
+    /// page says a pick of the system picker's or the camera's once that sheet has gone
+    /// (`PhotoSourceView.report`).
     private func paintPicked(_ choice: PaintChoice) {
-        guard !choice.comesFromASheet else {
-            // The system picker or the camera is still closing: the cover can't present over it.
-            Task {
-                try? await Task.sleep(for: Self.questionDismissal)
-                openFlow(on: choice)
-            }
+        // A cover asked for and never shown (the system dropped the presentation) is no flow.
+        if isCreating, !flowIsUp { abandonUnshownFlow() }
+        guard !isCreating, !isArchOpening, path.isEmpty else { return }
+        if case .blankPage = choice, ShellTab.resumesDraft(scratch: library.drafts.current?.scratch) {
+            resumeScratch()
             return
         }
-        openFlow(on: choice)
-    }
-
-    private func openFlow(on choice: PaintChoice) {
-        guard !isCreating, !isArchOpening, path.isEmpty else { return }
         pickedOnTab = choice
         flowID = UUID()
         // A blank page is there at once, plain paper for the drawing tools to slide up over, as
@@ -418,6 +429,55 @@ struct AppShellView: View {
         var presenting = Transaction()
         if case .blankPage = choice { presenting.disablesAnimations = true }
         withTransaction(presenting) { isCreating = true }
+        watchFlowComeUp()
+    }
+
+    /// Blank Page with a page from scratch begun and kept as the draft: that page, read as
+    /// Continue Refining reads it, not a fresh one.
+    private func resumeScratch() {
+        guard !isResumingScratch else { return }
+        isResumingScratch = true
+        Task {
+            let opened = await library.drafts.open()
+            isResumingScratch = false
+            guard !isCreating, !isArchOpening, path.isEmpty else { return }
+            if let opened {
+                continueDraft(opened)
+                watchFlowComeUp()
+            } else {
+                // The draft is gone or can't be read: a fresh page.
+                pickedOnTab = .blankPage
+                flowID = UUID()
+                isCreating = true
+                watchFlowComeUp()
+            }
+        }
+    }
+
+    /// How long a cover asked for from the Paint tab has to show.
+    private static let flowArrival: Duration = .seconds(2)
+
+    /// A presentation the system drops (another was still on its way out) leaves `isCreating`
+    /// true with nothing on screen, and every pick after it refused: one that hasn't shown in
+    /// `flowArrival` is taken back, so the Paint tab answers again.
+    private func watchFlowComeUp() {
+        let asked = flowID
+        Task {
+            try? await Task.sleep(for: Self.flowArrival)
+            if isCreating, !flowIsUp, flowID == asked { abandonUnshownFlow() }
+        }
+    }
+
+    private func abandonUnshownFlow() {
+        Log.create.error("The create flow's cover never showed; taking it back")
+        isCreating = false
+        // What the cover's `onDismiss` forgets: with no cover shown it never comes.
+        pickedOnTab = nil
+        droppedPhoto = nil
+        droppedTitle = nil
+        pickedSample = nil
+        resumedDraft = nil
+        handoff.reset()
     }
     #endif
 
@@ -513,6 +573,8 @@ struct AppShellView: View {
         }
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
+                // The gallery's own mark for UI tests, in either shell (`galleryMark`).
+                .accessibilityIdentifier("gallery-settings")
         }
         // An empty gallery's own New Painting is its only control there: nothing to filter, and
         // no second New Painting.

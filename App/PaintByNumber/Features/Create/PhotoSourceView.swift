@@ -25,6 +25,9 @@ struct PhotoSourceView: View {
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
+    /// On the Paint tab, what the system picker or the camera gave, kept until that sheet has
+    /// gone: the shell's cover can't present over one still closing (`report`).
+    @State private var awaited: PaintChoice?
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -91,17 +94,20 @@ struct PhotoSourceView: View {
             guard let item else { return }
             browsedItem = nil
             PaintTips.photoChosen()
-            onChoose(.item(item))
+            report(.item(item), whileShowing: isBrowsingAll)
+        }
+        .onChange(of: isBrowsingAll) { _, isBrowsing in
+            if !isBrowsing { reportAwaited() }
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
-        .fullScreenCover(isPresented: $isShowingCamera) {
+        .fullScreenCover(isPresented: $isShowingCamera, onDismiss: reportAwaited) {
             CameraPicker { data in
                 PaintTips.photoChosen()
-                onChoose(.photo(data))
+                report(.photo(data), whileShowing: true)
             } onFailure: {
-                onChoose(.cameraFailed)
+                report(.cameraFailed, whileShowing: true)
             }
             .ignoresSafeArea()
         }
@@ -229,6 +235,24 @@ struct PhotoSourceView: View {
         isShowingCamera = true
     }
 
+    /// Says what a sheet of the page's own gave. The create flow's first step says it at once and
+    /// pushes its preview, as ever. The Paint tab, whose pick opens a cover from the shell, waits
+    /// for the sheet to have gone (`reportAwaited`): a cover presented while it closes is dropped.
+    private func report(_ choice: PaintChoice, whileShowing isShowing: Bool) {
+        if onClose == nil, isShowing {
+            awaited = choice
+        } else {
+            onChoose(choice)
+        }
+    }
+
+    /// The system picker or the camera has gone: what it gave, if anything, is said now.
+    private func reportAwaited() {
+        guard let choice = awaited else { return }
+        awaited = nil
+        onChoose(choice)
+    }
+
     /// A blank page, straight into the drawing tools.
     private func startFromScratch() {
         PaintTips.photoChosen()
@@ -248,15 +272,6 @@ enum PaintChoice {
     case cameraFailed
     /// Blank Page: the drawing tools on plain paper.
     case blankPage
-
-    /// Picked in a sheet or a cover of the page's own (the system picker, the camera), which is
-    /// still closing when the choice is made.
-    var comesFromASheet: Bool {
-        switch self {
-        case .item, .photo, .cameraFailed: true
-        case .sample, .blankPage: false
-        }
-    }
 }
 
 /// One of Your Own's ways in: a small card with its symbol and name.

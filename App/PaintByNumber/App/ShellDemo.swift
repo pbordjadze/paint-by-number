@@ -208,7 +208,7 @@ enum ShellDemo: Equatable {
     /// pictures: Earthrise, and Red Fuji).
     private var favoriteSamples: [String] {
         let positions: [Int] = switch self {
-        case .gallery, .gallerySearch: [2]
+        case .gallery, .gallerySearch, .paintTab, .searchTab: [2]
         case .galleryFavorites: [2, 5]
         default: []
         }

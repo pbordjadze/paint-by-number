@@ -20,7 +20,7 @@ final class PaintingNavigationTests: XCTestCase {
     func testBackReturnsToGallery() throws {
         let app = openSeededPainting()
         app.buttons["Back"].tap()
-        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
+        let returned = galleryMark(in: app).waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-back")
         XCTAssertTrue(returned, "Back didn't return to the gallery")
     }
@@ -31,7 +31,7 @@ final class PaintingNavigationTests: XCTestCase {
         let window = app.windows.firstMatch
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
             .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
-        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
+        let returned = galleryMark(in: app).waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-edge-swipe")
         XCTAssertTrue(returned, "The edge swipe didn't return to the gallery")
     }

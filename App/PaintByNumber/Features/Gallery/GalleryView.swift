@@ -166,9 +166,9 @@ struct GalleryView: View {
             PaintTips.shelfMoment(library)
         }
         .onDisappear { if !searches { PaintTips.desk.leave(.shelf) } }
-        .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
-        .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
-        .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
+        .onChange(of: library.tipFacts) { shelfMoment() }
+        .onChange(of: PaintTips.desk.answers) { shelfMoment() }
+        .onChange(of: PaintTips.desk.shelfReturns) { shelfMoment() }
         // Deleting, filtering, searching and (un)favoriting all move cards. Not out of sight
         // (`shelfIsOutOfSight`): the card of the painting Start Painting is handing over would
         // move in unseen, its neighbours with it.
@@ -237,6 +237,12 @@ struct GalleryView: View {
         #else
         false
         #endif
+    }
+
+    /// The shelf's tips have their moment; never from the search's results, which point none.
+    private func shelfMoment() {
+        guard !searches else { return }
+        PaintTips.shelfMoment(library)
     }
 
     /// The pages show: there is something to list, or the search lists the library.

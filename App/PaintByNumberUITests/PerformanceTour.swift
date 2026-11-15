@@ -160,7 +160,7 @@ final class PerformanceTour: XCTestCase {
         segment("transitions") {
             for _ in 0..<2 {
                 app.buttons["Back"].tap()
-                XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 10), "Back didn't return to the gallery")
+                XCTAssertTrue(galleryMark(in: app).waitForExistence(timeout: 10), "Back didn't return to the gallery")
                 sleep(2)
                 // The new painting's card, named by its title (`-demoFixedPictures`: The Great Wave).
                 let card = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'The Great Wave'")).firstMatch

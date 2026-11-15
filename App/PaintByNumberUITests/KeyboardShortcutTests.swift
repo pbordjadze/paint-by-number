@@ -142,7 +142,7 @@ final class KeyboardShortcutTests: XCTestCase {
         sleep(2)
         leavePaintPage(in: app)
         XCTAssertTrue(photo.waitForNonExistence(timeout: Self.stateTimeout), "The Paint page stayed on screen")
-        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: Self.stateTimeout), "The gallery didn't come back")
+        XCTAssertTrue(galleryMark(in: app).waitForExistence(timeout: Self.stateTimeout), "The gallery didn't come back")
     }
 
     /// ⌘F puts the keyboard in the gallery's search field: what is typed next narrows the shelf.
@@ -244,7 +244,7 @@ final class KeyboardShortcutTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery", "-demoFixedPictures", "YES"]
         app.launch()
-        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 90), "The gallery didn't open")
+        XCTAssertTrue(galleryMark(in: app).waitForExistence(timeout: 90), "The gallery didn't open")
         sleep(1)
         return app
     }

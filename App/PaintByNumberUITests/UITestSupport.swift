@@ -207,6 +207,14 @@ extension XCTestCase {
         app.buttons["Gallery"].firstMatch.exists
     }
 
+    /// What only the gallery has, in either shell: its bar's gear (`gallery-settings`). On screen it
+    /// means the gallery is, with no painting pushed over it and nothing covering it; a button
+    /// named Paint doesn't, being the Paint tab's under the tab bar and the gallery's + without.
+    @MainActor
+    func galleryMark(in app: XCUIApplication) -> XCUIElement {
+        app.buttons["gallery-settings"].firstMatch
+    }
+
     /// The search field of the painter's paintings: the gallery's own, or under the tab bar the
     /// search tab's, which is opened for it.
     @MainActor

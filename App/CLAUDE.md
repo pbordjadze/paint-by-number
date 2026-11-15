@@ -102,8 +102,11 @@ search tab; the release keeps the gallery alone, its + and its own search field 
   bar's large title, no ×, the gear above), in the +'s stead: the gallery's bar has no +, and
   ⌘N, the empty gallery's invitation and `-demo create` select the tab (`showPaintPage`). The
   page only says what was picked (`PaintChoice`); the shell opens the create flow's cover on it
-  (`AppShellView.paintPicked`, `CreateFlowView.picked` and `choose`), after the system picker or
-  the camera has closed. Another One with no picture still opens the page in the cover, with its ×.
+  (`AppShellView.paintPicked`, `CreateFlowView.picked` and `choose`); a pick of the system
+  picker's or the camera's is said once that sheet has gone (`PhotoSourceView.report`), and a
+  cover that still never shows is taken back (`watchFlowComeUp`), so the tab answers again.
+  Blank Page there goes on with the draft when it is a page from scratch (`resumeScratch`).
+  Another One with no picture still opens the page in the cover, with its ×.
 - **Search** takes the gallery's search (`GalleryView.isSearch`: the paintings found, then the
   library's pictures found, all of both with nothing typed; no draft, tips or invitation); the
   gallery tab's query has the Show filter alone. ⌘F selects the tab and asks for the field.
@@ -117,10 +120,11 @@ search tab; the release keeps the gallery alone, its + and its own search field 
   opens on Gallery, or on Paint with nothing in the library (`ShellTab.atLaunch`, `chooseTab`).
   Demo and test launches open on their scenario's (`ShellDemo.tab`): `paint-tab` (with `-dark`)
   and `search-tab` are the screenshots, `gallery-search` shows on the search tab.
-- **The + tip** (`shelfNewPainting`) has no view to point at there and is never offered
-  (`GalleryView.hasNewPaintingButton`).
+- **The + tip** (`shelfNewPainting`) has no view to point at there and is left out of what the
+  shelf's moment offers (`PaintTips.shelfTips`), so the tips after it get their turn.
 - **UI tests** run against either shell by what is on screen (`UITestSupport`: `hasTabBar`,
-  `searchField(in:)`, `leavePaintPage(in:)`); `app.buttons["Paint"]` is the tab's button or the +.
+  `searchField(in:)`, `leavePaintPage(in:)`); `galleryMark(in:)`, the gallery's gear (`gallery-settings`), says the
+  gallery is on screen, which a button named Paint, the tab's or the +, doesn't.
   `ShellTabTests` hold the rules.
 
 ## Shared with Paint by Mosaic (`App/Shared/`)
