@@ -60,8 +60,9 @@ struct AppShellView: View {
     @State private var handoff = StartHandoff()
     @SceneStorage("openArtwork") private var openArtwork = ""
     #if UNRELEASED
-    /// The card whose painting just closed, set down as it lands (`SetDown`).
-    @State private var settlingCard: UUID?
+    /// How many times each painting has closed onto the gallery: its card is set down as it
+    /// lands (`SetDown`).
+    @State private var settledCards: [UUID: Int] = [:]
     #endif
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
@@ -115,14 +116,12 @@ struct AppShellView: View {
         }
         #if UNRELEASED
         .environment(\.paintPicture, paintAnother)
-        .environment(\.settlingCard, settlingCard)
+        .environment(\.settledCards, settledCards)
         .onChange(of: path) { old, new in
-            guard let closed = old.last(where: { !new.contains($0) }) else { return }
-            settlingCard = closed
-            Task {
-                try? await Task.sleep(for: .seconds(1.2))
-                if settlingCard == closed { settlingCard = nil }
-            }
+            // Only back onto the gallery in view: not a painting replaced by another, nor one
+            // closed under the create flow's cover.
+            guard new.isEmpty, let closed = old.last, !isCreating, !handoff.shelfIsOutOfSight else { return }
+            settledCards[closed, default: 0] += 1
         }
         #endif
         .environment(\.startHandoff, handoff)
@@ -504,6 +503,9 @@ struct AppShellView: View {
         }
         guard let id = UUID(uuidString: openArtwork), library.artwork(with: id) != nil else { return }
         guardian.begin()
+        #if UNRELEASED
+        StarsComeOut.skip()
+        #endif
         path = [id]
         Task {
             try? await Task.sleep(for: ReopenGuard.settleDelay)

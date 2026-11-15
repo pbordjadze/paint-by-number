@@ -37,7 +37,7 @@ struct GalleryView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfIsOutOfSight) private var isOutOfSight
     #if UNRELEASED
-    @Environment(\.settlingCard) private var settlingCard
+    @Environment(\.settledCards) private var settledCards
     #endif
     @State private var width: CGFloat = 0
     /// Where an open iPhone Duo's fold runs through the pages (`FoldPlace`), flat or not.
@@ -320,7 +320,7 @@ struct GalleryView: View {
         .buttonStyle(PressableCardStyle())
         #if UNRELEASED
         .comesOut(after: StarsComeOut.delay(for: artwork.id, among: shownIDs))
-        .setsDown(settlingCard == artwork.id)
+        .setsDown(count: settledCards[artwork.id] ?? 0)
         #endif
         .cardTip(tips(of: artwork))
         .contextMenu { menu(for: artwork) }

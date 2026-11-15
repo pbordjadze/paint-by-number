@@ -529,8 +529,10 @@ struct CurrentColorLabel: View {
             .accessibilityIdentifier("current-color")
             // Text to read, not a control: no touch target to size.
             .accessibilityAddTraits(.isStaticText)
+            // While it rolls, the old label and the new share `current-color`: a UI test reads it
+            // once the screen has settled.
             .id(rolls ? color : -1)
-            .transition(reduceMotion ? .opacity : .push(from: .bottom))
+            .transition(rolls && !reduceMotion ? .push(from: .bottom) : .opacity)
         }
     }
 }

@@ -90,6 +90,16 @@ enum StarsComeOut {
     private static var positions: [UUID: Int]?
     private static var until = Date.distantPast
 
+    /// The gallery's first moment goes unseen (a painting reopened at launch over it): its cards
+    /// show at once, now and on the way back.
+    /// The gallery's first cards are still coming out.
+    static var isComingOut: Bool { Date() < until }
+
+    static func skip() {
+        if positions == nil { positions = [:] }
+        until = .distantPast
+    }
+
     /// The delay after which the card of `id` comes out, or nil: it shows at once. The first call
     /// opens the gallery's moment, with the cards in `ids`' order.
     static func delay(for id: UUID, among ids: @autoclosure () -> [UUID]) -> Double? {
@@ -124,35 +134,39 @@ private struct ComesOut: ViewModifier {
             .offset(y: hidden ? 6 : 0)
             .onAppear {
                 guard let wait = delay, !reduceMotion else { return }
+                // Appearing late (held back under something), it shows at once.
+                guard StarsComeOut.isComingOut else {
+                    delay = nil
+                    return
+                }
                 withAnimation(.easeOut(duration: 0.8).delay(wait)) { delay = nil }
             }
     }
 }
 
 /// A gallery card set back down when its painting closes: it lands tilted a couple of degrees and
-/// straightens on the house curve, as a picture put back on a shelf by hand.
+/// straightens with a gentle spring, as a picture put back on a shelf by hand. `count` changes
+/// each time its painting closes onto the gallery.
 private struct SetDown: ViewModifier {
-    let isSettling: Bool
-    @State private var tilt = 0.0
+    let count: Int
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        content
-            .rotationEffect(.degrees(tilt), anchor: UnitPoint(x: 0.5, y: 0.6))
-            .onChange(of: isSettling) { _, settling in
-                guard settling, !reduceMotion else { return }
-                var still = Transaction()
-                still.disablesAnimations = true
-                withTransaction(still) { tilt = -2.5 }
-                // Once the zoom back has about landed on the card.
-                withAnimation(.spring(duration: 0.7, bounce: 0.3).delay(0.3)) { tilt = 0 }
-            }
+        content.keyframeAnimator(initialValue: 0.0, trigger: reduceMotion ? 0 : count) { view, tilt in
+            view.rotationEffect(.degrees(tilt), anchor: UnitPoint(x: 0.5, y: 0.6))
+        } keyframes: { _ in
+            LinearKeyframe(-2.5, duration: 0.01)
+            // Held while the zoom back lands on the card.
+            LinearKeyframe(-2.5, duration: 0.3)
+            SpringKeyframe(0, duration: 0.7, spring: Spring(duration: 0.7, bounce: 0.3))
+        }
     }
 }
 
 extension EnvironmentValues {
-    /// The gallery card whose painting is closing, to be set down (`SetDown`); from `AppShellView`.
-    @Entry var settlingCard: UUID?
+    /// How many times each gallery card's painting has closed onto the gallery, for `SetDown`;
+    /// from `AppShellView`.
+    @Entry var settledCards: [UUID: Int] = [:]
 }
 
 extension View {
@@ -162,8 +176,8 @@ extension View {
     }
 
     /// A gallery card set down as its painting closes (`SetDown`).
-    func setsDown(_ isSettling: Bool) -> some View {
-        modifier(SetDown(isSettling: isSettling))
+    func setsDown(count: Int) -> some View {
+        modifier(SetDown(count: count))
     }
 }
 #endif

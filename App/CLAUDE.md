@@ -12,7 +12,7 @@ synchronized folder would bundle it into the app.
   panels and toasts (`.snappy` in the release); a gallery card's progress as a waxing moon
   (`ProgressMoon`, `MoonPhase`); the gallery's first cards after a launch coming out one by one
   (`StarsComeOut`, never in demo or test launches); a card set down with a small tilt as its
-  painting closes (`SetDown`, `AppShellView`'s `settlingCard`); Show Photo opening as a lantern
+  painting closes onto it (`SetDown`, `AppShellView`'s `settledCards`); Show Photo opening as a lantern
   (`CanvasView.photoIsLantern`: `CanvasFrame.photoReveal`, the photo shader's `photo.y`); the
   current color's name rolling up (`CurrentColorLabel`, `EraSeam.rollsLabels`, never in Paint by
   Mosaic). Reduce Motion fades or shows each at once. The doors after Finished are plain cards

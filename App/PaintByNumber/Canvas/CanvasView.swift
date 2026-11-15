@@ -1013,8 +1013,8 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Source photo
 
-    /// Opacity of the photo overlay now (tests and demos).
-    var photoOpacity: Float { photoFade.value(at: now()) }
+    /// Opacity of the photo overlay now, or how far the lantern has spread (tests and demos).
+    var photoOpacity: Float { photoIsLantern ? photoReveal.value(at: now()) : photoFade.value(at: now()) }
 
     private func photoChanged() {
         accessibilityValue = showsPhoto ? String(localized: "Showing the photo") : nil
@@ -1071,7 +1071,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let t = now()
         photoFade.retarget(to: target, at: t)
         photoReveal.retarget(to: target, at: t)
-        activeUntil = max(activeUntil, t + max(photoFade.duration, photoReveal.duration) + 0.05)
+        activeUntil = max(activeUntil, t + (photoIsLantern ? photoReveal.duration : photoFade.duration) + 0.05)
         requestRender()
     }
 
