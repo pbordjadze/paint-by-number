@@ -400,11 +400,11 @@ struct TemplatePreviewView: View {
     private static let colorBounds = (
         Double(GenerationSettings.colorCountRange.lowerBound), Double(GenerationSettings.colorCountRange.upperBound))
 
-    private static func colorCount(at position: Double) -> Double {
+    static func colorCount(at position: Double) -> Double {
         (colorBounds.0 + (colorBounds.1 - colorBounds.0) * position * position).rounded()
     }
 
-    private static func colorPosition(_ count: Double) -> Double {
+    static func colorPosition(_ count: Double) -> Double {
         min(max((count - colorBounds.0) / (colorBounds.1 - colorBounds.0), 0), 1).squareRoot()
     }
 
@@ -1020,7 +1020,7 @@ struct TemplatePreviewView: View {
         min(count - 1, max(0, Int(value * Double(count))))
     }
 
-    private static func detailWord(_ value: Double) -> String {
+    static func detailWord(_ value: Double) -> String {
         switch step(value, of: 4) {
         case 0: String(localized: "create.detail.simple", defaultValue: "Simple",
                        comment: "Detail slider value: the fewest, largest areas")
@@ -1033,7 +1033,7 @@ struct TemplatePreviewView: View {
         }
     }
 
-    private static func linesWord(_ value: Double) -> String {
+    static func linesWord(_ value: Double) -> String {
         switch step(value, of: 5) {
         case 0: String(localized: "create.lines.fewest", defaultValue: "Fewest",
                        comment: "Lines slider value: only the strongest edges are drawn")
@@ -1084,7 +1084,9 @@ private struct StatusCapsule<Content: View>: View {
     }
 }
 
-private struct SettingSlider: View {
+/// A setting's slider with its value in words: the preview card's, and the painting's Fine-Tune
+/// (`FineTuneSheet`).
+struct SettingSlider: View {
     let title: LocalizedStringKey
     let value: Double
     var onChange: (Double) -> Void
