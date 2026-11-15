@@ -310,6 +310,15 @@ struct CreateFlowView: View {
         }
         #endif
         handingOver = Task {
+            #if UNRELEASED
+            // The picture forming's lines are still being drawn: the lift waits for the rest
+            // (the painting was saved meanwhile).
+            if let began = previewPicture.linesBegan {
+                let elapsed = (ContinuousClock.now - began).components
+                let wait = FormingPlan.liftWait(sinceLines: Double(elapsed.seconds) + Double(elapsed.attoseconds) * 1e-18)
+                if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+            }
+            #endif
             if entry != nil || staying != nil {
                 withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
                     departure?.opacity = 1
@@ -580,13 +589,20 @@ private struct PictureDeparture {
         /// The preview's picture.
         case preview(CreateModel.Picture)
         #if UNRELEASED
-        /// The picture forming (`FormingPlan`): the painter's photo, and over it the template's
-        /// lines, drawn once for a picture of `home` as heavy as the preview drew them
-        /// (`lineScale`) and scaled with the picture as it moves, which at the page's place
-        /// makes them the canvas's own.
+        /// The picture forming (`FormingPlan`): the painter's photo, and over it, as the preview
+        /// left them, its wash toward the paper and the template's lines, drawn once for a
+        /// picture of `home` as heavy as the preview drew them (`lineScale`) and scaled with the
+        /// picture as it moves, which at the page's place makes them the canvas's own.
         case forming(photo: CGImage, lines: LineArtDrawing?, home: CGSize, lineScale: CGFloat)
         #endif
     }
+
+    #if UNRELEASED
+    var isForming: Bool {
+        if case .forming = content { return true }
+        return false
+    }
+    #endif
 
     let content: Content
     /// Window coordinates.
@@ -605,6 +621,15 @@ private struct DepartingPicture: View {
             let origin = geometry.frame(in: .global).origin
             ZStack {
                 picture
+                #if UNRELEASED
+                // The photo dries into paper under the page too: the page can end a fraction of
+                // a point short of the picture's foot, where the photo showed as a dark hairline.
+                if page != nil, departure.showsPage, departure.isForming {
+                    Rectangle()
+                        .fill(LineArtDrawing.paper)
+                        .transition(.opacity)
+                }
+                #endif
                 if let page, departure.showsPage {
                     Image(decorative: page, scale: 1)
                         .resizable()
@@ -640,12 +665,16 @@ private struct DepartingPicture: View {
                 .interpolation(.high)
                 .scaledToFill()
             if let lines, home.width >= 1, home.height >= 1 {
-                // Drawn once: the move scales the drawing, and strokes nothing again.
+                Rectangle()
+                    .fill(LineArtDrawing.paper)
+                    .opacity(FormingPlan.wash)
+                // Drawn once: the move scales the drawing about the picture's centre, as the
+                // photo is filled, and strokes nothing again.
                 LineArtLayer(drawing: lines, picture: CGRect(origin: .zero, size: home), scale: lineScale, overPaint: true)
                     .equatable()
                     .frame(width: home.width, height: home.height)
-                    .scaleEffect(departure.rect.width / home.width, anchor: .topLeading)
-                    .frame(width: departure.rect.width, height: departure.rect.height, alignment: .topLeading)
+                    .scaleEffect(departure.rect.width / home.width)
+                    .frame(width: departure.rect.width, height: departure.rect.height)
             }
         #endif
         }

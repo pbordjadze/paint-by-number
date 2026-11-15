@@ -3,12 +3,14 @@ import Foundation
 /// The picture forming as one act (painting-company row 293), for a picture picked on the Paint
 /// page in SideStore and Debug builds (`UNRELEASED`; the release keeps its passage): the wait
 /// shows the painter's photo and nothing else over it, with one status that never changes its
-/// words. Once the template to be painted is made its lines arrive over the photo
-/// (`linesArrive`, while the painting is saved and the hand-off lifts its picture, so nothing
-/// waits for them), and the hand-off (`StartHandoffPlan`) carries the photo under its lines to
-/// where the painting's page will be, the photo drying away under them into the page as the
-/// canvas draws it (`HandoffPage`, whose numbers come with it) on the way (`dries`). No painted
-/// picture shows at any point: the color is the painter's to lay.
+/// words. Once the template to be painted is made (no earlier: a draft's lines are another
+/// template's, of a smaller canvas) its lines are drawn in across the photo (`drawIn`), which
+/// calms toward the paper under them (`wash`, the first step of its drying) so that the ink
+/// reads on any picture. The hand-off's lift waits for the drawing to end (`liftWait`; the
+/// painting is saved meanwhile), and the hand-off (`StartHandoffPlan`) carries the washed photo
+/// under its lines to where the painting's page will be, the photo drying the rest of the way
+/// into the page as the canvas draws it (`HandoffPage`, whose numbers come with it) as it goes
+/// (`dries`). No painted picture shows at any point: the color is the painter's to lay.
 ///
 /// Reduce Motion: no lines arrive and nothing moves; the photo stays where it is and fades as
 /// the page fades in at its place (`Passage.crossFade`). With Settings › The Making-of on, no
@@ -57,10 +59,19 @@ nonisolated enum FormingPlan {
         return reduceMotion ? .crossFade : .carried
     }
 
-    /// The lines come in over the photo. No longer than the hand-off's `lift` and `clear`
-    /// together, which follow the template being made whatever the save takes: by the time the
-    /// picture moves they are all there, and nothing waited for them.
-    static var linesArrive: Double { 2 * StartHandoffPlan.lift }
+    /// How far the photo calms toward the paper as its lines are drawn: enough for dark ink to
+    /// read on a dark or busy picture, the picture still plainly itself.
+    static let wash = 0.45
+    /// The lines are drawn in across the picture, leading edge to trailing, eased: long enough
+    /// to follow, slowed with the hand-off (`-handoffSlowdown`).
+    static var drawIn: Double { 1.4 * StartHandoffPlan.glide }
+    /// The soft edge of the drawing as it travels, as a share of the picture's width.
+    static let feather = 0.18
+    /// How long the hand-off's lift still waits, the lines having begun `elapsed` seconds ago:
+    /// the rest of the drawing, and nothing once it is done.
+    static func liftWait(sinceLines elapsed: Double) -> Double {
+        min(max(drawIn - elapsed, 0), drawIn)
+    }
     /// The photo dries away under the lines into the page: the hand-off's own `settle`, during
     /// its `glide`, so the passage is no longer than the release's.
     static var dries: Double { StartHandoffPlan.settle }
