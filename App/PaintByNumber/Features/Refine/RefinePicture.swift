@@ -126,12 +126,15 @@ private struct RefineDrawnLines: View {
     let refine: RefineModel
 
     var body: some View {
-        if let base = refine.base, refine.layers.ink {
-            let showsPhoto = refine.showsPhoto
-            LineArtLayer(
-                drawing: base.drawing, picture: refine.picture, scale: refine.zoom, overPhoto: showsPhoto,
-                overPaint: refine.painted != nil && !showsPhoto)
-                .equatable()
+        // In a container of its own, as the painted layers are (`RefinePaintedLayers`).
+        ZStack {
+            if let base = refine.base, refine.layers.ink {
+                let showsPhoto = refine.showsPhoto
+                LineArtLayer(
+                    drawing: base.drawing, picture: refine.picture, scale: refine.zoom, overPhoto: showsPhoto,
+                    overPaint: refine.painted != nil && !showsPhoto)
+                    .equatable()
+            }
         }
     }
 }
@@ -173,8 +176,11 @@ private struct RefineShownNumbers: View {
     let refine: RefineModel
 
     var body: some View {
-        if refine.layers.numbers || refine.group == .numbers || refine.tinyMarked != nil {
-            RefineNumbersDrawn(refine: refine)
+        // In a container of its own, as the painted layers are (`RefinePaintedLayers`).
+        ZStack {
+            if refine.layers.numbers || refine.group == .numbers || refine.tinyMarked != nil {
+                RefineNumbersDrawn(refine: refine)
+            }
         }
     }
 }
