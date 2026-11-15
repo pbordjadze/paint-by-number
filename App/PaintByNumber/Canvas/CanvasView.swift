@@ -72,6 +72,15 @@ final class CanvasView: UIView, PaintingCanvas {
     var showsNumbers = true {
         didSet { if showsNumbers != oldValue { numbersChanged() } }
     }
+    /// The finished painting shows as paint alone, without its drawing's ink (More › Show Lines
+    /// turned off; painting-company row 295). Only a finished coloring book's ink goes: with the
+    /// finale's shine for a painting finished on screen, at once for one opened finished, and
+    /// over `inkFadeDuration` when the painter chooses it there. An undo, a restart or a replay
+    /// brings the lines back, and finishing again takes them away again. Writing stays, since
+    /// no paint draws it. Under Reduce Motion the ink cuts.
+    var hidesLines = false {
+        didSet { if hidesLines != oldValue { inkChanged() } }
+    }
     var initialCamera: CanvasCamera?
     var onPencilAction: ((PencilAction) -> Void)?
     /// "Only Draw with Apple Pencil" (Settings › Apple Pencil), asked at each touch; a test answers
@@ -154,6 +163,10 @@ final class CanvasView: UIView, PaintingCanvas {
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
     private var numbersFade = Fade(from: 1, to: 1, duration: 0.25)
+    /// How far the finished picture's ink has gone (`hidesLines`, `inkChanged`).
+    private var inkFade = Fade(from: 0, to: 0, duration: CanvasView.inkFadeDuration)
+    /// The ease of the ink leaving a finished painting, or coming back to it (seconds).
+    static let inkFadeDuration: Float = 0.6
     /// How much the selected color shows (its hatch and its numbers' emphasis): hidden on a canvas
     /// a painting is handed over to until `revealSelection`.
     private var selectionFade = Fade(from: 1, to: 1, duration: 0.6)
@@ -852,6 +865,9 @@ final class CanvasView: UIView, PaintingCanvas {
             hoverRegion = -1
             pendingFocus = nil
         }
+        // Feedback's capture keeps the lines, so the markup canvas shows them; they go again
+        // after it (also from a painting finished under it, which had no finale to take them).
+        inkChanged()
         accessibilityChanged()
         requestRender()
     }
@@ -981,7 +997,8 @@ final class CanvasView: UIView, PaintingCanvas {
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
             palette: palette, shadowOpacity: palette.shadowOpacity, outlineOpacity: look.outlineOpacity,
             outlineWidth: look.outlineWidth, selectedOutlineWidth: look.selectedOutlineWidth, hatch: shown,
-            numbersShown: numbersFade.value(at: time), lines: look.lines, labels: look.labels, numbers: look.numbers,
+            numbersShown: numbersFade.value(at: time), lines: look.lines, inkHidden: inkFade.value(at: time),
+            labels: look.labels, numbers: look.numbers,
             time: SIMD4(time, selectionTime, pulseStart, bumpStart),
             selection: selected.map { (color: $0, paint: paint) },
             hovered: isReplaying ? -1 : hoverRegion, pulsing: pulseRegion, bumped: bumpRegion,
@@ -1005,6 +1022,29 @@ final class CanvasView: UIView, PaintingCanvas {
         let t = now()
         numbersFade.retarget(to: showsNumbers && !isReplaying ? 1 : 0, at: t)
         activeUntil = max(activeUntil, t + 0.3)
+        requestRender()
+    }
+
+    /// How far the finished picture's ink has gone now, 0 shown to 1 gone (tests).
+    var inkHidden: Float { inkFade.value(at: now()) }
+
+    /// The ink goes from a finished painting that hides its lines, `delay` seconds from now, and
+    /// comes back to one no longer finished or being replayed. It eases, but cuts under Reduce
+    /// Motion and before the canvas is on screen (a painting opened finished shows as it was
+    /// left).
+    private func inkChanged(after delay: Float = 0) {
+        let hidden: Float = hidesLines && session.isComplete && !isReplaying && !isAnnotating ? 1 : 0
+        guard hidden != inkFade.to else { return }
+        let t = now()
+        let from = inkFade.value(at: t)
+        if reduceMotion || window == nil {
+            // A cut: now, or at the moment the ease would have begun.
+            inkFade = Fade(from: delay > 0 ? from : hidden, to: hidden, start: delay > 0 ? t + delay : CanvasClock.never, duration: 0.001)
+            activeUntil = max(activeUntil, t + delay + 0.05)
+        } else {
+            inkFade = Fade(from: from, to: hidden, start: t + delay, duration: Self.inkFadeDuration)
+            activeUntil = max(activeUntil, t + delay + Self.inkFadeDuration + 0.05)
+        }
         requestRender()
     }
 
@@ -1083,6 +1123,8 @@ final class CanvasView: UIView, PaintingCanvas {
         // Undo and the bar's Stop follow at once, not at the replay's first tick.
         session.showReplayed(painted.count)
         numbersChanged()
+        // The painting is made again as it was painted: with its lines.
+        inkChanged()
         zoomToFit()
         let reduceMotion = self.reduceMotion
         let lift: Float = reduceMotion ? 0 : 0.45
@@ -1156,6 +1198,7 @@ final class CanvasView: UIView, PaintingCanvas {
         isReplaying = false
         session.showReplayed(nil)
         numbersChanged()
+        inkChanged()
         guard let renderer else { return }
         for (r, state) in Self.settledStates(template: template, progress: session.progress).enumerated() {
             renderer.update(r, state)
@@ -1257,6 +1300,8 @@ final class CanvasView: UIView, PaintingCanvas {
     /// night falls over it (`Nightfall`).
     private func finale(after delay: Float) {
         shine(color: -1, after: delay)
+        // A painting that hides its lines loses them as the shine sweeps.
+        inkChanged(after: delay)
         #if UNRELEASED
         // Once the shine has swept (it takes about a second); without it, a moment after the cut.
         scheduleNightfall(after: Double(delay) + (reduceMotion ? 0.4 : 1.1))
@@ -1407,6 +1452,8 @@ final class CanvasView: UIView, PaintingCanvas {
         #if UNRELEASED
         endNightfall()
         #endif
+        // No longer finished: the lines are back.
+        inkChanged()
         accessibilityChanged()
         guard let renderer else { return }
         let time = now()
