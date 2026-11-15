@@ -26,6 +26,11 @@ struct CompareView: View {
     /// heavy as the canvas would draw it at the picture's size relative to that.
     var canvasSize: CGSize = .zero
     var fillsSpace = false
+    #if UNRELEASED
+    /// The picture forming (`FormingPlan`): the lines of the template to be painted, which
+    /// arrive over the photo in the canvas's ink.
+    var lines: LineArtDrawing?
+    #endif
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat = 0.5
     /// The layers' zoom (1 fits the picture in the frame) and offset from the frame's centre, as
@@ -67,6 +72,18 @@ struct CompareView: View {
                             .mask(alignment: .leading) {
                                 Rectangle().frame(width: max(0, x))
                             }
+
+                        #if UNRELEASED
+                        ZStack {
+                            if let lines {
+                                LineArtLayer(drawing: lines, picture: picture, scale: canvasScale(of: picture), overPaint: true)
+                                    .equatable()
+                                    .frame(width: size.width, height: size.height)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .animation(.easeOut(duration: FormingPlan.linesArrive), value: lines?.id)
+                        #endif
 
                         if after != nil, compares {
                             divider(at: x, in: visible, size: size)
@@ -236,9 +253,15 @@ struct CompareView: View {
 
     /// How large the picture shows relative to the painting fitted on its canvas.
     private func canvasScale(of picture: CGRect) -> CGFloat {
-        let canvas = Self.fitted(aspectRatio, in: canvasSize)
-        let long = max(canvas.width, canvas.height)
-        guard long > 0 else { return shownZoom }
+        Self.canvasScale(of: picture.size, aspect: aspectRatio, canvas: canvasSize) ?? shownZoom
+    }
+
+    /// The same for a picture of `aspect` shown at the size `picture`, the painting screen's
+    /// space being `canvas`; nil without that space.
+    nonisolated static func canvasScale(of picture: CGSize, aspect: CGFloat, canvas: CGSize) -> CGFloat? {
+        let space = fitted(aspect, in: canvas)
+        let long = max(space.width, space.height)
+        guard long > 0 else { return nil }
         return max(picture.width, picture.height) / long
     }
 

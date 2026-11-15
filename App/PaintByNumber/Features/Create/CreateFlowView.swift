@@ -13,6 +13,10 @@ import UIKit
 /// page as the canvas draws it (`HandoffPage`), stays where it is while the flow's paper fades away
 /// around it, and the canvas beneath shows the same. The cover's background is clear for that
 /// (`AppShellView`), so the flow draws its own.
+///
+/// A picture picked on the Paint page forms as one act in SideStore and Debug builds
+/// (`FormingPlan`): what leaves the preview is the photo under the template's lines, which
+/// dries into that page on the way, and no painted picture shows.
 struct CreateFlowView: View {
     /// A bundled sample to open straight on its preview (demo scenarios).
     var openingSample: Sample?
@@ -60,6 +64,9 @@ struct CreateFlowView: View {
     @State private var makingOf: MakingOfRequest?
     /// The preview's picture on its way to the painting, when no show plays.
     @State private var departure: PictureDeparture?
+    /// The picture forming under Reduce Motion (`FormingPlan.Passage.crossFade`): the photo,
+    /// which stays where the preview had it until the page has faded in at its place.
+    @State private var staying: PictureDeparture?
     /// The picture has made its one move.
     @State private var hasArrived = false
     /// Where the painting's page is expected (window coordinates), and the page as the canvas will
@@ -94,6 +101,9 @@ struct CreateFlowView: View {
                         source: makingOf.source, entry: makingOf.entry, place: expectedPage, arrived: hasArrived,
                         page: page, leaving: leaving, onFinish: { showDidEnd() })
                 }
+            }
+            .overlay {
+                if let staying { DepartingPicture(departure: staying, page: nil) }
             }
             .overlay {
                 if let departure { DepartingPicture(departure: departure, page: page) }
@@ -132,7 +142,7 @@ struct CreateFlowView: View {
             } else if let resuming {
                 model.load(draft: resuming.draft, photo: resuming.photo, kept: resuming.kept)
             } else if let openingSample {
-                model.paintsNow = paintsSampleNow
+                model.paintsNow = paintsSampleNow || Self.demoHoldsForming
                 model.load(sample: openingSample)
             }
         }
@@ -163,8 +173,9 @@ struct CreateFlowView: View {
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineView.land`).
             // `create-refine-unlock` is ready once the sheet shows its price (`UnlockSheet`).
+            // `create-forming-page` is ready once its page is in its place (`handOver`).
             if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil
-                && ShellDemo.current != .createRefineUnlock)
+                && ShellDemo.current != .createRefineUnlock && ShellDemo.current?.formingHold != .page)
                 || ShellDemo.current == .createFromFile || ShellDemo.current?.opensDrawing == true {
                 DemoMode.markReady()
             }
@@ -223,6 +234,15 @@ struct CreateFlowView: View {
         #endif
     }
 
+    /// The `create-forming` demos pick their picture as the Paint page does, and hold it forming.
+    private static var demoHoldsForming: Bool {
+        #if DEBUG
+        ShellDemo.current?.formingHold != nil
+        #else
+        false
+        #endif
+    }
+
     /// The `create-drawing` demos open on the drawing's preview.
     private var opensOnDrawing: Bool {
         #if DEBUG
@@ -275,13 +295,26 @@ struct CreateFlowView: View {
         if let entry {
             if let show {
                 makingOf = MakingOfRequest(source: show, entry: entry)
-            } else if let picture = model.preview?.picture {
-                departure = PictureDeparture(picture: picture, rect: entry, radius: Theme.cardRadius, opacity: 0)
+            } else if let content = departing(home: entry.size, lineScale: previewPicture.lineScale ?? 1) {
+                departure = PictureDeparture(content: content, rect: entry, radius: Theme.cardRadius, opacity: 0)
             }
         }
+        #if UNRELEASED
+        // The picture forming under Reduce Motion: the photo stays put, over the preview's, while
+        // the flow's controls go and the layout follows the status bar.
+        if show == nil, FormingPlan.passage(forms: isForming, reduceMotion: reduceMotion) == .crossFade,
+           let home = previewPicture.picture, let photo = model.source?.preview {
+            staying = PictureDeparture(
+                content: .forming(photo: photo, lines: nil, home: home.size, lineScale: 1), rect: home,
+                radius: Theme.cardRadius, opacity: 0)
+        }
+        #endif
         handingOver = Task {
-            if entry != nil {
-                withAnimation(.easeOut(duration: StartHandoffPlan.lift)) { departure?.opacity = 1 }
+            if entry != nil || staying != nil {
+                withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
+                    departure?.opacity = 1
+                    staying?.opacity = 1
+                }
                 try? await Task.sleep(for: .seconds(StartHandoffPlan.lift))
             }
             withAnimation(.easeOut(duration: StartHandoffPlan.clear)) { controlsOpacity = 0 }
@@ -299,10 +332,18 @@ struct CreateFlowView: View {
                 // Nowhere to move from: it comes in where it goes.
                 if let show {
                     makingOf = MakingOfRequest(source: show, entry: nil)
-                } else if let place, let picture = model.preview?.picture {
-                    departure = PictureDeparture(picture: picture, rect: place, radius: 0, opacity: 0)
+                } else if let place, let content = departing(home: place.size, lineScale: 1) {
+                    // The photo that stayed gives way to the page itself: a moment for it to be drawn.
+                    if staying != nil {
+                        for _ in 0..<20 where page == nil {
+                            try? await Task.sleep(for: .milliseconds(25))
+                        }
+                    }
+                    departure = PictureDeparture(
+                        content: content, rect: place, radius: 0, opacity: 0, showsPage: page != nil)
                     withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { departure?.opacity = 1 }
                 }
+                withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { staying?.opacity = 0 }
             }
             withAnimation(.smooth(duration: StartHandoffPlan.glide)) {
                 hasArrived = true
@@ -313,12 +354,41 @@ struct CreateFlowView: View {
             }
             try? await Task.sleep(for: .seconds(StartHandoffPlan.glide))
             guard !Task.isCancelled else { return }
+            staying = nil
+            #if DEBUG
+            // `create-forming-page` holds here, on the page the photo has dried into.
+            if ShellDemo.current?.formingHold == .page {
+                await pageSettled()
+                DemoMode.markReady()
+                return
+            }
+            #endif
             // Once the picture is still: opening a painting keeps the main thread busy a moment.
             onStart(artwork)
             isOpening = true
             finishIfReady()
         }
     }
+
+    /// What leaves the preview for the painting: its picture, or, when the picture forms
+    /// (`FormingPlan`), the photo under the template's lines, laid out at `home` as heavy as the
+    /// preview drew them (`lineScale`). Reduce Motion brings no lines.
+    private func departing(home: CGSize, lineScale: CGFloat) -> PictureDeparture.Content? {
+        #if UNRELEASED
+        if isForming, let photo = model.source?.preview {
+            return .forming(
+                photo: photo, lines: reduceMotion ? nil : model.preview?.drawing, home: home, lineScale: lineScale)
+        }
+        #endif
+        return (model.preview?.picture).map { PictureDeparture.Content.preview($0) }
+    }
+
+    #if UNRELEASED
+    /// Whether this flow's picture forms on its way to the painting (`FormingPlan`).
+    private var isForming: Bool {
+        FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
+    }
+    #endif
 
     /// Hides the status bar and waits until the window is laid out without it, and the flow too:
     /// the page's place is worked out from that layout. UIKit says the status bar is hidden a
@@ -506,7 +576,19 @@ struct CreateFlowView: View {
 /// the painting's page will be, its corners squaring as the page's are, and becoming the page as
 /// the canvas draws it (`showsPage`).
 private struct PictureDeparture {
-    let picture: CreateModel.Picture
+    enum Content {
+        /// The preview's picture.
+        case preview(CreateModel.Picture)
+        #if UNRELEASED
+        /// The picture forming (`FormingPlan`): the painter's photo, and over it the template's
+        /// lines, drawn once for a picture of `home` as heavy as the preview drew them
+        /// (`lineScale`) and scaled with the picture as it moves, which at the page's place
+        /// makes them the canvas's own.
+        case forming(photo: CGImage, lines: LineArtDrawing?, home: CGSize, lineScale: CGFloat)
+        #endif
+    }
+
+    let content: Content
     /// Window coordinates.
     var rect: CGRect
     var radius: CGFloat
@@ -542,15 +624,30 @@ private struct DepartingPicture: View {
 
     @ViewBuilder
     private var picture: some View {
-        switch departure.picture {
-        case .painting(let image):
+        switch departure.content {
+        case .preview(.painting(let image)):
             Image(decorative: image, scale: 1)
                 .resizable()
                 .interpolation(.high)
                 .scaledToFill()
-        case .lineArt(let drawing):
+        case .preview(.lineArt(let drawing)):
             LineArtLayer(drawing: drawing, picture: CGRect(origin: .zero, size: departure.rect.size), scale: 1)
                 .equatable()
+        #if UNRELEASED
+        case .forming(let photo, let lines, let home, let lineScale):
+            Image(decorative: photo, scale: 1)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFill()
+            if let lines, home.width >= 1, home.height >= 1 {
+                // Drawn once: the move scales the drawing, and strokes nothing again.
+                LineArtLayer(drawing: lines, picture: CGRect(origin: .zero, size: home), scale: lineScale, overPaint: true)
+                    .equatable()
+                    .frame(width: home.width, height: home.height)
+                    .scaleEffect(departure.rect.width / home.width, anchor: .topLeading)
+                    .frame(width: departure.rect.width, height: departure.rect.height, alignment: .topLeading)
+            }
+        #endif
         }
     }
 }
