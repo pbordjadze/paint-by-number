@@ -143,7 +143,10 @@ final class TipDesk {
         }
     }
 
-    /// A view drew `id` itself, beside its subject (`TipForm.beside`).
+    /// A view drew `id` itself, beside its subject (`TipForm.beside`), or is about to: it says so
+    /// as the turn reaches it. The tip is then retired when its turn ends, lapsed too, even if
+    /// its popover never came up, as the tips the app draws as cards already are
+    /// (`TipID.isDrawnByTheApp`).
     func drewBeside(_ id: TipID) {
         drawnBeside = id
     }
@@ -506,7 +509,9 @@ private struct GentleTipModifier: ViewModifier {
         let ownIsPresented = Binding(get: { own != nil }, set: { if !$0, let own { PaintTips.closed(own) } })
         content
             .popoverTip((system ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
-            .popover(isPresented: ownIsPresented, arrowEdge: arrowEdge ?? .bottom) {
+            // The optional edge goes through as it is (SwiftUI's `Edge?` popover): nil leaves the
+            // side to the system here too, as it does TipKit's.
+            .popover(isPresented: ownIsPresented, arrowEdge: arrowEdge) {
                 TipCard(id: own ?? drawn) { ownIsPresented.wrappedValue = false }
                     .presentationCompactAdaptation(.popover)
             }
@@ -553,6 +558,7 @@ private struct TipCard: View {
                     title
                         .font(.headline)
                         .foregroundStyle(.primary)
+                        .accessibilityAddTraits(.isHeader)
                 }
                 if let message = tip?.message {
                     message

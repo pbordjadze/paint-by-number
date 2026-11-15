@@ -59,8 +59,9 @@ struct TipFormTests {
         }
     }
 
-    /// An iPad's tips, and a phone's at the largest text sizes, where a small popover could not
-    /// hold its words: unchanged in every build.
+    /// A regular width's tips, and a compact one's where the view reads one of the largest text
+    /// sizes (a bar that clamps Dynamic Type never does), where a small popover could not hold
+    /// its words: unchanged in every build.
     @Test func aRegularWidthAndTheLargestTextKeepTheUsualForm() {
         for id in TipID.allCases {
             for keepsOff in [true, false] {

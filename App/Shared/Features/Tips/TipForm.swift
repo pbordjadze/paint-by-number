@@ -37,15 +37,20 @@ nonisolated enum TipForm: Equatable, Sendable {
     static let besideWidth: CGFloat = 280
 
     /// The form `id` had everywhere until row 240, and has still in the release, on a regular
-    /// width and at the accessibility text sizes.
+    /// width and where its view reads an accessibility text size (`of`).
     static func usual(_ id: TipID) -> TipForm {
         if id == .shelfStarter || (id.liesUnderTheBar && id.place == .shelf) { return .inline }
         if id.liesUnderTheBar || id.liesOnThePage { return .card }
         return .popover
     }
 
-    /// The form `id` takes in a view `isCompact` wide. At the accessibility text sizes a small
-    /// popover could not hold its words, so every tip keeps its usual form there.
+    /// The form `id` takes in a view `isCompact` wide: a compact width, whatever the device, so
+    /// an iPad's window in Split View or Slide Over keeps its tips off their subjects too. At the
+    /// accessibility text sizes a small popover could not hold its words, so a tip keeps its
+    /// usual form there. `isAccessibilitySize` is the text size the pointing view reads, which a
+    /// bar that clamps Dynamic Type has already clamped (the painting's top bar, `CompletionBar`,
+    /// Refine's tool rows, all at `.xxLarge`): a tip anchored inside one is beside its subject at
+    /// every text size, and its card, drawn in that environment, is clamped as the bar is.
     static func of(
         _ id: TipID, isCompact: Bool, isAccessibilitySize: Bool, keepsOff: Bool = EraSeam.tipsKeepOffTheirSubject
     ) -> TipForm {

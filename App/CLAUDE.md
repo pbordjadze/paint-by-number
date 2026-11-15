@@ -478,7 +478,12 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
   Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
   picture's foot for the small one (`CompareView.DividerTipFoot`), which hangs under the
-  picture. At the accessibility text sizes every tip keeps its usual form. A popover of the
+  picture. The gate is the compact width, not the phone: an iPad's window in Split View or
+  Slide Over gets these forms too. A tip whose view reads an accessibility text size keeps its
+  usual form; a view inside a subtree that clamps Dynamic Type (the painting's top bar,
+  `CompletionBar`, Refine's tool rows, at `.xxLarge`) never reads one, so its tips are beside
+  their subjects at every text size, the card inheriting the clamp. A beside tip is retired
+  when its turn lapses even if its popover never came up, as the card tips are. A popover of the
   app's own keeps `.presentationCompactAdaptation(.popover)` outside any condition.
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
   tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
