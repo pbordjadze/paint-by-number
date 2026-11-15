@@ -518,8 +518,15 @@ struct ArtworkPaintingView: View {
     }
 
     /// The painting was cut with the painter's own settings, by Fine-Tune or the create flow's
-    /// sliders: no length's suggestion, so the cuts keep none of it.
-    private var isCustomCut: Bool { artwork?.settingsOrigin == SettingsOrigin.custom.rawValue }
+    /// sliders: no length's suggestion, so the cuts keep none of it. SideStore and Debug builds,
+    /// with Fine-Tune: the release's chip is as it was.
+    private var isCustomCut: Bool {
+        #if UNRELEASED
+        return artwork?.settingsOrigin == SettingsOrigin.custom.rawValue
+        #else
+        return false
+        #endif
+    }
 
     /// Fine-Tune's sheet, in SideStore and Debug builds.
     private var fineTune: (() -> Void)? {
@@ -538,10 +545,10 @@ struct ArtworkPaintingView: View {
               settings != artwork?.settings.normalized else { return }
         autosaver.saveNow()
         recutFailed = false
-        cuts = [:]
         recutting = Task {
             do {
                 let document = try await library.retune(artwork: artworkID, settings: settings)
+                cuts = [:]
                 _ = await RenderContext.ready()
                 await present(document, replacing: true)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
