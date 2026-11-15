@@ -1281,7 +1281,16 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
-(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). The launch purge and the sweep of stale exports each
+(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). Print… (painting-company
+row 240: newcomers looked for print in the painting's More menu, never inside Share) is in More
+and at the top of a gallery card's menu, beside Share, in every build: it makes the same PDF
+(`TemplatePrintJob`, `Export/TemplatePrint.swift`: `saved` from the card's painting, `open` from
+the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
+system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
+or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save.
+Printing takes no free painting. `TemplatePrintTests`; `GalleryActionsTests` and
+`PaintingNavigationTests` tap it (`checkPrintDialog`, which skips where the simulator shows no
+dialog it can see). Paint by Mosaic has no Print… yet. The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, off until the painter turns it on (the sweep of

@@ -54,6 +54,9 @@ struct GalleryView: View {
     @State private var isOpeningDraft = false
     /// The picture or template the share sheet is up for (`share(_:)`), deleted once it closes.
     @State private var sharedFile: URL?
+    /// The template the print dialog is up for (`printTemplate(of:)`), and the card it hangs from.
+    @State private var printJob: TemplatePrintJob?
+    @State private var printingCard: Artwork.ID?
     /// The top of the pages is in view, where the bar's tips lie.
     @State private var showsTop = true
 
@@ -366,6 +369,15 @@ struct GalleryView: View {
         } message: { pending in
             DeleteConfirmationMessage(artwork: pending)
         }
+        // The print dialog hangs from the card whose menu asked for it (an iPad's points at it).
+        .background {
+            if printingCard == artwork.id {
+                PrintSheet(job: printJob) {
+                    printJob = nil
+                    printingCard = nil
+                }
+            }
+        }
     }
 
     private var hasQuestion: Bool { renaming != nil || restarting != nil || deleting != nil || restartFailed }
@@ -419,6 +431,10 @@ struct GalleryView: View {
         } label: {
             Label("Share", systemImage: "square.and.arrow.up")
         }
+        // But for Print, which newcomers looked for here and never found inside Share
+        // (painting-company row 240): straight to the print dialog.
+        Button("Print…", systemImage: "printer") { printTemplate(of: artwork) }
+            .accessibilityIdentifier("print-template")
         Divider()
         // Nothing to clear on a painting nobody has painted on. Red, as in the painting's More
         // menu: it clears the painting.
@@ -480,6 +496,22 @@ struct GalleryView: View {
                 sharedFile = try await export()
             } catch {
                 Log.library.error("Preparing a file to share failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    /// Print…: makes the template's PDF, the one Print Template… shares, then opens the print
+    /// dialog on it from the painting's card.
+    private func printTemplate(of artwork: Artwork) {
+        PaintTips.used(.shelfHold)
+        let store = library.store, paper = PDFExporter.Paper.default(for: Locale.current.region)
+        Task {
+            do {
+                let job = try await TemplatePrintJob.saved(store: store, artwork: artwork, paper: paper)
+                printingCard = artwork.id
+                printJob = job
+            } catch {
+                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
             }
         }
     }

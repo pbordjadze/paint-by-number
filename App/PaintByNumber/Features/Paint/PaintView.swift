@@ -69,6 +69,8 @@ struct PaintView: View {
     @State private var linesHidden: Bool
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
+    /// The template the print dialog is up for (More › Print…).
+    @State private var printJob: TemplatePrintJob?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
     #if UNRELEASED
@@ -745,7 +747,8 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    /// In three groups: how the page looks, the palette (or Replay), Print and Give Feedback, then
+    /// Restart.
     private func moreMenu(_ regular: Bool) -> some View {
         let barHeight = self.barHeight(regular)
         return Menu {
@@ -771,6 +774,9 @@ struct PaintView: View {
             } else {
                 paletteMenu
             }
+            // Where newcomers looked for it first (painting-company row 240).
+            Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                .accessibilityIdentifier("print-template")
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
@@ -796,6 +802,8 @@ struct PaintView: View {
         } message: {
             Text("All paint will be cleared.")
         }
+        // An iPad's print dialog points at this menu's button too.
+        .background { PrintSheet(job: printJob) { printJob = nil } }
     }
 
     #if UNRELEASED
@@ -911,6 +919,21 @@ struct PaintView: View {
     private func shareTimelapse() {
         let name = title.isEmpty ? String(localized: "Painting") : title
         timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress))
+    }
+
+    /// More › Print…: the template as Print Template… prints it, lines, numbers and the color key,
+    /// whatever is painted, from the live session; then the print dialog.
+    private func printTemplate() {
+        let template = session.template, nicknames = session.colorNicknames
+        let name = title.isEmpty ? String(localized: "Painting") : title
+        let paper = PDFExporter.Paper.default(for: Locale.current.region)
+        Task {
+            do {
+                printJob = try await TemplatePrintJob.open(template: template, title: name, nicknames: nicknames, paper: paper)
+            } catch {
+                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     private func handlePencil(_ action: PencilAction) {

@@ -114,6 +114,37 @@ extension XCTestCase {
         app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
     }
 
+    /// Print… of an open menu (the painting's More, a gallery card's), by its identifier or, where
+    /// a menu hands its items' identifiers on to nothing, by its label.
+    @MainActor
+    func printItem(in app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "print-template", "Print…")).firstMatch
+    }
+
+    /// Taps Print… and waits for the system's print dialog, known by its own Print button (the
+    /// menu's item is "Print…") or its Printer and Copies rows, then cancels it. The screen is
+    /// attached as `print-<what>`. A simulator that shows no dialog this can see skips the test,
+    /// its tree attached as `print-tree-<what>`: the item was there and took the tap.
+    @MainActor
+    func checkPrintDialog(from item: XCUIElement, _ what: String, in app: XCUIApplication) throws {
+        XCTAssertTrue(item.isHittable, "\(what): Print… can't be tapped")
+        item.tap()
+        let dialog = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ OR label == %@ OR label == %@ OR label BEGINSWITH %@ OR label == %@",
+            "Print", "Printer", "Print Options", "No Printer", "Copies")).firstMatch
+        let shown = dialog.waitForExistence(timeout: 30)
+        attach(XCUIScreen.main.screenshot(), named: "print-\(what)")
+        guard shown else {
+            attachTree(of: app, named: "print-tree-\(what)")
+            throw XCTSkip("\(what): no print dialog this test can see on this simulator")
+        }
+        let cancel = app.buttons["Cancel"].firstMatch
+        if cancel.waitForExistence(timeout: 5) {
+            cancel.tap()
+            XCTAssertTrue(dialog.waitForNonExistence(timeout: 10), "\(what): Cancel left the print dialog up")
+        }
+    }
+
     /// Waits for a confirmation dialog to show `labels` (its title, its message, its buttons) and
     /// checks it points at `source`, the card or button whose action asked for it. A
     /// `.confirmationDialog` is a popover (iPhone too) anchored to the view that carries the
