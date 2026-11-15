@@ -47,6 +47,43 @@ struct SharedPaintingTests {
         #expect(try Self.fixture().photo == nil)
     }
 
+    /// `Fixtures/shared-v1-names.moonlight` is `shared-v1.moonlight` with the sender's paint names
+    /// in its META, as the encoder writes them (painting-company row 269): the JSON opens
+    /// `{"nicknameSeed":11400714819323198485,"nicknameVersion":2,` (a seed past `Int64.max`, so
+    /// the whole unsigned range is pinned), the chunk's length grown by those 56 bytes and
+    /// nothing else moved. It pins the keys' spelling: never regenerate it.
+    @Test func decodesNamesFixture() throws {
+        let data = try TestFixtures.data("shared-v1-names.moonlight")
+        let plain = try TestFixtures.data("shared-v1.moonlight")
+        #expect(data.count == plain.count + 56)
+        #expect(data.dropFirst(24).prefix(57) == Data(#"{"nicknameSeed":11400714819323198485,"nicknameVersion":2,"#.utf8))
+        let shared = try SharedPainting(encoded: data)
+        #expect(shared.nicknames == .init(seed: 0x9E37_79B9_7F4A_7C15, version: 2))
+        var unnamed = shared
+        unnamed.nicknames = nil
+        #expect(try unnamed == Self.fixture())
+        #expect(try shared.encoded() == data)
+        #expect(try unnamed.encoded() == plain)
+    }
+
+    /// What the seed and version are sent for: the template that arrives names its paints, by
+    /// them, exactly as the sender's does, at either vocabulary, compressed or not, and sent on.
+    @Test(arguments: [1, 2])
+    func arrivedTemplateTakesTheSendersNames(version: Int) throws {
+        let template = try Self.fixture().template
+        let seed = ColorNickname.seed(for: try #require(UUID(uuidString: "5F0C2A8E-3B1D-4E6F-9A70-1C2D3E4F5A6B")))
+        let sent = SharedPainting(title: "A", settings: nil, template: template, nicknames: .init(seed: seed, version: version))
+        let names = ColorNickname.assign(template.palette, seed: seed, version: version)
+        #expect(!names.isEmpty)
+        for data in [try sent.encoded(), try sent.encoded(compression: .lzfse, compress: Self.reversed)] {
+            let arrived = try SharedPainting(encoded: data) { _, stream, _ in Self.reversed(stream) }
+            let carried = try #require(arrived.nicknames)
+            #expect(ColorNickname.assign(arrived.template.palette, seed: carried.seed, version: carried.version) == names)
+            let onward = try SharedPainting(encoded: arrived.encoded())
+            #expect(onward.nicknames == sent.nicknames && onward.template.palette == template.palette)
+        }
+    }
+
     static func fixture() throws -> SharedPainting { try SharedPainting(encoded: TestFixtures.data("shared-v1.moonlight")) }
 
     /// A stand-in compressor: any reversible transform proves the method and length reach it.
@@ -115,6 +152,22 @@ struct SharedPaintingTests {
             let shared = try SharedPainting(encoded: Self.file([Self.meta(json), body]))
             #expect(shared.nicknames == nil, "\(json)")
             #expect(shared.title == "A")
+        }
+        // Names that are no names never cost the painting: with the fixture's seed or version
+        // overwritten, the file opens with the names it could read or none, unless the JSON no
+        // longer parses, which is a damaged META as it was before the names.
+        let named = try TestFixtures.data("shared-v1-names.moonlight")
+        for (offset, length) in [(40, 20), (79, 1)] {
+            for junk in ["x", "-", "9", "0", " ", "\"", "e", "."] {
+                var bytes = named
+                bytes.replaceSubrange(offset..<(offset + length), with: Data(String(repeating: junk, count: length).utf8))
+                if let opened = try? SharedPainting(encoded: bytes) {
+                    #expect(opened.template == template && opened.title == "Irises at Dusk", "\(junk) at \(offset)")
+                    #expect(opened.nicknames.map { (1...255).contains($0.version) } ?? true, "\(junk) at \(offset)")
+                } else {
+                    #expect(throws: Template.CodingError.corrupt("META"), "\(junk) at \(offset)") { try SharedPainting(encoded: bytes) }
+                }
+            }
         }
         #expect(try SharedPainting(encoded: Self.file([Self.meta(#"{"title":"A","nicknameSeed":18446744073709551615,"nicknameVersion":2}"#), body]))
             .nicknames == .init(seed: .max, version: 2))
@@ -220,7 +273,7 @@ struct SharedPaintingTests {
     }
 
     /// Every proper prefix of the file is rejected with a `CodingError` (never a trap).
-    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight"])
+    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight", "shared-v1-names.moonlight"])
     func truncationAtEveryOffset(_ name: String) throws {
         let data = try TestFixtures.data(name)
         for length in 0..<data.count {
@@ -230,7 +283,7 @@ struct SharedPaintingTests {
 
     /// Seeded random byte flips: every case throws a `CodingError` or decodes to a painting whose
     /// template's accessors and `validate()` run without trapping.
-    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight"])
+    @Test(arguments: ["shared-v1.moonlight", "shared-v1-photo.moonlight", "shared-v1-names.moonlight"])
     func randomCorruption(_ name: String) throws {
         let data = try TestFixtures.data(name)
         var rng = SplitMix64(seed: 0x5EED_5A1E)

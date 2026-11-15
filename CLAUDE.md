@@ -326,8 +326,11 @@ Saved paintings must open in every later build. The format history is documented
   strokes) must keep decoding (they are never regenerated). Add
   a fixture file and decode test for every new `formatVersion`, chunk or trailing field. A
   painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
-  input) follows the same rules: `shared-v1.moonlight` and `shared-v1-photo.moonlight` (the
-  optional `PHOT` chunk) keep decoding.
+  input) follows the same rules: `shared-v1.moonlight`, `shared-v1-photo.moonlight` (the
+  optional `PHOT` chunk) and `shared-v1-names.moonlight` (the sender's paint names, the seed and
+  vocabulary version in `META`'s optional keys, never the names: the receiver's artwork records
+  them, `meta.json`'s optional `nicknameSeed`, absent for a painting named by its own id) keep
+  decoding.
 - `LINE` can't grow in place: every reader since 1.0 reads a layer past `color` as a corrupt
   painting (`validateReferences`) and a style byte it doesn't know as layered, whatever the
   chunk's flags (a reader that knows a chunk never reads its `required` flag). A new layer or
