@@ -155,8 +155,11 @@ struct GalleryView: View {
         }
         .onDisappear {
             PaintTips.desk.leave(.shelf)
-            // A template still being made for Print… has no gallery to hang its dialog from.
+            // A template still being made for Print…, or made and not yet shown, has no gallery
+            // to hang its dialog from.
             printTask?.cancel()
+            printTask = nil
+            dropUnshownPrint()
         }
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
@@ -378,7 +381,8 @@ struct GalleryView: View {
         // The print dialog hangs from the card whose menu asked for it (an iPad's points at it).
         .background {
             if printingCard == artwork.id {
-                PrintSheet(job: printJob) {
+                PrintSheet(job: printJob) { finished in
+                    guard printJob?.id == finished else { return }
                     printJob = nil
                     printingCard = nil
                 }
@@ -510,24 +514,37 @@ struct GalleryView: View {
     }
 
     /// Print…: makes the template's PDF, the one Print Template… shares, then opens the print
-    /// dialog on it from the painting's card. One at a time: asked again while a PDF is being made
-    /// or the dialog is up, it does nothing.
+    /// dialog on it from the painting's card. One at a time: asked again while a PDF is being
+    /// made, it does nothing.
     private func printTemplate(of artwork: Artwork) {
         PaintTips.used(.shelfHold)
-        guard printTask == nil, printJob == nil else { return }
+        guard printTask == nil else { return }
         let store = library.store, paper = PDFExporter.Paper.default(for: Locale.current.region)
         printTask = Task {
-            defer { printTask = nil }
             do {
                 let job = try await TemplatePrintJob.saved(store: store, artwork: artwork, paper: paper)
-                // The gallery was left meanwhile (a painting opened): no dialog on coming back.
+                // The gallery was left meanwhile (a painting opened), which let go of this task:
+                // no dialog on coming back.
                 guard !Task.isCancelled else { return }
                 printingCard = artwork.id
                 printJob = job
+                // The dialog hangs from the card: one the gallery isn't showing (scrolled away,
+                // searched out, deleted) never opens it, and the job mustn't wait for it.
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { return }
+                dropUnshownPrint()
             } catch {
                 Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
             }
+            if !Task.isCancelled { printTask = nil }
         }
+    }
+
+    /// Lets go of a template whose print dialog never came up.
+    private func dropUnshownPrint() {
+        guard let job = printJob, !PrintSheet.hasShown(job.id) else { return }
+        printJob = nil
+        printingCard = nil
     }
 
     private func shareTimelapse(_ artwork: Artwork) {
