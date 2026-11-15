@@ -43,6 +43,44 @@ struct FormingTests {
         }
     }
 
+    /// The picture that leaves has lines only where the preview drew them in: with The
+    /// Making-of on there are none, a show made or not.
+    @Test func linesLeaveOnlyWhereTheyWereDrawnIn() {
+        #expect(FormingPlan.hasLines(reduceMotion: false, playsShow: false))
+        #expect(!FormingPlan.hasLines(reduceMotion: true, playsShow: false))
+        #expect(!FormingPlan.hasLines(reduceMotion: false, playsShow: true))
+        #expect(!FormingPlan.hasLines(reduceMotion: true, playsShow: true))
+    }
+
+    /// The photo washes and dries toward the paper its page will have, its lines in that
+    /// page's ink: dark paper's too.
+    @Test func theWashAndTheInkAreThePagesOwn() {
+        let light = FormingPlan.Sheet(paper: CanvasPalette.sheetPaperSRGB, ink: CanvasPalette.sheetInkSRGB)
+        let dark = FormingPlan.Sheet(paper: CanvasPalette.darkSheetPaperSRGB, ink: CanvasPalette.darkSheetInkSRGB)
+        #expect(light != dark)
+        #expect(FormingPlan.sheet(.light, interfaceIsDark: false) == light)
+        #expect(FormingPlan.sheet(.light, interfaceIsDark: true) == light)
+        #expect(FormingPlan.sheet(.dark, interfaceIsDark: false) == dark)
+        #expect(FormingPlan.sheet(.automatic, interfaceIsDark: false) == light)
+        #expect(FormingPlan.sheet(.automatic, interfaceIsDark: true) == dark)
+        // The canvas's own: what `HandoffPage` draws the page with.
+        for (paper, isDark) in [(PaperAppearance.light, true), (.dark, false), (.automatic, true)] {
+            let palette = CanvasPalette.resolve(paper, interfaceIsDark: isDark)
+            let sheet = FormingPlan.sheet(paper, interfaceIsDark: isDark)
+            #expect(palette.paper == CanvasColor.linearP3(sRGB: sheet.paper))
+            #expect(palette.ink == CanvasColor.linearP3(sRGB: sheet.ink))
+        }
+    }
+
+    /// Under the departing lines the wash goes on to plain paper as the page comes in, so no
+    /// photo shows at the page's edge; without lines there is no wash before that.
+    @Test func theWashDriesToPaperUnderTheLines() {
+        #expect(FormingPlan.paperOpacity(hasLines: true, dries: false) == FormingPlan.wash)
+        #expect(FormingPlan.paperOpacity(hasLines: false, dries: false) == 0)
+        #expect(FormingPlan.paperOpacity(hasLines: true, dries: true) == 1)
+        #expect(FormingPlan.paperOpacity(hasLines: false, dries: true) == 1)
+    }
+
     @Test func thePhotoIsCarriedToThePageOrFadesToItUnderReduceMotion() {
         #expect(FormingPlan.passage(forms: true, reduceMotion: false) == .carried)
         #expect(FormingPlan.passage(forms: true, reduceMotion: true) == .crossFade)

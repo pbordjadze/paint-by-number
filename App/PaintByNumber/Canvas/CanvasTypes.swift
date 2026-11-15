@@ -332,6 +332,9 @@ nonisolated struct CanvasPalette: Sendable {
     /// The canvas sheet (design token `paper`, #F4EFE6) and its ink, sRGB-encoded.
     static let sheetPaperSRGB = SIMD3<Float>(0.957, 0.937, 0.902)
     static let sheetInkSRGB = SIMD3<Float>(0.118, 0.102, 0.133)
+    /// Dark paper's sheet and its ink, sRGB-encoded.
+    static let darkSheetPaperSRGB = SIMD3<Float>(0.137, 0.118, 0.133)
+    static let darkSheetInkSRGB = SIMD3<Float>(0.812, 0.780, 0.827)
 
     /// The backdrops around the sheet, sRGB-encoded: of light paper on a light and on a dark
     /// system, and of dark paper.
@@ -355,8 +358,8 @@ nonisolated struct CanvasPalette: Sendable {
     /// A deep warm grey sheet with a hint of violet and light ink, for painting in the evening.
     static let darkPaper = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: darkPaperBackdropSRGB),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.137, 0.118, 0.133)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)),
+        paper: CanvasColor.linearP3(sRGB: darkSheetPaperSRGB),
+        ink: CanvasColor.linearP3(sRGB: darkSheetInkSRGB),
         shadowOpacity: 0, outlineOpacity: 0.5,
         rim: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)), rimOpacity: 0.3,
         accentFloor: 0.35, hatchCeiling: 1)

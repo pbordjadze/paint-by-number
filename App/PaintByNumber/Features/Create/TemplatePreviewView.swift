@@ -559,7 +559,9 @@ struct TemplatePreviewView: View {
             return CompareView(
                 photo: source.preview, after: nil, afterID: "none", afterLabel: model.previewStyle.name,
                 compares: false, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged,
-                lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw)
+                lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw,
+                // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
+                linesBegan: { [pictureProbe] in pictureProbe?.linesBegan = .now })
         }
         #endif
         return CompareView(
@@ -623,10 +625,6 @@ struct TemplatePreviewView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: shows)
-        // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
-        .onChange(of: forming.lines, initial: true) { _, lines in
-            if lines { pictureProbe?.linesBegan = .now }
-        }
     }
     #endif
 

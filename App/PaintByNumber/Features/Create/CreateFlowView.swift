@@ -385,8 +385,9 @@ struct CreateFlowView: View {
     private func departing(home: CGSize, lineScale: CGFloat) -> PictureDeparture.Content? {
         #if UNRELEASED
         if isForming, let photo = model.source?.preview {
+            let hasLines = FormingPlan.hasLines(reduceMotion: reduceMotion, playsShow: Preferences().playsMakingOf)
             return .forming(
-                photo: photo, lines: reduceMotion ? nil : model.preview?.drawing, home: home, lineScale: lineScale)
+                photo: photo, lines: hasLines ? model.preview?.drawing : nil, home: home, lineScale: lineScale)
         }
         #endif
         return (model.preview?.picture).map { PictureDeparture.Content.preview($0) }
@@ -590,19 +591,13 @@ private struct PictureDeparture {
         case preview(CreateModel.Picture)
         #if UNRELEASED
         /// The picture forming (`FormingPlan`): the painter's photo, and over it, as the preview
-        /// left them, its wash toward the paper and the template's lines, drawn once for a
+        /// left them, its wash toward the paper (which goes on to plain paper under the lines as
+        /// the page comes in, `FormingPlan.paperOpacity`) and the template's lines, drawn once for a
         /// picture of `home` as heavy as the preview drew them (`lineScale`) and scaled with the
         /// picture as it moves, which at the page's place makes them the canvas's own.
         case forming(photo: CGImage, lines: LineArtDrawing?, home: CGSize, lineScale: CGFloat)
         #endif
     }
-
-    #if UNRELEASED
-    var isForming: Bool {
-        if case .forming = content { return true }
-        return false
-    }
-    #endif
 
     let content: Content
     /// Window coordinates.
@@ -621,15 +616,6 @@ private struct DepartingPicture: View {
             let origin = geometry.frame(in: .global).origin
             ZStack {
                 picture
-                #if UNRELEASED
-                // The photo dries into paper under the page too: the page can end a fraction of
-                // a point short of the picture's foot, where the photo showed as a dark hairline.
-                if page != nil, departure.showsPage, departure.isForming {
-                    Rectangle()
-                        .fill(LineArtDrawing.paper)
-                        .transition(.opacity)
-                }
-                #endif
                 if let page, departure.showsPage {
                     Image(decorative: page, scale: 1)
                         .resizable()
@@ -664,13 +650,16 @@ private struct DepartingPicture: View {
                 .resizable()
                 .interpolation(.high)
                 .scaledToFill()
+            // The wash the preview left, drying to plain paper under the lines as the page comes
+            // in: the page can end a fraction of a point short of the picture's foot, where the
+            // photo showed as a dark hairline, and ink under it never fades.
+            FormingPaper()
+                .opacity(FormingPlan.paperOpacity(
+                    hasLines: lines != nil && home.width >= 1 && home.height >= 1, dries: departure.showsPage))
             if let lines, home.width >= 1, home.height >= 1 {
-                Rectangle()
-                    .fill(LineArtDrawing.paper)
-                    .opacity(FormingPlan.wash)
                 // Drawn once: the move scales the drawing about the picture's centre, as the
                 // photo is filled, and strokes nothing again.
-                LineArtLayer(drawing: lines, picture: CGRect(origin: .zero, size: home), scale: lineScale, overPaint: true)
+                FormingLines(drawing: lines, picture: CGRect(origin: .zero, size: home), scale: lineScale)
                     .equatable()
                     .frame(width: home.width, height: home.height)
                     .scaleEffect(departure.rect.width / home.width)
