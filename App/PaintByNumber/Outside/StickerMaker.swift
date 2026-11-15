@@ -14,15 +14,16 @@ nonisolated enum StickerMaker {
     static let pixels = 408
     /// Messages takes no sticker over 500 KB.
     static let mostBytes = 500_000
-    /// Vision runs for at most this many paintings each time the shelf is laid out, as the app
-    /// leaves the foreground with seconds to spare; the rest wait for the next time.
+    /// Vision runs for at most this many paintings each time the stickers are laid out with the
+    /// app in front (`OutsideDesk.cutOutStickers`); the rest wait for the next time. Leaving the
+    /// foreground, with seconds to spare, it runs for none.
     static let mostCutOutsALayout = 3
     /// The share of the picture a subject may take to be worth cutting out: less is a speck,
     /// more is the whole picture with its corners missing.
     static let subjectShare: ClosedRange<Double> = 0.04...0.85
 
     @concurrent
-    static func layOut(_ artworks: [Artwork], store: ArtworkStore, shelf: OutsideShelf) async {
+    static func layOut(_ artworks: [Artwork], store: ArtworkStore, shelf: OutsideShelf, cutOuts: Int = mostCutOutsALayout) async {
         let files = FileManager.default
         var stickers: [OutsideShelf.Stickers.Sticker] = []
         var kept = Set<String>()
@@ -31,7 +32,7 @@ nonisolated enum StickerMaker {
             let base = "sticker-\(artwork.id.uuidString)-\(artwork.thumbnailVersion)"
             let plain = base + ".png", cut = base + "-cut.png", noCut = base + "-nocut"
             func has(_ name: String) -> Bool { files.fileExists(atPath: shelf.url(name).path) }
-            let triesCut = !has(cut) && !has(noCut) && cutOutsTried < mostCutOutsALayout
+            let triesCut = !has(cut) && !has(noCut) && cutOutsTried < cutOuts
             if !has(plain) || triesCut {
                 guard let template = try? store.readTemplate(artwork.id),
                       let painting = TemplateRasterizer.image(template, style: .finished, maxPixelSize: 1024)

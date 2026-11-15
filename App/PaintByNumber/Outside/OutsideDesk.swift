@@ -119,13 +119,14 @@ enum OutsideDesk {
     /// Lays the shelf out from the library as saved, holding the app awake until it is done.
     static func layOutOnLeaving(_ library: Library) {
         guard shelf != nil else { return }
-        BackgroundSaving.shared.hold { await layOut(library) }
+        BackgroundSaving.shared.hold { await layOut(library, leaving: true) }
     }
 
     /// Lays out the painting in progress (unless taps wait to be painted into it: their
-    /// pictures must stay), the finished paintings and their stickers, and has the widgets
-    /// read them.
-    static func layOut(_ library: Library) async {
+    /// pictures must stay) and the finished paintings, has the widgets read them, then lays
+    /// out the stickers. `leaving` the foreground the app has seconds, so no sticker's subject
+    /// is looked for then (`cutOutStickers`).
+    static func layOut(_ library: Library, leaving: Bool = false) async {
         guard let shelf else { return }
         await library.flush()
         let usable = library.artworks.filter { !$0.needsNewerApp }
@@ -138,8 +139,16 @@ enum OutsideDesk {
             if !waiting { layOutNow(current, store: store, shelf: shelf) }
             layOutFinished(finished, store: store, shelf: shelf)
         }
-        await StickerMaker.layOut(finished, store: store, shelf: shelf)
         WidgetCenter.shared.reloadAllTimelines()
+        await StickerMaker.layOut(finished, store: store, shelf: shelf, cutOuts: leaving ? 0 : StickerMaker.mostCutOutsALayout)
+    }
+
+    /// Lays the stickers out with the app in front, where Vision has the time to find the
+    /// subjects of a few paintings more.
+    static func cutOutStickers(_ library: Library) async {
+        guard let shelf else { return }
+        let finished = Array(library.finished.filter { !$0.needsNewerApp }.prefix(mostFinished))
+        await StickerMaker.layOut(finished, store: library.store, shelf: shelf)
     }
 
     nonisolated private static func layOutNow(_ artwork: Artwork?, store: ArtworkStore, shelf: OutsideShelf) {
@@ -230,7 +239,10 @@ struct OutsideComings: ViewModifier {
         content
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
-                    Task { await OutsideDesk.comeBack(to: library, open: open) }
+                    Task {
+                        await OutsideDesk.comeBack(to: library, open: open)
+                        await OutsideDesk.cutOutStickers(library)
+                    }
                 } else if phase == .background, open == nil {
                     OutsideDesk.layOutOnLeaving(library)
                 }
