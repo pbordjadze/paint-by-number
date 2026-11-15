@@ -24,6 +24,8 @@ struct ArtworkPaintingView: View {
     /// artwork in the library, and values made afresh would reach `PaintView` as changed
     /// environment on every one. None of what they read changes while painting.
     @State private var sourcePhotoLoader: SourcePhotoLoader?
+    /// The painting was drawn on a blank start (`PaintingDocument.startsBlank`).
+    @State private var startsBlank = false
     @State private var feedbackSource: FeedbackSource?
     /// The push has finished. Only then does the painting replace its thumbnail: the zoom
     /// transition lays the screen out afresh every frame, and the painting screen rendered at
@@ -157,7 +159,7 @@ struct ArtworkPaintingView: View {
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
-                    onChange: changeAction, libraryPicture: artwork?.sampleName, hidesStatusBar: !leaving,
+                    onChange: changeAction, libraryPicture: artwork?.sampleName, startsBlank: startsBlank, hidesStatusBar: !leaving,
                     hidesLines: artwork?.paintsWithoutLines ?? false, onHidesLines: { linesHidden($0) })
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
@@ -363,6 +365,7 @@ struct ArtworkPaintingView: View {
             sourcePhotoLoader = document.hasPhoto ? SourcePhotoLoader { [library, artworkID] maxPixelSize in
                 await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
             } : nil
+            startsBlank = document.startsBlank
             feedbackSource = artwork.map(makeFeedbackSource)
         }
         if let notice = document.notice { show(notice) }

@@ -43,6 +43,10 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     /// given, nothing on screen), where the card's own confirmation dialogs do.
     var hangsFromCard: Bool { self == .shelfHold || self == .shelfTimeLapse }
 
+    /// The tips about a button that is on screen only while its tab is (`TipDesk.needsAnchor`):
+    /// none here.
+    var hidesWithItsTab: Bool { false }
+
     /// The tips about the page itself, a card at the top of the page with no arrow (`TipDesk.pageTip`):
     /// Paul, October 18, shown the arrow and none, "No arrow".
     var liesOnThePage: Bool { self == .benchZoom || self == .benchDrag || self == .benchPencil }

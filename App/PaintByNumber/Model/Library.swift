@@ -13,6 +13,13 @@ nonisolated struct PaintingDocument: Sendable {
     var notice: OpenNotice? = nil
     /// Whether the painting keeps a photo to peek at: one sent without its photo has none.
     var hasPhoto = true
+    /// Whether the painting was drawn on a blank start (`TemplateRefinements.Start.blank`): Blank
+    /// Page, whose photo is its white paper, so Photo shows no original and no tip says it does
+    /// (`TipMoments.photoIsWorthAPeek`). A photo refined with Start From › Blank reads the same,
+    /// though its photo is an original: nothing a painting stores tells the two apart (a page
+    /// from scratch is known only to its draft, `CreateDraft.scratch`), so it gets no such tip
+    /// either; its Photo button is there all the same.
+    var startsBlank = false
 }
 
 /// What happened to a painting on its way to the screen.
@@ -588,11 +595,15 @@ final class Library {
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }
         _ = await writes[id]?.value
         let store = self.store
-        let (template, saved, hasPhoto) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress, Bool) in
+        let (template, saved, hasPhoto, startsBlank) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress, Bool, Bool) in
             guard let template = try Library.readTemplate(id, from: store) else {
                 throw OpenError.damaged(canRegenerate: ArtworkFactory.canRegenerate(artwork, store: store))
             }
-            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store), store.hasSource(id))
+            // Refinements that can't be read just now only leave a tip to chance: never a failed open.
+            let startsBlank = (try? store.readRefinements(id))?.start == .blank
+            return (
+                template, try Library.readProgress(id, regionCount: template.regions.count, from: store), store.hasSource(id),
+                startsBlank)
         }
 
         let reset: Bool
@@ -619,7 +630,9 @@ final class Library {
                 }
             }
         }
-        return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil, hasPhoto: hasPhoto)
+        return PaintingDocument(
+            template: template, progress: saved.progress, notice: reset ? .progressReset : nil, hasPhoto: hasPhoto,
+            startsBlank: startsBlank)
     }
 
     /// Generates an artwork's template again from its photo (`ArtworkFactory.sourcePhoto`:
@@ -685,7 +698,7 @@ final class Library {
         replace(updated)
         return PaintingDocument(
             template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0),
-            hasPhoto: hasPhoto)
+            hasPhoto: hasPhoto, startsBlank: refinements.start == .blank)
     }
 
     /// What the painting's ✎ Change opens on (`CreateModel.load(artwork:…)`): the photo it was
@@ -749,7 +762,8 @@ final class Library {
         unsavedMeta.remove(id)
         clearWriteFailure(id)
         replace(updated)
-        return PaintingDocument(template: template, progress: progress, hasPhoto: hasPhoto)
+        return PaintingDocument(
+            template: template, progress: progress, hasPhoto: hasPhoto, startsBlank: draft.refinements.start == .blank)
     }
 
     /// Cuts a painting not begun again at another Painting Length (the painting's length chip,
