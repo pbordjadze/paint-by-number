@@ -411,8 +411,8 @@ Saved paintings must open in every later build. The format history is documented
   it runs only when Paul asks for it, its rounds in `factory/pieces/<piece>/`. Its answers and
   the critic's are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
-  `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
-  Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
+  `Resources/Localizable.xcstrings` (English first, translated into the ten languages of
+  `tools/l10n.py`), the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
   `PaintCore` and `pbn` stay English. Three code forms, and nothing else: a SwiftUI literal with no
   interpolation (`Text("Done")`, `Button`, `Label`, `.navigationTitle`, …: the literal is the key);
   `String(localized: "key", defaultValue: "…\(x)…", comment: "…")` for an interpolation, a count or
@@ -430,7 +430,13 @@ Saved paintings must open in every later build. The format history is documented
   (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: "Finished" and "Finished!" would collide).
   `tools/strings_check.py` (CI runs it) fails on any drift between sources and catalogs and on
   prose-like literals that bypass localization (`ALLOWED_LITERALS` / `VERBATIM_FILES` hold the
-  justified exceptions); `LocalizationTests` checks what ships. After UI text changes, read the
+  justified exceptions), and on a malformed translation; `LocalizationTests` checks what ships.
+  Translations: a new or reworded string (Paint by Mosaic's catalog too) gets its ten in the same
+  change, from `tools/l10n.py todo <lang>` through `apply`, in the voice and words of
+  `tools/l10n/GUIDE.md` (a subagent per language for anything long); one missing only shows
+  English, and the check counts them. A screenshot scenario ending `+de` or `+ja` runs in that
+  language (`ci/language_args.sh`). The App Store listing's translations are
+  `ci/store-listing.json`'s `locales`. After UI text changes, read the
   screenshots of every scenario whose name contains `long-text` (doubled strings; raw placeholders
   like `1$lld` in the first copy are expected).
 - Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`

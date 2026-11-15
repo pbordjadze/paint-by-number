@@ -181,6 +181,7 @@ jobs:
           set -o pipefail
           mkdir -p out
           python3 tools/strings_check.py --self-test
+          python3 tools/l10n.py self-test
           python3 tools/strings_check.py | tee out/strings-check.log
       - name: CI report script
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.

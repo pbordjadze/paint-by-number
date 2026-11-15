@@ -124,8 +124,9 @@ for entry in "${SCENARIOS[@]}"; do
   fold 0 && { [[ "$(orientation)" == portrait ]] || turn portrait; } || started_closed=0
   sleep 1
   rm -f "$MARKER" "$LAYOUT"
-  launch_args=(-demo "$scenario")
+  launch_args=(-demo "${scenario%+*}")
   [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
+  [[ "$scenario" == *+* ]] && launch_args+=($(ci/language_args.sh "${scenario##*+}"))
   step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" "${launch_args[@]}" 2>&1 | tr '\n' ' ')"
   started=$SECONDS
   while [[ ! -f "$MARKER" && $((SECONDS - started)) -lt $delay ]]; do sleep 0.25; done

@@ -8,6 +8,8 @@
 # Scenarios whose name contains "dark" are captured in dark appearance. Scenarios whose name
 # contains "long-text" are launched with `-NSDoubleLocalizedStrings YES`, which doubles the length
 # of every localized string (pseudo-localization), to show what long translations would break.
+# A scenario ending in "+<language>" (gallery+de, settings+ja: a language of tools/l10n.py) is that
+# scenario with the app in that language and region.
 set -euo pipefail
 APP="$1"; OUT="$2"; KIND="$3"; UDID="$4"; shift 4
 SCENARIOS=("$@")
@@ -38,8 +40,9 @@ for entry in "${SCENARIOS[@]}"; do
   fi
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
   rm -f "$MARKER"
-  launch_args=(-demo "$scenario")
+  launch_args=(-demo "${scenario%+*}")
   [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
+  [[ "$scenario" == *+* ]] && launch_args+=($(ci/language_args.sh "${scenario##*+}"))
   step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" "${launch_args[@]}" 2>&1 | tr '\n' ' ')"
   started=$SECONDS
   while [[ ! -f "$MARKER" && $((SECONDS - started)) -lt $delay ]]; do sleep 0.25; done
