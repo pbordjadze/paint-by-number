@@ -761,6 +761,22 @@ final class Library {
         return document
     }
 
+    /// Cuts the painting again with the painter's own `settings`, from the length chip's
+    /// Fine-Tune (painting-company row 352): what the create flow's sliders did before a picked
+    /// picture opened straight as a painting. The settings are the painter's, so the painting
+    /// records them as custom and keeps the length it was cut for.
+    func retune(artwork id: UUID, settings: GenerationSettings) async throws -> PaintingDocument {
+        var document = try await regenerate(artwork: id, settings: settings.normalized)
+        if var updated = self.artwork(with: id) {
+            updated.settingsOrigin = SettingsOrigin.custom.rawValue
+            replace(updated, resort: false)
+            let snapshot = updated
+            enqueue(id) { store in try store.writeMeta(snapshot) }
+        }
+        document.notice = nil
+        return document
+    }
+
     /// Puts back a cut the painting had while open (`template`, made with `settings` at
     /// `length`), as it was: never made again, which from `source.jpg` came out a few areas
     /// different from the cut made from the photo itself (the Mac's QA, 347 areas then 344). The

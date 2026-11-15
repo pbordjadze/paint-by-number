@@ -648,7 +648,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
 by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
-a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (from 1.1, with the
+a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
+  Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
+  (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
+  painting was cut with, and Cut Again makes it again with them in place (`Library.retune`, recorded
+  as custom, at its length); the menu then checks no length, and a length picked is cut afresh.
+  `gallery-fine-tune` (with `-dark`, `-long-text`) is its screenshot, `FineTuneTests`. **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
   the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
   `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an

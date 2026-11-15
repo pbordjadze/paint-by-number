@@ -6356,6 +6356,22 @@
           }
         }
       }
+    },
+    "Fine-Tune…" : {
+      "comment" : "Painting screen: the item at the foot of the Painting Length chip's menu that opens Fine-Tune, the sheet of the painting's Colors, Detail and Lines (SideStore builds)",
+      "extractionState" : "manual"
+    },
+    "Fine-Tune" : {
+      "comment" : "Title of the sheet, opened from the Painting Length chip's menu, that cuts a painting not begun again with the painter's own Colors, Detail and Lines (SideStore builds)",
+      "extractionState" : "manual"
+    },
+    "Cut Again" : {
+      "comment" : "Fine-Tune sheet: the button that makes the painting again with the sliders' settings (SideStore builds)",
+      "extractionState" : "manual"
+    },
+    "Cut the picture again with more or fewer colors, areas and lines." : {
+      "comment" : "Fine-Tune sheet: the line above its Colors, Detail and Lines sliders (SideStore builds)",
+      "extractionState" : "manual"
     }
   },
   "version" : "1.0"

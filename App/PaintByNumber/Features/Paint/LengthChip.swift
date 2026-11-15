@@ -16,7 +16,12 @@ struct LengthChip: View {
     /// The areas of the other lengths' cuts the painting has had while open: their rows say
     /// what the chip would, not the band a length aims for.
     var cutAreas: [PaintingLength: Int] = [:]
+    /// The painting was cut with the painter's own settings (Fine-Tune): no length is checked,
+    /// and each is a cut of its own, the one it was cut for too.
+    var isCustom = false
     let onPick: (PaintingLength) -> Void
+    /// Fine-Tune's sheet (`FineTuneSheet`), in SideStore and Debug builds; nil leaves it out.
+    var onFineTune: (() -> Void)?
 
     var body: some View {
         Menu {
@@ -25,12 +30,19 @@ struct LengthChip: View {
             // there, which hid the chosen length's time (painting-company row 305).
             ForEach(PaintingLength.allCases, id: \.self) { choice in
                 Toggle(isOn: Binding(
-                    get: { choice == length },
-                    set: { _ in if choice != length { onPick(choice) } }
+                    get: { choice == checked },
+                    set: { _ in if choice != checked { onPick(choice) } }
                 )) {
                     Text(choice.name)
-                    Text(Self.rowTime(of: choice, chosen: length, regionCount: regionCount, cutAreas: cutAreas))
+                    Text(Self.rowTime(of: choice, chosen: checked, regionCount: regionCount, cutAreas: cutAreas))
                 }
+            }
+            if let onFineTune {
+                Divider()
+                Button(action: onFineTune) {
+                    SwiftUI.Label("Fine-Tune…", systemImage: "slider.horizontal.3")
+                }
+                .accessibilityIdentifier("fine-tune")
             }
         } label: {
             HStack(spacing: 8) {
@@ -62,9 +74,12 @@ struct LengthChip: View {
         .accessibilityIdentifier("length-chip")
     }
 
+    /// The length the menu checks: none for a painting of the painter's own settings.
+    private var checked: PaintingLength? { isCustom ? nil : length }
+
     private var accessibilityValue: String {
         let summary = Self.summary(regionCount: regionCount)
-        guard let length else { return summary }
+        guard let length = checked else { return summary }
         return String(localized: "paint.lengthChip.value", defaultValue: "\(length.name), \(summary)",
                       comment: "VoiceOver value of the painting's Painting Length chip; the arguments are the length (Quick, Relaxed, Detailed) and the summary, e.g. Relaxed, ~20 min · 406 areas")
     }
