@@ -121,6 +121,24 @@ struct LocalizationTests {
         #expect(plurals >= 10, "Only \(plurals) plural entries found")
     }
 
+    /// Every language the catalog is translated into ships as its own table, and a key resolves
+    /// to that language's words there (`tools/l10n.py` keeps the translations well formed).
+    @Test func translationsShipInTheBundle() throws {
+        var languages = Set<String>()
+        for (key, entry) in try Self.catalog("Localizable") {
+            guard let localizations = entry["localizations"] as? [String: Entry] else { continue }
+            for (language, localization) in localizations where language != "en" && !languages.contains(language) {
+                guard let text = Self.value(of: localization), !text.contains("%") else { continue }
+                let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"), "\(language).lproj")
+                let table = try #require(Bundle(path: path))
+                #expect(table.localizedString(forKey: key, value: Self.missing, table: nil) == text, "\(language): \(key)")
+                languages.insert(language)
+            }
+        }
+        #expect(Set(Bundle.main.localizations).isSuperset(of: languages))
+        #expect(languages.count >= 10, "Only \(languages.sorted()) translated")
+    }
+
     @Test func durationsAreAssembledFromCatalogUnits() {
         #expect(PaintingTimeText.spent(14 * 60) == "14 min")
         #expect(PaintingTimeText.spent(2 * 3600) == "2 h")
