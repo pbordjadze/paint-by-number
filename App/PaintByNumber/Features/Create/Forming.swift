@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import SwiftUI
 
@@ -92,6 +93,17 @@ nonisolated enum FormingPlan {
     /// How far the photo calms toward the paper as its lines are drawn: enough for dark ink to
     /// read on a dark or busy picture, the picture still plainly itself.
     static let wash = 0.45
+    /// The one transform that carries the departing picture: its photo, wash, lines and page
+    /// are all laid out once, filling `layout` at the container's corner, and this alone moves
+    /// them, so that they coincide at every instant of the move, whichever of them came in on
+    /// the way (a view laid out by an animating frame is put at the frame's end as it comes
+    /// in, ahead of the views travelling there). `rect` is where the picture shows, in the
+    /// container's coordinates: its width sets the scale and the centres meet, and since both
+    /// are linear in `rect`, a rect moving evenly is a transform moving evenly.
+    static func carry(layout: CGSize, to rect: CGRect) -> PictureTravel {
+        PictureTravel(home: CGRect(origin: .zero, size: layout), destination: rect)
+    }
+
     /// The lines are drawn in across the picture, leading edge to trailing, eased: long enough
     /// to follow, slowed with the hand-off (`-handoffSlowdown`).
     static var drawIn: Double { 1.4 * StartHandoffPlan.glide }
@@ -135,24 +147,29 @@ struct FormingLines: View, Equatable {
     let picture: CGRect
     /// The picture's size relative to the painting fitted on its canvas.
     let scale: CGFloat
+    /// Laid as the canvas lays its page (`HandoffPage`): the picture's width is the canvas's,
+    /// from its top. Otherwise as the photo is filled: centred, cropped.
+    var asThePage = false
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @Environment(\.colorScheme) private var colorScheme
 
     nonisolated static func == (a: FormingLines, b: FormingLines) -> Bool {
-        a.drawing.id == b.drawing.id && a.picture == b.picture && a.scale == b.scale
+        a.drawing.id == b.drawing.id && a.picture == b.picture && a.scale == b.scale && a.asThePage == b.asThePage
     }
 
     var body: some View {
-        let drawing = drawing, picture = picture, scale = scale, lineWeight = lineWeight
+        let drawing = drawing, picture = picture, scale = scale, lineWeight = lineWeight, asThePage = asThePage
         let ink = Color(sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark).ink)
         Canvas { context, size in
             let units = drawing.size
             let shown = picture.intersection(CGRect(origin: .zero, size: size))
             guard units.width > 0, units.height > 0, !shown.isNull, !shown.isEmpty else { return }
             // Filled into the picture as the photo is: centred, cropped to it.
-            let s = max(picture.width / units.width, picture.height / units.height)
-            let origin = CGPoint(x: picture.midX - units.width * s / 2, y: picture.midY - units.height * s / 2)
+            let s = asThePage ? picture.width / units.width : max(picture.width / units.width, picture.height / units.height)
+            let origin = asThePage
+                ? picture.origin
+                : CGPoint(x: picture.midX - units.width * s / 2, y: picture.midY - units.height * s / 2)
             let width = drawing.lineWidth(scale: scale, weight: lineWeight)
             let inView = CGRect(
                 x: (shown.minX - origin.x) / s, y: (shown.minY - origin.y) / s, width: shown.width / s,

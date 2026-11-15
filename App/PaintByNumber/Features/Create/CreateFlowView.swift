@@ -295,8 +295,11 @@ struct CreateFlowView: View {
         if let entry {
             if let show {
                 makingOf = MakingOfRequest(source: show, entry: entry)
-            } else if let content = departing(home: entry.size, lineScale: previewPicture.lineScale ?? 1) {
+            } else if let content = departing() {
                 departure = PictureDeparture(content: content, rect: entry, radius: Theme.cardRadius, opacity: 0)
+                #if UNRELEASED
+                departure?.lay(at: entry, lineScale: previewPicture.lineScale ?? 1)
+                #endif
             }
         }
         #if UNRELEASED
@@ -305,8 +308,8 @@ struct CreateFlowView: View {
         if show == nil, FormingPlan.passage(forms: isForming, reduceMotion: reduceMotion) == .crossFade,
            let home = previewPicture.picture, let photo = model.source?.preview {
             staying = PictureDeparture(
-                content: .forming(photo: photo, lines: nil, home: home.size, lineScale: 1), rect: home,
-                radius: Theme.cardRadius, opacity: 0)
+                content: .forming(photo: photo, lines: nil), rect: home, radius: Theme.cardRadius, opacity: 0)
+            staying?.lay(at: home, lineScale: 1)
         }
         #endif
         handingOver = Task {
@@ -335,13 +338,18 @@ struct CreateFlowView: View {
             if let place { renderPage(of: template, size: place.size) }
             Log.create.notice("Hand-off: the page is expected at \(String(describing: place), privacy: .public)")
             if entry != nil {
+                #if UNRELEASED
+                // The forming picture is laid out where it is going, once, and carried there from
+                // where it is: its lines are stroked for the page here, before the move.
+                if let place { departure?.lay(at: place, lineScale: 1) }
+                #endif
                 // The show's place, a frame before it moves there: the move sets out from it.
                 try? await Task.sleep(for: .milliseconds(33))
             } else {
                 // Nowhere to move from: it comes in where it goes.
                 if let show {
                     makingOf = MakingOfRequest(source: show, entry: nil)
-                } else if let place, let content = departing(home: place.size, lineScale: 1) {
+                } else if let place, let content = departing() {
                     // The photo that stayed gives way to the page itself: a moment for it to be drawn.
                     if staying != nil {
                         for _ in 0..<20 where page == nil {
@@ -350,6 +358,9 @@ struct CreateFlowView: View {
                     }
                     departure = PictureDeparture(
                         content: content, rect: place, radius: 0, opacity: 0, showsPage: page != nil)
+                    #if UNRELEASED
+                    departure?.lay(at: place, lineScale: 1)
+                    #endif
                     withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { departure?.opacity = 1 }
                 }
                 withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { staying?.opacity = 0 }
@@ -380,14 +391,13 @@ struct CreateFlowView: View {
     }
 
     /// What leaves the preview for the painting: its picture, or, when the picture forms
-    /// (`FormingPlan`), the photo under the template's lines, laid out at `home` as heavy as the
-    /// preview drew them (`lineScale`). Reduce Motion brings no lines.
-    private func departing(home: CGSize, lineScale: CGFloat) -> PictureDeparture.Content? {
+    /// (`FormingPlan`), the photo under the template's lines. Reduce Motion and The Making-of
+    /// bring no lines.
+    private func departing() -> PictureDeparture.Content? {
         #if UNRELEASED
         if isForming, let photo = model.source?.preview {
             let hasLines = FormingPlan.hasLines(reduceMotion: reduceMotion, playsShow: Preferences().playsMakingOf)
-            return .forming(
-                photo: photo, lines: hasLines ? model.preview?.drawing : nil, home: home, lineScale: lineScale)
+            return .forming(photo: photo, lines: hasLines ? model.preview?.drawing : nil)
         }
         #endif
         return (model.preview?.picture).map { PictureDeparture.Content.preview($0) }
@@ -592,10 +602,10 @@ private struct PictureDeparture {
         #if UNRELEASED
         /// The picture forming (`FormingPlan`): the painter's photo, and over it, as the preview
         /// left them, its wash toward the paper (which goes on to plain paper under the lines as
-        /// the page comes in, `FormingPlan.paperOpacity`) and the template's lines, drawn once for a
-        /// picture of `home` as heavy as the preview drew them (`lineScale`) and scaled with the
-        /// picture as it moves, which at the page's place makes them the canvas's own.
-        case forming(photo: CGImage, lines: LineArtDrawing?, home: CGSize, lineScale: CGFloat)
+        /// the page comes in, `FormingPlan.paperOpacity`) and the template's lines. All of it,
+        /// and the page, is laid out once at `base` and carried by one transform
+        /// (`FormingPlan.carry`), so nothing in it can part from the rest on the way.
+        case forming(photo: CGImage, lines: LineArtDrawing?)
         #endif
     }
 
@@ -605,6 +615,25 @@ private struct PictureDeparture {
     var radius: CGFloat
     var opacity: Double
     var showsPage = false
+    #if UNRELEASED
+    /// The forming picture's layout (window coordinates): where it is carried from to show at
+    /// `rect`. Nil for the preview's picture, which is laid out at `rect` itself.
+    var base: CGRect?
+    /// How heavy its lines are drawn in that layout (`LineArtDrawing.lineWidth`).
+    var lineScale: CGFloat = 1
+
+    /// Lays the forming picture out at `base`, its lines as heavy as `lineScale` says there,
+    /// leaving it to show where it showed, its corners as round to the eye. Before the move
+    /// that is where the preview has it, as heavy as the preview's; for the move, the page's
+    /// place, as heavy as the canvas's, so that it arrives untransformed, its lines the page's.
+    mutating func lay(at base: CGRect, lineScale: CGFloat) {
+        guard case .forming = content, base.isPlace else { return }
+        let old = self.base ?? rect
+        if old.isPlace { radius *= base.width / old.width }
+        self.base = base
+        self.lineScale = lineScale
+    }
+    #endif
 }
 
 private struct DepartingPicture: View {
@@ -614,24 +643,56 @@ private struct DepartingPicture: View {
     var body: some View {
         GeometryReader { geometry in
             let origin = geometry.frame(in: .global).origin
-            ZStack {
-                picture
-                if let page, departure.showsPage {
-                    Image(decorative: page, scale: 1)
-                        .resizable()
-                        .interpolation(.high)
-                        .transition(.opacity)
-                }
+            #if UNRELEASED
+            if let base = departure.base {
+                carried(from: base, origin: origin)
+            } else {
+                placed(origin: origin)
             }
-            .frame(width: departure.rect.width, height: departure.rect.height)
-            .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
-            .offset(x: departure.rect.minX - origin.x, y: departure.rect.minY - origin.y)
-            .opacity(departure.opacity)
+            #else
+            placed(origin: origin)
+            #endif
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
+
+    /// The picture and, once it shows, the page over it.
+    private var layers: some View {
+        ZStack {
+            picture
+            if let page, departure.showsPage {
+                Image(decorative: page, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    /// Laid out where it shows: its frame is what moves.
+    private func placed(origin: CGPoint) -> some View {
+        layers
+            .frame(width: departure.rect.width, height: departure.rect.height)
+            .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
+            .offset(x: departure.rect.minX - origin.x, y: departure.rect.minY - origin.y)
+            .opacity(departure.opacity)
+    }
+
+    #if UNRELEASED
+    /// Laid out once, at `base`'s size, and carried to where it shows by one transform
+    /// (`FormingPlan.carry`): the page coming in on the way travels with the rest.
+    private func carried(from base: CGRect, origin: CGPoint) -> some View {
+        let travel = FormingPlan.carry(layout: base.size, to: departure.rect.offsetBy(dx: -origin.x, dy: -origin.y))
+        return layers
+            .frame(width: base.width, height: base.height)
+            .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
+            .scaleEffect(travel.scale, anchor: .topLeading)
+            .offset(x: travel.dx, y: travel.dy)
+            .opacity(departure.opacity)
+    }
+    #endif
 
     @ViewBuilder
     private var picture: some View {
@@ -645,7 +706,7 @@ private struct DepartingPicture: View {
             LineArtLayer(drawing: drawing, picture: CGRect(origin: .zero, size: departure.rect.size), scale: 1)
                 .equatable()
         #if UNRELEASED
-        case .forming(let photo, let lines, let home, let lineScale):
+        case .forming(let photo, let lines):
             Image(decorative: photo, scale: 1)
                 .resizable()
                 .interpolation(.high)
@@ -654,16 +715,14 @@ private struct DepartingPicture: View {
             // in: the page can end a fraction of a point short of the picture's foot, where the
             // photo showed as a dark hairline, and ink under it never fades.
             FormingPaper()
-                .opacity(FormingPlan.paperOpacity(
-                    hasLines: lines != nil && home.width >= 1 && home.height >= 1, dries: departure.showsPage))
-            if let lines, home.width >= 1, home.height >= 1 {
-                // Drawn once: the move scales the drawing about the picture's centre, as the
-                // photo is filled, and strokes nothing again.
-                FormingLines(drawing: lines, picture: CGRect(origin: .zero, size: home), scale: lineScale)
+                .opacity(FormingPlan.paperOpacity(hasLines: lines != nil, dries: departure.showsPage))
+            if let lines {
+                // Stroked for its layout, as the canvas lays its page: the move strokes nothing.
+                let layout = (departure.base ?? departure.rect).size
+                FormingLines(
+                    drawing: lines, picture: CGRect(origin: .zero, size: layout), scale: departure.lineScale, asThePage: true)
                     .equatable()
-                    .frame(width: home.width, height: home.height)
-                    .scaleEffect(departure.rect.width / home.width)
-                    .frame(width: departure.rect.width, height: departure.rect.height)
+                    .frame(width: layout.width, height: layout.height)
             }
         #endif
         }

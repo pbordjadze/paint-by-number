@@ -723,8 +723,11 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
   `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
   picture is the washed photo under those lines
-  (`PictureDeparture.Content.forming`: the lines drawn once and scaled with the picture, as heavy
-  as the preview drew them, `PreviewPictureProbe.lineScale`), which dries the rest of the way
+  (`PictureDeparture.Content.forming`: photo, wash, lines and page laid out once at the page's
+  place, `lay(at:)`, and carried there by one transform, `FormingPlan.carry`, since a page
+  coming in on the way under an animating frame stood at the frame's end ahead of the rest;
+  the lines as heavy as the preview drew them until then, `PreviewPictureProbe.lineScale`,
+  and for the move stroked as the canvas's own), which dries the rest of the way
   into the page as the canvas draws it (`HandoffPage`, whose numbers come with it) during the
   glide, in the hand-off's own `settle`, the wash going on to plain paper under the lines
   (`paperOpacity`) so no row of photo shows at the page's foot and the ink never fades: from the

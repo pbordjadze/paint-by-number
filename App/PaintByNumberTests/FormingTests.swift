@@ -81,6 +81,38 @@ struct FormingTests {
         #expect(FormingPlan.paperOpacity(hasLines: false, dries: true) == 1)
     }
 
+    /// The departing picture is one layout carried by one transform: at the start, the middle
+    /// and the end of the move its layers, each filling the layout, show in one rect, the
+    /// picture's own, and the transform moves evenly as the rect does. A page's shape a
+    /// rounding off the photo's splits the difference top and bottom.
+    @Test func thePictureTravelsAsOne() {
+        let entry = CGRect(x: 46, y: 504, width: 940, height: 648)
+        let place = CGRect(x: 18, y: 316, width: 996, height: 687)
+        let layout = CGRect(origin: .zero, size: place.size)
+        // The photo, the wash, the lines and the page are all laid out on this one rect.
+        let layers = Array(repeating: layout, count: 4)
+        func rect(_ p: CGFloat) -> CGRect {
+            CGRect(
+                x: entry.minX + (place.minX - entry.minX) * p, y: entry.minY + (place.minY - entry.minY) * p,
+                width: entry.width + (place.width - entry.width) * p, height: entry.height + (place.height - entry.height) * p)
+        }
+        let travels = ([0, 0.5, 1] as [CGFloat]).map { FormingPlan.carry(layout: layout.size, to: rect($0)) }
+        for (p, travel) in zip([0, 0.5, 1] as [CGFloat], travels) {
+            let shown = layers.map(travel.applied(to:))
+            #expect(Set(shown.map(\.debugDescription)).count == 1, "The layers part at \(p)")
+            let target = rect(p)
+            #expect(abs(shown[0].width - target.width) < 1e-9)
+            #expect(abs(shown[0].midX - target.midX) < 1e-9 && abs(shown[0].midY - target.midY) < 1e-9)
+            #expect(abs(shown[0].minY - target.minY) < 0.5 && abs(shown[0].maxY - target.maxY) < 0.5)
+        }
+        // Arrived, nothing is transformed but its place: the page is drawn as the canvas draws it.
+        #expect(travels[2] == PictureTravel(scale: 1, dx: place.minX, dy: place.minY))
+        // Half way is half the transform.
+        #expect(abs(travels[1].scale - (travels[0].scale + travels[2].scale) / 2) < 1e-9)
+        #expect(abs(travels[1].dx - (travels[0].dx + travels[2].dx) / 2) < 1e-9)
+        #expect(abs(travels[1].dy - (travels[0].dy + travels[2].dy) / 2) < 1e-9)
+    }
+
     @Test func thePhotoIsCarriedToThePageOrFadesToItUnderReduceMotion() {
         #expect(FormingPlan.passage(forms: true, reduceMotion: false) == .carried)
         #expect(FormingPlan.passage(forms: true, reduceMotion: true) == .crossFade)
