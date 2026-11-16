@@ -373,7 +373,8 @@ below name both alike.
   quarter bigger, always. `paint-quiet` (with `-dark`) is its screenshot.
 - Tips: the bench's moments are in `PaintChromeState` (see Tips below). Zoom, Drag and Pencil
   lie on the page as a card with no arrow, just inside its top as it first fits
-  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow").
+  (`TipDesk.pageTip`, `PaintView.pageTipInset`; Paul, October 18: "No arrow"); on a phone, in
+  SideStore and Debug builds, in the margin under the bar (`TipForm.margin`, Tips).
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -439,7 +440,18 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   these, the bar's and the page's have no
   TipKit display limit, which would retire a tip from under its view: `TipDesk` says it once, when
   it is closed, used, left 45 s or its screen goes (`TipID.isDrawnByTheApp`); a card
-  anchors its tip only while it is mostly in view). A screen reports the
+  anchors its tip only while it is mostly in view). No tip where its thing isn't
+  (painting-company row 240): a tip whose view may be away has its turn only while one is on
+  screen (`TipDesk.needsAnchor`: the cards', the bar's, and Make Cell's, whose button on iPhone
+  shows only in Cells, `TipID.hidesWithItsTab`, asked for again as Cells comes up,
+  `PaintTips.refineCellsShown`), and Peek at the Photo is never offered on a painting drawn on
+  a blank start, whose photo is its page (`TipMoments.photoIsWorthAPeek`,
+  `PaintingDocument.startsBlank`; a photo refined with Start From › Blank gets none either,
+  since a painting stores the blank start and nothing that tells it from a Blank Page; its
+  Photo button stays). A moment is waited out only while its task runs (`TipDesk.offering`
+  clears when it ends, with a turn or without). `.cardTip`'s popover keeps
+  `.presentationCompactAdaptation(.popover)` on its content outside any condition: inside one, a
+  phone got a blank sheet. A screen reports the
   moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
   stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
   for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
@@ -452,6 +464,28 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   Feedback is on, and after a finish only Replay Painting, which waits for none of the limits. Tap to Paint and Draw Your Own Lines alone wait for
   neither the gap nor something done (`TipID.isHowTo`). State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
   `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
+- **Which form where** (`TipForm`, `App/Shared/Features/Tips/TipForm.swift`; painting-company
+  row 240): `TipForm.of(id, isCompact:isAccessibilitySize:)` is the one rule, and `TipFormTests`
+  pins it for every tip. `usual` is the form above, the release's everywhere and every build's
+  on a regular width. In SideStore and Debug builds (`EraSeam.tipsKeepOffTheirSubject`, a seam,
+  so Paint by Mosaic's tips stay as they are) a compact width keeps every tip off what it
+  explains: TipKit's popover, as wide as a phone and of clear glass, lay over the comparison,
+  the Pen's options, the picture. A popover tip becomes `.beside`: SwiftUI's own popover from the
+  same view and edge, the tip drawn by the app (`TipCard`: no wider than `TipForm.besideWidth`,
+  on `Theme.surface`, opaque over a picture; `.gentleTip` keeps both popovers attached and
+  presents one, so its view is one view whatever the width, and `TipPassthrough` serves both;
+  TipKit counts no display of it, so the desk says it once, `TipDesk.drewBeside`). A card over
+  the screen becomes `.margin`: the same card on the opaque surface, the page's three just under
+  the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
+  Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
+  picture's foot for the small one (`CompareView.DividerTipFoot`), which hangs under the
+  picture. The gate is the compact width, not the phone: an iPad's window in Split View or
+  Slide Over gets these forms too. A tip whose view reads an accessibility text size keeps its
+  usual form; a view inside a subtree that clamps Dynamic Type (the painting's top bar,
+  `CompletionBar`, Refine's tool rows, at `.xxLarge`) never reads one, so its tips are beside
+  their subjects at every text size, the card inheriting the clamp. A beside tip is retired
+  when its turn lapses even if its popover never came up, as the card tips are. A popover of the
+  app's own keeps `.presentationCompactAdaptation(.popover)` outside any condition.
 - **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
   tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
   The first shelf visit, once the starter pages show, gives A Page Is Waiting with no question asked
@@ -894,7 +928,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
-    screen on the template as it stands, `RefineTrial`, saving nothing). The Layers button in the
+    screen on the template as it stands, `RefineTrial`, saving nothing, its paints named as the
+    painting's will be: `CreateModel.paintNames`, in ✎ Change the painting's own). The Layers button in the
     top bar opens the Layers panel (`RefineLayers`, `RefineLayersPanel`; Paul's choice of October
     28, in place of the views; hung under the bar, `RefineLayersAnchor`; at night it and an area's
     card lie on the card's surface, `RefinePopoverBacking`, as the glass alone took on the paint
@@ -1194,7 +1229,7 @@ The painter sees it as **Paint by Mosaic** (painting-company row 281: its galler
 footer, Settings, Feedback, its credits); code, module, target, files and the name of the city
 in its texts (the Ground and Sinopia captions) stay Ravenna.
 
-- **The door** (`App/EraDoor.swift`, `#if UNRELEASED`): Settings › About has a plain Year row
+- **The door** (`App/EraDoor.swift`, in every build from 1.1): Settings › About has a plain Year row
   (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
   first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
@@ -1203,9 +1238,17 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
   Ravenna's Settings › About has the same Year row (0547) whose wheel, rolled to the present or later,
   calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
-  while the door is shut). `EraDoorTests` and `SettingsTests.testTheClockSetBack…` (through the
-  door and back); `settings-clock` screenshots the wheel, `era-passage` (`RootView`) the passage
-  held two thirds laid.
+  while the door is shut). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row
+  281) the way back is its own, in the way in's 2.95 s (`EraWayBack`, the times and states;
+  `EraPassage.drawWayBack`): the tiles come over quickly on a bed of night, the era is swapped
+  once that bed is whole (0.86 s, the last courses still being set), they let go from the top courses down, the crescent rising as its
+  courses go and five stars coming out (`Theme.gold`), the night stands a moment and clears
+  over the gallery, the gold last. Reduce Motion, and the release both ways, keep the one
+  passage (`EraPassage.isWayBack`, `moments`). `EraDoorTests`, `EraWayBackTests` and
+  `SettingsTests.testTheClockSetBack…` (through the door and back); `settings-clock` screenshots
+  the wheel, `era-passage` (`RootView`) the passage held two thirds laid, `era-passage-back`
+  the way back with its tiles half fallen and `era-passage-night` its still night
+  (`tools/ravenna/way_back_preview.py` draws either off the device).
 - **Kept apart in one process:** resources through `Bundle.ravenna` (never `Bundle.main`, but for
   the HED model, which is the app's own file), settings in `UserDefaults.ravenna` (every
   `@AppStorage` through `.defaultAppStorage`; launch arguments are still read from `.standard`),
@@ -1221,9 +1264,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   count again before it starts one; the money rule is Paul's,
   painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
-- **Release:** the door's files are `Era*.swift`, and Release's `EXCLUDED_SOURCE_FILE_NAMES` leaves
-  out them, `Ravenna.framework` and `RavennaResources.bundle`; `ci/check_release.sh` checks the
-  Release app holds none of it. The `Ravenna` target defines `UNRELEASED` in every
+- **Release:** the door ships (painting-company row 236): Release's `EXCLUDED_SOURCE_FILE_NAMES`
+  leaves out only the extensions (`*.appex`), and `ci/check_release.sh` requires
+  `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in every
   configuration, as Ravenna's own app did.
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
   `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
@@ -1282,7 +1325,18 @@ reports when the share sheet closes so the movie is deleted. Every export lives 
 Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
-(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). The launch purge and the sweep of stale exports each
+(a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). Print… (painting-company
+row 240: newcomers looked for print in the painting's More menu, never inside Share) is in More
+and at the top of a gallery card's menu, beside Share, in every build: it makes the same PDF
+(`TemplatePrintJob`, `Export/TemplatePrint.swift`: `saved` from the card's painting, `open` from
+the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
+system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
+or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save.
+Printing takes no free painting. One dialog at a time (the controller is the system's one), and
+Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it
+only for a painting of the gallery's, `PaintView.asksForRating`). `TemplatePrintTests`; `GalleryActionsTests` and
+`PaintingNavigationTests` tap it (`checkPrintDialog`, which skips where the simulator shows no
+dialog it can see). Paint by Mosaic has no Print… yet. The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, off until the painter turns it on (the sweep of

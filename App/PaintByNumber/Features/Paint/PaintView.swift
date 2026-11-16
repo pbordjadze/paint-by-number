@@ -53,6 +53,9 @@ struct PaintView: View {
     /// own photo. Finished, its doors then lead to the page about the real work (`AboutPainting`,
     /// SideStore and Debug builds).
     var libraryPicture: String?
+    /// The painting was drawn on a blank start (`PaintingDocument.startsBlank`): its photo is no
+    /// original to peek at, and no tip says so.
+    var startsBlank = false
     /// False as the screen is left: `ArtworkPaintingView.close`.
     var hidesStatusBar = true
     /// Told when the painter turns the finished painting's lines off or on (More › Show Lines, in
@@ -69,6 +72,9 @@ struct PaintView: View {
     @State private var linesHidden: Bool
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
+    /// The template the print dialog is up for (More › Print…).
+    @State private var printJob: TemplatePrintJob?
+    @State private var preparingPrint = false
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
     #if UNRELEASED
@@ -165,9 +171,10 @@ struct PaintView: View {
         isNamed: Bool = true, asksForRating: Bool = false,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
         onTemplateFrame: ((CGRect) -> Void)? = nil, onFirstFrame: (() -> Void)? = nil, onChange: (() -> Void)? = nil,
-        libraryPicture: String? = nil, hidesStatusBar: Bool = true, hidesLines: Bool = false,
+        libraryPicture: String? = nil, startsBlank: Bool = false, hidesStatusBar: Bool = true, hidesLines: Bool = false,
         onHidesLines: ((Bool) -> Void)? = nil
     ) {
+        self.startsBlank = startsBlank
         self.onHidesLines = onHidesLines
         _linesHidden = State(initialValue: hidesLines)
         self.onChange = onChange
@@ -210,7 +217,7 @@ struct PaintView: View {
             guard !isWarmup else { return }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
-            chrome.hasPhoto = photoLoader != nil
+            chrome.hasPhoto = TipMoments.photoIsWorthAPeek(hasPhoto: photoLoader != nil, startsBlank: startsBlank)
             // A painting just started is opened under the create flow's cover, where a tip's
             // popover can't present: the bench and its tips begin once the cover is gone.
             if startHandoff?.isRunning != true { chrome.observe(session) }
@@ -355,12 +362,17 @@ struct PaintView: View {
             // Tips about the page itself: a card at the top of the page as it first fits, with no
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
-            if feedback == nil, PaintTips.desk.pageTip != nil {
+            // On a phone, in SideStore and Debug builds, the card lies in the margin over the
+            // page instead, just under the bar, on an opaque surface (`TipForm.margin`,
+            // painting-company row 240): a page that leaves no margin has it over its top.
+            if feedback == nil, let pageTip = PaintTips.desk.turn, pageTip.liesOnThePage {
                 let visiblePadding = layout.visibleCanvasPadding(safe: geo.safeAreaInsets)
-                TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
+                let inMargin = TipForm.of(
+                    pageTip, isCompact: sizeClass == .compact, isAccessibilitySize: dynamicTypeSize.isAccessibilitySize) == .margin
+                pageTipCard(pageTip, opaque: inMargin)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
-                    .padding(.top, pageTipInset(in: CGSize(
+                    .padding(.top, inMargin ? Self.pageTipMargin : pageTipInset(in: CGSize(
                         width: geo.size.width - visiblePadding.leading - visiblePadding.trailing,
                         height: geo.size.height - visiblePadding.top - visiblePadding.bottom)))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -547,6 +559,20 @@ struct PaintView: View {
     /// How far into the page the page tips lie, and how wide they grow.
     private static let pageTipDepth: CGFloat = 32
     private static let pageTipWidth: CGFloat = 420
+    /// How far under the bar a page tip in the margin lies (`TipForm.margin`).
+    private static let pageTipMargin: CGFloat = 8
+
+    /// A page tip's card, on the card's opaque surface where it lies in the margin, next to the
+    /// picture or over its top.
+    @ViewBuilder
+    private func pageTipCard(_ id: TipID, opaque: Bool) -> some View {
+        let tip = TipView(id.tip, isPresented: nil, arrowEdge: nil)
+        if opaque {
+            tip.tipBackground(Theme.surface)
+        } else {
+            tip
+        }
+    }
 
     // MARK: Top bar
 
@@ -745,7 +771,8 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    /// In three groups: how the page looks, the palette (or Replay), Print and Give Feedback, then
+    /// Restart.
     private func moreMenu(_ regular: Bool) -> some View {
         let barHeight = self.barHeight(regular)
         return Menu {
@@ -771,6 +798,11 @@ struct PaintView: View {
             } else {
                 paletteMenu
             }
+            // Where newcomers looked for it first (painting-company row 240).
+            if offersPrint {
+                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                    .accessibilityIdentifier("print-template")
+            }
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
@@ -795,6 +827,12 @@ struct PaintView: View {
             }
         } message: {
             Text("All paint will be cleared.")
+        }
+        // An iPad's print dialog points at this menu's button too.
+        .background {
+            PrintSheet(job: printJob) { finished in
+                if printJob?.id == finished { printJob = nil }
+            }
         }
     }
 
@@ -911,6 +949,29 @@ struct PaintView: View {
     private func shareTimelapse() {
         let name = title.isEmpty ? String(localized: "Painting") : title
         timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress))
+    }
+
+    /// More offers Print… for a painting of the gallery's (`asksForRating`: Refine's Try Painting
+    /// is a trial that saves nothing, not a painting to print), where the device can print.
+    private var offersPrint: Bool { asksForRating && PrintSheet.isAvailable }
+
+    /// More › Print…: the template as Print Template… prints it, lines, numbers and the color key,
+    /// whatever is painted, from the live session; then the print dialog. One at a time: asked
+    /// again while a PDF is being made, it does nothing.
+    private func printTemplate() {
+        guard !preparingPrint else { return }
+        preparingPrint = true
+        let template = session.template, nicknames = session.colorNicknames
+        let name = title.isEmpty ? String(localized: "Painting") : title
+        let paper = PDFExporter.Paper.default(for: Locale.current.region)
+        Task {
+            defer { preparingPrint = false }
+            do {
+                printJob = try await TemplatePrintJob.open(template: template, title: name, nicknames: nicknames, paper: paper)
+            } catch {
+                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     private func handlePencil(_ action: PencilAction) {

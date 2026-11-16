@@ -227,11 +227,43 @@ struct TipDeskTests {
         f.desk.leave(.bench)
     }
 
+    /// A moment that ends, with a turn or without, is no longer being waited out: one that found
+    /// no view to point at must not keep the next from being offered (Make Cell's, asked for again
+    /// as its tab comes into view, `PaintTips.refineCellsShown`; painting-company row 240).
+    /// Whether the second gives a turn is TipKit's to say, which these tests leave alone.
+    @Test func aMomentThatEndedIsNoLongerWaitedOut() async throws {
+        let f = try fixture()
+        defer { f.cleanup() }
+        f.desk.enter(.refine)
+        f.desk.offer([.refineFill], in: .refine, rest: .zero)
+        #expect(f.desk.offeringPlace == .refine)
+        try await waitUntil(timeout: .seconds(30)) { f.desk.offeringPlace == nil }
+        #expect(f.desk.turn == nil)
+        f.desk.anchor([.refineFill], present: true)
+        f.desk.offer([.refineFill], in: .refine, rest: .zero)
+        #expect(f.desk.offeringPlace == .refine)
+        f.desk.leave(.refine)
+        #expect(f.desk.offeringPlace == nil)
+    }
+
     @Test func noTipHasTheTurnBeforeOneIsGiven() throws {
         let f = try fixture()
         defer { f.cleanup() }
         #expect(f.desk.turn == nil)
         for id in TipID.allCases { #expect(f.desk.tip(among: TipSet([id])) == nil, "\(id)") }
+    }
+
+    /// A tip about a view that may not be on screen is given its turn only while one is: the
+    /// shelf's cards, the bar's buttons, and Make Cell, whose button on a phone is in a tab that
+    /// may not be showing (its turn was given and spent with nothing to see, painting-company
+    /// row 240).
+    @Test func aTipAboutAViewThatMayBeAwayWaitsForIt() {
+        #expect(TipDesk.needsAnchor.contains(.refineFill))
+        for id in TipID.allCases {
+            #expect(
+                TipDesk.needsAnchor.contains(id) == (id.hangsFromCard || id.liesUnderTheBar || id.hidesWithItsTab), "\(id)")
+        }
+        #expect(TipID.allCases.filter(\.hidesWithItsTab) == [.refineFill])
     }
 
     /// The tip modifiers hold a `TipSet` so that SwiftUI can compare them bit for bit and skip their

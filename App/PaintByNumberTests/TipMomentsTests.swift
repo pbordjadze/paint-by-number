@@ -173,4 +173,13 @@ struct TipMomentsTests {
         let onTheBench = TipMoments.benchOpened(fresh: true, feedbackIsDue: true, pastQuarter: true).allSatisfy { $0.place == .bench }
         #expect(onTheBench)
     }
+
+    /// Peek at the Photo is never offered where Photo shows no original: a painting sent without
+    /// its photo, and one drawn on a blank page, whose photo is that page (painting-company row 240).
+    @Test func thePhotoIsWorthAPeekOnlyWhenItIsAnOriginal() {
+        #expect(TipMoments.photoIsWorthAPeek(hasPhoto: true, startsBlank: false))
+        #expect(!TipMoments.photoIsWorthAPeek(hasPhoto: true, startsBlank: true))
+        #expect(!TipMoments.photoIsWorthAPeek(hasPhoto: false, startsBlank: false))
+        #expect(!TipMoments.photoIsWorthAPeek(hasPhoto: false, startsBlank: true))
+    }
 }

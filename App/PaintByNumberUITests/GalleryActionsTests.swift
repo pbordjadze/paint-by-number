@@ -115,6 +115,22 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertTrue(card.exists)
     }
 
+    /// Print… is in a card's menu itself, beside Share (painting-company row 240: inside Share,
+    /// newcomers never found it), for a painting nobody has painted on too, and opens the system's
+    /// print dialog.
+    @MainActor
+    func testPrintIsInTheCardMenuAndOpensThePrintDialog() throws {
+        let app = launchGallery()
+        let card = revealCard("The Milkmaid", in: app)
+        card.press(forDuration: 1.5)
+        XCTAssertTrue(app.buttons["Share"].waitForExistence(timeout: 5), "The card menu has no Share")
+        let item = printItem(in: app)
+        XCTAssertTrue(item.exists, "The card menu has no Print… beside Share")
+        attachScreenshot(of: app, named: "card-menu-print")
+        try checkPrintDialog(from: item, "card", in: app)
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "The gallery is gone after the print dialog")
+    }
+
     /// A painting nobody has painted on has no progress to share: its Share menu offers the
     /// template only.
     @MainActor

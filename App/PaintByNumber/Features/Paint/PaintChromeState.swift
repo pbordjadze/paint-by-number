@@ -29,8 +29,9 @@ final class PaintChromeState {
     @ObservationIgnored private var singleFills = 0
     @ObservationIgnored private var fillsThisVisit = 0
     @ObservationIgnored private var passedQuarter = false
-    /// Whether the painting has a photo to show: one sent without it has no Photo button, and
-    /// nothing to say about it.
+    /// Whether the painting has a photo worth a peek (`TipMoments.photoIsWorthAPeek`): one sent
+    /// without it has no Photo button, one drawn on a blank page no original, and nothing to say
+    /// about either.
     @ObservationIgnored var hasPhoto = true
     @ObservationIgnored private var idle: Task<Void, Never>?
     @ObservationIgnored private var afterShine: Task<Void, Never>?

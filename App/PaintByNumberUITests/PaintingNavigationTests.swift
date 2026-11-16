@@ -101,6 +101,19 @@ final class PaintingNavigationTests: XCTestCase {
         dismissDialog(at: dialog, titled: "Restart this painting?", in: app)
     }
 
+    /// More › Print… (painting-company row 240, where newcomers looked for it first) opens the
+    /// system's print dialog on the painting's template, and the painting is there after it.
+    @MainActor
+    func testMorePrintsTheTemplate() throws {
+        let app = openSeededPainting()
+        let more = app.buttons["More"]
+        more.tap()
+        let item = printItem(in: app)
+        XCTAssertTrue(item.waitForExistence(timeout: 5), "More has no Print…")
+        try checkPrintDialog(from: item, "more", in: app)
+        XCTAssertTrue(waitUntil(timeout: 10) { more.exists && more.isHittable }, "The painting's bar is gone after the print dialog")
+    }
+
     /// More's menu raises no keyboard over the painting, and stays open: the canvas takes back the
     /// first responder the menu took (`CanvasView.resignFirstResponder`; the Mac critic's sweep of
     /// November 9 saw a keyboard rise over the lower half while it was open, with nothing to type).

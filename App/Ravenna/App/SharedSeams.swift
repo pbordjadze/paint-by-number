@@ -26,6 +26,10 @@ nonisolated enum EraSeam {
     /// Whether the painting screen goes quiet once an area is painted (`QuietPainting`): always.
     static let offersQuietPainting = true
 
+    /// Whether a tip on a compact width keeps off what it explains (`TipForm`): no, its tips
+    /// are as they were in every build.
+    static let tipsKeepOffTheirSubject = false
+
     /// Whether the palette keeps the lines it was given once fewer colors are left: no, it takes
     /// no more lines than it has colors.
     static let paletteKeepsItsLines = false
