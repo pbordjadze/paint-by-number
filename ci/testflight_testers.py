@@ -233,9 +233,11 @@ def main():
     print(f"Build {version} ({build['attributes']['processingState']}).")
     try:
         ensure_team(client, app_id)
-    except APIError as error:
-        # The internal group is a convenience; the external one is the job.
-        print(f"The internal group {TEAM!r} wasn't kept: {error}")
+    except Exception as error:
+        # The internal group is a convenience; the external one is the job. Apple's detail could
+        # quote an address, so only the call and its status are printed.
+        brief = " ".join(str(error).split()[:3]) if isinstance(error, APIError) else type(error).__name__
+        print(f"The internal group {TEAM!r} wasn't kept ({brief}).")
     group = ensure_group(client, app_id, build["id"])
     print(f"Build {version} is in {GROUP!r}.")
     ensure_what_to_test(client, build["id"], os.environ.get("WHAT_TO_TEST", "").strip() or WHAT_TO_TEST)
