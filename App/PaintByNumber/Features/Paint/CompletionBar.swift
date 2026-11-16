@@ -61,8 +61,8 @@ struct CompletionBar: View {
     }
 
     /// The doors' room across, of `count` doors where the panel may be `available` wide: what
-    /// the panel lays them in, the painting screen measures them for (`PaintView.doorMetrics`)
-    /// and the gallery's opening expects (`ArchOpening`).
+    /// the panel lays them in and the painting screen measures them for
+    /// (`PaintView.doorMetrics`).
     nonisolated static func doorsWidth(count: Int, available: CGFloat) -> CGFloat {
         min(widestPanel(doors: count), available) - 2 * doorsInset
     }

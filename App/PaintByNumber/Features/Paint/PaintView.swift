@@ -306,8 +306,8 @@ struct PaintView: View {
                     .besideTheFold()
             }
         }
-        .animation(.snappy, value: thanks)
-        .animation(.snappy, value: zenNote)
+        .animation(.settle, value: thanks)
+        .animation(.settle, value: zenNote)
         #if DEBUG
         .task { await runFeedbackDemo() }
         #endif
@@ -478,7 +478,7 @@ struct PaintView: View {
         }
         // The completion bar slides in for the palette (at the bottom or the side) as the
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
-        .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
+        .animation(reduceMotion ? nil : .settle, value: session.isComplete)
         .animation(.easeInOut(duration: 0.25), value: PaintTips.desk.pageTip != nil)
     }
 
@@ -1003,7 +1003,7 @@ struct PaintView: View {
         Log.feedback.notice("Feedback started")
         // The painting is behind glass meanwhile: no undo of its fills.
         controller.releaseFocus()
-        withAnimation(reduceMotion ? nil : .snappy) { feedback = FeedbackDraft(capture: capture) }
+        withAnimation(reduceMotion ? nil : .settle) { feedback = FeedbackDraft(capture: capture) }
         if !reduceMotion {
             flashes = true
             Task {
@@ -1020,7 +1020,7 @@ struct PaintView: View {
     private func endFeedback() {
         Log.feedback.notice("Feedback ends")
         chrome.isGivingFeedback = false
-        withAnimation(reduceMotion ? nil : .snappy) { feedback = nil }
+        withAnimation(reduceMotion ? nil : .settle) { feedback = nil }
         // Back to the window's undo history of fills.
         controller.focus()
         Log.feedback.notice("Feedback ended")
