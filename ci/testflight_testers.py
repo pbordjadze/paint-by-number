@@ -10,7 +10,8 @@ on request. It finds the app by its bundle id and the build (BUILD, the CFBundle
 newest processed one; with WAIT_MINUTES it waits that long for BUILD to finish processing, and
 stops on a build App Store Connect rejected), makes the external group
 "Friends & Family" the first time (its public link on, limited to `LINK_LIMIT` testers) or turns
-an existing one's link on, adds the build to it with its What to Test (WHAT_TO_TEST, or the
+an existing one's link on, keeps the internal group `TEAM` (every App Store Connect user, every
+build at once, no review), adds the build to the external group with its What to Test (WHAT_TO_TEST, or the
 standing text below), and submits the build for Beta App Review. Every step is idempotent: a
 second run changes nothing it already did. On Actions, the outcome also goes to the run's summary.
 
@@ -40,6 +41,9 @@ from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 API = "https://api.appstoreconnect.apple.com/v1"
 BUNDLE_ID = "com.pbordjadze.paintbynumber"
 GROUP = "Friends & Family"
+# The internal group: every App Store Connect user of the account, given every build the moment it
+# is processed, with no Beta App Review (Apple's rule for internal testers).
+TEAM = "Team"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
     "Thank you for trying Paint by Moonlight 1.2 before anyone else.\n\n"
@@ -154,6 +158,40 @@ def ensure_group(client, app_id, build_id):
     return group
 
 
+def ensure_team(client, app_id):
+    """The internal group TEAM, with access to all builds, holding every App Store Connect user.
+
+    No address is printed (the logs are public): only counts."""
+    groups = client.call("GET", f"/apps/{app_id}/betaGroups", query={"limit": "200"})["data"]
+    group = next((g for g in groups if g["attributes"].get("isInternalGroup") and g["attributes"]["name"] == TEAM), None)
+    if group is None:
+        body = {"data": {"type": "betaGroups",
+                         "attributes": {"name": TEAM, "isInternalGroup": True, "hasAccessToAllBuilds": True},
+                         "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}}
+        group = client.call("POST", "/betaGroups", body)["data"]
+        print(f"Made the internal group {TEAM!r}, with every build.")
+    elif not group["attributes"].get("hasAccessToAllBuilds"):
+        client.call("PATCH", f"/betaGroups/{group['id']}", {"data": {
+            "type": "betaGroups", "id": group["id"], "attributes": {"hasAccessToAllBuilds": True}}})
+        print(f"{TEAM!r} now gets every build.")
+    else:
+        print(f"{TEAM!r} exists and gets every build.")
+    present = {t["attributes"].get("email", "").lower() for t in client.call(
+        "GET", f"/betaGroups/{group['id']}/betaTesters", query={"limit": "200", "fields[betaTesters]": "email"})["data"]}
+    users = client.call("GET", "/users", query={"limit": "200", "fields[users]": "username,firstName,lastName"})["data"]
+    added = 0
+    for user in users:
+        email = user["attributes"].get("username", "")
+        if not email or email.lower() in present:
+            continue
+        client.call("POST", "/betaTesters", {"data": {"type": "betaTesters", "attributes": {
+            "email": email, "firstName": user["attributes"].get("firstName") or "",
+            "lastName": user["attributes"].get("lastName") or ""},
+            "relationships": {"betaGroups": {"data": [{"type": "betaGroups", "id": group["id"]}]}}}})
+        added += 1
+    print(f"{TEAM!r}: {len(present) + added} of the account's {len(users)} users ({added} added now).")
+
+
 def ensure_what_to_test(client, build_id, text):
     existing = client.call("GET", f"/builds/{build_id}/betaBuildLocalizations")["data"]
     english = next((l for l in existing if l["attributes"]["locale"] == "en-US"), None)
@@ -193,6 +231,11 @@ def main():
     build = find_build(client, app_id, os.environ.get("BUILD", "").strip(), wait)
     version = build["attributes"]["version"]
     print(f"Build {version} ({build['attributes']['processingState']}).")
+    try:
+        ensure_team(client, app_id)
+    except APIError as error:
+        # The internal group is a convenience; the external one is the job.
+        print(f"The internal group {TEAM!r} wasn't kept: {error}")
     group = ensure_group(client, app_id, build["id"])
     print(f"Build {version} is in {GROUP!r}.")
     ensure_what_to_test(client, build["id"], os.environ.get("WHAT_TO_TEST", "").strip() or WHAT_TO_TEST)
