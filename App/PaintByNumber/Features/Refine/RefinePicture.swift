@@ -10,7 +10,7 @@ import UIKit
 ///
 /// What the layers' switches and the painting change is read by views of their own below, never
 /// here, and each animates what fades in it by itself: a layer a tool shows again
-/// (`RefineModel.show`, `layerShown`) and a landing's new colors (`RefineModel.land`,
+/// (`RefineModel.show`, `RefineLayers.revealed`) and a landing's new colors (`RefineModel.land`,
 /// `paintingFades`). The model writes both plainly.
 struct RefinePictureLayers: View {
     let refine: RefineModel
@@ -121,7 +121,7 @@ private struct RefinePaintedLayers: View {
             }
         }
         .animation(refine.paintingFades ? .easeInOut(duration: 0.35) : nil, value: refine.painting?.preview)
-        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layerShown)
+        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layers.revealed)
     }
 }
 
@@ -132,7 +132,7 @@ private struct RefineDrawnLines: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        // In a container of its own, which the ink's fade animates (`layerShown`).
+        // In a container of its own, which the ink's fade animates (`RefineLayers.revealed`).
         ZStack {
             if let base = refine.base, refine.layers.ink {
                 let showsPhoto = refine.showsPhoto
@@ -142,7 +142,7 @@ private struct RefineDrawnLines: View {
                     .equatable()
             }
         }
-        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layerShown)
+        .animation(reduceMotion ? nil : RefinePictureLayers.layerFade, value: refine.layers.revealed)
     }
 }
 
