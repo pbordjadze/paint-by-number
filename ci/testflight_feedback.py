@@ -8,7 +8,8 @@ in App Store Connect, not in the feedback relay. This writes each submission of 
 days to `<out>/<YYYY-MM-DD>/testflight-<id>/` (beside the relay's reports): `submission.json` (Apple's record, as it came), `feedback.md`
 (the comment, device, build and time) and the screenshots (`screenshot-<n>.jpg`), or for a crash
 `crash.txt` (its log). A submission already there is left alone, so a second run adds only new
-ones. Run by `.github/workflows/testflight-feedback.yml`, which commits them to the private
+ones; a submission that fails (a crash whose log isn't ready, a screenshot that won't
+download) is tried again next run, and the run exits 1 so it is seen. Run by `.github/workflows/testflight-feedback.yml`, which commits them to the private
 feedback repository's `reports/` every hour: the comments and pictures are testers' own, so nothing of them is printed
 here (the repository's logs are public), only counts. Needs `cryptography`; the client is
 ci/testflight_testers.py's.
@@ -30,14 +31,23 @@ KINDS = {
 }
 
 
+def created(item):
+    """When the submission was made, in UTC (Apple's dates carry their own offset)."""
+    text = item["attributes"].get("createdDate") or ""
+    try:
+        return datetime.datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(datetime.timezone.utc)
+    except ValueError:
+        return None
+
+
 def submissions(client, app_id, kind, since):
     path = f"/apps/{app_id}/{kind}"
     query = {"limit": "50", "sort": "-createdDate"}
     while path:
         page = client.call("GET", path, query=query)
         for item in page.get("data", []):
-            created = item["attributes"].get("createdDate", "")
-            if created and created < since:
+            when = created(item)
+            if when and when < since:
                 return
             yield item
         nxt = page.get("links", {}).get("next")
@@ -53,9 +63,19 @@ def build_version(client, path, item):
         return ""
 
 
+def eastern(when):
+    """`when` as Paul reads times: Eastern, labelled ET."""
+    if when is None:
+        return "?"
+    from zoneinfo import ZoneInfo
+    local = when.astimezone(ZoneInfo("America/New_York"))
+    return local.strftime("%B %-d, %-I:%M %p ET")
+
+
 def markdown(kind, item, version):
     a = item["attributes"]
-    lines = [f"# TestFlight {kind} feedback", ""]
+    # The first line, without its "# ", is the report's issue title too (the workflow's Issues step).
+    lines = [f"# TestFlight {kind} feedback, {eastern(created(item))} ({version or '?'})", ""]
     lines.append(f"{a.get('createdDate', '?')}, build {version or '?'} "
                  f"on {a.get('deviceModel', '?')} ({a.get('deviceFamily', '')}), {a.get('osVersion', '?')}")
     lines += ["", "## Comment", "", a.get("comment") or "(none)", ""]
@@ -66,51 +86,72 @@ def markdown(kind, item, version):
 
 
 def save(client, out, path, kind, item):
+    """Writes one submission; returns its folder, or None when it was already there. Anything
+    that fails leaves `submission.json` (the done mark) unwritten, so the next run tries again."""
     a = item["attributes"]
-    folder = os.path.join(out, (a.get("createdDate") or "unknown")[:10], "testflight-" + item["id"])
+    when = created(item)
+    # UTC dates, as the relay's folders.
+    folder = os.path.join(out, when.strftime("%Y-%m-%d") if when else "unknown", "testflight-" + item["id"])
     if os.path.exists(os.path.join(folder, "submission.json")):
-        return False
+        return None
     os.makedirs(folder, exist_ok=True)
     for n, shot in enumerate(a.get("screenshots") or [], 1):
         with urllib.request.urlopen(shot["url"], timeout=60) as response:
             with open(os.path.join(folder, f"screenshot-{n}.jpg"), "wb") as f:
                 f.write(response.read())
     if kind == "crash":
-        try:
-            log = client.call("GET", f"/betaFeedbackCrashSubmissions/{item['id']}/crashLog")
-            text = log.get("data", {}).get("attributes", {}).get("logText") or ""
-        except APIError as error:
-            text = f"(no log: {error})"
+        # Not yet processed: no log, and the next run asks again.
+        log = client.call("GET", f"/betaFeedbackCrashSubmissions/{item['id']}/crashLog")
+        text = log.get("data", {}).get("attributes", {}).get("logText") or ""
+        if not text:
+            raise APIError("crash log not ready")
         with open(os.path.join(folder, "crash.txt"), "w") as f:
             f.write(text)
     with open(os.path.join(folder, "feedback.md"), "w") as f:
         f.write(markdown(kind, item, build_version(client, path, item)))
     with open(os.path.join(folder, "submission.json"), "w") as f:
         json.dump(item, f, indent=2)
-    return True
+    return folder
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("out")
     parser.add_argument("--days", type=int, default=14)
+    parser.add_argument("--new-list", help="a file to write the folders this run added to, one a line")
     args = parser.parse_args()
     client = Client(private_key())
     app_id = find_app(client)["id"]
-    since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=args.days)).strftime("%Y-%m-%dT%H:%M:%S")
-    lines = []
+    since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=args.days)
+    lines, saved, failed = [], [], False
     for path, kind in KINDS.items():
-        found = new = 0
+        found = new = missed = 0
         try:
             for item in submissions(client, app_id, path, since):
                 found += 1
-                new += save(client, args.out, path, kind, item)
-        except APIError as error:
+                try:
+                    folder = save(client, args.out, path, kind, item)
+                except (APIError, OSError) as error:
+                    # The error names a path of ids or a network failure, never what a tester wrote.
+                    missed += 1
+                    lines.append(f"{kind} {item['id']}: {error}")
+                    continue
+                if folder:
+                    new += 1
+                    saved.append(folder)
+        except (APIError, OSError) as error:
             lines.append(f"{kind}: {error}")
+            failed = True
             continue
-        lines.append(f"{kind}: {found} in the last {args.days} days, {new} new")
+        failed = failed or missed > 0
+        lines.append(f"{kind}: {found} in the last {args.days} days, {new} new, {missed} to try again")
+    if args.new_list:
+        with open(args.new_list, "w") as f:
+            f.write("".join(folder + "\n" for folder in saved))
     print("\n".join(lines))
     summarize(lines)
+    # Red, so a lasting failure (an expired key) is seen; what was saved is still committed.
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":

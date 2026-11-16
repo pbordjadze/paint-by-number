@@ -38,6 +38,7 @@ jobs:
           token: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
           path: feedback
       - name: Python
+        id: python
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
@@ -46,12 +47,41 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: '"$RUNNER_TEMP/venv/bin/python" ci/testflight_feedback.py feedback/reports --days "${{ inputs.days || 14 }}"'
+          DAYS: ${{ inputs.days || '14' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/testflight_feedback.py feedback/reports --days "$DAYS" --new-list "$RUNNER_TEMP/new.txt"'
       - name: Commit
+        # What was saved goes in even when another submission failed (the Fetch step is red then).
+        if: always() && steps.python.outcome == 'success'
         working-directory: feedback
         run: |
           git add reports
           git diff --cached --quiet && { echo "nothing new"; exit 0; }
           git -c user.name="TestFlight feedback" -c user.email="actions@users.noreply.github.com" \
             commit --quiet -m "TestFlight feedback $(TZ=America/New_York date '+%Y-%m-%d %H:%M ET')"
-          git push --quiet origin HEAD:main
+          # The relay may have added a report since the checkout: its folders never conflict.
+          for attempt in 1 2 3 4; do
+            git push --quiet origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+            git pull --rebase --quiet origin main
+          done
+          exit 1
+      - name: Issues
+        # One issue a submission, as the relay opens for each of its reports.
+        if: always() && steps.python.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+        run: |
+          [ -s "$RUNNER_TEMP/new.txt" ] || exit 0
+          while read -r folder; do
+            [ -f "$folder/submission.json" ] || continue
+            rel=${folder#feedback/}
+            body="$RUNNER_TEMP/body.md"
+            cat "$folder/feedback.md" > "$body"
+            for shot in "$folder"/screenshot-*.jpg; do
+              [ -e "$shot" ] || continue
+              echo "![Screenshot](https://github.com/pbordjadze/paint-feedback/blob/main/$rel/$(basename "$shot")?raw=1)" >> "$body"
+            done
+            printf '\n[All the files of this report](https://github.com/pbordjadze/paint-feedback/tree/main/%s)\n' "$rel" >> "$body"
+            title=$(head -1 "$folder/feedback.md" | sed 's/^# //')
+            gh issue create --repo pbordjadze/paint-feedback --title "$title" --body-file "$body" > /dev/null
+          done < "$RUNNER_TEMP/new.txt"
