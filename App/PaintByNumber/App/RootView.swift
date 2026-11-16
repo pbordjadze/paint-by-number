@@ -8,7 +8,8 @@ import SwiftUI
 /// passage half laid; `era-passage-back` and `era-passage-night` (SideStore and Debug builds) play
 /// the way back over the gallery and hold it with the tiles half fallen, the night showing
 /// through, and at its still night, the crescent and stars out; `about-painting` and
-/// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`).
+/// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
+/// `print-preview…` Print's preview (`PrintPreviewDemo`).
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -50,6 +51,8 @@ struct RootView: View {
         #if UNRELEASED
         case let scenario? where scenario.hasPrefix("about-"):
             AboutPaintingDemo(scenario: scenario)
+        case let scenario? where scenario.hasPrefix("print-preview"):
+            PrintPreviewDemo(scenario: scenario)
         #endif
         default:
             AppShellView()

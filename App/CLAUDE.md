@@ -1338,7 +1338,16 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 (`TemplatePrintJob`, `Export/TemplatePrint.swift`: `saved` from the card's painting, `open` from
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
-or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save.
+or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
+painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
+`Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
+(`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
+painted in, never printed), and the layout's choices, `PDFExporter.Layout`: Paper, Orientation,
+Size (`PDFExporter.sizes`: the fewest legible sheets, then the picture across more, with its
+printed size) and Color Key; its Print hands that layout's blank PDF to the dialog and closes once
+it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
+`print-preview` (with `-dark`, `-long-text`), `-painted` and `-sheets` are its screenshots,
+`PrintLayoutTests` its tests.
 Printing takes no free painting. One dialog at a time (the controller is the system's one), and
 Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it
 only for a painting of the gallery's, `PaintView.asksForRating`). `TemplatePrintTests`; `GalleryActionsTests` and

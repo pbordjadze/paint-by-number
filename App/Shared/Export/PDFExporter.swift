@@ -72,14 +72,53 @@ nonisolated enum PDFExporter {
         }
     }
 
+    /// How the pages are laid out: the paper, which way it is turned, how big the picture
+    /// prints and whether the color key follows. `Layout(paper:)` is the document Print Template…
+    /// has always made; Print's preview (`PrintPreviewSheet`) changes the rest.
+    struct Layout: Equatable, Sendable {
+        enum Orientation: String, Sendable, CaseIterable { case portrait, landscape }
+
+        var paper: Paper
+        /// Nil: the picture's own, landscape for a wide one.
+        var orientation: Orientation?
+        /// Sheets along the picture's longer printed side (`sizes(for:layout:)`); nil, or fewer
+        /// than its numbers need, is the fewest whose smallest number is legible.
+        var across: Int?
+        /// The color key page (with the finished picture for reference) after the template.
+        var colorKey = true
+        /// The template's pages as they look painted (every area in its paint, the lines a
+        /// whisper): Print's preview of what the painter will make. Never printed.
+        var painted = false
+
+        init(paper: Paper, orientation: Orientation? = nil, across: Int? = nil, colorKey: Bool = true, painted: Bool = false) {
+            self.paper = paper
+            self.orientation = orientation
+            self.across = across
+            self.colorKey = colorKey
+            self.painted = painted
+        }
+
+        /// The orientation the page is turned to for `t`.
+        func resolvedOrientation(for t: Template) -> Orientation {
+            orientation ?? (t.width > t.height ? .landscape : .portrait)
+        }
+    }
+
     static func sheets(for t: Template, paper: Paper) -> Sheets {
-        let body = bodyRect(pageBox(for: t, paper: paper)).size
+        sheets(for: t, layout: Layout(paper: paper))
+    }
+
+    static func sheets(for t: Template, layout: Layout) -> Sheets {
+        let body = bodyRect(pageBox(for: t, layout: layout)).size
         let width = CGFloat(max(t.width, 1)), height = CGFloat(max(t.height, 1))
         func make(scale: CGFloat, columns: Int, rows: Int) -> Sheets {
             Sheets(scale: scale, columns: columns, rows: rows, body: body, printed: CGSize(width: width * scale, height: height * scale))
         }
         let fitted = min(body.width / width, body.height / height)
-        guard let needed = legibleScale(t), fitted < needed else {
+        let legible = legibleScale(t) ?? 0
+        let asked = layout.across.map { across(t, body: body, sheets: $0) } ?? 0
+        let needed = max(legible, asked)
+        guard fitted < needed else {
             return make(scale: fitted, columns: 1, rows: 1)
         }
         // n sheets with overlap o cover n·(w − o) + o.
@@ -92,6 +131,41 @@ nonisolated enum PDFExporter {
             (CGFloat(columns) * (body.width - sheetOverlap) + sheetOverlap) / width,
             (CGFloat(rows) * (body.height - sheetOverlap) + sheetOverlap) / height)
         return make(scale: scale, columns: columns, rows: rows)
+    }
+
+    /// The scale at which the picture spans `sheets` sheets along the side that fills a page
+    /// first (1: fitted to one page).
+    private static func across(_ t: Template, body: CGSize, sheets: Int) -> CGFloat {
+        let width = CGFloat(max(t.width, 1)), height = CGFloat(max(t.height, 1))
+        let alongWidth = width / body.width >= height / body.height
+        let extent = alongWidth ? width : height, window = alongWidth ? body.width : body.height
+        let n = CGFloat(max(sheets, 1))
+        // A hair under: at exactly this scale rounding could ask for one sheet more.
+        return (n * (window - sheetOverlap) + sheetOverlap) / extent * (1 - 1e-9)
+    }
+
+    /// The sizes Print offers for `t` on `layout`'s paper and orientation, smallest first: the
+    /// fewest legible sheets (nil `across`), then the picture across more sheets, each a
+    /// different count of sheets. At most three.
+    static func sizes(for t: Template, layout: Layout) -> [Size] {
+        var base = layout
+        base.across = nil
+        let smallest = sheets(for: t, layout: base)
+        var sizes = [Size(across: nil, sheets: smallest)]
+        let start = max(smallest.columns, smallest.rows)
+        for n in (start + 1)...(start + 3) where sizes.count < 3 {
+            var bigger = layout
+            bigger.across = n
+            let made = sheets(for: t, layout: bigger)
+            if made.count > (sizes.last?.sheets.count ?? 0) { sizes.append(Size(across: n, sheets: made)) }
+        }
+        return sizes
+    }
+
+    /// One of the sizes Print offers: the `Layout.across` that asks for it, and its sheets.
+    struct Size: Equatable, Sendable {
+        var across: Int?
+        var sheets: Sheets
     }
 
     /// The scale (points per canvas unit) that prints the smallest number at
@@ -119,8 +193,12 @@ nonisolated enum PDFExporter {
     /// `nicknames` (index-aligned with the palette, nil where a color has none) head the color key
     /// entries, with the plain color name below them; without them the plain name heads each entry.
     static func document(for t: Template, title: String, paper: Paper, nicknames: [String?] = []) -> Data {
+        document(for: t, title: title, layout: Layout(paper: paper), nicknames: nicknames)
+    }
+
+    static func document(for t: Template, title: String, layout: Layout, nicknames: [String?] = []) -> Data {
         let data = NSMutableData()
-        var box = pageBox(for: t, paper: paper)
+        var box = pageBox(for: t, layout: layout)
         let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: EraSeam.pdfCreator]
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
               let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
@@ -130,7 +208,8 @@ nonisolated enum PDFExporter {
         let stats = String(localized: "pdf.stats", defaultValue: "\(colorsText) · \(areasText)", bundle: .era,
                            comment: "Header of the printable template's pages; the arguments are the number of colors and the number of areas")
         let rasterResolution = CGSize(width: t.width * 2, height: t.height * 2)
-        let sheets = Self.sheets(for: t, paper: paper)
+        let sheets = Self.sheets(for: t, layout: layout)
+        let templateStyle = layout.painted ? TemplateRasterizer.Style.finished : .printable
         if sheets.isTiled {
             page(ctx, box) { content in
                 let sheetsText = String(localized: "pdf.sheets", defaultValue: "\(sheets.count) sheets", bundle: .era,
@@ -140,13 +219,13 @@ nonisolated enum PDFExporter {
                 let body = header(ctx, in: content, title: title, detail: overviewDetail)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 // A map for putting the sheets together; the numbers are on the sheets.
-                var overview = TemplateRasterizer.Style.printable
+                var overview = templateStyle
                 overview.numbers = false
                 TemplateRasterizer.draw(t, painted: nil, style: overview, in: ctx, rect: rect, rasterResolution: rasterResolution)
                 sheetGrid(ctx, sheets, in: rect)
             }
             // Numbers no wider than the overlap: each is whole on some sheet.
-            var style = TemplateRasterizer.Style.printable
+            var style = templateStyle
             let widest = CGFloat(LabelSizing.digitCount(of: t.palette.count)) * CGFloat(LabelSizing.digitAdvance)
             style.maximumNumberFraction = min(
                 style.maximumNumberFraction, sheetOverlap / (widest * sheets.scale * CGFloat(max(t.width, t.height))))
@@ -177,13 +256,13 @@ nonisolated enum PDFExporter {
             page(ctx, box) { content in
                 let body = header(ctx, in: content, title: title, detail: stats)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
-                TemplateRasterizer.draw(t, painted: nil, style: .printable, in: ctx, rect: rect, rasterResolution: rasterResolution)
+                TemplateRasterizer.draw(t, painted: nil, style: templateStyle, in: ctx, rect: rect, rasterResolution: rasterResolution)
                 ctx.setStrokeColor(gray(0.75))
                 ctx.setLineWidth(0.5)
                 ctx.stroke(rect)
             }
         }
-        page(ctx, box) { content in
+        if layout.colorKey { page(ctx, box) { content in
             let body = header(ctx, in: content, title: String(localized: "Color Key", bundle: .era), detail: title)
             let used = legend(ctx, t, nicknames: nicknames, in: body)
             let remaining = CGRect(x: body.minX, y: used.maxY + 24, width: body.width, height: body.maxY - used.maxY - 24)
@@ -195,7 +274,7 @@ nonisolated enum PDFExporter {
                     t, painted: nil, style: .painting, in: ctx, rect: rect,
                     rasterResolution: CGSize(width: rect.width * 3, height: rect.height * 3))
             }
-        }
+        } }
         ctx.closePDF()
         return data as Data
     }
@@ -205,10 +284,11 @@ nonisolated enum PDFExporter {
     private static let margin: CGFloat = 36
     private static let headerHeight: CGFloat = 36
 
-    /// The page, turned to landscape for wide templates.
-    private static func pageBox(for t: Template, paper: Paper) -> CGRect {
-        let landscape = t.width > t.height
-        return CGRect(origin: .zero, size: landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size)
+    /// The page, turned as `layout` says (landscape for a wide template unless it says otherwise).
+    static func pageBox(for t: Template, layout: Layout) -> CGRect {
+        let paper = layout.paper.size
+        let landscape = layout.resolvedOrientation(for: t) == .landscape
+        return CGRect(origin: .zero, size: landscape ? CGSize(width: paper.height, height: paper.width) : paper)
     }
 
     /// The part of a page below its header, in page coordinates.

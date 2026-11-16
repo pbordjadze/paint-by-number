@@ -74,6 +74,10 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     /// The template the print dialog is up for (More › Print…).
     @State private var printJob: TemplatePrintJob?
+    #if UNRELEASED
+    /// Print's preview, up for More › Print… (painting-company row 357).
+    @State private var printPreview: PrintPreviewRequest?
+    #endif
     @State private var preparingPrint = false
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
@@ -292,6 +296,11 @@ struct PaintView: View {
             TimelapseExportSheet(request: request)
         }
         #if UNRELEASED
+        .sheet(item: $printPreview) { request in
+            PrintPreviewSheet(request: request)
+                .pageSizedOnPad()
+                .besideTheFold()
+        }
         .sheet(item: $about) { work in
             AboutPainting(work: work)
                 // An iPad's default form sheet is shorter than the picture, its label and the links.
@@ -963,6 +972,11 @@ struct PaintView: View {
         preparingPrint = true
         let template = session.template, nicknames = session.colorNicknames
         let name = title.isEmpty ? String(localized: "Painting") : title
+        #if UNRELEASED
+        // Print's preview, with the layout's choices, before the dialog.
+        printPreview = PrintPreviewRequest(template: template, title: name, nicknames: nicknames)
+        preparingPrint = false
+        #else
         let paper = PDFExporter.Paper.default(for: Locale.current.region)
         Task {
             defer { preparingPrint = false }
@@ -972,6 +986,7 @@ struct PaintView: View {
                 Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
             }
         }
+        #endif
     }
 
     private func handlePencil(_ action: PencilAction) {

@@ -53,6 +53,10 @@ struct GalleryView: View {
     @State private var sharedFile: URL?
     /// The template the print dialog is up for (`printTemplate(of:)`), and the card it hangs from.
     @State private var printJob: TemplatePrintJob?
+    #if UNRELEASED
+    /// Print's preview, up for a card's Print… (painting-company row 357).
+    @State private var printPreview: PrintPreviewRequest?
+    #endif
     @State private var printingCard: Artwork.ID?
     /// The template's PDF being made for it; called off when the gallery is left.
     @State private var printTask: Task<Void, Never>?
@@ -156,6 +160,13 @@ struct GalleryView: View {
             printTask = nil
             dropUnshownPrint()
         }
+        #if UNRELEASED
+        .sheet(item: $printPreview) { request in
+            PrintPreviewSheet(request: request)
+                .pageSizedOnPad()
+                .besideTheFold()
+        }
+        #endif
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
@@ -499,6 +510,19 @@ struct GalleryView: View {
     private func printTemplate(of artwork: Artwork) {
         PaintTips.used(.shelfHold)
         guard printTask == nil else { return }
+        #if UNRELEASED
+        // Print's preview, with the layout's choices, before the dialog.
+        let store = library.store
+        printTask = Task {
+            do {
+                let request = try await PrintPreviewRequest.saved(store: store, artwork: artwork)
+                if !Task.isCancelled { printPreview = request }
+            } catch {
+                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
+            }
+            if !Task.isCancelled { printTask = nil }
+        }
+        #else
         let store = library.store, paper = PDFExporter.Paper.default(for: Locale.current.region)
         printTask = Task {
             do {
@@ -518,6 +542,7 @@ struct GalleryView: View {
             }
             if !Task.isCancelled { printTask = nil }
         }
+        #endif
     }
 
     /// Lets go of a template whose print dialog never came up.
