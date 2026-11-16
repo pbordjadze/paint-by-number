@@ -44,10 +44,19 @@ def submissions(client, app_id, kind, since):
         path, query = (nxt.removeprefix("https://api.appstoreconnect.apple.com/v1"), None) if nxt else (None, None)
 
 
-def markdown(kind, item):
+def build_version(client, path, item):
+    """The build's CFBundleVersion (e.g. 32.1), or "" when App Store Connect doesn't say."""
+    try:
+        build = client.call("GET", f"/{path}/{item['id']}/build").get("data") or {}
+        return (build.get("attributes") or {}).get("version") or ""
+    except APIError:
+        return ""
+
+
+def markdown(kind, item, version):
     a = item["attributes"]
     lines = [f"# TestFlight {kind} feedback", ""]
-    lines.append(f"{a.get('createdDate', '?')}, build {a.get('buildBundleId', '')} "
+    lines.append(f"{a.get('createdDate', '?')}, build {version or '?'} "
                  f"on {a.get('deviceModel', '?')} ({a.get('deviceFamily', '')}), {a.get('osVersion', '?')}")
     lines += ["", "## Comment", "", a.get("comment") or "(none)", ""]
     keys = ("appUptimeInMilliseconds", "batteryPercentage", "diskBytesAvailable", "connectionType",
@@ -56,7 +65,7 @@ def markdown(kind, item):
     return "\n".join(lines)
 
 
-def save(client, out, kind, item):
+def save(client, out, path, kind, item):
     a = item["attributes"]
     folder = os.path.join(out, (a.get("createdDate") or "unknown")[:10], "testflight-" + item["id"])
     if os.path.exists(os.path.join(folder, "submission.json")):
@@ -75,7 +84,7 @@ def save(client, out, kind, item):
         with open(os.path.join(folder, "crash.txt"), "w") as f:
             f.write(text)
     with open(os.path.join(folder, "feedback.md"), "w") as f:
-        f.write(markdown(kind, item))
+        f.write(markdown(kind, item, build_version(client, path, item)))
     with open(os.path.join(folder, "submission.json"), "w") as f:
         json.dump(item, f, indent=2)
     return True
@@ -95,7 +104,7 @@ def main():
         try:
             for item in submissions(client, app_id, path, since):
                 found += 1
-                new += save(client, args.out, kind, item)
+                new += save(client, args.out, path, kind, item)
         except APIError as error:
             lines.append(f"{kind}: {error}")
             continue
