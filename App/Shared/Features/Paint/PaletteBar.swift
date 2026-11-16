@@ -93,8 +93,9 @@ nonisolated struct PaletteWindow: Equatable, Sendable {
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
 /// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view,
-/// or the swatch a tap on its color's area just shook. Where it `keepsPlaces`, finished colors
-/// stay instead, each a spent well in its place, so no swatch ever moves.
+/// or the swatch a tap on its color's area just shook until the selected color paints again.
+/// Where it `keepsPlaces`, finished colors stay instead, each a spent well in its place, so no
+/// swatch ever moves.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -310,6 +311,12 @@ struct PaletteBar: View {
             .onChange(of: shakes) { old, new in
                 if let shaken = Self.shaken(from: old, to: new) { reveal(shaken, animated: true) }
             }
+            // Painting on with the color in hand brings its swatch back, wherever a shake or the
+            // painter's own scrolling left the bar: a missed tap pulled the bar to another swatch, and it
+            // stayed there while the painter went on with theirs (painting-company row 356).
+            .onChange(of: selectedRemaining) { _, _ in
+                if let selected = session.selectedColor { reveal(selected, animated: true) }
+            }
         }
         .frame(width: axis == .vertical ? thickness : nil,
                height: axis == .horizontal ? thickness : nil)
@@ -371,6 +378,14 @@ struct PaletteBar: View {
         withAnimation(animated && !reduceMotion ? .smooth(duration: 0.35) : nil) {
             if horizontal { position.scrollTo(x: target) } else { position.scrollTo(y: target) }
         }
+    }
+
+    /// The selected color and its areas left, which change together only when the painter paints
+    /// (or undoes) with the color in hand, or picks another.
+    private var selectedRemaining: [Int] {
+        guard let selected = session.selectedColor, session.remainingByColor.indices.contains(selected)
+        else { return [] }
+        return [selected, session.remainingByColor[selected]]
     }
 
     private func revealPending() {

@@ -330,7 +330,8 @@ below name both alike.
   `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
   double tap and the Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
-  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen. The palette's
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen; the next fill
+  or undo of the color in hand brings its swatch back (`selectedRemaining`). The palette's
   lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
   so they never change as colors finish. In SideStore and Debug builds the palette stays put
   (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
