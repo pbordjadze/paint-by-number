@@ -565,7 +565,11 @@ private struct NavigationBarShown: UIViewControllerRepresentable {
     final class Controller: UIViewController {
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            guard let bar = navigationController?.navigationBar, bar.alpha < 1 else { return }
+            // Only with the gallery on top: a painting pushed as the gallery first appears (one
+            // reopened at launch) fades the bar out itself.
+            guard let navigation = navigationController, navigation.viewControllers.count == 1 else { return }
+            let bar = navigation.navigationBar
+            guard bar.alpha < 1 else { return }
             Log.library.notice("The gallery's bar came back see-through (alpha \(bar.alpha, privacy: .public)): shown")
             bar.alpha = 1
         }
