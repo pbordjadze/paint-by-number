@@ -7,14 +7,6 @@ import UniformTypeIdentifiers
 
 /// The app's main navigation: gallery → painting (zoom transition), the create flow,
 /// and settings.
-///
-/// In SideStore and Debug builds the shell has the system's tab bar (`ShellTabs`,
-/// painting-company row 328): Gallery, Paint (the Paint page as a place of its own, in the +'s
-/// stead) and the search tab, which takes the gallery's search. A painting is still pushed on
-/// the gallery's stack, where it hides the bar from its screen; a tab's own screen hides it too
-/// from the moment a painting is on its way in under a cover (`hidesTabBar`), so the painting
-/// lays itself out once, in the whole window, as the hand-off expects it (`StartHandoff`).
-/// Everything that covers the shell is laid over the tabs, so over the bar.
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -74,18 +66,6 @@ struct AppShellView: View {
     /// The gallery falls back as the arch grows.
     @State private var galleryRecedes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The tab on screen, kept per window, and the launch it was kept in (`chooseTab`).
-    @SceneStorage("shellTab") private var tab = ShellTab.gallery
-    @SceneStorage("shellTabLaunch") private var tabLaunch = ""
-    /// The search tab's cards: their own zoom sources and places, apart from the gallery's.
-    @Namespace private var searchZoom
-    @State private var searchPlaces = CardPlaces()
-    /// What was picked on the Paint tab, for the create flow to open on.
-    @State private var pickedOnTab: PaintChoice?
-    /// The create flow's cover is on screen: `isCreating` alone only says it was asked for.
-    @State private var flowIsUp = false
-    /// Blank Page on the Paint tab is reading the page begun before (`resumeScratch`).
-    @State private var isResumingScratch = false
     #endif
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
@@ -105,8 +85,38 @@ struct AppShellView: View {
         let flowSample = pickedSample
         let flowDraft = resumedDraft
         let flowIdentity = flowID
-        let flowPick = tabPick
-        shell
+        NavigationStack(path: $path) {
+            gallery
+                // Photos dragged in from another app (Split View, Slide Over) start a painting.
+                .dropDestination(for: DroppedPhoto.self) { photos, _ in
+                    guard let photo = photos.first, !isCreating, !isArchOpening else { return false }
+                    droppedPhoto = photo.data
+                    isCreating = true
+                    return true
+                } isTargeted: { isDropTargeted = $0 }
+                .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
+                .animation(.easeOut(duration: 0.2), value: isDropTargeted)
+                // While Start Painting hands over, under the create flow, the shelf moves nothing
+                // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
+                // doesn't reach the painting screen, whose own thumbnail fades as ever.
+                .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
+                .navigationTitle("Paint by Moonlight")
+                // At accessibility sizes the count goes with the large title (`toolbar`).
+                .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
+                .toolbar { toolbar }
+                .searchable(text: $search, prompt: Text("Search paintings"))
+                .searchFocused($isSearchFocused)
+                .navigationDestination(for: UUID.self) { id in
+                    // The zoom is for pushes from a card and for the way back to it; the painting
+                    // Start Painting makes is pushed under the cover (`startPainting`).
+                    ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
+                        // One view per painting: a painting someone sent replaces the open one
+                        // in the path (`presentReceivedPainting`), and without its own identity
+                        // the screen kept the first painting, which its task opens once.
+                        .id(id)
+                        .navigationTransition(.zoom(sourceID: id, in: zoom))
+                }
+        }
         #if UNRELEASED
         .scaleEffect(galleryRecedes ? 0.92 : 1)
         .overlay {
@@ -126,27 +136,26 @@ struct AppShellView: View {
             // Not over another sheet or the create flow: one presentation can't present another
             // here, and the flag would stay set, leaving the shelf covered (review of polish7).
             openSettings: { if !isCovered { isShowingSettings = true } },
-            newPainting: { if !isCovered && !isArchOpening && path.isEmpty { showPaintPage() } },
-            search: showSearch,
+            newPainting: { if !isCovered && !isArchOpening && path.isEmpty { isCreating = true } },
+            search: { isSearchFocused = true },
             isCovered: isCovered || !path.isEmpty))
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil
             pickedSample = nil
             resumedDraft = nil
-            forgetTabPick()
-            flowWent()
             handoff.reset()
             presentIncomingImage()
         }) {
-            createFlow(sample: flowSample, photo: flowPhoto, title: flowTitle, draft: flowDraft, pick: flowPick)
+            CreateFlowView(
+                openingSample: flowSample ?? launchSample, paintsSampleNow: flowSample != nil,
+                droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
+                onStart: startPainting
+            )
             .id(flowIdentity)
             .environment(library)
             .environment(paintings)
             .environment(\.startHandoff, handoff)
-            #if UNRELEASED
-            .onAppear { flowIsUp = true }
-            #endif
             // The flow draws its own background and leaves the cover clear, so that it can fade to
             // the painting opened beneath it.
             .presentationBackground(.clear)
@@ -171,9 +180,6 @@ struct AppShellView: View {
         } message: { failure in
             Text(failure.localizedDescription)
         }
-        #if UNRELEASED
-        .onAppear(perform: chooseTab)
-        #endif
         .onAppear(perform: restoreOpenArtwork)
         // "Open in Paint by Moonlight" from the share sheet or Files.
         .onOpenURL(perform: openFile)
@@ -218,14 +224,7 @@ struct AppShellView: View {
             path = [id]
         }
         #endif
-        .onChange(of: path) { _, path in
-            openArtwork = path.last?.uuidString ?? ""
-            #if UNRELEASED
-            // A painting is the gallery's, whichever tab it was picked or made on.
-            let holding = tab.holding(openPainting: path.last)
-            if holding != tab { tab = holding }
-            #endif
-        }
+        .onChange(of: path) { _, path in openArtwork = path.last?.uuidString ?? "" }
         // The shelf's tips wait while anything covers it, and have their moment when it is uncovered.
         .onChange(of: isCovered, initial: true) { _, covered in
             PaintTips.desk.isCovered = covered
@@ -237,249 +236,18 @@ struct AppShellView: View {
         }
     }
 
-    /// The shell under whatever covers it: the tabs in SideStore and Debug builds, the gallery
-    /// alone in the release.
-    @ViewBuilder private var shell: some View {
-        #if UNRELEASED
-        ShellTabs(selection: $tab) {
-            galleryStack
-        } paint: {
-            acceptingPhotos(PaintTab(hidesTabBar: hidesTabBar, onSettings: { isShowingSettings = true }, onChoose: paintPicked))
-        } search: {
-            NavigationStack {
-                acceptingPhotos(GalleryView(
-                    namespace: searchZoom, query: GalleryQuery(search: search), timelapse: $timelapse, sending: $sending,
-                    onCreate: showPaintPage, onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks,
-                    onOpen: { openThroughArch($0, from: searchPlaces) }, cardPlaces: searchPlaces, isSearch: true))
-                    .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
-                    .navigationTitle("Search")
-                    .toolbarVisibility(hidesTabBar ? .hidden : .automatic, for: .tabBar)
-                    .searchable(text: $search, prompt: Text("Search paintings"))
-                    .searchFocused($isSearchFocused)
-            }
-        }
-        #else
-        galleryStack
-        #endif
-    }
-
-    /// The gallery and the paintings pushed from it.
-    private var galleryStack: some View {
-        NavigationStack(path: $path) {
-            acceptingPhotos(gallery)
-                // While Start Painting hands over, under the create flow, the shelf moves nothing
-                // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
-                // doesn't reach the painting screen, whose own thumbnail fades as ever.
-                .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
-                .navigationTitle("Paint by Moonlight")
-                // At accessibility sizes the count goes with the large title (`toolbar`).
-                .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
-                .toolbar { toolbar }
-                #if UNRELEASED
-                .toolbarVisibility(hidesTabBar ? .hidden : .automatic, for: .tabBar)
-                #else
-                .searchable(text: $search, prompt: Text("Search paintings"))
-                .searchFocused($isSearchFocused)
-                #endif
-                .navigationDestination(for: UUID.self) { id in
-                    // The zoom is for pushes from a card and for the way back to it; the painting
-                    // Start Painting makes is pushed under the cover (`startPainting`).
-                    ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
-                        // One view per painting: a painting someone sent replaces the open one
-                        // in the path (`presentReceivedPainting`), and without its own identity
-                        // the screen kept the first painting, which its task opens once.
-                        .id(id)
-                        .navigationTransition(.zoom(sourceID: id, in: zoom))
-                        #if UNRELEASED
-                        // No tab bar on a painting: the canvas has the whole window.
-                        .toolbarVisibility(.hidden, for: .tabBar)
-                        #endif
-                }
-        }
-    }
-
-    /// Photos dragged onto `content` from another app (Split View, Slide Over) start a painting.
-    private func acceptingPhotos(_ content: some View) -> some View {
-        content
-            .dropDestination(for: DroppedPhoto.self) { photos, _ in
-                guard let photo = photos.first, !isCreating, !isArchOpening else { return false }
-                droppedPhoto = photo.data
-                isCreating = true
-                return true
-            } isTargeted: { isDropTargeted = $0 }
-            .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
-            .animation(.easeOut(duration: 0.2), value: isDropTargeted)
-    }
-
     private var gallery: GalleryView {
         #if UNRELEASED
         GalleryView(
-            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: showPaintPage,
-            onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks,
-            onOpen: { openThroughArch($0, from: cardPlaces) }, cardPlaces: cardPlaces)
+            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { if !isArchOpening { isCreating = true } },
+            onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks, onOpen: openThroughArch,
+            cardPlaces: cardPlaces)
         #else
         GalleryView(
-            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: showPaintPage,
+            namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
         #endif
     }
-
-    /// The create flow, on whatever the shell opens it for.
-    private func createFlow(
-        sample: Sample?, photo: Data?, title: String?, draft: Drafts.Opened?, pick: PaintChoice?
-    ) -> CreateFlowView {
-        #if UNRELEASED
-        CreateFlowView(
-            openingSample: sample ?? launchSample, paintsSampleNow: sample != nil,
-            droppedPhoto: photo, droppedTitle: title, resuming: draft, picked: pick,
-            onStart: startPainting)
-        #else
-        CreateFlowView(
-            openingSample: sample ?? launchSample, paintsSampleNow: sample != nil,
-            droppedPhoto: photo, droppedTitle: title, resuming: draft,
-            onStart: startPainting)
-        #endif
-    }
-
-    /// The Paint page, as the + and ⌘N open it: its tab in SideStore and Debug builds, the create
-    /// flow's first step in the release.
-    private func showPaintPage() {
-        guard !isArchOpening else { return }
-        #if UNRELEASED
-        tab = .paint
-        #else
-        isCreating = true
-        #endif
-    }
-
-    /// The search field, with the keyboard in it (⌘F).
-    private func showSearch() {
-        #if UNRELEASED
-        tab = .search
-        // The field comes with its tab: asked again once it is there.
-        Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            if tab == .search { isSearchFocused = true }
-        }
-        #endif
-        isSearchFocused = true
-    }
-
-    /// What the Paint tab handed the create flow; the release has no tab, and nothing.
-    private var tabPick: PaintChoice? {
-        #if UNRELEASED
-        pickedOnTab
-        #else
-        nil
-        #endif
-    }
-
-    private func forgetTabPick() {
-        #if UNRELEASED
-        pickedOnTab = nil
-        #endif
-    }
-
-    /// The create flow's cover has gone.
-    private func flowWent() {
-        #if UNRELEASED
-        flowIsUp = false
-        #endif
-    }
-
-    #if UNRELEASED
-    /// A tab's own screen shows no bar from the moment a painting is on its way in under a cover
-    /// (Start Painting saving, the arch growing) until that is over: the painting pushed beneath
-    /// then lays itself out once, in the whole window, where the hand-off expects its page
-    /// (`StartHandoffPlan.matches`), and no bar shows through as the cover goes.
-    private var hidesTabBar: Bool {
-        handoff.shelfIsOutOfSight || handoff.isRunning || archOpening != nil
-    }
-
-    /// Opens on the tab a launch opens on (`ShellTab.atLaunch`), once a launch: after that the
-    /// window keeps the tab it is on. Demos and tests open on their scenario's.
-    private func chooseTab() {
-        guard tabLaunch != ShellTab.launch else { return }
-        tabLaunch = ShellTab.launch
-        #if DEBUG
-        if DemoMode.isActive || DemoMode.isTestHost {
-            tab = ShellDemo.current?.tab ?? .gallery
-            return
-        }
-        #endif
-        tab = ShellTab.atLaunch(isBare: library.isBare)
-    }
-
-    /// What was picked on the Paint tab opens in the create flow, as a pick of its own first page
-    /// does: a picture forming on its way to the painting, a blank page in the drawing tools. The
-    /// page says a pick of the system picker's or the camera's once that sheet has gone
-    /// (`PhotoSourceView.report`).
-    private func paintPicked(_ choice: PaintChoice) {
-        // A cover asked for and never shown (the system dropped the presentation) is no flow.
-        if isCreating, !flowIsUp { abandonUnshownFlow() }
-        guard !isCreating, !isArchOpening, path.isEmpty else { return }
-        if case .blankPage = choice, ShellTab.resumesDraft(scratch: library.drafts.current?.scratch) {
-            resumeScratch()
-            return
-        }
-        pickedOnTab = choice
-        flowID = UUID()
-        // A blank page is there at once, plain paper for the drawing tools to slide up over, as
-        // it is with no push in the create flow.
-        var presenting = Transaction()
-        if case .blankPage = choice { presenting.disablesAnimations = true }
-        withTransaction(presenting) { isCreating = true }
-        watchFlowComeUp()
-    }
-
-    /// Blank Page with a page from scratch begun and kept as the draft: that page, read as
-    /// Continue Refining reads it, not a fresh one.
-    private func resumeScratch() {
-        guard !isResumingScratch else { return }
-        isResumingScratch = true
-        Task {
-            let opened = await library.drafts.open()
-            isResumingScratch = false
-            guard !isCreating, !isArchOpening, path.isEmpty else { return }
-            if let opened {
-                continueDraft(opened)
-                watchFlowComeUp()
-            } else {
-                // The draft is gone or can't be read: a fresh page.
-                pickedOnTab = .blankPage
-                flowID = UUID()
-                isCreating = true
-                watchFlowComeUp()
-            }
-        }
-    }
-
-    /// How long a cover asked for from the Paint tab has to show.
-    private static let flowArrival: Duration = .seconds(8)
-
-    /// A presentation the system drops (another was still on its way out) leaves `isCreating`
-    /// true with nothing on screen, and every pick after it refused: one that hasn't shown in
-    /// `flowArrival` is taken back, so the Paint tab answers again.
-    private func watchFlowComeUp() {
-        let asked = flowID
-        Task {
-            try? await Task.sleep(for: Self.flowArrival)
-            if isCreating, !flowIsUp, flowID == asked { abandonUnshownFlow() }
-        }
-    }
-
-    private func abandonUnshownFlow() {
-        Log.create.error("The create flow's cover never showed; taking it back")
-        isCreating = false
-        // What the cover's `onDismiss` forgets: with no cover shown it never comes.
-        pickedOnTab = nil
-        droppedPhoto = nil
-        droppedTitle = nil
-        pickedSample = nil
-        resumedDraft = nil
-        handoff.reset()
-    }
-    #endif
 
     /// A painting is opening through the arch: nothing else opens over it meanwhile.
     private var isArchOpening: Bool {
@@ -493,9 +261,9 @@ struct AppShellView: View {
     #if UNRELEASED
     /// A card tapped: its picture becomes an arch that grows into the room (`ArchOpening`). Pushed
     /// the usual way while anything else is under way, or the card's place isn't known.
-    private func openThroughArch(_ artwork: Artwork, from places: CardPlaces) {
+    private func openThroughArch(_ artwork: Artwork) {
         guard archOpening == nil, path.isEmpty, !isCreating, !handoff.isRunning,
-              let from = places.rects[artwork.id], from.width > 1
+              let from = cardPlaces.rects[artwork.id], from.width > 1
         else {
             if archOpening == nil, !path.contains(artwork.id) { path.append(artwork.id) }
             return
@@ -519,7 +287,7 @@ struct AppShellView: View {
             if !path.contains(id) { path = [id] }
             return
         }
-        push(id)
+        path = [id]
     }
 
     /// Another One, a door after Finished: the create flow paints the library picture as the
@@ -573,8 +341,6 @@ struct AppShellView: View {
         }
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
-                // The gallery's own mark for UI tests, in either shell (`galleryMark`).
-                .accessibilityIdentifier("gallery-settings")
         }
         // An empty gallery's own New Painting is its only control there: nothing to filter, and
         // no second New Painting.
@@ -596,25 +362,15 @@ struct AppShellView: View {
                     .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
                 }
             }
-            // Under the tab bar (SideStore and Debug builds) the Paint tab is the +.
-            #if !UNRELEASED
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Paint", systemImage: "plus", action: showPaintPage)
+                Button("Paint", systemImage: "plus") { if !isArchOpening { isCreating = true } }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
             }
-            #endif
         }
     }
 
-    /// What the gallery shows: under the tab bar the search is its own tab's, and narrows nothing here.
-    private var query: GalleryQuery {
-        #if UNRELEASED
-        GalleryQuery(filter: filter)
-        #else
-        GalleryQuery(filter: filter, search: search)
-        #endif
-    }
+    private var query: GalleryQuery { GalleryQuery(filter: filter, search: search) }
 
     /// Counts what the gallery shows, so a filter or a search is visible in the numbers.
     private var subtitle: String {
@@ -729,7 +485,6 @@ struct AppShellView: View {
         droppedPhoto = image.data
         droppedTitle = image.title
         resumedDraft = nil
-        forgetTabPick()
         // A hand-off still under way belonged to the flow this one replaces.
         handoff.reset()
         flowID = UUID()
@@ -784,24 +539,7 @@ struct AppShellView: View {
     private func startPainting(_ artwork: Artwork) {
         guard handoff.begin(artwork.id) else { return }
         guard StartHandoffLogic.shouldPush(artwork.id, onto: path) else { return }
-        push(artwork.id)
-    }
-
-    /// Pushes the painting a hand-off waits for, under its cover. From another tab (SideStore and
-    /// Debug builds) the gallery comes first, a moment ahead, so that the push is the usual one on
-    /// a stack already there, as it is from the gallery.
-    private func push(_ id: UUID) {
-        #if UNRELEASED
-        guard tab == .gallery else {
-            tab = .gallery
-            Task {
-                try? await Task.sleep(for: .milliseconds(80))
-                if handoff.isAwaiting(id), StartHandoffLogic.shouldPush(id, onto: path) { path = [id] }
-            }
-            return
-        }
-        #endif
-        path = [id]
+        path = [artwork.id]
     }
 
     /// The flow has dissolved into the painting: the cover goes without a slide.

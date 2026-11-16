@@ -20,7 +20,7 @@ final class PaintingNavigationTests: XCTestCase {
     func testBackReturnsToGallery() throws {
         let app = openSeededPainting()
         app.buttons["Back"].tap()
-        let returned = galleryMark(in: app).waitForExistence(timeout: 10)
+        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-back")
         XCTAssertTrue(returned, "Back didn't return to the gallery")
     }
@@ -31,7 +31,7 @@ final class PaintingNavigationTests: XCTestCase {
         let window = app.windows.firstMatch
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
             .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
-        let returned = galleryMark(in: app).waitForExistence(timeout: 10)
+        let returned = app.buttons["Paint"].waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-edge-swipe")
         XCTAssertTrue(returned, "The edge swipe didn't return to the gallery")
     }
@@ -269,6 +269,21 @@ final class PaintingNavigationTests: XCTestCase {
         attachScreenshot(of: app, named: "another-color-swatch")
         XCTAssertTrue(hidden.isHittable, "Swatch \(paint) stayed out of view after a tap on its color's area")
         XCTAssertFalse(hidden.isSelected, "A tap on another color's area selected it")
+        // Painting on with the color in hand brings its swatch back, if the shake took it away.
+        guard let selectedPaint, !app.buttons["swatch-\(selectedPaint)"].isHittable else { return }
+        let inHand = app.buttons["swatch-\(selectedPaint)"]
+        let mine = selectedPoints.filter { canvas.insetBy(dx: 24, dy: 0).contains($0) && $0.y > top && $0.y < bottom }
+        var painted = false
+        for point in mine.prefix(5) where !painted {
+            let filled = filledAreas()
+            origin.withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+            painted = waitUntil(timeout: 3) { filledAreas() > filled }
+        }
+        try XCTSkipUnless(painted, "No tap painted paint \(selectedPaint)")
+        // A fill that finished the color moved the selection on, and its swatch went.
+        try XCTSkipUnless(inHand.exists && inHand.isSelected, "Paint \(selectedPaint) is no longer in hand")
+        XCTAssertTrue(waitUntil(timeout: 3) { inHand.isHittable },
+                      "Swatch \(selectedPaint) stayed out of view while its color was painted")
     }
 
     /// Hardware keyboard: `]` selects the next color; a fill is undone with ⌘Z and redone

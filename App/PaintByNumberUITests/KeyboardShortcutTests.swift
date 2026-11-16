@@ -128,8 +128,7 @@ final class KeyboardShortcutTests: XCTestCase {
 
     // MARK: The gallery
 
-    /// ⌘N opens the Paint page, as the gallery's Paint button does, and the cancel key closes it;
-    /// under the tab bar (Debug builds) the page is the Paint tab, and the Gallery tab leaves it.
+    /// ⌘N opens the Paint page, as the gallery's Paint button does, and the cancel key closes it.
     @MainActor
     func testNewPaintingKeyAndCancelKey() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
@@ -140,15 +139,14 @@ final class KeyboardShortcutTests: XCTestCase {
         XCTAssertTrue(photo.waitForExistence(timeout: Self.stateTimeout), "⌘N didn't open the Paint page")
         attachScreenshot(of: app, named: "new-painting-key")
         sleep(2)
-        leavePaintPage(in: app)
-        XCTAssertTrue(photo.waitForNonExistence(timeout: Self.stateTimeout), "The Paint page stayed on screen")
-        XCTAssertTrue(galleryMark(in: app).waitForExistence(timeout: Self.stateTimeout), "The gallery didn't come back")
+        app.typeKey(".", modifierFlags: .command)
+        XCTAssertTrue(photo.waitForNonExistence(timeout: Self.stateTimeout), "The cancel key didn't close the Paint page")
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: Self.stateTimeout), "The gallery didn't come back")
     }
 
     /// ⌘F puts the keyboard in the gallery's search field: what is typed next narrows the shelf.
     /// (What a painter with a keyboard gets; iPadOS's own Find may be what answers, so this is not
-    /// proof of the app's own binding.) Under the tab bar (Debug builds) the field is the search
-    /// tab's, which ⌘F opens: there the app's own command is what answers.
+    /// proof of the app's own binding.)
     @MainActor
     func testSearchKey() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
@@ -157,10 +155,8 @@ final class KeyboardShortcutTests: XCTestCase {
         XCTAssertTrue(wave.waitForExistence(timeout: 60), "The gallery has no Great Wave")
         sleep(2)
         let field = app.searchFields.firstMatch
-        if !hasTabBar(app) {
-            XCTAssertTrue(field.waitForExistence(timeout: Self.stateTimeout), "The gallery has no search field")
-        }
-        XCTAssertTrue(press("f", .command, in: app) { field.exists && (field.value(forKey: "hasKeyboardFocus") as? Bool) == true },
+        XCTAssertTrue(field.waitForExistence(timeout: Self.stateTimeout), "The gallery has no search field")
+        XCTAssertTrue(press("f", .command, in: app) { (field.value(forKey: "hasKeyboardFocus") as? Bool) == true },
                       "⌘F didn't put the keyboard in the search field")
         app.typeText("re")
         XCTAssertTrue(app.buttons["Red Fox in Snow"].firstMatch.waitForExistence(timeout: Self.stateTimeout), "“re” didn't find Red Fox in Snow")
@@ -244,7 +240,7 @@ final class KeyboardShortcutTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery", "-demoFixedPictures", "YES"]
         app.launch()
-        XCTAssertTrue(galleryMark(in: app).waitForExistence(timeout: 90), "The gallery didn't open")
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 90), "The gallery didn't open")
         sleep(1)
         return app
     }

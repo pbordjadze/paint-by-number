@@ -190,7 +190,7 @@ final class StartHandoffUITests: XCTestCase {
     /// Back to the gallery, where the new painting's card is.
     @MainActor
     private func returnToGallery(from app: XCUIApplication, byEdgeSwipe: Bool) {
-        let gallery = galleryMark(in: app)
+        let gallery = app.buttons["Paint"]
         if byEdgeSwipe {
             // A swipe lost to a busy simulator is made once more; one that never goes back is a failure.
             let window = app.windows.firstMatch

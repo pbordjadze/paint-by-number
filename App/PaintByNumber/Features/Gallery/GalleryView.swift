@@ -36,10 +36,6 @@ struct GalleryView: View {
     /// `cardPlaces`; nil opens it by the usual link.
     var onOpen: ((Artwork) -> Void)?
     var cardPlaces: CardPlaces?
-    /// The search tab's results (painting-company row 328): the paintings the search finds, then
-    /// the library's pictures it finds, all of both while nothing is typed; no draft, no tips and
-    /// no invitation, which are the gallery's.
-    var isSearch = false
     #endif
 
     @Environment(Library.self) private var library
@@ -72,11 +68,11 @@ struct GalleryView: View {
 
     var body: some View {
         ScrollView {
-            if showsPages {
+            if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
                     // The tips about the bar's gear and +, atop the pages, which make room: a card
                     // laid over them hid the first section's title.
-                    if !searches, let tip = PaintTips.desk.turn, tip.place == .shelf, tip.liesUnderTheBar {
+                    if let tip = PaintTips.desk.turn, tip.place == .shelf, tip.liesUnderTheBar {
                         GentleTipView(id: tip)
                             .transition(.opacity)
                     }
@@ -97,7 +93,7 @@ struct GalleryView: View {
                     let ready = library.readyToPaint(matching: query)
                     let preparing = shownPlaceholders
                     if !ready.isEmpty || !preparing.isEmpty {
-                        section("Ready to Paint", tip: searches ? nil : .shelfStarter) {
+                        section("Ready to Paint", tip: .shelfStarter) {
                             ForEach(preparing) { PlaceholderCard(placeholder: $0) }
                             ForEach(ready) { card($0) }
                         }
@@ -108,26 +104,13 @@ struct GalleryView: View {
                             ForEach(finished) { card($0) }
                         }
                     }
-                    #if UNRELEASED
-                    if isSearch {
-                        let pictures = foundPictures
-                        if !pictures.isEmpty {
-                            section("The Library") {
-                                ForEach(pictures) { sample in
-                                    Button { onPaint(sample) } label: { SampleTile(sample: sample) }
-                                        .buttonStyle(PressableCardStyle())
-                                        .accessibilityIdentifier("search-library-picture")
-                                }
-                            }
-                        }
-                    } else if !query.isActive {
+                    if !query.isActive {
                         GalleryShelf(
                             held: Set(library.artworks.compactMap(\.sampleName)),
                             hasRoom: library.artworks.count + library.placeholders.count < Self.fewPaintings,
                             columns: columns, rowSpacing: spacing + 8,
                             onPaint: onPaint, onMore: onCreate)
                     }
-                    #endif
                 }
                 .padding(.leading, horizontalPadding + max(0, 2 * (fold?.offset ?? 0)))
                 .padding(.trailing, horizontalPadding + max(0, -2 * (fold?.offset ?? 0)))
@@ -136,21 +119,20 @@ struct GalleryView: View {
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
             }
         }
-        .scrollDisabled(!showsPages)
+        .scrollDisabled(isBare)
         .onScrollGeometryChange(for: Bool.self, of: { $0.contentOffset.y + $0.contentInsets.top < Self.topSlack }) { _, atTop in
             showsTop = atTop
         }
         // The gear's tip (where tips can be turned off) and the +'s may have the turn only while
         // the top of the pages is in view: scrolled away, one would come and go unseen above it.
-        .barTipsInline(.shelfSettings, active: showsTop && !searches)
-        // An empty gallery has no + in its bar: the tip waits for one. So does the gallery under
-        // the tab bar, whose + is the Paint tab (`hasNewPaintingButton`).
-        .barTipsInline(.shelfNewPainting, active: showsTop && !isBare && Self.hasNewPaintingButton)
+        .barTipsInline(.shelfSettings, active: showsTop)
+        // An empty gallery has no + in its bar: the tip waits for one.
+        .barTipsInline(.shelfNewPainting, active: showsTop && !isBare)
         // An empty scroll view collapses; keep the paper (and the empty state) full size.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .overlay {
-            if !showsPages {
+            if isBare {
                 EmptyGalleryView(onCreate: onCreate)
                     .transition(.opacity.combined(with: .scale(scale: 0.97)))
             } else if isNarrowedToNothing {
@@ -170,12 +152,11 @@ struct GalleryView: View {
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
         .onAppear {
-            guard !searches else { return }
             PaintTips.desk.enter(.shelf)
             PaintTips.shelfMoment(library)
         }
         .onDisappear {
-            if !searches { PaintTips.desk.leave(.shelf) }
+            PaintTips.desk.leave(.shelf)
             // A template still being made for Print…, or made and not yet shown, has no gallery
             // to hang its dialog from.
             printTask?.cancel()
@@ -189,9 +170,9 @@ struct GalleryView: View {
                 .besideTheFold()
         }
         #endif
-        .onChange(of: library.tipFacts) { shelfMoment() }
-        .onChange(of: PaintTips.desk.answers) { shelfMoment() }
-        .onChange(of: PaintTips.desk.shelfReturns) { shelfMoment() }
+        .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
+        .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
+        .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
         // Deleting, filtering, searching and (un)favoriting all move cards. Not out of sight
         // (`shelfIsOutOfSight`): the card of the painting Start Painting is handing over would
         // move in unseen, its neighbours with it.
@@ -232,63 +213,20 @@ struct GalleryView: View {
     // MARK: Query
 
     /// Paintings still being prepared belong to no selection: they show only while nothing is narrowed.
-    private var shownPlaceholders: [Library.Placeholder] { query.isActive || searches ? [] : library.placeholders }
+    private var shownPlaceholders: [Library.Placeholder] { query.isActive ? [] : library.placeholders }
 
     private var shownIDs: [UUID] {
         (library.inProgress(matching: query) + library.readyToPaint(matching: query) + library.finished(matching: query)).map(\.id)
     }
 
-    /// There are paintings or a draft, but the filter or the search hides every one (and the
-    /// search finds no library picture either).
-    private var isNarrowedToNothing: Bool {
-        #if UNRELEASED
-        if isSearch, !foundPictures.isEmpty { return false }
-        #endif
-        return shownIDs.isEmpty && shownPlaceholders.isEmpty && shownDraft == nil
-    }
+    /// There are paintings or a draft, but the filter or the search hides every one.
+    private var isNarrowedToNothing: Bool { shownIDs.isEmpty && shownPlaceholders.isEmpty && shownDraft == nil }
 
     /// The create flow's draft belongs to no selection either: it shows while nothing is narrowed.
-    private var shownDraft: CreateDraft? { query.isActive || searches ? nil : library.drafts.current }
+    private var shownDraft: CreateDraft? { query.isActive ? nil : library.drafts.current }
 
     /// Nothing to list, not even a draft: the invitation to the first painting shows instead.
     private var isBare: Bool { library.isBare }
-
-    /// These are the search tab's results (`isSearch`; never in the release).
-    private var searches: Bool {
-        #if UNRELEASED
-        isSearch
-        #else
-        false
-        #endif
-    }
-
-    /// The shelf's tips have their moment; never from the search's results, which point none.
-    private func shelfMoment() {
-        guard !searches else { return }
-        PaintTips.shelfMoment(library)
-    }
-
-    /// The pages show: there is something to list, or the search lists the library.
-    private var showsPages: Bool { !isBare || searches }
-
-    /// The gallery's bar has the + its tip points at; under the tab bar the Paint tab is the +.
-    private static var hasNewPaintingButton: Bool {
-        #if UNRELEASED
-        false
-        #else
-        true
-        #endif
-    }
-
-    #if UNRELEASED
-    /// The library's pictures the search finds, by their titles and by who made them: every
-    /// one while nothing is typed.
-    private var foundPictures: [Sample] {
-        Sample.all.filter { sample in
-            TitleSearch.matches([sample.title, sample.provenance?.creator ?? ""].joined(separator: " "), query: query.search)
-        }
-    }
-    #endif
 
     @ViewBuilder
     private var narrowedEmptyState: some View {
@@ -348,10 +286,8 @@ struct GalleryView: View {
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
     /// widths, 20 pt on regular ones), so the cards start where they do.
     private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
-    #if UNRELEASED
     /// Fewer paintings than this leave the gallery room for the nights after Tonight's Picture.
     static let fewPaintings = 4
-    #endif
     /// How far the pages may be scrolled with their top still counted in view.
     nonisolated private static let topSlack: CGFloat = 44
     private var spacing: CGFloat { width < 560 ? 16 : 26 }
@@ -390,7 +326,6 @@ struct GalleryView: View {
     /// finished one's time-lapse.
     private func tips(of artwork: Artwork) -> [TipID] {
         var ids: [TipID] = []
-        guard !searches else { return ids }
         if shownIDs.first == artwork.id { ids.append(.shelfHold) }
         if library.finished(matching: query).first?.id == artwork.id { ids.append(.shelfTimeLapse) }
         return ids

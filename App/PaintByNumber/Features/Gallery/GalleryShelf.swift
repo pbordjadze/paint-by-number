@@ -1,4 +1,3 @@
-#if UNRELEASED
 import SwiftUI
 
 /// Something new to paint on the gallery itself (painting-company row 317: every critic round of
@@ -8,7 +7,7 @@ import SwiftUI
 /// the nights after it fill out its row, and More to Paint opens the whole Paint page. The tiles lie on
 /// the cards' own columns, a card's width each, so the page reads as one grid and no library
 /// picture outshines the painter's own (the critic's round 1). A tap paints a picture as the
-/// Paint page's does (`AppShellView.paint(_:)`). SideStore and Debug builds until Paul has seen it.
+/// Paint page's does (`AppShellView.paint(_:)`). In the release from 1.2.
 struct GalleryShelf: View {
     /// The library pictures the gallery holds (`Artwork.sampleName`), offered no more.
     let held: Set<String>
@@ -64,4 +63,3 @@ struct GalleryShelf: View {
         }
     }
 }
-#endif
