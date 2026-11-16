@@ -104,7 +104,7 @@ struct PrintPreviewSheet: View {
         .task(id: key) { await draw(key) }
         // Another paper or orientation has sizes of its own: back to the smallest.
         .onChange(of: layout.paper) { layout.across = nil }
-        .onChange(of: layout.orientation) { layout.across = nil }
+        .onChange(of: layout.resolvedOrientation(for: request.template)) { layout.across = nil }
     }
 
     // MARK: The pages
@@ -164,7 +164,8 @@ struct PrintPreviewSheet: View {
             return String(localized: "print.caption.painted", defaultValue: "As it looks once you’ve painted it",
                           comment: "Print's preview with Painted chosen: the pages are shown painted in (they print blank)")
         }
-        let sheets = PDFExporter.sheets(for: request.template, layout: layout)
+        // The layout of the pages on screen, which may still be the last one drawn.
+        let sheets = PDFExporter.sheets(for: request.template, layout: pages?.key.layout ?? layout)
         if sheets.isTiled && index == 0 {
             let size = sizeText(sheets)
             return String(localized: "print.caption.tiled", defaultValue: "How the sheets tape together · \(size)",
@@ -290,7 +291,9 @@ struct PrintPreviewSheet: View {
     private func draw(_ key: Key) async {
         var drawn = key.layout
         drawn.painted = key.painted
-        let images = await PrintPages.images(request, layout: drawn, longSide: 1200)
+        // A poster's many sheets are drawn smaller: each is the whole template under a clip.
+        let count = PDFExporter.sheets(for: request.template, layout: drawn).count
+        let images = await PrintPages.images(request, layout: drawn, longSide: count > 4 ? 800 : 1200)
         guard !Task.isCancelled else { return }
         pages = Pages(key: key, images: images.map { UIImage(cgImage: $0) })
         page = min(page, max(images.count - 1, 0))
