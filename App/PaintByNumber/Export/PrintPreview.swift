@@ -41,6 +41,7 @@ struct PrintPreviewSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var layout: PDFExporter.Layout
     @State private var showsPainted = false
     /// The pages of the layout on screen, drawn for it (`Pages.key`).
@@ -134,7 +135,8 @@ struct PrintPreviewSheet: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 340)
+            // A page a hand's width on the iPad, where the sheet has the room.
+            .frame(height: sizeClass == .regular ? 560 : 340)
             .overlay {
                 if pages == nil { ProgressView() }
             }
