@@ -92,41 +92,6 @@ synchronized folder would bundle it into the app.
 - Vision finds no subjects or eyes on CI's simulators: `ObjectFinderTests` and `EyeFinderTests` bite
   only on a device.
 
-## The tabbed shell
-
-SideStore and Debug builds (`#if UNRELEASED`; painting-company row 328): the shell is the system's
-`TabView` (`ShellTabs`, `Features/Gallery/ShellTabs.swift`) of Gallery, Paint and the system's
-search tab; the release keeps the gallery alone, its + and its own search field (each `#else`).
-
-- **Paint** is the Paint page as a place (`PaintTab`: `PhotoSourceView` with no `onClose`, so the
-  bar's large title, no ×, the gear above), in the +'s stead: the gallery's bar has no +, and
-  ⌘N, the empty gallery's invitation and `-demo create` select the tab (`showPaintPage`). The
-  page only says what was picked (`PaintChoice`); the shell opens the create flow's cover on it
-  (`AppShellView.paintPicked`, `CreateFlowView.picked` and `choose`); a pick of the system
-  picker's or the camera's is said once that sheet has gone (`PhotoSourceView.report`), and a
-  cover that still never shows is taken back (`watchFlowComeUp`), so the tab answers again.
-  Blank Page there goes on with the draft when it is a page from scratch (`resumeScratch`).
-  Another One with no picture still opens the page in the cover, with its ×.
-- **Search** takes the gallery's search (`GalleryView.isSearch`: the paintings found, then the
-  library's pictures found, all of both with nothing typed; no draft, tips or invitation); the
-  gallery tab's query has the Show filter alone. ⌘F selects the tab and asks for the field.
-- **A painting is the gallery's.** It is pushed on the gallery's stack from any tab
-  (`AppShellView.push` selects Gallery first; `ShellTab.holding`), where its screen hides the
-  bar, so closing one lands among the paintings and leaves the Paint tab as it was. A tab's own
-  screen hides the bar from the moment a painting is on its way in under a cover or the arch
-  (`hidesTabBar`): the painting then lays out once, in the whole window, where the hand-off
-  expects its page. Covers, sheets and the arch are modifiers of the tabs, so over the bar.
-- **Which tab.** Kept per scene (`@SceneStorage("shellTab")`) within a launch; a new launch
-  opens on Gallery, or on Paint with nothing in the library (`ShellTab.atLaunch`, `chooseTab`).
-  Demo and test launches open on their scenario's (`ShellDemo.tab`): `paint-tab` (with `-dark`)
-  and `search-tab` are the screenshots, `gallery-search` shows on the search tab.
-- **The + tip** (`shelfNewPainting`) has no view to point at there and is left out of what the
-  shelf's moment offers (`PaintTips.shelfTips`), so the tips after it get their turn.
-- **UI tests** run against either shell by what is on screen (`UITestSupport`: `hasTabBar`,
-  `searchField(in:)`, `leavePaintPage(in:)`); `galleryMark(in:)`, the gallery's gear (`gallery-settings`), says the
-  gallery is on screen, which a button named Paint, the tab's or the +, doesn't.
-  `ShellTabTests` hold the rules.
-
 ## Shared with Paint by Mosaic (`App/Shared/`)
 
 `App/Shared` is compiled into both modules, the app and `Ravenna` (the project syncs the folder

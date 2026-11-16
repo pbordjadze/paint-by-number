@@ -1,7 +1,6 @@
 import CoreGraphics
 import os
 import PaintCore
-import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -29,11 +28,6 @@ struct CreateFlowView: View {
     var droppedTitle: String?
     /// The draft to continue refining (`Drafts`): the flow opens on its preview.
     var resuming: Drafts.Opened?
-    #if UNRELEASED
-    /// What was picked on the Paint tab (`PaintTab`, painting-company row 328): the flow opens on
-    /// it as on a pick of its own first page, which the tab is in its place.
-    var picked: PaintChoice?
-    #endif
     var onStart: (Artwork) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -51,10 +45,6 @@ struct CreateFlowView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @State private var model = CreateModel(previewStyle: Self.previewStyle)
     @State private var path: [Step] = []
-    #if UNRELEASED
-    /// `picked` has been loaded, once.
-    @State private var tookPick = false
-    #endif
     /// Where the preview's picture is on screen, which the show or the hand-off moves it from.
     @State private var previewPicture = PreviewPictureProbe()
     /// The flow's safe area as SwiftUI has laid it out, which the status bar's going changes on an
@@ -135,14 +125,6 @@ struct CreateFlowView: View {
                     TemplatePreviewView(model: model, onStart: start, pictureProbe: previewPicture)
                 }
         }
-        #if UNRELEASED
-        // Before the flow's first frame: a blank page's preview is plain paper from the start.
-        .onAppear {
-            guard let picked, !tookPick else { return }
-            tookPick = true
-            choose(picked)
-        }
-        #endif
         .task {
             // A dropped photo or demo opens straight on the preview (pushing while the cover
             // is still being presented would stall the presentation).
@@ -230,11 +212,10 @@ struct CreateFlowView: View {
 
     @ViewBuilder
     private var root: some View {
-        if droppedPhoto != nil || openingSample != nil || resuming != nil || opensOnDrawing || opensOnPick {
+        if droppedPhoto != nil || openingSample != nil || resuming != nil || opensOnDrawing {
             TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() }, pictureProbe: previewPicture)
         } else {
-            PhotoSourceView(onClose: { dismiss() }) { choice in
-                choose(choice)
+            PhotoSourceView(model: model, onClose: { dismiss() }) {
                 // A page from scratch goes to Refine: its preview, plain paper until Refine has
                 // slid up over it, is there at once rather than pushed (`TemplatePreviewView`).
                 var push = Transaction()
@@ -242,37 +223,6 @@ struct CreateFlowView: View {
                 withTransaction(push) { path = [.preview] }
             }
         }
-    }
-
-    /// Loads what was picked on the Paint page (`PhotoSourceView`): a picture is painted now, a
-    /// blank page opens the drawing tools.
-    private func choose(_ choice: PaintChoice) {
-        switch choice {
-        case .sample(let sample):
-            model.paintsNow = true
-            model.load(sample: sample)
-        case .item(let item):
-            model.paintsNow = true
-            model.load(item: item)
-        case .photo(let data):
-            model.paintsNow = true
-            model.load(imageData: data)
-        case .cameraFailed:
-            model.fail(.cameraCapture)
-        case .blankPage:
-            model.paintsNow = false
-            // Back from a page drawn on and Blank Page again: that page, not a fresh one.
-            if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
-        }
-    }
-
-    /// The flow opens on the preview of a pick made on the Paint tab.
-    private var opensOnPick: Bool {
-        #if UNRELEASED
-        picked != nil
-        #else
-        false
-        #endif
     }
 
     /// Demo launches open a dropped photo on its preview, which their screenshots show.

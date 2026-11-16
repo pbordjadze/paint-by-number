@@ -10,24 +10,18 @@ import UIKit
 /// and, in SideStore and Debug builds, a drawing on paper; then The Library, its paintings
 /// and photographs. A picture picked opens as a painting with no preview step
 /// (`CreateModel.paintsNow`); a blank page opens the drawing tools (`CreateModel.loadScratch()`).
-/// The page only says what was picked (`PaintChoice`): the create flow loads it. In SideStore and
-/// Debug builds the page is also the Paint tab (`PaintTab`, painting-company row 328), a place of
-/// its own with nothing to close (`onClose` nil): the bar's large title, and no ×.
 ///
 /// No inline photo picker: the Shelf scrolls, and the inline picker scrolls out of process,
 /// which a scroll view around it can't arbitrate (a drag on it moved neither); on iPhone its grid
 /// never took a tap either (Sept 30, Oct 4 and 9). A Photo presents the full system picker.
 struct PhotoSourceView: View {
-    /// Closes the create flow this page is the first step of; nil on the Paint tab.
-    var onClose: (() -> Void)?
-    var onChoose: (PaintChoice) -> Void
+    let model: CreateModel
+    var onClose: () -> Void
+    var onPicked: () -> Void
 
     @State private var browsedItem: PhotosPickerItem?
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
-    /// On the Paint tab, what the system picker or the camera gave, kept until that sheet has
-    /// gone: the shell's cover can't present over one still closing (`report`).
-    @State private var awaited: PaintChoice?
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -41,8 +35,7 @@ struct PhotoSourceView: View {
     private var isWide: Bool { width >= 600 }
     private var horizontalPadding: CGFloat { isWide ? 32 : 20 }
     /// At accessibility sizes the title leaves the bar for a line of its own atop the page.
-    /// The Paint tab keeps the bar's large title at every size, as short as it is.
-    private var titleOnPage: Bool { onClose != nil && dynamicTypeSize.isAccessibilitySize }
+    private var titleOnPage: Bool { dynamicTypeSize.isAccessibilitySize }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -78,14 +71,12 @@ struct PhotoSourceView: View {
             height = size.height
         }
         .navigationTitle("Paint")
-        .navigationBarTitleDisplayMode(onClose == nil ? .large : .inline)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(removing: titleOnPage ? .title : nil)
         .toolbar {
-            if let onClose {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark", action: onClose)
-                        .keyboardShortcut(.cancelAction)
-                }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark", action: onClose)
+                    .keyboardShortcut(.cancelAction)
             }
         }
         // The full picker, for A Photo.
@@ -94,20 +85,22 @@ struct PhotoSourceView: View {
             guard let item else { return }
             browsedItem = nil
             PaintTips.photoChosen()
-            report(.item(item), whileShowing: isBrowsingAll)
-        }
-        .onChange(of: isBrowsingAll) { _, isBrowsing in
-            if !isBrowsing { reportAwaited() }
+            model.paintsNow = true
+            model.load(item: item)
+            onPicked()
         }
         .onAppear { PaintTips.newPaintingOpened() }
         .onDisappear { PaintTips.desk.leave(.newPainting) }
         .modifier(RefineUnlockOffer(isPresented: $offersRefineUnlock, unlocked: startFromScratch))
-        .fullScreenCover(isPresented: $isShowingCamera, onDismiss: reportAwaited) {
+        .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 PaintTips.photoChosen()
-                report(.photo(data), whileShowing: true)
+                model.paintsNow = true
+                model.load(imageData: data)
+                onPicked()
             } onFailure: {
-                report(.cameraFailed, whileShowing: true)
+                model.fail(.cameraCapture)
+                onPicked()
             }
             .ignoresSafeArea()
         }
@@ -222,7 +215,9 @@ struct PhotoSourceView: View {
 
     private func pick(_ sample: Sample) {
         PaintTips.photoChosen()
-        onChoose(.sample(sample))
+        model.paintsNow = true
+        model.load(sample: sample)
+        onPicked()
     }
 
     /// The full picker, for a photo.
@@ -235,43 +230,14 @@ struct PhotoSourceView: View {
         isShowingCamera = true
     }
 
-    /// Says what a sheet of the page's own gave. The create flow's first step says it at once and
-    /// pushes its preview, as ever. The Paint tab, whose pick opens a cover from the shell, waits
-    /// for the sheet to have gone (`reportAwaited`): a cover presented while it closes is dropped.
-    private func report(_ choice: PaintChoice, whileShowing isShowing: Bool) {
-        if onClose == nil, isShowing {
-            awaited = choice
-        } else {
-            onChoose(choice)
-        }
-    }
-
-    /// The system picker or the camera has gone: what it gave, if anything, is said now.
-    private func reportAwaited() {
-        guard let choice = awaited else { return }
-        awaited = nil
-        onChoose(choice)
-    }
-
     /// A blank page, straight into the drawing tools.
     private func startFromScratch() {
         PaintTips.photoChosen()
-        onChoose(.blankPage)
+        model.paintsNow = false
+        // Back from a page drawn on and Blank Page again: that page, not a fresh one.
+        if model.hasScratchDrawing { model.reopenScratch() } else { model.loadScratch() }
+        onPicked()
     }
-}
-
-/// What the painter picked on the Paint page, for the create flow to load (`CreateFlowView.choose`).
-enum PaintChoice {
-    /// Tonight's Picture, or one of The Library's.
-    case sample(Sample)
-    /// A photo from the system picker.
-    case item(PhotosPickerItem)
-    /// A photo the camera took, as JPEG data.
-    case photo(Data)
-    /// The camera's shot couldn't be used: the flow says so.
-    case cameraFailed
-    /// Blank Page: the drawing tools on plain paper.
-    case blankPage
 }
 
 /// One of Your Own's ways in: a small card with its symbol and name.
