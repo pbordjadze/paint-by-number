@@ -213,7 +213,7 @@ final class CreateFlowTests: XCTestCase {
             XCTAssertTrue(app.staticTexts[section].exists, "The Library has no \(section) section")
         }
         let paintings = app.staticTexts[paintingsTitle]
-        XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first library sample isn't under the Art title")
+        XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first library sample isn't under the \(paintingsTitle) title")
         // "<title>, <creator>"
         XCTAssertTrue(first.label.contains(", "), "The picture's label doesn't name its creator: \(first.label)")
         attachScreenshot(of: app, named: "paint-page")
