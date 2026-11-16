@@ -42,15 +42,14 @@ BUNDLE_ID = "com.pbordjadze.paintbynumber"
 GROUP = "Friends & Family"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
-    "Thank you for trying Paint by Moonlight 1.1 before anyone else.\n\n"
-    "New: make it your own. In a painting, tap the pencil (Change, beside Undo) to draw lines with your finger or "
-    "Apple Pencil, bend them with Bend Line, split and join areas and pick any paint; ? opens the Tool "
-    "Guide, with a picture to practise on. Or tap Blank Page in New Painting and draw your own picture "
-    "to paint.\n\n"
-    "Please try: a photo of your own, changed, then painted; bending a long line across the picture; a "
-    "Blank Page drawing; the drawing tools on an iPhone turned on its side.\n\n"
-    "The drawing tools come with Unlimited Paintings: in TestFlight its purchase is free, and nothing is charged.\n\n"
-    "Also new: five free paintings, one back each day.\n\n"
+    "Thank you for trying Paint by Moonlight 1.2 before anyone else.\n\n"
+    "This version is about smoothness and fixes, and Tonight's Picture now waits in the gallery. Please try:\n"
+    "- Starting a painting, from your own photo and from the library, and watch for any stutter as it opens.\n"
+    "- Zen Mode on a long painting, and finishing a painting.\n"
+    "- Leaving a painting and coming back: the paint you had should still be in your hand.\n"
+    "- The length menu under a painting you haven't begun.\n"
+    "- Tonight's Picture, under your paintings in the gallery.\n\n"
+    "Unlimited Paintings is free in TestFlight; nothing is charged.\n\n"
     "Anything odd, confusing or lovely: Give Feedback, in a painting's More menu, lets you mark the spot."
 )
 
