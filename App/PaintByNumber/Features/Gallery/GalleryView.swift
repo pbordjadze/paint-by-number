@@ -100,7 +100,6 @@ struct GalleryView: View {
                             ForEach(finished) { card($0) }
                         }
                     }
-                    #if UNRELEASED
                     if !query.isActive {
                         GalleryShelf(
                             held: Set(library.artworks.compactMap(\.sampleName)),
@@ -108,7 +107,6 @@ struct GalleryView: View {
                             columns: columns, rowSpacing: spacing + 8,
                             onPaint: onPaint, onMore: onCreate)
                     }
-                    #endif
                 }
                 .padding(.leading, horizontalPadding + max(0, 2 * (fold?.offset ?? 0)))
                 .padding(.trailing, horizontalPadding + max(0, -2 * (fold?.offset ?? 0)))
@@ -277,10 +275,8 @@ struct GalleryView: View {
     /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
     /// widths, 20 pt on regular ones), so the cards start where they do.
     private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
-    #if UNRELEASED
     /// Fewer paintings than this leave the gallery room for the nights after Tonight's Picture.
     static let fewPaintings = 4
-    #endif
     /// How far the pages may be scrolled with their top still counted in view.
     nonisolated private static let topSlack: CGFloat = 44
     private var spacing: CGFloat { width < 560 ? 16 : 26 }
