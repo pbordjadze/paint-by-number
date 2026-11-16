@@ -106,8 +106,10 @@ struct PhotoOverlayTests {
         #expect(sizes == expected)
 
         view.showsPhoto = false
-        try await Task.sleep(for: .milliseconds(400))
-        #expect(view.photoOpacity <= 0.001)
+        // Waited for, not slept: SideStore builds open and close the photo as a lantern, slower
+        // than the release's fade.
+        let hidden = await Self.waitUntil { view.photoOpacity <= 0.001 }
+        #expect(hidden, "the photo never faded out")
 
         view.showsPhoto = true
         let shownAgain = await Self.waitUntil { view.photoOpacity >= 0.999 }
