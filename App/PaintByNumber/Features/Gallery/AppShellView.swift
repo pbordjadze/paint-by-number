@@ -97,6 +97,7 @@ struct AppShellView: View {
                 // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
                 // doesn't reach the painting screen, whose own thumbnail fades as ever.
                 .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
+                .background { NavigationBarShown() }
                 .navigationTitle("Paint by Moonlight")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
@@ -549,5 +550,24 @@ private struct DropHighlight: View {
             }
             .padding(16)
             .allowsHitTesting(false)
+    }
+}
+
+/// A painting swiped back while its zoom in was still running left the gallery's bar see-through:
+/// the push fades the bar out (the painting hides it), the swipe turns the push round, and nothing
+/// fades it back in. The gallery then had no Settings or +, and its large title sat over the first
+/// row until another painting closed (the look of painting-company row 324, but staying). The
+/// gallery shows the bar again each time it appears.
+private struct NavigationBarShown: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+
+    final class Controller: UIViewController {
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            guard let bar = navigationController?.navigationBar, bar.alpha < 1 else { return }
+            Log.library.notice("The gallery's bar came back see-through (alpha \(bar.alpha, privacy: .public)): shown")
+            bar.alpha = 1
+        }
     }
 }
