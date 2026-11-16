@@ -31,17 +31,14 @@ struct GalleryView: View {
     /// Whether a rename, restart or delete question (or the restart's failure) is up; set false
     /// by the shell to close it, as a photo shared in from another app does.
     @Binding var isAsking: Bool
-    #if UNRELEASED
-    /// Opens a painting through the arch (`ArchOpening`), from its picture's place in
-    /// `cardPlaces`; nil opens it by the usual link.
-    var onOpen: ((Artwork) -> Void)?
-    var cardPlaces: CardPlaces?
-    #endif
 
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfIsOutOfSight) private var isOutOfSight
+    #if UNRELEASED
+    @Environment(\.settledCards) private var settledCards
+    #endif
     @State private var width: CGFloat = 0
     /// Where an open iPhone Duo's fold runs through the pages (`FoldPlace`), flat or not.
     @State private var foldPlace: FoldPlace?
@@ -331,32 +328,19 @@ struct GalleryView: View {
         return ids
     }
 
-    @ViewBuilder
     private func link(_ artwork: Artwork) -> some View {
-        #if UNRELEASED
-        if let onOpen {
-            Button { onOpen(artwork) } label: {
-                ArtworkCard(artwork: artwork, namespace: namespace)
-            }
-            // The card's picture is its top, as wide as the card.
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { card in
-                cardPlaces?.set(CGRect(x: card.minX, y: card.minY, width: card.width, height: card.width), for: artwork.id)
-            }
-        } else {
-            NavigationLink(value: artwork.id) {
-                ArtworkCard(artwork: artwork, namespace: namespace)
-            }
-        }
-        #else
         NavigationLink(value: artwork.id) {
             ArtworkCard(artwork: artwork, namespace: namespace)
         }
-        #endif
     }
 
     private func card(_ artwork: Artwork) -> some View {
         link(artwork)
         .buttonStyle(PressableCardStyle())
+        #if UNRELEASED
+        .comesOut(after: StarsComeOut.delay(for: artwork.id, among: shownIDs))
+        .setsDown(count: settledCards[artwork.id] ?? 0)
+        #endif
         .cardTip(tips(of: artwork))
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
@@ -591,8 +575,8 @@ struct GalleryView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
-        .animation(.snappy, value: library.latestWriteFailure?.artwork.id)
-        .animation(.snappy, value: library.recentlyDeleted?.id)
+        .animation(.settle, value: library.latestWriteFailure?.artwork.id)
+        .animation(.settle, value: library.recentlyDeleted?.id)
         // VoiceOver users hear what the toasts show, and that their action is there to find.
         .onChange(of: library.latestWriteFailure?.artwork.id) {
             guard let failed = library.latestWriteFailure?.artwork else { return }

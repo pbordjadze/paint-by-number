@@ -48,7 +48,7 @@ nonisolated enum HandoffPage {
             numbersShown: 1, lines: canvasLook.lines, inkHidden: 0, labels: canvasLook.labels, numbers: canvasLook.numbers,
             time: SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never),
             selection: nil, hovered: -1, pulsing: -1, bumped: -1, brush: nil,
-            shine: (start: CanvasClock.never, color: -1), photoOpacity: 0)
+            shine: (start: CanvasClock.never, color: -1), photoOpacity: 0, photoReveal: -1)
         return CanvasSnapshot.image(
             scene: scene, states: Array(repeating: .settled(painted: false), count: template.regions.count),
             uniforms: CanvasUniforms(frame), content: RenderContext.Content(outlines: true, numbers: true),

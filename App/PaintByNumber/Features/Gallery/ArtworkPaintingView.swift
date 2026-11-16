@@ -228,10 +228,10 @@ struct ArtworkPaintingView: View {
             .environment(\.colorScheme, PaintView.chromeScheme(paper: paperAppearance, system: colorScheme))
         }
         .readsTheFold { foldPlace = $0 }
-        .animation(.snappy, value: notice)
-        .animation(.snappy, value: showsLengthChip)
-        .animation(.snappy, value: recutFailed)
-        .animation(.snappy, value: saveFailed)
+        .animation(.settle, value: notice)
+        .animation(.settle, value: showsLengthChip)
+        .animation(.settle, value: recutFailed)
+        .animation(.settle, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in
             if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }

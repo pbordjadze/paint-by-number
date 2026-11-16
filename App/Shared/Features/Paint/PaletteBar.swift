@@ -532,8 +532,22 @@ private struct SwatchDetails: View {
 struct CurrentColorLabel: View {
     let session: PaintingSession
     let font: Font
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        if EraSeam.rollsLabels {
+            // Another color's name rolls up into place like a dial; Reduce Motion cross-fades.
+            ZStack { label(rolls: true) }
+                .clipped()
+                .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.35, bounce: 0),
+                           value: session.selectedColor)
+        } else {
+            label(rolls: false)
+        }
+    }
+
+    @ViewBuilder
+    private func label(rolls: Bool) -> some View {
         if let color = session.selectedColor {
             HStack(spacing: 6) {
                 Circle()
@@ -553,6 +567,10 @@ struct CurrentColorLabel: View {
             .accessibilityIdentifier("current-color")
             // Text to read, not a control: no touch target to size.
             .accessibilityAddTraits(.isStaticText)
+            // While it rolls, the old label and the new share `current-color`: a UI test reads it
+            // once the screen has settled.
+            .id(rolls ? color : -1)
+            .transition(rolls && !reduceMotion ? .push(from: .bottom) : .opacity)
         }
     }
 }

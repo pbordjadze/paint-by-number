@@ -30,6 +30,9 @@ nonisolated enum EraSeam {
     /// are as they were in every build.
     static let tipsKeepOffTheirSubject = false
 
+    /// Whether the selected color's name rolls into place when it changes: not in this era.
+    static let rollsLabels = false
+
     /// Whether the palette keeps the lines it was given once fewer colors are left: no, it takes
     /// no more lines than it has colors.
     static let paletteKeepsItsLines = false
