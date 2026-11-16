@@ -1,0 +1,87 @@
+name: TestFlight feedback
+
+# Copies what testers sent from the TestFlight app (screenshots with a comment, crashes) from App
+# Store Connect into the private feedback repository's `reports/` on `main`, beside the relay's
+# (ci/testflight_feedback.py, its docstring the manual). Every hour, and on request: Actions ›
+# TestFlight feedback › Run workflow, or a push to a `claude/testflight-feedback*` branch (which ci.yml ignores). Nothing
+# testers wrote reaches this public repository's logs: only counts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'How many days back'
+        required: false
+        default: '14'
+  push:
+    branches: ['claude/testflight-feedback*']
+  schedule:
+    - cron: '17 * * * *'
+
+concurrency:
+  group: testflight-feedback
+
+permissions:
+  contents: read
+
+jobs:
+  feedback:
+    name: Fetch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: pbordjadze/paint-feedback
+          ref: main
+          token: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+          path: feedback
+      - name: Python
+        id: python
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+      - name: Fetch
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          DAYS: ${{ inputs.days || '14' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/testflight_feedback.py feedback/reports --days "$DAYS" --new-list "$RUNNER_TEMP/new.txt"'
+      - name: Commit
+        # What was saved goes in even when another submission failed (the Fetch step is red then).
+        if: always() && steps.python.outcome == 'success'
+        working-directory: feedback
+        run: |
+          git add reports
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git -c user.name="TestFlight feedback" -c user.email="actions@users.noreply.github.com" \
+            commit --quiet -m "TestFlight feedback $(TZ=America/New_York date '+%Y-%m-%d %H:%M ET')"
+          # The relay may have added a report since the checkout: its folders never conflict.
+          for attempt in 1 2 3 4; do
+            git push --quiet origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+            git pull --rebase --quiet origin main
+          done
+          exit 1
+      - name: Issues
+        # One issue a submission, as the relay opens for each of its reports.
+        if: always() && steps.python.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+        run: |
+          [ -s "$RUNNER_TEMP/new.txt" ] || exit 0
+          while read -r folder; do
+            [ -f "$folder/submission.json" ] || continue
+            rel=${folder#feedback/}
+            body="$RUNNER_TEMP/body.md"
+            cat "$folder/feedback.md" > "$body"
+            for shot in "$folder"/screenshot-*.jpg; do
+              [ -e "$shot" ] || continue
+              echo "![Screenshot](https://github.com/pbordjadze/paint-feedback/blob/main/$rel/$(basename "$shot")?raw=1)" >> "$body"
+            done
+            printf '\n[All the files of this report](https://github.com/pbordjadze/paint-feedback/tree/main/%s)\n' "$rel" >> "$body"
+            title=$(head -1 "$folder/feedback.md" | sed 's/^# //')
+            gh issue create --repo pbordjadze/paint-feedback --title "$title" --body-file "$body" > /dev/null
+          done < "$RUNNER_TEMP/new.txt"
