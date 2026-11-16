@@ -203,12 +203,17 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 30), "The Library shows no sample")
         XCTAssertTrue(reveal(first, in: app), "The first library painting can't be reached")
         XCTAssertTrue(app.staticTexts["The Library"].exists, "The page has no The Library")
-        // Debug builds have 1.3's names: the famous paintings are Art (painting-company row 331).
-        for section in ["Art", "Photographs"] {
+        // SideStore builds have 1.3's names: the famous paintings are Art (painting-company row 331).
+        #if UNRELEASED
+        let paintingsTitle = "Art"
+        #else
+        let paintingsTitle = "Paintings"
+        #endif
+        for section in [paintingsTitle, "Photographs"] {
             XCTAssertTrue(app.staticTexts[section].exists, "The Library has no \(section) section")
         }
-        let paintings = app.staticTexts["Art"]
-        XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first library sample isn't under the Art title")
+        let paintings = app.staticTexts[paintingsTitle]
+        XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first library sample isn't under the \(paintingsTitle) title")
         // "<title>, <creator>"
         XCTAssertTrue(first.label.contains(", "), "The picture's label doesn't name its creator: \(first.label)")
         attachScreenshot(of: app, named: "paint-page")
