@@ -15,7 +15,10 @@ this script reads the Swift sources itself and fails when sources and catalog di
 * `InfoPlist.xcstrings` drifted from the `INFOPLIST_KEY_*` build settings or from the document
   type names in `Config/Info.plist` (the system localizes a `CFBundleTypeName` by looking up its
   English text as the key),
-* a string that reads like prose is not routed through any localization form.
+* a string that reads like prose is not routed through any localization form,
+* a translation is malformed (`tools/l10n.py check`: its placeholders, plural forms or links
+  differ from the English). A missing or stale translation only shows English: it is counted,
+  not failed.
 
 Forms scanned (comments and string contents are skipped by a small Swift lexer):
 
@@ -48,6 +51,8 @@ import plistlib
 import re
 import sys
 from pathlib import Path
+
+import l10n
 
 APP_SOURCES = "App/PaintByNumber"
 # The code the app shares with Paint by Mosaic, compiled into the app target too (App/CLAUDE.md ›
@@ -814,6 +819,8 @@ def run(root):
                 plist=plistlib.loads((root / INFOPLIST_FILE).read_bytes()))
         except json.JSONDecodeError as error:
             findings.append(Finding(INFOPLIST_CATALOG, error.lineno, f"invalid JSON: {error.msg}"))
+    translation_errors, _ = l10n.check(root)
+    findings += [Finding(path, 0, message) for path, message in translation_errors]
     return findings, keys, len({u.key for u in usages})
 
 
@@ -971,7 +978,9 @@ def main():
     if findings:
         print(f"strings_check: {len(findings)} problem(s)")
         return 1
-    print(f"strings_check: ok ({keys} catalog entries, {used} keys used by the sources)")
+    _, untranslated = l10n.check(args.root)
+    print(f"strings_check: ok ({keys} catalog entries, {used} keys used by the sources; "
+          f"{untranslated.get('missing', 0)} missing and {untranslated.get('stale', 0)} stale translations: tools/l10n.py status)")
     return 0
 
 

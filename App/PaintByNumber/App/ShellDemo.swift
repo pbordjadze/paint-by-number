@@ -63,6 +63,12 @@ import PaintCore
 ///   a Drawing, SideStore and Debug builds): a page of shapes and strokes drawn at launch and
 ///   photographed askew on a dark table (`drawingPhoto`), cleaned and made a painting, the
 ///   palette set's picker in the card; ready once the painting is final.
+/// - `create-forming`, `create-forming-drawing`, `create-forming-lines`, `create-forming-page`:
+///   the picture forming (`FormingPlan`, SideStore and Debug builds; painting-company row 293),
+///   the photograph starter picked as on the Paint page and held at a moment each
+///   (`formingHold`): the photo alone under its one status; the made template's lines half drawn
+///   across the photo, half washed; all drawn over the washed photo, nothing started; and,
+///   started, the page it has dried into at the painting's place, before the painting opens.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
@@ -88,6 +94,8 @@ import PaintCore
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-open-new` (`-dark`): a painting not begun, cut for a Painting Length: its length chip
 ///   under the bar and, in SideStore and Debug builds, ✎ Change beside Undo.
+/// - `gallery-fine-tune` (`-dark`, `-long-text`; SideStore and Debug builds): that painting with
+///   its length chip's Fine-Tune sheet up (`FineTuneSheet`).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
 /// - `gallery-received`, `gallery-received-dark`: a painting someone sent opened in the app, as
@@ -103,10 +111,10 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
-         galleryDraft, galleryOpen, galleryOpenNew, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
-         createCustom, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, settingsClock
 
     static let current: ShellDemo? = {
@@ -122,6 +130,7 @@ enum ShellDemo: Equatable {
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-open-new", "gallery-open-new-dark": .galleryOpenNew
+        case "gallery-fine-tune", "gallery-fine-tune-dark", "gallery-fine-tune-long-text": .galleryFineTune
         case "gallery-send", "gallery-send-dark", "gallery-send-long-text": .gallerySend
         case "gallery-received", "gallery-received-dark": .galleryReceived
         case "gallery-damaged": .galleryDamaged
@@ -143,6 +152,10 @@ enum ShellDemo: Equatable {
         case "create-refine-guide-writing", "create-refine-guide-writing-dark": .createRefineGuideWriting
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
+        case "create-forming": .createForming
+        case "create-forming-drawing": .createFormingDrawing
+        case "create-forming-lines": .createFormingLines
+        case "create-forming-page": .createFormingPage
         case "create-from-file": .createFromFile
         case "create-drawing", "create-drawing-dark": .createDrawing
         case "create-unlock", "create-unlock-dark", "create-unlock-long-text": .createUnlock
@@ -204,7 +217,31 @@ enum ShellDemo: Equatable {
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
-            || self == .createTip || self == .createDrawing || self == .createRefineUnlock
+            || self == .createTip || self == .createDrawing || self == .createRefineUnlock || formingHold != nil
+    }
+
+    /// Where a `create-forming` scenario holds the picture forming.
+    enum FormingHold {
+        /// The wait: the template is made and never shows.
+        case waiting
+        /// The lines half drawn across the photo, which has half its wash: nothing starts.
+        case drawing
+        /// The lines all drawn over the washed photo: nothing starts.
+        case lines
+        /// Started: the page at the painting's place, which never opens.
+        case page
+    }
+
+    /// The scenario's picture is picked as on the Paint page (`CreateModel.paintsNow`) and
+    /// held there.
+    var formingHold: FormingHold? {
+        switch self {
+        case .createForming: .waiting
+        case .createFormingDrawing: .drawing
+        case .createFormingLines: .lines
+        case .createFormingPage: .page
+        default: nil
+        }
     }
 
     /// The create flow opens on the preview of a drawing (`drawingPhoto`).
@@ -233,7 +270,7 @@ enum ShellDemo: Equatable {
         // A painting and a photograph: the library's starters, or the first two fixed pictures.
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
-        case .createTip: pictures.dropFirst().first
+        case .createTip, .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage: pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
              .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createRefineUnlock:
             DemoMode.photos.first ?? pictures.first
@@ -262,7 +299,7 @@ enum ShellDemo: Equatable {
     var opensLayers: Bool { self == .createRefineLayers }
 
     /// Refine opens the Tool Guide on this page, ready once its practice canvas shows
-    /// (`RefineView.land`).
+    /// (`RefineModel.land`).
     var opensGuide: RefineGuideTopic? {
         switch self {
         case .createRefineGuide: .tool(.merge)
@@ -378,7 +415,7 @@ enum ShellDemo: Equatable {
         case .galleryOpen:
             let painted = ProcessInfo.processInfo.arguments.contains("-playHarness") ? 0.0 : 0.42
             library.seed([Library.SeedItem(sample: pictures[0], painted: painted, photoMaxPixelSize: 560)])
-        case .galleryOpenNew:
+        case .galleryOpenNew, .galleryFineTune:
             // A painting not begun, cut for a length: its length chip and ✎ Change in the bar.
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0, photoMaxPixelSize: 560, paintingLength: .relaxed)])
         case .galleryDamaged:
@@ -395,6 +432,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
+             .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage,
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break

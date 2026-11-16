@@ -54,6 +54,10 @@ struct ArtworkPaintingView: View {
         let template: Template
         let settings: GenerationSettings
     }
+    #if UNRELEASED
+    /// Fine-Tune's sheet is up, from the length chip (`FineTuneSheet`).
+    @State private var fineTuning = false
+    #endif
     /// What the failure toast says: the re-cut's, or ✎ Change's.
     @State private var recutFailedText = ""
     /// ✎ Change's drawing tools, open over the painting (`PaintingChangeView`), with the
@@ -96,6 +100,14 @@ struct ArtworkPaintingView: View {
         namingTitle = artwork?.title ?? ""
         namingUnnamed = artwork?.isNamed == false
         isNaming = true
+    }
+
+    /// More › Show Lines on the finished painting: the painting keeps the choice, and its
+    /// gallery picture follows it (`Library.setHidesLines`).
+    private func linesHidden(_ hidden: Bool) {
+        guard let session = autosaver?.session else { return }
+        let library = library, id = artworkID, template = session.template, progress = session.progress
+        Task { await library.setHidesLines(id, hidden, template: template, progress: progress) }
     }
 
     private func saveName() {
@@ -145,7 +157,8 @@ struct ArtworkPaintingView: View {
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
                     onTemplateFrame: canvasReport, onFirstFrame: heldScreen == nil ? nil : { releaseHeldScreen() },
-                    onChange: changeAction, hidesStatusBar: !leaving)
+                    onChange: changeAction, libraryPicture: artwork?.sampleName, hidesStatusBar: !leaving,
+                    hidesLines: artwork?.paintsWithoutLines ?? false, onHidesLines: { linesHidden($0) })
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
@@ -229,6 +242,18 @@ struct ArtworkPaintingView: View {
             }
         }
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
+        #if UNRELEASED
+        .sheet(isPresented: $fineTuning) {
+            if let artwork {
+                FineTuneSheet(
+                    settings: artwork.settings,
+                    // A painting saved before its paints were counted has none recorded.
+                    paints: artwork.colorCount > 0 ? artwork.colorCount : artwork.settings.colorCount
+                ) { recut(with: $0) }
+                    .besideTheFold()
+            }
+        }
+        #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .alert(namingUnnamed ? Text("Name Your Painting") : Text("Rename Painting"), isPresented: $isNaming) {
             TextField("Title", text: $nameText, prompt: Text(namingTitle))
@@ -240,12 +265,20 @@ struct ArtworkPaintingView: View {
         }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
-            guard phase != .active else { return }
+            guard phase != .active else {
+                #if UNRELEASED
+                absorbWidgetAreas()
+                #endif
+                return
+            }
             FeedbackEngine.shared.rest()
             autosaver?.saveNow(refreshThumbnail: true)
             if phase == .background {
                 let library = library
                 BackgroundSaving.shared.hold { await library.flush() }
+                #if UNRELEASED
+                OutsideDesk.layOutOnLeaving(library)
+                #endif
             }
         }
         .onDisappear {
@@ -256,8 +289,27 @@ struct ArtworkPaintingView: View {
         }
     }
 
+    #if UNRELEASED
+    /// The areas the widget's Paint One Area showed painted while the app was away go into the
+    /// painting on screen, are saved, and the shelf is laid out from there (`OutsideDesk`).
+    private func absorbWidgetAreas() {
+        // Not under ✎ Change's tools or during a replay: the taps wait for the next coming back.
+        guard let autosaver, change == nil, presentedChange == nil, !autosaver.session.isReplaying else { return }
+        let library = library
+        Task {
+            guard await OutsideDesk.absorb(into: autosaver.session, artwork: autosaver.artworkID) > 0 else { return }
+            autosaver.saveNow(refreshThumbnail: true)
+            await OutsideDesk.layOut(library)
+        }
+    }
+    #endif
+
     private func open() async {
         guard autosaver == nil, failure == nil else { return }
+        #if UNRELEASED
+        // Before the painting is read: what the widget painted while the app was away.
+        await OutsideDesk.comeBack(to: library, open: nil, only: artworkID)
+        #endif
         do {
             let document = try await library.loadForPainting(artworkID)
             _ = await RenderContext.ready()
@@ -362,9 +414,21 @@ struct ArtworkPaintingView: View {
     }
 
     #if DEBUG
-    /// `gallery-open` and `gallery-received` are ready once the painting is on screen.
+    /// `gallery-open` and `gallery-received` are ready once the painting is on screen,
+    /// `gallery-fine-tune` once Fine-Tune's sheet has risen over it.
     private func markDemoReady() {
-        guard autosaver != nil, hasLanded, ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew
+        guard autosaver != nil, hasLanded else { return }
+        #if UNRELEASED
+        if ShellDemo.current == .galleryFineTune, !fineTuning {
+            fineTuning = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                DemoMode.markReady()
+            }
+            return
+        }
+        #endif
+        guard ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew
             || ShellDemo.current == .galleryReceived else { return }
         DemoMode.markReady()
     }
@@ -488,16 +552,63 @@ struct ArtworkPaintingView: View {
             length: artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)),
             progress: recutting == nil ? nil : (library.regenerating[artworkID] ?? 0),
             cutAreas: cuts.mapValues { $0.template.regions.count },
-            onPick: recut(to:))
+            isCustom: isCustomCut,
+            onPick: recut(to:),
+            onFineTune: fineTune)
+    }
+
+    /// The painting was cut with the painter's own settings, by Fine-Tune or the create flow's
+    /// sliders: no length's suggestion, so the cuts keep none of it. SideStore and Debug builds,
+    /// with Fine-Tune: the release's chip is as it was.
+    private var isCustomCut: Bool {
+        #if UNRELEASED
+        return artwork?.settingsOrigin == SettingsOrigin.custom.rawValue
+        #else
+        return false
+        #endif
+    }
+
+    /// Fine-Tune's sheet, in SideStore and Debug builds.
+    private var fineTune: (() -> Void)? {
+        #if UNRELEASED
+        return { fineTuning = true }
+        #else
+        return nil
+        #endif
+    }
+
+    /// Cuts the painting again with the painter's own `settings`, from Fine-Tune
+    /// (`Library.retune`), and opens it in place. The lengths' cuts kept are forgotten: picking
+    /// one again cuts it afresh, as the length chip promised before the painter tuned it.
+    private func recut(with settings: GenerationSettings) {
+        guard recutting == nil, changing == nil, regeneration == nil, let autosaver,
+              settings != artwork?.settings.normalized else { return }
+        autosaver.saveNow()
+        recutFailed = false
+        recutting = Task {
+            do {
+                let document = try await library.retune(artwork: artworkID, settings: settings)
+                cuts = [:]
+                _ = await RenderContext.ready()
+                await present(document, replacing: true)
+                Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
+            } catch is CancellationError {
+            } catch {
+                showRecutFailure(error)
+            }
+            recutting = nil
+        }
     }
 
     /// Cuts the painting again at `length` (`Library.recut`) and opens the new cut in place.
     private func recut(to length: PaintingLength) {
         guard recutting == nil, changing == nil, regeneration == nil, let autosaver,
-              length.rawValue != artwork?.paintingLength else { return }
+              isCustomCut || length.rawValue != artwork?.paintingLength else { return }
         autosaver.saveNow()
         recutFailed = false
-        if let artwork, let current = artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)), cuts[current] == nil {
+        // A cut of the painter's own settings is no length's: a length picked is cut afresh.
+        if !isCustomCut, let artwork, let current = artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)),
+           cuts[current] == nil {
             cuts[current] = Cut(template: autosaver.session.template, settings: artwork.settings)
         }
         let kept = cuts[length]
@@ -516,16 +627,20 @@ struct ArtworkPaintingView: View {
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
             } catch is CancellationError {
             } catch {
-                Log.library.error("Re-cutting \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
-                recutFailedText = String(localized: "Couldn’t cut the picture again")
-                recutFailed = true
-                Announcer.announce(recutFailedText)
-                Task {
-                    try? await Task.sleep(for: .seconds(4))
-                    recutFailed = false
-                }
+                showRecutFailure(error)
             }
             recutting = nil
+        }
+    }
+
+    private func showRecutFailure(_ error: any Error) {
+        Log.library.error("Re-cutting \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+        recutFailedText = String(localized: "Couldn’t cut the picture again")
+        recutFailed = true
+        Announcer.announce(recutFailedText)
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            recutFailed = false
         }
     }
 

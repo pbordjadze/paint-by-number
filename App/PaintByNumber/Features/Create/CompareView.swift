@@ -26,6 +26,17 @@ struct CompareView: View {
     /// heavy as the canvas would draw it at the picture's size relative to that.
     var canvasSize: CGSize = .zero
     var fillsSpace = false
+    #if UNRELEASED
+    /// The picture forming (`FormingPlan`): the lines of the template to be painted, which
+    /// are drawn in across the photo in the canvas's ink while it calms toward the paper.
+    var lines: LineArtDrawing?
+    /// A demo's hold: how much of the lines is drawn (nil: drawn in as they come).
+    var linesHeld: CGFloat?
+    /// Told as the lines begin to be drawn in.
+    var linesBegan: (() -> Void)?
+    /// The drawing whose lines are drawn in, or are being: another's start undrawn.
+    @State private var drawnLines: UUID?
+    #endif
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat = 0.5
     /// The layers' zoom (1 fits the picture in the frame) and offset from the frame's centre, as
@@ -67,6 +78,12 @@ struct CompareView: View {
                             .mask(alignment: .leading) {
                                 Rectangle().frame(width: max(0, x))
                             }
+
+                        #if UNRELEASED
+                        if let lines {
+                            formingLayers(lines, picture: picture, size: size, visible: visible)
+                        }
+                        #endif
 
                         if after != nil, compares {
                             divider(at: x, in: visible, size: size)
@@ -236,9 +253,15 @@ struct CompareView: View {
 
     /// How large the picture shows relative to the painting fitted on its canvas.
     private func canvasScale(of picture: CGRect) -> CGFloat {
-        let canvas = Self.fitted(aspectRatio, in: canvasSize)
-        let long = max(canvas.width, canvas.height)
-        guard long > 0 else { return shownZoom }
+        Self.canvasScale(of: picture.size, aspect: aspectRatio, canvas: canvasSize) ?? shownZoom
+    }
+
+    /// The same for a picture of `aspect` shown at the size `picture`, the painting screen's
+    /// space being `canvas`; nil without that space.
+    nonisolated static func canvasScale(of picture: CGSize, aspect: CGFloat, canvas: CGSize) -> CGFloat? {
+        let space = fitted(aspect, in: canvas)
+        let long = max(space.width, space.height)
+        guard long > 0 else { return nil }
         return max(picture.width, picture.height) / long
     }
 
@@ -271,6 +294,50 @@ struct CompareView: View {
                 .frame(width: size.width, height: size.height)
         }
     }
+
+    #if UNRELEASED
+    /// The picture forming over the photo: its wash toward the page's paper, and the lines of
+    /// `lines`, stroked once, drawn in by a mask moving over them. The drawing in begins as the
+    /// layer of these lines appears, and is undone as it goes, so lines that come again (or
+    /// another template's) are drawn in again.
+    @ViewBuilder
+    private func formingLayers(_ lines: LineArtDrawing, picture: CGRect, size: CGSize, visible: CGRect) -> some View {
+        let id: UUID = lines.id
+        let drawn: CGFloat = linesHeld ?? (drawnLines == id ? 1 : 0)
+        let wash: Double = FormingPlan.wash * Double(drawn)
+        FormingPaper()
+            .opacity(wash)
+        FormingLines(drawing: lines, picture: picture, scale: canvasScale(of: picture))
+            .equatable()
+            .frame(width: size.width, height: size.height)
+            .mask(alignment: .topLeading) { sweep(drawn, over: visible) }
+            .id(id)
+            .onAppear {
+                guard linesHeld == nil else { return }
+                linesBegan?()
+                withAnimation(.easeInOut(duration: FormingPlan.drawIn)) { drawnLines = id }
+            }
+            .onDisappear {
+                if drawnLines == id { drawnLines = nil }
+            }
+    }
+
+    /// What shows of the forming lines over the card at `visible`: everything up to an edge that
+    /// travels from its left to its right as `drawn` goes from 0 to 1, soft over `feather`.
+    private func sweep(_ drawn: CGFloat, over visible: CGRect) -> some View {
+        let feather: CGFloat = visible.width * CGFloat(FormingPlan.feather)
+        let width: CGFloat = visible.width + feather
+        let x: CGFloat = visible.minX - width * (1 - drawn)
+        return HStack(spacing: 0) {
+            Rectangle()
+            LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                .frame(width: feather)
+        }
+        .environment(\.layoutDirection, .leftToRight)
+        .frame(width: width, height: visible.height)
+        .offset(x: x, y: visible.minY)
+    }
+    #endif
 
     private static let cardShape = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 

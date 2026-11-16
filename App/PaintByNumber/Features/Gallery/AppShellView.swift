@@ -177,6 +177,9 @@ struct AppShellView: View {
         .onAppear(perform: restoreOpenArtwork)
         // "Open in Paint by Moonlight" from the share sheet or Files.
         .onOpenURL(perform: openFile)
+        #if UNRELEASED
+        .modifier(OutsideComings(library: library, open: path.last))
+        #endif
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
         .task {
@@ -203,7 +206,8 @@ struct AppShellView: View {
         }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
-            guard ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew, !demoOpenedPainting, path.isEmpty, let id else { return }
+            guard ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew || ShellDemo.current == .galleryFineTune,
+                  !demoOpenedPainting, path.isEmpty, let id else { return }
             demoOpenedPainting = true
             path = [id]
         }
@@ -339,6 +343,13 @@ struct AppShellView: View {
     /// Only the first of several files opens (one painting per create flow); the others' inbox
     /// copies are just deleted.
     private func openFile(_ url: URL) {
+        #if UNRELEASED
+        // A widget's link to its painting (`OutsideShelf.link`).
+        if let id = OutsideShelf.painting(of: url) {
+            if library.artwork(with: id) != nil, !isCreating, path.last != id { path = [id] }
+            return
+        }
+        #endif
         guard url.isFileURL else { return }
         guard !isReadingFile else {
             Task { await IncomingFile.discard(url) }

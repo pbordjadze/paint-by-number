@@ -82,7 +82,7 @@ struct RefinePaletteBar: View {
     let template: Template
     @Binding var current: SIMD3<Float>?
     /// The colors the color wheel picked that no paint had, in the order picked
-    /// (`RefineView.newColors`): they show as new paints, so several picked in a row are all kept
+    /// (`RefineModel.newColors`): they show as new paints, so several picked in a row are all kept
     /// (QA, November 3).
     var picked: Binding<[SIMD3<Float>]> = .constant([])
     /// Makes paint `from` the paint `into` (both indices of the palette).

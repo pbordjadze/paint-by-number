@@ -107,6 +107,7 @@ jobs:
       actions: read
     outputs:
       lanes: ${{ steps.plan.outputs.lanes }}
+      matrix: ${{ steps.plan.outputs.matrix }}
       before: ${{ steps.plan.outputs.before }}
     steps:
       - uses: actions/checkout@v5
@@ -115,10 +116,31 @@ jobs:
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
+          # `on`: a branch's run may give one entry to the Mac (ci/plan.py).
+          MAC: ${{ vars.MAC_CI }}
           # compile, test, duo, release-tests and iphone as the header says; the report job asks
           # the same (TEST_ONLY, DUO_ONLY, RELEASE_TESTS_ONLY).
           LANES: ${{ (github.ref_name != 'main' && contains(github.event.head_commit.message, '[compile]')) && '["compile"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[test ') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tests != ''))) && '["test"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[duo]') || github.event.inputs.duo == 'true')) && '["duo"]' || (github.ref_name != 'main' && (contains(github.event.head_commit.message, '[release-tests]') || github.event.inputs.release_tests == 'true')) && '["release-tests"]' || github.ref_name == 'main' && '["ipad", "ipad-ui", "iphone", "iphone-ui", "release-tests"]' || (github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone", "iphone-ui"]' || '["ipad", "ipad-ui"]' }}
         run: python3 ci/plan.py
+
+  mac-watch:
+    name: Watch for the Mac
+    # A job waits a day for a runner that isn't there: this cancels the run when the Mac hasn't
+    # taken its entry in 15 minutes, and the plans after it leave the Mac out (ci/plan.py).
+    needs: plan
+    if: contains(needs.plan.outputs.matrix, 'pbm-mac')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false, sparse-checkout: ci }
+      - name: Watch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ci/plan.py --watch
 
   core:
     name: PaintCore tests and quality regression (Linux)
@@ -181,6 +203,7 @@ jobs:
           set -o pipefail
           mkdir -p out
           python3 tools/strings_check.py --self-test
+          python3 tools/l10n.py self-test
           python3 tools/strings_check.py | tee out/strings-check.log
       - name: CI report script
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.
@@ -195,7 +218,8 @@ jobs:
     name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || matrix.job == 'compile' && 'iPad — compile check' || matrix.job == 'test' && 'iPad — chosen tests' || matrix.job == 'duo' && 'iPhone Duo — every pose' || matrix.job == 'iphone-ui' && 'iPhone — UI tests' || matrix.job == 'release-tests' && 'iPad — App Store build, its tests' || 'iPhone — build, screenshots, unit tests' }}
     needs: plan
     if: needs.plan.outputs.lanes != '[]'
-    runs-on: xcode-27
+    # GitHub's runner, or the Mac for the one entry the plan gave it (`pbm-mac`).
+    runs-on: ${{ matrix.on }}
     # On main an entry waits for the same entry of the push before, and is never cut off for a
     # newer one (the header); a branch's run has groups of its own.
     concurrency:
@@ -208,13 +232,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: ${{ fromJSON(needs.plan.outputs.lanes) }}
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2, persist-credentials: false }
       - name: Xcode
         id: xcode
         run: ci/xcode.sh
+      - name: A runner of our own
+        # The Mac keeps what a job leaves: the crash reports of the jobs before would count as
+        # this one's (ci/collect.sh), a simulator left booted holds its memory, and one not erased
+        # still has the last job's app, paintings and caches. The runner's user is CI's alone.
+        if: runner.environment == 'self-hosted'
+        run: |
+          rm -f ~/Library/Logs/DiagnosticReports/PaintByNumber* 2> /dev/null || true
+          xcrun simctl shutdown all 2> /dev/null || true
+          xcrun simctl erase all 2> /dev/null || true
       - name: Plan
         # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
         # out (`-only-testing`, `-skip-testing`; neither: all). The Settings and play mailbox UI
@@ -423,6 +456,9 @@ jobs:
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='UNRELEASED $(inherited)' EXCLUDED_SOURCE_FILE_NAMES= \
             2>&1 | tee out/sidestore-build.log | tail -60
+          # Its widgets and stickers are in it (the App Store's build leaves them out).
+          ls build/sidestore/Build/Products/Release-iphonesimulator/PaintByNumber.app/PlugIns/MoonlightWidgets.appex \
+            build/sidestore/Build/Products/Release-iphonesimulator/PaintByNumber.app/PlugIns/MoonlightStickers.appex > /dev/null
       - name: Compiler warnings
         id: warnings
         # A new warning in the app, its tests or PaintCore fails the job (main has none).
@@ -495,6 +531,7 @@ jobs:
           mkdir -p out
           echo "$OUTCOMES" > out/outcomes.txt
           ci/collect.sh "${{ steps.sim.outputs.udid }}"
+          if [[ "${{ runner.environment }}" == self-hosted ]]; then xcrun simctl shutdown all 2> /dev/null || true; fi
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: "${{ matrix.job }}", path: out, if-no-files-found: ignore }
@@ -538,6 +575,14 @@ jobs:
           APP=build/PaintByNumber.xcarchive/Products/Applications/PaintByNumber.app
           mkdir -p build/ipa/Payload
           cp -R "$APP" build/ipa/Payload/
+          # The widgets and the stickers read what the app lays out in its app group. An unsigned
+          # build names no group, so each is signed ad hoc with the group's entitlement, the
+          # extensions first: SideStore reads it there and gives its own signature the same.
+          for appex in build/ipa/Payload/PaintByNumber.app/PlugIns/*.appex; do
+            codesign --force --sign - --entitlements App/Config/Outside.entitlements "$appex"
+          done
+          codesign --force --sign - --entitlements App/Config/Outside.entitlements build/ipa/Payload/PaintByNumber.app
+          codesign -d --entitlements - build/ipa/Payload/PaintByNumber.app 2>/dev/null | grep -q "$(sed -n 's/.*<string>\(group\..*\)<\/string>.*/\1/p' App/Config/Outside.entitlements)"
           (cd build/ipa && zip -qry ../../out/PaintByNumber.ipa Payload)
           ls -l out/PaintByNumber.ipa
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"

@@ -144,13 +144,13 @@ below name both alike.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`, the Toolbox's `RefineStudio` and `RefineToolbox`; its gestures and
+- `Features/`: `Create/`; `Refine/` (`RefineView`, the screen's layout and bars, over `RefineModel`, its state and what its gestures do; its panels `RefinePicture`, `RefineToolRail`, `RefineToolOptions`, `RefineTopControls`; `RefineTool`, the tools and their names, hints and keys; `RefineCanvas`, `RefineEdits`, `RefineColorsPanel`, the Toolbox's `RefineStudio` and `RefineToolbox`; its gestures and
   geometry are PaintCore's `Refine/`, which `pbn refine` replays on Linux, `RefineGeometry+Drawing`
   the app's part); `Gallery/` (`AppShellView` the shell, `GalleryView`, `EmptyGalleryView` (its sketch paints
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  `CompletionBar`, `FinishedDoors` and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
   The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
@@ -183,6 +183,7 @@ below name both alike.
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`; the sky they play in is `App/Sky.swift`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
+- `Outside/` (`#if UNRELEASED`): the app's side of its widgets and stickers (Outside the app, below).
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).
@@ -234,7 +235,8 @@ below name both alike.
   answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
-  captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
+  captured in dark appearance, `long-text` ones with doubled strings, `+de` and `+ja` ones in
+  that language; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), `gallery-send` (with `-dark`,
   `-long-text`) is Send Template's sheet, `gallery-received` (with `-dark`) opens a refined painting
   sent with its photo as a `.moonlight` file (`ShellDemo.sentPaintingFile`), and `gallery-first-run` is the
@@ -299,14 +301,28 @@ below name both alike.
   `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
   finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
-  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot;
-  during a replay its ring and
+  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
+  A painting made from a library picture (`Artwork.sampleName`, handed on as
+  `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
+  (painting-company row 120), five doors standing three over two on a phone upright and in one
+  row on an iPad, whose panel widens by a door for them (`CompletionBar.widestPanel(doors:)`;
+  `doorsWidth` keeps the panel and `PaintView.doorMetrics` in step). It opens
+  `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
+  read from `library.json` alone): the picture, and under it one small placard, its title,
+  maker and date, medium and, last, where it hangs (a record without a place has no such
+  line), the credit one faint line under the placard; on an iPad the sheet is page-sized, so
+  the links stay in view. The catalog entry is
+  the page's one tinted control and Wikipedia's article, where the record names one, a plain
+  link in the words' color (the accent is gold in dark appearance); both open in the browser,
+  and the app sends nothing. `about-painting` (with `-dark`)
+  and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
+  the bar's ring and
   percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
   how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
   the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
-- Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
+- Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
@@ -321,7 +337,25 @@ below name both alike.
   `PaletteOrder.followsProgress`, `PaintingSession.advancesToFirstLeft`), and the Pencil's
   double tap and the Paint menu's `]`/`[` step along it. A tap on an
   area of another color selects nothing and shakes that color's swatch, which the bar scrolls into
-  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen.
+  view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen; the next fill
+  or undo of the color in hand brings its swatch back (`selectedRemaining`). The palette's
+  lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
+  so they never change as colors finish. In SideStore and Debug builds the palette stays put
+  (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
+  `placedColors`): every color of the painting keeps its place from the first fill to the last,
+  on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
+  its start would keep the colors to come out of sight), and a finished one that is no longer in
+  hand becomes a spent well there
+  (`SwatchButton.isSpent`: what is left of its paint, a thinner wash set well in inside a thin rim, no
+  numeral, check or progress ring; a cross-fade, a cut under Reduce Motion), so nothing
+  ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
+  nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
+  its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
+  `swatch-N` stays the colors there are to paint. The selection moves on to the next color left
+  and the bar scrolls it into view past the wells; an undo puts the paint back in its well. Not
+  under Nearly Done or Most Left, which re-sort by the painter's choice; the release lets a
+  finished color leave and packs the rest, as 1.1 did. `paint-palette`, `paint-palette-number`
+  and `paint-progress` (with `paint-dark`) show the wells.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
@@ -517,6 +551,21 @@ Conventions).
   sheet's writing stays in its light ink); `TemplateRasterizer.drawBookOutlines` switches where
   the region is painted (never in `.print`) and `LineArtDrawing.paths(within:overPaint:)` splits
   it out over the painting (Refine's). Unpainted and every other line stay in the ink.
+- A finished book as paint alone (SideStore and Debug builds, `#if UNRELEASED`; painting-company
+  row 295): More › Show Lines, offered on a finished coloring book, turned off takes the
+  drawing's ink from the picture. Only a finished painting's: an undo, a restart or a replay has
+  its lines, and finishing again loses them with the finale's shine (`CanvasView.hidesLines`,
+  `inkChanged`: an ease of `inkFadeDuration`, a cut under Reduce Motion and for a painting opened
+  so). The writing stays, since no paint draws it: the canvas's scene marks every writing stroke
+  (`OutlineGeometry(_:marksWriting:)`, `writingMark` beside `lightWritingMark`) and the shader
+  fades the rest by `CanvasFrame.inkHidden` (`lineMode.y`); pictures draw the writing alone
+  under `TemplateRasterizer.Style.withoutInk` (`hidingLines`), `CanvasSnapshot.Options.withoutInk`.
+  The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
+  build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
+  gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
+  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
+  `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
   pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in
@@ -655,7 +704,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
 by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
-a length already cut while the painting is open is made again as it was, `cuts`). **✎ Change** (from 1.1, with the
+a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
+  Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
+  (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
+  painting was cut with, and Cut Again makes it again with them in place (`Library.retune`, recorded
+  as custom, at its length); the menu then checks no length, and a length picked is cut afresh.
+  `gallery-fine-tune` (with `-dark`, `-long-text`) is its screenshot, `FineTuneTests`. **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
   the painting, any time (`PaintingChangeView`, a `CreateModel` of its own loaded by
   `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
@@ -666,6 +720,32 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
   `PaintNowTests`.
+- **The picture forming** (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 293;
+  `FormingPlan`, `Features/Create/Forming.swift`): a picture picked on the Paint page waits as its
+  photo alone, with no draft, painted picture or divider over it (`CompareView` with no `after`),
+  under one status that keeps its words whatever stage the making is at ("Making the painting…",
+  announced to VoiceOver once). Once the template to be painted is made (no earlier: a draft is
+  another template, of a smaller canvas) its lines are drawn in across the photo, left to right
+  (`CompareView.lines`: stroked once, a soft-edged mask travelling over them, `drawIn` 0.7 s,
+  eased), while the photo calms 45% toward the paper under them (`wash`), so the ink reads on a
+  dark or busy picture; paper and ink are the page's own, dark paper's too (`FormingPlan.sheet`,
+  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
+  `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
+  picture is the washed photo under those lines
+  (`PictureDeparture.Content.forming`: photo, wash, lines and page laid out once at the page's
+  place, `lay(at:)`, and carried there by one transform, `FormingPlan.carry`, since a page
+  coming in on the way under an animating frame stood at the frame's end ahead of the rest;
+  the lines as heavy as the preview drew them until then, `PreviewPictureProbe.lineScale`,
+  and for the move stroked as the canvas's own), which dries the rest of the way
+  into the page as the canvas draws it (`HandoffPage`, whose numbers come with it) during the
+  glide, in the hand-off's own `settle`, the wash going on to plain paper under the lines
+  (`paperOpacity`) so no row of photo shows at the page's foot and the ink never fades: from the
+  lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
+  the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
+  Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
+  settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios
+  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`), and
+  `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
   the library's tiles `library-picture`, labelled by title and creator. The inline photo picker is
@@ -782,7 +862,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     each tool does one visible thing, and ink, cells and paint are separate. The tools are in groups
     (`RefineGroup`: Ink, Cells, Paint, Numbers, See; each `RefineTool` names its `group`, and a group
     lists its tools in the order `RefineTool` declares them): on iPad a rail along the leading edge holds every tool
-    in labelled sections (`RefineView.toolRail`; where the screen is too short for them, an iPad
+    in labelled sections (`RefineToolRail`; where the screen is too short for them, an iPad
     on its side, it scrolls, its indicator flashing as it comes and its foot fading while there
     is more below), on iPhone the groups are tabs over a row of the
     group's tools. A phone on its side (compact height, every iPhone in landscape, the Pro Max
@@ -811,7 +891,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     (`RefinePaletteBar`, in Cells and Paint but for Make Cell, which takes the photo's color) holds the current paint (`RefinePalette`: a color as on
     screen, following its paint through edits; the system color picker at its end picks any color,
     which the first Bucket tap adds as a paint; every color it picks that no paint has waits
-    after the paints with a plus, in the order picked, until poured, `RefineView.newColors`,
+    after the paints with a plus, in the order picked, until poured, `RefineModel.newColors`,
     `RefinePaletteBar.unpoured`), the Bucket (`.paintArea` with the current paint,
     each tap a step of its own; only the card's picker takes its last pick's place), the
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
@@ -846,7 +926,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     met (`CreateModel.closedShape`, `RefineSparkles`; stars by Moon, a soft tap, none under Reduce
     Motion), and a badge counts the numbers near their floor (`RefineTinyAreas`), zooming to
     each (`RefineFocus`) and marking it: the area glows and the numbers show, whatever Layers
-    says, until the next touch, tool or template (`RefineView.tinyMarked`). The badge and Start
+    says, until the next touch, tool or template (`RefineModel.tinyMarked`). The badge and Start
     From lie in the canvas's top trailing corner, or just inside the picture's where it reaches
     the top (`topControlsInsets`; on a phone on its side, in the tools' column), on the card's surface under their glass. `create-refine-card` (with `-dark`, `-long-text`) selects the largest
     area and opens its card, `create-refine-select` (with `-dark`) selects it, `create-refine-long-text`
@@ -917,7 +997,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     `pipelineVersion`; what an edit doesn't reach is bit for bit what it was (`CreateModelTests`).
     Until an edit lands (`CreateModel.settledEdits` reaches its number) it shows over the template
     in the drawing's own ink (`RefineInkLayer`; a fill as a swatch, `RefineFillLayer`, which then
-    tints the area in its paint), and `RefineView.land` swaps the new drawing, the painting
+    tints the area in its paint), and `RefineModel.land` swaps the new drawing, the painting
     beneath it and the end of the pending ink in together, so nothing flickers.
   - **One queue.** Every change Refine makes (an edit, a text correction, Undo, Redo,
     Cancel) runs in its turn on `CreateModel`'s queue, from the state the ones before it left, and
@@ -1157,6 +1237,48 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
+
+## Outside the app: widgets and stickers
+
+SideStore and Debug builds only (painting-company rows 348 and 349). Two extensions, each a
+synchronized folder and a target of its own: `App/MoonlightWidgets` (WidgetKit: Painting in
+Progress, with its Paint One Area button, on the Home Screen and the Lock Screen; Finished
+Paintings, the frame, a painting a day, which StandBy shows too) and `App/MoonlightStickers`
+(Messages: the finished paintings as stickers). Neither links PaintCore or reads a painting.
+
+- **The shelf.** `App/Outside/OutsideShelf.swift` (Foundation only, compiled into the app and
+  both extensions; its doc comment is the reference) is a folder of the app group,
+  `Outside/`: pictures the app drew and three lists. The paintings stay in the app's own folder,
+  with one writer.
+- **The app's side** (`App/PaintByNumber/Outside/`, `#if UNRELEASED`): `OutsideDesk` lays the
+  shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
+  `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
+  (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
+  (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
+  whose finish is the app's), the finished paintings' pictures, and their stickers
+  (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
+  subject cut out of the finished painting; Vision runs for a few paintings at a time, and only
+  with the app in front, `OutsideDesk.cutOutStickers`: leaving, the app has seconds).
+- **Paint One Area** writes one number (`OutsideShelf.addTap`) and the widget shows the next
+  picture. The app paints those areas for real when it next comes forward (`OutsideDesk.comeBack`
+  into the saved painting, `absorb(into:artwork:)` into the one on screen, as taps of the
+  painter's own), then lays the shelf out again. Always absorb, then lay out: laying out starts
+  the count over, and leaves the pictures alone while taps wait that still fit the painting.
+  Taps that no longer fit it (it changed since) are dropped. The desk does one job at a time
+  (`inTurn`): a widget tapped brings the shell and a painting's screen there together.
+- **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
+- **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
+  extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as
+  `ci.yml` and `tools/checks.sh` do); `ci/check_release.sh` fails on a Release app with PlugIns.
+  The extensions sign only in Debug, where the three targets carry the app group
+  (`Config/Outside.entitlements`). The `ipa` job signs the SideStore build ad hoc with that
+  entitlement, so SideStore, which signs again under the installer's team, gives the three a
+  group of that team; `OutsideShelf.groups(of:)` finds its name (`ALTAppGroups`).
+- **Demo and test launches lay nothing out** (`OutsideDesk.shelf` is nil); `OutsideTests` hand
+  the desk, the plan and the sticker maker a shelf in a temporary folder.
+- **Words** are each extension's own `Localizable.xcstrings` (its literals are looked up in its
+  own bundle), written by hand as the app's; `tools/strings_check.py` doesn't read them.
+- Paint by Mosaic's mosaics aren't on the shelf.
 
 ## Sharing and exports
 

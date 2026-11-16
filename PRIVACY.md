@@ -104,5 +104,4 @@ If this policy changes, the new version will be posted on this page with a new d
 ## Contact
 
 Questions about privacy, or a request to delete a report: email
-[support@paulbordjadze.com](mailto:support@paulbordjadze.com), or open an issue at
-[github.com/pbordjadze/paint-by-number/issues](https://github.com/pbordjadze/paint-by-number/issues).
+[support@paulbordjadze.com](mailto:support@paulbordjadze.com).
