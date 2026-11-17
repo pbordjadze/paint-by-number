@@ -152,6 +152,29 @@ struct MakingOfShowTests {
         }
     }
 
+    /// The stage pictures the create flow kept as it made the base (`MakingOfSource.stages`) make
+    /// the very show that making the base again would, frame for frame, and nothing is generated
+    /// again: a source whose photo is blank still pictures the steps of the base it kept.
+    @Test func keptStagesMakeTheSameShowWithoutGeneratingAgain() async throws {
+        var source = try Self.source()
+        let recorder = SnapshotRecorder()
+        let saved = try TemplateGenerator(settings: source.settings)
+            .generate(from: source.image, cancel: .none, observer: { recorder.receive($0) }).template
+        source.template = saved
+        let remade = try await MakingOfShow.build(source)
+
+        var kept = source
+        kept.stages = recorder.snapshots
+        kept.image = RGBAImage(
+            width: source.image.width, height: source.image.height,
+            pixels: [UInt8](repeating: 255, count: source.image.width * source.image.height * 4))
+        let reused = try await MakingOfShow.build(kept)
+        for t in stride(from: 0.0, through: remade.show.duration, by: 0.7) {
+            #expect(reused.show.frame(at: t) == remade.show.frame(at: t), "t = \(t)")
+        }
+        #expect(reused.digits == remade.digits && reused.numbers == remade.numbers)
+    }
+
     /// Reduce Motion's stills: the picture as each step leaves it, then the real template, with
     /// no seed rings, sparks or stars.
     @Test func stillsFollowTheSteps() async throws {

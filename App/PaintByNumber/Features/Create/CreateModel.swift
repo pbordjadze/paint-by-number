@@ -270,6 +270,10 @@ final class CreateModel {
     /// what they were made with, newest first: stepping back to one (a text correction undone, a slider put
     /// back) lays the edits on it again without generating.
     @ObservationIgnored private var made: [Made] = []
+    /// The stage pictures the newest full-resolution base showed as it was made, with The
+    /// Making-of on, so that its show plays them rather than making the base again
+    /// (`makingOfSource`; painting-company row 361).
+    @ObservationIgnored private var shownStages: (made: Made, snapshots: [PipelineSnapshot])?
 
     /// How many base templates are kept for stepping back (`made`).
     var rememberedBases: Int { made.count }
@@ -724,6 +728,7 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
+        shownStages = nil
         loadID += 1
         forgetEdits()
         progress = 0
@@ -766,6 +771,7 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
+        shownStages = nil
         // A generation still finishing belonged to the photo that is gone.
         loadID += 1
         forgetEdits()
@@ -814,6 +820,7 @@ final class CreateModel {
         refinements = saved?.refinements ?? TemplateRefinements()
         if scratch { refinements.start = .blank }
         made = []
+        shownStages = nil
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would
         // not make again: kept for coming back to them too.
         if let resumed = resumeKept {
@@ -1043,11 +1050,17 @@ final class CreateModel {
     func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
         // A drawing's painting has no steps the show plays either.
         guard let source, draft.refinements.start == .generated, draft.settings.drawing == nil else { return nil }
+        let inputs = draft.refinements.generatorInputs
+        let palette = pinnedPalette(for: draft.settings, inputs: inputs)
+        // The pictures the forming already made of this very base, when it was made here.
+        let stages = shownStages.flatMap { kept in
+            kept.made.settings == draft.settings && kept.made.refinements == inputs && kept.made.palette == palette
+                ? kept.snapshots : nil
+        }
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
             settings: draft.settings, template: draft.template, photo: source.preview,
-            seed: ColorNickname.seed(for: artworkID),
-            palette: pinnedPalette(for: draft.settings, inputs: draft.refinements.generatorInputs))
+            seed: ColorNickname.seed(for: artworkID), palette: palette, stages: stages)
     }
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
@@ -1197,10 +1210,16 @@ final class CreateModel {
                 shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
+                let recorder = !draft && Preferences().playsMakingOf ? SnapshotRecorder() : nil
+                let observer: PipelineSnapshot.Observer? = recorder.map { recorder in { recorder.receive($0) } }
                 shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
-                    isDraft: draft, style: previewStyle, palette: palette, progress: draft ? nil : report)
+                    isDraft: draft, style: previewStyle, palette: palette, progress: draft ? nil : report,
+                    observer: observer)
+                if load == loadID, let recorder, let base = shown.trail?.base {
+                    shownStages = (Made(settings: settings, refinements: inputs, palette: palette, template: base), recorder.snapshots)
+                }
             }
             // Kept even if cancelled meanwhile: it is what these settings and inputs make of this
             // photo, not of the one that replaced it (`made` was cleared for that one).
@@ -1868,7 +1887,7 @@ final class CreateModel {
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
-        palette: [PaletteColor]?, progress: (@Sendable (Float) -> Void)?
+        palette: [PaletteColor]?, progress: (@Sendable (Float) -> Void)?, observer: PipelineSnapshot.Observer? = nil
     ) async throws -> Shown {
         let template: Template
         if refinements.start == .blank {
@@ -1878,7 +1897,7 @@ final class CreateModel {
             template = try TemplateGenerator(settings: settings)
                 .generate(
                     from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress,
-                    palette: palette)
+                    observer: observer, palette: palette)
                 .template
         }
         try Task.checkCancellation()
