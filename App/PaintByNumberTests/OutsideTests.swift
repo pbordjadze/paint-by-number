@@ -51,6 +51,24 @@ struct OutsideShelfTests {
         #expect(shelf.taps(for: next) == 0)
     }
 
+    /// The widget's percentage is the gallery card's: 135 of 314 areas is 42%, not 43%.
+    @Test func theWidgetsPercentIsTheGallerysRule() {
+        #expect(OutsideShelf.percent(painted: 135, total: 314) == 42)
+        for total in [0, 1, 2, 3, 7, 99, 100, 101, 314, 1000, 2047] {
+            for painted in Set([0, 1, 2, total / 3, total / 2, total - 2, total - 1, total, total + 1]) where painted >= 0 {
+                #expect(OutsideShelf.percent(painted: painted, total: total) == PaintSpeech.percent(painted: painted, total: total))
+            }
+        }
+        var laid = now(steps: 3)
+        laid.total = 314
+        laid.steps = laid.steps.enumerated().map { index, step in
+            var step = step
+            step.painted = 134 + index
+            return step
+        }
+        #expect(laid.percent(after: 0) == 42 && laid.percent(after: 1) == 42 && laid.percent(after: 9) == 43)
+    }
+
     @Test func theFrameTurnsThroughThePaintingsADayEach() {
         let paintings = (0..<3).map { OutsideShelf.Finished.Painting(id: UUID(), title: "\($0)", picture: "\($0).jpg") }
         let finished = OutsideShelf.Finished(paintings: paintings)
@@ -214,15 +232,29 @@ struct StickerMakerTests {
         #expect(!grown[10 * 21 + 14] && !grown[7 * 21 + 7] && !grown[0])
     }
 
-    /// The print is the picture on white with clear corners, its long side a sticker's.
-    @Test func thePrintHasAWhiteEdgeAndClearCorners() throws {
+    /// The print is the picture on white with clear corners, centered on a square of a
+    /// sticker's side, its white edge casting a soft shadow that shows on white.
+    @Test func thePrintHasAWhiteEdgeAShadowAndClearCorners() throws {
         let painting = try #require(TemplateRasterizer.image(Fixtures.stripes(), style: .finished, maxPixelSize: 300))
         let print = try #require(StickerMaker.framed(painting))
-        #expect(max(print.width, print.height) == StickerMaker.pixels)
+        #expect(print.width == StickerMaker.pixels && print.height == StickerMaker.pixels)
         let pixels = PixelReader(print)
         #expect(pixels.alpha(x: 0, y: 0) == 0)
-        #expect(pixels.alpha(x: print.width / 2, y: 3) == 255)
         #expect(pixels.alpha(x: print.width / 2, y: print.height / 2) == 255)
+        expectShadowBeforeTheWhiteEdge(pixels)
+    }
+
+    /// Along the middle row from the left: clear, then the shadow's partly covered pixels, then
+    /// the white edge.
+    private func expectShadowBeforeTheWhiteEdge(_ pixels: PixelReader) {
+        let y = pixels.height / 2
+        guard let opaque = (0..<pixels.width).first(where: { pixels.alpha(x: $0, y: y) == 255 }) else {
+            Issue.record("No opaque pixel in the middle row")
+            return
+        }
+        #expect((0..<opaque).contains { pixels.alpha(x: $0, y: y) > 0 })
+        let white = pixels[opaque + 2, y]
+        #expect(white.x >= 250 && white.y >= 250 && white.z >= 250)
     }
 
     /// The cut-out is cropped to its subject and clear outside its white edge; a speck, the
@@ -238,7 +270,18 @@ struct StickerMakerTests {
         #expect(pixels.alpha(x: 0, y: 0) == 0)
         #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 2) == 255)
         // Inside the white edge; its outermost pixels are soft, as the mask is scaled up.
-        #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 16) == 255)
+        #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 10) == 255)
+        // The scaled-up mask is soft on every side; the shadow, drawn a little down, makes the
+        // band below the subject's white edge the heavier one.
+        let x = cut.width / 2
+        let column = (0..<cut.height).filter { pixels.alpha(x: x, y: $0) == 255 }
+        if let top = column.first, let bottom = column.last {
+            let above = (max(0, top - 10)..<top).reduce(0) { $0 + pixels.alpha(x: x, y: $1) }
+            let below = ((bottom + 1)..<min(cut.height, bottom + 11)).reduce(0) { $0 + pixels.alpha(x: x, y: $1) }
+            #expect(below > above)
+        } else {
+            Issue.record("No opaque pixel in the middle column")
+        }
 
         var speck = [Bool](repeating: false, count: width * height)
         speck[0] = true

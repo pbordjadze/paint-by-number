@@ -280,9 +280,12 @@ struct EraPassage: View {
         let moon = EraWayBack.moon(at: elapsed) * gold
         if moon > 0 {
             let sky = EraWayBack.sky(in: size)
-            // The crescent as the app inks it, an outline, with a breath of its gold inside.
+            // The crescent is the night's light: lit gold, a glow around it, its ink's outline on
+            // top, at least as bright as the stars it brings out.
             let crescent = Path(Crescent.cgPath(in: sky.moon))
-            graphics.fill(crescent, with: .color(Theme.gold.opacity(0.16 * moon)))
+            var glow = graphics
+            glow.addFilter(.shadow(color: Theme.gold.opacity(0.55 * moon), radius: sky.moon.width * 0.18))
+            glow.fill(crescent, with: .color(Theme.gold.opacity(0.92 * moon)))
             graphics.stroke(crescent, with: .color(Theme.gold.opacity(moon)),
                             style: StrokeStyle(lineWidth: min(4, max(2, sky.moon.width * 0.04)), lineCap: .round, lineJoin: .round))
             for star in sky.stars {

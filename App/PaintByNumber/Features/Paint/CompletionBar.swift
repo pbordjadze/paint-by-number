@@ -123,6 +123,16 @@ struct CompletionBar: View {
         .task(id: isWarmup ? 0 : session.revision) { await share.prepare(for: session) }
     }
 
+    /// Watch It Again's side in its small form (`TipForm.beside`): under the row while the doors
+    /// lie under it, otherwise above, as everywhere.
+    private var replayTipBesideEdge: Edge? {
+        #if UNRELEASED
+        doors != nil ? .top : nil
+        #else
+        nil
+        #endif
+    }
+
     private func row(seal: Bool, titleLines: Int) -> some View {
         HStack(spacing: 12) {
             if seal {
@@ -187,8 +197,10 @@ struct CompletionBar: View {
             }
             // The only hint after a finish: over the bar, which sits at the bottom. On the place
             // both buttons share: hung from Replay alone, it stayed up over the replay it started,
-            // its view gone before its binding turned false.
-            .gentleTip(.benchReplay, active: !isWarmup, arrowEdge: .bottom)
+            // its view gone before its binding turned false. The small form of a phone hangs
+            // under the row while the doors are there, over them rather than over the painting
+            // just finished (painting-company row 240).
+            .gentleTip(.benchReplay, active: !isWarmup, arrowEdge: .bottom, besideEdge: replayTipBesideEdge)
             // UIImage keeps the picture's Display P3 colors.
             let shareImage: Image? = isWarmup ? Image(systemName: "photo") : share.picture.map { Image(uiImage: UIImage(cgImage: $0)) }
             if let shareImage {

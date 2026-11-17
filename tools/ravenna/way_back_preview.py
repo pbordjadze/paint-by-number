@@ -2,7 +2,7 @@
 """A still of the way back from Paint by Mosaic (App/PaintByNumber/App/EraDoor.swift, `EraWayBack`
 and `EraPassage.drawWayBack`), to judge its look off the device, as `passage_preview.py` does the
 way in's. It mirrors the timings, the night, the crescent and the tiles' fall with Pillow, with
-its own random draws (not the app's) and plain four-point stars, so it shows the shape and the
+its own random draws (not the app's), plain four-point stars and no glow round the crescent, so it shows the shape and the
 light, not the exact tiles. `--at` is seconds from the passage's start (the demos hold 1.495 and
 2.35); the gallery beneath is a flat paper.
 
@@ -58,7 +58,7 @@ def main():
     if up > 0:
         side = min(160, max(64, min(W, H) * 0.2))
         moon = [(x * k, y * k) for x, y in crescent(W / 2 - side / 2, H * 0.36 - side / 2, side)]
-        d.polygon(moon, fill=GOLD + (int(255 * 0.16 * up),))
+        d.polygon(moon, fill=GOLD + (int(255 * 0.92 * up),))
         d.line(moon + moon[:1], fill=GOLD + (int(255 * up),), width=max(1, round(min(4, max(2, side * 0.04)) * k)), joint="curve")
         places = [(0.77, 0.13, 0.22), (0.24, 0.17, 0.30), (0.85, 0.40, 0.26), (0.15, 0.47, 0.20), (0.68, 0.60, 0.24)]
         for i, (px, py, ps) in enumerate(places):

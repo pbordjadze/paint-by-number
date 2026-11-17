@@ -94,6 +94,11 @@ nonisolated struct OutsideShelf: Sendable {
             steps.isEmpty ? nil : steps[min(max(taps, 0), steps.count - 1)]
         }
 
+        /// Whole percent painted after `taps` taps, by the app's one rule (`percent(painted:total:)`).
+        func percent(after taps: Int) -> Int {
+            OutsideShelf.percent(painted: step(after: taps)?.painted ?? 0, total: total)
+        }
+
         /// Whether a tap more has a picture to show.
         func offersTap(after taps: Int) -> Bool {
             taps >= 0 && taps < steps.count - 1
@@ -103,6 +108,16 @@ nonisolated struct OutsideShelf: Sendable {
     struct Taps: Codable, Sendable, Equatable {
         var token: String
         var count: Int
+    }
+
+    /// Whole percent painted, rounded down; 0 only when nothing is painted and 100 only when
+    /// everything is: the app's `PaintSpeech.percent(painted:total:)`, which the gallery's card
+    /// shows, written again here for the extensions, which don't compile it (`OutsideTests`
+    /// hold the two to one answer).
+    static func percent(painted: Int, total: Int) -> Int {
+        guard total > 0, painted > 0 else { return 0 }
+        guard painted < total else { return 100 }
+        return min(max(painted * 100 / total, 1), 99)
     }
 
     // MARK: Finished paintings and stickers

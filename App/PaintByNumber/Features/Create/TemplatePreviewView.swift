@@ -967,7 +967,9 @@ struct TemplatePreviewView: View {
         // ran past the screen's foot over Start Painting (QA, November 7, doubled strings on
         // iPhone). Before the frame: they point at the chip, not the row.
         .gentleTip(.newPaintingSuggested, active: model.settingsOrigin != .custom, arrowEdge: .bottom)
-        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom)
+        // On a phone You Can Always Go Back draws wide (`TipForm.besideWideWidth`): a line or two
+        // shorter, between the comparison and the chip it reaches the title field, not the picture.
+        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, wideBeside: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(model.settingsOrigin == nil ? 0 : 1)
         .accessibilityHidden(model.settingsOrigin == nil)

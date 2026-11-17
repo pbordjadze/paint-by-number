@@ -50,8 +50,19 @@ final class MessagesViewController: MSMessagesAppViewController {
     static func stickers(on shelf: OutsideShelf?) -> [MSSticker] {
         guard let shelf, let list = shelf.stickers() else { return [] }
         return list.stickers.compactMap { sticker in
-            try? MSSticker(contentsOfFileURL: shelf.url(sticker.picture), localizedDescription: sticker.title)
+            try? MSSticker(contentsOfFileURL: shelf.url(sticker.picture), localizedDescription: stickerDescription(sticker.title))
         }
+    }
+
+    /// The title as a sticker's description, which Messages limits to 150 Unicode characters:
+    /// whole characters only, so an emoji or a flag is never cut in half.
+    static func stickerDescription(_ title: String) -> String {
+        var kept = ""
+        for character in title {
+            guard kept.unicodeScalars.count + character.unicodeScalars.count <= 150 else { break }
+            kept.append(character)
+        }
+        return kept
     }
 }
 

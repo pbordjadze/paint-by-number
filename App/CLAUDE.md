@@ -485,8 +485,12 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   the screen becomes `.margin`: the same card on the opaque surface, the page's three just under
   the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
   Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
-  picture's foot for the small one (`CompareView.DividerTipFoot`), which hangs under the
-  picture. The gate is the compact width, not the phone: an iPad's window in Split View or
+  picture's foot for the small one (`CompareView.DividerTipFoot`, under the divider), which
+  hangs under the picture. No small tip lies over a picture: where its usual side would, it
+  takes another (`.gentleTip(…, besideEdge:)`, `.cardTip(…, besideEdge:)`: Watch It Again under
+  the finished row, over the doors; the first card's tips above it) or draws wider and shorter
+  (`wideBeside`, `TipForm.besideWideWidth`: the create flow's, between the comparison and the
+  chip), and Can't Find It hangs from its lane, above the caption naming the color. The gate is the compact width, not the phone: an iPad's window in Split View or
   Slide Over gets these forms too. A tip whose view reads an accessibility text size keeps its
   usual form; a view inside a subtree that clamps Dynamic Type (the painting's top bar,
   `CompletionBar`, Refine's tool rows, at `.xxLarge`) never reads one, so its tips are beside
@@ -1300,7 +1304,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
-  subject cut out of the finished painting; Vision runs for a few paintings at a time, and only
+  subject cut out of the finished painting, each on a clear square of Messages' sizes, its white
+  edge casting a soft shadow so it reads on Messages' white; Vision runs for a few paintings at a time, and only
   with the app in front, `OutsideDesk.cutOutStickers`: leaving, the app has seconds).
 - **Paint One Area** writes one number (`OutsideShelf.addTap`) and the widget shows the next
   picture. The app paints those areas for real when it next comes forward (`OutsideDesk.comeBack`
@@ -1310,6 +1315,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   Taps that no longer fit it (it changed since) are dropped. The desk does one job at a time
   (`inTurn`): a widget tapped brings the shell and a painting's screen there together.
 - **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
+- **Its percentage** is the gallery card's (`OutsideShelf.percent`, `PaintSpeech.percent`
+  written again for the extensions; `OutsideShelfTests` holds them to one answer).
 - **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
   extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as
   `ci.yml` and `tools/checks.sh` do); `ci/check_release.sh` fails on a Release app with PlugIns.
@@ -1320,7 +1327,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
 - **Demo and test launches lay nothing out** (`OutsideDesk.shelf` is nil); `OutsideTests` hand
   the desk, the plan and the sticker maker a shelf in a temporary folder.
 - **Words** are each extension's own `Localizable.xcstrings` (its literals are looked up in its
-  own bundle), written by hand as the app's; `tools/strings_check.py` doesn't read them.
+  own bundle), written by hand as the app's and translated into the same ten languages through
+  `tools/l10n.py` (catalogs `widgets` and `stickers`); `tools/strings_check.py` doesn't read them.
 - Paint by Mosaic's mosaics aren't on the shelf.
 
 ## Sharing and exports

@@ -16,7 +16,8 @@ struct PaintingWidget: Widget {
                 .widgetURL(entry.now.map { OutsideShelf.link(toPainting: $0.artwork) })
         }
         .configurationDisplayName("Painting in Progress")
-        .description("Your painting as it stands. Paint One Area fills in the next area, right here.")
+        // One description for every family, the Lock Screen's too, which have no button.
+        .description("Your painting as it stands. On the Home Screen, Paint One Area fills in the next area.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
@@ -42,10 +43,8 @@ struct PaintingEntry: TimelineEntry {
 
     var step: OutsideShelf.Now.Step? { now?.step(after: taps) }
     var offersTap: Bool { now?.offersTap(after: taps) ?? false }
-    var fraction: Double {
-        guard let now, now.total > 0, let step else { return 0 }
-        return min(1, Double(step.painted) / Double(now.total))
-    }
+    /// Whole percent painted, as the app's gallery card rounds it.
+    var percent: Int { now?.percent(after: taps) ?? 0 }
     /// One area from finished: the app keeps that one, and its finish, for itself.
     var isAtTheLast: Bool {
         guard let now, let step else { return false }
@@ -88,7 +87,8 @@ struct PaintingWidgetView: View {
         }
     }
 
-    private var percent: String { entry.fraction.formatted(.percent.precision(.fractionLength(0))) }
+    /// "42%", as the app's gallery card writes it (`ArtworkCard.percentText`).
+    private var percent: String { (Double(entry.percent) / 100).formatted(.percent.precision(.fractionLength(0))) }
 
     // MARK: Home Screen
 
@@ -198,7 +198,7 @@ struct PaintingWidgetView: View {
     // MARK: Lock Screen
 
     private var circular: some View {
-        Gauge(value: entry.fraction) {
+        Gauge(value: Double(entry.percent) / 100) {
             Image(systemName: "paintbrush.pointed.fill")
         } currentValueLabel: {
             Text(percent)
