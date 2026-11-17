@@ -14,12 +14,18 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
     /// shadows warm where the photo's averaged to a grey brown (`KitPaint.shade`), and the
     /// hues spread further and mixed bolder (`LivelyPaint.Strength.rich`).
     case rich
+    /// Rich paint mixed for beauty over likeness (`BeautyPaint`, painting-company row 360): no
+    /// muddy greys, more color where there is little, the subject a little forward. Its faces
+    /// are split as rich paint's are.
+    case beauty
 
     /// `palette` (the regions' colors) mixed this way, never closer than `minDistance` where
     /// the regions' colors weren't; `faces` as `KitPaint.mix` takes them, `shares` as
-    /// `LivelyPaint.mix` (the share of the painting each paint covers).
+    /// `LivelyPaint.mix` (the share of the painting each paint covers), `importance` as
+    /// `BeautyPaint.mix` (each paint's mean importance; beauty paint alone reads it).
     public func mixed(
-        _ palette: [PaletteColor], shares: [Float] = [], space: RGBColorSpace, minDistance: Float, faces: KitPaint.Faces? = nil
+        _ palette: [PaletteColor], shares: [Float] = [], space: RGBColorSpace, minDistance: Float, faces: KitPaint.Faces? = nil,
+        importance: [Float] = []
     ) -> [PaletteColor] {
         switch self {
         case .photo: return palette
@@ -37,6 +43,12 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
             }
             return LivelyPaint.mix(
                 kit, shares: shares, hold: hold, space: space, minDistance: minDistance, strength: .rich)
+        case .beauty:
+            let rich = PaintMix.rich.mixed(palette, shares: shares, space: space, minDistance: minDistance, faces: faces)
+            let share = palette.indices.map { k in faces.map { $0.share.count == palette.count ? $0.share[k] : 0 } ?? 0 }
+            let hold = palette.indices.map { KitPaint.skinHold(palette[$0], face: share[$0]) }
+            return BeautyPaint.mix(
+                rich, shares: shares, hold: hold, faceShare: share, importance: importance, space: space, minDistance: minDistance)
         }
     }
 }

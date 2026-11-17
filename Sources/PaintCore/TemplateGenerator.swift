@@ -126,7 +126,7 @@ public struct TemplateGenerator: Sendable {
         var (segmentation, weights, plan) = try segmented(
             kit ? nil : pinned, centers: nil, observer: buffer?.observer ?? observer, spanning: twice ? 0.1...0.4 : 0.1...0.7)
         // Rich paint gives a face paints of its own, before anything counts the paints.
-        if mix == .rich {
+        if mix == .rich || mix == .beauty {
             FacePaints.split(
                 &segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working,
                 minRadius: { parameters.minRadius(digits: $0) })
@@ -136,10 +136,14 @@ public struct TemplateGenerator: Sendable {
             ? KitPaint.faces(of: segmentation, importance: weights, eyes: input?.eyes ?? [], photo: working) : nil
         var mixes = kit
         // How much of the painting each paint covers, for lively paint's families.
-        var shares = mix == .lively || mix == .rich ? LivelyPaint.shares(of: segmentation) : []
+        var shares = mix == .lively || mix == .rich || mix == .beauty ? LivelyPaint.shares(of: segmentation) : []
+        // How important each paint's pixels are, for beauty paint's focus.
+        var importance = mix == .beauty ? BeautyPaint.importance(of: segmentation, importance: weights) : []
         if let mix, let pinned {
             let means = segmentation.palette
-            let mixed = mix.mixed(means, shares: shares, space: segmentation.colorSpace, minDistance: settings.minPaletteDistance, faces: faces)
+            let mixed = mix.mixed(
+                means, shares: shares, space: segmentation.colorSpace, minDistance: settings.minPaletteDistance, faces: faces,
+                importance: importance)
             if mixed != pinned, !mixed.isEmpty {
                 let centers = pinned.map { paint in
                     let j = mixed.indices.min {
@@ -156,6 +160,7 @@ public struct TemplateGenerator: Sendable {
                 (segmentation, weights, plan) = try segmented(pinned, centers: centers, observer: observer, spanning: 0.4...0.7)
                 faces = nil
                 shares = []
+                importance = []
                 mixes = false
             } else {
                 if let buffer, let observer { for shot in buffer.shots { try observer(shot) } }
@@ -176,7 +181,7 @@ public struct TemplateGenerator: Sendable {
         if mixes, let mix {
             vector.template.palette = mix.mixed(
                 vector.template.palette, shares: shares, space: vector.template.colorSpace, minDistance: settings.minPaletteDistance,
-                faces: faces)
+                faces: faces, importance: importance)
             // The output's paints are the template's, so pbn's rasters show what is painted.
             segmentation.palette = vector.template.palette
         }

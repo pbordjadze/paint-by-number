@@ -53,7 +53,9 @@ before planning app work).
     Rich paint (`--paint-mix rich`, `PaintMix.rich`; row 344): lively paint turned further, a broad
     background left calm, and a face given paints of its own (`FacePaints.split`, the one mix that
     recolors regions and adds paints, at the palette's end) with a pale face's shadows mixed warm
-    (`KitPaint.shade`); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    (`KitPaint.shade`). Beauty paint (`--paint-mix beauty`, `PaintMix.beauty`; row 360): rich paint mixed
+    for a pretty painting over a faithful one (`BeautyPaint`: greys mixed from color, vibrance, the subject a
+    little forward, from each paint's mean importance); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
