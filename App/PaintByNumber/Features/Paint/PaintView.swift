@@ -800,7 +800,7 @@ struct PaintView: View {
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             #if UNRELEASED
             if let paintTogether, !session.isComplete {
-                Button(action: paintTogether) { Label("Paint Together", systemImage: "shareplay") }
+                Button { paintTogether() } label: { Label("Paint Together", systemImage: "shareplay") }
                     .accessibilityIdentifier("paint-together")
             }
             #endif

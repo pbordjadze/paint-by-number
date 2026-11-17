@@ -167,7 +167,7 @@ struct ArtworkPaintingView: View {
                     // A new template (a re-cut) is a new session: the screen starts afresh on it.
                     .id(ObjectIdentifier(autosaver.session))
                     #if UNRELEASED
-                    .environment(\.paintTogether, artwork.map { artwork in { startTogether(artwork) } })
+                    .environment(\.paintTogether, artwork.map { artwork in PaintTogetherAction(painting: artwork.id) { startTogether(artwork) } })
                     .task(id: ObjectIdentifier(autosaver.session)) {
                         TogetherLink.shared.paintingOpened(artworkID, session: autosaver.session)
                     }

@@ -36,8 +36,19 @@ nonisolated struct TogetherPainting: Transferable, Sendable {
     }
 }
 
+/// Starts painting the open painting together (More › Paint Together). Compared by its
+/// painting, so the screen's views aren't invalidated by a new closure on every update.
+struct PaintTogetherAction: Equatable {
+    let painting: UUID
+    let run: () -> Void
+
+    func callAsFunction() { run() }
+
+    static func == (a: Self, b: Self) -> Bool { a.painting == b.painting }
+}
+
 extension EnvironmentValues {
-    /// Starts painting the open painting together (More › Paint Together); nil where it can't.
-    @Entry var paintTogether: (() -> Void)? = nil
+    /// Nil where the painting can't be painted together.
+    @Entry var paintTogether: PaintTogetherAction? = nil
 }
 #endif
