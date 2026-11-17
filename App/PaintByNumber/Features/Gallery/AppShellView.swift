@@ -195,6 +195,7 @@ struct AppShellView: View {
                     receivedPainting = id
                     incomingImage = nil
                 } catch {
+                    TogetherLink.shared.arrived = nil
                     pendingReceiveFailure = error as? Library.ReceiveError ?? .damaged
                 }
                 presentIncomingImage()

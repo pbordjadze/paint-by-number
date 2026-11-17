@@ -111,7 +111,8 @@ public struct TogetherLedger: Sendable, Equatable {
         var order: [Int] = []
         for op in ops {
             let region = Int(op.region)
-            guard region < regionCount else { continue }
+            // A clock near the top would wrap this ledger's own to 0 and lose every later fill.
+            guard region < regionCount, op.stamp.clock <= Self.highestClock else { continue }
             clock = max(clock, op.stamp.clock)
             if let current = stamps[region],
                 !op.supersedes(TogetherOp(region: op.region, painted: painted[region], stamp: current))
@@ -139,6 +140,9 @@ public struct TogetherLedger: Sendable, Equatable {
             stamps[region].map { TogetherOp(region: UInt32(region), painted: painted[region], stamp: $0) }
         }
     }
+
+    /// Far beyond any real painting's changes: a peer's stamp past it is damage, ignored.
+    public static let highestClock: UInt64 = 1 << 48
 
     private mutating func tick() -> TogetherStamp {
         clock &+= 1

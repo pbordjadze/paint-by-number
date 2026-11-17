@@ -10,6 +10,7 @@ import Testing
 @MainActor
 struct PaintTogetherTests {
     /// Two painters of one template, each engine's messages queued for the other.
+    @MainActor
     private final class Pair {
         let a: PaintingSession, b: PaintingSession
         var engineA: TogetherEngine!, engineB: TogetherEngine!

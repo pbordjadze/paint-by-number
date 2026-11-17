@@ -823,7 +823,14 @@ struct PaintView: View {
             }
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
+            #if UNRELEASED
+            // Painting together, a restart would clear only this side.
+            if !TogetherLink.shared.isActive {
+                Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
+            }
+            #else
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
+            #endif
         } label: {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))

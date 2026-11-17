@@ -24,13 +24,23 @@ final class TogetherEngine {
     private let started = ContinuousClock.now
     private let regionCount: Int
 
-    init(session: PaintingSession, painter: UInt64, send: @escaping (Data) -> Void) {
+    /// `ledger` is the one this painting had earlier in the session (closed and opened again),
+    /// so its stamps go on from where they were and the painter's fills don't lose to older ones.
+    init(session: PaintingSession, painter: UInt64, ledger: TogetherLedger? = nil, send: @escaping (Data) -> Void) {
         self.painter = painter
         self.session = session
         self.send = send
         regionCount = session.progress.regionCount
-        ledger = TogetherLedger(
-            seeding: (0..<session.progress.regionCount).map(session.isPainted), painter: painter)
+        let painted = (0..<session.progress.regionCount).map(session.isPainted)
+        if var kept = ledger, kept.regionCount == painted.count, kept.painter == painter {
+            // What changed while it was closed (nothing should) goes in as this painter's own.
+            let differs = painted.indices.filter { painted[$0] != kept.isPainted($0) }
+            _ = kept.paint(differs.filter { painted[$0] })
+            for r in differs where !painted[r] { _ = kept.unpaint(r) }
+            self.ledger = kept
+        } else {
+            self.ledger = TogetherLedger(seeding: painted, painter: painter)
+        }
         session.onEvent { [weak self] event in self?.observe(event) }
     }
 

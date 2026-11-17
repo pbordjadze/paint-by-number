@@ -63,10 +63,15 @@ final class TogetherLink {
     /// The painting on screen, whichever it is: painted together once it is the session's.
     @ObservationIgnored private var open: (id: UUID, session: PaintingSession)?
 
+    /// Each painting's ledger, kept while the session lasts (`TogetherEngine.init`).
+    @ObservationIgnored private var ledgers: [UUID: TogetherLedger] = [:]
+
     func paintingOpened(_ id: UUID, session: PaintingSession) {
-        if open?.session !== session {
-            engine?.stop()
-            engine = nil
+        if let open, open.id == id, open.session !== session, engine != nil {
+            // Cut again or changed: its areas are no longer the friend's, so painting together ends.
+            leave()
+        } else if open?.session !== session {
+            stopEngine()
         }
         open = (id, session)
         bind()
@@ -74,16 +79,22 @@ final class TogetherLink {
 
     func paintingClosed(_ id: UUID) {
         guard open?.id == id else { return }
+        stopEngine()
         open = nil
-        engine?.stop()
-        engine = nil
+    }
+
+    private func stopEngine() {
+        guard let engine else { return }
+        engine.stop()
+        if let id = open?.id ?? painting { ledgers[id] = engine.ledger }
+        self.engine = nil
     }
 
     /// Paints the open painting together when it is the session's and the session is up,
     /// whichever of the three comes last.
     private func bind() {
         guard engine == nil, let open, open.id == painting, let messenger else { return }
-        let engine = TogetherEngine(session: open.session, painter: painter) { data in
+        let engine = TogetherEngine(session: open.session, painter: painter, ledger: ledgers[open.id]) { data in
             Task { try? await messenger.send(data) }
         }
         self.engine = engine
@@ -152,6 +163,7 @@ final class TogetherLink {
         tasks = []
         engine?.stop()
         engine = nil
+        ledgers = [:]
         messenger = nil
         groupSession = nil
         friends = 0
