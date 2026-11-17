@@ -34,6 +34,7 @@ struct GalleryView: View {
 
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var textSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfIsOutOfSight) private var isOutOfSight
     #if UNRELEASED
@@ -68,8 +69,10 @@ struct GalleryView: View {
             if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
                     // The tips about the bar's gear and +, atop the pages, which make room: a card
-                    // laid over them hid the first section's title.
-                    if let tip = PaintTips.desk.turn, tip.place == .shelf, tip.liesUnderTheBar {
+                    // laid over them hid the first section's title. On a phone Hold's lies here
+                    // too: hung from the first card, it covered the gallery's title or a picture.
+                    if let tip = PaintTips.desk.turn, tip.place == .shelf,
+                       tip.liesUnderTheBar || holdLiesAtop.contains(tip) {
                         GentleTipView(id: tip)
                             .transition(.opacity)
                     }
@@ -319,11 +322,20 @@ struct GalleryView: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: PaintTips.desk.turn)
     }
 
+    /// Hold's tip, where its small form (`TipForm.beside`) would hang from the first card: atop
+    /// the pages instead, on a compact width (painting-company row 240's critic, round 2: above
+    /// the first card it covered the gallery's title and the gear, beside or under it a picture).
+    private var holdLiesAtop: [TipID] {
+        TipForm.of(.shelfHold, isCompact: sizeClass == .compact, isAccessibilitySize: textSize.isAccessibilitySize)
+            == .beside ? [.shelfHold] : []
+    }
+
     /// The tips a card carries: touching and holding the first painting shown, and the first
-    /// finished one's time-lapse.
+    /// finished one's time-lapse. Hold's, where it lies atop the pages, only while that top is in
+    /// view, as the gear's: scrolled away, it would come and go unseen.
     private func tips(of artwork: Artwork) -> [TipID] {
         var ids: [TipID] = []
-        if shownIDs.first == artwork.id { ids.append(.shelfHold) }
+        if shownIDs.first == artwork.id, holdLiesAtop.isEmpty || showsTop { ids.append(.shelfHold) }
         if library.finished(matching: query).first?.id == artwork.id { ids.append(.shelfTimeLapse) }
         return ids
     }
@@ -344,8 +356,8 @@ struct GalleryView: View {
         // A section's first card (`leads`: nothing but titles above it, no draft or preparing
         // card) has its tips hang above it in their small form on a phone (`TipForm.beside`):
         // below, the card's words reach past the row's gap over the next row's picture
-        // (painting-company row 240).
-        .cardTip(tips(of: artwork), besideEdge: leads ? .bottom : nil)
+        // (painting-company row 240). Hold's lies atop the pages there (`holdLiesAtop`).
+        .cardTip(tips(of: artwork), besideEdge: leads ? .bottom : nil, drawnElsewhere: holdLiesAtop)
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery
