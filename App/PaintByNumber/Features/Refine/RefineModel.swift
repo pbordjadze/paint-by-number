@@ -1045,7 +1045,7 @@ final class RefineModel {
     }
 
     /// Edit Paint's paint, as the colors panel picks it: the current paint.
-    /// Looks and Edit Paint's change. A repaint of the current paint keeps it the current paint
+    /// Edit Paint's change. A repaint of the current paint keeps it the current paint
     /// once it lands, in the color the repaint gives it (`repainted`), so a picker still open goes
     /// on with it; a repaint of another (a color still waiting as another paint was chosen) leaves
     /// the choice alone.
