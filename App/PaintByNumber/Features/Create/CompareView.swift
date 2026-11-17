@@ -103,10 +103,12 @@ struct CompareView: View {
 
                     #if UNRELEASED
                     // On a compact width Compare Photo and Page hangs under the picture, pointing
-                    // up at its foot: from the handle it lay over the comparison it tells of
-                    // (painting-company row 240; `TipForm.beside`).
+                    // up at the divider's foot: from the handle it lay over the comparison it
+                    // tells of (painting-company row 240; `TipForm.beside`). Wide, so it fits
+                    // between the picture and the settings, reaching the title field at most.
                     if after != nil, compares {
-                        placed(DividerTipFoot(), in: CGRect(x: visible.minX, y: visible.maxY - 1, width: visible.width, height: 1))
+                        let foot = min(max(x, visible.minX + Self.footWidth / 2), visible.maxX - Self.footWidth / 2)
+                        placed(DividerTipFoot(), in: CGRect(x: foot - Self.footWidth / 2, y: visible.maxY - 1, width: Self.footWidth, height: 1))
                             .allowsHitTesting(false)
                     }
                     #endif
@@ -395,9 +397,12 @@ struct CompareView: View {
     /// its tip's modifier.
     private struct DividerTipFoot: View {
         var body: some View {
-            Color.clear.gentleTip(.newPaintingDivider, arrowEdge: .top, only: .beside)
+            Color.clear.gentleTip(.newPaintingDivider, arrowEdge: .top, only: .beside, wideBeside: true)
         }
     }
+
+    /// The width of the divider's foot the tip points at.
+    private static let footWidth: CGFloat = 24
     #endif
 
     /// The photo's first picture arrives from the trailing edge, the divider sweeping from there

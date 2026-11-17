@@ -485,8 +485,12 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   the screen becomes `.margin`: the same card on the opaque surface, the page's three just under
   the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
   Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
-  picture's foot for the small one (`CompareView.DividerTipFoot`), which hangs under the
-  picture. The gate is the compact width, not the phone: an iPad's window in Split View or
+  picture's foot for the small one (`CompareView.DividerTipFoot`, under the divider), which
+  hangs under the picture. No small tip lies over a picture: where its usual side would, it
+  takes another (`.gentleTip(…, besideEdge:)`, `.cardTip(…, besideEdge:)`: Watch It Again under
+  the finished row, over the doors; the first card's tips above it) or draws wider and shorter
+  (`wideBeside`, `TipForm.besideWideWidth`: the create flow's, between the comparison and the
+  chip), and Can't Find It hangs from its lane, above the caption naming the color. The gate is the compact width, not the phone: an iPad's window in Split View or
   Slide Over gets these forms too. A tip whose view reads an accessibility text size keeps its
   usual form; a view inside a subtree that clamps Dynamic Type (the painting's top bar,
   `CompletionBar`, Refine's tool rows, at `.xxLarge`) never reads one, so its tips are beside

@@ -35,6 +35,10 @@ nonisolated enum TipForm: Equatable, Sendable {
 
     /// The widest a tip beside its subject grows: its words wrap rather than span a phone.
     static let besideWidth: CGFloat = 280
+    /// The width of a tip beside its subject where the room off a picture is short but wide (the
+    /// create flow's, between the comparison and the settings): a line or two fewer, so it keeps
+    /// off the picture. Still narrower than a phone, unlike TipKit's popover.
+    static let besideWideWidth: CGFloat = 340
 
     /// The form `id` had everywhere until row 240, and has still in the release, on a regular
     /// width and where its view reads an accessibility text size (`of`).

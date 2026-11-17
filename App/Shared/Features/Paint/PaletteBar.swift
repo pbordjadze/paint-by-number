@@ -116,6 +116,7 @@ struct PaletteBar: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var position = ScrollPosition(idType: Int.self)
     @State private var scroll = ScrollState()
     /// Whether swatches lie past either end of the bar, which then fades there: a swatch cut by
@@ -254,6 +255,12 @@ struct PaletteBar: View {
         let transition: AnyTransition = reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity)
         let anchors = barTipAnchors
         let tipEdge: Edge = axis == .horizontal || dynamicTypeSize.isAccessibilitySize ? .bottom : .trailing
+        // Can't Find It in its small form (`TipForm.beside`, a phone's) hangs from the lane, as Tap
+        // to Paint does, above the caption: from the swatch it lay over the selected color's
+        // number and name, the color it is about (painting-company row 240).
+        let findPlace: CGRect? = caption && TipForm.of(
+            .benchFind, isCompact: sizeClass == .compact, isAccessibilitySize: dynamicTypeSize.isAccessibilitySize) == .beside
+            ? anchors?.lane : anchors?.swatch
         VStack(spacing: 0) {
             if caption {
                 CurrentColorLabel(session: session, font: .system(size: metrics.captionFontSize, weight: .semibold))
@@ -341,7 +348,7 @@ struct PaletteBar: View {
                 .allowsHitTesting(false)
         }
         .overlay(alignment: .topLeading) {
-            tipPlace(anchors?.swatch).gentleTip(.benchFind, arrowEdge: tipEdge).placed(at: anchors?.swatch)
+            tipPlace(findPlace).gentleTip(.benchFind, arrowEdge: tipEdge).placed(at: findPlace)
                 .allowsHitTesting(false)
         }
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
