@@ -135,12 +135,14 @@ for scenario in "${SCENARIOS[@]}"; do
     sleep 2
     fetch "$OUT/.tmp-$name"
     new=""
+    # By the launch it records, not by its name or contents: a log is named for its process id (a device
+    # just restarted gives the same small ids again), and the run before may still be writing its own
+    # when this one's is fetched, so it looks new again. The log whose process started within 30 s
+    # after this run asked for its launch is this run's (the device's clock and the Mac's agree to the second).
+    asked="$(awk '/^load-before/ {print $NF}' "$OUT/$name.meta")"
     for log in $(find "$OUT/.tmp-$name" -name 'tour-log-*.tsv' 2>/dev/null); do
-      # By its contents, not its name alone: a log is named for its process id, and a device just
-      # restarted gives the same small ids again, so a new log can carry an old one's name.
-      old=0
-      while IFS= read -r seen; do cmp -s "$log" "$seen" && old=1; done < <(find "$SEEN" -name "$(basename "$log")" 2>/dev/null)
-      [[ $old == 1 ]] || new="$log"
+      started="$(awk -F'\t' '$2 == "launch" { for (i = 3; i <= NF; i++) if ($i ~ /^started=/) { sub(/^started=/, "", $i); print int($i) } exit }' "$log")"
+      [[ -n "$started" ]] && (( started >= asked - 2 && started <= asked + 30 )) && new="$log"
     done
     if [[ -n "$new" ]]; then
       cp "$new" "$OUT/$name.tsv"
