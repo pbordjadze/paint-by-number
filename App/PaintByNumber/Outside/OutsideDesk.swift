@@ -256,7 +256,7 @@ enum OutsideDesk {
         for k in 0...plan.count {
             if k > 0 { state.paint(plan[k - 1]) }
             let picture = "now-\(token.prefix(8))-\(k).jpg"
-            guard let image = TemplateRasterizer.image(template, painted: state.painted, style: .thumbnail, maxPixelSize: nowPixels),
+            guard let image = TemplateRasterizer.image(template, painted: state.painted, style: .widget, maxPixelSize: nowPixels),
                   let data = ImageCodec.jpegData(image), (try? shelf.write(data, named: picture)) != nil
             else { return nil }
             steps.append(OutsideShelf.Now.Step(

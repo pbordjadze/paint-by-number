@@ -1301,7 +1301,7 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
   `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
   (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
-  (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
+  (`OutsideFills.plan`: the paint in hand's largest areas first, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
   subject cut out of the finished painting, each on a clear square of Messages' sizes, its white
