@@ -26,7 +26,9 @@ synchronized folder would bundle it into the app.
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
   answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
   usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
-  swipe back never worked), and shows without fading (`StartHandoff`).
+  swipe back never worked), and shows without fading (`StartHandoff`); it is built at once there,
+  not after the push (`isBuilt`, `builtUnderCover`: the unseen zoom cost Start 0.8 s on an iPad,
+  painting-company row 361).
 - What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
   draws again at every frame of an animation that moves or fades it, seen or not. While Start
@@ -1146,7 +1148,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`startPainting`: the usual push and its zoom, unseen behind the opaque cover; a push with
   animations off left the edge swipe back dead), and `ArtworkPaintingView` mounts without its fades
   (`isUnderCover`). The canvas notes when its first frame is on screen
-  (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished it), and
+  (`CanvasView.hasShownFirstFrame`: as its drawable is shown, at the latest a tenth of a second
+  after the GPU finished it), and
   `PaintView.reportTemplate` then tells the hand-off where the page is, in the window's coordinates
   as UIKit has the canvas (`CanvasController.templateFrameInWindow`; SwiftUI's global frame of the
   pushed canvas put it a safe area's height too low, October 25), and again should it move (a

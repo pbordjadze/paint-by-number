@@ -30,8 +30,13 @@ struct ArtworkPaintingView: View {
     /// The push has finished. Only then does the painting replace its thumbnail: the zoom
     /// transition lays the screen out afresh every frame, and the painting screen rendered at
     /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
-    /// renders in one push), where the thumbnail costs next to nothing.
+    /// renders in one push), where the thumbnail costs next to nothing. Under the create flow's
+    /// cover nothing of the push is seen, so the painting is built at once rather than after it
+    /// (`isBuilt`): it waited 0.8 s for a zoom no one sees (painting-company row 361).
     @State private var hasLanded = false
+    /// The painting was opened under the cover: built then, it stays built once the hand-off is
+    /// over (no longer awaiting) though the push may not have landed yet.
+    @State private var builtUnderCover = false
     /// Back was tapped: the status bar is back before the pop starts (`close`).
     @State private var leaving = false
     @State private var failure: Library.OpenError?
@@ -123,6 +128,10 @@ struct ArtworkPaintingView: View {
     /// dissolves.
     private var isUnderCover: Bool { handoff?.isAwaiting(artworkID) == true }
 
+    /// The painting screen takes the thumbnail's place: once the push has landed, or at once under
+    /// the cover (`hasLanded`).
+    private var isBuilt: Bool { hasLanded || builtUnderCover }
+
     /// What the canvas tells once its first frame is on screen, while the cover waits for it, and
     /// when a layout moves the template after that.
     private var canvasReport: ((CGRect) -> Void)? {
@@ -154,7 +163,7 @@ struct ArtworkPaintingView: View {
     var body: some View {
         ZStack {
             Theme.paper.ignoresSafeArea()
-            if let autosaver, hasLanded {
+            if let autosaver, isBuilt {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onName: { startNaming() }, isNamed: artwork?.isNamed ?? true, asksForRating: true,
@@ -266,6 +275,9 @@ struct ArtworkPaintingView: View {
             Text("This name shows when you share or print the painting.")
         }
         .task { await open() }
+        .onChange(of: isUnderCover, initial: true) { _, under in
+            if under { builtUnderCover = true }
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {
                 #if UNRELEASED

@@ -56,8 +56,10 @@ final class CanvasRenderer {
 
     /// Renders a frame into the layer's next drawable. Returns false when no frame could be
     /// produced (GPU still busy with earlier frames, or no drawable); try again next tick.
-    /// `onPresented` is called, on a thread of Metal's, once the frame is on screen: a tenth of a
-    /// second after the GPU finished it, which is a few refreshes after it was queued to be shown.
+    /// `onPresented` is called once, on a thread of Metal's or the system's, once the frame is on
+    /// screen: when the drawable is presented, or at the latest a tenth of a second after the GPU
+    /// finished it (a drawable the system never shows still reports). Until painting-company row
+    /// 361 it waited the tenth of a second every time.
     @discardableResult
     func draw(
         in layer: CAMetalLayer, uniforms: CanvasUniforms, content: RenderContext.Content,
@@ -94,7 +96,9 @@ final class CanvasRenderer {
             commands, scene: scene, states: stateBuffers[slot], uniforms: uniforms,
             targets: RenderContext.Targets(color: drawable.texture, multisample: multisample, outlines: outlines),
             content: content)
-        commands.addCompletedHandler(Self.signal(inFlight, then: onPresented))
+        let once = onPresented.map(Self.once)
+        if let once { drawable.addPresentedHandler(Self.presented(then: once)) }
+        commands.addCompletedHandler(Self.signal(inFlight, then: once))
         commands.present(drawable)
         commands.commit()
         return true
@@ -112,9 +116,27 @@ final class CanvasRenderer {
         pending[k].removeAll(keepingCapacity: true)
     }
 
+    /// Built outside the main actor, as `signal` is: the system calls it on a thread of its own.
+    nonisolated private static func presented(then action: @escaping @Sendable () -> Void) -> MTLDrawablePresentedHandler {
+        // A drawable the system dropped reports too, never shown (`presentedTime` 0): the
+        // fallback after the GPU covers it.
+        { drawable in if drawable.presentedTime > 0 { action() } }
+    }
+
+    nonisolated private static func once(_ action: @escaping @Sendable () -> Void) -> @Sendable () -> Void {
+        let done = OSAllocatedUnfairLock(initialState: false)
+        return {
+            let first = done.withLock { called in
+                defer { called = true }
+                return !called
+            }
+            if first { action() }
+        }
+    }
+
     /// Built outside the main actor: Metal calls it on its own completion thread. A frame whose
-    /// presentation is awaited (`onPresented`) is announced here, a tenth of a second after the
-    /// GPU finished it: the drawable is shown at the next refresh after that.
+    /// presentation is awaited (`onPresented`) is announced here a tenth of a second after the
+    /// GPU finished it, unless `presented` told it sooner, as the drawable was shown.
     nonisolated private static func signal(
         _ semaphore: DispatchSemaphore, then onPresented: (@Sendable () -> Void)?
     ) -> MTLCommandBufferHandler {
