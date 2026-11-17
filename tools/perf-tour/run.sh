@@ -19,6 +19,8 @@
 #   zen-30            thirty fills in Zen Mode, a tap's and a drag's in turn (`paint-zen-30`)
 #   colors            ten fills that each finish a color, in Zen Mode (`paint-colors-10`)
 #   finish            the last fill, the flight to the whole painting and night falling (`paint-nightfall`)
+#   gallery-open      a painting opened from its gallery card (`gallery-open`): `open begin` to `open end`;
+#                     tools/perf-tour/waits.py gives the canvas's first frame after it
 # Launch arguments override the app's stored settings for that launch only; nothing stored is changed.
 # Every setting a scenario's work depends on is given: Music (Sun, and Moon for the finish, whose
 # night it is: left to Auto, the hour of the run would choose the sounds and the stars), Sounds and
@@ -64,6 +66,7 @@ plan() {
     zen-30)          ARGS=(-demo paint-zen-30 -zenMode YES); PLAY=114; SEGMENT=zen-30 ;;
     colors)          ARGS=(-demo paint-colors-10 -zenMode YES); PLAY=48; SEGMENT=colors ;;
     finish)          ARGS=(-demo paint-nightfall); PLAY=22; SEGMENT=finish; SKY=moon ;;
+    gallery-open)    ARGS=(-demo gallery-open); PLAY=20; SEGMENT=open ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac
   ARGS+=(-sky "$SKY" -soundsEnabled YES -hapticsEnabled YES -tourLog YES)

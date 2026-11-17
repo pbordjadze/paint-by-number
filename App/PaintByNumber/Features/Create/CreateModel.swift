@@ -831,10 +831,12 @@ final class CreateModel {
         // Nor does a draft show the suggestion: the painter's settings are what it generates.
         let firstDraft: (@Sendable (Preview) -> Void)? =
             previewStyle == .painting && saved == nil ? Self.firstDraftHandler(for: self, load: load) : nil
+        trace("Loading")
         loadTask = Task {
             do {
                 var decoded = try await decode()
                 try Task.checkCancellation()
+                trace("Decoded")
                 if scratch {
                     // Paper alone: nothing to analyze or suggest, the base the page as one area,
                     // and Refine is where the picture is made.
@@ -874,6 +876,7 @@ final class CreateModel {
                 phase = .analyzing
                 let prepared = try await Self.prepare(decoded, lineArt: lineArt)
                 try Task.checkCancellation()
+                trace("Analyzed")
                 importance = prepared.importance
                 lineArtInput = prepared.lineArt
                 draftImage = prepared.draft
@@ -897,6 +900,7 @@ final class CreateModel {
                     chosen = nil
                 }
                 try Task.checkCancellation()
+                if suggests { trace("Suggested") }
                 if let saved {
                     resume(saved, suggestion: chosen)
                 } else if let chosen {

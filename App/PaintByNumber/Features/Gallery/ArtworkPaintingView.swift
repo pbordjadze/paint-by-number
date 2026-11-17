@@ -308,6 +308,9 @@ struct ArtworkPaintingView: View {
 
     private func open() async {
         guard autosaver == nil, failure == nil else { return }
+        #if DEBUG
+        TourLog.trace("mark", "open begin")
+        #endif
         #if UNRELEASED
         // Before the painting is read: what the widget painted while the app was away.
         await OutsideDesk.comeBack(to: library, open: nil, only: artworkID)
@@ -316,6 +319,9 @@ struct ArtworkPaintingView: View {
             let document = try await library.loadForPainting(artworkID)
             _ = await RenderContext.ready()
             await present(document)
+            #if DEBUG
+            TourLog.trace("mark", "open end")
+            #endif
         } catch {
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
             withAnimation(.easeOut(duration: 0.25)) {
