@@ -273,7 +273,7 @@ final class CreateModel {
     /// The stage pictures the newest full-resolution base showed as it was made, with The
     /// Making-of on, so that its show plays them rather than making the base again
     /// (`makingOfSource`; painting-company row 361).
-    @ObservationIgnored private var shownStages: (made: Made, snapshots: [PipelineSnapshot])?
+    @ObservationIgnored private var shownStages: (key: BaseKey, palette: [PaletteColor]?, snapshots: [PipelineSnapshot])?
 
     /// How many base templates are kept for stepping back (`made`).
     var rememberedBases: Int { made.count }
@@ -1054,8 +1054,7 @@ final class CreateModel {
         let palette = pinnedPalette(for: draft.settings, inputs: inputs)
         // The pictures the forming already made of this very base, when it was made here.
         let stages = shownStages.flatMap { kept in
-            kept.made.settings == draft.settings && kept.made.refinements == inputs && kept.made.palette == palette
-                ? kept.snapshots : nil
+            kept.key == BaseKey(settings: draft.settings, inputs: inputs) && kept.palette == palette ? kept.snapshots : nil
         }
         return MakingOfSource(
             image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
@@ -1210,15 +1209,15 @@ final class CreateModel {
                 shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
-                let recorder = !draft && Preferences().playsMakingOf ? SnapshotRecorder() : nil
+                let recorder = !draft && refinements.start != .blank && Preferences().playsMakingOf ? SnapshotRecorder() : nil
                 let observer: PipelineSnapshot.Observer? = recorder.map { recorder in { recorder.receive($0) } }
                 shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
                     isDraft: draft, style: previewStyle, palette: palette, progress: draft ? nil : report,
                     observer: observer)
-                if load == loadID, let recorder, let base = shown.trail?.base {
-                    shownStages = (Made(settings: settings, refinements: inputs, palette: palette, template: base), recorder.snapshots)
+                if load == loadID, let recorder, !recorder.snapshots.isEmpty {
+                    shownStages = (BaseKey(settings: settings, inputs: inputs), palette, recorder.snapshots)
                 }
             }
             // Kept even if cancelled meanwhile: it is what these settings and inputs make of this
