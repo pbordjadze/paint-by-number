@@ -253,7 +253,7 @@ struct StickerMakerTests {
             return
         }
         #expect((0..<opaque).contains { pixels.alpha(x: $0, y: y) > 0 })
-        let white = pixels[x: opaque + 2, y: y]
+        let white = pixels[opaque + 2, y]
         #expect(white.x >= 250 && white.y >= 250 && white.z >= 250)
     }
 
