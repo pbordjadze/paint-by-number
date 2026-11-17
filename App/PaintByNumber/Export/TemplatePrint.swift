@@ -15,7 +15,7 @@ nonisolated struct TemplatePrintJob: Identifiable, Sendable {
     let name: String
     let pdf: Data
 
-    /// A gallery card's: the saved painting's template, as `PrintableTemplateFile` writes it.
+    /// A gallery card's: the saved painting's template, as `PDFExporter.document` lays it.
     @concurrent
     static func saved(store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper) async throws -> TemplatePrintJob {
         try TemplatePrintJob(title: artwork.title, pdf: ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper))

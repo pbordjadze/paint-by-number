@@ -911,7 +911,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     the groups (each name at its own width, `sideGroups`) and the tools at its foot, scrolling
     under a fixed head where they are taller than the screen, and the picture beside it at the
     screen's full height; an area's card takes the room of all but Select's band there. The tools along the bottom keep the room of the tallest they have been, and a
-    taller one (Select's band, a card, the looks) rises over the paper under the picture where
+    taller one (Select's band, a card, Edit Paint's panel) rises over the paper under the picture where
     that holds it, so the picture moves only where it would be covered (`reservedTools`); an
     option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
@@ -1338,8 +1338,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try
 Again; `TimelapseSchedule` eases the strokes in and out) and goes to `ActivityShareSheet`, which
 reports when the share sheet closes so the movie is deleted. Every export lives in
-`tmp/Exports/<uuid>/` (`ArtworkExporter`). A gallery card's Share Progress, Share Painting and
-Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
+`tmp/Exports/<uuid>/` (`ArtworkExporter`). A gallery card's Share Progress and Share Painting
+write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
 (a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). Print… (painting-company
@@ -1348,7 +1348,8 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 (`TemplatePrintJob`, `Export/TemplatePrint.swift`: `saved` from the card's painting, `open` from
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
-or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
+or the More button on an iPad. Share's Print Template… left on November 17, 2026 (one way to print
+per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
 painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
@@ -1371,7 +1372,7 @@ then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPaintin
 `SharedPainting`, the template as it is (the painter's refinements are in it) with its title,
 settings and paint names (their seed and vocabulary: the receiver's `Artwork.sentNicknameSeed`), LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
 picture; never progress or refinements. The sheet deletes the file once the share sheet closes,
-and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
+and stays up when the painter backs out of it. Whoever hasn't the app gets the PDF from Print…
 instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter
 sends it, the developers collect nothing).
 

@@ -5,7 +5,7 @@
     python3 ci/budget.py --self-test  checks the counting on small samples
 
 The limits and their exceptions are `ci/design-budget.json`; why they exist is painting-company's
-`process/design-budget.md`. They are soft (Paul, November 17, 2026: warnings first, the numbers
+`process/design-budget.md`. They are soft (since November 17, 2026: warnings first, the numbers
 revisited after a few weeks): CI runs it so that nothing it finds, nor a break in its own counting
 (a function renamed, say), fails the build; `core` prints its last line in STATUS.md. On GitHub each count past its limit is also a
 `::warning::` annotation on the run.

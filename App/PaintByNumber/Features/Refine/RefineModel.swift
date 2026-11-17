@@ -1044,11 +1044,10 @@ final class RefineModel {
         model.recolor(.repaint(from: palette[from].oklab, to: palette[into].oklab, family: false))
     }
 
-    /// Edit Paint's paint, as the colors panel picks it: the current paint.
-    /// Edit Paint's change. A repaint of the current paint keeps it the current paint
-    /// once it lands, in the color the repaint gives it (`repainted`), so a picker still open goes
-    /// on with it; a repaint of another (a color still waiting as another paint was chosen) leaves
-    /// the choice alone.
+    /// Edit Paint's paint, as the colors panel picks it: the current paint, and its change. A
+    /// repaint of the current paint keeps it the current paint once it lands, in the color the
+    /// repaint gives it (`repainted`), so a picker still open goes on with it; a repaint of
+    /// another (a color still waiting as another paint was chosen) leaves the choice alone.
     func recolor(_ change: RefineColors) {
         if case .repaint(let from, let to, let family) = change, from == currentPaint {
             let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)

@@ -5,9 +5,8 @@ import SwiftUI
 /// `RefinePaletteBar`, or by a tap on its area) takes a new color from the system color picker, its
 /// family moving with it while Similar Colors Too is on; once any paint has changed, Photo’s Colors
 /// puts the photo's own back. Shapes, lines and numbers never change. Its Looks, a row of moods over
-/// every paint, left on November 17, 2026 (painting-company's cut list: the look picker Paul set
-/// aside, and Blend paints new paintings prettily without a choice); a painting that has a look
-/// keeps it, and Photo’s Colors takes it out.
+/// every paint, left on November 17, 2026 (painting-company `process/design-budget.md`); a painting
+/// that has a look keeps it, and Photo’s Colors takes it out.
 struct RefineColorsPanel: View {
     /// The template on screen.
     let template: Template
