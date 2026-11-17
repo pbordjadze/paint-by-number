@@ -1210,7 +1210,7 @@ final class CreateModel {
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
                 let recorder = !draft && refinements.start != .blank && Preferences().playsMakingOf ? SnapshotRecorder() : nil
-                let observer: PipelineSnapshot.Observer? = recorder.map { recorder in { recorder.receive($0) } }
+                let observer: PipelineSnapshot.Observer? = recorder.map { recorder in { @Sendable snapshot in recorder.receive(snapshot) } }
                 shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
