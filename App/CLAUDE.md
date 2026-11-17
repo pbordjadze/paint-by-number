@@ -1304,7 +1304,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
-  subject cut out of the finished painting; Vision runs for a few paintings at a time, and only
+  subject cut out of the finished painting, each on a clear square of Messages' sizes, its white
+  edge casting a soft shadow so it reads on Messages' white; Vision runs for a few paintings at a time, and only
   with the app in front, `OutsideDesk.cutOutStickers`: leaving, the app has seconds).
 - **Paint One Area** writes one number (`OutsideShelf.addTap`) and the widget shows the next
   picture. The app paints those areas for real when it next comes forward (`OutsideDesk.comeBack`
@@ -1314,6 +1315,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   Taps that no longer fit it (it changed since) are dropped. The desk does one job at a time
   (`inTurn`): a widget tapped brings the shell and a painting's screen there together.
 - **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
+- **Its percentage** is the gallery card's (`OutsideShelf.percent`, `PaintSpeech.percent`
+  written again for the extensions; `OutsideShelfTests` holds them to one answer).
 - **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
   extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as
   `ci.yml` and `tools/checks.sh` do); `ci/check_release.sh` fails on a Release app with PlugIns.

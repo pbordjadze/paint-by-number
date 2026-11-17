@@ -56,17 +56,50 @@ struct FrameProvider: TimelineProvider {
 
 struct FrameWidgetView: View {
     let entry: FrameEntry
+    @Environment(\.widgetFamily) private var family
 
     var body: some View {
         if let painting = entry.painting {
-            ShelfPicture(url: entry.picture)
-                .clipShape(.rect(cornerRadius: 10, style: .continuous))
-                .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .accessibilityElement()
-                .accessibilityLabel(Text(painting.title))
+            if family == .systemMedium {
+                medium(painting)
+            } else {
+                picture
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityElement()
+                    .accessibilityLabel(Text(painting.title))
+            }
         } else {
             EmptyShelf(words: "Finish a painting and it hangs here.")
         }
+    }
+
+    private var picture: some View {
+        ShelfPicture(url: entry.picture)
+            .clipShape(.rect(cornerRadius: 10, style: .continuous))
+            .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
+    }
+
+    /// The wide card: the picture as large as its height allows, and beside it, as on a
+    /// gallery's wall, its title under the crescent.
+    private func medium(_ painting: OutsideShelf.Finished.Painting) -> some View {
+        HStack(spacing: 14) {
+            picture
+                .frame(maxHeight: .infinity)
+                .layoutPriority(1)
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer(minLength: 0)
+                Image(systemName: "moon.stars.fill")
+                    .font(.footnote)
+                    .foregroundStyle(Look.gold)
+                    .widgetAccentable()
+                    .accessibilityHidden(true)
+                Text(painting.title)
+                    .font(Look.title(.headline))
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(minWidth: 96, maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+        .accessibilityElement(children: .combine)
     }
 }

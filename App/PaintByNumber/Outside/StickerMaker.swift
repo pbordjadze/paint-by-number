@@ -10,7 +10,7 @@ import PaintCore
 /// cut out of the finished painting with a white edge round it: the painter's own cat, in the
 /// painter's own paints. Nothing is uploaded; Messages sends what the painter picks.
 nonisolated enum StickerMaker {
-    /// A sticker's long side in pixels: Messages' regular size, 136 points, at 3×.
+    /// A sticker's side in pixels: Messages' regular size, 136 points, at 3×.
     static let pixels = 408
     /// Messages takes no sticker over 500 KB.
     static let mostBytes = 500_000
@@ -21,6 +21,8 @@ nonisolated enum StickerMaker {
     /// The share of the picture a subject may take to be worth cutting out: less is a speck,
     /// more is the whole picture with its corners missing.
     static let subjectShare: ClosedRange<Double> = 0.04...0.85
+    /// The stickers' look, in their file names: a new look draws every sticker again.
+    static let look = 2
 
     @concurrent
     static func layOut(_ artworks: [Artwork], store: ArtworkStore, shelf: OutsideShelf, cutOuts: Int = mostCutOutsALayout) async {
@@ -29,7 +31,7 @@ nonisolated enum StickerMaker {
         var kept = Set<String>()
         var cutOutsTried = 0
         for artwork in artworks {
-            let base = "sticker-\(artwork.id.uuidString)-\(artwork.thumbnailVersion)"
+            let base = "sticker-\(artwork.id.uuidString)-\(artwork.thumbnailVersion)-\(look)"
             let plain = base + ".png", noPlain = base + "-noprint", cut = base + "-cut.png", noCut = base + "-nocut"
             func has(_ name: String) -> Bool { files.fileExists(atPath: shelf.url(name).path) }
             let triesCut = !has(cut) && !has(noCut) && cutOutsTried < cutOuts
@@ -77,18 +79,29 @@ nonisolated enum StickerMaker {
 
     // MARK: Drawing
 
-    /// The picture as a small print: on white, with a white edge and rounded corners, on nothing.
+    /// The room kept round a sticker for its shadow, as a share of its side.
+    static let shadowRoom: CGFloat = 0.03
+
+    /// The picture as a small print: on white, with a white edge and rounded corners, on nothing
+    /// but a soft shadow, so the white edge reads on Messages' white as on its dark. Square,
+    /// `pixels` a side, the print centered: Messages takes stickers of 300 to 618 pixels a side,
+    /// and a print's short side alone could fall below that.
     static func framed(_ painting: CGImage, pixels: Int = pixels) -> CGImage? {
-        let edge = CGFloat(pixels) * 0.035
-        let room = CGFloat(pixels) - 2 * edge
+        let side = CGFloat(pixels)
+        let edge = side * 0.035
+        let room = side * (1 - 2 * shadowRoom) - 2 * edge
         let scale = room / CGFloat(max(painting.width, painting.height))
         let inner = CGSize(width: (CGFloat(painting.width) * scale).rounded(), height: (CGFloat(painting.height) * scale).rounded())
         let size = CGSize(width: inner.width + 2 * edge, height: inner.height + 2 * edge)
-        guard let ctx = context(width: Int(size.width.rounded(.up)), height: Int(size.height.rounded(.up)), like: painting) else { return nil }
-        let outer = CGRect(origin: .zero, size: size)
+        guard let ctx = context(width: pixels, height: pixels, like: painting) else { return nil }
+        let outer = CGRect(
+            origin: CGPoint(x: ((side - size.width) / 2).rounded(), y: ((side - size.height) / 2).rounded()), size: size)
+        ctx.saveGState()
+        shadow(ctx, side: side)
         ctx.addPath(CGPath(roundedRect: outer, cornerWidth: edge * 2, cornerHeight: edge * 2, transform: nil))
         ctx.setFillColor(gray: 1, alpha: 1)
         ctx.fillPath()
+        ctx.restoreGState()
         let picture = outer.insetBy(dx: edge, dy: edge)
         ctx.addPath(CGPath(roundedRect: picture, cornerWidth: edge, cornerHeight: edge, transform: nil))
         ctx.clip()
@@ -96,10 +109,18 @@ nonisolated enum StickerMaker {
         return ctx.makeImage()
     }
 
+    /// The shadow the white edge casts: close and soft, a line on white, nothing much on dark.
+    private static func shadow(_ ctx: CGContext, side: CGFloat) {
+        ctx.setShadow(
+            offset: CGSize(width: 0, height: -side * 0.004), blur: side * 0.015,
+            color: CGColor(gray: 0, alpha: 0.35))
+    }
+
     /// `painting` where `inside` says the subject is (a mask of `width` × `height`, row 0 its
-    /// top, of the painting's shape), with a white edge round it, cropped to it and scaled so
-    /// its long side is `pixels`. Nil when the mask isn't the painting's shape or the subject
-    /// isn't worth cutting out (`subjectShare`).
+    /// top, of the painting's shape), with a white edge round it casting the print's shadow,
+    /// cropped to it and centered on a clear square of `pixels` a side, as `framed`. Nil when
+    /// the mask isn't the painting's shape or the subject isn't worth cutting out
+    /// (`subjectShare`).
     static func cutOut(_ painting: CGImage, inside: [Bool], width: Int, height: Int, pixels: Int = pixels) -> CGImage? {
         guard width > 0, height > 0, inside.count == width * height else { return nil }
         let shape = Double(painting.width) / Double(painting.height), maskShape = Double(width) / Double(height)
@@ -118,23 +139,30 @@ nonisolated enum StickerMaker {
         }
         guard maxX >= minX, maxY >= minY else { return nil }
         let cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1
-        let scale = CGFloat(pixels) / CGFloat(max(cropWidth, cropHeight))
+        let side = CGFloat(pixels)
+        let scale = side * (1 - 2 * shadowRoom) / CGFloat(max(cropWidth, cropHeight))
         guard let subject = gray(inside, width: width, height: height),
               let white = gray(edged, width: width, height: height),
-              let ctx = context(
-                  width: max(1, Int((CGFloat(cropWidth) * scale).rounded())),
-                  height: max(1, Int((CGFloat(cropHeight) * scale).rounded())), like: painting)
+              let ctx = context(width: pixels, height: pixels, like: painting)
         else { return nil }
-        // Where the whole mask lies in the cropped picture: CoreGraphics counts rows from the
-        // bottom, the mask from the top.
+        // Where the whole mask lies in the square, the crop centered: CoreGraphics counts rows
+        // from the bottom, the mask from the top.
+        let left = ((side - CGFloat(cropWidth) * scale) / 2).rounded()
+        let bottom = ((side - CGFloat(cropHeight) * scale) / 2).rounded()
         let whole = CGRect(
-            x: -CGFloat(minX) * scale, y: -CGFloat(height - 1 - maxY) * scale,
+            x: left - CGFloat(minX) * scale, y: bottom - CGFloat(height - 1 - maxY) * scale,
             width: CGFloat(width) * scale, height: CGFloat(height) * scale)
         ctx.interpolationQuality = .high
+        // The white edge in a layer of its own, so its shadow falls round the clipped shape.
+        ctx.saveGState()
+        shadow(ctx, side: side)
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
         ctx.saveGState()
         ctx.clip(to: whole, mask: white)
         ctx.setFillColor(gray: 1, alpha: 1)
         ctx.fill(whole)
+        ctx.restoreGState()
+        ctx.endTransparencyLayer()
         ctx.restoreGState()
         ctx.saveGState()
         ctx.clip(to: whole, mask: subject)

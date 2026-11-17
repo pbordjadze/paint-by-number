@@ -991,68 +991,68 @@
         }
       }
     },
-    "Your painting as it stands. Paint One Area fills in the next area, right here." : {
-      "comment" : "Widget gallery: what the Painting in Progress widget does. Paint One Area is its button",
+    "Your painting as it stands. On the Home Screen, Paint One Area fills in the next area." : {
+      "comment" : "Widget gallery: what the Painting in Progress widget does, shown for every size, the Lock Screen's too. Paint One Area is its button, which only the Home Screen sizes have",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dein Bild, wie es gerade ist. „Eine Fläche malen“ füllt die nächste Fläche, gleich hier."
+            "value" : "Dein Bild, wie es gerade ist. Auf dem Home-Bildschirm füllt „Eine Fläche malen“ die nächste Fläche."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu cuadro tal como está. «Pintar una zona» rellena la siguiente zona, aquí mismo."
+            "value" : "Tu cuadro tal como está. En la pantalla de inicio, «Pintar una zona» rellena la siguiente zona."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre tableau tel qu’il est. « Peindre une zone » remplit la zone suivante, ici même."
+            "value" : "Votre tableau tel qu’il est. Sur l’écran d’accueil, « Peindre une zone » remplit la zone suivante."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il tuo quadro così com’è. “Dipingi un’area” riempie la prossima area, proprio qui."
+            "value" : "Il tuo quadro così com’è. Nella schermata Home, “Dipingi un’area” riempie la prossima area."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "いまの絵の様子です。「ひとつ塗る」で次のエリアをここで塗れます。"
+            "value" : "いまの絵の様子です。ホーム画面では「ひとつ塗る」で次のエリアを塗れます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "지금 그대로의 그림이에요. ‘한 영역 칠하기’로 다음 영역을 바로 여기서 채워요."
+            "value" : "지금 그대로의 그림이에요. 홈 화면에서는 ‘한 영역 칠하기’로 다음 영역을 채워요."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je schilderij zoals het nu is. “Schilder één vlak” vult het volgende vlak, hier meteen."
+            "value" : "Je schilderij zoals het nu is. Op het beginscherm vult “Schilder één vlak” het volgende vlak."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sua pintura como está agora. “Pintar uma área” preenche a próxima área, aqui mesmo."
+            "value" : "Sua pintura como está agora. Na Tela de Início, “Pintar uma área” preenche a próxima área."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的画作现在的样子。“涂一个区域”会在这里直接涂好下一个区域。"
+            "value" : "你的画作现在的样子。在主屏幕上，“涂一个区域”会涂好下一个区域。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的畫作現在的樣子。「為一個區塊上色」會在這裡直接為下一個區塊上色。"
+            "value" : "你的畫作現在的樣子。在主畫面上，「為一個區塊上色」會為下一個區塊上色。"
           }
         }
       }
