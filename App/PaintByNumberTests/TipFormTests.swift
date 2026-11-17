@@ -77,5 +77,7 @@ struct TipFormTests {
         #expect(TipForm.beside.keepsOffItsSubject && TipForm.margin.keepsOffItsSubject && TipForm.inline.keepsOffItsSubject)
         #expect(!TipForm.popover.keepsOffItsSubject && !TipForm.card.keepsOffItsSubject)
         #expect(TipForm.besideWidth < 320)
+        // The wide one still leaves a margin on the narrowest phone (375 pt), and grows.
+        #expect(TipForm.besideWidth < TipForm.besideWideWidth && TipForm.besideWideWidth <= 343)
     }
 }

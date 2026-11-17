@@ -341,7 +341,10 @@ struct GalleryView: View {
         .comesOut(after: StarsComeOut.delay(for: artwork.id, among: shownIDs))
         .setsDown(count: settledCards[artwork.id] ?? 0)
         #endif
-        .cardTip(tips(of: artwork))
+        // The first card's tips hang above it in their small form on a phone (`TipForm.beside`),
+        // over the pages' title and the section's: below, the card's words reach past the row's
+        // gap over the next row's picture (painting-company row 240).
+        .cardTip(tips(of: artwork), besideEdge: shownIDs.first == artwork.id ? .bottom : nil)
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery

@@ -482,6 +482,11 @@ private struct GentleTipModifier: ViewModifier {
     /// The one form this view points its tips in, where a tip has a place for each
     /// (`TipForm.popover`, `.beside`); nil points in either.
     var only: TipForm?
+    /// The popover's side in the small form (`TipForm.beside`), where it differs from
+    /// `arrowEdge`: the side that keeps the tip off a picture on a phone (nil: `arrowEdge`).
+    var besideEdge: Edge?
+    /// The small form at `TipForm.besideWideWidth`, for a tip whose room is short but wide.
+    var wide = false
     /// The tip this view pointed last, which TipKit keeps being handed once its turn has gone.
     @State private var pointed: TipID?
     /// The tip this view drew last (`TipCard`), kept under its popover while that goes.
@@ -511,9 +516,11 @@ private struct GentleTipModifier: ViewModifier {
             .popoverTip((system ?? pointed)?.tip, isPresented: isPresented, arrowEdge: arrowEdge)
             // The optional edge goes through as it is (SwiftUI's `Edge?` popover): nil leaves the
             // side to the system here too, as it does TipKit's.
-            .popover(isPresented: ownIsPresented, arrowEdge: arrowEdge) {
-                TipCard(id: own ?? drawn) { ownIsPresented.wrappedValue = false }
-                    .presentationCompactAdaptation(.popover)
+            .popover(isPresented: ownIsPresented, arrowEdge: besideEdge ?? arrowEdge) {
+                TipCard(id: own ?? drawn, width: wide ? TipForm.besideWideWidth : TipForm.besideWidth) {
+                    ownIsPresented.wrappedValue = false
+                }
+                .presentationCompactAdaptation(.popover)
             }
             // A tap outside the popover does what it was aimed at and closes the tip.
             .background {
@@ -542,6 +549,7 @@ private struct GentleTipModifier: ViewModifier {
 /// `.presentationCompactAdaptation(.popover)` outside any condition, or a phone gets a sheet.
 private struct TipCard: View {
     let id: TipID?
+    var width: CGFloat = TipForm.besideWidth
     let close: () -> Void
 
     var body: some View {
@@ -571,7 +579,7 @@ private struct TipCard: View {
                 .buttonStyle(TipCloseStyle())
         }
         .padding(14)
-        .frame(minWidth: 220, idealWidth: TipForm.besideWidth, maxWidth: TipForm.besideWidth)
+        .frame(minWidth: 220, idealWidth: width, maxWidth: width)
         .fixedSize(horizontal: false, vertical: true)
         .presentationBackground(Theme.surface)
     }
@@ -598,8 +606,15 @@ extension View {
     /// the system choose.
     /// `only` keeps the view to one of the tip's two forms, where its subject has a place for
     /// each (`TipForm.popover`, TipKit's; `.beside`, the app's small one on a compact width).
-    func gentleTip(_ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil, only: TipForm? = nil) -> some View {
-        modifier(GentleTipModifier(ids: TipSet(ids), active: active, arrowEdge: arrowEdge, only: only))
+    /// `besideEdge` is the small one's side where it is not `arrowEdge`'s, and `wideBeside` draws
+    /// it at `TipForm.besideWideWidth`: where the room off the picture is shorter than the narrow
+    /// card is tall (painting-company row 240's critic: no tip over a picture on a phone).
+    func gentleTip(
+        _ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil, only: TipForm? = nil,
+        besideEdge: Edge? = nil, wideBeside: Bool = false
+    ) -> some View {
+        modifier(GentleTipModifier(
+            ids: TipSet(ids), active: active, arrowEdge: arrowEdge, only: only, besideEdge: besideEdge, wide: wideBeside))
     }
 }
 
@@ -611,6 +626,8 @@ extension View {
 private struct OwnPopoverTipModifier: ViewModifier {
     let ids: TipSet
     var arrowEdge: Edge
+    /// The popover's side in the small form (`TipForm.beside`), where it differs (nil: `arrowEdge`).
+    var besideEdge: Edge?
     /// The tip this view drew last (`TipCard`), kept under its popover while that goes.
     @State private var drawn: TipID?
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -625,7 +642,7 @@ private struct OwnPopoverTipModifier: ViewModifier {
             TipForm.of($0, isCompact: sizeClass == .compact, isAccessibilitySize: textSize.isAccessibilitySize) == .beside
         } ?? false
         content
-            .popover(isPresented: isPresented, arrowEdge: arrowEdge) {
+            .popover(isPresented: isPresented, arrowEdge: isBeside ? besideEdge ?? arrowEdge : arrowEdge) {
                 // The adaptation is on the popover's content whatever the turn and the form: inside
                 // a condition it never reached the presentation, and a phone got a sheet, blank but
                 // for the tip (painting-company row 240).
@@ -755,10 +772,11 @@ extension View {
     }
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
-    /// while it is mostly in view.
-    func cardTip(_ ids: [TipID], arrowEdge: Edge = .top) -> some View {
+    /// while it is mostly in view; `besideEdge` is the popover's side in the small form
+    /// (`TipForm.beside`) where it is not `arrowEdge`.
+    func cardTip(_ ids: [TipID], arrowEdge: Edge = .top, besideEdge: Edge? = nil) -> some View {
         let ids = TipSet(ids)
-        return modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge))
+        return modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge, besideEdge: besideEdge))
             .modifier(CardTipAnchor(ids: ids))
     }
 }
