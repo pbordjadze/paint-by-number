@@ -6,8 +6,8 @@
 ///
 /// 1. **No mud** (`clean`): a black with no hue of its own (below `neutralChroma`, darker than
 ///    `darkLightness`) is mixed from a touch of indigo, as a painter mixes black, never from
-///    black itself; other greys stay grey. A clearly coloured paint still greyed (up to
-///    `greyChroma`) keeps its own hue and gets a little more of it (`greyGain`). A khaki or olive
+///    black itself; other greys stay grey. A clearly coloured paint still greyed (from about
+///    0.035 up to `greyChroma`) keeps its own hue and gets a little more of it (`greyGain`). A khaki or olive
 ///    (`mudArc`, `mudChroma`, `mudLightness`) turns part of the way to sienna or sap green,
 ///    whichever is nearer, with more chroma (`mudGain`); every other paint gets a little more
 ///    (`gain`). Skin keeps its colors (`hold`, `KitPaint.skinHold`). Two critic rounds took the
@@ -18,7 +18,7 @@
 ///    `huedChroma` and out by `vibranceLimit`; a pale greyish paint, `pastel`, none), skin held
 ///    to `skinVibrance` of it, and the lightness spread around the painting's median by
 ///    `contrast`, unless that would cost a paint at the gamut's edge chroma.
-/// 3. **Focus**, when the importance of each paint is known: a third (`focus`) of the way to a
+/// 3. **Focus**, when the importance of each paint is known and uneven (`evenImportance`): a third (`focus`) of the way to a
 ///    painting whose subject (above the `subjectCut` share of the importance) is bolder
 ///    (`subjectGain`) and whose background recedes into a soft blue haze (`haze`), a dark
 ///    background by losing color rather than into grey, a vivid one (`vividChroma`) not at all.
@@ -28,7 +28,7 @@
 /// Hues move by vectors, never angles: no trigonometry, so the same paints mix to the same
 /// paints on every device.
 public enum BeautyPaint {
-    /// Below this chroma a paint has no hue of its own and is mixed from color, fully at 0.
+    /// Below this chroma a paint has no hue of its own; a dark one is mixed from color, fully at 0.
     static let neutralChroma: Float = 0.025
     /// Up to this chroma a paint is a greyed color: its own hue, `greyGain` more of it at most.
     static let greyChroma: Float = 0.06
@@ -63,6 +63,8 @@ public enum BeautyPaint {
     static let focus: Float = 0.33
     static let subjectCut: Float = 0.55
     static let subjectGain: Float = 0.35
+    /// Paints whose mean importance spans less than this get no focus.
+    static let evenImportance: Float = 0.1
     static let haze = SIMD3<Float>(0.86, -0.0125, -0.021_651)
     static let hazeMost: Float = 0.2
     static let vividChroma: ClosedRange<Float> = 0.08...0.14
@@ -130,7 +132,8 @@ public enum BeautyPaint {
 
         // 3. Focus.
         var target = vivid
-        if let importance = valid(importance) {
+        // An even map names no subject: every paint would come forward and none recede.
+        if let importance = valid(importance), (importance.max() ?? 0) - (importance.min() ?? 0) >= evenImportance {
             let cut = percentile(importance, weights: weight, subjectCut)
             target = vivid.indices.map { i in
                 let lab = vivid[i]
