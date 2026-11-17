@@ -166,6 +166,12 @@ struct ArtworkPaintingView: View {
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     // A new template (a re-cut) is a new session: the screen starts afresh on it.
                     .id(ObjectIdentifier(autosaver.session))
+                    #if UNRELEASED
+                    .environment(\.paintTogether, artwork.map { artwork in { startTogether(artwork) } })
+                    .task(id: ObjectIdentifier(autosaver.session)) {
+                        TogetherLink.shared.paintingOpened(artworkID, session: autosaver.session)
+                    }
+                    #endif
                     // Nothing is painted while the picture is cut again: it would be lost.
                     .overlay {
                         if recutting != nil || changing != nil { Color.clear.contentShape(.rect) }
@@ -284,6 +290,9 @@ struct ArtworkPaintingView: View {
             }
         }
         .onDisappear {
+            #if UNRELEASED
+            TogetherLink.shared.paintingClosed(artworkID)
+            #endif
             regeneration?.cancel()
             recutting?.cancel()
             releaseHeldScreen()
@@ -292,6 +301,20 @@ struct ArtworkPaintingView: View {
     }
 
     #if UNRELEASED
+    /// More › Paint Together: shares the painting as a `.moonlight` file would be sent (its
+    /// template and title, never its photo), and the painting screen paints together as soon as the
+    /// session is up (`TogetherLink.bind`).
+    private func startTogether(_ artwork: Artwork) {
+        autosaver?.saveNow()
+        let store = library.store, link = TogetherLink.shared
+        Task {
+            guard let data = try? await Background.run({
+                try ArtworkExporter.sharedPainting(store: store, artwork: artwork, includesPhoto: false)
+            }) else { return }
+            await link.start(artwork: artwork.id, title: artwork.title, data: data)
+        }
+    }
+
     /// The areas the widget's Paint One Area showed painted while the app was away go into the
     /// painting on screen, are saved, and the shelf is laid out from there (`OutsideDesk`).
     private func absorbWidgetAreas() {

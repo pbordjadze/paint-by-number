@@ -62,6 +62,9 @@ before planning app work).
     calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
     `LabelRoom` hold; an edge along a painter's line takes the line's path (`EdgeGuides`). `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
     the regression gate and the create flow's Debug check.
+  - `Together/`: Paint Together's sync (painting-company row 350): `TogetherLedger` (areas
+    stamped last writer wins, so any order of arrival converges), `TogetherMessage` (the wire
+    format, read as hostile input), `TogetherBatcher`, `TogetherTransport` and `LoopbackHub`.
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).

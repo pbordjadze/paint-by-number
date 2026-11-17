@@ -91,13 +91,16 @@ final class FeedbackEngine {
             let area = regions.reduce(Float(0)) { $0 + session.template.regions[$1].area }
             let canvas = Float(max(1, session.template.width * session.template.height))
             let size = min(1, (area / canvas).squareRoot() * 6)
-            if hapticsOn { haptics.paint(strength: size, duration: fillDuration) }
+            // A friend's fills (Paint Together) are heard softer and never felt: a busy friend
+            // shouldn't buzz this painter's hand.
+            let friend = session.isApplyingFriend
+            if hapticsOn, !friend { haptics.paint(strength: size, duration: fillDuration) }
             // At most a note every 40 ms: a stroke's fills come faster than notes can sound.
             let now = self.now()
             if lastNote.map({ now - $0 >= .milliseconds(40) }) ?? true {
                 lastNote = now
                 let note = melody.next(at: now, under: skyOfTheMoment)
-                if soundsOn { sounds.paint(note, velocity: 0.35 + 0.65 * size) }
+                if soundsOn { sounds.paint(note, velocity: (0.35 + 0.65 * size) * (friend ? 0.45 : 1)) }
             }
         case .rejected:
             if hapticsOn { haptics.reject() }

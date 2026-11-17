@@ -182,6 +182,25 @@ struct AppShellView: View {
         .modifier(OutsideComings(library: library, open: path.last))
         #endif
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
+        #if UNRELEASED
+        .task { await TogetherLink.shared.listen() }
+        // Someone started painting a picture together: it is added as a painting they sent and
+        // opens straight away, as an opened `.moonlight` file does.
+        .onChange(of: TogetherLink.shared.arrived?.data) { _, data in
+            guard let data else { return }
+            Task {
+                do {
+                    let id = try await library.receive(data, fallbackTitle: nil).id
+                    TogetherLink.shared.received(as: id)
+                    receivedPainting = id
+                    incomingImage = nil
+                } catch {
+                    pendingReceiveFailure = error as? Library.ReceiveError ?? .damaged
+                }
+                presentIncomingImage()
+            }
+        }
+        #endif
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
         .task {
             RenderContext.prewarm()
