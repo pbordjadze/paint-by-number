@@ -1,4 +1,4 @@
-/// A face's own paints, for rich paint (`PaintMix.rich`; painting-company row 344).
+/// A face's own paints, for rich and beauty paint (`PaintMix.rich`, `.beauty`; painting-company rows 344, 360).
 ///
 /// The segmentation fits one paint to every area of a colour, so a face in shadow shares its
 /// paints with whatever else in the photo is that brown: on Girl with a Pearl Earring three of
